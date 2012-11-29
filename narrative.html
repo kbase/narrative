@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/jquery-ui.min.js"></script>
+
+        <script src = 'http://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.2/jquery.cookie.js'></script>
+        <script src = 'http://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/0.11.4/jquery.timeago.js'></script>
+
+        <!-- Add fancyBox -->
+        <link rel="stylesheet" href="./jquery/fancybox/source/jquery.fancybox.css?v=2.1.3" type="text/css" media="screen" />
+        <script type="text/javascript" src="./jquery/fancybox/source/jquery.fancybox.pack.js?v=2.1.3"></script>
+
+		<script type="text/javascript" src="./jquery/spinner/jquery.spinner.js"></script>
+
+        <script src = './jquery/kbase/jquery.kbase.login.js'></script>
+        <script src = './jquery/kbase/jquery.kbase.slidingPanel.js'></script>
+        <script src = './jquery/kbase/jquery.kbase.formBuilder.js'></script>
+        <script src = './jquery/kbase/jquery.kbase-narrative.narrativeBlock.js'></script>
+        <script src = './jquery/kbase/jquery.kbase-narrative.comment.js'></script>
+        <script src = './jquery/kbase/jquery.kbase-narrative.narrative.js'></script>
+        <script src = './jquery/kbase/jquery.kbase-narrative.commandcontext.js'></script>
+
+        <script src = './jquery/kbase/jquery.kbase-iris.commands.js'></script>
+
+        <link type = 'text/css' href = 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/themes/smoothness/jquery-ui.css' rel = 'stylesheet' />
+
+        <script src = './js/MetaTool.js'></script>
+
+
+
+        <script src="./js/InvocationService.js" type="text/javascript" charset="utf-8"></script>
+
+		<link type="text/css" href="./css/liquid.css" rel="stylesheet" />
+
+		<script type="text/javascript">
+
+            <!--
+
+                $(function() {
+
+                    $('#commandcontext').commandcontext(
+                        {
+                            link : function (evt) {
+                                var f = $("#workspaces").data('addNarrativeCommand');
+                                f(this.text);
+                            }
+                        }
+                    );
+
+		            window.$ld = $('#login-box').login(
+		                {
+		                    style : 'slim',
+		                    login_callback : function(args) {
+		                        if (this.session('user_id')) {
+		                            var client = new InvocationService('http://bio-data-1.mcs.anl.gov/services/invocation');
+                                    client.start_session(this.session('user_id'));
+                                }
+		                    }
+		                });
+
+                    $('#command-list').commands(
+                        {
+                            link : function (evt) {
+                                var f = $("#workspaces").data('addNarrativeCommand');
+                                f(this.text);
+                            }
+                        }
+                    );
+
+
+                    $('#workspaces').data('addNarrativeCommand', function(label) {
+
+                        if (label.length == 0) {
+                            $('#add-custom-command-error').css('display', '');
+                            return;
+                        }
+
+                        var $selectedPanel = $('#workspaces').data('selectedPanel');
+
+                        $( $selectedPanel.children()[0] ).narrative('addBlock', { name : label });
+                        $( $selectedPanel.children()[0] ).narrative('reposition');
+                        //$(window).trigger('resize');
+
+                        return 1;
+
+                    });
+
+
+                    $('#workspaces').tabs({
+                        tabTemplate: "<li><a href='#{href}'>#{label}</a> <span class='ui-icon ui-icon-close removeTabButton'>Remove Tab</span></li>",
+
+                        add: function( event, ui ) {
+
+                            var name = $(ui.tab).text();
+                            $(ui.panel).css('visibility', 'hidden');
+                            var $narrative = $('<div></div>').narrative({name : name});
+
+                            $(ui.panel).append( $narrative );
+                            $narrative.narrative('reposition');
+                            $(ui.panel).css('visibility', '');
+                        },
+                        show : function (event, ui) {
+                            $(ui.panel).css('visibility', 'hidden');
+                            $(this).data('selectedPanel', $(ui.panel));
+                            $( $(ui.panel).children()[0] ).narrative('reposition');
+                            $(ui.panel).css('visibility', '');
+
+                        }
+                    });
+
+                    $( "#workspaces span.removeTabButton" ).live( "click", function() {
+
+                        var index = $( "li", $('#workspaces') ).index( $( this ).parent() );
+                        var selectedIndex = $('#workspaces').tabs('option', 'selected');
+
+                        if (index == selectedIndex) {
+                            if (index > 1) {
+                                $('#workspaces').tabs('option', 'selected', index - 1);
+                            }
+                            else if (index == 1 && $('#workspaces').tabs("length") > 2) {
+                                $('#workspaces').tabs('option', 'selected', index + 1);
+                            }
+                            else {
+                                $('#workspaces').tabs('option', 'selected', 0);
+                            }
+                        }
+
+                        $('#workspaces').tabs( "remove", index );
+
+                    });
+
+                    $('#add-tabs-button').bind('click', function(evt) {
+
+                        if (window.$ld.login('session').user_id == undefined) {
+                            return;
+                        }
+
+                        $('#narrative_list').empty();
+                        $('#narrative_list').append(
+                            $('<option></option>')
+                                .attr('value', '')
+                                .append('-----')
+                        );
+
+                        try {
+                            var client = new InvocationService('http://bio-data-1.mcs.anl.gov/services/invocation');
+                            var files = client.list_files(window.$ld.login('session').user_id, '/narratives');
+
+                            $.each(
+                                files[0],
+                                function (idx, val) {
+                                    $('#narrative_list').append(
+                                        $('<option></option>')
+                                            .attr('value', val.name)
+                                            .append(val.name)
+                                    );
+                                }
+                            );
+
+                        }
+                        catch (e) {};
+
+                        $('#add-workspace-dialog').dialog( "open" );
+                    });
+
+
+                    $('#workspaces').bind('tabsselect', function(event, ui) {
+
+                        if ($(ui.tab).attr('href') == '#add-workspace') {
+                            $('#add-workspace-dialog').dialog( "open" );
+                            return false;
+                        }
+                        else {
+                            return true;
+                        }
+                    } );
+
+                    var $add_workspace_dialog = $( "#add-workspace-dialog" ).dialog({
+                        autoOpen    : false,
+                        modal       : true,
+                        buttons     : {
+                            Add     : function() {
+                                var f = $("#workspaces").data("addTab");
+
+                                var title = $("#narrative_list").val() || $("#workspace_title").val();
+
+                                var res = f(title);
+                                if (res) {
+                                    $( this ).dialog( "close" );
+                                }
+                                else {
+                                    $("#workspace_title").focus();
+                                }
+                            },
+                            Cancel  : function() {
+                                $( this ).dialog( "close" );
+                            }
+                        },
+                        open: function() {
+                            $("#workspace_title").focus();
+                        },
+                        close: function() {
+                            $('#add-workspace-error').css('display', 'none');
+                            $('form', $(this))[0].reset();
+                        }
+                    });
+
+                    $('#workspaces').data('workspace_idx', $("#workspaces").tabs("length"));
+
+                    $('#workspaces').data('addTab', function(label) {
+
+                        if (label.length == 0) {
+                            $('#add-workspace-error').css('display', '');
+                            return;
+                        }
+                        var workspace_idx = $('#workspaces').tabs("length");
+
+                        var newIdx = $('#workspaces').tabs("length") ;
+
+                        $("#workspaces").tabs("add", "#workspaces-" + workspace_idx, label, newIdx);
+                        $("#workspaces").tabs("select", newIdx);
+
+                        return 1;
+                    });
+
+                    // addTab form: calls addTab function on submit and closes the dialog
+                    $( "form", $add_workspace_dialog ).submit(function() {
+                        var f = $("#workspaces").data("addTab");
+                        var res = f($("#workspace_title").val());
+                        if (res) {
+                            $add_workspace_dialog.dialog( "close" );
+                        }
+                        return false;
+                    });
+
+                    $('#add-comment').click(function(event) {
+
+                        var $selectedPanel = $('#workspaces').data('selectedPanel');
+
+                        if ($selectedPanel) {
+                            $( $selectedPanel.children()[0] ).narrative('addComment');
+                            //$(window).trigger('resize');
+                            $( $selectedPanel.children()[0] ).narrative('reposition');
+                        }
+                    });
+
+
+
+                    var $add_custom_command_dialog = $( "#add-custom-command-dialog" ).dialog({
+                        autoOpen: false,
+                        modal: true,
+                        buttons: {
+                            Add: function() {
+                                var f = $('#workspaces').data("addNarrativeCommand");
+                                var res = f($("#command_title").val());
+                                if (res) {
+                                    $( this ).dialog( "close" );
+                                }
+                                else {
+                                    $("#command_title").focus();
+                                }
+                            },
+                            Cancel: function() {
+                                $( this ).dialog( "close" );
+                            }
+                        },
+                        open: function() {
+                            $("#command_title").focus();
+                        },
+                        close: function() {
+                            $('#add-custom-command-error').css('display', 'none');
+                            $('form', $(this))[0].reset();
+                        }
+                    });
+
+                    // addTab form: calls addTab function on submit and closes the dialog
+                    $( "form", $add_custom_command_dialog ).submit(function() {
+                        var f = $("#workspaces").data("addNarrativeCommand");
+                        var res = f($("#command_title").val());
+                        if (res) {
+                            $add_custom_command_dialog.dialog( "close" );
+                        }
+                        return false;
+                    });
+
+                    $('#add-custom-command').click(function(event) {
+                        $add_custom_command_dialog.dialog( "open" );
+                    });
+
+
+                });
+
+
+
+
+			//-->
+
+
+		</script>
+		<style type="text/css">
+			/*demo page css*/
+			body{ font: 62.5% "Trebuchet MS", sans-serif;}
+			ul { padding : 2px }
+			li { list-style-type : none; }
+		</style>
+
+<style>
+	#workspaces li .ui-icon-close { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }
+</style>
+
+<style>
+#portamento_container {
+	float:right;
+	position:relative;
+}
+
+#portamento_container #floating {
+	float:none;
+	position:absolute;
+}
+
+#portamento_container #floating.fixed {
+	position:fixed;
+}
+</style>
+
+</head>
+<body>
+
+<div>
+
+<!--    <div>
+        <img src = 'kbase-header.png'/ width = '220'>
+        <div style = 'float : right' id = 'login-box'>
+
+        </div>
+    </div>
+-->
+
+    <div id="maincontainer">
+
+        <div id="contentwrapper">
+            <div id="contentcolumn">
+                <div class="innertube">
+
+                    <div class = 'ui-widget'>
+        <div style = 'float : right; clear : both' id = 'login-box'>
+
+        </div><br clear = 'all'/>
+                        <div id="workspaces">
+                            <ul>
+                                <li style = 'float : right'><a href='#add-workspace' id = 'add-tabs-button'><span class = 'ui-icon ui-icon-plus'>&nbsp;</span></a></li>
+                                <!--<li style = 'white-space : nowrap'><a href="#flowchart">Narrative (concept)</a> <span class='ui-icon ui-icon-close'>Remove Tab</span></li>-->
+                                <!--<li style = 'white-space : nowrap'><a href="#iris-terminal">Iris Terminal</a> <span class='ui-icon ui-icon-close'>Remove Tab</span></li>-->
+                            </ul>
+                            <div class = 'ui-widget' id = 'add-workspace'></div>
+
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <div id="leftcolumn">
+            <div class="innertube">
+
+                <div id = 'floating'>
+                    <img src = './img/kbase-header.png'/ width = '220'>
+                    <div class = 'ui-widget'>
+                        <div class = "ui-widget-content ui-corner-top" style = 'width : 250px;'>
+                            <h3 class="ui-widget-header ui-corner-top" style = 'padding : 5px; margin-top : 0px; text-align : center; border-top : 0px; border-right : 0px; border-left : 0px '>
+                                <a href = '#' id = 'add-custom-command'>Custom narrative command</a>
+                            </h3>
+                            <h3 class="ui-widget-header" style = 'padding : 5px; margin-top : 0px; text-align : center; border-left : 0px; border-right : 0px '>
+                                <a href = '#' id = 'add-comment'>Add comment</a>
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div class = 'ui-widget'>
+                        <div style = 'width : 250px;' id = 'commandcontext'>
+
+                        </div>
+                    </div>
+
+                    <div class = 'ui-widget' style = 'height : 350px'>
+                        <h3 class="ui-widget-header ui-corner-bottom" style = 'padding : 5px; margin-top : 0px; text-align : center; border-top : 0px '>
+                            Command list
+                        </h3>
+
+                        <div style = 'width : 250px' id = 'command-list'>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="rightcolumn">
+            <!-- we dropped down to a two column interface -->
+        </div>
+    </div>
+
+    <br clear = 'all'/>
+    <div style = 'width : 100%; height : 2.4em;'>&nbsp;</div>
+
+    <div id="footer">Copyright &copy; 2012 DOE <a href = 'http://www.kbase.us/'>KBase</a></div>
+
+    <div style = 'display : none'>
+
+        <div id="add-workspace-dialog" title="Select narrative">
+            <form id = 'new-workspace-form'>
+                <fieldset class="ui-helper-reset">
+                    <div class="ui-widget" id = 'add-workspace-error' style = 'display : none'>
+                        <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;">
+                            <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+                            <strong>Error:</strong> Please name this workspace.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="workspace_title">New Narrative:</label>
+                        <input type="text" name="workspace_title" id="workspace_title" value="" class="ui-widget-content ui-corner-all" />
+                    </div>
+                    <div>
+                        <label for="narrative_list">Existing Narrative:</label>
+                        <select name = 'narrative_list' id = 'narrative_list'></select>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+
+        <div id="add-custom-command-dialog" title="New custom command">
+            <form id = 'new-command-form'>
+                <fieldset class="ui-helper-reset">
+                    <div class="ui-widget" id = 'add-custom-command-error' style = 'display : none'>
+                        <div class="ui-state-error ui-corner-all" style="padding: 0 .7em;">
+                            <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+                            <strong>Error:</strong> Please name this custom command.</p>
+                        </div>
+                    </div
+                    <div>
+                        <label for="command_title">Name:</label>
+                        <input type="text" name="command_title" id="command_title" value="" class="ui-widget-content ui-corner-all" />
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+
+
+    </div>
+
+<br clear = all>
+
+
+
+		<script type="text/javascript" src="./jquery/portamento/portamento.js"></script>
+		<script>
+			$('#floating').portamento();
+		</script>
+	</body>
+
+</html>
+

@@ -350,9 +350,6 @@
                                 sort :
                                     $.proxy (
                                         function(event, ui) {
-                                            //setTimeout(
-                                            //    $.proxy(function() {this.reposition()}, this), 0
-                                            //);
                                             this.reposition();
                                         },
                                         this

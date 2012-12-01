@@ -60,6 +60,7 @@
             var $ui = this._defaultStyle();
             this.data('ui', $ui);
             this.element.append($ui);
+            $(this.element).data('hasSlidingPanel', 1);
             this.reposition();
 
             if (this.options.autoOpen) {

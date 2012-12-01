@@ -539,6 +539,11 @@
 
             this.data('command-lastrun').position({of : this.data('command-controls'), my : 'right center', at : 'left-3 center'});
             this.data('command-interface').formBuilder('resizeToMinimum');
+
+            if ( this.data('command-interface').data('hasSlidingPanel') ) {
+                this.data('command-interface').slidingPanel('reposition');
+            }
+
         },
 
         blockDefinition : function() {

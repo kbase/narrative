@@ -293,6 +293,72 @@
 
         },
 
+        prompt : function() {
+
+            var $promptDialog = $('<div></div>')
+                //.append('Really delete block?')
+                .append(this.data('command-interface'))
+                .dialog(
+                    {
+                        title : this.options.label || this.options.name,
+                        autoOpen : false,
+                        modal : true,
+                        resizable: false,
+                        minWidth : 500,
+                        buttons : {
+                            Cancel :
+                                $.proxy(
+                                    function () {
+                                        this.data('promptDialog').dialog('close');
+                                        this.data('block').parent().remove();
+                                        this.narrative.reposition();
+                                    },
+                                    this
+                                ),
+                            Add :
+                                $.proxy(
+                                    function() {
+
+                                        this.data('output-type').before(this.data('command-interface'));
+                                        this.data('promptDialog').dialog('close');
+                                        this.narrative.reposition();
+
+                                    },
+                                    this
+                                ),
+                            'Add and Run' :
+                                $.proxy(
+                                    function () {
+                                        this.data('output-type').before(this.data('command-interface'));
+                                        this.data('promptDialog').dialog('close');
+                                        this.run();
+                                        this.narrative.reposition();
+                                    },
+                                    this
+                                ),
+                        },
+                        open :  function () {
+                            $('button:last', $(this).parent()).focus();
+                        },
+                        /*close :
+                            $.proxy(
+                                function () {
+                                    //this.data('promptDialog').dialog('close');
+                                    this.narrative.reposition();
+                                    //this.data('block').parent().remove();
+                                },
+                                this
+                            ),*/
+                    }
+            );
+
+            this.data('promptDialog', $promptDialog)
+            $(".ui-dialog-titlebar-close", $promptDialog).hide();
+
+            $promptDialog.dialog('open');
+
+        },
+
         run : function() {
 
             if (this.narrative) {

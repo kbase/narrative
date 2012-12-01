@@ -38,13 +38,25 @@
 
             <!--
 
+                function getParameterByName(name)
+                {
+                  name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+                  var regexS = "[\\?&]" + name + "=([^&#]*)";
+                  var regex = new RegExp(regexS);
+                  var results = regex.exec(window.location.search);
+                  if(results == null)
+                    return "";
+                  else
+                    return decodeURIComponent(results[1].replace(/\+/g, " "));
+                }
+
                 $(function() {
 
                     $('#commandcontext').commandcontext(
                         {
                             link : function (evt) {
                                 var f = $("#workspaces").data('addNarrativeCommand');
-                                f(this.text);
+                                f(this.attr('title'));
                             }
                         }
                     );
@@ -65,7 +77,7 @@
                             connectToSortable : '.kb-nar-narrative',
                             link : function (evt) {
                                 var f = $("#workspaces").data('addNarrativeCommand');
-                                f(this.text);
+                                f($(this).attr('title'));
                             }
                         }
                     );
@@ -80,7 +92,11 @@
 
                         var $selectedPanel = $('#workspaces').data('selectedPanel');
 
-                        $( $selectedPanel.children()[0] ).narrative('addBlock', { name : label });
+                        var prompt = getParameterByName('version') == 'B'
+                            ? 0
+                            : 1;
+
+                        $( $selectedPanel.children()[0] ).narrative('addBlock', { name : label, prompt : prompt });
                         $( $selectedPanel.children()[0] ).narrative('reposition');
                         //$(window).trigger('resize');
 
@@ -180,8 +196,12 @@
 
                     var $add_workspace_dialog = $( "#add-workspace-dialog" ).dialog({
                         autoOpen    : false,
+                        resizable   : false,
                         modal       : true,
                         buttons     : {
+                            Cancel  : function() {
+                                $( this ).dialog( "close" );
+                            },
                             Add     : function() {
                                 var f = $("#workspaces").data("addTab");
 
@@ -195,9 +215,6 @@
                                     $("#workspace_title").focus();
                                 }
                             },
-                            Cancel  : function() {
-                                $( this ).dialog( "close" );
-                            }
                         },
                         open: function() {
                             $("#workspace_title").focus();

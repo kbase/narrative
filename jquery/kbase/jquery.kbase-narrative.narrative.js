@@ -224,6 +224,12 @@
                 options.target = undefined;
             }
 
+            var prompt = 0;
+            if (options.prompt) {
+                prompt = options.prompt;
+                options.prompt = undefined;
+            }
+
             options.narrative = this;
 
             var metaFunc = MetaToolInfo(options.name);
@@ -260,6 +266,9 @@
                 scrollTop: $block.offset().top
             }, 450);
 
+            if (prompt) {
+                $block.narrativeBlock('prompt');
+            }
 
             return $block;
         },
@@ -353,9 +362,7 @@
                                         function (evt, ui) {
                                             var node = ui.item.get(0).nodeName.toLowerCase();
                                             if(node != 'div') {
-                                            console.log("I HAVE STOPPED");
-                                                var command = $('a', ui.item).text();
-                                                console.log(command);
+                                                var command = $('a', ui.item).attr('title');
                                                 this.addBlock({name : command, target : ui.item});
                                             };
                                             this.reposition();

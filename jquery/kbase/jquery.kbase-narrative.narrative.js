@@ -218,6 +218,12 @@
                 options.id = this.generateBlockID();
             }
 
+            var $target = undefined;
+            if (options.target) {
+                $target = options.target;
+                options.target = undefined;
+            }
+
             options.narrative = this;
 
             var metaFunc = MetaToolInfo(options.name);
@@ -231,7 +237,10 @@
 
             var $block = $('<div></div>').narrativeBlock(options);
 
-            if (this.data('activeBlock')) {
+            if ($target) {
+                $target.replaceWith($block);
+            }
+            else if (this.data('activeBlock')) {
                 this.data('activeBlock').element.after($block);
             }
             else {
@@ -246,6 +255,11 @@
 
             //THIS IS A TEMPORARY HACK!
             $('#commandcontext').commandcontext('refresh');
+
+            $('html, body').animate({
+                scrollTop: $block.offset().top
+            }, 450);
+
 
             return $block;
         },
@@ -313,12 +327,48 @@
                 .append(
                     $('<div></div>')
                         .attr('id', 'workspace')
+                        .droppable(
+                            {
+                                accept : 'li',
+                                activeClass : 'ui-state-hover',
+                                hoverClass : 'ui-state-highlight',
+                                tolerance : 'touch',
+                            }
+                        )
+                        .sortable(
+                            {
+                                cancel: ':input,button,.editor',
+                                sort :
+                                    $.proxy (
+                                        function(event, ui) {
+                                            //setTimeout(
+                                            //    $.proxy(function() {this.reposition()}, this), 0
+                                            //);
+                                            this.reposition();
+                                        },
+                                        this
+                                    ),
+                                stop :
+                                    $.proxy(
+                                        function (evt, ui) {
+                                            var node = ui.item.get(0).nodeName.toLowerCase();
+                                            if(node != 'div') {
+                                            console.log("I HAVE STOPPED");
+                                                var command = $('a', ui.item).text();
+                                                console.log(command);
+                                                this.addBlock({name : command, target : ui.item});
+                                            };
+                                            this.reposition();
+                                        },
+                                        this
+                                    )
+                            }
+                        )
+                        .addClass('kb-nar-narrative')
+                        .css('padding', '5px')
                 );
 
-
             this._rewireIds($container, this);
-
-            this.data('workspace').sortable({cancel: ':input,button,.editor'});
 
             return $container;
 

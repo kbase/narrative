@@ -62,6 +62,7 @@
 
                     $('#command-list').commands(
                         {
+                            connectToSortable : '.kb-nar-narrative',
                             link : function (evt) {
                                 var f = $("#workspaces").data('addNarrativeCommand');
                                 f(this.text);

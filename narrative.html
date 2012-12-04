@@ -317,9 +317,13 @@
 
 
 		</script>
+
+        <link href='http://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
 		<style type="text/css">
 			/*demo page css*/
-			body{ font: 62.5% Oxygen, "Trebuchet MS", sans-serif;}
+
+			body, .ui-widget { font-size: 80%;}
+			body, .ui-widget, .ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { font-family: "Oxygen", sans-serif !important}
 			ul { padding : 2px }
 			li { list-style-type : none; }
 		</style>
@@ -441,11 +445,11 @@
                         </div>
                     </div>
                     <div>
-                        <label for="workspace_title">New Narrative:</label>
+                        <label for="workspace_title" style = 'width : 90px; float : left; margin-right : 10px; margin-bottom : 5px; clear : left; text-align : right'>New Narrative:</label>
                         <input type="text" name="workspace_title" id="workspace_title" value="" class="ui-widget-content ui-corner-all" />
                     </div>
                     <div>
-                        <label for="narrative_list">Existing Narrative:</label>
+                        <label for="narrative_list" style = 'width : 90px; float : left; margin-right : 10px; margin-bottom : 5px; clear : left; text-align : right'>Existing Narrative:</label>
                         <select name = 'narrative_list' id = 'narrative_list'></select>
                     </div>
                 </fieldset>

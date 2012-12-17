@@ -58,17 +58,40 @@
                                         group.items,
                                         $.proxy(
                                             function (idx, val) {
+                                                var metaFunc = MetaToolInfo(val.cmd);
+                                                var label = val.cmd;
+                                                if (metaFunc != undefined) {
+                                                    var meta = metaFunc(val.cmd);
+                                                    label = meta.label;
+                                                }
+
                                                 $ul.append(
-                                                    $('<li></li')
+                                                    $('<li></li>')
                                                         .append($('<a></a>')
                                                             .attr('href', '#')
-                                                            .attr('title', 'Usage information would be here...if we had it')
+                                                            .attr('title', val.cmd)
+                                                            .css('display', 'list-item')
                                                             //.tooltip()
-                                                            .text(val.cmd)
+                                                            .text(label)
                                                             .bind(
                                                                 'click',
                                                                 this.options.link
                                                             )
+                                                        )
+                                                        .draggable(
+                                                            {
+                                                                distance : 20,
+                                                                cursor   : 'pointer',
+                                                                opacity  : 0.7,
+                                                                helper   : 'clone',
+                                                                connectToSortable: this.options.connectToSortable,
+                                                                revert : 'invalid',
+                                                                disabled : this.options.connectToSortable == undefined,
+                                                                cursorAt : {
+                                                                    left : 5,
+                                                                    top  : 5
+                                                                }
+                                                            }
                                                         )
                                                 );
                                             },

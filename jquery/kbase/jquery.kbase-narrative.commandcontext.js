@@ -48,7 +48,13 @@
                         outputType = $activeElem.narrativeBlock('outputType');
                     }
                     catch (e) {
-                        outputType = $activeElem.outputType();
+                        if ($activeElem.outputType) {
+                            outputType = $activeElem.outputType();
+                        }
+                        else {
+                            $elem.empty();
+                            return;
+                        };
                     }
 
                     var metaInfo = MetaToolInfo();

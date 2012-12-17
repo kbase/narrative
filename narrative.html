@@ -38,13 +38,25 @@
 
             <!--
 
+                function getParameterByName(name)
+                {
+                  name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+                  var regexS = "[\\?&]" + name + "=([^&#]*)";
+                  var regex = new RegExp(regexS);
+                  var results = regex.exec(window.location.search);
+                  if(results == null)
+                    return "";
+                  else
+                    return decodeURIComponent(results[1].replace(/\+/g, " "));
+                }
+
                 $(function() {
 
                     $('#commandcontext').commandcontext(
                         {
                             link : function (evt) {
                                 var f = $("#workspaces").data('addNarrativeCommand');
-                                f(this.text);
+                                f(this.attr('title'));
                             }
                         }
                     );
@@ -62,9 +74,10 @@
 
                     $('#command-list').commands(
                         {
+                            connectToSortable : '.kb-nar-narrative',
                             link : function (evt) {
                                 var f = $("#workspaces").data('addNarrativeCommand');
-                                f(this.text);
+                                f($(this).attr('title'));
                             }
                         }
                     );
@@ -79,7 +92,11 @@
 
                         var $selectedPanel = $('#workspaces').data('selectedPanel');
 
-                        $( $selectedPanel.children()[0] ).narrative('addBlock', { name : label });
+                        var prompt = getParameterByName('version') == 'B'
+                            ? 0
+                            : 1;
+
+                        $( $selectedPanel.children()[0] ).narrative('addBlock', { name : label, prompt : prompt });
                         $( $selectedPanel.children()[0] ).narrative('reposition');
                         //$(window).trigger('resize');
 
@@ -179,8 +196,12 @@
 
                     var $add_workspace_dialog = $( "#add-workspace-dialog" ).dialog({
                         autoOpen    : false,
+                        resizable   : false,
                         modal       : true,
                         buttons     : {
+                            Cancel  : function() {
+                                $( this ).dialog( "close" );
+                            },
                             Add     : function() {
                                 var f = $("#workspaces").data("addTab");
 
@@ -194,9 +215,6 @@
                                     $("#workspace_title").focus();
                                 }
                             },
-                            Cancel  : function() {
-                                $( this ).dialog( "close" );
-                            }
                         },
                         open: function() {
                             $("#workspace_title").focus();
@@ -299,9 +317,13 @@
 
 
 		</script>
+
+        <link href='http://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
 		<style type="text/css">
 			/*demo page css*/
-			body{ font: 62.5% "Trebuchet MS", sans-serif;}
+
+			body, .ui-widget { font-size: 80%;}
+			body, .ui-widget, .ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { font-family: "Oxygen", sans-serif !important}
 			ul { padding : 2px }
 			li { list-style-type : none; }
 		</style>
@@ -332,7 +354,7 @@
 <div>
 
 <!--    <div>
-        <img src = 'kbase-header.png'/ width = '220'>
+        <img src = 'kbase_logo.png'/ width = '220'>
         <div style = 'float : right' id = 'login-box'>
 
         </div>
@@ -369,7 +391,7 @@
             <div class="innertube">
 
                 <div id = 'floating'>
-                    <img src = './img/kbase-header.png'/ width = '220'>
+                    <img src = './img/kbase_logo.png'/ width = '220'>
                     <div class = 'ui-widget'>
                         <div class = "ui-widget-content ui-corner-top" style = 'width : 250px;'>
                             <h3 class="ui-widget-header ui-corner-top" style = 'padding : 5px; margin-top : 0px; text-align : center; border-top : 0px; border-right : 0px; border-left : 0px '>
@@ -423,11 +445,11 @@
                         </div>
                     </div>
                     <div>
-                        <label for="workspace_title">New Narrative:</label>
+                        <label for="workspace_title" style = 'width : 90px; float : left; margin-right : 10px; margin-bottom : 5px; clear : left; text-align : right'>New Narrative:</label>
                         <input type="text" name="workspace_title" id="workspace_title" value="" class="ui-widget-content ui-corner-all" />
                     </div>
                     <div>
-                        <label for="narrative_list">Existing Narrative:</label>
+                        <label for="narrative_list" style = 'width : 90px; float : left; margin-right : 10px; margin-bottom : 5px; clear : left; text-align : right'>Existing Narrative:</label>
                         <select name = 'narrative_list' id = 'narrative_list'></select>
                     </div>
                 </fieldset>

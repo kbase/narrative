@@ -21,6 +21,7 @@
         <script src = './jquery/kbase/jquery.kbase-narrative.comment.js'></script>
         <script src = './jquery/kbase/jquery.kbase-narrative.narrative.js'></script>
         <script src = './jquery/kbase/jquery.kbase-narrative.commandcontext.js'></script>
+        <script src = './jquery/kbase/jquery.kbase-narrative.dataUploader.js'></script>
 
         <script src = './jquery/kbase/jquery.kbase-iris.commands.js'></script>
 
@@ -307,6 +308,9 @@
                         $add_custom_command_dialog.dialog( "open" );
                     });
 
+                    $('#add-custom-command').button();
+                    $('#add-comment').button();
+
 
                 });
 
@@ -394,12 +398,8 @@
                     <img src = './img/kbase_logo.png'/ width = '220'>
                     <div class = 'ui-widget'>
                         <div class = "ui-widget-content ui-corner-top" style = 'width : 250px;'>
-                            <h3 class="ui-widget-header ui-corner-top" style = 'padding : 5px; margin-top : 0px; text-align : center; border-top : 0px; border-right : 0px; border-left : 0px '>
-                                <a href = '#' id = 'add-custom-command'>Custom narrative command</a>
-                            </h3>
-                            <h3 class="ui-widget-header" style = 'padding : 5px; margin-top : 0px; text-align : center; border-left : 0px; border-right : 0px '>
-                                <a href = '#' id = 'add-comment'>Add comment</a>
-                            </h3>
+                            <button id = 'add-custom-command' style = 'width : 100%; margin-bottom : 5px;'>Custom narrative command</button>
+                            <button id = 'add-comment' style = 'width : 100%; margin-bottom : 5px'>Add comment</button>
                         </div>
                     </div>
 

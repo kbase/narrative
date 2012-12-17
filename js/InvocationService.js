@@ -1,7 +1,13 @@
 function dbg(txt) { if (window.console) console.log(txt); }
 
+var defaultURL = 'http://bio-data-1.mcs.anl.gov/services/invocation';
 
 function InvocationService(url) {
+
+    if (url == undefined) {
+        url = defaultURL;
+    }
+
 console.log("create for " + url);
     var _url = url;
 

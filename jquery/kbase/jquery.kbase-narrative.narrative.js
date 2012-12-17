@@ -10,13 +10,12 @@
     $.widget("kbase-narrative.narrative", {
         version: "1.0.0",
         options: {
-            invocationURL : 'http://bio-data-1.mcs.anl.gov/services/invocation',
             name : 'New Narrative',
             blockCounter : 0,
         },
 
         _create : function() {
-            this.client = new InvocationService(this.options.invocationURL);
+            this.client = new InvocationService();
 
             this.user_id = window.$ld.login('session').user_id;
             this.wd = '/narratives/' + this.options.name;

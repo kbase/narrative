@@ -56,9 +56,10 @@
         version: "1.0.0",
         options: {
             style : 'button',
-            loginURL : "https://kbase.us/services/authorization/Sessions/Login",
+            loginURL : "http://kbase.us/services/authorization/Sessions/Login",
             login_button_options : {label : 'Login'},
-            fields : ['fullname', 'kbase_sessionid', 'user_id'],
+            possibleFields : ['verified','name','opt_in','kbase_sessionid','token','groups','user_id','email','system_admin'],
+            fields : ['name', 'kbase_sessionid', 'user_id'],
         },
 
     get_kbase_cookie : function () {
@@ -298,7 +299,7 @@
                         this.data("entrance").hide();
                         this.data('user_id').val('');
                         this.data('password').val('');
-                        this.data("loggedinuser_id").text(args.fullname);
+                        this.data("loggedinuser_id").text(args.name);
                         this.data("userdisplay").show();
                     }
                     else {
@@ -410,7 +411,7 @@
                         this.data('loginbutton').tooltip(
                             {
                                 disabled : false,
-                                content : 'Logged in as ' + args.fullname
+                                content : 'Logged in as ' + args.name
                             }
                         );
 
@@ -510,7 +511,7 @@
                     if ( args.success ) {
                         this.data('loginDialog').trigger('clearMessages');
                         this.data("entrance").hide();
-                        this.data("loggedinuser_id").text(args.fullname);
+                        this.data("loggedinuser_id").text(args.name);
                         this.data("userdisplay").show();
                         this.data('loginDialog').dialog('close');
                     }
@@ -756,8 +757,9 @@
                         xhrFields        : { withCredentials: true },
                         success            : $.proxy(
                             function (data,res,jqXHR) {
-
-                                if (data.token) {
+console.log("ABLE");console.log(data); console.log(res); console.log(jqXHR);
+console.log(data.kbase_sessionid);
+                                if (data.kbase_sessionid) {
 
 									//$.cookie('kbase_session',
 								    //	  'un=' + data.user_id
@@ -790,8 +792,10 @@
                         ),
                         error: $.proxy(
                             function (jqXHR, textStatus, errorThrown) {
+                            console.log(jqXHR);console.log(textStatus);console.log(errorThrown);
                                 // If we have a useless error message, replace with
                                 // friendly, but useless error message
+                                console.log(jqXHR);console.log(textStatus);console.log(errorThrown);
                                 if (textStatus == "error") {
                                     textStatus = "Error connecting to KBase login server";
                                 }

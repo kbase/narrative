@@ -10,14 +10,13 @@
     $.widget("kbase-iris.commands", {
         version: "1.0.0",
         options: {
-            invocationURL : 'http://bio-data-1.mcs.anl.gov/services/invocation',
             link : function (evt) {
                 alert("clicked on " + $(evt.target).text());
             }
         },
 
         _create : function() {
-            this.client = new InvocationService(this.options.invocationURL);
+            this.client = new InvocationService();
             return this;
         },
 

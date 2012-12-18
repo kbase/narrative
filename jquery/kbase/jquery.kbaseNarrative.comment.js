@@ -7,7 +7,7 @@
 (function( $, undefined ) {
 
 
-    $.widget("kbase-narrative.comment", {
+    $.widget("kbaseNarrative.comment", $.kbase.widget, {
         version: "1.0.0",
         options: {
 

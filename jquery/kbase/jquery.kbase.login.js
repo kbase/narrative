@@ -52,7 +52,7 @@
 (function( $, undefined ) {
 
 
-    $.widget("kbase.login", {
+    $.widget("kbase.login", $.kbase.widget, {
         version: "1.0.0",
         options: {
             style : 'button',
@@ -110,37 +110,6 @@
 
             }
 
-        },
-
-        data : function (key, val) {
-            if (this.options._storage == undefined) {
-                this.options._storage = {};
-            }
-
-            if (arguments.length == 2) {
-                this.options._storage[key] = val;
-            }
-
-            return this.options._storage[key];
-        },
-
-        _rewireIds : function($elem, $target) {
-
-            if ($target == undefined) {
-                $target = $elem;
-            }
-
-            $elem.removeAttr('id');
-
-            $.each(
-                $elem.find('[id]'),
-                function(idx) {
-                    $target.data($(this).attr('id'), $(this));
-                    $(this).removeAttr('id');
-                    }
-            );
-
-            return $elem;
         },
 
         registerLoginFunc  : function() { return this.registerLogin },
@@ -757,8 +726,7 @@
                         xhrFields        : { withCredentials: true },
                         success            : $.proxy(
                             function (data,res,jqXHR) {
-console.log("ABLE");console.log(data); console.log(res); console.log(jqXHR);
-console.log(data.kbase_sessionid);
+
                                 if (data.kbase_sessionid) {
 
 									//$.cookie('kbase_session',
@@ -792,10 +760,10 @@ console.log(data.kbase_sessionid);
                         ),
                         error: $.proxy(
                             function (jqXHR, textStatus, errorThrown) {
-                            console.log(jqXHR);console.log(textStatus);console.log(errorThrown);
+
                                 // If we have a useless error message, replace with
                                 // friendly, but useless error message
-                                console.log(jqXHR);console.log(textStatus);console.log(errorThrown);
+
                                 if (textStatus == "error") {
                                     textStatus = "Error connecting to KBase login server";
                                 }

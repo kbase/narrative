@@ -43,7 +43,7 @@
 (function( $, undefined ) {
 
 
-    $.widget("kbase.slidingPanel", {
+    $.widget("kbase.slidingPanel", $.kbase.widget, {
         version: "1.0.0",
         options: {
             animationDuration : 200,
@@ -73,17 +73,6 @@
             this.close();
             this.data('ui')[0].remove();
             this.data('ui')[1].remove();
-        },
-
-        data : function (key, val) {
-            if (this.options._storage == undefined) {
-                this.options._storage = {};
-            }
-
-            if (arguments.length == 2) {
-                this.options._storage[key] = val;
-            }
-            return this.options._storage[key];
         },
 
         addContentToPanel : function ($panel, content) {
@@ -125,28 +114,6 @@
             });
 
             return $panel;
-        },
-
-        _rewireIds : function($elem, $target) {
-
-            if ($target == undefined) {
-                $target = $elem;
-            }
-
-            if ($elem.attr('id')) {
-                $target.data($elem.attr('id'), $elem);
-                $elem.removeAttr('id');
-            }
-
-            $.each(
-                $elem.find('[id]'),
-                function(idx) {
-                    $target.data($(this).attr('id'), $(this));
-                    $(this).removeAttr('id');
-                    }
-            );
-
-            return $elem;
         },
 
         _defaultStyle : function() {

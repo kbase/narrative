@@ -7,7 +7,7 @@
 (function( $, undefined ) {
 
 
-    $.widget("kbase-narrative.commandcontext", {
+    $.widget("kbaseNarrative.commandcontext", $.kbase.widget, {
         version: "1.0.0",
         options: {
             link : function (evt) {
@@ -92,7 +92,7 @@
                         $.proxy(
                             function (idx, val) {
                                 $ul.append(
-                                    $('<li></li')
+                                    $('<li></li>')
                                         .append($('<a></a>')
                                             .attr('href', '#')
                                             //.tooltip()

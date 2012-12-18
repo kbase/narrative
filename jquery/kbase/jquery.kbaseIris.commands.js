@@ -7,7 +7,7 @@
 (function( $, undefined ) {
 
 
-    $.widget("kbase-iris.commands", {
+    $.widget("kbaseIris.commands", $.kbase.widget, {
         version: "1.0.0",
         options: {
             link : function (evt) {

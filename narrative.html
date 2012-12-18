@@ -14,16 +14,17 @@
 
 		<script type="text/javascript" src="./jquery/spinner/jquery.spinner.js"></script>
 
+        <script src = './jquery/kbase/jquery.kbase.widget.js'></script>
+
         <script src = './jquery/kbase/jquery.kbase.login.js'></script>
         <script src = './jquery/kbase/jquery.kbase.slidingPanel.js'></script>
         <script src = './jquery/kbase/jquery.kbase.formBuilder.js'></script>
-        <script src = './jquery/kbase/jquery.kbase-narrative.narrativeBlock.js'></script>
-        <script src = './jquery/kbase/jquery.kbase-narrative.comment.js'></script>
-        <script src = './jquery/kbase/jquery.kbase-narrative.narrative.js'></script>
-        <script src = './jquery/kbase/jquery.kbase-narrative.commandcontext.js'></script>
-        <script src = './jquery/kbase/jquery.kbase-narrative.dataUploader.js'></script>
+        <script src = './jquery/kbase/jquery.kbaseNarrative.narrativeBlock.js'></script>
+        <script src = './jquery/kbase/jquery.kbaseNarrative.comment.js'></script>
+        <script src = './jquery/kbase/jquery.kbaseNarrative.narrative.js'></script>
+        <script src = './jquery/kbase/jquery.kbaseNarrative.commandcontext.js'></script>
 
-        <script src = './jquery/kbase/jquery.kbase-iris.commands.js'></script>
+        <script src = './jquery/kbase/jquery.kbaseIris.commands.js'></script>
 
         <link type = 'text/css' href = 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/themes/smoothness/jquery-ui.css' rel = 'stylesheet' />
 
@@ -57,7 +58,7 @@
                         {
                             link : function (evt) {
                                 var f = $("#workspaces").data('addNarrativeCommand');
-                                f(this.attr('title'));
+                                f($(this).text());
                             }
                         }
                     );

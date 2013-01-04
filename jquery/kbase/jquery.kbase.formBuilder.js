@@ -101,13 +101,55 @@
                 }
                 else {
                     if (form[field].value.length) {
-                        ret.push([key, form[field].value])
+                        ret.push([key, this.split(form[field].value, val.split)]);
                     }
                 }
 
             }
 
             return ret;
+        },
+
+        split : function(strings, delimiters) {
+
+            if (typeof strings == 'string') {
+                strings = [strings];
+            }
+
+            if (delimiters == undefined || typeof delimiters == 'string') {
+                delimiters = [delimiters];
+            }
+
+            var ret = [];
+
+            var delim = delimiters.shift();
+
+            if (delim != undefined) {
+                var delimRegex = new RegExp(' *' + delim + ' *');
+
+                jQuery.each(
+                    strings,
+                    jQuery.proxy(
+                        function (idx, str) {
+                            ret.push(
+                                this.split(
+                                    str.split(delimRegex),
+                                    delimiters
+                                )
+                            );
+                        },
+                        this
+                    )
+                );
+            }
+            else {
+                ret = strings;
+            }
+
+            return ret.length == 1
+                ? ret[0]
+                : ret;
+
         },
 
         escapeValue : function(val) {
@@ -134,7 +176,14 @@
                             returnValue.push( field[j] );
                         }
                         else {
-                            returnValue.push(field[0] + ' ' + this.escapeValue(field[j]));
+                            if (typeof field[j] == 'string') {
+                                returnValue.push(field[0] + ' ' + this.escapeValue(field[j]));
+                            }
+                            else {
+                                console.log("COMPLEX OBJECT");console.log(field[j]);
+                                console.log(this.escapeValue(JSON.stringify(field[j])));
+                                returnValue.push(field[0] + ' ' + this.escapeValue(JSON.stringify(field[j])));
+                            }
                         }
                     }
                 }

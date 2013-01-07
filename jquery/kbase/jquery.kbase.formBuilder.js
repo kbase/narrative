@@ -114,7 +114,7 @@
 
                     var res = [];
                     for (var i = 0; i < fields.length; i++) {
-                        res.push( this.carve(fields[i].value, val.split) );
+                        res.push( this.carve(fields[i].value, val.split, val.asArray) );
                     }
 
                     if (res.length > 0) {
@@ -135,7 +135,7 @@
             return ret;
         },
 
-        carve : function(strings, delimiters) {
+        carve : function(strings, delimiters, asArray) {
 
             if (typeof strings == 'string') {
                 strings = [strings];
@@ -161,7 +161,8 @@
                             ret.push(
                                 this.carve(
                                     str.split(delimRegex),
-                                    delimiters
+                                    delimiters,
+                                    asArray
                                 )
                             );
                         },
@@ -173,7 +174,7 @@
                 ret = strings;
             }
 
-            return ret.length == 1
+            return ret.length == 1 && ! asArray
                 ? ret[0]
                 : ret;
 

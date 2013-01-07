@@ -68,15 +68,15 @@
                 var field = val.name;
                 var type = val.type;
 
-                var fields = form[field];
-                console.log(fields);
-                console.log($.isArray(fields));
-                console.log($.isArray([]));
-                console.log("F IS " + fields);
-                if ($.isArray(fields)) {
-                    console.log("HAS ARRAY! HLY FUCK");
-                    console.log(fields);
-                    console.log(typeof fields);
+                var fields = [];
+
+                if (form[field] == '[object NodeList]') {
+                    for (var i = 0; i < form[field].length; i++) {
+                        fields.push(form[field][i]);
+                    }
+                }
+                else {
+                    fields = [ form[field] ];
                 }
 
                 if (type == 'checkbox') {
@@ -111,8 +111,22 @@
                     }
                 }
                 else {
-                    if (form[field].value.length) {
-                        ret.push([key, this.split(form[field].value, val.split)]);
+
+                    var res = [];
+                    for (var i = 0; i < fields.length; i++) {
+                        res.push( this.carve(fields[i].value, val.split) );
+                    }
+
+                    if (res.length > 0) {
+
+                        if (res.length == 1) {
+                            res = res[0];
+                            if (res.length == 0) {
+                                continue;
+                            }
+                        }
+
+                        ret.push([key, res]); //this.carve(form[field].value, val.split)]);
                     }
                 }
 
@@ -121,7 +135,7 @@
             return ret;
         },
 
-        split : function(strings, delimiters) {
+        carve : function(strings, delimiters) {
 
             if (typeof strings == 'string') {
                 strings = [strings];
@@ -145,7 +159,7 @@
                     jQuery.proxy(
                         function (idx, str) {
                             ret.push(
-                                this.split(
+                                this.carve(
                                     str.split(delimRegex),
                                     delimiters
                                 )
@@ -193,8 +207,6 @@
                                 returnValue.push(field[0] + ' ' + this.escapeValue(field[j]));
                             }
                             else {
-                                console.log("COMPLEX OBJECT");console.log(field[j]);
-                                console.log(this.escapeValue(JSON.stringify(field[j])));
                                 returnValue.push(field[0] + ' ' + this.escapeValue(JSON.stringify(field[j])));
                             }
                         }

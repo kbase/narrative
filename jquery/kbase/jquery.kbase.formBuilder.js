@@ -68,6 +68,17 @@
                 var field = val.name;
                 var type = val.type;
 
+                var fields = form[field];
+                console.log(fields);
+                console.log($.isArray(fields));
+                console.log($.isArray([]));
+                console.log("F IS " + fields);
+                if ($.isArray(fields)) {
+                    console.log("HAS ARRAY! HLY FUCK");
+                    console.log(fields);
+                    console.log(typeof fields);
+                }
+
                 if (type == 'checkbox') {
                     if (form[field].checked) {
                         ret.push([key]);
@@ -119,6 +130,8 @@
             if (delimiters == undefined || typeof delimiters == 'string') {
                 delimiters = [delimiters];
             }
+
+            delimiters = delimiters.slice(0);
 
             var ret = [];
 
@@ -268,8 +281,10 @@
                             value.value = value.checked = value.selected = passedValues[value.key];
                         }
 
+                        var $field;
+
                         if (this.options.dispatch[value.type]) {
-                            $label.append( this[this.options.dispatch[value.type]](value) );
+                            $field = this[this.options.dispatch[value.type]](value);
                         }
                         else if (value.type == undefined) {
                             var errorMsg = "FORM ERROR. KEY " + value.key + ' HAS NO TYPE';
@@ -277,7 +292,33 @@
                             return false;
                         }
                         else {
-                            $label.append( this.buildTextField(value) );
+                            $field = this.buildTextField(value);
+                        }
+
+                        var $container = $('<span></span>');
+                        $container.css('display', 'inline-block');
+
+
+                        $label.append($container);
+                        $container.append($field);
+
+                        var $button = $('<button></button>')
+                                        .append('Add more\n')
+                                        .css({width : '19px', height : '18px'})
+                                        .button({text : false, icons : {primary : 'ui-icon-plus'}});
+
+                        $button.bind(
+                                            'click',
+                                            function (evt) {
+                                                //alert("Add more!");
+                                                $container.append($('<br/>'));
+                                                $container.append($field.clone());
+                                                evt.stopPropagation();
+                                            }
+                                        );
+
+                        if (value.multi) {
+                            $container.append($button);
                         }
 
                         $form.append($label);

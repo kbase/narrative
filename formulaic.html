@@ -1,0 +1,181 @@
+<html>
+
+    <head>
+
+
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/jquery-ui.min.js"></script>
+
+        <link type = 'text/css' href = 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/themes/smoothness/jquery-ui.css' rel = 'stylesheet' />
+
+        <script src = 'http://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.2/jquery.cookie.js'></script>
+
+        <script src = './jquery/kbase/jquery.kbase.widget.js'></script>
+        <script src = './jquery/kbase/jquery.kbase.formBuilder.js'></script>
+
+        <script src = './jquery/kbase/jquery.kbase.login.js'></script>
+
+
+
+        <script type = 'text/javascript'>
+            <!--
+
+                $(function() {
+
+                    //$('#foobar').buildForm( {} );
+
+                    var elements = [
+                        {
+                            name : 'foo',
+                            label : 'This is my first element. Make it purty.',
+                            type : 'text',
+                            value : 'fill me in, bro',
+                            key : '-a',
+//                            fieldset : 'alpha',
+                            description: "This is routine usage information. How does it work? Why is it here? Why should we use it?",
+                            split : [';',','],
+                        },
+                        {
+                            name : 'longer',
+                            label : 'This is my first textarea',
+                            type : 'textarea',
+                            value : 'But will it work',
+                            key : '-atxt',
+//                            fieldset : 'alpha',
+                            description: "This is routine usage information. How does it work? Why is it here? Why should we use it?"
+                        },
+                        {
+                            name : 'bar',
+                            label : 'Arbitrary value',
+                            type : 'password',
+                            value : 'PASS',
+                            key : '-b',
+//                            fieldset : 'alpha',
+                        },
+                        {
+                            name : 'baz',
+                            label : 'This one requires further explanation. And I shall be very verbose in my pontificating upon that point right there.',
+                            type : 'text',
+                            key : '-c',
+                            value : 'baz value',
+//                            fieldset : 'beta',
+                        },
+                        {
+                            name : 'bing',
+                            label : 'Val:',
+                            type : 'text',
+                            size : 23,
+                            key : '-d',
+                            value : 'bing value',
+                            multi : 1,
+                        },
+                        {
+                            name : 'gar',
+                            key : '-e',
+                            value : 'gar value',
+//                            fieldset : 'alpha',
+type : 'text',
+                        },
+                        {
+                            name : 'funk',
+                            key : '-f',
+                            type : 'checkbox',
+                            value : 'CBX',
+                            checked : 1,
+//                            fieldset : 'alpha',
+                        },
+                        {
+                            name : 'oof',
+                            key : '-g',
+                            type : 'multiselect',
+                            values : ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'],
+                            names  : ['alpha', 'beta', 'kappa', 'delta', 'epsilon', 'feta', 'gamma', 'hiero'],
+                            checked : 'i',
+                            selected : 'b',
+//                            fieldset : 'alpha',
+                        },
+
+                        {
+                            name : 'able',
+                            key : '-baker',
+                            label : 'ABLEBAKER',
+                            type : 'enum',
+                            values : ['able', 'baker', 'charlie', 'delta', 'epsilon', 'foxtrot'],
+                            names : [undefined, undefined, 'WACKY'],
+                            selected : 'charlie',
+                            valOnly : 0,
+                        }
+
+                    ];
+
+
+
+                    $('#foobar').formBuilder({elements : elements, values :
+                        [['-g','d'], ['-f',0], ['-a','a OVERRIDE; 1,2,3; a,b,c; d,e,f'], ['-atxt','-atxt OVERRIDE']]
+                    });
+                    $('#g').login({style : 'micro'});
+
+
+$('#extract').button();
+$('#extract').bind('click',
+
+    function(evt) {
+        var string = $('#foobar').formBuilder('getFormValuesAsString');
+        console.log(string);
+    }
+);
+
+$('#extract').tooltip({content : 'effin', disabled : false});
+var t= $('#f').tooltip({content : 'ace'});
+console.log("A");
+
+$('#h').attr('contenteditable', 'true');
+                });
+
+            //-->
+        </script>
+
+        <style type = 'text/css'>
+            <!--
+
+                span.label {
+                    width : 250px;
+                    text-align : right;
+                    margin-right : 5px;
+                    padding : 2px;
+                    float : left;
+                }
+
+                label.field {
+                    clear : both;
+                    display : block;
+                }
+
+            -->
+        </style>
+
+		<style type="text/css">
+			/*demo page css*/
+			body{ font: 62.5% "Trebuchet MS", sans-serif;}
+			ul { padding : 2px }
+			li { list-style-type : none; }
+		</style>
+
+    </head>
+
+
+    <body>
+
+        <div id = 'foobar' style = 'border : 1px solid blue; padding : 5px'></div>
+
+        <button id = 'extract'>Extract</button>
+
+        <div id = 'f' style = 'border : 1px solid red; width : 250px; height : 250px' title = 'wing'>content of it</div>
+
+        <div id = 'g'></div>
+
+<div id = 'h' style = 'width : 100px; height : 100px; border : 1px solid blue' ></div>
+
+    </body>
+
+</html>

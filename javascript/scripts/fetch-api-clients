@@ -1,0 +1,16 @@
+#!/bin/bash
+
+outfile=${1:-./kbase.js}
+echo "Writing to $outfile"
+jslist=./javascripts.$$.list; touch $jslist
+for svc in `cat hostlist | cut -f2 -d: | grep .`; do
+	ssh "$svc" 'find /kb/deployment/lib -name "Client.js"' 2>/dev/null | \
+	while read client; do
+		if [ $(grep -c "$client" $jslist) -eq 0 ]; then
+			ssh "$svc" cat $client 2>/dev/null >> ./$outfile
+			printf "%-20s %s\n" $svc $client;
+			echo $client >> $jslist
+		fi
+	done
+done
+rm -f $jslist

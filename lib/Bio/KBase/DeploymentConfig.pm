@@ -27,17 +27,13 @@ fallback to defaults as defined by the module.
 
 =item C<new>
 
-    my $cfg = Bio::KBase::DeploymentConfig->new($service_impl, $service_name, { name => 'value', ...})
+    my $cfg = Bio::KBase::DeploymentConfig->new($service_name, { name => 'value', ...})
 
 Create a new C<Bio::KBase::DeploymentConfig> instance.
 
 Parameters:
 
 =over 4
-
-=item C<$service_impl>
-
-The service implementation instance hosting this session
 
 =item C<$service_name>
 
@@ -53,7 +49,7 @@ A hash reference containing the default values for the service parameters.
    
 sub new
 {
-    my($class, $impl, $service_name, $defaults) = @_;
+    my($class, $service_name, $defaults) = @_;
 
     if ((my $n = $ENV{KB_SERVICE_NAME}) ne "")
     {

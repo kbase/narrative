@@ -1,7 +1,7 @@
 TOP_DIR = ../..
 include $(TOP_DIR)/tools/Makefile.common
 
-JARFILE = $(PWD)/lib/kbapi_common.jar
+JARFILE = $(PWD)/dist/lib/kbapi_common.jar
 
 all: jar
 
@@ -13,7 +13,7 @@ what:
 bin: 
 
 jar: 
-	ant -Djar_file=$(JARFILE) dist
+	ant -Djar_file=$(JARFILE) -Dkb_top=$(KB_TOP) dist
 
 deploy: deploy-client
 deploy-service: deploy-client

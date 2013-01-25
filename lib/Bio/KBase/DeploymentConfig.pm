@@ -47,6 +47,8 @@ The name of this service, used as a default if C<KB_SERVICE_NAME> is not defined
 
 A hash reference containing the default values for the service parameters.
 
+=back
+
 =cut
    
 sub new
@@ -89,10 +91,26 @@ sub new
     return bless $self, $class;
 }
 
+=item C<setting>
+
+Retrieve a setting from the configuration.
+
+   my $value = $obj->setting("key-name");
+
+=cut
+
 sub setting
 {
     my($self, $key) = @_;
     return $self->{settings}->{$key};
 }
+
+=item C<service_name>
+
+Return the name of the service currently configured.
+
+    my $name = $obj->service_name();
+
+=cut
 
 1;

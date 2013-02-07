@@ -13,7 +13,7 @@ BANNER="
 function usage {
     [ -n "$1" ] && echo "$1"
     cat <<EOF
-Usage: $0 [options]
+Usage: $0 [options] outfile
 
     -m mode    The mode for fetching JavaScript libraries
                  deploy:
@@ -22,6 +22,8 @@ Usage: $0 [options]
                    Libraries hosted on live services
                    
     -h host    An SSH host string
+    
+    outfile    The output file (Default: ./kbase.js)
 EOF
     exit 0;
 }

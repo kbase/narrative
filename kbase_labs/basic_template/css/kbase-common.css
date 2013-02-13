@@ -13,6 +13,10 @@
     min-height: 50px;
 }
 
+.navbar-fixed-top .navbar-inner {
+    padding-left: 10px;
+}
+
 .navbar-inner li {
     line-height: 30px;
 }
@@ -26,4 +30,5 @@
 .logo {
     float: left;
     margin: 2px 10px 2px 0;
+    width: 46px;
 }

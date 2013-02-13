@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>GLAMM</title>
+    <title>Awesome App</title>
     <link rel="icon" href="img/KBase_favicon.ico" type="image/x-icon">
     <link href="css/bootstrap.css" rel="stylesheet">
     <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
-    <link href="css/kbase-common.css" rel="stylesheet">
+    <link href="css/identity.css" rel="stylesheet">
+    <link href="css/kbase-common.css" rel="stylesheet">    
     <style type="text/css">
       body {
-        padding-top: 50px;
+        padding-top: 60px;
       }
     </style>
   </head>
@@ -16,14 +17,26 @@
   <body>
     <div class="navbar navbar-fixed-top">      
       <div class="navbar-inner">
-        <a href="http://www.kbase.us"><img class="logo" src="img/labs_icon.png" width="46"></a>
+        <a href="http://www.kbase.us/labs/"><img class="logo" src="img/labs_icon.png" width="46"></a>
         <a class="brand">KBase Labs App</a>
+        <ul class="nav">
+          <li class="active"><a>Button 1</a></li>
+          <li><a>Button 2</a></li>
+          <li><a href="#" class="dropdown-toggle" data-toggle="dropdown">
+              Dropdown
+              <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+              <li>foo</li>
+              <li>bar</li>
+            </ul>
+          </li>
+        </ul>
         <ul class="nav" style="float:right;">
           <li><a>Sign In<span id="counter"></span></a></li>
         </ul>
       </div>
     </div>
-
 
     <div class="container">
       <div class="hero-unit" >
@@ -32,14 +45,15 @@
             <img src="img/default_splash.png" width="46"/>
           </div>
           <div class="span5">
-            <h3>A simple splash page for a KBase Labs application.</h3>
+            <h2>A simple splash page for a KBase Labs application.</h2>
             <button class="btn btn-primary btn-large">Get started!</button>
           </div>
         </div>
       </div>
+
       <div class="row">
         <div class="span6">
-          <h4>Developers</h4>
+          <h3>Developers</h3>
           <table class="table contact-table">
             <thead>
               <tr>
@@ -50,32 +64,34 @@
             </thead>
             <tbody>
               <tr>
-                <td>Developer 1</td>
+                <td><i class="icon-user"></i>Developer 1</td>
                 <td>Title 1</td>
-                <td>email 1</td>
+                <td><i class="icon-envelope"></i>email 1</td>
               </tr>
               <tr>
-                <td>Developer 2</td>
+                <td><i class="icon-user"></i>Developer 2</td>
                 <td>Title 2</td>
-                <td>email 2</td>
+                <td><i class="icon-envelope"></i>email 2</td>
               </tr>
             </tbody>
           </table>
-          <p>
+          <p><small>
             This project relies on user input and testing, so please contact us with any suggestions or comments.
-          </p>
+          </small></p>
         </div>
         <div class="span3">
-          <h4>Related Links</h4>
+          <h3>Related Links</h3>
             <a href="http://www.kbase.us">KBase Homepage</a><br/>
             <a href="http://www.kbase.us/labs">KBase Labs</a><br/>
             <a href="http://www.kbase.us/developer-zone">KBase Developer Zone</a><br/>
         </div>
         <div class="span3">
-          <h4>Documentation</h4>
+          <h3>Documentation</h3>
           Docs link goes *here*
         </div>
       </div>
     </div>
+  
   </body>
+
 </html>

@@ -54,7 +54,7 @@ function deploy_libs {
     if [ -z "$host" ]; then
         usage "Host is required for deployed libs."
     fi
-    ssh $host 'cat /kb/deployment/lib/javascript/*/Client.js' > $tmpfile 2> /dev/null
+    ssh $host 'find /kb/deployment/lib -name "*.js" | xargs cat' > $tmpfile 2> /dev/null
     cat <<Banner > $outfile
 $BANNER
 Banner

@@ -6,25 +6,32 @@ Created on Sep 6, 2012
 Some class related tools
 '''
 
+
 class Immutable(object):
-  '''
-Inheriting from Immutable disables modification of attributes except by 
-a non-standard method, preventing accidental modification in code.'''
-  
-  def __setattr__(self, name, value):
-    raise SetAttrOnImmutableObjectError("This object is immutable for good reason- knock it off")
-  
-  def __delattr__(self, name, value):
-    raise DelAttrOnImmutableObjectError("This object is immutable for good reason- knock it off")  
-  
-  def _setattrbyobj(self, name, value):
-    object.__setattr__(self, name, value)
+    '''
+  Inheriting from Immutable disables modification of attributes except by
+  a non-standard method, preventing accidental modification in code.'''
 
-class SetAttrOnImmutableObjectError(Exception): pass
+    def __setattr__(self, name, value):
+        raise SetAttrOnImmutableObjectError(
+            "This object is immutable for good reason- knock it off")
 
-class DelAttrOnImmutableObjectError(Exception): pass
+    def __delattr__(self, name, value):
+        raise DelAttrOnImmutableObjectError(
+            "This object is immutable for good reason- knock it off")
 
-#hacked version from py3. Note can't use the classmethod and abstract methods together in py2.
+    def _setattrbyobj(self, name, value):
+        object.__setattr__(self, name, value)
+
+
+class SetAttrOnImmutableObjectError(Exception):
+    pass
+
+
+class DelAttrOnImmutableObjectError(Exception):
+    pass
+
+
 class abstractclassmethod(classmethod):
     """
     A decorator indicating abstract classmethods.
@@ -41,6 +48,8 @@ class abstractclassmethod(classmethod):
     'abstractclassmethod' is deprecated. Use 'classmethod' with
     'abstractmethod' instead.
     """
+# hacked version from py3. Note can't use the classmethod and abstract
+# methods together in py2.
 
     __isabstractmethod__ = True
 

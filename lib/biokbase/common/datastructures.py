@@ -102,12 +102,12 @@ class DictListWithSortedIterator(object):
 
         def __init__(self, objStore):
             self._ostore = objStore
-            self._dictIndex = 0
-            self._listIndex = -1
-            self._notExhausted = True
+            self._dictindex = 0
+            self._listindex = -1
+            self._notexhausted = True
 
         def next(self):
-            if self._notExhausted and self._has_next():
+            if self._notexhausted and self._has_next():
                 self._advance_index()
                 return self._get_current_key_val_tuple()
             else:
@@ -118,30 +118,30 @@ class DictListWithSortedIterator(object):
             self._dec_iter_count()
 
         def _dec_iter_count(self):
-            if self._notExhausted:
+            if self._notexhausted:
                 self._ostore._itercount -= 1
-            self._notExhausted = False
+            self._notexhausted = False
 
         def _has_next(self):
             if len(self._ostore._store) == 0:
                 return False
-            dictI = self._dictIndex
-            if self._listIndex + 1 >= len(self._get_list(
+            dictI = self._dictindex
+            if self._listindex + 1 >= len(self._get_list(
                                           self._get_sorted_key(dictI))):
                 dictI += 1
             return dictI < len(self._ostore._sortedKeys)
 
         def _advance_index(self):
-            if self._listIndex + 1 >= len(self._get_list(self._get_sorted_key(
-                                                         self._dictIndex))):
-                self._dictIndex += 1
-                self._listIndex = 0
+            if self._listindex + 1 >= len(self._get_list(self._get_sorted_key(
+                                                         self._dictindex))):
+                self._dictindex += 1
+                self._listindex = 0
             else:
-                self._listIndex += 1
+                self._listindex += 1
 
         def _get_current_key_val_tuple(self):
-            key = self._get_sorted_key(self._dictIndex)
-            return key, self._get_list(key)[self._listIndex]
+            key = self._get_sorted_key(self._dictindex)
+            return key, self._get_list(key)[self._listindex]
 
         def _get_sorted_key(self, index):
             return self._ostore._sortedKeys[index]

@@ -1,4 +1,4 @@
-import _os
+import os as _os
 
 
 def touch(fname, times=None):

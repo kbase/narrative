@@ -4,7 +4,7 @@ Created on Sep 15, 2012
 @author: gaprice@lbl.gov
 '''
 
-from collections import _defaultdict
+from collections import defaultdict as _defaultdict
 
 
 class AutoVivifingDict(dict):

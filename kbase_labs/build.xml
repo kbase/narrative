@@ -1,0 +1,52 @@
+<project name="kbapi_common" basedir=".">
+  <description>
+    This module contains the KBase API common code.
+  </description>
+  <property name="app.name"	value="kbapi_common"/>
+  <property name="src" 		location="src"/>
+  <property name="build" 	location="build"/>
+  <property name="dist" 	location="dist"/>
+  <property name="kb_top"	location="../.."/>
+  <property name="jar_file"	location="${dist}/lib/${app.name}.jar" />
+
+  <path id="project.class.path">
+    <fileset dir="..">
+      <include name="*/dist/lib/*.jar"/>
+    </fileset>
+    <fileset dir="${kb_top}">
+      <include name="*/lib/*.jar"/>
+    </fileset>
+    <pathelement path="${java.class.path}/"/>
+  </path>
+  
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${build}"/>
+  </target>
+
+  <target name="compile" depends="init"
+	  description="compile java source">
+    <javac
+       includeantruntime="false"
+       srcdir="${src}"
+       destdir="${build}">
+      <classpath refid="project.class.path"/>
+    </javac>
+  </target> 
+
+  <target name="dist" depends="compile"
+          description="generate the distribution" >
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}/lib"/>
+    <jar jarfile="${jar_file}" basedir="${build}"/>
+  </target>
+
+
+
+  <target name="clean"
+          description="clean up" >
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>

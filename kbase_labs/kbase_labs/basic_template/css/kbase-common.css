@@ -1,0 +1,36 @@
+
+/* this is a css file that can be 
+   shared among kbase labs projects */
+
+
+/* start overwrites default bootstrap styling */
+
+.navbar .brand {
+    padding: 15px 20px 10px;
+}
+
+.navbar-inner {
+    min-height: 50px;
+}
+
+.navbar-fixed-top .navbar-inner {
+    padding-left: 10px;
+}
+
+.navbar-inner li {
+    line-height: 30px;
+}
+
+.navbar .nav .dropdown-toggle .caret {
+    margin-top: 13px;
+}
+
+/* end overwrites of default bootstrap styling */
+
+
+/* custom kbase common styling */
+.logo {
+    float: left;
+    margin: 2px 10px 2px 0;
+}
+

@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 
+use JavaScript::Minifier qw(minify);
+
 my @files = qw(
     kbaseWidget.js
     kbaseAuthenticatedWidget.js
@@ -33,4 +35,4 @@ foreach my $file (@files) {
     $all_js .= <$fh>;
 }
 
-print $all_js;
+print minify('input' => $all_js);

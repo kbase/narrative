@@ -6,7 +6,7 @@
 
         <!-- Global KBass css -->
         <link href="css/bootstrap.css" rel="stylesheet">
-        <link href="css/jquery.dataTables.css" rel="stylesheet">        
+        <link href="css/jquery.dataTables.css" rel="stylesheet">
 
         <!-- custom css for application -->
 
@@ -21,21 +21,35 @@
         <script src="js/jquery.js"></script>
         <script src="js/jquery.dataTables.js"></script>
         <script src="js/fbaService.js"></script>
-        <script src="js/workspaceService.js"></script>        
+        <script src="js/workspaceService.js"></script>
+
+        <script src="../../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script>
+        <script src="kbaseModelView.js"></script>
 
         <!-- custom KBase view (plugin)-->
-        <script src="js/kbase/jquery.kbase.model-view.js"></script>
+        <!--<script src="js/kbase/jquery.kbase.model-view.js"></script>-->
 
-        <!-- This would scripts for be the actual 
+        <!-- This would scripts for be the actual
              KBase application/lab/ui/web-tool/narrative/etc. -->
-        <script src="js/main.js"></script>
+        <!--<script src="js/main.js"></script>-->
+
+        <script type = 'text/javascript'>
+            <!--
+
+                $(function() {
+$('#new-view').kbaseModelView({models : ['kb|g.19.fbamdl.0'], workspaces : ['KBaseFBA']});
+
+                })
+            //-->
+        </script>
 
     </head>
 
 
     <body>
         This is an example of a "KBase View" plugin
-        <div class="test-page"></div>
+        <!--<div class="test-page"></div>-->
+        <div id="new-view"></div>
     </body>
 
 </html>

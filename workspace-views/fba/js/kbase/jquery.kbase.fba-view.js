@@ -62,7 +62,6 @@ $.fn.fbaView = function(options) {
     $('.overview-view').append('<p class="muted loader-overview"> \
                               <img src="/img/ajax-loader.gif"> loading...</p>')
     $.when(meta_AJAX).done(function(data){
-        console.log(data)
         var labels = ['ID','Type','Moddate','Instance',
                       'Command','Last Modifier','Owner','Workspace','Ref',
                       'Check Sum']

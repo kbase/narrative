@@ -3,23 +3,20 @@
 $.kbWidget("kbaseModelView", 'kbaseWidget', {
     version: "1.0.0",
     options: {
-
     },
-
     init: function(options) {
         this._super(options);
-        var models = options.models;
+        var models = options.ids;
         var workspaces = options.workspaces;
 
         this.$elem.append('<div id="kbase-model-view"></div>');
-        var self = $('#kbase-model-view');
+        var container = $('#kbase-model-view');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
         var tables = ['Overview', 'Compartment', 'Reactions', 'Compounds', 'Biomass', 'Gapfilling', 'Gapgen']
         var tableIds = ['overview', 'compartment', 'reaction', 'compound', 'biomass', 'gapfilling', 'gapgen']
-
 
         // build tabs
         var tabs = $('<ul id="table-tabs" class="nav nav-tabs"> \
@@ -31,16 +28,16 @@ $.kbWidget("kbaseModelView", 'kbaseWidget', {
         }
 
         // add tabs
-        self.append(tabs);
+        container.append(tabs);
 
         // add table views (don't hide first one)
-        self.append('<div class="'+tableIds[0]+'-view view"> \
+        container.append('<div class="'+tableIds[0]+'-view view"> \
                             <table id="'+tableIds[0]+'-table" \
                             class="table table-bordered table-striped"></table>\
                         </div>');
 
         for (var i=1; i<tableIds.length; i++) {
-            self.append('<div class="'+tableIds[i]+'-view view hide"> \
+            container.append('<div class="'+tableIds[i]+'-view view hide"> \
                             <table id="'+tableIds[i]+'-table" \
                             class="table table-bordered table-striped"></table>\
                         </div>');
@@ -144,8 +141,6 @@ $.kbWidget("kbaseModelView", 'kbaseWidget', {
             $('.loader-tables').remove();
         })
 
-
-
         function getColumns(keys, labels) {
             var cols = [];
 
@@ -158,177 +153,23 @@ $.kbWidget("kbaseModelView", 'kbaseWidget', {
         function events() {}
 
         this.hideView = function(){
-            self.hide()
+            container.hide()
         }
 
         this.showView = function(){
-            self.show()
+            container.show()
         }
 
         this.destroyView = function(){
-            self.remove();
+            container.remove();
         }
-
-        function adjustContainer() {
-            rxn_table.fnAdjustColumnSizing();
-            // move table element into new scrollable div with absolute position
-            var otable = $('#reaction-table');
-            var parts = otable.children()
-
-            var header = parts.eq(0);
-            var table = parts.eq(1);
-            var footer = parts.eq(2);
-
-            header.css({
-                position: 'absolute',
-                top: '0px',
-                left: '0px',
-                right: '0px'
-            });
-
-            table.css({
-                position: 'absolute',
-                top: (header.height() + 2) + 'px',
-                left: '0px',
-                right: '0px',
-                bottom: (footer.height() + 2) + 'px'
-            });
-
-            table.find('.dataTables_scrollBody').css({
-                position: 'absolute',
-                height: '',
-                width: '',
-                top: table.find('.dataTables_scrollHead').height(),
-                left: '0px',
-                right: '0px',
-                bottom: '0px'
-            });
-
-            footer.css({
-                position: 'absolute',
-                bottom: '0px',
-                left: '0px',
-                right: '0px'
-            });
-        }
-
-
-        $.extend( true, $.fn.dataTable.defaults, {
-            "sDom": "<'row-fluid'<'span12 obj-opts'f>r>t<'row-fluid'<'span6'il><'span6'p>>",
-            "sPaginationType": "bootstrap",
-            "oLanguage": {
-                "sLengthMenu": "_MENU_ records per page"
-            }
-        } );
-
-
-        /* Default class modification */
-        $.extend( $.fn.dataTableExt.oStdClasses, {
-            "sWrapper": "dataTables_wrapper form-inline"
-        } );
-
-
-        /* API method to get paging information */
-        $.fn.dataTableExt.oApi.fnPagingInfo = function ( oSettings )
-        {
-            return {
-                "iStart":         oSettings._iDisplayStart,
-                "iEnd":           oSettings.fnDisplayEnd(),
-                "iLength":        oSettings._iDisplayLength,
-                "iTotal":         oSettings.fnRecordsTotal(),
-                "iFilteredTotal": oSettings.fnRecordsDisplay(),
-                "iPage":          Math.ceil( oSettings._iDisplayStart / oSettings._iDisplayLength ),
-                "iTotalPages":    Math.ceil( oSettings.fnRecordsDisplay() / oSettings._iDisplayLength )
-            };
-        };
-
-
-        /* Bootstrap style pagination control */
-        $.extend( $.fn.dataTableExt.oPagination, {
-            "bootstrap": {
-                "fnInit": function( oSettings, nPaging, fnDraw ) {
-                    var oLang = oSettings.oLanguage.oPaginate;
-                    var fnClickHandler = function ( e ) {
-                        e.preventDefault();
-                        if ( oSettings.oApi._fnPageChange(oSettings, e.data.action) ) {
-                            fnDraw( oSettings );
-                        }
-                    };
-
-                    $(nPaging).addClass('pagination').append(
-                        '<ul>'+
-                            '<li class="prev disabled"><a href="#">&larr; '+oLang.sPrevious+'</a></li>'+
-                            '<li class="next disabled"><a href="#">'+oLang.sNext+' &rarr; </a></li>'+
-                            '</ul>'
-                        );
-                    var els = $('a', nPaging);
-                    $(els[0]).bind( 'click.DT', { action: "previous" }, fnClickHandler );
-                    $(els[1]).bind( 'click.DT', { action: "next" }, fnClickHandler );
-                },
-
-                "fnUpdate": function ( oSettings, fnDraw ) {
-                    var iListLength = 5;
-                    var oPaging = oSettings.oInstance.fnPagingInfo();
-                    var an = oSettings.aanFeatures.p;
-                        var i, j, sClass, iStart, iEnd, iHalf=Math.floor(iListLength/2);
-
-                    if ( oPaging.iTotalPages < iListLength) {
-                        iStart = 1;
-                        iEnd = oPaging.iTotalPages;
-                    }
-                    else if ( oPaging.iPage <= iHalf ) {
-                        iStart = 1;
-                        iEnd = iListLength;
-                    } else if ( oPaging.iPage >= (oPaging.iTotalPages-iHalf) ) {
-                        iStart = oPaging.iTotalPages - iListLength + 1;
-                        iEnd = oPaging.iTotalPages;
-                    } else {
-                        iStart = oPaging.iPage - iHalf + 1;
-                        iEnd = iStart + iListLength - 1;
-                    }
-
-                    for ( i=0, iLen=an.length ; i<iLen ; i++ ) {
-                        // Remove the middle elements
-                        $('li:gt(0)', an[i]).filter(':not(:last)').remove();
-
-                        // Add the new list items and their event handlers
-                        for ( j=iStart ; j<=iEnd ; j++ ) {
-                            sClass = (j==oPaging.iPage+1) ? 'class="active"' : '';
-                            $('<li '+sClass+'><a href="#">'+j+'</a></li>')
-                                .insertBefore( $('li:last', an[i])[0] )
-                                .bind('click', function (e) {
-                                    e.preventDefault();
-                                    oSettings._iDisplayStart = (parseInt($('a', this).text(),10)-1) * oPaging.iLength;
-                                    fnDraw( oSettings );
-                                } );
-                        }
-
-                        // Add / remove disabled classes from the static elements
-                        if ( oPaging.iPage === 0 ) {
-                            $('li:first', an[i]).addClass('disabled');
-                        } else {
-                            $('li:first', an[i]).removeClass('disabled');
-                        }
-
-                        if ( oPaging.iPage === oPaging.iTotalPages-1 || oPaging.iTotalPages === 0 ) {
-                            $('li:last', an[i]).addClass('disabled');
-                        } else {
-                            $('li:last', an[i]).removeClass('disabled');
-                        }
-                    }
-                }
-            }
-        } );
 
         //
         //this._rewireIds(this.$elem, this);
 
         return this;
 
-    },  //end init
+    }  //end init
 
-    hideView : function(){
-        self.hide()
-    }
 })
 }( jQuery ) );

@@ -2,7 +2,7 @@
 
 <html>
     <head>
-        <title>KBase FBA Plugin Example</title>
+        <title>KBase Workspace Selector plugin Plugin Example</title>
 
         <!-- Global KBass css -->
         <link href="../css/bootstrap.css" rel="stylesheet">
@@ -13,18 +13,21 @@
 
         <!-- custom css for plugin-->
 
-
         <!-- start dependancies for application -->
         <!-- end dependancies for application -->
 
         <!-- dependancies for KBase view (if not already included) -->
         <script src="../js/jquery.js"></script>
+        <script src="../js/bootstrap.js"></script>        
         <script src="../js/jquery.dataTables.js"></script>
         <script src="../js/fbaModelServices.js"></script>
         <script src="../js/workspaceService.js"></script>
 
+        <script src="../js/jquery.cookie.min.js"></script>
         <script src="../../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script>
-        <script src="kbaseFBAView.js"></script>
+        <script src="../js/kbaseLogin.js"></script> 
+        <script src="kbaseWSHandler.js"></script>
+        <script src="kbaseWSSelector.js"></script>
 
         <!-- custom KBase view (plugin)-->
         <!--<script src="js/kbase/jquery.kbase.model-view.js"></script>-->
@@ -34,19 +37,29 @@
         <!--<script src="js/main.js"></script>-->
 
         <script>
-            <!--
-                $(function() {
-                    $('#new-view').kbaseFBAView({ids : ['kb|g.19.fbamdl.0.fba.0'], workspaces : ['KBaseFBA']});
-                })
-            //-->
+            $(function(){
+                $('#signin-button').kbaseLogin({style: 'text'}); //login_callback: login_cb, logout_callback: logout_cb
+                var userToken = $("#signin-button").kbaseLogin('session').token;
+                console.log('called 2')
+                var wsSelector = $('<div id="ws-selector-container">').kbaseWSSelector({userToken: userToken,
+                                                                   selectHandler: selectHandler});
+
+                function selectHandler(selected) {
+                   
+
+                }
+
+            });
+
         </script>
 
     </head>
 
 
     <body>
-        This is an example of a "KBase View" plugin
-        <div id="new-view"></div>
+        This is an example of a KBase workspace selector plugin
+        <div id="signin-button"></div>        
+        <div id="ws-selector-container" style="width: 300px; float: left;"></div>
     </body>
 
 </html>

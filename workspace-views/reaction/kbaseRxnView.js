@@ -1,19 +1,86 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseFBAView", 'kbaseWidget', {
+$.kbWidget("kbaseRxnView", 'kbaseWidget', {
     version: "1.0.0",
     options: {
     },
     init: function(options) {
-        var wsIDs = options.ids;
-        var workspaces = options.workspaces;
+        var rxnIds = options.rxnIds;
+        var id = options.id;
+        var workspace = options.workspace;
 
-        this.$elem.append('<div id="kbase-fba-view"></div>');
-        var container = $('#kbase-fba-view');
+        this.$elem.append('<div id="kbase-rxn-view"></div>');
+        var container = $('#kbase-rxn-view');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
+
+        var gId = getGenomeId(id)
+        var rxn_AJAX = fba.get_reactions({reactions: rxnIds});
+        var model_AJAX = fba.get_models({models: [id], workspaces: [workspace]});        
+        console.log(id, workspace)
+        var genome_AJAX = fba.export_object({type: "Genome", id: gId, workspace: workspace});
+
+
+
+        container.append('<p class="muted loader-overview"> \
+                                  <img src="../img/ajax-loader.gif"> loading...</p>')
+        $.when(rxn_AJAX, model_AJAX, genome_AJAX).done(function(rxnData, mData, gData){
+            var genomeData = JSON.parse(gData)
+            var modelData = mData[0];
+            joinData(rxnIds, modelData, genomeData)
+            $('#kbase-rxn-view').append(JSON.stringify(rxnData) );
+            $('.loader-overview').remove();
+        })
+
+
+
+        function joinData(rxnIds, modelData, genomeData) {
+            var rxnId = rxnIds[0];
+
+            var features;
+
+            var rxns = modelData.reactions
+            for (var i in rxns) {
+                var rxn = rxns[i];
+                if (rxn.reaction == rxnId) {
+                    features = rxn.features;
+                }
+            }
+
+
+            var roles = []
+            var gDataFeatures = genomeData.features
+            console.log(genomeData)
+            for (var i in gDataFeatures) {
+                var gFeature = gDataFeatures[i];
+
+                var matchIndex = features.indexOf(gFeature.id);
+                if (matchIndex != -1) {
+                    var featureMatch = features[ matchIndex ];
+                    var featureRoles = gFeature.featureroles
+                    roles.push( featureRoles )
+                }
+
+            }
+
+            console.log(roles)
+
+
+        }
+
+
+
+
+        function getGenomeId(ws_id) {
+            var pos = ws_id.indexOf('.');
+            var ws_id = ws_id.slice(0, ws_id.indexOf('.', pos+1));
+            return ws_id;
+        }
+
+
+        /*
         var tables = ['Overview', 'Reaction Fluxes', 'Compound Fluxes', 'Compound Production']
         var tableIds = ['overview', 'rxn-fluxes', 'cpd-fluxes', 'cpd-prod']
 
@@ -100,6 +167,7 @@ $.kbWidget("kbaseFBAView", 'kbaseWidget', {
 
             $('.loader-tables').remove();
         })
+        */
 
 
         function getColArraySettings(labels) {

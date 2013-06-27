@@ -2,7 +2,7 @@
 
 <html>
     <head>
-        <title>KBase FBA Plugin Example</title>
+        <title>KBase Plugin Example</title>
 
         <!-- Global KBass css -->
         <link href="../css/bootstrap.css" rel="stylesheet">
@@ -12,7 +12,7 @@
 
 
         <!-- custom css for plugin-->
-
+        <link href="rxn-view.css" rel="stylesheet">
 
         <!-- start dependancies for application -->
         <!-- end dependancies for application -->
@@ -24,7 +24,7 @@
         <script src="../js/workspaceService.js"></script>
 
         <script src="../../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script>
-        <script src="kbaseFBAView.js"></script>
+        <script src="kbaseRxnView.js"></script>
 
         <!-- custom KBase view (plugin)-->
         <!--<script src="js/kbase/jquery.kbase.model-view.js"></script>-->
@@ -36,7 +36,7 @@
         <script>
             <!--
                 $(function() {
-                    $('#new-view').kbaseFBAView({ids : ['kb|g.19.fbamdl.0.fba.0'], workspaces : ['KBaseFBA']});
+                    $('#new-view').kbaseRxnView({rxnIds: ['rxn00001'], id: '457428.4.fbamdl.1', workspace : 'Paco'});
                 })
             //-->
         </script>

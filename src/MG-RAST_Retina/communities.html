@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>KBase Microbial Communities</title>
+    <link rel="icon" href="images/KBase_favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" media="screen" charset="utf-8" href="css/bootstrap.min.css">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <style type="text/css" media="screen">
+    .span3 {
+	position: relative;
+        height: 175px ;
+    }
+    .span3 a.btn {
+        position: absolute; bottom: 0;
+    }
+    .logo {
+       float: right;
+    }
+    h4 {
+        font: 1.15em/1.25em 'OxygenItalic',Arial,sans-serif;
+        letter-spacing: 0.07em;
+    }
+    </style>
+  </head>
+  <body>
+      <div class="container" style="margin-top: 50px;">
+          <div class="hero-unit" style="margin-bottom: 10px;">
+              <a href="http://kbase.us" class="logo">
+                  <img width="200px" align="right" src="images/KbaseLogoTransparent.gif"/>
+              </a>
+              <div>
+                  <h1>KBase Communities</h1>
+                  <h4>analyze, explore and collaborate across domains</h4>
+              </div>
+          </div>
+
+	  <div id="carousel" class="carousel slide">
+
+	    <ol class="carousel-indicators">
+	      <li data-target="#carousel" data-slide-to="0" class="active"></li>
+	      <li data-target="#carousel" data-slide-to="1"></li>
+	      <li data-target="#carousel" data-slide-to="2"></li>
+	      <li data-target="#carousel" data-slide-to="3"></li>
+	      <li data-target="#carousel" data-slide-to="4"></li>
+	      <li data-target="#carousel" data-slide-to="5"></li>
+	    </ol>
+
+	    <!-- Carousel items -->
+	    <div class="carousel-inner">
+	      <div class="active item" style="width: 940px;height: 300px;">
+		<img src="images/splash2.png">
+		<div style="position: relative; left: 650px; bottom: 211px;">
+		  <h2 style="">KBase Notebook</h2>
+		  <h3 style="color: gray; font-style: italic; font-weight: 400;">
+		    visualize your
+		    <br>
+		    biological data
+		  </h3>
+		</div>
+	      </div>
+	      <div class="item" style="width: 940px;height: 300px;">
+		<img src="images/splash4.png">
+		<div style="position: relative; left: 630px; bottom: 211px;">
+		  <h2 style="">IPython power</h2>
+		  <h3 style="color: gray; font-style: italic; font-weight: 400;">
+		    command line interface
+		    <br>
+		    with broad community
+		    <br>
+		    support
+		  </h3>
+		</div>
+	      </div>
+	      <div class="item" style="width: 940px;height: 300px;">
+		<img src="images/splash5.png">
+		<div style="position: relative; left: 550px; bottom: 211px;">
+		  <h2 style="">Visual Analysis Builder</h2>
+		  <h3 style="color: gray; font-style: italic; font-weight: 400;">
+		    not a programmer?
+		    <br>
+		    we make it as easy
+		    <br>
+		    as 1 - 2 - 3
+		  </h3>
+		</div>
+	      </div>
+	      <div class="item" style="width: 940px;height: 300px;">
+		<img src="images/splash3.png">
+		<div style="position: relative; left: 550px; bottom: 211px;">
+		  <h2 style="">Experimental Design<br>Wizard</h2>
+		  <h3 style="color: gray; font-style: italic; font-weight: 400;">
+		    too much to sample?
+		    <br>
+		    we maximize your ! for the $
+		  </h3>
+		</div>
+	      </div>
+	      <div class="item" style="width: 940px;height: 300px;">
+		<img src="images/splash1.png">
+		<div style="position: relative; left: 550px; bottom: 211px;">
+		  <h2 style="">KEGG Mapper</h2>
+		  <h3 style="color: gray; font-style: italic; font-weight: 400;">
+		    map arbitrary groupings of samples
+		    <br>
+		    onto a KEGG map
+		  </h3>
+		</div>
+
+	      </div>
+	      <div class="item" style="width: 940px;height: 300px;">
+		<img src="images/splash6.png">
+		<div style="position: relative; left: 650px; bottom: 211px;">
+		  <h2 style="">Metagenome Data<br>Sheet</h2>
+		  <h3 style="color: gray; font-style: italic; font-weight: 400;">
+		    what's inside of your sample
+		    <br>
+		    at a glance
+		  </h3>
+		</div>
+
+	      </div>
+	    </div>
+
+	    <!-- Carousel nav
+	    <a class="carousel-control left" href="#carousel" data-slide="prev" style="margin-top: 10px;">&lsaquo;</a>
+	    <a class="carousel-control right" href="#carousel" data-slide="next" style="margin-top: 10px;">&rsaquo;</a> -->
+
+	  </div>
+
+          <div class="row">
+              <div class="span3">
+                  <h3>KBase Notebook</h3>
+                  <p>A framework for creating and sharing reproducible data analyses. Programmatically, with a visual editor or a combination - it's up to you.</p>
+                  <a class="btn" href="analysis_builder_splash.html">Launch &raquo;</a>
+              </div>
+              <div class="span3">
+                  <h3>Experimental Design Wizard</h3>
+                  <p>Evaluate which of your metagenomic samples you should investigate further to get the most information relevat to your biological question.</p>
+                  <p><a class="btn" href="wizard_splash.html">Launch &raquo;</a></p>
+              </div>
+              <div class="span2">
+                  <h3>KEGG Mapper</h3>
+                  <p>A sample application for mapping metagenomic samples to KEGG using the Retina framework.</p>
+                  <p><a class="btn" href="kegg.html">Launch &raquo;</a></p>
+              </div>
+              <div class="span2">
+                  <h3>Metagenome Data Sheet</h3>
+                  <p>An example of a view presenting statistical information about a metagenome, using the Retina framework.</p>
+                  <p><a class="btn" href="mgoverview_splash.html">Launch &raquo;</a></p>
+              </div>
+              <div class="span2">
+                  <h3>Data Uploader</h3>
+                  <p>Get your data into KBase!</p>
+                  <p><a class="btn" href="data_uploader_splash.html">Launch &raquo;</a></p>
+              </div>
+          </div>
+	  <div style="width: 940px;">
+            <hr/>
+            <footer>&copy; DOE KBase Project 2012-2013</footer>
+	  </div>
+      </div>
+      <script>
+	jQuery('.carousel').carousel({interval: 8000});
+      </script>
+  </body>
+</html>

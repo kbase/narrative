@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    
+    <!--external javascript files-->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    
+    <!--basic javascript files-->
+    <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/stm.js"></script>
+    <script type="text/javascript" src="js/retina.js"></script>
+    
+    <!--style-->
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    
+    <!--initialization-->
+    <script type="text/javascript">
+    jQuery(function () {
+        var builder_widget = '';
+      	stm.init('https://kbase.us/services/search-api/search', false, 'kbase').then(function() {
+	        Retina.init({ library_resource: "js/" });
+	        Retina.add_widget({"name": "NotebookDashboard", "resource": "widgets/", "filename": "widget.NotebookDashboard.js"});
+	        Retina.add_widget({"name": builder_widget, "resource": "widgets/", "filename": "widget."+builder_widget+".js"});
+      	    Retina.load_widget("NotebookDashboard").then(function () {
+		        Retina.load_widget(builder_widget).then(function () {
+		            Retina.Widget.create('NotebookDashboard', {"target": "dashboard", "notebook": "nb_iframe", "builder": builder_widget, "logo": "kbase"});	
+		        });
+	        });
+      	});
+    });
+    </script>
+    
+  </head>
+  
+  <body style="margin-top: 60px;">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+	    <div class="container" style="width: 100%; padding-left: 10px;">
+          <img id="title_img" src="" style="float: left; margin-left: -10px; height: 55px;">
+    	  <a id="title_bar" class="brand" href="#" style="color: white; cursor: default; margin-top: 8px; margin-left: 30px;"></a>
+	      <p id="login_space" style="float: right; right:16px; top: 11px; position: relative;cursor: pointer;" onclick="if(document.getElementById('login_name').innerHTML ==''){jQuery('#loginModal').modal('show');}else{if(confirm('do you really want to log out?')){Retina.WidgetInstances.NotebookDashboard[0].perform_logout(0);}}">
+	        <i class="icon-user icon-white" style="margin-right: 5px;"></i>
+	        <span id="login_name_span">
+	          <input type="button" class="btn" value="login" style="position:relative; bottom: 2px;" onclick="jQuery('#loginModal').modal('show');">
+	        </span>
+	        <span id="login_name"></span>
+	      </p>
+	    </div>
+      </div>
+    </div>
+    <div id="dashboard"></div>
+    <div id="nb_iframe" style="margin-top: 18px;"></div>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+
+    <!--meta section-->
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+    <!--page title-->
+    <title>Blank</title>
+    
+    <!--external javascript files-->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    
+    <!--retina javascript files-->
+    <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/stm.js"></script>
+    <script type="text/javascript" src="js/retina.js"></script>
+    
+    <!--bootstrap style-->
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    
+    <!--initialization of retina-->
+    <script type="text/javascript">
+    jQuery(function () {
+	stm.init('http://api.metagenomics.anl.gov').then(function() {
+	    Retina.init( { library_resource: "./" } ).then( function () {
+		Retina.add_widget({"name": "tutorial", "resource": "./widgets/",  "filename": "widget.tutorial.js" });
+		Retina.load_widget("tutorial").then( function () {
+		    Retina.Widget.tutorial.create({target: document.getElementById("content")});
+		});
+	    });
+	});
+    });
+    </script>
+
+  </head>
+  
+  <body>
+    
+    <!--the content div-->
+    <div id="content"></div>
+
+  </body>
+</html>

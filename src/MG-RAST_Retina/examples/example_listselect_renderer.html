@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>listselect</title>
+	<script src="../js/jquery.min.js"></script>
+	<script src="../js/stm.js"></script>
+	<script src="../js/retina.js"></script>
+	<script src="../js/bootstrap.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+	<script>
+    stm.init('http://api.metagenomics.anl.gov/api2.cgi').then(function() {
+	Retina.init( { library_resource: "../js/" } ).then( function () {
+	    Retina.add_renderer({"name": "listselect", "resource": "../renderers/",  "filename": "renderer.listselect.js" });
+	    Retina.load_renderer("listselect").then( function () {
+		Retina.Renderer.create("listselect", {
+		    target: document.getElementById('target'),
+		    data: [ { name: 'Hans', age: '75', city: 'New York' },
+			    { name: 'Peter', age: '5', city: 'New Hampshire' },
+			    { name: 'Klaus', age: '12', city: 'York' },
+			    { name: 'Stefan', age: '33', city: 'Berlin' },
+			    { name: 'Sibylle', age: '45', city: 'Moscow' },
+			    { name: 'Claudia', age: '23', city: 'Paris' },
+			    { name: 'Claudius', age: '81', city: 'Rome' },
+			    { name: 'Homer', age: '52', city: 'Springfield' },
+			  ],
+		    filter: [ 'name', 'age', 'city' ],
+		    label: 'name',
+		    value: 'name',
+		    multiple: true,
+		    callback: function (data) { alert("You selected: "+data.join(", ") ); } }).render();
+	    });
+	});
+    });
+	</script>
+  </head>
+
+  <body>
+    
+    <div class="container" style="margin-top: 100px;">
+      <h2>Listselect Demo</h2>
+      <div id='target'></div>
+    </div>
+
+  </body>
+</html>

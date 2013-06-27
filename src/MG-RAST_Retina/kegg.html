@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>KEGG Mapper</title>
+    <link rel="icon" href="images/KBase_favicon.ico" type="image/x-icon">
+	<script src="js/jquery.min.js"></script>
+	<script src="js/config.js"></script>
+	<script src="js/stm.js"></script>
+	<script src="js/retina.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<script>
+    stm.init('http://api.metagenomics.anl.gov').then(function() {
+	Retina.init( { library_resource: "js/" } ).then( function () {
+	    Retina.add_widget({"name": "kegg", "resource": "widgets/",  "filename": "widget.kegg.js" });
+	    Retina.load_widget("kegg").then( function () {
+		Retina.Widget.create('kegg', { target: document.getElementById('content') });
+	    });
+	});
+    });
+	</script>
+  </head>
+<body style="margin-top: 60px; margin-bottom: 100px;">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+	<div class="container" style="width: 100%; padding-left: 10px;">
+          <img src="images/KbaseLogoTransparent.gif" style="float: left; background: white; margin-left: -10px; height: 55px;">
+    	  <a class="brand" href="#" style="color: white; cursor: default; margin-top: 8px; margin-left: 30px;">KEGG Mapper - project metagenomic samples onto a KEGG map</a>
+	  <p style="float: right; right:16px; top: 11px; position: relative;cursor: pointer;" onclick="if(document.getElementById('login_name').innerHTML ==''){jQuery('#loginModal').modal('show');}else{if(confirm('do you really want to log out?')){Retina.WidgetInstances.NotebookDashboard[0].perform_logout();}}"><i class="icon-user icon-white" style="margin-right: 5px;"></i><span  id="login_name_span"><input type="button" class="btn" value="login" style="position:relative; bottom: 2px;" onclick="jQuery('#loginModal').modal('show');"></span><span id="login_name"></span></p>
+	</div>
+      </div>
+    </div>
+      <div id='content' style='margin-left: 50px;'></div>
+      <div id='export'></div>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Experiment Design Wizard</title>
+    <link rel="icon" href="images/KBase_favicon.ico" type="image/x-icon">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/stm.js"></script>
+    <script src="js/retina.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery.svg.css">
+    <script>
+    stm.init('http://api.metagenomics.anl.gov').then(function() {
+	Retina.init( { library_resource: "js/" } ).then( function () {
+	    Retina.add_widget({"name": "login", "resource": "widgets/",  "filename": "widget.login.js"});
+	    Retina.load_widget("login").then( function() {
+		Retina.Widget.create('login', {"target": document.getElementById("login_space")});
+	    });
+
+	    Retina.add_widget({"name": "wizard", "resource": "widgets/",  "filename": "widget.wizard.js" });
+	    Retina.load_widget("wizard").then( function () {
+		Retina.Widget.create('wizard', { target: document.getElementById('content') });
+	    });
+	});
+    });
+    </script>
+  </head>
+  <body style="margin-top: 60px;">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+	<div class="container" style="width: 100%; padding-left: 10px;">
+          <img src="images/KbaseLogoTransparent.gif" style="float: left; background: white; margin-left: -10px; height: 55px;">
+    	  <a class="brand" href="#" style="color: white; cursor: default; margin-top: 8px; margin-left: 30px;">Experiment Design Wizard</a>
+	  <span id="login_space"></span></p>
+	</div>
+      </div>
+    </div>
+    <div id="content" style="padding-bottom: 100px; padding-left: 10px; padding-right: 10px;"></div>
+</html>

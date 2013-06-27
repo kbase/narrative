@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>box plot</title>
+	<script src="../js/jquery.min.js"></script>
+	<script src="../js/stm.js"></script>
+	<script src="../js/retina.js"></script>
+	<script src="../js/bootstrap.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+	<script>
+	Retina.init( { library_resource: "../js/" } ).then( function () {
+	    Retina.add_renderer({"name": "boxplot", "resource": "../renderers/",  "filename": "renderer.boxplot.js" });
+	    Retina.load_renderer("boxplot").then( function () {
+		Retina.Renderer.create("boxplot", {
+		    target: document.getElementById('target'),
+		    data: Retina.RendererInstances.boxplot[0].exampleData()
+		}).render();
+	    });
+	});
+	</script>
+  </head>
+
+  <body>
+    
+    <div class="container" style="margin-top: 100px;">
+      <h2>Box-Plot Demo</h2>
+      <div id='target'></div>
+    </div>
+
+  </body>
+</html>

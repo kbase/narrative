@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>paragraph</title>
+	<script src="../js/jquery.min.js"></script>
+	<script src="../js/stm.js"></script>
+	<script src="../js/retina.js"></script>
+	<script src="../js/bootstrap.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+	<script>
+	    Retina.add_renderer({"name": "paragraph", "resource": "../renderers/",  "filename": "renderer.paragraph.js" });
+	    Retina.load_renderer("paragraph").then( function () {
+		Retina.Renderer.create("paragraph", {
+		    target: document.getElementById('target'),
+		    title_color: '#8FBC3F',
+		    header_color: '#8FBC3F',
+		    data: document.getElementById('para_text').value }).render();
+	    });
+	</script>
+  </head>
+
+  <body>
+    
+    <div class="container" style="margin-top: 100px;">
+      <h2>Paragraph Demo</h2>
+      <textarea id="para_text" style="width: 500px; height: 300px;">[ { "title": "Hello World" },
+{ "header": "About" },
+{ "p": "Say hello to the world, it likes being greeted this way. Do not be afraid, everything will be ok. I will end this paragraph now and start another." },
+{ "p": "This is the next paragraph, feel free to read it. I hope it is not too long. Next up is a table." },
+{ "header": "A simple table" },
+{ "table": [ 
+[ { "header": "header cell 1" }, "data cell 1" ],
+[ { "header": "header cell 2" }, "data cell 2" ],
+[ { "header": "header cell 3" }, "data cell 3" ],
+[ { "header": "header cell 4" }, "data cell 4" ] ] } ]</textarea>
+      <input type="button" value="render" class="btn" onclick="Retina.RendererInstances.paragraph[1].settings.data=JSON.parse(document.getElementById('para_text').value);Retina.RendererInstances.paragraph[1].render();">
+      <div id="target"></div>
+    </div>
+
+  </body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>table</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <script type="text/javascript" src="../js/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/retina.js"></script>
+    <script type="text/javascript" src="../js/stm.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+
+    <script type="text/javascript">
+      var tdata =  [ [ 'a1', 'b1', 'c1' ], [ 'a1', 'b1', 'c1' ], [ 'a2', 'b2', 'c2' ], [ 'a3', 'b3', 'c3' ], [ 'a4', 'b4', 'c4' ], [ 'a5', 'b5', 'c5' ] ];
+      var hdata = [ 'column a', 'column b', 'column c' ];
+      jQuery(function () {
+        Retina.init( { library_resource: "../js/" } ).then( function () {
+          Retina.add_renderer({"name": "table", "resource": "../renderers/", "filename": "renderer.table.js" });
+          Retina.load_renderer("table").then( function () {
+            Retina.Renderer.create("table", { "target": document.getElementById("target"), "data": { "data": tdata, "header": hdata }, "sort_autodetect": true,"filter_autodetect": true,"onclick": function (clicked_row, clicked_cell, clicked_row_index, clicked_cell_index) {
+      var html = "<h3>You clicked something</h3><p style='font-size: 18px;'><i>row: " + clicked_row_index + "<br>clicked cell: " + clicked_cell_index + "<br>row data: " + clicked_row.join(", ") +"<br>cell data: "+clicked_cell+"</p>";
+      document.getElementById('details').innerHTML = html;
+      } } ).render();
+          });
+        });
+      });
+    </script>
+  </head>
+  
+  <body style="margin: 15px;">
+<div class="container" style="margin-top: 100px;">
+    <h2>Table Demo</h2>
+    <br><br>
+    <div id="target"></div>
+    <br><br>
+    <div id="details"></div>
+    </div>
+  </body>
+</html>

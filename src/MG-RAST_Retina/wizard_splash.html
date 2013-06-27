@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Experimental Design Wizard</title>
+    <link rel="icon" href="images/KBase_favicon.ico" type="image/x-icon">
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="css/kbase-common.css" rel="stylesheet">    
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <style type="text/css">
+      body {
+        /* padding to make room for the fixed nav bar, 
+           modify in css as needed. */
+        padding-top: 60px;
+      }
+      .carousel-indicators{list-style: none outside none;margin: 0;position: absolute;right: 15px;top: 15px;z-index: 5;}
+      .carousel-indicators li {background-color: rgba(0, 0, 0, 0.25);border-radius: 5px 5px 5px 5px;display: block;float: left;height: 10px;margin-left: 5px;text-indent: -999px;width: 10px;}
+      .carousel-indicators .active {background-color: #000000;}
+    </style>
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">      
+      <div class="navbar-inner">
+        <a href="http://www.kbase.us/labs/"><img class="logo" src="images/labs_icon.png" width="46"></a>
+        <a class="brand">Experimental Design Wizard</a>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="hero-unit" >
+        <div class="row">
+          <div class="span5">
+            <img src="images/ed_splash1.png" height="300px"/>
+          </div>
+          <div class="span5">
+            <h3>Design a sequencing strategy for your metagenome experiment. Based on 16S amplicon data and metadata, the wizard helps in devising a sequencing strategy to maximize diversity.</h3>
+            <button class="btn btn-primary btn-large" onclick='document.location="wizard.html";'>Get started!</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="span6">
+          <h4>Developers</h4>
+          <table class="table contact-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Folker Meyer</td>
+                <td>Computational Biologist</td>
+                <td>folker at anl.gov</td>
+              </tr>
+              <tr>
+                <td>Tobias Paczian</td>
+                <td>Software Developer</td>
+                <td>paczian at mcs.anl.gov</td>
+              </tr>
+              <tr>
+                <td>Kevin P. Keegan</td>
+                <td>Post Doctoral Fellow</td>
+                <td>kkeegan at anl.gov</td>
+              </tr>
+              <tr>
+                <td>William Trimble</td>
+                <td>Post Doctoral Fellow</td>
+                <td>trimble at anl.gov</td>
+              </tr>
+            </tbody>
+          </table>
+          <p><small>
+            This project relies on user input and testing, so please contact us with any suggestions or comments.
+          </small></p>
+        </div>
+        <div class="span3">
+          <h4>Related Links</h4>
+            <a href="http://www.kbase.us">KBase Homepage</a><br/>
+            <a href="http://www.kbase.us/labs">KBase Labs</a><br/>
+            <a href="http://www.kbase.us/developer-zone">KBase Developer Zone</a><br/>
+        </div>
+        <div class="span3">
+          <h4>Documentation</h4>
+            Coming Soon!<br/>
+        </div>
+      </div>
+    </div>
+    <script>
+      jQuery('.carousel').carousel({interval: 8000});
+    </script>
+  </body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>KBNB - The KBase Notebook</title>
+    <link rel="icon" href="images/KBase_favicon.ico" type="image/x-icon">
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="css/kbase-common.css" rel="stylesheet">    
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <style type="text/css">
+      body {
+        /* padding to make room for the fixed nav bar, 
+           modify in css as needed. */
+        padding-top: 60px;
+      }
+      .carousel-indicators{list-style: none outside none;margin: 0;position: absolute;right: 15px;top: 15px;z-index: 5;}
+      .carousel-indicators li {background-color: rgba(0, 0, 0, 0.25);border-radius: 5px 5px 5px 5px;display: block;float: left;height: 10px;margin-left: 5px;text-indent: -999px;width: 10px;}
+      .carousel-indicators .active {background-color: #000000;}
+    </style>
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">      
+      <div class="navbar-inner">
+        <a href="http://www.kbase.us/labs/"><img class="logo" src="images/labs_icon.png" width="46"></a>
+        <a class="brand">KBNB - The KBase Notebook</a>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="hero-unit" >
+        <div class="row">
+          <div class="span5" style="width:600px;">
+            <div id="carousel" class="carousel slide">
+
+              <ol class="carousel-indicators">
+                <li data-target="#carousel" data-slide-to="0" class="active"></li>
+                <li data-target="#carousel" data-slide-to="1"></li>
+                <li data-target="#carousel" data-slide-to="2"></li>
+                <li data-target="#carousel" data-slide-to="3"></li>
+                <li data-target="#carousel" data-slide-to="4"></li>
+              </ol>
+
+              <!-- Carousel items -->
+              <div class="carousel-inner">
+                <div class="item active" style="width: 600px;height: 380px;">
+                  <img src="images/nb_splash1.png">
+                  <div class="carousel-caption">
+                    <h4 style="margin: 0 0 5px 70px">iPython Interactive Computing</h4>
+                    <p style="color:white; margin: 0 0 0 70px">Command line interface with broad community support</p>
+                    </h3>
+                  </div>
+                </div>
+                <div class="item" style="width: 600px;height: 380px;">
+                  <img src="images/nb_splash2.png">
+                  <div class="carousel-caption">
+                    <h4 style="margin: 0 0 5px 70px">iPython Power</h4>
+                    <p style="color:white; margin: 0 0 0 70px">Supports programming in shell, R, Perl, and Python</p>
+                    </h3>
+                  </div>
+                </div>
+                <div class="item" style="width: 600px;height: 380px;">
+                  <img src="images/nb_splash3.png">
+                  <div class="carousel-caption">
+                    <h4 style="margin: 0 0 5px 70px">KBase Notebook</h4>
+                    <p style="color:white; margin: 0 0 0 70px">Visualize, then SHARE and PUBLISH your biological data</p>
+                  </div>
+                </div>
+                <div class="item" style="width: 600px;height: 380px;">
+                  <img src="images/nb_splash4.png">
+                  <div class="carousel-caption">
+                    <h4 style="margin: 0 0 5px 70px">Visual Analysis Builder</h4>
+                    <p style="color:white; margin: 0 0 0 70px">Not a programmer? Generate analyses by point-and-click!</p>
+                    </h3>
+                  </div>
+                </div>
+                <div class="item" style="width: 600px;height: 380px;">
+                  <img src="images/nb_splash5.png">
+                  <div class="carousel-caption">
+                    <h4 style="margin: 0 0 5px 70px">Inline Visual Results</h4>
+                    <p style="color:white; margin: 0 0 0 70px">Images are displayed inline with your code when created</p>
+                    </h3>
+                  </div>
+                </div>
+              </div>
+              <a class="carousel-control left" href="#carousel" data-slide="prev" style="top:88%">&lsaquo;</a>
+              <a class="carousel-control right" href="#carousel" data-slide="next" style="top:88%">&rsaquo;</a>
+            </div>
+
+          </div>
+          <div class="span5" style="width:400px;">
+            <h3>A framework for creating and sharing reproducible data analyses. Results can be generated programmatically, with a visual editor, or using both!</h3>
+            <button class="btn btn-primary btn-large" onclick='document.location="analysis_builder.html";'>Get started!</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="span6">
+          <h4>Developers</h4>
+          <table class="table contact-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Folker Meyer</td>
+                <td>Computational Biologist</td>
+                <td>folker at anl.gov</td>
+              </tr>
+              <tr>
+                <td>Travis Harrison</td>
+                <td>Software Developer</td>
+                <td>teharrison at anl.gov</td>
+              </tr>
+              <tr>
+                <td>Tobias Paczian</td>
+                <td>Software Developer</td>
+                <td>paczian at mcs.anl.gov</td>
+              </tr>
+              <tr>
+                <td>Andreas Wilke</td>
+                <td>Software Developer</td>
+                <td>wilke at mcs.anl.gov</td>
+              </tr>
+              <tr>
+                <td>Jared Bischof</td>
+                <td>Software Developer</td>
+                <td>jbischof at mcs.anl.gov</td>
+              </tr>
+            </tbody>
+          </table>
+          <p><small>
+            This project relies on user input and testing, so please contact us with any suggestions or comments.
+          </small></p>
+        </div>
+        <div class="span3">
+          <h4>Related Links</h4>
+            <a href="http://www.kbase.us">KBase Homepage</a><br/>
+            <a href="http://www.kbase.us/labs">KBase Labs</a><br/>
+            <a href="http://www.kbase.us/developer-zone">KBase Developer Zone</a><br/>
+            <a href="http://ipython.org/">iPython</a><br/>
+        </div>
+        <div class="span3">
+          <h4>Documentation</h4>
+            Coming Soon!<br/>
+            <!-- http://kbase.us/user-zone/tutorials/notebook -->
+        </div>
+      </div>
+    </div>
+    <script>
+      jQuery('.carousel').carousel({interval: 8000});
+    </script>
+  </body>
+</html>

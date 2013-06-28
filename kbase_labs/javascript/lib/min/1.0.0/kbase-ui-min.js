@@ -570,7 +570,7 @@ $target.append($li);if(val.expandable){var $ul=$('<ul></ul>')
 .addClass('nav nav-list');if(!val.open){$ul.hide();}
 if(val.children!=undefined){this.appendContent(val.children,$ul);}
 $target.append($ul);var callback=val.childrenCallback;if(val.children==undefined&&callback==undefined&&val.type!=undefined){callback=this.options.types[val.type].childrenCallback;}
-$li.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();$button.toggleClass(iconOpen);$button.toggleClass(icon);if($ul.is(':hidden')&&callback!=undefined){callback.call(this,val,$.proxy(function(results){$ul.empty();this.appendContent(results,$ul);$ul.toggle('collapse')},this));}
+$li.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();$button.toggleClass(iconOpen);$button.toggleClass(icon);if($ul.is(':hidden')&&callback!=undefined){callback.call(this,val.id,$.proxy(function(results){$ul.empty();this.appendContent(results,$ul);$ul.toggle('collapse')},this));}
 else{$ul.toggle('collapse');}},this));}
 var controls=val.controls;if(controls==undefined&&val.type!=undefined){controls=this.options.types[val.type].controls;}
 if(controls){$li.kbaseButtonControls({controls:controls,id:val.id});}},this));this._rewireIds($target,this);return $target;},prepareRootContent:function(){return $('<ul></ul>')

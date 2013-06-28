@@ -21,7 +21,7 @@
         }
         var Widget = function($elem) {
             this.$elem = $elem;
-            this.options = $.extend(true, {}, def.options);
+            this.options = $.extend(true, {}, def.options, this.constructor.prototype.options);
             return this;
         }
 
@@ -131,10 +131,8 @@
             dbg : function (txt) { if (window.console) console.log(txt); },
 
             init : function(args) {
-
                 var opts = $.extend(true, {}, this.options);
-                this.options = $.extend(false, {}, opts, args);
-
+                this.options = $.extend(true, {}, opts, args);
                 return this;
             },
 
@@ -195,6 +193,14 @@
                      if (a.toLowerCase() < b.toLowerCase()) { return -1 }
                 else if (a.toLowerCase() > b.toLowerCase()) { return 1  }
                 else                            { return 0  }
+            },
+
+            sortByKey : function (key) {
+                return function (a,b) {
+                         if (a[key] < b[key]) { return -1 }
+                    else if (a[key] > b[key]) { return 1  }
+                    else                      { return 0  }
+                }
             },
 
             trigger : function () {

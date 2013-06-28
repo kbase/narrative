@@ -8,13 +8,7 @@
     $.kbWidget("kbaseIrisTutorial", 'kbaseWidget', {
         version: "1.0.0",
         options: {
-            default : 'How to annotate a genome',
-        },
-
-        dispatch : {
-            'How to annotate a genome' : 'http://www.prototypesite.net/iris-dev/annotate_genome.html',
-            'How to create an IRIS tutorial' : 'tutorial_tutorial.html',
-            'Constructing RAST2 in the IRIS Environment': 'rast2.html',
+            configURL : 'http://www.prototypesite.net/iris-dev/tutorial.cfg',
         },
 
         list : function() {
@@ -29,14 +23,22 @@
         init : function (options) {
             this._super(options);
 
-            if (this.options.tutorial == undefined) {
-                this.options.tutorial = this.options.default;
-            }
-
-            this.retrieveTutorial(this.options.tutorial);
-
             this.pages = [];
             this.currentPage = -1;
+
+            $.getJSON(
+                this.options.configURL,
+                $.proxy(function(data) {
+                    this.dispatch = data.dispatch;
+                    if (this.options.tutorial == undefined) {
+                        this.options.tutorial = data.default;
+                    }
+
+                    this.retrieveTutorial(this.options.tutorial);
+
+                }, this)
+            );
+
 
             return this;
         },

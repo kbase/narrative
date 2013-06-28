@@ -87,7 +87,7 @@
         },
 
         sessionId : function () {
-            return this.get_kbase_cookie('kbase_session_id');
+            return this.get_kbase_cookie('kbase_sessionid');
         },
 
         token : function () {
@@ -199,6 +199,8 @@
                         .text('Sign In')
                         .bind('click',
                             $.proxy( function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 this.openDialog();
                             }, this)
                         )
@@ -208,29 +210,53 @@
                         .attr('id', 'userdisplay')
                         .css('display', 'none')
                         .append(
-                            $('<div></div>')
-                                .addClass('pull-left')
-                                .css('margin-top', '2px')
-                                .append("Signed in as ")
-                                .append($('<span></span>').attr('id', 'loggedinuser_id').css('font-weight', 'bold'))
-                                .append('&nbsp;')
-                        )
-                        .append(
                             $('<button></button>')
-                                .attr('id', 'logoutlink')
                                 .attr('href', '#')
-                                .addClass('btn btn-mini')
+                                .attr('id', 'accountButton')
+                                .addClass('btn btn-mini dropdown-toggle')
                                 .css('margin-bottom', '5px')
-                                .css('padding-left', '3px')
-                                .css('padding-right', '3px')
-                                .attr('title', 'Logout')
-                                .tooltip({'placement' : 'bottom'})
+                                //.css('padding-left', '3px')
+                                //.css('padding-right', '3px')
                                 .bind('click',
                                     $.proxy( function(e) {
-                                        this.logout();
+                                        //this.logout();
+                                        console.log(this.data('accountButton'));
+                                        this.data('accountButton').dropdown();
                                     }, this)
                                 )
-                                .append($('<i></i>').addClass('icon-signout'))
+                                .append($('<i></i>').addClass('icon-user'))
+                                .append($('<i></i>').addClass('icon-caret-down'))
+                        )
+                        .append(
+                            $('<ul></ul>')
+                                .css('padding', '3px')
+                                .css('font-size', '75%')
+                                .addClass('dropdown-menu pull-right')
+                                .append(
+                                    $('<li></li>')
+                                        .append('Signed in as ')
+                                        .append($('<span></span>').attr('id', 'loggedinuser_id').css('font-weight', 'bold'))
+                                )
+                                .append($('<li></li>').append($('<hr></hr>')))
+                                .append(
+                                    $('<li></li>')
+                                        .append(
+                                            $('<a></a>')
+                                                .attr('id', 'logoutlink')
+                                                .attr('href', '#')
+                                                .css('margin-bottom', '5px')
+                                                .css('padding-left', '3px')
+                                                .css('padding-right', '3px')
+                                                .attr('title', 'Sign out')
+                                                .append('Sign out')
+                                                .bind('click',
+                                                    $.proxy( function(e) {
+                                                        e.stopPropagation();e.preventDefault();
+                                                        this.logout();
+                                                    }, this)
+                                                )
+                                        )
+                                )
                         )
                 )
             ;

@@ -1,7 +1,7 @@
 (function($,undefined){var widgetRegistry={};function subclass(constructor,superConstructor){function surrogateConstructor(){}
 surrogateConstructor.prototype=superConstructor.prototype;var prototypeObject=new surrogateConstructor();prototypeObject.constructor=constructor;constructor.prototype=prototypeObject;}
 $.kbWidget=function(name,parent,def){if(widgetRegistry[name]!=undefined){return;}
-var Widget=function($elem){this.$elem=$elem;this.options=$.extend(true,{},def.options);return this;}
+var Widget=function($elem){this.$elem=$elem;this.options=$.extend(true,{},def.options,this.constructor.prototype.options);return this;}
 widgetRegistry[name]=Widget;if(def==undefined){def=parent;parent=undefined;}
 if(parent){subclass(Widget,widgetRegistry[parent]);}
 var defCopy=$.extend(true,{},def);for(var prop in defCopy){if($.isFunction(defCopy[prop])){Widget.prototype[prop]=(function(methodName,method){var _super=function(){throw"No parent method defined! Play by the rules!";}
@@ -16,7 +16,7 @@ if(Widget.prototype[method]){return Widget.prototype[method].apply(this.data(nam
 $w._init=true;return $w;}else{$.error('Method '+method+' does not exist on '+name);}
 return this;};Widget.prototype[name]=function(){return $.fn[name].apply(this.$elem,arguments);}
 return $.fn[name];}
-$.kbWidget('kbaseWidget',{options:{},element:function(){return this;},dbg:function(txt){if(window.console)console.log(txt);},init:function(args){var opts=$.extend(true,{},this.options);this.options=$.extend(false,{},opts,args);return this;},alert:function(msg){if(msg==undefined){msg=this.data('msg');}
+$.kbWidget('kbaseWidget',{options:{},element:function(){return this;},dbg:function(txt){if(window.console)console.log(txt);},init:function(args){var opts=$.extend(true,{},this.options);this.options=$.extend(true,{},opts,args);return this;},alert:function(msg){if(msg==undefined){msg=this.data('msg');}
 this.data('msg',msg);return this;},popper:function(){alert("pop, pop");},data:function(key,val){if(this.options._storage==undefined){this.options._storage={};}
 if(arguments.length==2){this.options._storage[key]=val;}
 if(key!=undefined){return this.options._storage[key];}
@@ -24,7 +24,9 @@ else{return this.options._storage;}},_rewireIds:function($elem,$target){if($targ
 if($elem.attr('id')){$target.data($elem.attr('id'),$elem);$elem.removeAttr('id');}
 $.each($elem.find('[id]'),function(idx){$target.data($(this).attr('id'),$(this));$(this).removeAttr('id');});return $elem;},sortCaseInsensitively:function(a,b){if(a.toLowerCase()<b.toLowerCase()){return-1}
 else if(a.toLowerCase()>b.toLowerCase()){return 1}
-else{return 0}},trigger:function(){this.$elem.trigger.apply(this.$elem,arguments);},on:function(){this.$elem.on.apply(this.$elem,arguments);},});}(jQuery));(function($,undefined){$.kbWidget("kbaseAuthenticatedWidget",'kbaseWidget',{version:"1.0.0",options:{},init:function(options){this._super(options);if(options.$loginbox){this.$loginbox=options.$loginbox;}
+else{return 0}},sortByKey:function(key){return function(a,b){if(a[key]<b[key]){return-1}
+else if(a[key]>b[key]){return 1}
+else{return 0}}},trigger:function(){this.$elem.trigger.apply(this.$elem,arguments);},on:function(){this.$elem.on.apply(this.$elem,arguments);},});}(jQuery));(function($,undefined){$.kbWidget("kbaseAuthenticatedWidget",'kbaseWidget',{version:"1.0.0",options:{},init:function(options){this._super(options);if(options.$loginbox){this.$loginbox=options.$loginbox;}
 else{throw"Cannot create authenticated widget w/o login box!";}
 return this;},sessionId:function(){return this.$loginbox.sessionId();},});}(jQuery));(function($,undefined){$.kbWidget("kbaseAccordion",'kbaseWidget',{version:"1.0.0",options:{fontSize:'100%',},init:function(options){this._super(options);if(this.options.client){this.client=this.options.client;}
 this.appendUI($(this.$elem));return this;},appendUI:function($elem,elements){if(elements==undefined){elements=this.options.elements;}
@@ -57,7 +59,8 @@ if($target.get(0)!=$opened.get(0)){$target.collapse('show');var $i=$(this).paren
 .addClass('accordion-body')
 .append($('<div></div>')
 .addClass('accordion-inner')
-.append(val.body))));},this));this._rewireIds($block,this);$elem.append($block);$block.find('.accordion-body').collapse('hide');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseBox",'kbaseWidget',{version:"1.0.0",options:{canCollapse:true,controls:[],bannerColor:'lightgray',boxColor:'lightgray',},init:function(options){this._super(options);this._controls={};this.appendUI($(this.$elem));return this;},setBannerColor:function(color){this.data('banner').css('background-color',color);},startThinking:function(){this.data('banner').addClass('progress progress-striped active')},stopThinking:function(){this.data('banner').removeClass('progress progress-striped active')},appendUI:function($elem){var canCollapse=this.options.canCollapse;var $div=$('<div></div>')
+.append(val.body))));},this));this._rewireIds($block,this);$elem.append($block);$block.find('.accordion-body').collapse('hide');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseBox",'kbaseWidget',{version:"1.0.0",options:{canCollapse:true,canCollapseOnDoubleClick:false,controls:[],bannerColor:'lightgray',boxColor:'lightgray',},init:function(options){this._super(options);if(this.options.canCollapse){this.options.controls.push({icon:'icon-caret-up','icon-alt':'icon-caret-down','tooltip':'collapse / expand',callback:$.proxy(function(e){this.data('content').collapse('toggle');},this)});}
+this.appendUI($(this.$elem));return this;},setBannerColor:function(color){this.data('banner').css('background-color',color);},startThinking:function(){this.data('banner').addClass('progress progress-striped active')},stopThinking:function(){this.data('banner').removeClass('progress progress-striped active')},appendUI:function($elem){var canCollapse=this.options.canCollapse;var $div=$('<div></div>')
 .append($('<div></div>')
 .css('text-align','left')
 .css('font-size','70%')
@@ -75,6 +78,7 @@ if($target.get(0)!=$opened.get(0)){$target.collapse('show');var $i=$(this).paren
 .css('background-color',this.options.bannerColor)
 .css('border-radius','0px')
 .append($('<h5></h5>')
+.attr('id','banner-text')
 .addClass('text-left')
 .css('text-align','left')
 .css('text-shadow','none')
@@ -85,23 +89,28 @@ if($target.get(0)!=$opened.get(0)){$target.collapse('show');var $i=$(this).paren
 .css('margin','0px')
 .css('position','relative')
 .css('width','100%')
-.bind('click',function(e){e.preventDefault();e.stopPropagation();if(canCollapse){$(this).parent().parent().children().last().collapse('toggle');}})
+.bind('dblclick',function(e){e.preventDefault();e.stopPropagation();if(canCollapseOnDoubleClick){$(this).parent().parent().children().last().collapse('toggle');}})
 .append($('<span></span>')
-.attr('id','title'))
-.append($('<div></div>')
-.addClass('btn-group')
-.attr('id','control-buttons')
-.css('right','0px')
-.css('top','0px')
-.css('position','absolute')
-.append('foo, bar, baz'))))
+.attr('id','title'))))
 .append($('<div></div>')
 .attr('id','content')))
 .append($('<div></div>')
 .css('text-align','right')
 .css('font-size','70%')
 .css('color','gray')
-.append(this.options.postcontent));this._rewireIds($div,this);this.setControls(this.options.controls);this.setTitle(this.options.title);this.setContent(this.options.content);$elem.append($div);return this;},setTitle:function(title){this.data('title').empty();this.data('title').append(title);},setContent:function(content){this.data('content').empty();this.data('content').append(content);},controls:function(control){if(control){return this._controls[control];}
+.append(this.options.postcontent));this._rewireIds($div,this);if(this.options.controls){this.data('banner-text').kbaseButtonControls({onMouseover:false,controls:this.options.controls})}
+this.setTitle(this.options.title);this.setContent(this.options.content);$elem.append($div);return this;},setTitle:function(title){this.data('title').empty();this.data('title').append(title);},setContent:function(content){this.data('content').empty();this.data('content').append(content);},controls:function(control){return this.data('banner-text').kbaseButtonControls('controls',control);},});}(jQuery));(function($,undefined){$.kbWidget("kbaseButtonControls",'kbaseWidget',{version:"1.0.0",options:{controls:[],onMouseover:true,},init:function(options){this._super(options);this._controls={};this.appendUI($(this.$elem));return this;},appendUI:function($elem){$elem
+.css('position','relative')
+.prepend($('<div></div>')
+.addClass('btn-group')
+.attr('id','control-buttons')
+.css('right','0px')
+.css('top','0px')
+.css('position','absolute')
+.css('margin-right','3px'));this._rewireIds($elem,this);if(this.options.onMouseover){$elem
+.mouseover(function(e){$(this).children().first().show();})
+.mouseout(function(e){$(this).children().first().hide();})
+.children().first().hide();};this.setControls(this.options.controls);return this;},controls:function(control){if(control){return this._controls[control];}
 else{return this._controls;}},setControls:function(controls){this.data('control-buttons').empty();for(control in this._controls){this._controls[control]=undefined;}
 var $box=this;$.each(controls,$.proxy(function(idx,val){var btnClass='btn btn-mini';if(val.type){btnClass=btnClass+' btn-'+val.type;}
 var $button=$('<button></button>')
@@ -110,7 +119,10 @@ var $button=$('<button></button>')
 .css('padding-bottom','1px')
 .attr('class',btnClass)
 .append($('<i></i>').addClass(val.icon))
-.bind('click',function(e){e.preventDefault();e.stopPropagation();val.callback.call(this,e,$box);});if(val.id){this._controls[val.id]=$button;}
+.tooltip({title:val.tooltip})
+.bind('click',function(e){e.preventDefault();e.stopPropagation();if(val['icon-alt']){$(this).children().first().toggleClass(val.icon);$(this).children().first().toggleClass(val['icon-alt']);}
+val.callback.call(this,e,$box);});if(val.id){this._controls[val.id]=$button;}
+if(this.options.id){$button.data('id',this.options.id);}
 this.data('control-buttons').append($button);},this));},});}(jQuery));(function($,undefined){$.kbWidget("kbasePrompt",'kbaseWidget',{version:"1.0.0",options:{controls:['cancelButton','okayButton']},init:function(options){this._super(options);return this;},openPrompt:function(){this.dialogModal().modal({'keyboard':true});},closePrompt:function(){this.dialogModal().modal('hide');},cancelButton:function(){return{name:'Cancel',callback:function(e,$prompt){$prompt.closePrompt();}}},okayButton:function(){return{name:'Okay',type:'primary',callback:function(e,$prompt){$prompt.closePrompt();}}},dialogModal:function(){if(this.data('dialogModal')!=undefined){return this.data('dialogModal');}
 var $dialogModal=$('<div></div>')
 .attr('class','modal hide fade')
@@ -256,7 +268,7 @@ $.each(data.values,function(idx,value){var name=data.names[idx]||data.values[idx
 else if(typeof data.selected=='object'){$.each(data.selected,function(idx,selectedValue){if(selectedValue==value){$option.attr('selected','selected');}});}
 $selectbox.append($option);});return $selectbox;},});}(jQuery));(function($,undefined){$.kbWidget("kbaseLogin",'kbaseWidget',{version:"1.0.0",options:{style:'button',loginURL:"http://kbase.us/services/authorization/Sessions/Login",possibleFields:['verified','name','opt_in','kbase_sessionid','token','groups','user_id','email','system_admin'],fields:['name','kbase_sessionid','user_id','token'],},get_kbase_cookie:function(field){var chips={};var cookieString=$.cookie('kbase_session');if(cookieString==undefined){return chips;}
 var pairs=cookieString.split('\|');for(var i=0;i<pairs.length;i++){var set=pairs[i].split('=');set[1]=set[1].replace(/PIPESIGN/g,'|');set[1]=set[1].replace(/EQUALSSIGN/g,'=');chips[set[0]]=set[1];}
-chips.success=1;return field==undefined?chips:chips[field];},sessionId:function(){return this.get_kbase_cookie('kbase_session_id');},token:function(){return this.get_kbase_cookie('token');},init:function(options){this._super(options);var kbaseCookie=this.get_kbase_cookie();this.$elem.empty();var style='_'+this.options.style+'Style';this.ui=this[style]();if(this.ui){this.$elem.append(this.ui);}
+chips.success=1;return field==undefined?chips:chips[field];},sessionId:function(){return this.get_kbase_cookie('kbase_sessionid');},token:function(){return this.get_kbase_cookie('token');},init:function(options){this._super(options);var kbaseCookie=this.get_kbase_cookie();this.$elem.empty();var style='_'+this.options.style+'Style';this.ui=this[style]();if(this.ui){this.$elem.append(this.ui);}
 if(kbaseCookie.user_id){if(this.registerLogin){this.registerLogin(kbaseCookie);}
 if(this.options.prior_login_callback){this.options.prior_login_callback.call(this,kbaseCookie);}
 this.data('_session',kbaseCookie);}
@@ -270,27 +282,36 @@ return this._error;},openDialog:function(){if(this.data('loginDialog')){var $ld=
 .attr('id','loginlink')
 .attr('href','#')
 .text('Sign In')
-.bind('click',$.proxy(function(e){this.openDialog();},this)))
+.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();this.openDialog();},this)))
 .append($('<div></div>')
 .attr('id','userdisplay')
 .css('display','none')
-.append($('<div></div>')
-.addClass('pull-left')
-.css('margin-top','2px')
-.append("Signed in as ")
-.append($('<span></span>').attr('id','loggedinuser_id').css('font-weight','bold'))
-.append('&nbsp;'))
 .append($('<button></button>')
+.attr('href','#')
+.attr('id','accountButton')
+.addClass('btn btn-mini dropdown-toggle')
+.css('margin-bottom','5px')
+.bind('click',$.proxy(function(e){console.log(this.data('accountButton'));this.data('accountButton').dropdown();},this))
+.append($('<i></i>').addClass('icon-user'))
+.append($('<i></i>').addClass('icon-caret-down')))
+.append($('<ul></ul>')
+.css('padding','3px')
+.css('font-size','75%')
+.addClass('dropdown-menu pull-right')
+.append($('<li></li>')
+.append('Signed in as ')
+.append($('<span></span>').attr('id','loggedinuser_id').css('font-weight','bold')))
+.append($('<li></li>').append($('<hr></hr>')))
+.append($('<li></li>')
+.append($('<a></a>')
 .attr('id','logoutlink')
 .attr('href','#')
-.addClass('btn btn-mini')
 .css('margin-bottom','5px')
 .css('padding-left','3px')
 .css('padding-right','3px')
-.attr('title','Logout')
-.tooltip({'placement':'bottom'})
-.bind('click',$.proxy(function(e){this.logout();},this))
-.append($('<i></i>').addClass('icon-signout'))));this._rewireIds($prompt,this);this.registerLogin=function(args){if(args.success){this.data("loginlink").hide();this.data('loggedinuser_id').text(args.name);this.data("userdisplay").show();this.data('loginDialog').closePrompt();}
+.attr('title','Sign out')
+.append('Sign out')
+.bind('click',$.proxy(function(e){e.stopPropagation();e.preventDefault();this.logout();},this))))));this._rewireIds($prompt,this);this.registerLogin=function(args){if(args.success){this.data("loginlink").hide();this.data('loggedinuser_id').text(args.name);this.data("userdisplay").show();this.data('loginDialog').closePrompt();}
 else{this.data('loginDialog').dialogModal().trigger('error',args.message);}};this.specificLogout=function(args){this.data("userdisplay").hide();this.data("loginlink").show();};return $prompt;},_hiddenStyle:function(){this._createLoginDialog();this.registerLogin=function(args){if(args.success){this.data('loginDialog').closePrompt();}
 else{this.data('loginDialog').dialogModal().trigger('error',args.message);}};return undefined;},_slimStyle:function(){this.data('loginDialog',undefined);var $prompt=$('<span></span>')
 .addClass('form-inline')
@@ -470,7 +491,8 @@ if(this.options.caption){$tbl.append($('<caption></caption>')
 if(struct.header){var $thead=$('<thead></thead>')
 .attr('id','thead');var $tr=$('<tr></tr>')
 .attr('id','headerRow');$.each(struct.header,$.proxy(function(idx,header){var h=this.nameOfHeader(header);var zed=new Date();var $th=$('<th></th>')
-.append(h);if(typeof header!='string'){this.addOptions($th,header);if(header.sortable){var buttonId=h+'-sortButton';var $buttonIcon=$('<i></i>')
+.append(h)
+.bind('mouseover',function(e){console.log("H "+h);});if(typeof header!='string'){this.addOptions($th,header);if(header.sortable){var buttonId=h+'-sortButton';var $buttonIcon=$('<i></i>')
 .addClass('icon-sort');var $button=$('<button></button>')
 .addClass('btn btn-mini')
 .attr('id',buttonId)
@@ -481,7 +503,7 @@ if(struct.header){var $thead=$('<thead></thead>')
 if($buttonIcon.hasClass('icon-sort')){$buttonIcon.removeClass('icon-sort');$buttonIcon.addClass('icon-sort-up');$button.data('shouldHide',false);this.sortAndLayoutOn(h,1);}
 else if($buttonIcon.hasClass('icon-sort-up')){$buttonIcon.removeClass('icon-sort-up');$buttonIcon.addClass('icon-sort-down');$button.data('shouldHide',false);this.sortAndLayoutOn(h,-1);}
 else if($buttonIcon.hasClass('icon-sort-down')){$buttonIcon.removeClass('icon-sort-down');$buttonIcon.addClass('icon-sort');$button.data('shouldHide',true);this.sortAndLayoutOn(undefined);}
-this.data('lastSort',$button);},this));$th.append($button);$th.bind('mouseover',$.proxy(function(e){$button.css('display','inline');},this));$th.bind('mouseout',$.proxy(function(e){if($button.data('shouldHide')){$button.css('display','none');}},this));}}
+this.data('lastSort',$button);},this));$th.append($button);$th.bind('mouseover',$.proxy(function(e){console.log(this);console.log(this.data());console.log(buttonId);$button.css('display','inline');},this));$th.bind('mouseout',$.proxy(function(e){console.log($button.data());if($button.data('shouldHide')){$button.css('display','none');}},this));}}
 $tr.append($th);},this));$thead.append($tr);$tbl.append($thead);}
 if(struct.rows){var $tbody=this.data('tbody',$('<tbody></tbody>'));this.layoutRows(struct.rows,struct.header);$tbl.append($tbody);}
 if(struct.footer){var $tfoot=$('<tfoot></tfoot>')
@@ -491,10 +513,11 @@ $tbl.append($tfoot);}
 this._rewireIds($tbl,this);$elem.append($tbl);return $elem;},sortAndLayoutOn:function(header,dir){var sortedRows=this.options.structure.rows;if(header!=undefined){var h=this.nameOfHeader(header);sortedRows=this.options.structure.rows.slice().sort(function(a,b){var keyA=a[h];var keyB=b[h];keyA=typeof keyA=='string'?keyA.toLowerCase():keyA;keyB=typeof keyB=='string'?keyB.toLowerCase():keyB;if(keyA<keyB){return 0-dir}
 else if(keyA>keyB){return dir}
 else{return 0}});}
-this.layoutRows(sortedRows,this.options.structure.header);},nameOfHeader:function(header){return typeof header=='string'?header:header.value;},layoutRows:function(rows,header){this.data('tbody').empty();for(var idx=0;idx<rows.length;idx++){this.data('tbody').append(this.createRow(rows[idx],header));}},addOptions:function($cell,options){if(options.style!=undefined){$cell.attr('style',options.style);}
-if(options.class!=undefined){var classes=typeof options.class=='string'?[options.class]:options.class;$.each(classes,$.proxy(function(idx,cl){$cell.addClass(cl);},this));}
-var events=['mouseover','mouseout','click'];$.each(events,$.proxy(function(idx,e){if(options[e]!=undefined){$cell.bind(e,options[e])}},this));if(options.colspan){$cell.attr('colspan',options.colspan);}
-if(options.rowspan){$cell.attr('rowspan',options.rowspan);}},createRow:function(rowData,headers){var $tr=$('<tr></tr>');$.each(headers,$.proxy(function(hidx,header){var h=this.nameOfHeader(header);var $td=$('<td></td>');if(rowData[h]!=undefined){var value=typeof rowData[h]=='string'?rowData[h]:rowData[h].value;$td.append(value);if(typeof rowData[h]!='string'){this.addOptions($td,rowData[h]);}}
+console.log("SORT");console.log(this.options.structure.rows);console.log(sortedRows);this.layoutRows(sortedRows,this.options.structure.header);console.log(header);},nameOfHeader:function(header){return typeof header=='string'?header:header.value;},layoutRows:function(rows,header){this.data('tbody').empty();for(var idx=0;idx<rows.length;idx++){this.data('tbody').append(this.createRow(rows[idx],header));}},addOptions:function($cell,options){if(options.style!=undefined){$cell.attr('style',options.style);}
+if(options.class!=undefined){var classes=typeof options.class=='string'?[options.class]:options.class;$.each(classes,$.proxy(function(idx,cl){console.log("ADD CLASS "+cl);$cell.addClass(cl);},this));}
+var events=['mouseover','mouseout','click'];$.each(events,$.proxy(function(idx,e){if(options[e]!=undefined){console.log("BINDS "+e+', '+options[e]);$cell.bind(e,options[e])}},this));if(options.colspan){$cell.attr('colspan',options.colspan);}
+if(options.rowspan){$cell.attr('rowspan',options.rowspan);}},createRow:function(rowData,headers){var $tr=$('<tr></tr>');$.each(headers,$.proxy(function(hidx,header){var h=this.nameOfHeader(header);var $td=$('<td></td>');if(rowData[h]!=undefined){var value=typeof rowData[h]=='string'?rowData[h]:rowData[h].value;$td.append(value);if(typeof rowData[h]!='string'){this.addOptions($td,rowData[h]);}
+console.log("APPEND "+h+' , ');console.log(rowData[h]);}
 if(value!=undefined){$tr.append($td);}},this));return $tr;},deletePrompt:function(row){var $deleteModal=$('<div></div>').kbaseDeletePrompt({name:row,callback:this.deleteRowCallback(row),});$deleteModal.openPrompt();},deleteRowCallback:function(row){},shouldDeleteRow:function(row){return 1;},});}(jQuery));(function($,undefined){$.kbWidget("kbaseTabs",'kbaseWidget',{version:"1.0.0",options:{tabPosition:'top',canDelete:false,borderColor:'lightgray',},init:function(options){this._super(options);this.data('tabs',{});this.data('nav',{});this.appendUI($(this.$elem));return this;},appendUI:function($elem,tabs){if(tabs==undefined){tabs=this.options.tabs;}
 var $block=$('<div></div>')
 .addClass('tabbable');var $tabs=$('<div></div>')
@@ -530,96 +553,28 @@ this.data('tabs')[tab.tab]=$tab;this.data('nav')[tab.tab]=$nav;this.data('tabs-c
 if(tab.show||tabCount==1){this.showTab(tab.tab);}},closeIcon:function(){return'icon-remove';},deleteTabToolTip:function(tabName){return'Remove '+tabName;},showTab:function(tab){if(this.shouldShowTab(tab)){this.data('nav')[tab].find('a').trigger('click');}},shouldShowTab:function(tab){return 1;},deletePrompt:function(tabName){var $deleteModal=$('<div></div>').kbaseDeletePrompt({name:tabName,callback:this.deleteTabCallback(tabName),});$deleteModal.openPrompt();},deleteTabCallback:function(tabName){return $.proxy(function(e,$prompt){if($prompt!=undefined){$prompt.closePrompt();}
 var $tab=this.data('tabs')[tabName];var $nav=this.data('nav')[tabName];if($nav.hasClass('active')){if($nav.next('li').length){$nav.next().find('a').trigger('click');}
 else{$nav.prev('li').find('a').trigger('click');}}
-if(this.shouldDeleteTab(tabName)){$tab.remove();$nav.remove();}},this);},shouldDeleteTab:function(tabName){return 1;},activeTab:function(){var activeNav=this.data('tabs-nav').find('.active:last a')[0];return $(activeNav).attr('data-tab');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseFileBrowser",'kbaseWidget',{version:"1.0.0",options:{'root':'/','controls':true,'externalControls':true,'height':'110px','tallHeight':'450px','shouldToggleNavHeight':true,'controlButtons':['deleteButton','viewButton','addDirectoryButton','uploadButton','addButton'],'name':'File Browser','openFolderIcon':'icon-folder-open-alt','closedFolderIcon':'icon-folder-close-alt','fileIcon':'icon-file',},init:function(options){this._super(options);if(options.client){this.client=options.client;}
-if(options.$loginbox){this.$loginbox=options.$loginbox;}
-this.appendUI(this.$elem);return this;},refreshDirectory:function(path){if(this.sessionId()==undefined){this.$elem.find('ul').first().empty();}
-if(this.data(path)){this.listDirectory(path,this.data(path));}},sortByName:function(a,b){if(a['name'].toLowerCase()<b['name'].toLowerCase()){return-1}
+if(this.shouldDeleteTab(tabName)){$tab.remove();$nav.remove();}},this);},shouldDeleteTab:function(tabName){return 1;},activeTab:function(){var activeNav=this.data('tabs-nav').find('.active:last a')[0];return $(activeNav).attr('data-tab');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseDataBrowser",'kbaseWidget',{version:"1.0.0",options:{'title':'Data Browser','canCollapse':true,'height':'200px','types':{'file':{'icon':'icon-file',},'folder':{'icon':'icon-folder-close-alt','icon-open':'icon-folder-open-alt','expandable':true,}},'content':[],},init:function(options){this._super(options);this.appendUI(this.$elem);return this;},sortByName:function(a,b){if(a['name'].toLowerCase()<b['name'].toLowerCase()){return-1}
 else if(a['name'].toLowerCase()>b['name'].toLowerCase()){return 1}
-else{return 0}},sessionId:function(){return this.$loginbox.sessionId();},selected:function(path){},displayPath:function(path,$ul,filelist){var $fb=this;$ul.empty();$.each(filelist,$.proxy(function(idx,val){var icon=this.options.fileIcon;var callback=function(e){e.preventDefault();$fb.data('activeDirectory',undefined);$fb.data('activeFile',undefined);$fb.disableButtons();var $opened=$fb.$elem.find('.active');$opened.removeClass('active');if($(this).parent().get(0)!=$opened.get(0)){$(this).parent().addClass('active');$fb.data('activeFile',val.path);$fb.enableButtons('f');$fb.selected(val.path);}};if(val.type=='directory'){icon=this.data(val.path)?$fb.options.openFolderIcon:$fb.options.closedFolderIcon
-callback=function(e){e.preventDefault();$fb.data('activeDirectory',undefined);$fb.data('activeFile',undefined);$fb.disableButtons();var $opened=$fb.$elem.find('.active');$opened.removeClass('active');if($(this).next().children().length){if($(this).parent().get(0)==$opened.get(0)){$(this).children().first().removeClass($fb.options.openFolderIcon);$(this).children().first().addClass($fb.options.closedFolderIcon);$(this).next().empty();$fb.data(val.path,undefined);}
-else{$fb.data('activeDirectory',val.path);$(this).parent().addClass('active');$fb.enableButtons('d');$fb.selected(val.path);}}
-else{$(this).children().first().removeClass($fb.options.closedFolderIcon);$(this).children().first().addClass($fb.options.openFolderIcon);$fb.listDirectory(val.path,$(this).next());$(this).parent().addClass('active');$fb.data('activeDirectory',val.path);$fb.data(val.path,$(this).next());$fb.enableButtons('d');$fb.selected(val.path);}}}
-$ul.append($('<li></li>')
+else{return 0}},appendContent:function(content,$target){$.each(content,$.proxy(function(idx,val){var icon=val.icon;var iconOpen=val['icon-open'];if(icon==undefined&&val.type!=undefined){icon=this.options.types[val.type].icon;iconOpen=this.options.types[val.type]['icon-open'];}
+if(val.expandable==undefined&&val.type!=undefined){val.expandable=this.options.types[val.type].expandable;}
+var $button=$('<i></i>')
+.addClass(val.open?iconOpen:icon)
+.css('color','gray');var $li=$('<li></li>')
+.attr('id',val.id)
 .append($('<a></a>')
-.append($('<i></i>')
-.addClass(icon)
-.css('color','gray'))
+.append($button)
 .append(' ')
-.append(val.name)
-.attr('href','#')
-.bind('click',callback))
-.data('meta',val.meta)
-.data('able','baker')
-.append($('<ul></ul>').addClass('nav nav-list')));if(val.type=='directory'&&this.data(val.path)){this.listDirectory(val.path,$ul.children().last().children().last());}},this));},fileBrowserContainer:function(){var navHeight=this.options.height;var $ul=$('<ul></ul>')
+.append(val.label));if(val.data){$li.data('data',val.data);}
+if(val.id){$li.data('id',val.id);}
+$target.append($li);if(val.expandable){var $ul=$('<ul></ul>')
+.addClass('nav nav-list');if(!val.open){$ul.hide();}
+if(val.children!=undefined){this.appendContent(val.children,$ul);}
+$target.append($ul);var callback=val.childrenCallback;if(val.children==undefined&&callback==undefined&&val.type!=undefined){callback=this.options.types[val.type].childrenCallback;}
+$li.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();$button.toggleClass(iconOpen);$button.toggleClass(icon);if($ul.is(':hidden')&&callback!=undefined){callback.call(this,val,$.proxy(function(results){$ul.empty();this.appendContent(results,$ul);$ul.toggle('collapse')},this));}
+else{$ul.toggle('collapse');}},this));}
+var controls=val.controls;if(controls==undefined&&val.type!=undefined){controls=this.options.types[val.type].controls;}
+if(controls){$li.kbaseButtonControls({controls:controls,id:val.id});}},this));this._rewireIds($target,this);return $target;},prepareRootContent:function(){return $('<ul></ul>')
 .addClass('nav nav-list')
-.css('height',navHeight)
+.css('height',this.options.height)
 .css('overflow','auto')
-.attr('id','ul-nav');var $container=$('<div></div>')
-.append($ul);this.data('file-ul',$ul);return $container;},fileBrowserControls:function(){var $div=$('<div></div>')
-.addClass('btn-toolbar')
-.addClass('text-right')
-.append($('<div></div>')
-.addClass('btn-group')
-.attr('id','control-buttons')
-.append($('<input></input>')
-.attr('type','file')
-.attr('id','fileInput')
-.css('display','none')
-.bind('change',jQuery.proxy(this.handleFileSelect,this))));return $div;},appendUI:function($elem){var $container=this.fileBrowserContainer();var $box=$('<div></div>').kbaseBox({title:this.options.name,canCollapse:true,content:$container,});$elem.append($box.$elem);if(this.options.controls){if(this.options.externalControls){$container.parent().parent().append(this.fileBrowserControls());}
-else{$container.append(this.fileBrowserControls());}}
-this._rewireIds($box.$elem,this);$.each(this.options.controlButtons,$.proxy(function(idx,val){this.data('control-buttons').append(this[val]());},this));this._rewireIds($box.$elem,this);this.listDirectory(this.options.root,this.data('file-ul'));this.disableButtons();return this;},disableButtons:function(){this.toggleButtons('N');},enableButtons:function(flag){this.toggleButtons(flag);},toggleButtons:function(flag){$.each(this.options.controlButtons,$.proxy(function(idx,val){var $button=this[val]();if($button==undefined){return;}
-var require=$button.data('require');if(require!=undefined){if((require=='a'&&flag!='N')||require==flag){$button.removeClass('disabled');}
-else{$button.addClass('disabled');}}},this));},addDirectoryButton:function(){return this.data('addDirectoryButton')!=undefined?this.data('addDirectoryButton'):$('<a></a>')
-.attr('id','addDirectoryButton')
-.addClass('btn btn-mini')
-.append($('<i></i>').addClass('icon-plus'))
-.attr('title','Add new directory')
-.tooltip()
-.bind('click',$.proxy(function(e){e.preventDefault();if(!this.addDirectoryButton().hasClass('disabled')){this.addDirectory();}},this))},viewButton:function(){return this.data('viewButton')!=undefined?this.data('viewButton'):$('<a></a>')
-.attr('id','viewButton')
-.addClass('btn btn-mini')
-.append($('<i></i>').addClass('icon-search'))
-.attr('title','View selected file')
-.tooltip()
-.bind('click',$.proxy(function(e){e.preventDefault();if(!this.viewButton().hasClass('disabled')){this.openFile(this.data('activeFile'));}},this))
-.data('require','f')},deleteButton:function(){return this.data('deleteButton')!=undefined?this.data('deleteButton'):$('<a></a>')
-.attr('id','deleteButton')
-.addClass('btn btn-mini')
-.append($('<i></i>').addClass('icon-minus'))
-.attr('title','Delete selected item')
-.tooltip()
-.bind('click',$.proxy(function(e){e.preventDefault();if(!this.deleteButton().hasClass('disabled')){this.deleteFile();}},this))
-.data('require','a')},uploadButton:function(){return this.data('uploadButton')!=undefined?this.data('uploadButton'):$('<a></a>')
-.attr('id','uploadButton')
-.addClass('btn btn-mini')
-.append($('<i></i>').addClass('icon-arrow-up'))
-.attr('title','Upload file')
-.tooltip()
-.bind('click',$.proxy(function(e){this.data('fileInput').trigger('click');},this))},addButton:function(){if(this.options.addFileCallback==undefined){return;}
-return this.data('addButton')!=undefined?this.data('addButton'):$('<a></a>')
-.attr('id','addButton')
-.addClass('btn btn-mini')
-.append($('<i></i>').addClass('icon-arrow-right'))
-.attr('title','Add file')
-.tooltip()
-.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();if(!this.addButton().hasClass('disabled')){this.options.addFileCallback(this.data('activeFile'));}},this))
-.data('require','f')},addDirectory:function(){var parentDir=this.data('activeDirectory')||this.options.root;var that=this;var displayDir=parentDir.replace(this.options.root,'/');var $addDirectoryModal=$('<div></div>').kbasePrompt({title:'Create directory',body:$('<p></p>')
-.append('Create directory ')
-.append($('<span></span>')
-.css('font-weight','bold')
-.text(displayDir))
-.append(' ')
-.append($('<input></input>')
-.attr('type','text')
-.attr('name','dir_name')
-.attr('size','20')),controls:['cancelButton',{name:'Create directory',type:'primary',callback:function(e,$prompt){$prompt.closePrompt();that.makeDirectoryCallback($addDirectoryModal.dialogModal().find('input').val(),parentDir);}}]});$addDirectoryModal.openPrompt();},openFile:function(file,content,win){if(win==undefined){win=window.open();win.document.open();}
-if(content==undefined){this.fetchContent(file,win);return;}
-content=content.replace(/>/g,'&gt;');content=content.replace(/</g,'&lt;');win.document.write($('<div></div>').append($('<div></div>')
-.css('white-space','pre')
-.append(content))
-.html());win.document.close();},deleteFile:function(){var file=this.data('activeFile');var deleteMethod='deleteFileCallback';if(file==undefined){file=this.data('activeDirectory');if(file==undefined){return;}
-file=file.replace(/\/+$/,'');deleteMethod='deleteDirectoryCallback';}
-var matches=file.match(/(.+)\/[^/]+$/);var active_dir='/';if(matches!=undefined&&matches.length>1){active_dir=matches[1];}
-var that=this;var promptFile=file.replace(this.options.root,'');var $deleteModal=$('<div></div>').kbaseDeletePrompt({name:promptFile,callback:function(e,$prompt){$prompt.closePrompt();that[deleteMethod](file,active_dir);}});$deleteModal.openPrompt();},handleFileSelect:function(evt){evt.stopPropagation();evt.preventDefault();var files=evt.target.files||evt.originalEvent.dataTransfer.files||evt.dataTransfer.files;$.each(files,jQuery.proxy(function(idx,file){var reader=new FileReader();var upload_dir=this.options.root;if(this.data('activeDirectory')){upload_dir=this.data('activeDirectory');}
-var $processElem;if(this.options.processList){$processElem=this.options.processList.addProcess('Uploading '+file.name);}
-reader.onload=jQuery.proxy(function(e){this.uploadFile(file.name,e.target.result,upload_dir,$processElem);},this);reader.readAsText(file);},this));this.data('fileInput').val('');},listDirectory:function(path,$ul){throw"Cannot call listDirectory directly - please subclass";},makeDirectoryCallback:function(dir,parentDir){throw"Cannot call makeDirectoryCallback directly - please subclass";},fetchContent:function(file,win){throw"Cannot call fetchContent directly - please subclass";},deleteFileCallback:function(file,active_dir){throw"Cannot call deleteFileCallback directly - please subclass";},deleteDirectoryCallback:function(file,active_dir){throw"Cannot call deleteDirectoryCallback directly - please subclass";},uploadFile:function(name,content,upload_dir,$processElem){throw"Cannot call uploadFile directly - please subclass";},});}(jQuery));
+.attr('id','ul-nav');},appendUI:function($elem){var $root=this.prepareRootContent();this._rewireIds($root,this);this.appendContent(this.options.content,this.data('ul-nav'));$elem.kbaseBox({title:this.options.title,canCollapse:this.options.canCollapse,content:$root,postcontent:this.options.postcontent});return $elem;},});}(jQuery));

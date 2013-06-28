@@ -5,7 +5,8 @@
     var $box = $('#box').kbaseBox(
         {
             title : 'This is a box',
-            canCollapse: true,  //boolean. Whether or not clicking the title bar collapses the box
+            canCollapseOnDoubleClick: true,  //boolean. Whether or not clicking the title bar collapses the box
+            canCollapse: true,  //boolean. Whether or not to show the collapse button
             content: 'Moo. We are a box. Take us to China.',  //The content within the box. Any HTML string or jquery element
             //optional list of controls to populate buttons on the right end of the title bar. Give it an icon
             //and a callback function.
@@ -29,9 +30,9 @@
 
     alternatively, set it up or change it after the fact.
 
-    $('#tabs').kbaseTabs('setTitle', 'New box title');
-    $('#tabs').kbaseTabs('setContent', "I'm a big billy goat, so you'd better beat it, sister");
-    $('#tabs').kbaseTabs('setControls', newControls);  //the tabObject defined up above
+    $('#tabs').kbaseBox('setTitle', 'New box title');
+    $('#tabs').kbaseBox('setContent', "I'm a big billy goat, so you'd better beat it, sister");
+    $('#tabs').kbaseBox('setControls', newControls);  //the tabObject defined up above
 
 */
 
@@ -41,6 +42,7 @@
         version: "1.0.0",
         options: {
             canCollapse : true,
+            canCollapseOnDoubleClick : false,
             controls : [],
             bannerColor : 'lightgray',
             boxColor : 'lightgray',
@@ -50,7 +52,19 @@
 
             this._super(options);
 
-            this._controls = {};
+            if (this.options.canCollapse) {
+                this.options.controls.push(
+                    {
+                        icon : 'icon-caret-up',
+                        'icon-alt' : 'icon-caret-down',
+                        'tooltip' : 'collapse / expand',
+                        callback : $.proxy(function(e) {
+                            this.data('content').collapse('toggle');
+                        }, this)
+                    }
+                );
+            }
+
 
             this.appendUI( $( this.$elem ) );
 
@@ -96,6 +110,7 @@
                             .css('border-radius', '0px')
                             .append(
                                 $('<h5></h5>')
+                                    .attr('id', 'banner-text')
                                     .addClass('text-left')
                                     .css('text-align', 'left')
                                     .css('text-shadow', 'none')
@@ -106,11 +121,11 @@
                                     .css('margin', '0px')
                                     .css('position', 'relative')
                                     .css('width', '100%')
-                                    .bind('click',
+                                    .bind('dblclick',
                                         function(e) {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            if (canCollapse) {
+                                            if (canCollapseOnDoubleClick) {
                                                 $(this).parent().parent().children().last().collapse('toggle');
                                             }
                                         }
@@ -118,15 +133,6 @@
                                     .append(
                                         $('<span></span>')
                                             .attr('id', 'title')
-                                    )
-                                    .append(
-                                        $('<div></div>')
-                                        .addClass('btn-group')
-                                        .attr('id', 'control-buttons')
-                                        .css('right', '0px')
-                                        .css('top', '0px')
-                                        .css('position', 'absolute')
-                                        .append('foo, bar, baz')
                                     )
                             )
                         )
@@ -147,7 +153,16 @@
 
             this._rewireIds($div, this);
 
-            this.setControls(this.options.controls);
+            if (this.options.controls) {
+                this.data('banner-text').kbaseButtonControls(
+                    {
+                        onMouseover : false,
+                        controls : this.options.controls
+                    }
+                )
+            }
+
+            //this.setControls(this.options.controls);
             this.setTitle(this.options.title);
             this.setContent(this.options.content);
 
@@ -168,54 +183,7 @@
         },
 
         controls : function (control) {
-            if (control) {
-                return this._controls[control];
-            }
-            else {
-                return this._controls;
-            }
-        },
-
-        setControls : function (controls) {
-            this.data('control-buttons').empty();
-            for (control in this._controls) {
-                this._controls[control] = undefined;
-            }
-
-            var $box = this;
-
-            $.each(
-                controls,
-                $.proxy(function (idx, val) {
-
-                    var btnClass = 'btn btn-mini';
-                    if (val.type) {
-                        btnClass = btnClass + ' btn-' + val.type;
-                    }
-
-                    var $button =
-                        $('<button></button>')
-                            .attr('href', '#')
-                            .css('padding-top', '1px')
-                            .css('padding-bottom', '1px')
-                            .attr('class', btnClass)
-                            .append($('<i></i>').addClass(val.icon))
-                            .bind('click',
-                                function(e) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    val.callback.call(this, e, $box);
-                                }
-                            )
-                    ;
-
-                    if (val.id) {
-                        this._controls[val.id] = $button;
-                    }
-
-                    this.data('control-buttons').append($button);
-                },this)
-            );
+            return this.data('banner-text').kbaseButtonControls('controls', control);
         },
 
 

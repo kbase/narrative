@@ -46,6 +46,7 @@
             }
 
             this.commands = [];
+            this.commandCategories = {};
 
             return this;
 
@@ -118,9 +119,10 @@
 
 
         appendUI : function($elem) {
-            this.client.valid_commands_async(
+            this.client.valid_commands(
                 $.proxy(
                     function (res) {
+
                         var commands = [];
                         $.each(
                             res,
@@ -150,6 +152,10 @@
                                                 }
 
                                                 this.commands.push(val.cmd);
+                                                if (this.commandCategories[group.name] == undefined) {
+                                                    this.commandCategories[group.name] = [];
+                                                }
+                                                this.commandCategories[group.name].push(val.cmd);
 
                                                 $ul.append(
                                                     this.createLI(val.cmd, label)
@@ -162,6 +168,7 @@
                                     commands.push(
                                         {
                                             'title' : group.title,
+                                            'category' : group.name,
                                             'body' : $ul
                                         }
                                     );
@@ -196,6 +203,7 @@
                     'mouseover',
                     function (e) {
                         e.preventDefault();
+                    console.log('in');
                     $(this).children().last().css('display', 'inline');
                     }
                 )
@@ -203,6 +211,7 @@
                     'mouseout',
                     function (e) {
                         e.preventDefault();
+                    console.log('out');
                     $(this).children().last().css('display', 'none');
                     }
                 )
@@ -229,6 +238,8 @@
                             function (e) {
                                 e.preventDefault();
                                 if ($commands.options.terminal != undefined) {
+                                console.log("TERMINAL");
+                                console.log($commands.options.terminal);
                                     $commands.options.terminal.run(cmd + ' -h');
                                 }
                             }

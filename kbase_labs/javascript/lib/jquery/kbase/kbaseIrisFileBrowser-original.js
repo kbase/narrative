@@ -6,73 +6,25 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisFileBrowser", 'kbaseDataBrowser', {
+    $.kbWidget("kbaseIrisFileBrowser", 'kbaseWidget', {
         version: "1.0.0",
         options: {
-            title : 'File Browser',
             'root' : '/',
-            types : {
-                file : {
-                    controls :
-                    [
-                        {
-                            icon : 'icon-remove',
-                            callback : function(e) {
-                                console.log("clicked on delete");
-                                console.log($(this).parent().parent());
-                                console.log($(this).parent().parent().data('id'));
-                            },
-                            id : 'removeButton',
-                            //tooltip : 'Delete this file',
-                        },
-                        {
-                            icon : 'icon-eye-open',
-                            callback : function(e) {
-                                console.log("clicked on view");
-                                console.log($(this).parent().parent().data('id'));
-                            },
-                            id : 'viewButton'
-                        },
-                        {
-                            icon : 'icon-arrow-right',
-                            callback : function(e) {
-                                console.log("clicked on add to term");
-                                console.log($(this).parent().parent().data('id'));
-                            },
-                            id : 'addButton'
-                        },
-                    ],
-                },
-                folder : {
-                    childrenCallback : function (val, callback) {
-                        console.log("ON " + val.id);
-                        this.listDirectory(val.id, function (results) {
-                            callback(results);
-                        });
-                    },
-                    controls : [
-                        {
-                            icon : 'icon-remove',
-                            callback : function(e) {
-                                console.log("clicked on delete dir");
-                                console.log($(this).parent().parent().data('id'));
-                            },
-                            id : 'removeDirectoryButton'
-                        },
-                        {
-                            icon : 'icon-plus',
-                            callback : function(e) {
-                                console.log("clicked on add sub");
-                                console.log($(this).parent().parent().data('id'));
-                            },
-                            id : 'addDirectoryButton'
-                        },
-                    ],
-                }
-            },
+            'controls' : true,
+            'externalControls' : true,
+            'height' : '110px',
+            'tallHeight' : '450px',
+            'shouldToggleNavHeight' : true,
+            'controlButtons' : ['deleteButton', 'viewButton', 'addDirectoryButton', 'uploadButton'],
+            // this is a bug. These should inherit from the superclass. FML.
+            'openFolderIcon' : 'icon-folder-open-alt',
+            'closedFolderIcon' : 'icon-folder-close-alt',
+            'fileIcon' : 'icon-file',
         },
 
         init: function (options) {
+
+            this._super(options);
 
             if (options.client) {
                 this.client = options.client;
@@ -82,96 +34,12 @@
                 this.$loginbox = options.$loginbox;
             }
 
-            var $pc = $('<div></div>').css('margin-top', '2px')
-            $pc.kbaseButtonControls(
-                {
-                    onMouseover : false,
-                    controls : [
-                        {
-                            'icon' : 'icon-plus',
-                            'tooltip' : 'add directory'
-                        },
-                        {
-                            'icon' : 'icon-arrow-up',
-                            'tooltip' : 'upload a file'
-                        },
-                    ]
-
-                }
-            );
-
-            this.options.postcontent = $pc;
-
-            this._super(options);
-
-            this.listDirectory(this.options.root, $.proxy(function (results) {
-                this.appendContent(results, this.data('ul-nav'))
-            }, this));
+            this.appendUI(this.$elem);
 
             return this;
 
         },
 
-        sessionId : function() {
-            return this.$loginbox.sessionId();
-        },
-
-        listDirectory : function (path, callback) {
-
-console.log(this.$loginbox.sessionId());
-console.log(path);
-            this.client.list_files(
-                this.sessionId(),
-                '/',
-                path,
-                jQuery.proxy( function (filelist) {
-                    var dirs = filelist[0];
-                    var files = filelist[1];
-console.log(filelist);
-                    var results = [];
-
-                    var $fb = this;
-                    jQuery.each(
-                        dirs.sort(this.sortByKey('name')),
-                        $.proxy(function (idx, val) {
-                            val['full_path'] = val['full_path'].replace(/\/+/g, '/');
-                            results.push(
-                                {
-                                    'type' : 'folder',
-                                    'id' : val['full_path'],
-                                    'label' : val['name'],
-                                }
-                            )
-                        }, this)
-                    );
-
-                    jQuery.each(
-                        files.sort(this.sortByKey('name')),
-                        $.proxy(function (idx, val) {
-                            val['full_path'] = val['full_path'].replace(/\/+/g, '/');
-
-                            results.push(
-                                {
-                                    'type' : 'file',
-                                    'id' : val['full_path'],
-                                    'label' : val['name'],
-                                }
-                            )
-                        }, this)
-                    );
-                    console.log("RESULTS");console.log(results);
-                    results = results.sort(this.sortByKey('label'));
-
-                    callback(results);
-
-                    }, this
-                ),
-                $.proxy(function (err) {this.dbg(err)},this)
-            );
-
-        },
-
-/*
         refreshDirectory : function(path) {
 
             if (this.sessionId() == undefined) {
@@ -183,6 +51,15 @@ console.log(filelist);
             }
         },
 
+        sortByName : function (a,b) {
+                 if (a['name'] < b['name']) { return -1 }
+            else if (a['name'] > b['name']) { return 1  }
+            else                            { return 0  }
+        },
+
+        sessionId : function() {
+            return this.$loginbox.sessionId();
+        },
 
         init: function (options) {
             if (options.$terminal) {
@@ -193,6 +70,10 @@ console.log(filelist);
 
             return this;
 
+        },
+
+        sessionId : function() {
+            return this.$terminal.sessionId;
         },
 
         listDirectory : function (path, $ul) {
@@ -322,6 +203,19 @@ console.log(filelist);
                 $.proxy(function (err) {this.dbg(err)},this)
             );
 
+        },
+
+        toggleNavHeight : function () {
+            if (this.options.shouldToggleNavHeight) {
+                var $ul = this.data('ul-nav');
+                var height = $ul.css('height');
+                $ul.css(
+                    'height',
+                    height == this.options.height
+                        ? this.options.tallHeight
+                        : this.options.height
+                );
+            }
         },
 
         appendUI : function($elem) {
@@ -677,7 +571,7 @@ console.log(filelist);
             this.data('fileInput').val('');
 
         }
-*/
+
     });
 
 }( jQuery ) );

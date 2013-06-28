@@ -4,6 +4,7 @@
         "javascript/lib/jquery/kbase/kbaseAuthenticatedWidget.js",
         "javascript/lib/jquery/kbase/kbaseAccordion.js",
         "javascript/lib/jquery/kbase/kbaseBox.js",
+        "javascript/lib/jquery/kbase/kbaseButtonControls.js",
         "javascript/lib/jquery/kbase/kbasePrompt.js",
         "javascript/lib/jquery/kbase/kbaseDeletePrompt.js",
         "javascript/lib/jquery/kbase/kbaseErrorPrompt.js",
@@ -11,7 +12,7 @@
         "javascript/lib/jquery/kbase/kbaseLogin.js",
         "javascript/lib/jquery/kbase/kbaseTable.js",
         "javascript/lib/jquery/kbase/kbaseTabs.js",
-        "javascript/lib/jquery/kbase/kbaseFileBrowser.js"
+        "javascript/lib/jquery/kbase/kbaseDataBrowser.js"
     ],
     "$lib_root/kbase-iris-min.js" : [
         "javascript/lib/jquery/kbase/kbaseFileBrowser.js",

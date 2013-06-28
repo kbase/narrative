@@ -92,7 +92,7 @@
                                 function(args) {
                                     if (args.success) {
                                         this.out_line();
-                                        this.client.start_session_async(
+                                        this.client.start_session(
                                             args.user_id,
                                             jQuery.proxy(
                                                 function (newsid) {
@@ -176,6 +176,7 @@
                     $('<div></div>').kbaseIrisFileBrowser (
                         {
                             client : this.client,
+                            $terminal : this,
                             $loginbox : this.$loginbox,
                             externalControls : false,
                         }
@@ -300,7 +301,7 @@
         },
 
         saveCommandHistory : function() {
-            this.client.put_file_async(
+            this.client.put_file(
                 this.sessionId,
                 "history",
                 JSON.stringify(this.commandHistory),
@@ -311,7 +312,7 @@
         },
 
         loadCommandHistory : function() {
-            this.client.get_file_async(
+            this.client.get_file(
                 this.sessionId,
                 "history", "/",
                 jQuery.proxy(
@@ -375,6 +376,8 @@
                     }
                     var escapedVar = variable.replace(/\$/, '\\$');
                     var varRegex = new RegExp(escapedVar, 'g');
+                    console.log("VR");
+                    console.log(varRegex);
                     cmd = cmd.replace(varRegex, this.variables[variable]);
                 }
 
@@ -417,11 +420,11 @@
 
                     if (toComplete.length) {
                         toComplete = toComplete[1];
-
+console.log("TO COMPLETE " + toComplete);
                         var ret = this.options.grammar.evaluate(
                             this.input_box.val()
                         );
-
+                        console.log("RET VAL IS "); console.log(ret);
                         if (ret != undefined && ret['next'] && ret['next'].length) {
 
                             var nextRegex = new RegExp('^' + toComplete);
@@ -429,8 +432,9 @@
                             var newNext = [];
                             for (var idx = 0; idx < ret['next'].length; idx++) {
                                 var n = ret['next'][idx];
-
+                                console.log("MATCHES " + n + " against " + toComplete);
                                 if (n.match(nextRegex)) {
+                                console.log("GOOD");
                                     newNext.push(n);
                                 }
                             }
@@ -441,7 +445,7 @@
                                     this.input_box.val(this.input_box.val().replace(toCompleteRegex, ''));
                                 }
                             }
-
+console.log("NEXT IS ");console.log(ret['next']);
                             //this.input_box.val(ret['parsed'] + ' ');
 
                             if (ret['next'].length == 1) {
@@ -450,6 +454,15 @@
                                     pad = '';
                                 }
                                 this.appendInput(pad + ret['next'][0] + ' ', 0);
+                                /*if (ret['next'][0].match(/^\$/)) {
+                                    console.log("RET NEXT VARIABLE " + ret['next'][0]);
+                                    console.log(this.input_box.val().length - ret['next'][0]);
+                                    console.log(this.input_box.val().length);
+                                    console.log(ret['next'][0].length);
+                                    var start = this.input_box.val().length - ret['next'][0].length - 1;
+                                    console.log(start);
+                                    this.input_box.setSelection(start, this.input_box.val().length);
+                                }*/
                                 this.selectNextInputVariable();
                                 return;
                             }
@@ -458,10 +471,12 @@
                                 var shouldComplete = true;
                                 var regex = new RegExp(toComplete + '\\s*$');
                                 for (prop in ret.next) {
+                                console.log("CHECK " + prop + " AGAINST " + regex);
                                     if (! prop.match(regex)) {
                                         shouldComplete = false;
                                     }
                                 }
+                                console.log("SHOULD " + shouldComplete + ", " + toComplete);
 
                                 this.displayCompletions(ret['next'], toComplete);//shouldComplete ? toComplete : '', false);
                                 return;
@@ -514,12 +529,17 @@
                 filterRegex = new RegExp(filter.replace(/,/g,'|'));
             };
 
+            console.log(filterRegex);
+
+
             $.each(
                 json,
                 $.proxy(function(idx, record) {
                     var $tbl = $('<table></table>')
                         .css('border', '1px solid black')
                         .css('margin-bottom', '2px');
+                        //console.log("KEYS");
+                        //console.log(Object.keys(record));
                         var keys = Object.keys(record).sort();
                     for (var idx = 0; idx < keys.length; idx++) {
                         var prop = keys[idx];
@@ -547,7 +567,8 @@
 
         displayCompletions : function(completions, toComplete) {
             var prefix = this.options.commandsElement.kbaseIrisCommands('commonCommandPrefix', completions);
-
+console.log("TO COMPLETE " + toComplete + ', ' + prefix);
+console.log(completions);
             if (prefix != undefined && prefix.length) {
                 this.input_box.val(
                     this.input_box.val().replace(new RegExp(toComplete + '\s*$'), prefix)
@@ -613,66 +634,6 @@
                 .css('white-space', 'pre')
                 .css('position', 'relative')
                 .append(
-                    $('<div></div>')
-                        .addClass('btn-group')
-                        .css('display', 'none')
-                        .css('position', 'absolute')
-                        .css('top', '0px')
-                        .css('right', '0px')
-                        .css('text-align', 'right')
-                        .append(
-                            $('<a></a>')
-                                .addClass('btn btn-mini')
-                                .append(
-                                    $('<i></i>')
-                                        .addClass('icon-download-alt')
-                                )
-                                .attr('title', 'Open results in new window')
-                                .bind('click',
-                                    function (e) {
-                                        var win = window.open();
-                                        win.document.open();
-                                        var output =
-                                            $('<div></div>')
-                                                .append(
-                                                    $('<div></div>')
-                                                        .css('white-space', 'pre')
-                                                        .css('font-family' , 'monospace')
-                                                        .append(
-                                                            $(this).parent().parent().next().clone()
-                                                        )
-                                                )
-                                        ;
-                                        $.each(
-                                            output.find('a'),
-                                            function (idx, val) {
-                                                $(val).replaceWith($(val).html());
-                                            }
-                                        );
-
-                                        win.document.write(output.html());
-                                        win.document.close();
-                                    }
-                                )
-                        )
-                        .append(
-                            $('<a></a>')
-                                .addClass('btn btn-mini')
-                                .append(
-                                    $('<i></i>')
-                                        .addClass('icon-remove')
-                                )
-                                .attr('title', 'delete command from window')
-                                .bind('click',
-                                    function (e) {
-                                        $(this).parent().parent().next().remove();
-                                        $(this).parent().parent().next().remove();
-                                        $(this).parent().parent().remove();
-                                    }
-                                )
-                        )
-                )
-                .append(
                     $('<span></span>')
                         .addClass('command')
                         .text(">" + this.cwd + " " + text)
@@ -688,6 +649,51 @@
                     }
                 )
             ;
+
+            $wrapperDiv.kbaseButtonControls(
+                {
+                    controls : [
+                        {
+                            icon : 'icon-download-alt',
+                            callback :
+                                function (e) {
+                                    var win = window.open();
+                                    win.document.open();
+                                    var output =
+                                        $('<div></div>')
+                                            .append(
+                                                $('<div></div>')
+                                                    .css('white-space', 'pre')
+                                                    .css('font-family' , 'monospace')
+                                                    .append(
+                                                        $(this).parent().parent().next().clone()
+                                                    )
+                                            )
+                                    ;
+                                    $.each(
+                                        output.find('a'),
+                                        function (idx, val) {
+                                            $(val).replaceWith($(val).html());
+                                        }
+                                    );
+
+                                    win.document.write(output.html());
+                                    win.document.close();
+                                },
+                        },
+                        {
+                            icon : 'icon-remove',
+                            callback :
+                                function (e) {
+                                    $(this).parent().parent().next().remove();
+                                    $(this).parent().parent().next().remove();
+                                    $(this).parent().parent().remove();
+                                }
+                        },
+
+                    ]
+                }
+            );
 
             this.terminal.append($wrapperDiv);
         },
@@ -753,13 +759,14 @@
                 sid = args[0];
 
                 //old login code. copy and pasted into iris.html.
-                this.client.start_session_async(
+                this.client.start_session(
                     sid,
                     jQuery.proxy(
                         function (newsid) {
                             this.set_session(sid);
                             this.loadCommandHistory();
                             this.out_to_div($commandDiv, "Set session to " + sid);
+                            this.refreshFileBrowser();
                         },
                         this
                     ),
@@ -873,7 +880,7 @@
                 }
                 dir = args[0];
 
-                this.client.change_directory_async(
+                this.client.change_directory(
                     this.sessionId,
                     this.cwd,
                     dir,
@@ -909,6 +916,7 @@
             if (m = command.match(/^search\s+(\S+)\s+(\S+)(?:\s*(\S+)\s+(\S+)(?:\s*(\S+))?)?/)) {
 
                 var parsed = this.options.grammar.evaluate(command);
+                //console.log("SEARCH PARSED");console.log(parsed);
 
                 var searchVars = {};
                 //'kbase.us/services/search-api/search/$category/$keyword?start=$start&count=$count&format=json',
@@ -920,10 +928,13 @@
                 searchVars.$start = m[3] || this.options.searchStart;
                 searchVars.$count = m[4] || this.options.searchCount;
                 var filter = m[5] || this.options.searchFilter[searchVars.$category];
+                console.log("FILTER " + filter);
 
                 for (prop in searchVars) {
                     searchURL = searchURL.replace(prop, searchVars[prop]);
                 }
+
+                console.log(searchURL);
 
                 $.support.cors = true;
                 $.ajax(
@@ -952,7 +963,9 @@
                                 this.out_to_div($commandDiv, $('<br/>'));
                                 this.out_to_div($commandDiv, this.search_json_to_table(data.body, filter));
                                 var res = this.search_json_to_table(data.body, filter);
-
+                                console.log("TABLE : ");
+                                console.log(res);
+                                console.log(data);
                                 this.scroll();
 
                             },
@@ -979,7 +992,7 @@
                 }
                 from = args[0];
                 to   = args[1];
-                this.client.copy_async(
+                this.client.copy(
                     this.sessionId,
                     this.cwd,
                     from,
@@ -1008,7 +1021,7 @@
 
                 from = args[0];
                 to   = args[1];
-                this.client.rename_file_async(
+                this.client.rename_file(
                     this.sessionId,
                     this.cwd,
                     from,
@@ -1035,7 +1048,7 @@
                     return;
                 }
                 dir = args[0];
-                this.client.make_directory_async(
+                this.client.make_directory(
                     this.sessionId,
                     this.cwd,
                     dir,
@@ -1062,7 +1075,7 @@
                     return;
                 }
                 dir = args[0];
-                this.client.remove_directory_async(
+                this.client.remove_directory(
                     this.sessionId,
                     this.cwd,
                     dir,
@@ -1089,7 +1102,7 @@
                     return;
                 }
                 file = args[0];
-                this.client.remove_files_async(
+                this.client.remove_files(
                     this.sessionId,
                     this.cwd,
                     file,
@@ -1171,7 +1184,7 @@
             }
 
             if (command == 'commands') {
-                this.client.valid_commands_async(
+                this.client.valid_commands(
                     jQuery.proxy(
                         function (cmds) {
                             var $tbl = $('<table></table>');
@@ -1267,8 +1280,8 @@
                         d = args[0];
                     }
                 }
-
-                this.client.list_files_async(
+console.log("SESSION ID");console.log(this.sessionId);
+                this.client.list_files(
                     this.sessionId,
                     this.cwd,
                     d,
@@ -1361,7 +1374,8 @@
             }
 
             var parsed = this.options.grammar.evaluate(command);
-
+            console.log("PARSED");
+            console.log(parsed);
             if (parsed != undefined) {
                 if (! parsed.fail && parsed.execute) {
                     command = parsed.execute;
@@ -1387,7 +1401,7 @@
                 $pendingProcessElem = this.data('processList').addProcess(command);
             }
 
-            this.client.run_pipeline_async(
+            this.client.run_pipeline(
                 this.sessionId,
                 command,
                 [],

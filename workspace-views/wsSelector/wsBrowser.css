@@ -73,17 +73,9 @@
 #kbase-ws-selector {
     position: fixed;
     height: 100%;
-    overflow: auto
+    overflow: auto;
+    width: 100%;
 }
-
-.accordian {
-    position: fixed;
-    top: 0;
-    left:0;
-    right:0;
-    bottom: 0;
-}
-
 
 
 #ws-table-div {
@@ -93,8 +85,6 @@
     left: 0px;
     right: 0px;
     overflow: auto;
-    position: inherit;
-
 }
 
 #ws-table {

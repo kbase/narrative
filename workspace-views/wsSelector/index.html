@@ -9,7 +9,7 @@
         <link href="../css/jquery.dataTables.css" rel="stylesheet">
 
         <!-- custom css for application -->
-
+        <link href="wsBrowser.css" rel="stylesheet">
 
         <!-- custom css for plugin-->
 
@@ -40,13 +40,15 @@
             $(function(){
                 $('#signin-button').kbaseLogin({style: 'text'}); //login_callback: login_cb, logout_callback: logout_cb
                 var userToken = $("#signin-button").kbaseLogin('session').token;
-                console.log('called 2')
                 var wsSelector = $('<div id="ws-selector-container">').kbaseWSSelector({userToken: userToken,
                                                                    selectHandler: selectHandler});
 
                 function selectHandler(selected) {
-                   
+                    // selected is a list of selected ws ids
 
+                    if (selected[0]) {
+                        alert(selected[0].id);
+                    }
                 }
 
             });
@@ -59,7 +61,7 @@
     <body>
         This is an example of a KBase workspace selector plugin
         <div id="signin-button"></div>        
-        <div id="ws-selector-container" style="width: 300px; float: left;"></div>
+        <div id="ws-selector-container" style="width:300px; float: left;"></div>
     </body>
 
 </html>

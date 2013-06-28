@@ -47,10 +47,9 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
 
         // on document ready, append wsSelector and objectTable
         $(function() {
-            $('#ws-selector-container').append(self.getHtml());
-
-            $('#loading').addClass('hide');
-            $('#main').removeClass('hide');
+            $('#ws-selector-container').append('<div id="kbase-ws-selector"></div>')
+            
+            $('#kbase-ws-selector').append(self.getHtml());
 
             self.reload();
             self.resizeTable();
@@ -177,7 +176,8 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
 
     container.append(filterCollapse);
 
-    var filterSearch = $('<input type="text" class="search-query" style="margin-bottom: 5px;" placeholder="Filter Workspaces">');
+    var filterSearch = $('<input type="text" class="search-query" style="margin-bottom: 5px; width:100%;"\
+             placeholder="Filter Workspaces">');
     container.append(filterSearch);
 
     filterSearch.keyup(filter);
@@ -645,10 +645,10 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
 
     function filterCollapseHtml() {
         return '' +
-            '<div class="accordion" style="margin-bottom: 0px;">'
+            '<div class="accordion" style="margin-bottom: 0px;>'
             + '<div class="accordion-group">'
             + '<div class="accordion-heading" style="text-align: center; position: relative;">'
-            + '<button class="btn btn-link" title="Filter Workspaces" style="width: 100%; height: 100%;">'
+            + '<button class="btn btn-link" title="Filter Workspaces" style="width: 100%;">'
             + 'Workspaces <span class="caret"></span>'
             + '</button>'
             + '<button id="create-workspace" class="btn btn-mini"'

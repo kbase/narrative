@@ -123,7 +123,7 @@
                                 $button.toggleClass(iconOpen);
                                 $button.toggleClass(icon);
                                 if ($ul.is(':hidden') && callback != undefined) {
-                                    callback.call(this, val, $.proxy(function(results) {
+                                    callback.call(this, val.id, $.proxy(function(results) {
                                         $ul.empty();
                                         this.appendContent(results, $ul);
                                         $ul.toggle('collapse')

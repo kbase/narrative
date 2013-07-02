@@ -9,7 +9,7 @@ $.kbWidget("kbaseModelView", 'kbaseWidget', {
         var models = options.ids;
         var workspaces = options.workspaces;
 
-        extendDefaults();
+        //extendDefaults();
 
         this.$elem.append('<div id="kbase-model-view"></div>');
         var container = $('#kbase-model-view');
@@ -59,8 +59,8 @@ $.kbWidget("kbaseModelView", 'kbaseWidget', {
         })
 
         var tableSettings = {"fnDrawCallback": events,
-            sScrollY: '100px',
-            sScrollX: '100%',
+            //sScrollY: '100px',
+            //sScrollX: '100%',
             "sPaginationType": "full_numbers",
             "iDisplayLength": 20,
             "aaData": [],

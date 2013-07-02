@@ -7,6 +7,7 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
     },
     init:  function(options) {
     this._super(options);
+    console.log(this.$elem)
     var self = this;
 
     // arguments
@@ -24,7 +25,8 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
         selected = [],
         lastSelectedRow = null,
         lastShiftSelect = null,
-        container = this.$elem;
+        container = self.$elem;
+    console.log(container)
 
     wsHandler.getWorkspaces()
         .done(handleGetWorkspaces)
@@ -45,15 +47,9 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
         // whenever the user selects one/more workspaces, call selectHandler
         self.onselect(selectHandler);
 
-        // on document ready, append wsSelector and objectTable
-        $(function() {
-            $('#ws-selector-container').append('<div id="kbase-ws-selector"></div>')
-            
-            $('#kbase-ws-selector').append(self.getHtml());
-
+        // on document ready, append wsSelector
             self.reload();
             self.resizeTable();
-        });
 
         // add handlers for adding/removing workspaces
         workspaces.onchange(function() {

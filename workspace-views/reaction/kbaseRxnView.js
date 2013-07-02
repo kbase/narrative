@@ -20,7 +20,7 @@ $.kbWidget("kbaseRxnView", 'kbaseWidget', {
         var rxn_AJAX = fba.get_reactions({reactions: rxnIds});
         var model_AJAX = fba.get_models({models: [id], workspaces: [workspace]});        
         console.log(id, workspace)
-        var genome_AJAX = fba.export_object({type: "Genome", id: gId, workspace: workspace});
+        var genome_AJAX = fba.export_genome({id: gId, workspace: workspace});
 
 
 
@@ -29,6 +29,8 @@ $.kbWidget("kbaseRxnView", 'kbaseWidget', {
         $.when(rxn_AJAX, model_AJAX, genome_AJAX).done(function(rxnData, mData, gData){
             var genomeData = JSON.parse(gData)
             var modelData = mData[0];
+            console.log(genomeData);
+            console.log(modelData);
             joinData(rxnIds, modelData, genomeData)
             $('#kbase-rxn-view').append(JSON.stringify(rxnData) );
             $('.loader-overview').remove();

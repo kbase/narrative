@@ -1,0 +1,423 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+    <meta charset="UTF-8" />
+<!--
+     Stylesheets
+-->
+<link rel="stylesheet" href="valums-file-uploader-b3b20b1/client/fileuploader.css"
+type="text/css" media="screen" title="main" charset="utf-8">
+
+<link type="text/css" href="css/jquery-ui-1.9.0.custom.css" rel="stylesheet" />
+<link type="text/css" href="css/kbase_stylesheet.css" rel="stylesheet" />
+<link type="text/css" href="css/narrative.css" rel="stylesheet" />
+
+</head>
+<body>
+
+	<header>
+		<p id="site-title">
+			<a href="kbase.us">KBase</a>
+		</p>
+		<nav>
+			<ul>
+				<li class="selected">Narratives</li>
+				<li>Newsfeed</li>
+				<li>Notifications</li>
+				<li>Search</li>
+			</ul>
+		</nav>
+		<div id="login_info">janescientist@mu.edu <a href="#">log out</a></div>
+	</header>
+    <div id="maincontainer">
+
+		<div id="contentcolumn">
+			<div id="narrative_header">
+				<h1 contenteditable="true">Untitled</h1>
+				<h2>Jane Scientist, Midwestern University</h2>
+				<div class="tools"><p><a href="#">Sharing</a> &nbsp; <a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+				
+			</div>
+			<div id="workspace">
+				
+
+			</div>
+		</div>	
+        <div id="leftcolumn">
+			<div id="data_pane" class="leftpane">
+				<h3 class="pane_title">
+					Data<span id="add_link"><a id="add_data" href="#">+ add data</a></span>
+				</h3>
+				<p><span class="tab1">In workspace</span><span class="tab2">In narrative</span></p>
+                 <ul id="data_list" class="pane_list">
+                 </ul>
+            </div>
+            <div id="function_pane" class="leftpane">
+					<h3 class="pane_title">Functions</h3>
+                    <ul id="command_list" class="pane_list">
+                    </ul>
+             </div>
+
+
+        </div>
+
+    </div> <!-- end of main container -->
+    <div id="tabs" class="clearselect"><p contenteditable="true"><a href="#">Untitled</a></p></div>
+
+    
+
+
+	<div id="add_data_dialog" title="Add a Dataset to your Narrative" style="display:none;">
+	    <div class="dialog_box">
+		<ul>
+			<li><a id="upload_link" href="#">Upload a file</a></li>
+			<li><a href="#" id="search">Search the Central Data Store</a></li>
+		</ul>
+		</div>
+	</div>
+	
+	<div id="upload_file_dialog" title="Upload a File to your Narrative" style="display:none;">
+	    <div class="dialog_box">
+		<fieldset>
+			<label for="file">File:</label>
+			<input id="file" type="file">
+		</fieldset>
+		<fieldset>
+			<label for="dataset_type">Dataset Type:</label>
+			<select>
+				<option>select...</option>
+				<option>Abundance Profile</option>
+				<option>Genome sequence, FASTA</option>
+				<option>Genome sequence, Key-Value</option>
+				<option>Gene Sequence, FASTA</option>
+				<option>Gene Sequence, Key-Value</option>
+				<option>Protein sequence, FASTA</option>
+				<option>Protein Sequence, Key-Value</option>
+				<option>Sequence Alignments, .aln</option>
+				<option>Sequence Alignments, .msf</option>
+				<option>Sequence Mapping</option>
+				<option>Expression Profile</option>
+				<option>Growth/No Growth</option>
+				<option>Metabolic Model</option>
+				<option>Flux Distribution</option>
+				<option>Regulatory Model</option>
+			</select>
+		</fieldset>
+		<fieldset>
+			<label for="dataset_type">Dataset Name:</label>
+			<input id="dataset_name" type="text">
+		</fieldset>
+		<fieldset>
+			<input type="button" id="upload_button" value="upload file">
+		</fieldset>
+		</div>
+	</div>
+	
+	<!-- function dialogs -->
+	<div id="run_annotate_dialog" style="display:none;">
+	    <div class="dialog_box">
+		<fieldset>
+			<label for="dataset_type">Dataset:</label>
+			<select>
+				<option>E. coli F11 Genome</option>
+			</select>
+			 <a id="add_data_link_dialog" href="#">add a dataset</a>
+		</fieldset>
+		<fieldset>
+			<label for="run_options">Other Options:</label>
+			<select>
+				<option>&nbsp;</option>
+			</select>
+		</fieldset>
+		<fieldset>
+			<input type="button" class="run_function_button" value="run">
+			<input type="button" class="cancel" value="cancel">
+		</fieldset>
+		</div>
+	</div>
+
+	<div id="run_browse_dialog" style="display:none;">
+	    <div class="dialog_box">
+		<fieldset>
+			<label for="dataset_type">Dataset:</label>
+			<select>
+				<option>E. coli F11 Genome</option>
+			</select>
+			 <a id="add_data_link_dialog" href="#">add a dataset</a>
+		</fieldset>
+		<fieldset>
+			<label for="run_options">Other Options:</label>
+			<select>
+				<option>&nbsp;</option>
+			</select>
+		</fieldset>
+		<fieldset>
+			<input type="button" class="run_function_button" value="run">
+			<input type="button" class="cancel" value="cancel">
+		</fieldset>
+		</div>
+	</div>
+	
+	<div id="run_reconstruction_dialog" style="display:none;">
+	    <div class="dialog_box">
+		<fieldset>
+			<label for="dataset_type">Dataset:</label>
+			<select>
+				<option>E. coli F11 Genome</option>
+			</select>
+			 <a id="add_data_link_dialog" href="#">add a dataset</a>
+		</fieldset>
+		<fieldset>
+			<label for="run_options">Other Options:</label>
+			<select>
+				<option>&nbsp;</option>
+			</select>
+		</fieldset>
+		<fieldset>
+			<input type="button" class="run_function_button" value="run">
+			<input type="button" class="cancel" value="cancel">
+		</fieldset>
+		</div>
+	</div>
+	
+	<div id="run_runfba_dialog" style="display:none;">
+	    <div class="dialog_box">
+		<fieldset>
+			<label for="dataset_type">Dataset:</label>
+			<select>
+				<option>E. coli F11 Genome FBA Model</option>
+			</select>
+			 <a id="add_data_link_dialog" href="#">add a dataset</a>
+		</fieldset>
+		<fieldset>
+			<label for="run_options">Other Options:</label>
+			<select>
+				<option>&nbsp;</option>
+			</select>
+		</fieldset>
+		<fieldset>
+			<input type="button" class="run_function_button" value="run">
+			<input type="button" class="cancel" value="cancel">
+		</fieldset>
+		</div>
+	</div>
+
+	<div id="run_buildmodel_dialog" style="display:none;">
+	    <div class="dialog_box">
+		<fieldset>
+			<label for="dataset_type">Dataset:</label>
+			<select>
+				<option>E. coli F11 Genome</option>
+			</select>
+			 <a id="add_data_link_dialog" href="#">add a dataset</a>
+		</fieldset>
+		<fieldset>
+			<label for="run_options">Other Options:</label>
+			<select>
+				<option>&nbsp;</option>
+			</select>
+		</fieldset>
+		<fieldset>
+			<input type="button" class="run_function_button" value="run">
+			<input type="button" class="cancel" value="cancel">
+		</fieldset>
+		</div>
+	</div>
+
+	<div id="run_gapfill_dialog" style="display:none;">
+	    <div class="dialog_box">
+		<fieldset>
+			<label for="dataset_type">Model Dataset:</label>
+			<select>
+				<option>E. coli F11 Genome FBA Model</option>
+			</select>
+			 <a id="add_data_link_dialog" href="#">add a dataset</a>
+		</fieldset>
+		<fieldset>
+			<label for="dataset_type">Phenotype Dataset:</label>
+			<select>
+				<option>E. coli F11 Growth Data</option>
+			</select>
+			 <a id="add_data_link_dialog" href="#">add a dataset</a>
+		</fieldset>
+		<fieldset>
+			<label for="run_options">Other Options:</label>
+			<select>
+				<option>&nbsp;</option>
+			</select>
+		</fieldset>
+		<fieldset>
+			<input type="button" class="run_function_button" value="run">
+			<input type="button" class="cancel" value="cancel">
+		</fieldset>
+		</div>
+	</div>
+
+	<div id="run_glamm_dialog" style="display:none;">
+	    <div class="dialog_box">
+		<fieldset>
+			<label for="dataset_type">Dataset:</label>
+			<select>
+				<option>E. coli F11 Gapfilled GBA Model</option>
+			</select>
+			 <a id="add_data_link_dialog" href="#">add a dataset</a>
+		</fieldset>
+		<fieldset>
+			<label for="run_options">Other Options:</label>
+			<select>
+				<option>&nbsp;</option>
+			</select>
+		</fieldset>
+		<fieldset>
+			<input type="button" class="run_function_button" value="run">
+			<input type="button" class="cancel" value="cancel">
+		</fieldset>
+		</div>
+	</div>
+	
+	
+	<!-- dataset cells -->
+	
+	<div id="dataset_cell1" style="display: none;" class="dataset_cell">
+		<div class="metadata"><h2><a href="#">Escherichia coli F11 Genome, annotated</a></h2>
+		<p style="margin-top: 0;">Domain: Bacteria<br />
+		Taxon: gamma-proteobacteria</p></div>
+		<div class="metadata"><p>KBase ID: KB|g.691<br />
+		Source: Joe Scientist<br />
+		Version: Mar 27, 2013 08:13:00 PST<br />
+		Complete genome</p></div>
+		<div class="metadata"><p>
+		Contigs: 2<br />
+		Base pairs: 5,280,267<br />
+		PEGs: 232 <br />
+		GC Content: 50.64%</p></div><p class="clear"></p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	
+	<div id="dataset_cell2" style="display: none;" class="dataset_cell">
+		<div class="social"><p><a href="#" onclick="$('p span.notification').removeClass('notification');"><span class="notification">1</span> Comment</a></p></div>
+		<div class="metadata"><h2><a href="#">Escherichia coli F11 Metabolic Reconstruction</a></h2>
+		</div>
+		<div class="metadata"><p>
+		Source: calculated<br />
+		Version: Mar 27, 2013 08:13:00 PST
+		</p></div>
+		<div class="metadata"><p>Roles: 29,294</p></div>
+		<p class="clear"></p>
+		<div class="tools"><p><a href="#" onclick="$('div.social').toggle();">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	<div id="dataset_cell3" style="display: none;" class="dataset_cell">
+		<div class="metadata"><h2><a href="#">Escherichia coli F11 FBA Model</a></h2>
+		</div>
+		<div class="metadata"><p>
+		Source: calculated<br />
+		Version: Mar 27, 2013 08:13:00 PST
+		</p></div>
+		<div class="metadata"><p>Reactions: 29,294<br />
+		Compounds: 2098<br />
+		Annotations: 234</p></div>
+		<p class="clear"></p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	<div id="dataset_cell4" style="display: none;" class="dataset_cell">
+		<div class="metadata"><h2><a href="#">Escherichia coli F11 FBA Result</a></h2>
+		</div>
+		<div class="metadata"><p>
+		Source: calculated<br />
+		Version: Mar 27, 2013 08:13:00 PST
+		</p></div>
+		<div class="metadata"><p>P(Growth): 0.98</p></div>
+		<p class="clear"></p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	<div id="dataset_cell5" style="display: none;" class="dataset_cell">
+		<div class="metadata"><h2><a href="#">Escherichia coli F11 Growth</a></h2>
+		</div>
+		<div class="metadata"><p>
+		Source: user uploaded<br />
+		Version: Mar 27, 2013 08:13:00 PST
+		</p></div>
+		<div class="metadata"><p>growth x nickel abundance</p></div>
+		<p class="clear"></p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	<img id="dataset_cell6" style="display: none; width: 811px;" class="dataset_cell" src="images/genome_widget_cell.png" alt="genome browser widget" />
+	<div id="dataset_cell7" style="display: none;" class="dataset_cell">
+		<div class="metadata"><h2><a href="#">Escherichia coli F11 Gapfilled FBA Model</a></h2>
+		</div>
+		<div class="metadata"><p>
+		Source: calculated<br />
+		Version: Mar 27, 2013 08:27:00 PST
+		</p></div>
+		<div class="metadata"><p>Reactions Added: 4<br />
+		growth on serine&ndash; media<br />
+		</p></div>
+		<p class="clear"></p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	<img id="dataset_cell8" style="display: none; width: 811px;" class="dataset_cell" src="images/glamm_widget_cell.png" alt="GLAMM widget" />
+
+	<!-- function cells -->
+	
+	<div id="function_cell1" style="display: none;" class="function_cell">
+		<h2>Run Metabolic Reconstruction on E. coli F11 Genome</h2>
+		<p>Started: 9/27/2012 4:15:32pm<BR>
+		Finished: 9/27/2012 4.15:33pm
+		</p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	
+	<div id="function_cell2" style="display: none;" class="function_cell">
+		<h2>Run Build FBA Model on E. coli F11 Genome</h2>
+		<p>Started: 9/27/2012 4:15:32pm<BR>
+		Finished: 9/27/2012 4.15:33pm
+		</p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	<div id="function_cell3" style="display: none;" class="function_cell">
+		<h2>Run FBA on E. coli F11 Metabolic Model</h2>
+		<p>Started: 9/27/2012 4:15:32pm<BR>
+		Finished: 9/27/2012 4.15:33pm
+		</p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	<div id="function_cell4" style="display: none;" class="function_cell">
+		<h2>Run Gapfilling on E. coli F11 Metabolic Model</h2>
+		<p>Started: 9/27/2012 4:15:32pm<BR>
+		Finished: 9/27/2012 4.15:33pm
+		</p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	<div id="function_cell5" style="display: none; width: 0; height: 0;" class="function_cell"></div>
+	<div id="function_cell6" style="display: none;" class="function_cell">
+		<h2>Run Annotation on E. coli F11 Genome</h2>
+		<p>Started: 9/27/2012 4:15:32pm<BR>
+		Finished: 9/27/2012 4.15:33pm
+		</p>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+	<div id="function_cell7" style="display: none; width: 0; height: 0;" class="function_cell"></div>
+	
+	<!-- text cell -->
+	
+	<div id="textcell" style="display: none;" class="textcell">
+		
+		<div class="texttools"><a href="#"><img src="images/tinymcetools.png" /></a> &nbsp; <a href="#"><img src="images/graytag.png" alt="tag" />Hypothesis</a> &nbsp; <a href="#"><img src="images/link.png" alt="link" />Citation</a> <a href="#"><img src="images/remove.png" width="20" alt="remove" class="remove" /></a></div>
+		<p class="textcuepara">Click to add text</p>
+		<div contenteditable="true"  class="textarea"></div>
+		<div class="tools"><p><a href="#">Add Comment</a> &nbsp; <a href="#">Add Evidence</a> &nbsp; <a href="#">Copy URL</a></p></div>
+	</div>
+
+<!-- 
+    Javascript
+-->
+<script type="text/javascript" src="js/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.9.0.custom.min.js"></script>
+<script src="js/narrative.js" type="text/javascript" charset="utf-8"></script>
+
+
+
+</body>
+</html>
+
+

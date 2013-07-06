@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Narrative{% endblock %}
+{% block head %}
+	{{ super() }}
+	<link type="text/css" href="{{ static_url("valums-file-uploader-b3b20b1/client/fileuploader.css") }}" rel="stylesheet" media="screen" title="main" charset="utf-8">
+	<link type="text/css" href="{{ static_url("css/narrative.css") }}" rel="stylesheet" />
+	<link type="text/css" href="{{ static_url("css/landing.css") }}" rel="stylesheet" />
+	<link type="text/css" href="{{ static_url("jquery/qtip/jquery.qtip.css") }}" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+	{{ super() }}
+	<div id="maincontainer">
+		<div id="newsfeed_column">
+			<div id="feed_section">
+				<h2>Newsfeed</h2>
+					<div class="newsfeed_section">
+						<h3>People I'm following</h3>
+						{% if followed_users.length() > 0 %}
+							<ol>
+								{% for user in followed_users %}
+								<li><a href="{{ user.uri }}">{{ user.email }}</a> {{ user.update_text }}</li>
+								{% endfor %}
+							</ol>
+						{% else %}
+							<span class="aside">You are not currently following any users. <a href="#">Find some users to follow.</a></span>
+						{% endif %}
+					</div>
+
+					<div class="newsfeed_section">
+						<h3>Organisms I'm following</h3>
+						{% if followed_organisms.length() > 0 %}
+							{% for org in followed_organisms %}
+								<h4 class="feed_projects_title">{{ org.name }}</h4>
+								<ol>
+									{% for update in org.updates %}
+										<li><a href="{{ update.uri }}">{{ update.user }}</a> {{ update.text }}</li>
+									{% endfor %}
+								</ol>
+							{% endfor %}
+						{% else %}
+							<span class="aside">You are not currently following any organisms. <a href="#">Find some organisms to follow.</a></span>
+						{% endif %}
+					</div>
+					
+					<div class="newsfeed_section">
+						<h3>Projects I'm following</h3>
+						{% if followed_projects.length() > 0 %}
+							{% for project in followed_projects %}
+								<h4 class="feed_projects_title">{{ project.name }}</h4>
+								<ol>
+									{% for update in project.updates %}
+										<li><a href="{{ update.uri }}">{{ update.user }}</a> {{ update.text }}</li>
+									{% endfor %}
+								</ol>
+							{% endfor %}
+						{% else %}
+							<span class="aside">You are not currently following any projects. <a href="#">Find some projects to follow.</a></span>
+						{% endif %}
+					</div>
+					
+					<div class="newsfeed_section">
+						<a href="#">Manage my subscriptions</a>
+					</div>
+				</div>
+
+				<div id="metrics_section">
+					<div class="stats_section">
+						<h3>You have:</h3>
+						<ul>
+							<li><a href="#">{{ num_notifications }}</a> notifications</li>
+						<ul>
+					</div>
+					<div class="stats_section">
+						<h3>Your narratives have been:</h3>
+						<table>
+							<tr>
+								<td>commented on</td>
+								<td>{{ num_narrative_comments }} times</td>
+							</tr>
+							<tr>
+								<td>linked to</td>
+								<td>{{ num_narrative_links }} times</td>
+							</tr>
+							<tr>
+								<td>cloned</td>
+								<td>{{ num_narrative_clones }} times</td>
+							</tr>
+							<tr>
+								<td>viewed</td>
+								<td>{{ num_narrative_views }} times</td>
+							</tr>
+						</table>
+					</div>
+					<div class="stats_section">
+						<h3>Your usage:</h3>
+						<ul>
+							<li>{{ used_storage }} of {{ available_storage }} GB of storage</li>
+							<li>{{ used_compute }} of a possible {{ available_compute }} compute hours this month</li>
+							<li><a href="#">learn how to increase your allocation</a></li>
+						<ul>
+					</div>
+					<div class="stats_section">
+						<h3>You have:</h3>
+						<ul>
+							<li>{{ contrib_points }} Contribution Points</li>
+						</ul>
+						based on the following:
+						<ul id="contribution_stats">
+							{% for stat in contribution_stats %}
+								<li>{{ stat.value }} {{ stat.name }}</li>
+							{% endfor %}
+						<ul>
+					</div>
+						
+				</div>
+			</div>	
+	        <div id="narrative_column">
+				<h2>Narratives</h2>
+				<input type="button" value="Create a New Narrative">
+				<div class="narrative_section">
+					<h3>Recent</h3>
+					{% if recent_narratives.length() > 0 %}
+						<ol>
+						{% for narrative in recent_narratives %}
+							<li><a href="{{ narrative.uri }}">{{ narrative.name }}</a></li>
+						{% endfor %}
+						</ol>
+					{% else %}
+						You haven't accessed any narratives recently.
+					{% endif %}
+				</div>
+				<div class="narrative_section">
+					<h3>All</h3>
+					{% if all_narratives.length() > 0 %}
+						<ol>
+						{% for narrative in all_narratives.page(0) %}
+							<li><a href="{{ narrative.uri }}">{{ narrative.name }}</a></li>
+						{% endfor %}
+						</ol>
+					{% else %}
+						<span>You aren't subscribed to any narratives. <a href="#">Create a new narrative?</a></span>
+					{% endif %}
+
+					{% if all_narratives.num_pages > 1 %}
+						<div class="narrative_controls">
+							<div id="page_control_left">
+								<span class="control_arrow">&#x25c1;<BR></span>prev
+							</div>
+							<div id="page_control_right">
+								<span class="control_arrow">&#x25b7;<BR></span>next
+							</div>
+						</div>
+					{% endif %}
+				</div>
+	        </div>
+	    </div>
+	</div>
+{% endblock %}

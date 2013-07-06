@@ -1,0 +1,56 @@
+{% macro static_url(name) -%}
+   {{ base_project_url }}static/{{ name }}
+{%- endmacro %}
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+	<head>
+		{% block head %}
+		<meta charset="UTF-8" />
+		<link type="text/css" href="{{ static_url("jquery/css/kbase/smoothness/jquery-ui-1.9.0.custom.css") }}" rel="stylesheet" />
+		<link type="text/css" href="{{ static_url("css/kbase_stylesheet.css") }}" rel="stylesheet" />
+		<title>KBase - {% block title %}{% endblock %}</title>
+		{% endblock %}
+	</head>
+
+	<body>
+		{% block page_header %}
+		<p id="site-title">
+			<a href="kbase.us">KBase</a>
+		</p>
+		<nav>
+			<ul>
+				{% for target in navbar %}
+					{% if target.selected %}
+						<li class="selected">
+					{% else %}
+						<li>
+					{% endif %}
+						<a href="{{ target.href }}">{{ target.name }}</a>
+						</li>
+				{% endfor %}
+			</ul>
+		</nav>
+		<div id="login_info">
+			{% if user %}
+				{{ user.email }} <a href="#">log out</a>
+			{% else %}
+				<a href="#">log in</a>
+			{% endif %}
+		</div>
+		{% endblock %}
+
+		{% block content %}
+		{% endblock %}
+
+
+		<br clear = 'all'/>
+	    <div style = 'width : 100%; height : 2.4em;'>&nbsp;</div>
+
+	    {% block script %}
+	    {% endblock %}
+	</body>
+
+</html>

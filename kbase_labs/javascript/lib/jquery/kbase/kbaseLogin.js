@@ -744,7 +744,7 @@
                                                     .attr('style', 'display : none')
                                                     .append(
                                                         $('<div></div>')
-                                                            .append(
+                                                            /*.append(
                                                                 $('<div></div>')
                                                                     .addClass('pull-left')
                                                                     .append(
@@ -752,7 +752,7 @@
                                                                             .addClass('icon-info-sign')
                                                                             .attr('style', 'float: left; margin-right: .3em;')
                                                                     )
-                                                            )
+                                                            )*/
                                                             .append(
                                                                 $('<div></div>')
                                                                     .append(

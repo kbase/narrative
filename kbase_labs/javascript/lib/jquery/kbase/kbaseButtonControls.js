@@ -102,7 +102,7 @@
                 this._controls[control] = undefined;
             }
 
-            var $box = this;
+            var $buttonControls = this;
 
             $.each(
                 controls,
@@ -129,7 +129,7 @@
                                         $(this).children().first().toggleClass(val.icon);
                                         $(this).children().first().toggleClass(val['icon-alt']);
                                     }
-                                    val.callback.call(this, e, $box);
+                                    val.callback.call(this, e, $buttonControls.options.context);
                                 }
                             )
                     ;

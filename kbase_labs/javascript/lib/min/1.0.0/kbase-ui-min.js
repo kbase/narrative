@@ -7,7 +7,7 @@ if(parent){subclass(Widget,widgetRegistry[parent]);}
 var defCopy=$.extend(true,{},def);for(var prop in defCopy){if($.isFunction(defCopy[prop])){Widget.prototype[prop]=(function(methodName,method){var _super=function(){throw"No parent method defined! Play by the rules!";}
 var _superMethod=function(){throw"No parent method defined! Play by the rules!";}
 if(parent){var _super=function(){return widgetRegistry[parent].prototype[methodName].apply(this,arguments);}
-var _superMethod=function(superMethodName){return widgetRegistry[parent].prototype[superMethodName].apply(this,Array.prototype.slice.apply(arguments,[1]));}}
+var _superMethod=function(superMethodName){return widgetRegistry[parent].prototype[superMethodName].apply(this,Array.prototype.slice.call(arguments,1));}}
 return function(){var _oSuper=this._super;var _oSuperMethod=this._superMethod;this._super=_super;this._superMethod=_superMethod;var retValue=method.apply(this,arguments);this._super=_oSuper;this._superMethod=_oSuperMethod;return retValue;}})(prop,defCopy[prop]);}
 else{Widget.prototype[prop]=defCopy[prop];}}
 if(parent){Widget.prototype.options=$.extend(true,{},widgetRegistry[parent].prototype.options,Widget.prototype.options);}
@@ -38,8 +38,8 @@ var fontSize=this.options.fontSize;var $block=$('<div></div>')
 .append($('<div></div>')
 .addClass('accordion-heading')
 .append($('<i></i>')
-.css('margin-right','3px')
-.css('margin-left','1px')
+.css('margin-right','5px')
+.css('margin-left','3px')
 .addClass('icon-chevron-right')
 .addClass('pull-left')
 .css('height','22px')
@@ -59,7 +59,7 @@ if($target.get(0)!=$opened.get(0)){$target.collapse('show');var $i=$(this).paren
 .addClass('accordion-body')
 .append($('<div></div>')
 .addClass('accordion-inner')
-.append(val.body))));},this));this._rewireIds($block,this);$elem.append($block);$block.find('.accordion-body').collapse('hide');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseBox",'kbaseWidget',{version:"1.0.0",options:{canCollapse:true,canCollapseOnDoubleClick:false,controls:[],bannerColor:'lightgray',boxColor:'lightgray',},init:function(options){this._super(options);if(this.options.canCollapse){this.options.controls.push({icon:'icon-caret-up','icon-alt':'icon-caret-down','tooltip':'collapse / expand',callback:$.proxy(function(e){this.data('content').collapse('toggle');},this)});}
+.append(val.body))));},this));this._rewireIds($block,this);$elem.append($block);$block.find('.accordion-body').collapse('hide');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseBox",'kbaseWidget',{version:"1.0.0",options:{canCollapse:true,canCollapseOnDoubleClick:false,controls:[],bannerColor:'lightgray',boxColor:'lightgray',},init:function(options){this._super(options);if(this.options.canCollapse){this.options.controls.push({icon:'icon-caret-up','icon-alt':'icon-caret-down',callback:$.proxy(function(e){this.data('content').collapse('toggle');},this)});}
 this.appendUI($(this.$elem));return this;},setBannerColor:function(color){this.data('banner').css('background-color',color);},startThinking:function(){this.data('banner').addClass('progress progress-striped active')},stopThinking:function(){this.data('banner').removeClass('progress progress-striped active')},appendUI:function($elem){var canCollapse=this.options.canCollapse;var $div=$('<div></div>')
 .append($('<div></div>')
 .css('text-align','left')
@@ -99,7 +99,7 @@ this.appendUI($(this.$elem));return this;},setBannerColor:function(color){this.d
 .css('font-size','70%')
 .css('color','gray')
 .append(this.options.postcontent));this._rewireIds($div,this);if(this.options.controls){this.data('banner-text').kbaseButtonControls({onMouseover:false,controls:this.options.controls})}
-this.setTitle(this.options.title);this.setContent(this.options.content);$elem.append($div);return this;},setTitle:function(title){this.data('title').empty();this.data('title').append(title);},setContent:function(content){this.data('content').empty();this.data('content').append(content);},controls:function(control){return this.data('banner-text').kbaseButtonControls('controls',control);},});}(jQuery));(function($,undefined){$.kbWidget("kbaseButtonControls",'kbaseWidget',{version:"1.0.0",options:{controls:[],onMouseover:true,},init:function(options){this._super(options);this._controls={};this.appendUI($(this.$elem));return this;},appendUI:function($elem){$elem
+this.setTitle(this.options.title);this.setContent(this.options.content);$elem.append($div);return this;},setTitle:function(title){this.data('title').empty();this.data('title').append(title);},setContent:function(content){this.data('content').empty();this.data('content').append(content);},content:function(){return this.data('content');},controls:function(control){return this.data('banner-text').kbaseButtonControls('controls',control);},});}(jQuery));(function($,undefined){$.kbWidget("kbaseButtonControls",'kbaseWidget',{version:"1.0.0",options:{controls:[],onMouseover:true,},init:function(options){this._super(options);this._controls={};this.appendUI($(this.$elem));return this;},appendUI:function($elem){$elem
 .css('position','relative')
 .prepend($('<div></div>')
 .addClass('btn-group')
@@ -112,7 +112,7 @@ this.setTitle(this.options.title);this.setContent(this.options.content);$elem.ap
 .mouseout(function(e){$(this).children().first().hide();})
 .children().first().hide();};this.setControls(this.options.controls);return this;},controls:function(control){if(control){return this._controls[control];}
 else{return this._controls;}},setControls:function(controls){this.data('control-buttons').empty();for(control in this._controls){this._controls[control]=undefined;}
-var $box=this;$.each(controls,$.proxy(function(idx,val){var btnClass='btn btn-mini';if(val.type){btnClass=btnClass+' btn-'+val.type;}
+var $buttonControls=this;$.each(controls,$.proxy(function(idx,val){var btnClass='btn btn-mini';if(val.type){btnClass=btnClass+' btn-'+val.type;}
 var $button=$('<button></button>')
 .attr('href','#')
 .css('padding-top','1px')
@@ -121,7 +121,7 @@ var $button=$('<button></button>')
 .append($('<i></i>').addClass(val.icon))
 .tooltip({title:val.tooltip})
 .bind('click',function(e){e.preventDefault();e.stopPropagation();if(val['icon-alt']){$(this).children().first().toggleClass(val.icon);$(this).children().first().toggleClass(val['icon-alt']);}
-val.callback.call(this,e,$box);});if(val.id){this._controls[val.id]=$button;}
+val.callback.call(this,e,$buttonControls.options.context);});if(val.id){this._controls[val.id]=$button;}
 if(this.options.id){$button.data('id',this.options.id);}
 this.data('control-buttons').append($button);},this));},});}(jQuery));(function($,undefined){$.kbWidget("kbasePrompt",'kbaseWidget',{version:"1.0.0",options:{controls:['cancelButton','okayButton']},init:function(options){this._super(options);return this;},openPrompt:function(){this.dialogModal().modal({'keyboard':true});},closePrompt:function(){this.dialogModal().modal('hide');},cancelButton:function(){return{name:'Cancel',callback:function(e,$prompt){$prompt.closePrompt();}}},okayButton:function(){return{name:'Okay',type:'primary',callback:function(e,$prompt){$prompt.closePrompt();}}},dialogModal:function(){if(this.data('dialogModal')!=undefined){return this.data('dialogModal');}
 var $dialogModal=$('<div></div>')
@@ -174,7 +174,7 @@ else if($(val).is("textarea")&&$(val).text().length==0){$(val).focus();selection
 .addClass('icon-warning-sign')
 .attr('style','float: left; margin-right: .3em;')))
 .append($('<div></div>')
-.append($('<strong></strong>').append(options.message)))),controls:['okayButton'],});},});}(jQuery));(function($,undefined){$.kbWidget("kbaseFormBuilder",'kbaseWidget',{version:"1.0.0",options:{elements:[],defaultSize:50,defaultRowSize:5,defaultMultiSelectSize:5,dispatch:{text:'buildTextField',textarea:'buildTextArea',password:'buildSecureTextField',checkbox:'buildCheckbox',select:'buildSelectbox',multiselect:'buildSelectbox',radio:'buildRadioButton',string:'buildTextField',secure:'buildSecureTextField',enum:'buildSelectbox',boolean:'buildCheckbox',},},init:function(options){this._super(options);this.$elem.append(this._buildForm(this.options.elements));return this;},getFormValues:function(){var ret=[];var formValues=this.data('formValues');var form=this.data('form').get(0);for(key in formValues){var val=formValues[key];var field=val.name;var type=val.type;var fields=[];if(form[field]=='[object NodeList]'){for(var i=0;i<form[field].length;i++){fields.push(form[field][i]);}}
+.append($('<strong></strong>').append(options.message)))),controls:['okayButton'],});},});}(jQuery));(function($,undefined){$.kbWidget("kbaseFormBuilder",'kbaseWidget',{version:"1.0.0",options:{elements:[],defaultSize:50,defaultRowSize:5,defaultMultiSelectSize:5,dispatch:{text:'buildTextField',textarea:'buildTextArea',password:'buildSecureTextField',checkbox:'buildCheckbox',select:'buildSelectbox',multiselect:'buildSelectbox',radio:'buildRadioButton',string:'buildTextField',secure:'buildSecureTextField',enum:'buildSelectbox',boolean:'buildCheckbox',},},init:function(options){this._super(options);this.$elem.append(this._buildForm(this.options.elements));return this;},getFormValuesAsObject:function(){var values=this.getFormValues();var ret={};$.each(values,function(idx,val){ret[val[0]]=val.slice(1)});return ret;},getFormValues:function(){var ret=[];var formValues=this.data('formValues');var form=this.data('form').get(0);for(key in formValues){var val=formValues[key];var field=val.name;var type=val.type;var fields=[];if(form[field]=='[object NodeList]'){for(var i=0;i<form[field].length;i++){fields.push(form[field][i]);}}
 else{fields=[form[field]];}
 if(type=='checkbox'){if(form[field].checked){ret.push([key]);}}
 else if(type=='multiselect'){var selectedValues=[key];var fieldValues=selectedValues;if(val.asArray){fieldValues=[];selectedValues.push(fieldValues);}
@@ -284,34 +284,43 @@ return this._error;},openDialog:function(){if(this.data('loginDialog')){var $ld=
 .text('Sign In')
 .bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();this.openDialog();},this)))
 .append($('<div></div>')
+.addClass('btn-group')
 .attr('id','userdisplay')
 .css('display','none')
 .append($('<button></button>')
-.attr('href','#')
-.attr('id','accountButton')
-.addClass('btn btn-mini dropdown-toggle')
-.css('margin-bottom','5px')
-.bind('click',$.proxy(function(e){console.log(this.data('accountButton'));this.data('accountButton').dropdown();},this))
+.addClass('btn')
+.addClass('btn-mini')
+.addClass('dropdown-toggle')
 .append($('<i></i>').addClass('icon-user'))
-.append($('<i></i>').addClass('icon-caret-down')))
+.append($('<i></i>').addClass('icon-caret-down'))
+.bind('click',function(e){e.preventDefault();e.stopPropagation();$(this).next().slideToggle();console.log($(this).next());}
+))
 .append($('<ul></ul>')
+.addClass('dropdown-menu')
+.addClass('pull-right')
 .css('padding','3px')
-.css('font-size','75%')
-.addClass('dropdown-menu pull-right')
+.attr('id','login-dropdown-menu')
 .append($('<li></li>')
+.css('border-bottom','1px solid lightgray')
+.css('white-space','nowrap')
+.append($('<span></span>')
+.css('white-space','nowrap')
 .append('Signed in as ')
-.append($('<span></span>').attr('id','loggedinuser_id').css('font-weight','bold')))
-.append($('<li></li>').append($('<hr></hr>')))
-.append($('<li></li>')
 .append($('<a></a>')
-.attr('id','logoutlink')
-.attr('href','#')
-.css('margin-bottom','5px')
-.css('padding-left','3px')
-.css('padding-right','3px')
-.attr('title','Sign out')
-.append('Sign out')
-.bind('click',$.proxy(function(e){e.stopPropagation();e.preventDefault();this.logout();},this))))));this._rewireIds($prompt,this);this.registerLogin=function(args){if(args.success){this.data("loginlink").hide();this.data('loggedinuser_id').text(args.name);this.data("userdisplay").show();this.data('loginDialog').closePrompt();}
+.attr('id','loggedinuser_id')
+.css('font-weight','bold')
+.attr('href','https://gologin.kbase.us/account/UpdateProfile')
+.attr('target','_blank')
+.css('padding-right','0px')
+.css('padding-left','0px'))))
+.append($('<li></li>')
+.addClass('pull-right')
+.append($('<span></span>')
+.append($('<a></a>')
+.css('padding-right','0px')
+.css('padding-left','0px')
+.append('Sign out'))
+.bind('click',$.proxy(function(e){e.stopPropagation();e.preventDefault();this.data('login-dropdown-menu').slideUp();this.logout();},this))))));this._rewireIds($prompt,this);this.registerLogin=function(args){if(args.success){this.data("loginlink").hide();this.data('loggedinuser_id').text(args.name);this.data("userdisplay").show();this.data('loginDialog').closePrompt();}
 else{this.data('loginDialog').dialogModal().trigger('error',args.message);}};this.specificLogout=function(args){this.data("userdisplay").hide();this.data("loginlink").show();};return $prompt;},_hiddenStyle:function(){this._createLoginDialog();this.registerLogin=function(args){if(args.success){this.data('loginDialog').closePrompt();}
 else{this.data('loginDialog').dialogModal().trigger('error',args.message);}};return undefined;},_slimStyle:function(){this.data('loginDialog',undefined);var $prompt=$('<span></span>')
 .addClass('form-inline')
@@ -553,7 +562,7 @@ this.data('tabs')[tab.tab]=$tab;this.data('nav')[tab.tab]=$nav;this.data('tabs-c
 if(tab.show||tabCount==1){this.showTab(tab.tab);}},closeIcon:function(){return'icon-remove';},deleteTabToolTip:function(tabName){return'Remove '+tabName;},showTab:function(tab){if(this.shouldShowTab(tab)){this.data('nav')[tab].find('a').trigger('click');}},shouldShowTab:function(tab){return 1;},deletePrompt:function(tabName){var $deleteModal=$('<div></div>').kbaseDeletePrompt({name:tabName,callback:this.deleteTabCallback(tabName),});$deleteModal.openPrompt();},deleteTabCallback:function(tabName){return $.proxy(function(e,$prompt){if($prompt!=undefined){$prompt.closePrompt();}
 var $tab=this.data('tabs')[tabName];var $nav=this.data('nav')[tabName];if($nav.hasClass('active')){if($nav.next('li').length){$nav.next().find('a').trigger('click');}
 else{$nav.prev('li').find('a').trigger('click');}}
-if(this.shouldDeleteTab(tabName)){$tab.remove();$nav.remove();}},this);},shouldDeleteTab:function(tabName){return 1;},activeTab:function(){var activeNav=this.data('tabs-nav').find('.active:last a')[0];return $(activeNav).attr('data-tab');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseDataBrowser",'kbaseWidget',{version:"1.0.0",options:{'title':'Data Browser','canCollapse':true,'height':'200px','types':{'file':{'icon':'icon-file',},'folder':{'icon':'icon-folder-close-alt','icon-open':'icon-folder-open-alt','expandable':true,}},'content':[],},init:function(options){this._super(options);this.appendUI(this.$elem);return this;},sortByName:function(a,b){if(a['name'].toLowerCase()<b['name'].toLowerCase()){return-1}
+if(this.shouldDeleteTab(tabName)){$tab.remove();$nav.remove();}},this);},shouldDeleteTab:function(tabName){return 1;},activeTab:function(){var activeNav=this.data('tabs-nav').find('.active:last a')[0];return $(activeNav).attr('data-tab');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseDataBrowser",'kbaseWidget',{version:"1.0.0",options:{'title':'Data Browser','canCollapse':true,'height':'200px','types':{'file':{'icon':'icon-file',},'folder':{'icon':'icon-folder-close-alt','icon-open':'icon-folder-open-alt','expandable':true,}},'content':[],},init:function(options){this.targets={};this.openTargets={};this._super(options);this.appendUI(this.$elem);return this;},sortByName:function(a,b){if(a['name'].toLowerCase()<b['name'].toLowerCase()){return-1}
 else if(a['name'].toLowerCase()>b['name'].toLowerCase()){return 1}
 else{return 0}},appendContent:function(content,$target){$.each(content,$.proxy(function(idx,val){var icon=val.icon;var iconOpen=val['icon-open'];if(icon==undefined&&val.type!=undefined){icon=this.options.types[val.type].icon;iconOpen=this.options.types[val.type]['icon-open'];}
 if(val.expandable==undefined&&val.type!=undefined){val.expandable=this.options.types[val.type].expandable;}
@@ -565,15 +574,17 @@ var $button=$('<i></i>')
 .append($button)
 .append(' ')
 .append(val.label));if(val.data){$li.data('data',val.data);}
-if(val.id){$li.data('id',val.id);}
+if(val.id){$li.data('id',val.id);this.targets[val.id]=$li;}
 $target.append($li);if(val.expandable){var $ul=$('<ul></ul>')
 .addClass('nav nav-list');if(!val.open){$ul.hide();}
 if(val.children!=undefined){this.appendContent(val.children,$ul);}
 $target.append($ul);var callback=val.childrenCallback;if(val.children==undefined&&callback==undefined&&val.type!=undefined){callback=this.options.types[val.type].childrenCallback;}
-$li.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();$button.toggleClass(iconOpen);$button.toggleClass(icon);if($ul.is(':hidden')&&callback!=undefined){callback.call(this,val.id,$.proxy(function(results){$ul.empty();this.appendContent(results,$ul);$ul.toggle('collapse')},this));}
-else{$ul.toggle('collapse');}},this));}
+$li.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();$button.toggleClass(iconOpen);$button.toggleClass(icon);if($ul.is(':hidden')&&callback!=undefined){callback.call(this,val.id,$.proxy(function(results){$ul.empty();this.appendContent(results,$ul);$ul.show('collapse');this.openTargets[val['id']]=true;},this));}
+else{if($ul.is(':hidden')){$ul.show('collapse');this.openTargets[val['id']]=true;}
+else{$ul.hide('collapse');this.openTargets[val['id']]=false;}}
+console.log("OT");console.log(this.openTargets);},this));console.log("DONE SETUP "+val['id']);console.log(val);if(val.open&&val.children==undefined&&callback!=undefined){$button.toggleClass(iconOpen);$button.toggleClass(icon);$ul.hide();$li.trigger('click');}}
 var controls=val.controls;if(controls==undefined&&val.type!=undefined){controls=this.options.types[val.type].controls;}
-if(controls){$li.kbaseButtonControls({controls:controls,id:val.id});}},this));this._rewireIds($target,this);return $target;},prepareRootContent:function(){return $('<ul></ul>')
+if(controls){$li.kbaseButtonControls({controls:controls,id:val.id,context:this});}},this));this._rewireIds($target,this);return $target;},prepareRootContent:function(){return $('<ul></ul>')
 .addClass('nav nav-list')
 .css('height',this.options.height)
 .css('overflow','auto')

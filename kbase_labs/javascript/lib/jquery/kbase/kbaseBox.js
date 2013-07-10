@@ -57,7 +57,7 @@
                     {
                         icon : 'icon-caret-up',
                         'icon-alt' : 'icon-caret-down',
-                        'tooltip' : 'collapse / expand',
+                        //'tooltip' : 'collapse / expand',
                         callback : $.proxy(function(e) {
                             this.data('content').collapse('toggle');
                         }, this)
@@ -180,6 +180,10 @@
         setContent : function (content) {
             this.data('content').empty();
             this.data('content').append(content);
+        },
+
+        content : function() {
+            return this.data('content');
         },
 
         controls : function (control) {

@@ -134,6 +134,21 @@
             return this;
         },
 
+        getFormValuesAsObject : function() {
+            var values = this.getFormValues();
+
+            var ret = {};
+
+            $.each(
+                values,
+                function (idx, val) {
+                    ret[val[0]] = val.slice(1)
+                }
+            );
+
+            return ret;
+        },
+
         getFormValues : function() {
             var ret = [];
 

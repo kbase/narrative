@@ -23,27 +23,15 @@
 
         appendUI : function($elem) {
 
-            $elem.append(
-                $('<div></div>')
-                    .css('border', '1px solid lightgray')
-                    .css('padding', '2px')
-                    .append(
-                        $('<h5></h5>')
-                            .addClass('text-left')
-                            .text("Running processes")
-                            .css('margin', '0px')
-                            .css('padding', '2px')
-                            .css('background-color', 'lightgray')
-                            .css('border-collapse', 'collapse')
-
-                        )
-                    .append(
+            var $box = $elem.kbaseBox(
+                {
+                    'title' : 'Running processes',
+                    'content' :
                         $('<ul></ul>')
                             .addClass('unstyled')
-                            .append(this.pendingLi())
-                    )
-                )
-            ;
+                            .append(this.pendingLi()),
+                }
+            );
 
             return this;
 

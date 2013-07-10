@@ -57,7 +57,7 @@
                         }
 
                         var _superMethod = function(superMethodName) {
-                            return widgetRegistry[parent].prototype[superMethodName].apply(this, Array.prototype.slice.apply(arguments, [1]));
+                            return widgetRegistry[parent].prototype[superMethodName].apply(this, Array.prototype.slice.call(arguments, 1));
                         }
                     }
 

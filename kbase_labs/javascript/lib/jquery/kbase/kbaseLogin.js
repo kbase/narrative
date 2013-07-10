@@ -207,58 +207,74 @@
                 )
                 .append(
                     $('<div></div>')
+                        .addClass('btn-group')
                         .attr('id', 'userdisplay')
                         .css('display', 'none')
                         .append(
                             $('<button></button>')
-                                .attr('href', '#')
-                                .attr('id', 'accountButton')
-                                .addClass('btn btn-mini dropdown-toggle')
-                                .css('margin-bottom', '5px')
-                                //.css('padding-left', '3px')
-                                //.css('padding-right', '3px')
-                                .bind('click',
-                                    $.proxy( function(e) {
-                                        //this.logout();
-                                        console.log(this.data('accountButton'));
-                                        this.data('accountButton').dropdown();
-                                    }, this)
-                                )
+                                .addClass('btn')
+                                .addClass('btn-mini')
+                                .addClass('dropdown-toggle')
                                 .append($('<i></i>').addClass('icon-user'))
                                 .append($('<i></i>').addClass('icon-caret-down'))
+                                .bind('click',
+                                //$.proxy(
+                                function(e) {
+                                    e.preventDefault(); e.stopPropagation();
+                                    $(this).next().slideToggle();//toggle('dropdown');
+                                    console.log($(this).next());
+                                }
+                                //, this)
+                                )
                         )
                         .append(
                             $('<ul></ul>')
+                                .addClass('dropdown-menu')
+                                .addClass('pull-right')
                                 .css('padding', '3px')
-                                .css('font-size', '75%')
-                                .addClass('dropdown-menu pull-right')
+                                .attr('id', 'login-dropdown-menu')
                                 .append(
                                     $('<li></li>')
-                                        .append('Signed in as ')
-                                        .append($('<span></span>').attr('id', 'loggedinuser_id').css('font-weight', 'bold'))
-                                )
-                                .append($('<li></li>').append($('<hr></hr>')))
-                                .append(
-                                    $('<li></li>')
+                                        .css('border-bottom', '1px solid lightgray')
+                                        .css('white-space', 'nowrap')
+                                        .append(
+                                            $('<span></span>')
+                                        .css('white-space', 'nowrap')
+                                            .append('Signed in as ')
+
                                         .append(
                                             $('<a></a>')
-                                                .attr('id', 'logoutlink')
-                                                .attr('href', '#')
-                                                .css('margin-bottom', '5px')
-                                                .css('padding-left', '3px')
-                                                .css('padding-right', '3px')
-                                                .attr('title', 'Sign out')
-                                                .append('Sign out')
-                                                .bind('click',
-                                                    $.proxy( function(e) {
-                                                        e.stopPropagation();e.preventDefault();
-                                                        this.logout();
-                                                    }, this)
-                                                )
+                                                .attr('id', 'loggedinuser_id')
+                                                .css('font-weight', 'bold')
+                                                .attr('href', 'https://gologin.kbase.us/account/UpdateProfile')
+                                                .attr('target', '_blank')
+                                                .css('padding-right', '0px')
+                                                .css('padding-left', '0px')
+                                        ))
+                                )
+                                .append(
+                                    $('<li></li>')
+                                        .addClass('pull-right')
+                                        .append(
+                                            $('<span></span>')
+                                            .append(
+                                                $('<a></a>')
+                                                    .css('padding-right', '0px')
+                                                    .css('padding-left', '0px')
+                                                    .append('Sign out')
+                                            )
+                                            .bind('click',
+                                                $.proxy( function(e) {
+                                                    e.stopPropagation();e.preventDefault();
+                                                    this.data('login-dropdown-menu').slideUp();
+                                                    this.logout();
+                                                }, this)
+                                            )
                                         )
                                 )
                         )
                 )
+
             ;
 
             this._rewireIds($prompt, this);

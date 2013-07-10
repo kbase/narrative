@@ -90,7 +90,7 @@ file=file.replace(/\/+$/,'');deleteMethod='deleteDirectoryCallback';}
 var matches=file.match(/(.+)\/[^/]+$/);var active_dir='/';if(matches!=undefined&&matches.length>1){active_dir=matches[1];}
 var that=this;var promptFile=file.replace(this.options.root,'');var $deleteModal=$('<div></div>').kbaseDeletePrompt({name:promptFile,callback:function(e,$prompt){$prompt.closePrompt();that[deleteMethod](file,active_dir);}});$deleteModal.openPrompt();},handleFileSelect:function(evt){evt.stopPropagation();evt.preventDefault();var files=evt.target.files||evt.originalEvent.dataTransfer.files||evt.dataTransfer.files;$.each(files,jQuery.proxy(function(idx,file){var reader=new FileReader();var upload_dir=this.options.root;if(this.data('activeDirectory')){upload_dir=this.data('activeDirectory');}
 var $processElem;if(this.options.processList){$processElem=this.options.processList.addProcess('Uploading '+file.name);}
-reader.onload=jQuery.proxy(function(e){this.uploadFile(file.name,e.target.result,upload_dir,$processElem);},this);reader.readAsText(file);},this));this.data('fileInput').val('');},listDirectory:function(path,$ul){throw"Cannot call listDirectory directly - please subclass";},makeDirectoryCallback:function(dir,parentDir){throw"Cannot call makeDirectoryCallback directly - please subclass";},fetchContent:function(file,win){throw"Cannot call fetchContent directly - please subclass";},deleteFileCallback:function(file,active_dir){throw"Cannot call deleteFileCallback directly - please subclass";},deleteDirectoryCallback:function(file,active_dir){throw"Cannot call deleteDirectoryCallback directly - please subclass";},uploadFile:function(name,content,upload_dir,$processElem){throw"Cannot call uploadFile directly - please subclass";},});}(jQuery));(function($,undefined){$.kbWidget("kbaseIrisCommands",'kbaseAccordion',{version:"1.0.0",options:{link:function(evt){alert("clicked on "+$(evt.target).text());},englishCommands:0,fontSize:'75%',overflow:true,sectionHeight:'300px',},init:function(options){this._super(options);if(options.client){this.client=options.client;}
+reader.onload=jQuery.proxy(function(e){this.uploadFile(file.name,e.target.result,upload_dir,$processElem);},this);reader.readAsText(file);},this));this.data('fileInput').val('');},listDirectory:function(path,$ul){throw"Cannot call listDirectory directly - please subclass";},makeDirectoryCallback:function(dir,parentDir){throw"Cannot call makeDirectoryCallback directly - please subclass";},fetchContent:function(file,win){throw"Cannot call fetchContent directly - please subclass";},deleteFileCallback:function(file,active_dir){throw"Cannot call deleteFileCallback directly - please subclass";},deleteDirectoryCallback:function(file,active_dir){throw"Cannot call deleteDirectoryCallback directly - please subclass";},uploadFile:function(name,content,upload_dir,$processElem){throw"Cannot call uploadFile directly - please subclass";},});}(jQuery));(function($,undefined){$.kbWidget("kbaseIrisCommands",'kbaseAccordion',{version:"1.0.0",options:{link:function(evt){alert("clicked on "+$(evt.target).text());},englishCommands:0,fontSize:'90%',overflow:true,sectionHeight:'300px',},init:function(options){this._super(options);if(options.client){this.client=options.client;}
 this.commands=[];this.commandCategories={};return this;},completeCommand:function(command){var completions=[];var commandRegex=new RegExp('^'+command+'.*');for(var idx=0;idx<this.commands.length;idx++){if(this.commands[idx].match(commandRegex)){completions.push(this.commands[idx]);}}
 return completions;},commonPrefix:function(str1,str2){var prefix='';for(var idx=0;idx<str1.length&&idx<str2.length;idx++){var chr1=str1.charAt(idx);var chr2=str2.charAt(idx);if(chr1==chr2){prefix=prefix+chr1;}
 else{break;}};return prefix;},commonCommandPrefix:function(commands){var prefix='';if(commands.length>1){prefix=this.commonPrefix(commands[0],commands[1]);for(var idx=2;idx<commands.length;idx++){prefix=this.commonPrefix(prefix,commands[idx]);}}
@@ -103,55 +103,15 @@ return matches.sort();},appendUI:function($elem){this.client.valid_commands($.pr
 this.commands.push(val.cmd);if(this.commandCategories[group.name]==undefined){this.commandCategories[group.name]=[];}
 this.commandCategories[group.name].push(val.cmd);$ul.append(this.createLI(val.cmd,label));},this));commands.push({'title':group.title,'category':group.name,'body':$ul});},this));this.loadedCallback($elem,commands);},this));},createLI:function(cmd,label,func){if(label==undefined){label=cmd;}
 if(func==undefined){func=this.options.link;}
-var $commands=this;return $('<li></li>')
-.bind('mouseover',function(e){e.preventDefault();console.log('in');$(this).children().last().css('display','inline');})
-.bind('mouseout',function(e){e.preventDefault();console.log('out');$(this).children().last().css('display','none');})
+var $li=$('<li></li>')
 .append($('<a></a>')
 .attr('href','#')
 .attr('title',cmd)
 .data('type','invocation')
 .text(label)
-.bind('click',func))
-.append($('<button></button>')
-.addClass('btn btn-mini')
-.css('display','none')
-.css('float','right')
-.append('?')
-.bind('click',function(e){e.preventDefault();if($commands.options.terminal!=undefined){console.log("TERMINAL");console.log($commands.options.terminal);$commands.options.terminal.run(cmd+' -h');}}))
-},loadedCallback:function($elem,commands){var that=this;$('input,textarea').on('focus.kbaseIrisCommands',$.proxy(function(e){if($(':focus').get(0)!=undefined&&$(':focus').get(0)!=this.data('searchField').get(0)){this.data('focused',$(':focus'));}},this));this.data('focused',$(':focus'));var $div=$('<div></div>')
-.css('border','1px solid lightgray')
-.css('padding','2px')
-.append($('<h5></h5>')
-.addClass('text-left')
-.text("Command List")
-.css('background-color','lightgray')
-.css('padding','2px')
-.css('margin','0px')
-.css('position','relative')
-.bind('click',function(e){$(this).parent().children().last().collapse('toggle');if(that.options.fileBrowser){that.options.fileBrowser.toggleNavHeight();}})
-.append($('<div></div>')
-.css('right','0px')
-.css('top','0px')
-.css('position','absolute')
-.append($('<button></button>')
-.attr('id','deleteSearchResults')
-.addClass('btn btn-mini')
-.append($('<i></i>').addClass('icon-remove'))
-.css('padding-top','1px')
-.css('padding-bottom','1px')
-.css('display','none')
-.attr('title','Remove search results')
-.tooltip()
-.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();this.data('searchResults').empty();this.data('deleteSearchResults').hide();this.data('searchFieldBox').hide();},this)))
-.append($('<button></button>')
-.addClass('btn btn-mini')
-.append($('<i></i>').addClass('icon-search'))
-.css('padding-top','1px')
-.css('padding-bottom','1px')
-.attr('title','Search for command')
-.tooltip()
-.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();this.data('searchResults').empty();this.data('searchFieldBox').toggle();if(this.data('searchFieldBox').is(':hidden')){this.data('searchField').blur();this.data('focused').focus();}
-else{this.data('searchField').val('');this.data('searchField').focus();}},this))))
+.bind('click',func));$li.kbaseButtonControls({context:this,controls:[{icon:'icon-question',callback:function(e,$ic){if($ic.options.terminal!=undefined){$ic.options.terminal.run(cmd+' -h');}},id:'removeDirectoryButton'},]});return $li;},loadedCallback:function($elem,commands){var that=this;$('input,textarea').on('focus.kbaseIrisCommands',$.proxy(function(e){if($(':focus').get(0)!=undefined&&$(':focus').get(0)!=this.data('searchField').get(0)){this.data('focused',$(':focus'));}},this));this.data('focused',$(':focus'));var $div=$('<div></div>')
+.css('max-height',this.options.overflow?this.options.sectionHeight:'5000px')
+.css('overflow',this.options.overflow?'auto':'visible')
 .append($('<div></div>')
 .css('right','0px')
 .css('top','24px')
@@ -168,17 +128,46 @@ else{this.data('searchField').val('');this.data('searchField').focus();}},this))
 .attr('id','searchField')
 .keypress($.proxy(function(e){if(e.which==13){var regex=new RegExp(this.data('searchField').val(),'i');var commands=this.commandsMatchingRegex(regex);$.each(commands,$.proxy(function(idx,cmd){this.data('searchResults').append(this.createLI(cmd,cmd,function(e){that.options.link.call(this,e);}));},this));if(!commands.length){this.data('searchResults').append($('<li></li>')
 .css('font-style','italic')
-.text('No matching commands found'));};this.data('deleteSearchResults').show();this.data('searchFieldBox').hide();if(!commands.length){this.data('focused').focus();}};},this)))))
-.append($('<ul></ul>')
+.text('No matching commands found'));};this.data('deleteSearchResults').show();this.data('searchFieldBox').hide();if(!commands.length){this.data('focused').focus();}};},this))));var $box=$div.kbaseBox({'title':'Command list','content':$('<ul></ul>')
 .css('font-size',this.options.fontSize)
 .css('padding-left','15px')
 .attr('id','searchResults')
-.addClass('unstyled')
-.css('max-height',this.options.overflow?this.options.sectionHeight:'5000px')
-.css('overflow',this.options.overflow?'auto':'visible'));$elem.append($div);this._rewireIds($div,this);this._superMethod('appendUI',$div,commands);this.data('accordion').css('margin-bottom','0px');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseIrisFileBrowser",'kbaseDataBrowser',{version:"1.0.0",options:{title:'File Browser','root':'/',types:{file:{controls:[{icon:'icon-remove',callback:function(e){console.log("clicked on delete");console.log($(this).parent().parent());console.log($(this).parent().parent().data('id'));},id:'removeButton',},{icon:'icon-eye-open',callback:function(e){console.log("clicked on view");console.log($(this).parent().parent().data('id'));},id:'viewButton'},{icon:'icon-arrow-right',callback:function(e){console.log("clicked on add to term");console.log($(this).parent().parent().data('id'));},id:'addButton'},],},folder:{childrenCallback:function(val,callback){console.log("ON "+val.id);this.listDirectory(val.id,function(results){callback(results);});},controls:[{icon:'icon-remove',callback:function(e){console.log("clicked on delete dir");console.log($(this).parent().parent().data('id'));},id:'removeDirectoryButton'},{icon:'icon-plus',callback:function(e){console.log("clicked on add sub");console.log($(this).parent().parent().data('id'));},id:'addDirectoryButton'},],}},},init:function(options){if(options.client){this.client=options.client;}
-if(options.$loginbox){this.$loginbox=options.$loginbox;}
-var $pc=$('<div></div>').css('margin-top','2px')
-$pc.kbaseButtonControls({onMouseover:false,controls:[{'icon':'icon-plus','tooltip':'add directory'},{'icon':'icon-arrow-up','tooltip':'upload a file'},]});this.options.postcontent=$pc;this._super(options);this.listDirectory(this.options.root,$.proxy(function(results){this.appendContent(results,this.data('ul-nav'))},this));return this;},sessionId:function(){return this.$loginbox.sessionId();},listDirectory:function(path,callback){console.log(this.$loginbox.sessionId());console.log(path);this.client.list_files(this.sessionId(),'/',path,jQuery.proxy(function(filelist){var dirs=filelist[0];var files=filelist[1];console.log(filelist);var results=[];var $fb=this;jQuery.each(dirs.sort(this.sortByKey('name')),$.proxy(function(idx,val){val['full_path']=val['full_path'].replace(/\/+/g,'/');results.push({'type':'folder','id':val['full_path'],'label':val['name'],})},this));jQuery.each(files.sort(this.sortByKey('name')),$.proxy(function(idx,val){val['full_path']=val['full_path'].replace(/\/+/g,'/');results.push({'type':'file','id':val['full_path'],'label':val['name'],})},this));console.log("RESULTS");console.log(results);results=results.sort(this.sortByKey('label'));callback(results);},this),$.proxy(function(err){this.dbg(err)},this));},});}(jQuery));(function($,undefined){$.kbWidget("kbaseIrisGrammar",'kbaseWidget',{version:"1.0.0",options:{defaultGrammarURL:'http://www.prototypesite.net/iris-dev/grammar.json',},init:function(options){this._super(options);if(this.options.$loginbox!=undefined){this.$loginbox=this.options.$loginbox;}
+.addClass('unstyled'),'controls':[{'icon':'icon-search',},]});$elem.append($div);this._rewireIds($div,this);this._superMethod('appendUI',$div.kbaseBox('content'),commands);this.data('accordion').css('margin-bottom','0px');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseIrisFileBrowser",'kbaseDataBrowser',{version:"1.0.0",options:{title:'File Browser','root':'/',types:{file:{controls:[{icon:'icon-minus',callback:function(e,$fb){$fb.deleteFile($(this).data('id'),'file');},id:'removeButton',},{icon:'icon-eye-open',callback:function(e,$fb){$fb.openFile($(this).data('id'));},id:'viewButton'},{icon:'icon-pencil',callback:function(e){console.log("clicked on edit");console.log($(this).data('id'));},id:'editButton'},{icon:'icon-arrow-right',callback:function(e,$fb){if($fb.$terminal){$fb.$terminal.kbaseIrisTerminal('appendInput',$(this).data('id')+' ');}},id:'addButton'},],},folder:{childrenCallback:function(path,callback){this.listDirectory(path,function(results){callback(results);});},controls:[{icon:'icon-minus',callback:function(e,$fb){$fb.deleteFile($(this).data('id'),'folder');},id:'removeDirectoryButton'},{icon:'icon-plus',callback:function(e,$fb){$fb.addDirectory($(this).data('id'));},id:'addDirectoryButton'},],}},},init:function(options){if(options.client){this.client=options.client;}
+if(options.$terminal){this.$terminal=options.$terminal;}
+this._super(options);this.listDirectory(this.options.root,$.proxy(function(results){this.appendContent(results,this.data('ul-nav'))},this));return this;},prepareRootContent:function(){var $ul=this._super();$ul.css('height',(parseInt(this.options.height)-25)+'px');var $pc=$('<div></div>').css('margin-top','2px')
+$pc.kbaseButtonControls({onMouseover:false,context:this,controls:[{'icon':'icon-plus','tooltip':'add directory',callback:function(e,$fb){$fb.addDirectory('/');},},{'icon':'icon-arrow-up','tooltip':'upload a file',callback:function(e,$fb){$fb.data('fileInput').trigger('click');}},]});return $('<div></div>')
+.css('height',this.options.height)
+.append($ul)
+.append($pc)
+.append($('<input></input>')
+.attr('type','file')
+.attr('id','fileInput')
+.css('display','none')
+.bind('change',$.proxy(this.handleFileSelect,this)))},sessionId:function(){return this.$terminal.sessionId;},refreshDirectory:function(path){if(this.sessionId()==undefined){this.data('ul-nav').empty();return;}
+var $target=path=='/'?this.data('ul-nav'):this.targets[path].next();var pathRegex=new RegExp('^'+path);var openTargets=[];for(var subPath in this.targets){if(subPath.match(pathRegex)&&!this.targets[subPath].next().is(':hidden')&&this.targets[subPath].next().is('ul')){openTargets.push(subPath);}}
+if(!$target.is(':hidden')){this.listDirectory(path,$.proxy(function(results){$target.empty();this.appendContent(results,$target)},this),openTargets);}
+$.each(openTargets,$.proxy(function(idx,subPath){var $target=this.targets[subPath].next();this.listDirectory(subPath,$.proxy(function(results){$target.empty();this.appendContent(results,$target)
+$target.show();},this));},this));},listDirectory:function(path,callback){this.client.list_files(this.sessionId(),'/',path,jQuery.proxy(function(filelist){var dirs=filelist[0];var files=filelist[1];var results=[];var $fb=this;jQuery.each(dirs.sort(this.sortByKey('name')),$.proxy(function(idx,val){val['full_path']=val['full_path'].replace(/\/+/g,'/');results.push({'type':'folder','id':val['full_path'],'label':val['name'],'open':$fb.openTargets[val['full_path']]})},this));jQuery.each(files.sort(this.sortByKey('name')),$.proxy(function(idx,val){val['full_path']=val['full_path'].replace(/\/+/g,'/');results.push({'type':'file','id':val['full_path'],'label':val['name'],})},this));results=results.sort(this.sortByKey('label'));callback(results);},this),$.proxy(function(err){this.dbg(err)},this));},handleFileSelect:function(evt){evt.stopPropagation();evt.preventDefault();var files=evt.target.files||evt.originalEvent.dataTransfer.files||evt.dataTransfer.files;$.each(files,jQuery.proxy(function(idx,file){var reader=new FileReader();var upload_dir='/';if(this.data('activeDirectory')){upload_dir=this.data('activeDirectory');}
+var $processElem;if(this.options.processList){$processElem=this.options.processList.addProcess('Uploading '+file.name);reader.onprogress=$.proxy(function(e){this.options.processList.removeProcess($processElem);$processElem=this.options.processList.addProcess('Uploading '+file.name+' '+(100*e.loaded/e.total).toFixed(2)+'%')
+this.dbg('progress '+(e.loaded/e.total));this.dbg(e);},this)}
+reader.onload=jQuery.proxy(function(e){this.client.put_file(this.sessionId(),file.name,e.target.result,upload_dir,jQuery.proxy(function(res){if(this.options.processList){this.options.processList.removeProcess($processElem);}
+this.refreshDirectory(upload_dir)},this),jQuery.proxy(function(res){if(this.options.processList){this.options.processList.removeProcess($processElem);}
+this.dbg(res);},this));},this);reader.readAsText(file);},this));this.data('fileInput').val('');},openFile:function(file){var win=window.open();win.document.open();this.client.get_file(this.sessionId(),file,'/',$.proxy(function(res){try{var obj=JSON.parse(res);res=JSON.stringify(obj,undefined,2);}
+catch(e){this.dbg("FAILURE");this.dbg(e);}
+win.document.write($('<div></div>').append($('<div></div>')
+.css('white-space','pre')
+.append(res))
+.html());win.document.close();},this),function(err){this.dbg("FILE FAILURE");this.dbg(err)});},deleteFile:function(file,type){var deleteMethod=type=='file'?'remove_files':'remove_directory';file=file.replace(/\/+$/,'');var matches=file.match(/(.+)\/[^/]+$/);var active_dir='/';if(matches!=undefined&&matches.length>1){active_dir=matches[1];}
+var that=this;var promptFile=file.replace(this.options.root,'');var $deleteModal=$('<div></div>').kbaseDeletePrompt({name:promptFile,callback:function(e,$prompt){$prompt.closePrompt();that.client[deleteMethod](that.sessionId,'/',file,function(res){that.refreshDirectory(active_dir)},function(){});}});$deleteModal.openPrompt();},addDirectory:function(parentDir){var that=this;var displayDir=parentDir.replace(this.options.root,'/');var $addDirectoryModal=$('<div></div>').kbasePrompt({title:'Create directory',body:$('<p></p>')
+.append('Create directory ')
+.append($('<span></span>')
+.css('font-weight','bold')
+.text(displayDir))
+.append(' ')
+.append($('<input></input>')
+.attr('type','text')
+.attr('name','dir_name')
+.attr('size','20')),controls:['cancelButton',{name:'Create directory',type:'primary',callback:function(e,$prompt){$prompt.closePrompt();that.client.make_directory(that.sessionId,parentDir,$addDirectoryModal.dialogModal().find('input').val(),function(res){that.refreshDirectory(parentDir)},function(){});}}]});$addDirectoryModal.openPrompt();},});}(jQuery));(function($,undefined){$.kbWidget("kbaseIrisGrammar",'kbaseWidget',{version:"1.0.0",options:{defaultGrammarURL:'http://www.prototypesite.net/iris-dev/grammar.json',},init:function(options){this._super(options);if(this.options.$loginbox!=undefined){this.$loginbox=this.options.$loginbox;}
 this.appendUI($(this.$elem));this.retrieveGrammar(this.options.defaultGrammarURL);return this;},appendUI:function($elem){},tokenize:function(string){var tokens=[];var partial='';var quote=undefined;var escaped=false;for(var idx=0;idx<string.length;idx++){var chr=string.charAt(idx);if(quote==undefined){if(chr.match(/[?;]/)){continue;}}
 if(chr.match(/\S/)||quote!=undefined){partial=partial+chr;}
 else{if(partial.length){tokens.push(partial);partial='';}
@@ -213,19 +202,9 @@ else{var filteredQ=[];var qRegex=new RegExp(filter);for(var idx=0;idx<questions.
 return filteredQ;}},XXXallQuestionsBOGUS:function(grammar,prefix){if(prefix==undefined){prefix='';}
 console.log("CALL AQ");console.log(this.grammar);if(grammar==undefined){if(this.grammar==undefined){this.retrieveGrammar(this.options.defaultGrammarURL,$.proxy(function(){this.allQuestions();},this));return;}
 else{grammar=this.grammar._root.children;}}
-console.log("checks it now!");console.log(grammar);for(var child in grammar){var childPrefix=prefix.length?prefix+' '+child:child;console.log(childPrefix);}},retrieveGrammar:function(url,callback){var token=undefined;$.ajax({async:true,dataType:"text",url:url,crossDomain:true,beforeSend:function(xhr){if(token){xhr.setRequestHeader('Authorization',token);}},success:$.proxy(function(data,status,xhr){var json=JSON.parse(data);this.grammar=json;if(callback){callback();}},this),error:$.proxy(function(xhr,textStatus,errorThrown){this.dbg(textStatus);throw xhr;},this),type:'GET',});}});}(jQuery));(function($,undefined){$.kbWidget("kbaseIrisProcessList",'kbaseWidget',{version:"1.0.0",options:{},init:function(options){this._super(options);this.appendUI(this.$elem);return this;},appendUI:function($elem){$elem.append($('<div></div>')
-.css('border','1px solid lightgray')
-.css('padding','2px')
-.append($('<h5></h5>')
-.addClass('text-left')
-.text("Running processes")
-.css('margin','0px')
-.css('padding','2px')
-.css('background-color','lightgray')
-.css('border-collapse','collapse'))
-.append($('<ul></ul>')
+console.log("checks it now!");console.log(grammar);for(var child in grammar){var childPrefix=prefix.length?prefix+' '+child:child;console.log(childPrefix);}},retrieveGrammar:function(url,callback){var token=undefined;$.ajax({async:true,dataType:"text",url:url,crossDomain:true,beforeSend:function(xhr){if(token){xhr.setRequestHeader('Authorization',token);}},success:$.proxy(function(data,status,xhr){var json=JSON.parse(data);this.grammar=json;if(callback){callback();}},this),error:$.proxy(function(xhr,textStatus,errorThrown){this.dbg(textStatus);throw xhr;},this),type:'GET',});}});}(jQuery));(function($,undefined){$.kbWidget("kbaseIrisProcessList",'kbaseWidget',{version:"1.0.0",options:{},init:function(options){this._super(options);this.appendUI(this.$elem);return this;},appendUI:function($elem){var $box=$elem.kbaseBox({'title':'Running processes','content':$('<ul></ul>')
 .addClass('unstyled')
-.append(this.pendingLi())));return this;},pendingLi:function(){if(this.data('pendingLi')==undefined){this.data('pendingLi',$('<li></li>')
+.append(this.pendingLi()),});return this;},pendingLi:function(){if(this.data('pendingLi')==undefined){this.data('pendingLi',$('<li></li>')
 .css('font-style','italic')
 .text('No processes running'));}
 return this.data('pendingLi');},addProcess:function(process){this.pendingLi().remove();var $li=$('<li></li>')
@@ -237,12 +216,12 @@ $.fn.getCursorPosition=function(){if(this.length==0)return this;input=this[0];re
 if(this.options.client){this.client=this.options.client;}
 else{this.client=new InvocationService(this.options.invocationURL,undefined,jQuery.proxy(function(){var cookie_obj=this.$loginbox.kbaseLogin('get_kbase_cookie');if(cookie_obj){var token=cookie_obj['token'];this.dbg("returning token from auth_cb "+token);return token;}
 else{this.dbg("returning undef from auth_cb ");return undefined;}},this));}
-this.$loginbox=$("<div></div>").kbaseLogin({style:'text',login_callback:jQuery.proxy(function(args){if(args.success){this.out_line();this.client.start_session(args.user_id,jQuery.proxy(function(newsid){this.set_session(args.user_id);this.loadCommandHistory();this.out("Set session to "+args.user_id);this.scroll();},this),jQuery.proxy(function(err){this.out("<i>Error on session_start:<br>"+
-err.message.replace("\n","<br>\n")+"</i>");},this));this.kbase_sessionid=args.kbase_sessionid;this.input_box.focus();this.refreshFileBrowser();}},this),logout_callback:jQuery.proxy(function(){this.sessionId=undefined;this.cwd='/';this.dbg("LOGOUT CALLBACK");this.refreshFileBrowser();this.terminal.empty();},this)});this.tutorial=$('<div></div>').kbaseIrisTutorial();this.commandHistory=[];this.commandHistoryPosition=0;this.path='.';this.cwd="/";this.variables={};this.aliases={};this.appendUI($(this.$elem));var cookie;if(cookie=this.$loginbox.get_kbase_cookie()){var $commandDiv=$("<div></div>").css('white-space','pre');this.terminal.append($commandDiv);this.out_line();if(cookie.user_id){this.out_to_div($commandDiv,'Already logged in as '+cookie.name+"\n");this.set_session(cookie.user_id);this.loadCommandHistory();this.out_to_div($commandDiv,"Set session to "+cookie.user_id);}
+this.$loginbox=$("<div></div>").kbaseLogin({style:'text',login_callback:jQuery.proxy(function(args){if(args.success){this.client.start_session(args.user_id,jQuery.proxy(function(newsid){this.set_session(args.user_id);this.loadCommandHistory();this.out("Authenticated as "+args.name);this.out_line();this.scroll();},this),jQuery.proxy(function(err){this.out("<i>Error on session_start:<br>"+
+err.message.replace("\n","<br>\n")+"</i>");},this));this.sessionId=args.kbase_sessionid;this.input_box.focus();this.refreshFileBrowser();}},this),logout_callback:jQuery.proxy(function(){this.sessionId=undefined;this.cwd='/';this.dbg("LOGOUT CALLBACK");this.refreshFileBrowser();this.terminal.empty();},this)});this.tutorial=$('<div></div>').kbaseIrisTutorial();this.commandHistory=[];this.commandHistoryPosition=0;this.path='.';this.cwd="/";this.variables={};this.aliases={};this.appendUI($(this.$elem));var cookie;if(cookie=this.$loginbox.get_kbase_cookie()){var $commandDiv=$("<div></div>").css('white-space','pre');this.terminal.append($commandDiv);if(cookie.user_id){this.out_line();this.out_to_div($commandDiv,'Already authenticated as '+cookie.name+"\n");this.set_session(cookie.user_id);this.loadCommandHistory();}
 else if(this.options.promptIfUnauthenticated){this.$loginbox.kbaseLogin('openDialog');}}
 else if(this.options.promptIfUnauthenticated){this.$loginbox.kbaseLogin('openDialog');}
 this.fileBrowsers=[];if(this.options.fileBrowser){this.addFileBrowser(this.options.fileBrowser);}
-else{this.addFileBrowser($('<div></div>').kbaseIrisFileBrowser({client:this.client,$terminal:this,$loginbox:this.$loginbox,externalControls:false,}))};return this;},addFileBrowser:function($fb){this.fileBrowsers.push($fb);},open_file:function(file){this.fileBrowsers[0].openFile(file);},refreshFileBrowser:function(){for(var idx=0;idx<this.fileBrowsers.length;idx++){this.fileBrowsers[idx].refreshDirectory(this.cwd);}},loginbox:function(){return this.$loginbox;},getClient:function(){return this.client;},authToken:function(){var cookieObj=this.$loginbox.kbaseLogin('get_kbase_cookie');if(cookieObj!=undefined){return cookieObj['token'];}
+else{this.addFileBrowser($('<div></div>').kbaseIrisFileBrowser({client:this.client,$terminal:this,externalControls:false,}))};return this;},addFileBrowser:function($fb){this.fileBrowsers.push($fb);},open_file:function(file){this.fileBrowsers[0].openFile(file);},refreshFileBrowser:function(){for(var idx=0;idx<this.fileBrowsers.length;idx++){this.fileBrowsers[idx].refreshDirectory(this.cwd);}},loginbox:function(){return this.$loginbox;},getClient:function(){return this.client;},authToken:function(){var cookieObj=this.$loginbox.kbaseLogin('get_kbase_cookie');if(cookieObj!=undefined){return cookieObj['token'];}
 else{return undefined;}},appendInput:function(text,spacer){if(this.input_box){var space=spacer==undefined?' ':'';if(this.input_box.val().length==0){space='';};this.input_box.val(this.input_box.val()+space+text);this.input_box.focusEnd();}},appendUI:function($elem){var $block=$('<div></div>')
 .append($('<div></div>')
 .attr('id','terminal')
@@ -252,36 +231,40 @@ else{return undefined;}},appendInput:function(text,spacer){if(this.input_box){va
 .css('font-family','monospace'))
 .append($('<textarea></textarea>')
 .attr('id','input_box')
-.attr('style','width : 99%;')
+.attr('style','width : 95%;')
 .attr('height','3'))
 .append($('<div></div>')
 .attr('id','file-uploader'))
 .append($('<div></div>')
 .attr('id','panel')
-.css('display','none'));;this._rewireIds($block,this);$elem.append($block);this.terminal=this.data('terminal');this.input_box=this.data('input_box');this.out('Welcome to the interactive KBase.');this.out_line();this.input_box.bind('keypress',jQuery.proxy(function(event){this.keypress(event);},this));this.input_box.bind('keydown',jQuery.proxy(function(event){this.keydown(event)},this));this.input_box.bind("onchange",jQuery.proxy(function(event){this.dbg("change");},this));this.data('input_box').focus();$(window).bind("resize",jQuery.proxy(function(event){this.resize_contents(this.terminal)},this));this.resize_contents(this.terminal);},saveCommandHistory:function(){this.client.put_file(this.sessionId,"history",JSON.stringify(this.commandHistory),"/",function(){},function(){});},loadCommandHistory:function(){this.client.get_file(this.sessionId,"history","/",jQuery.proxy(function(txt){this.commandHistory=JSON.parse(txt);this.commandHistoryPosition=this.commandHistory.length;},this),jQuery.proxy(function(e){this.dbg("error on history load : "+e);},this));},set_session:function(session){this.sessionId=session;},resize_contents:function($container){},keypress:function(event){if(event.which==13){event.preventDefault();var cmd=this.input_box.val();cmd=cmd.replace(/^ +/,'');cmd=cmd.replace(/ +$/,'');this.dbg("Run ("+cmd+')');this.out_cmd(cmd);var exception=cmd+cmd;var m;if(m=cmd.match(/^\s*(\$\S+)/)){exception=m[1];}
+.css('display','none'));;this._rewireIds($block,this);$elem.append($block);this.terminal=this.data('terminal');this.input_box=this.data('input_box');this.out("Welcome to the interactive KBase terminal!<br/>\n"
++"Please click the 'Sign in' button in the upper right to get started.<br/>\n"
++"Type <b>commands</b> for a list of commands.<br/>\n"
++"For usage information about a specific command, type the command name with -h or --help after it.<br/>\n"
++"Please visit <a href = 'http://kbase.us/for-users/tutorials/navigating-iris/' target = '_blank'>http://kbase.us/for-users/tutorials/navigating-iris/</a> or type <b>tutorial</b> for an IRIS tutorial.",0,1);this.out_line();this.input_box.bind('keypress',jQuery.proxy(function(event){this.keypress(event);},this));this.input_box.bind('keydown',jQuery.proxy(function(event){this.keydown(event)},this));this.input_box.bind("onchange",jQuery.proxy(function(event){this.dbg("change");},this));this.data('input_box').focus();$(window).bind("resize",jQuery.proxy(function(event){this.resize_contents(this.terminal)},this));this.resize_contents(this.terminal);},saveCommandHistory:function(){this.client.put_file(this.sessionId,"history",JSON.stringify(this.commandHistory),"/",function(){},function(){});},loadCommandHistory:function(){this.client.get_file(this.sessionId,"history","/",jQuery.proxy(function(txt){this.commandHistory=JSON.parse(txt);this.commandHistoryPosition=this.commandHistory.length;},this),jQuery.proxy(function(e){this.dbg("error on history load : "+e);},this));},set_session:function(session){this.sessionId=session;},resize_contents:function($container){},keypress:function(event){if(event.which==13){event.preventDefault();var cmd=this.input_box.val();cmd=cmd.replace(/^ +/,'');cmd=cmd.replace(/ +$/,'');this.dbg("Run ("+cmd+')');this.out_cmd(cmd);var exception=cmd+cmd;var m;if(m=cmd.match(/^\s*(\$\S+)/)){exception=m[1];}
 for(variable in this.variables){if(variable.match(exception)){continue;}
-var escapedVar=variable.replace(/\$/,'\\$');var varRegex=new RegExp(escapedVar,'g');console.log("VR");console.log(varRegex);cmd=cmd.replace(varRegex,this.variables[variable]);}
+var escapedVar=variable.replace(/\$/,'\\$');var varRegex=new RegExp(escapedVar,'g');cmd=cmd.replace(varRegex,this.variables[variable]);}
 this.run(cmd);this.scroll();this.input_box.val('');}},keydown:function(event){if(event.which==38){event.preventDefault();if(this.commandHistoryPosition>0){this.commandHistoryPosition--;}
 this.input_box.val(this.commandHistory[this.commandHistoryPosition]);}
 else if(event.which==40){event.preventDefault();if(this.commandHistoryPosition<this.commandHistory.length){this.commandHistoryPosition++;}
 this.input_box.val(this.commandHistory[this.commandHistoryPosition]);}
 else if(event.which==39){if(this.options.commandsElement){var input_box_length=this.input_box.val().length;var cursorPosition=this.input_box.getCursorPosition();if(cursorPosition!=undefined&&cursorPosition<input_box_length){this.selectNextInputVariable(event);return;}
-event.preventDefault();var toComplete=this.input_box.val().match(/([^\s]+)\s*$/);if(toComplete.length){toComplete=toComplete[1];console.log("TO COMPLETE "+toComplete);var ret=this.options.grammar.evaluate(this.input_box.val());console.log("RET VAL IS ");console.log(ret);if(ret!=undefined&&ret['next']&&ret['next'].length){var nextRegex=new RegExp('^'+toComplete);var newNext=[];for(var idx=0;idx<ret['next'].length;idx++){var n=ret['next'][idx];console.log("MATCHES "+n+" against "+toComplete);if(n.match(nextRegex)){console.log("GOOD");newNext.push(n);}}
+event.preventDefault();var toComplete=this.input_box.val().match(/([^\s]+)\s*$/);if(toComplete.length){toComplete=toComplete[1];var ret=this.options.grammar.evaluate(this.input_box.val());if(ret!=undefined&&ret['next']&&ret['next'].length){var nextRegex=new RegExp('^'+toComplete);var newNext=[];for(var idx=0;idx<ret['next'].length;idx++){var n=ret['next'][idx];if(n.match(nextRegex)){newNext.push(n);}}
 if(newNext.length||ret.parsed.length==0){ret['next']=newNext;if(ret['next'].length==1){var toCompleteRegex=new RegExp('\s*'+toComplete+'\s*$');this.input_box.val(this.input_box.val().replace(toCompleteRegex,''));}}
-console.log("NEXT IS ");console.log(ret['next']);if(ret['next'].length==1){var pad=' ';if(this.input_box.val().match(/\s+$/)){pad='';}
+if(ret['next'].length==1){var pad=' ';if(this.input_box.val().match(/\s+$/)){pad='';}
 this.appendInput(pad+ret['next'][0]+' ',0);this.selectNextInputVariable();return;}
-else if(ret['next'].length){var shouldComplete=true;var regex=new RegExp(toComplete+'\\s*$');for(prop in ret.next){console.log("CHECK "+prop+" AGAINST "+regex);if(!prop.match(regex)){shouldComplete=false;}}
-console.log("SHOULD "+shouldComplete+", "+toComplete);this.displayCompletions(ret['next'],toComplete);return;}}
+else if(ret['next'].length){var shouldComplete=true;var regex=new RegExp(toComplete+'\\s*$');for(prop in ret.next){if(!prop.match(regex)){shouldComplete=false;}}
+this.displayCompletions(ret['next'],toComplete);return;}}
 var completions=this.options.commandsElement.kbaseIrisCommands('completeCommand',toComplete);if(completions.length==1){var completion=completions[0].replace(new RegExp('^'+toComplete),'');this.appendInput(completion+' ',0);}
 else if(completions.length){this.displayCompletions(completions,toComplete);}}}}},selectNextInputVariable:function(e){var match;var pos=this.input_box.getCursorPosition();if(match=this.input_box.val().match(/(\$\S+)/)){if(e!=undefined){e.preventDefault();}
-var start=this.input_box.val().indexOf(match[1]);var end=this.input_box.val().indexOf(match[1])+match[1].length;this.input_box.setSelection(start,end);this.input_box.setSelection(start,end);}},search_json_to_table:function(json,filter){var $div=$('<div></div>');var filterRegex=new RegExp('.');if(filter){filterRegex=new RegExp(filter.replace(/,/g,'|'));};console.log(filterRegex);$.each(json,$.proxy(function(idx,record){var $tbl=$('<table></table>')
+var start=this.input_box.val().indexOf(match[1]);var end=this.input_box.val().indexOf(match[1])+match[1].length;this.input_box.setSelection(start,end);this.input_box.setSelection(start,end);}},search_json_to_table:function(json,filter){var $div=$('<div></div>');var filterRegex=new RegExp('.');if(filter){filterRegex=new RegExp(filter.replace(/,/g,'|'));};$.each(json,$.proxy(function(idx,record){var $tbl=$('<table></table>')
 .css('border','1px solid black')
 .css('margin-bottom','2px');var keys=Object.keys(record).sort();for(var idx=0;idx<keys.length;idx++){var prop=keys[idx];if(prop.match(filterRegex)){$tbl
 .append($('<tr></tr>')
 .css('text-align','left')
 .append($('<th></th>').append(prop))
 .append($('<td></td>').append(record[prop])))}}
-$div.append($tbl);},this));return $div;},displayCompletions:function(completions,toComplete){var prefix=this.options.commandsElement.kbaseIrisCommands('commonCommandPrefix',completions);console.log("TO COMPLETE "+toComplete+', '+prefix);console.log(completions);if(prefix!=undefined&&prefix.length){this.input_box.val(this.input_box.val().replace(new RegExp(toComplete+'\s*$'),prefix));}
+$div.append($tbl);},this));return $div;},displayCompletions:function(completions,toComplete){var prefix=this.options.commandsElement.kbaseIrisCommands('commonCommandPrefix',completions);if(prefix!=undefined&&prefix.length){this.input_box.val(this.input_box.val().replace(new RegExp(toComplete+'\s*$'),prefix));}
 else{prefix=toComplete;}
 var $commandDiv=$('<div></div>');this.terminal.append($commandDiv);var $tbl=$('<table></table>')
 .attr('border',1)
@@ -308,7 +291,7 @@ var $commandDiv=$('<div></div>');this.terminal.append($commandDiv);var $tbl=$('<
 $div.append(text);if(scroll){this.scroll(0);}},out_line:function(text){var $hr=$('<hr/>');this.terminal.append($hr);this.scroll(0);},scroll:function(speed){if(speed==undefined){speed=this.options.scrollSpeed;}
 this.terminal.animate({scrollTop:this.terminal.prop('scrollHeight')-this.terminal.height()},speed);},run:function(command){if(command=='help'){this.out('There is an introductory Iris tutorial available <a target="_blank" href="http://kbase.us/developer-zone/tutorials/iris/introduction-to-the-kbase-iris-interface/">on the KBase tutorials website</a>.',0,1);return;}
 var $commandDiv=$('<div></div>').css('white-space','pre');this.terminal.append($commandDiv);this.out_line();var m;if(m=command.match(/^log[io]n\s*(.*)/)){var args=m[1].split(/\s+/);this.dbg(args.length);if(args.length!=1){this.out_to_div($commandDiv,"Invalid login syntax.");return;}
-sid=args[0];this.client.start_session(sid,jQuery.proxy(function(newsid){this.set_session(sid);this.loadCommandHistory();this.out_to_div($commandDiv,"Set session to "+sid);this.refreshFileBrowser();},this),jQuery.proxy(function(err){this.out_to_div($commandDiv,"<i>Error on session_start:<br>"+
+sid=args[0];this.client.start_session(sid,jQuery.proxy(function(newsid){this.set_session(sid);this.loadCommandHistory();this.out_to_div($commandDiv,"Unauthenticated logged in as "+sid);this.refreshFileBrowser();},this),jQuery.proxy(function(err){this.out_to_div($commandDiv,"<i>Error on session_start:<br>"+
 err.message.replace("\n","<br>\n")+"</i>");},this));this.scroll();return;}
 if(m=command.match(/^authenticate\s*(.*)/)){var args=m[1].split(/\s+/)
 if(args.length!=1){this.out_to_div($commandDiv,"Invalid login syntax.");return;}
@@ -332,10 +315,10 @@ if(args.length!=1){this.out_to_div($commandDiv,"Invalid cd syntax.");return;}
 dir=args[0];this.client.change_directory(this.sessionId,this.cwd,dir,jQuery.proxy(function(path){this.cwd=path;},this),jQuery.proxy(function(err){var m=err.message.replace("/\n","<br>\n");this.out_to_div($commandDiv,"<i>Error received:<br>"+err.code+"<br>"+m+"</i>");},this));return;}
 if(m=command.match(/^(\$\S+)\s*=\s*(\S+)/)){this.variables[m[1]]=m[2];this.out_to_div($commandDiv,m[1]+' set to '+m[2]);return;}
 if(m=command.match(/^alias\s+(\S+)\s*=\s*(\S+)/)){this.aliases[m[1]]=m[2];this.out_to_div($commandDiv,m[1]+' set to '+m[2]);return;}
-if(m=command.match(/^search\s+(\S+)\s+(\S+)(?:\s*(\S+)\s+(\S+)(?:\s*(\S+))?)?/)){var parsed=this.options.grammar.evaluate(command);var searchVars={};var searchURL=this.options.searchURL;searchVars.$category=m[1];searchVars.$keyword=m[2];searchVars.$start=m[3]||this.options.searchStart;searchVars.$count=m[4]||this.options.searchCount;var filter=m[5]||this.options.searchFilter[searchVars.$category];console.log("FILTER "+filter);for(prop in searchVars){searchURL=searchURL.replace(prop,searchVars[prop]);}
-console.log(searchURL);$.support.cors=true;$.ajax({type:"GET",url:searchURL,dataType:"json",crossDomain:true,xhrFields:{withCredentials:true},xhrFields:{withCredentials:true},beforeSend:function(xhr){xhr.withCredentials=true;},success:$.proxy(function(data,res,jqXHR){this.out_to_div($commandDiv,$('<i></i>').html("Command completed."));this.out_to_div($commandDiv,$('<br/>'));this.out_to_div($commandDiv,$('<span></span>')
+if(m=command.match(/^search\s+(\S+)\s+(\S+)(?:\s*(\S+)\s+(\S+)(?:\s*(\S+))?)?/)){var parsed=this.options.grammar.evaluate(command);var searchVars={};var searchURL=this.options.searchURL;searchVars.$category=m[1];searchVars.$keyword=m[2];searchVars.$start=m[3]||this.options.searchStart;searchVars.$count=m[4]||this.options.searchCount;var filter=m[5]||this.options.searchFilter[searchVars.$category];for(prop in searchVars){searchURL=searchURL.replace(prop,searchVars[prop]);}
+$.support.cors=true;$.ajax({type:"GET",url:searchURL,dataType:"json",crossDomain:true,xhrFields:{withCredentials:true},xhrFields:{withCredentials:true},beforeSend:function(xhr){xhr.withCredentials=true;},success:$.proxy(function(data,res,jqXHR){this.out_to_div($commandDiv,$('<i></i>').html("Command completed."));this.out_to_div($commandDiv,$('<br/>'));this.out_to_div($commandDiv,$('<span></span>')
 .append($('<b></b>').html(data.found))
-.append(" records found."));this.out_to_div($commandDiv,$('<br/>'));this.out_to_div($commandDiv,this.search_json_to_table(data.body,filter));var res=this.search_json_to_table(data.body,filter);console.log("TABLE : ");console.log(res);console.log(data);this.scroll();},this),error:$.proxy(function(jqXHR,textStatus,errorThrown){this.out_to_div($commandDiv,errorThrown);},this),});return;}
+.append(" records found."));this.out_to_div($commandDiv,$('<br/>'));this.out_to_div($commandDiv,this.search_json_to_table(data.body,filter));var res=this.search_json_to_table(data.body,filter);this.scroll();},this),error:$.proxy(function(jqXHR,textStatus,errorThrown){this.out_to_div($commandDiv,errorThrown);},this),});return;}
 if(m=command.match(/^cp\s*(.*)/)){var args=m[1].split(/\s+/)
 if(args.length!=2){this.out_to_div($commandDiv,"Invalid cp syntax.");return;}
 from=args[0];to=args[1];this.client.copy(this.sessionId,this.cwd,from,to,$.proxy(function(){this.refreshFileBrowser();},this),jQuery.proxy(function(err){var m=err.message.replace("\n","<br>\n");this.out_to_div($commandDiv,"<i>Error received:<br>"+err.code+"<br>"+m+"</i>");},this));return;}
@@ -380,7 +363,7 @@ if(d=command.match(/^ls\s*(.*)/)){var args=d[1].split(/\s+/)
 var obj=this;if(args.length==0){d=".";}
 else{if(args.length!=1){this.out_to_div($commandDiv,"Invalid ls syntax.");return;}
 else{d=args[0];}}
-console.log("SESSION ID");console.log(this.sessionId);this.client.list_files(this.sessionId,this.cwd,d,jQuery.proxy(function(filelist){var dirs=filelist[0];var files=filelist[1];var $tbl=$('<table></table>')
+this.client.list_files(this.sessionId,this.cwd,d,jQuery.proxy(function(filelist){var dirs=filelist[0];var files=filelist[1];var $tbl=$('<table></table>')
 jQuery.each(dirs,function(idx,val){$tbl.append($('<tr></tr>')
 .append($('<td></td>')
 .text('0'))
@@ -399,7 +382,7 @@ jQuery.each(dirs,function(idx,val){$tbl.append($('<tr></tr>')
 .bind('click',jQuery.proxy(function(event){event.preventDefault();this.open_file(val['full_path']);},this))
 )));},this));$commandDiv.append($tbl);this.scroll();},this),function(err)
 {var m=err.message.replace("\n","<br>\n");obj.out_to_div($commandDiv,"<i>Error received:<br>"+err.code+"<br>"+m+"</i>");});return;}
-var parsed=this.options.grammar.evaluate(command);console.log("PARSED");console.log(parsed);if(parsed!=undefined){if(!parsed.fail&&parsed.execute){command=parsed.execute;if(parsed.explain){$commandDiv.append(parsed.execute);return;}}
+var parsed=this.options.grammar.evaluate(command);if(parsed!=undefined){if(!parsed.fail&&parsed.execute){command=parsed.execute;if(parsed.explain){$commandDiv.append(parsed.execute);return;}}
 else if(parsed.parsed.length&&parsed.fail){$commandDiv.append($('<i></i>').html(parsed.error));return;}}
 command=command.replace(/\\\n/g," ");command=command.replace(/\n/g," ");var $pendingProcessElem;if(this.data('processList')){$pendingProcessElem=this.data('processList').addProcess(command);}
 this.client.run_pipeline(this.sessionId,command,[],this.options.maxOutput,this.cwd,jQuery.proxy(function(runout){if(this.data('processList')){this.data('processList').removeProcess($pendingProcessElem);}

@@ -40,6 +40,9 @@
 
         init: function (options) {
 
+            this.targets = {};
+            this.openTargets = {};
+
             this._super(options);
 
             this.appendUI(this.$elem);
@@ -91,8 +94,10 @@
                     if (val.data) {
                         $li.data('data', val.data);
                     }
+
                     if (val.id) {
                         $li.data('id', val.id);
+                        this.targets[val.id] = $li;
                     }
 
                     $target.append($li);
@@ -126,14 +131,36 @@
                                     callback.call(this, val.id, $.proxy(function(results) {
                                         $ul.empty();
                                         this.appendContent(results, $ul);
-                                        $ul.toggle('collapse')
+                                        $ul.show('collapse');
+                                        this.openTargets[ val['id'] ] = true;
                                     }, this));
                                 }
                                 else {
-                                    $ul.toggle('collapse');
+                                    if ($ul.is(':hidden')) {
+                                        $ul.show('collapse');
+                                        this.openTargets[ val['id'] ] = true;
+                                    }
+                                    else {
+                                        $ul.hide('collapse');
+                                        this.openTargets[ val['id'] ] = false;
+                                    }
                                 }
+                                console.log("OT");
+                                console.log(this.openTargets);
                             }, this)
                         );
+console.log("DONE SETUP " + val['id']);
+console.log(val);
+                        if (val.open && val.children == undefined && callback != undefined) {
+                            //we need to hack it a little bit. Because it'll actually come in as open
+                            //so it'll have the open icon. We need to toggle back to the normal icon
+                            //and hide it, since it's visible because it's open (even though it has no children)
+                            //then we can finally fall back on the click to re-open it properly.
+                            $button.toggleClass(iconOpen);
+                            $button.toggleClass(icon);
+                            $ul.hide();
+                            $li.trigger('click');
+                        }
 
                     }
 
@@ -146,7 +173,8 @@
                         $li.kbaseButtonControls(
                             {
                                 controls : controls,
-                                id : val.id
+                                id : val.id,
+                                context : this
                             }
                         );
                     }

@@ -76,8 +76,8 @@ Widget to create an accordion control. Easy to use!
                                         .addClass('accordion-heading')
                                         .append(
                                             $('<i></i>')
-                                                .css('margin-right', '3px')
-                                                .css('margin-left', '1px')
+                                                .css('margin-right', '5px')
+                                                .css('margin-left', '3px')
                                                 .addClass('icon-chevron-right')
                                                 .addClass('pull-left')
                                                 .css('height', '22px')

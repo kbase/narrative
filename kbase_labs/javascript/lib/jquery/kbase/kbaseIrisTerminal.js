@@ -91,14 +91,16 @@
                             jQuery.proxy(
                                 function(args) {
                                     if (args.success) {
-                                        this.out_line();
+                                        //this.out_line();
+
                                         this.client.start_session(
                                             args.user_id,
                                             jQuery.proxy(
                                                 function (newsid) {
                                                     this.set_session(args.user_id);
                                                     this.loadCommandHistory();
-                                                    this.out("Set session to " + args.user_id);
+                                                    this.out("Authenticated as " + args.name);
+                                                    this.out_line();
                                                     this.scroll();
                                                 },
                                                 this
@@ -112,7 +114,7 @@
                                             )
                                         );
 
-                                        this.kbase_sessionid = args.kbase_sessionid;
+                                        this.sessionId = args.kbase_sessionid;
                                         this.input_box.focus();
 
                                         this.refreshFileBrowser();
@@ -151,12 +153,12 @@
             if (cookie = this.$loginbox.get_kbase_cookie()) {
                 var $commandDiv = $("<div></div>").css('white-space', 'pre');
                 this.terminal.append($commandDiv);
-                this.out_line();
                 if (cookie.user_id) {
-                    this.out_to_div($commandDiv, 'Already logged in as ' + cookie.name + "\n");
+                    this.out_line();
+                    this.out_to_div($commandDiv, 'Already authenticated as ' + cookie.name + "\n");
                     this.set_session(cookie.user_id);
                     this.loadCommandHistory();
-                    this.out_to_div($commandDiv, "Set session to " + cookie.user_id);
+                    //this.out_to_div($commandDiv, "Set session to " + cookie.user_id);
                 }
                 else if (this.options.promptIfUnauthenticated) {
                     this.$loginbox.kbaseLogin('openDialog');
@@ -177,7 +179,6 @@
                         {
                             client : this.client,
                             $terminal : this,
-                            $loginbox : this.$loginbox,
                             externalControls : false,
                         }
                     )
@@ -247,7 +248,7 @@
                 .append(
                     $('<textarea></textarea>')
                         .attr('id', 'input_box')
-                        .attr('style', 'width : 99%;')
+                        .attr('style', 'width : 95%;')
                         .attr('height', '3')
                     )
                 .append(
@@ -268,7 +269,12 @@
             this.terminal = this.data('terminal');
             this.input_box = this.data('input_box');
 
-            this.out('Welcome to the interactive KBase.');
+            this.out("Welcome to the interactive KBase terminal!<br/>\n"
+                    +"Please click the 'Sign in' button in the upper right to get started.<br/>\n"
+                    +"Type <b>commands</b> for a list of commands.<br/>\n"
+                    +"For usage information about a specific command, type the command name with -h or --help after it.<br/>\n"
+                    +"Please visit <a href = 'http://kbase.us/for-users/tutorials/navigating-iris/' target = '_blank'>http://kbase.us/for-users/tutorials/navigating-iris/</a> or type <b>tutorial</b> for an IRIS tutorial.",
+                    0,1);
             this.out_line();
 
             this.input_box.bind(
@@ -376,8 +382,6 @@
                     }
                     var escapedVar = variable.replace(/\$/, '\\$');
                     var varRegex = new RegExp(escapedVar, 'g');
-                    console.log("VR");
-                    console.log(varRegex);
                     cmd = cmd.replace(varRegex, this.variables[variable]);
                 }
 
@@ -420,11 +424,11 @@
 
                     if (toComplete.length) {
                         toComplete = toComplete[1];
-console.log("TO COMPLETE " + toComplete);
+
                         var ret = this.options.grammar.evaluate(
                             this.input_box.val()
                         );
-                        console.log("RET VAL IS "); console.log(ret);
+
                         if (ret != undefined && ret['next'] && ret['next'].length) {
 
                             var nextRegex = new RegExp('^' + toComplete);
@@ -432,9 +436,8 @@ console.log("TO COMPLETE " + toComplete);
                             var newNext = [];
                             for (var idx = 0; idx < ret['next'].length; idx++) {
                                 var n = ret['next'][idx];
-                                console.log("MATCHES " + n + " against " + toComplete);
+
                                 if (n.match(nextRegex)) {
-                                console.log("GOOD");
                                     newNext.push(n);
                                 }
                             }
@@ -445,7 +448,7 @@ console.log("TO COMPLETE " + toComplete);
                                     this.input_box.val(this.input_box.val().replace(toCompleteRegex, ''));
                                 }
                             }
-console.log("NEXT IS ");console.log(ret['next']);
+
                             //this.input_box.val(ret['parsed'] + ' ');
 
                             if (ret['next'].length == 1) {
@@ -471,12 +474,10 @@ console.log("NEXT IS ");console.log(ret['next']);
                                 var shouldComplete = true;
                                 var regex = new RegExp(toComplete + '\\s*$');
                                 for (prop in ret.next) {
-                                console.log("CHECK " + prop + " AGAINST " + regex);
                                     if (! prop.match(regex)) {
                                         shouldComplete = false;
                                     }
                                 }
-                                console.log("SHOULD " + shouldComplete + ", " + toComplete);
 
                                 this.displayCompletions(ret['next'], toComplete);//shouldComplete ? toComplete : '', false);
                                 return;
@@ -529,17 +530,12 @@ console.log("NEXT IS ");console.log(ret['next']);
                 filterRegex = new RegExp(filter.replace(/,/g,'|'));
             };
 
-            console.log(filterRegex);
-
-
             $.each(
                 json,
                 $.proxy(function(idx, record) {
                     var $tbl = $('<table></table>')
                         .css('border', '1px solid black')
                         .css('margin-bottom', '2px');
-                        //console.log("KEYS");
-                        //console.log(Object.keys(record));
                         var keys = Object.keys(record).sort();
                     for (var idx = 0; idx < keys.length; idx++) {
                         var prop = keys[idx];
@@ -567,8 +563,7 @@ console.log("NEXT IS ");console.log(ret['next']);
 
         displayCompletions : function(completions, toComplete) {
             var prefix = this.options.commandsElement.kbaseIrisCommands('commonCommandPrefix', completions);
-console.log("TO COMPLETE " + toComplete + ', ' + prefix);
-console.log(completions);
+
             if (prefix != undefined && prefix.length) {
                 this.input_box.val(
                     this.input_box.val().replace(new RegExp(toComplete + '\s*$'), prefix)
@@ -765,7 +760,7 @@ console.log(completions);
                         function (newsid) {
                             this.set_session(sid);
                             this.loadCommandHistory();
-                            this.out_to_div($commandDiv, "Set session to " + sid);
+                            this.out_to_div($commandDiv, "Unauthenticated logged in as " + sid);
                             this.refreshFileBrowser();
                         },
                         this
@@ -916,7 +911,6 @@ console.log(completions);
             if (m = command.match(/^search\s+(\S+)\s+(\S+)(?:\s*(\S+)\s+(\S+)(?:\s*(\S+))?)?/)) {
 
                 var parsed = this.options.grammar.evaluate(command);
-                //console.log("SEARCH PARSED");console.log(parsed);
 
                 var searchVars = {};
                 //'kbase.us/services/search-api/search/$category/$keyword?start=$start&count=$count&format=json',
@@ -928,13 +922,10 @@ console.log(completions);
                 searchVars.$start = m[3] || this.options.searchStart;
                 searchVars.$count = m[4] || this.options.searchCount;
                 var filter = m[5] || this.options.searchFilter[searchVars.$category];
-                console.log("FILTER " + filter);
 
                 for (prop in searchVars) {
                     searchURL = searchURL.replace(prop, searchVars[prop]);
                 }
-
-                console.log(searchURL);
 
                 $.support.cors = true;
                 $.ajax(
@@ -963,9 +954,7 @@ console.log(completions);
                                 this.out_to_div($commandDiv, $('<br/>'));
                                 this.out_to_div($commandDiv, this.search_json_to_table(data.body, filter));
                                 var res = this.search_json_to_table(data.body, filter);
-                                console.log("TABLE : ");
-                                console.log(res);
-                                console.log(data);
+
                                 this.scroll();
 
                             },
@@ -1280,7 +1269,7 @@ console.log(completions);
                         d = args[0];
                     }
                 }
-console.log("SESSION ID");console.log(this.sessionId);
+
                 this.client.list_files(
                     this.sessionId,
                     this.cwd,
@@ -1374,8 +1363,7 @@ console.log("SESSION ID");console.log(this.sessionId);
             }
 
             var parsed = this.options.grammar.evaluate(command);
-            console.log("PARSED");
-            console.log(parsed);
+
             if (parsed != undefined) {
                 if (! parsed.fail && parsed.execute) {
                     command = parsed.execute;

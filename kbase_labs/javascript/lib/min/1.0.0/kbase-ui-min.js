@@ -277,7 +277,7 @@ else{this.data('_session',{});this._error=args.message;}},session:function(key,v
 var session=this.data('_session');if(arguments.length==2){session[key]=value;}
 if(arguments.length>0){return session[key];}
 else{return session;}},error:function(new_error){if(new_error){this._error=new_error;}
-return this._error;},openDialog:function(){if(this.data('loginDialog')){var $ld=this.data('loginDialog');$('form',$ld.dialogModal()).get(0).reset();$ld.dialogModal().data("user_id").val(this.session('user_id')||this.data('passed_user_id')||this.options.user_id);delete this.options.user_id;this.session('user_id',undefined);$ld.dialogModal().trigger('clearMessages');this.data('loginDialog').openPrompt();}},_textStyle:function(){this._createLoginDialog();var $prompt=$('<span></span>')
+return this._error;},openDialog:function(){if(this.data('loginDialog')){var $ld=this.data('loginDialog');$('form',$ld.dialogModal()).get(0).reset();$ld.dialogModal().data("user_id").val(this.session('user_id')||this.data('passed_user_id')||this.options.user_id);delete this.options.user_id;this.session('user_id',undefined);$ld.dialogModal().trigger('clearMessages');this.data('loginDialog').openPrompt();}},_textStyle:function(){this._createLoginDialog();this.$elem.css('padding','9px 15px 7px 10px');var $prompt=$('<span></span>')
 .append($('<a></a>')
 .attr('id','loginlink')
 .attr('href','#')
@@ -441,11 +441,6 @@ if(this.options.login_callback){this.options.login_callback.call(this,args);}});
 .attr('id','pending')
 .attr('style','display : none')
 .append($('<div></div>')
-.append($('<div></div>')
-.addClass('pull-left')
-.append($('<i></i>')
-.addClass('icon-info-sign')
-.attr('style','float: left; margin-right: .3em;')))
 .append($('<div></div>')
 .append($('<strong></strong>')
 .append('Logging in as:\n'))

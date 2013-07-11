@@ -191,6 +191,8 @@
         _textStyle : function() {
             this._createLoginDialog();
 
+            this.$elem.css('padding', '9px 15px 7px 10px');
+
             var $prompt = $('<span></span>')
                 .append(
                     $('<a></a>')

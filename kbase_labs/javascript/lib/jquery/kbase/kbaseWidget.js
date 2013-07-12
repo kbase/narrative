@@ -16,6 +16,14 @@
         constructor.prototype = prototypeObject;
     }
 
+    $.jqElem = function (tagName) {
+        var tag = "<" + tagName + ">";
+        if (! tag.match(/^(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track)/) ) {
+            tag += '</' + tagName + '>';
+        }
+        return $(tag);
+    }
+
     $.kbObject = function(name, parent, def, asPlugin) {
         if (asPlugin == undefined) {
             asPlugin = false;
@@ -120,6 +128,17 @@
 
         if (asPlugin) {
             $.fn[name] = function( method, args ) {
+
+                if (this.length > 1) {
+                    var methodArgs = arguments;
+                    $.each(
+                        this,
+                        function (idx, elem) {
+                            $.fn[name].apply($(elem), methodArgs);
+                        }
+                    )
+                    return this;
+                }
 
                 if (this.data(name) == undefined) {
                     this.data(name, new Widget(this));

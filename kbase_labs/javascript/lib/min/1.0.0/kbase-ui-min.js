@@ -1,6 +1,8 @@
 (function($,undefined){var widgetRegistry={};if(window.KBase==undefined){window.KBase={};}
 function subclass(constructor,superConstructor){function surrogateConstructor(){}
 surrogateConstructor.prototype=superConstructor.prototype;var prototypeObject=new surrogateConstructor();prototypeObject.constructor=constructor;constructor.prototype=prototypeObject;}
+$.jqElem=function(tagName){var tag="<"+tagName+">";if(!tag.match(/^(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track)/)){tag+='</'+tagName+'>';}
+return $(tag);}
 $.kbObject=function(name,parent,def,asPlugin){if(asPlugin==undefined){asPlugin=false;}
 return $.kbWidget(name,parent,def,asPlugin);}
 $.kbWidget=function(name,parent,def,asPlugin){if(asPlugin==undefined){asPlugin=true;}
@@ -16,7 +18,9 @@ var _superMethod=function(superMethodName){return widgetRegistry[parent].prototy
 return function(){var _oSuper=this._super;var _oSuperMethod=this._superMethod;this._super=_super;this._superMethod=_superMethod;var retValue=method.apply(this,arguments);this._super=_oSuper;this._superMethod=_oSuperMethod;return retValue;}})(prop,defCopy[prop]);}
 else{Widget.prototype[prop]=defCopy[prop];}}
 if(parent){Widget.prototype.options=$.extend(true,{},widgetRegistry[parent].prototype.options,Widget.prototype.options);}
-if(asPlugin){$.fn[name]=function(method,args){if(this.data(name)==undefined){this.data(name,new Widget(this));}
+if(asPlugin){$.fn[name]=function(method,args){if(this.length>1){var methodArgs=arguments;$.each(this,function(idx,elem){$.fn[name].apply($(elem),methodArgs);})
+return this;}
+if(this.data(name)==undefined){this.data(name,new Widget(this));}
 if(Widget.prototype[method]){return Widget.prototype[method].apply(this.data(name),Array.prototype.slice.call(arguments,1));}else if(typeof method==='object'||!method){var args=arguments;$w=this.data(name);if(!$w._init){$w=Widget.prototype.init.apply($w,arguments);}
 $w._init=true;return $w;}else{$.error('Method '+method+' does not exist on '+name);}
 return this;};}

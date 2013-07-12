@@ -57,9 +57,9 @@
                     {
                         icon : 'icon-caret-up',
                         'icon-alt' : 'icon-caret-down',
-                        //'tooltip' : 'collapse / expand',
+                        'tooltip' : {title : 'collapse / expand', placement : 'bottom'},
                         callback : $.proxy(function(e) {
-                            this.data('content').collapse('toggle');
+                            this.data('content').slideToggle();
                         }, this)
                     }
                 );

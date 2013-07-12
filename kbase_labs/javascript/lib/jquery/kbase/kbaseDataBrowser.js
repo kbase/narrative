@@ -145,12 +145,9 @@
                                         this.openTargets[ val['id'] ] = false;
                                     }
                                 }
-                                console.log("OT");
-                                console.log(this.openTargets);
                             }, this)
                         );
-console.log("DONE SETUP " + val['id']);
-console.log(val);
+
                         if (val.open && val.children == undefined && callback != undefined) {
                             //we need to hack it a little bit. Because it'll actually come in as open
                             //so it'll have the open icon. We need to toggle back to the normal icon

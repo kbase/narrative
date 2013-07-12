@@ -1308,6 +1308,7 @@
                                 jQuery.proxy(
                                     function (idx, val) {
                                         var url = this.options.invocationURL + "/download/" + val['full_path'] + "?session_id=" + this.sessionId;
+                                        console.log("URL IS " + url);
                                         $tbl.append(
                                             $('<tr></tr>')
                                                 .append(

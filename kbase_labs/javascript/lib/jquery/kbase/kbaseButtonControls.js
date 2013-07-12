@@ -113,6 +113,16 @@
                         btnClass = btnClass + ' btn-' + val.type;
                     }
 
+                    tooltip = val.tooltip;
+
+                    if (typeof val.tooltip == 'string') {
+                        tooltip = {title : val.tooltip};
+                    }
+
+                    if (tooltip != undefined && tooltip.container == undefined) {
+                        //tooltip.container = 'body';//this.$elem;//'body';
+                    }
+
                     var $button =
                         $('<button></button>')
                             .attr('href', '#')
@@ -120,7 +130,7 @@
                             .css('padding-bottom', '1px')
                             .attr('class', btnClass)
                             .append($('<i></i>').addClass(val.icon))
-                            .tooltip({title : val.tooltip})
+                            .tooltip(tooltip)//{title : val.tooltip})
                             .bind('click',
                                 function(e) {
                                     e.preventDefault();

@@ -1,8 +1,13 @@
-(function($,undefined){var widgetRegistry={};function subclass(constructor,superConstructor){function surrogateConstructor(){}
+(function($,undefined){var widgetRegistry={};if(window.KBase==undefined){window.KBase={};}
+function subclass(constructor,superConstructor){function surrogateConstructor(){}
 surrogateConstructor.prototype=superConstructor.prototype;var prototypeObject=new surrogateConstructor();prototypeObject.constructor=constructor;constructor.prototype=prototypeObject;}
-$.kbWidget=function(name,parent,def){if(widgetRegistry[name]!=undefined){return;}
+$.kbObject=function(name,parent,def,asPlugin){if(asPlugin==undefined){asPlugin=false;}
+return $.kbWidget(name,parent,def,asPlugin);}
+$.kbWidget=function(name,parent,def,asPlugin){if(asPlugin==undefined){asPlugin=true;}
+if(widgetRegistry[name]!=undefined){return;}
 var Widget=function($elem){this.$elem=$elem;this.options=$.extend(true,{},def.options,this.constructor.prototype.options);return this;}
-widgetRegistry[name]=Widget;if(def==undefined){def=parent;parent=undefined;}
+var directName=name;directName=directName.replace(/^kbase/,'');directName=directName.charAt(0).toLowerCase()+directName.slice(1);KBase[directName]=function(options,$elem){var $w=new Widget();$w.$elem=$elem;$w.init(options);$w._init=true;return $w;}
+widgetRegistry[name]=Widget;if(def==undefined){def=parent;parent='kbaseWidget';if(def==undefined){def={};}}
 if(parent){subclass(Widget,widgetRegistry[parent]);}
 var defCopy=$.extend(true,{},def);for(var prop in defCopy){if($.isFunction(defCopy[prop])){Widget.prototype[prop]=(function(methodName,method){var _super=function(){throw"No parent method defined! Play by the rules!";}
 var _superMethod=function(){throw"No parent method defined! Play by the rules!";}
@@ -11,10 +16,11 @@ var _superMethod=function(superMethodName){return widgetRegistry[parent].prototy
 return function(){var _oSuper=this._super;var _oSuperMethod=this._superMethod;this._super=_super;this._superMethod=_superMethod;var retValue=method.apply(this,arguments);this._super=_oSuper;this._superMethod=_oSuperMethod;return retValue;}})(prop,defCopy[prop]);}
 else{Widget.prototype[prop]=defCopy[prop];}}
 if(parent){Widget.prototype.options=$.extend(true,{},widgetRegistry[parent].prototype.options,Widget.prototype.options);}
-$.fn[name]=function(method,args){if(this.data(name)==undefined){this.data(name,new Widget(this));}
+if(asPlugin){$.fn[name]=function(method,args){if(this.data(name)==undefined){this.data(name,new Widget(this));}
 if(Widget.prototype[method]){return Widget.prototype[method].apply(this.data(name),Array.prototype.slice.call(arguments,1));}else if(typeof method==='object'||!method){var args=arguments;$w=this.data(name);if(!$w._init){$w=Widget.prototype.init.apply($w,arguments);}
 $w._init=true;return $w;}else{$.error('Method '+method+' does not exist on '+name);}
-return this;};Widget.prototype[name]=function(){return $.fn[name].apply(this.$elem,arguments);}
+return this;};}
+Widget.prototype[name]=function(){return $.fn[name].apply(this.$elem,arguments);}
 return $.fn[name];}
 $.kbWidget('kbaseWidget',{options:{},element:function(){return this;},dbg:function(txt){if(window.console)console.log(txt);},init:function(args){var opts=$.extend(true,{},this.options);this.options=$.extend(true,{},opts,args);return this;},alert:function(msg){if(msg==undefined){msg=this.data('msg');}
 this.data('msg',msg);return this;},popper:function(){alert("pop, pop");},data:function(key,val){if(this.options._storage==undefined){this.options._storage={};}
@@ -59,7 +65,7 @@ if($target.get(0)!=$opened.get(0)){$target.collapse('show');var $i=$(this).paren
 .addClass('accordion-body')
 .append($('<div></div>')
 .addClass('accordion-inner')
-.append(val.body))));},this));this._rewireIds($block,this);$elem.append($block);$block.find('.accordion-body').collapse('hide');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseBox",'kbaseWidget',{version:"1.0.0",options:{canCollapse:true,canCollapseOnDoubleClick:false,controls:[],bannerColor:'lightgray',boxColor:'lightgray',},init:function(options){this._super(options);if(this.options.canCollapse){this.options.controls.push({icon:'icon-caret-up','icon-alt':'icon-caret-down',callback:$.proxy(function(e){this.data('content').collapse('toggle');},this)});}
+.append(val.body))));},this));this._rewireIds($block,this);$elem.append($block);$block.find('.accordion-body').collapse('hide');},});}(jQuery));(function($,undefined){$.kbWidget("kbaseBox",'kbaseWidget',{version:"1.0.0",options:{canCollapse:true,canCollapseOnDoubleClick:false,controls:[],bannerColor:'lightgray',boxColor:'lightgray',},init:function(options){this._super(options);if(this.options.canCollapse){this.options.controls.push({icon:'icon-caret-up','icon-alt':'icon-caret-down','tooltip':{title:'collapse / expand',placement:'bottom'},callback:$.proxy(function(e){this.data('content').slideToggle();},this)});}
 this.appendUI($(this.$elem));return this;},setBannerColor:function(color){this.data('banner').css('background-color',color);},startThinking:function(){this.data('banner').addClass('progress progress-striped active')},stopThinking:function(){this.data('banner').removeClass('progress progress-striped active')},appendUI:function($elem){var canCollapse=this.options.canCollapse;var $div=$('<div></div>')
 .append($('<div></div>')
 .css('text-align','left')
@@ -113,13 +119,15 @@ this.setTitle(this.options.title);this.setContent(this.options.content);$elem.ap
 .children().first().hide();};this.setControls(this.options.controls);return this;},controls:function(control){if(control){return this._controls[control];}
 else{return this._controls;}},setControls:function(controls){this.data('control-buttons').empty();for(control in this._controls){this._controls[control]=undefined;}
 var $buttonControls=this;$.each(controls,$.proxy(function(idx,val){var btnClass='btn btn-mini';if(val.type){btnClass=btnClass+' btn-'+val.type;}
+tooltip=val.tooltip;if(typeof val.tooltip=='string'){tooltip={title:val.tooltip};}
+if(tooltip!=undefined&&tooltip.container==undefined){}
 var $button=$('<button></button>')
 .attr('href','#')
 .css('padding-top','1px')
 .css('padding-bottom','1px')
 .attr('class',btnClass)
 .append($('<i></i>').addClass(val.icon))
-.tooltip({title:val.tooltip})
+.tooltip(tooltip)
 .bind('click',function(e){e.preventDefault();e.stopPropagation();if(val['icon-alt']){$(this).children().first().toggleClass(val.icon);$(this).children().first().toggleClass(val['icon-alt']);}
 val.callback.call(this,e,$buttonControls.options.context);});if(val.id){this._controls[val.id]=$button;}
 if(this.options.id){$button.data('id',this.options.id);}
@@ -576,8 +584,7 @@ if(val.children!=undefined){this.appendContent(val.children,$ul);}
 $target.append($ul);var callback=val.childrenCallback;if(val.children==undefined&&callback==undefined&&val.type!=undefined){callback=this.options.types[val.type].childrenCallback;}
 $li.bind('click',$.proxy(function(e){e.preventDefault();e.stopPropagation();$button.toggleClass(iconOpen);$button.toggleClass(icon);if($ul.is(':hidden')&&callback!=undefined){callback.call(this,val.id,$.proxy(function(results){$ul.empty();this.appendContent(results,$ul);$ul.show('collapse');this.openTargets[val['id']]=true;},this));}
 else{if($ul.is(':hidden')){$ul.show('collapse');this.openTargets[val['id']]=true;}
-else{$ul.hide('collapse');this.openTargets[val['id']]=false;}}
-console.log("OT");console.log(this.openTargets);},this));console.log("DONE SETUP "+val['id']);console.log(val);if(val.open&&val.children==undefined&&callback!=undefined){$button.toggleClass(iconOpen);$button.toggleClass(icon);$ul.hide();$li.trigger('click');}}
+else{$ul.hide('collapse');this.openTargets[val['id']]=false;}}},this));if(val.open&&val.children==undefined&&callback!=undefined){$button.toggleClass(iconOpen);$button.toggleClass(icon);$ul.hide();$li.trigger('click');}}
 var controls=val.controls;if(controls==undefined&&val.type!=undefined){controls=this.options.types[val.type].controls;}
 if(controls){$li.kbaseButtonControls({controls:controls,id:val.id,context:this});}},this));this._rewireIds($target,this);return $target;},prepareRootContent:function(){return $('<ul></ul>')
 .addClass('nav nav-list')

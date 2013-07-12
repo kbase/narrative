@@ -219,7 +219,8 @@
                                     $ic.options.terminal.run(cmd + ' -h');
                                 }
                             },
-                            id : 'removeDirectoryButton'
+                            id : 'helpButton',
+                            'tooltip' : {title : label + ' help', placement : 'bottom'},
                         },
                     ]
                 }
@@ -446,6 +447,7 @@
                     'controls' : [
                         {
                             'icon' : 'icon-search',
+                            tooltip : {title : 'search for a command', placement : 'bottom', container : 'body'},
                         },
                     ]
                 }

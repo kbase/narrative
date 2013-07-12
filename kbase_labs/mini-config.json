@@ -15,7 +15,6 @@
         "javascript/lib/jquery/kbase/kbaseDataBrowser.js"
     ],
     "$lib_root/kbase-iris-min.js" : [
-        "javascript/lib/jquery/kbase/kbaseFileBrowser.js",
         "javascript/lib/jquery/kbase/kbaseIrisCommands.js",
         "javascript/lib/jquery/kbase/kbaseIrisFileBrowser.js",
         "javascript/lib/jquery/kbase/kbaseIrisGrammar.js",

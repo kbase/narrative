@@ -135,75 +135,55 @@ class KBaseMagics(Magics):
             cwd = inv_cwd
             d = ''
         res = inv_client.list_files( sess, cwd,d)
-        return res[0]
-
-    @line_magic
-    def invoke_remove_files(self,line):
-        "Invocation service remove files"
-        global user_id, token, user_profile, inv_client, inv_session
-        sess = self.invoke_session()
-        return res[0]
-
-    @line_magic
-    def invoke_rename_files(self,line):
-        "Invocation service remove files"
-        global user_id, token, user_profile, inv_client, inv_session
-        sess = self.invoke_session()
-        return res[0]
-
-    @line_magic
-    def invoke_copy(self,line):
-        "Invocation service copy file"
-        global user_id, token, user_profile, inv_client, inv_session
-        sess = self.invoke_session()
-        return res[0]
+        return res
 
     @line_magic
     def invoke_make_directory(self,line):
         "Invocation service make directory"
-        global user_id, token, user_profile, inv_client, inv_session
-        return res[0]
+        global user_id, token, user_profile, inv_client, inv_session,inv_cwd
+        sess = self.invoke_session()
+        if len(line) < 1:
+            print "Error - must specify a new directory name"
+            res = None
+        else:
+            cwd = inv_cwd
+            d = line
+            res = inv_client.make_directory( sess, cwd,d)
+        return res
 
     @line_magic
     def invoke_remove_directory(self,line):
         "Invocation service make directory"
-        global user_id, token, user_profile, inv_client, inv_session
-        return res[0]
+        global user_id, token, user_profile, inv_client, inv_session,inv_cwd
+        sess = self.invoke_session()
+        if len(line) < 1:
+            print "Error - must specify a directory to remove"
+            res = None
+        else:
+            cwd = inv_cwd
+            d = line
+            res = inv_client.remove_directory( sess, cwd,d)
+        return res
 
     @line_magic
     def invoke_cd(self,line):
         "Invocation service make directory"
         global user_id, token, user_profile, inv_client, inv_session,inv_cwd
+        sess = self.invoke_session()
         if len(line) > 0:
-            try:
-                (cwd,d) = line.split()
-            except:
-                cwd = line
-                d = ''
+            d = line
+            res = inv_client.change_directory( sess, inv_cwd,d)
+            inv_cwd = res
         else:
-            cwd = inv_cwd
-            d = ''
-        res = inv_client.list_files( sess, cwd,d)
-        inv_cmd = res
+            print "Error - please specify a directory"
         return res
 
     @line_magic
-    def invoke_put_file(self,line):
-        "Invocation service make directory"
-        global user_id, token, user_profile, inv_client, inv_session
-        return res[0]
-
-    @line_magic
-    def invoke_get_file(self,line):
-        "Invocation service make directory"
-        global user_id, token, user_profile, inv_client, inv_session
-        return res[0]
-
-    @line_magic
-    def invoke_make_directory(self,line):
-        "Invocation service make directory"
-        global user_id, token, user_profile, inv_client, inv_session
-        return res[0]
+    def invoke_cwd(self,line):
+        "Invocation service current working directory"
+        global user_id, token, user_profile, inv_client, inv_session,cwd
+        sess = self.invoke_session()
+        return inv_cwd
 
     @line_magic
     def invoke_valid_commands(self,line):
@@ -214,10 +194,43 @@ class KBaseMagics(Magics):
         return res
 
     @line_magic
+    def invoke_remove_files(self,line):
+        "Invocation service remove files"
+        global user_id, token, user_profile, inv_client, inv_session
+        sess = self.invoke_session()
+        return res
+
+    @line_magic
+    def invoke_rename_files(self,line):
+        "Invocation service remove files"
+        global user_id, token, user_profile, inv_client, inv_session
+        sess = self.invoke_session()
+        return res
+
+    @line_magic
+    def invoke_copy(self,line):
+        "Invocation service copy file"
+        global user_id, token, user_profile, inv_client, inv_session
+        sess = self.invoke_session()
+        return res
+
+    @line_magic
+    def invoke_put_file(self,line):
+        "Invocation service make directory"
+        global user_id, token, user_profile, inv_client, inv_session
+        return res
+
+    @line_magic
+    def invoke_get_file(self,line):
+        "Invocation service make directory"
+        global user_id, token, user_profile, inv_client, inv_session
+        return res
+
+    @line_magic
     def invoke_get_tutorial_text(self,line):
         "Invocation service make directory"
         global user_id, token, user_profile, inv_client, inv_session
-        return res[0]
+        return res
 
 # Grab the ipython object and the config object if available
 #

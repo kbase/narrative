@@ -1,0 +1,6 @@
+server: nexus.api.globusonline.org
+cache:
+  class: 'nexus.token_utils.InMemoryCache'
+verify_ssl: false
+api_key: null
+api_secret: null

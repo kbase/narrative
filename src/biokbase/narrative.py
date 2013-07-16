@@ -345,3 +345,4 @@ if ip is not None:
         print "Logged in automatically as %s from environment defaults" % user_id
     else:
         print "You are not currently logged in. Access to kbase will be unauthenticated (where allowed).\nPlease login with kblogin for personal access"
+    print "KBase narrative module loaded.\nUse 'kblogin {username}' and 'kblogout' to acquire and dispose of KBase credentials.\nIPython magics defined for invocation service access are prefixed with invoke_*\n"

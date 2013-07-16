@@ -1,0 +1,2 @@
+# Load the ipython narrative module
+import biokbase.narrative

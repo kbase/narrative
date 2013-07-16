@@ -9,8 +9,8 @@ and standard KBase makefile targets are in the works.
 cd src
 ./ipython.sh
 
-   This will set the PYTHONPATH to include the src directory, where the biokbase.* modules reside.
-   Once within ipython, you can use "import biokbase.narrative" to bring in the modifications to
-support the narrative.
+   This will set the PYTHONPATH to include the src directory, where the biokbase.* modules reside,
+as well as setting the IPYTHONPATH to include the directory containing a KBase narrative profile
+that loads a kbase specific environment
 
    sychan 6/27/2013

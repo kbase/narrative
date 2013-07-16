@@ -12,6 +12,7 @@ import getpass
 import random
 import string
 import time
+from IPython.core.display import display, Javascript
 
 # Module variables for maintaining KBase Notebook state
 user_id = None
@@ -28,10 +29,100 @@ endpoint = { 'invocation' : 'https://kbase.us/services/invocation' }
 # IPython interpreter object
 ip = None
 
-# Define the KBase notebook magics
+#
+# Some helper code to prompt for a password from
+# https://github.com/minrk/ipython_extensions/blob/master/nbinput.py
+#
+# This code is supposed to be obsolete once we merge with IPython 1.0
+# and will be removed
+#
+def nbgetpass(user_id):
+    display(Javascript("""
+var dialog = $('<div/>').append(
+    $('<input/>')
+    .attr('id', 'password')
+    .attr('name', 'password')
+    .attr('type', 'password')
+    .attr('value', '')
+);
+$(document).append(dialog);
+dialog.dialog({
+    resizable: false,
+    modal: true,
+    title: "Password for %s",
+    closeText: '',
+    buttons : {
+        "Okay": function () {
+            IPython.notebook.kernel.execute(
+                "biokbase.narrative.do_login( '%s', '" + $("input#password").attr('value') + "')"
+            );
+            $(this).dialog('close');
+            dialog.remove();
+        },
+        "Cancel": function () {
+            $(this).dialog('close');
+            dialog.remove();
+        }
+    }
+});
+""" % (user_id,user_id)), include=['application/javascript'])
+                                  
+def nb_raw_input(prompt, name="raw_input_reply"):
+    display(Javascript("""
+var dialog = $('<div/>').append(
+    $('<input/>')
+    .attr('id', 'theinput')
+    .attr('value', '')
+);
+$(document).append(dialog);
+dialog.dialog({
+    resizable: false,
+    modal: true,
+    title: "%s",
+    closeText: '',
+    buttons : {
+        "Okay": function () {
+            IPython.notebook.kernel.execute(
+                "%s = '" + $("input#theinput").attr('value') + "'"
+            );
+            $(this).dialog('close');
+            dialog.remove();
+        },
+        "Cancel": function () {
+            $(this).dialog('close');
+            dialog.remove();
+        }
+    }
+});
+""" % (prompt, name)), include=['application/javascript'])
 
-class NoLogin( Exception ):
-    pass
+# Actually performs the login with username and password
+def do_login( user, password, t=None):
+    global user_id, token, user_profile, inv_client, inv_session
+    try:
+        if t is None:
+            t = Auth.Token( user_id = user, password = password)
+        if t.token:
+            user_id = t.user_id
+            token = t.token
+            user_profile = Auth.User( token = token)
+            # If we had a previous session, clear it out
+            if inv_session is not None:
+                print "Clearing anonymous invocation session"
+                inv_client.exit_session( inv_session)
+            inv_client = None
+            inv_session = None
+            ws_client = None
+        else:
+            raise Auth.AuthFail( "Could not get token with username and password given")
+    except Auth.AuthFail, a:
+        print "Failed to login with username password provided. Please try again."
+        token = None
+    if token is not None:
+        print "Logged in as %s" % user_id
+
+
+# Define the KBase notebook magics
 
 @magics_class
 class KBaseMagics(Magics):

@@ -8,6 +8,7 @@
         {
             title : 'Confirm deletion',
             body : 'Really delete <strong>' + tab + '</strong>?',
+            modalClass : 'fade', //Not required. jquery animation class to show/hide. Defaults to 'fade'
             controls : [
                 'cancelButton',
                 {
@@ -56,7 +57,8 @@
     $.kbWidget("kbasePrompt", 'kbaseWidget', {
         version: "1.0.0",
         options: {
-            controls : ['cancelButton', 'okayButton']
+            controls : ['cancelButton', 'okayButton'],
+            modalClass : 'fade',
         },
 
         init: function(options) {
@@ -100,7 +102,7 @@
 
             var $dialogModal =
                 $('<div></div>')
-                    .attr('class', 'modal hide fade')
+                    .attr('class', 'modal hide ' + this.options.modalClass)
                     .attr('tabindex', '-1')
                     .append(
                         $('<div></div>')

@@ -101,6 +101,10 @@
                 this.$terminal = options.$terminal;
             }
 
+            if (options.$loginbox) {
+                this.$loginbox = options.$loginbox;
+            }
+
             this._super(options);
 
             this.listDirectory(this.options.root, $.proxy(function (results) {
@@ -156,7 +160,15 @@
         },
 
         sessionId : function() {
-            return this.$terminal.sessionId;
+            if (this.$terminal != undefined) {
+                return this.$terminal.sessionId;
+            }
+            else if (this.$loginbox != undefined) {
+                return this.$loginbox.sessionId();
+            }
+            else {
+                return undefined;
+            }
         },
 
         refreshDirectory : function(path) {

@@ -55,6 +55,9 @@
 
         KBase[directName] = function (options, $elem) {
             var $w = new Widget();
+            if ($elem == undefined) {
+                $elem = $.jqElem('div');
+            }
             $w.$elem = $elem;
             $w.init(options);
             $w._init = true;

@@ -8,7 +8,8 @@ return $.kbWidget(name,parent,def,asPlugin);}
 $.kbWidget=function(name,parent,def,asPlugin){if(asPlugin==undefined){asPlugin=true;}
 if(widgetRegistry[name]!=undefined){return;}
 var Widget=function($elem){this.$elem=$elem;this.options=$.extend(true,{},def.options,this.constructor.prototype.options);return this;}
-var directName=name;directName=directName.replace(/^kbase/,'');directName=directName.charAt(0).toLowerCase()+directName.slice(1);KBase[directName]=function(options,$elem){var $w=new Widget();$w.$elem=$elem;$w.init(options);$w._init=true;return $w;}
+var directName=name;directName=directName.replace(/^kbase/,'');directName=directName.charAt(0).toLowerCase()+directName.slice(1);KBase[directName]=function(options,$elem){var $w=new Widget();if($elem==undefined){$elem=$.jqElem('div');}
+$w.$elem=$elem;$w.init(options);$w._init=true;return $w;}
 widgetRegistry[name]=Widget;if(def==undefined){def=parent;parent='kbaseWidget';if(def==undefined){def={};}}
 if(parent){subclass(Widget,widgetRegistry[parent]);}
 var defCopy=$.extend(true,{},def);for(var prop in defCopy){if($.isFunction(defCopy[prop])){Widget.prototype[prop]=(function(methodName,method){var _super=function(){throw"No parent method defined! Play by the rules!";}
@@ -135,9 +136,9 @@ var $button=$('<button></button>')
 .bind('click',function(e){e.preventDefault();e.stopPropagation();if(val['icon-alt']){$(this).children().first().toggleClass(val.icon);$(this).children().first().toggleClass(val['icon-alt']);}
 val.callback.call(this,e,$buttonControls.options.context);});if(val.id){this._controls[val.id]=$button;}
 if(this.options.id){$button.data('id',this.options.id);}
-this.data('control-buttons').append($button);},this));},});}(jQuery));(function($,undefined){$.kbWidget("kbasePrompt",'kbaseWidget',{version:"1.0.0",options:{controls:['cancelButton','okayButton']},init:function(options){this._super(options);return this;},openPrompt:function(){this.dialogModal().modal({'keyboard':true});},closePrompt:function(){this.dialogModal().modal('hide');},cancelButton:function(){return{name:'Cancel',callback:function(e,$prompt){$prompt.closePrompt();}}},okayButton:function(){return{name:'Okay',type:'primary',callback:function(e,$prompt){$prompt.closePrompt();}}},dialogModal:function(){if(this.data('dialogModal')!=undefined){return this.data('dialogModal');}
+this.data('control-buttons').append($button);},this));},});}(jQuery));(function($,undefined){$.kbWidget("kbasePrompt",'kbaseWidget',{version:"1.0.0",options:{controls:['cancelButton','okayButton'],modalClass:'fade',},init:function(options){this._super(options);return this;},openPrompt:function(){this.dialogModal().modal({'keyboard':true});},closePrompt:function(){this.dialogModal().modal('hide');},cancelButton:function(){return{name:'Cancel',callback:function(e,$prompt){$prompt.closePrompt();}}},okayButton:function(){return{name:'Okay',type:'primary',callback:function(e,$prompt){$prompt.closePrompt();}}},dialogModal:function(){if(this.data('dialogModal')!=undefined){return this.data('dialogModal');}
 var $dialogModal=$('<div></div>')
-.attr('class','modal hide fade')
+.attr('class','modal hide '+this.options.modalClass)
 .attr('tabindex','-1')
 .append($('<div></div>')
 .attr('class','modal-header')
@@ -278,7 +279,7 @@ $.each(data.values,function(idx,value){var name=data.names[idx]||data.values[idx
 .attr('value',value)
 .append(name);if(typeof data.selected=='string'&&data.selected==value){$option.attr('selected','selected');}
 else if(typeof data.selected=='object'){$.each(data.selected,function(idx,selectedValue){if(selectedValue==value){$option.attr('selected','selected');}});}
-$selectbox.append($option);});return $selectbox;},});}(jQuery));(function($,undefined){$.kbWidget("kbaseLogin",'kbaseWidget',{version:"1.0.0",options:{style:'button',loginURL:"http://kbase.us/services/authorization/Sessions/Login",possibleFields:['verified','name','opt_in','kbase_sessionid','token','groups','user_id','email','system_admin'],fields:['name','kbase_sessionid','user_id','token'],},get_kbase_cookie:function(field){var chips={};var cookieString=$.cookie('kbase_session');if(cookieString==undefined){return chips;}
+$selectbox.append($option);});return $selectbox;},});}(jQuery));(function($,undefined){$.kbWidget("kbaseLogin",'kbaseWidget',{version:"1.0.0",options:{style:'button',loginURL:"http://kbase.us/services/authorization/Sessions/Login",possibleFields:['verified','name','opt_in','kbase_sessionid','token','groups','user_id','email','system_admin'],fields:['name','kbase_sessionid','user_id','token'],},get_kbase_cookie:function(field){var chips={};var cookieString=$.cookie('kbase_session');if(cookieString==undefined){return field==undefined?chips:undefined;}
 var pairs=cookieString.split('\|');for(var i=0;i<pairs.length;i++){var set=pairs[i].split('=');set[1]=set[1].replace(/PIPESIGN/g,'|');set[1]=set[1].replace(/EQUALSSIGN/g,'=');chips[set[0]]=set[1];}
 chips.success=1;return field==undefined?chips:chips[field];},sessionId:function(){return this.get_kbase_cookie('kbase_sessionid');},token:function(){return this.get_kbase_cookie('token');},init:function(options){this._super(options);var kbaseCookie=this.get_kbase_cookie();this.$elem.empty();var style='_'+this.options.style+'Style';this.ui=this[style]();if(this.ui){this.$elem.append(this.ui);}
 if(kbaseCookie.user_id){if(this.registerLogin){this.registerLogin(kbaseCookie);}
@@ -305,7 +306,7 @@ return this._error;},openDialog:function(){if(this.data('loginDialog')){var $ld=
 .addClass('dropdown-toggle')
 .append($('<i></i>').addClass('icon-user'))
 .append($('<i></i>').addClass('icon-caret-down'))
-.bind('click',function(e){e.preventDefault();e.stopPropagation();$(this).next().slideToggle();console.log($(this).next());}
+.bind('click',function(e){e.preventDefault();e.stopPropagation();$(this).next().toggle();console.log($(this).next());}
 ))
 .append($('<ul></ul>')
 .addClass('dropdown-menu')
@@ -332,7 +333,7 @@ return this._error;},openDialog:function(){if(this.data('loginDialog')){var $ld=
 .css('padding-right','0px')
 .css('padding-left','0px')
 .append('Sign out'))
-.bind('click',$.proxy(function(e){e.stopPropagation();e.preventDefault();this.data('login-dropdown-menu').slideUp();this.logout();},this))))));this._rewireIds($prompt,this);this.registerLogin=function(args){if(args.success){this.data("loginlink").hide();this.data('loggedinuser_id').text(args.name);this.data("userdisplay").show();this.data('loginDialog').closePrompt();}
+.bind('click',$.proxy(function(e){e.stopPropagation();e.preventDefault();this.data('login-dropdown-menu').hide();this.logout();},this))))));this._rewireIds($prompt,this);this.registerLogin=function(args){if(args.success){this.data("loginlink").hide();this.data('loggedinuser_id').text(args.name);this.data("userdisplay").show();this.data('loginDialog').closePrompt();}
 else{this.data('loginDialog').dialogModal().trigger('error',args.message);}};this.specificLogout=function(args){this.data("userdisplay").hide();this.data("loginlink").show();};return $prompt;},_hiddenStyle:function(){this._createLoginDialog();this.registerLogin=function(args){if(args.success){this.data('loginDialog').closePrompt();}
 else{this.data('loginDialog').dialogModal().trigger('error',args.message);}};return undefined;},_slimStyle:function(){this.data('loginDialog',undefined);var $prompt=$('<span></span>')
 .addClass('form-inline')

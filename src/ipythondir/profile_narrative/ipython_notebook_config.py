@@ -141,7 +141,7 @@ c = get_config()
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-# c.IPKernelApp.exec_lines = []
+c.IPKernelApp.exec_lines = [ 'import biokbase.narrative' ]
 
 # The importstring for the OutStream factory
 # c.IPKernelApp.outstream_class = 'IPython.zmq.iostream.OutStream'
@@ -205,7 +205,7 @@ c = get_config()
 # c.IPKernelApp.gui = None
 
 # A list of dotted module names of IPython extensions to load.
-# c.IPKernelApp.extensions = []
+#c.IPKernelApp.extensions = []
 
 # redirect stderr to the null device
 # c.IPKernelApp.no_stderr = False

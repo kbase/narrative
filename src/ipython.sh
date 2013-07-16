@@ -4,8 +4,7 @@
 # everything - intended solely for development work in the src repo
 #
 export IPYTHONSRC="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo "Running out of $IPYTHONSRC"
-export PYTHONPATH=$iPYTHONSRC:$PYTHONPATH
+export PYTHONPATH=$IPYTHONSRC:$IPYTHONSRC/KBNB:$PYTHONPATH
 export IPYTHONDIR=$IPYTHONSRC/ipythondir
 
-python KBNB/ipython $* # --profile=narrative $* # --NotebookManager.notebook_dir=$IPYTHONSRC/notebooks $*
+KBNB/ipython.py $* --NotebookManager.notebook_dir=$IPYTHONSRC/notebooks --profile=narrative

@@ -72,7 +72,7 @@ c.InteractiveShellApp.extensions = [ 'extensions.nbinput' ]
 # c.TerminalIPythonApp.display_banner = True
 
 # lines of code to run at IPython startup.
-# c.TerminalIPythonApp.exec_lines = []
+c.TerminalIPythonApp.exec_lines = [ 'import biokbase.narrative']
 
 # Enable GUI event loop integration ('qt', 'wx', 'gtk', 'glut', 'pyglet',
 # 'osx').
@@ -123,7 +123,7 @@ c.InteractiveShellApp.extensions = [ 'extensions.nbinput' ]
 # c.TerminalIPythonApp.extra_extension = ''
 
 # List of files to run at IPython startup.
-c.TerminalIPythonApp.exec_files = [ 'load_narrative_modules.ipy']
+# c.TerminalIPythonApp.exec_files = []
 
 # Whether to overwrite existing config files when copying
 # c.TerminalIPythonApp.overwrite = False

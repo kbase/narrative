@@ -44,7 +44,8 @@ biokbase 	 - root of kbase pythong libraries to support the notebook
 extensions	 - directory for ipython extensions (the type used with %load_ext)
 ipython.sh	 - helper script that runs ipython out of this source directory with narrative stuff loaded
 ipythondir	 - the equivalent of ~/.ipython for storing configs, used with ipython.sh script for configuration
-
+usercustomize.py - Ugly hack needed to deal with PYTHONPATH being munged when the kbase notebook forks a
+		   process. See http://python.6.x6.nabble.com/Weird-PYTHONPATH-etc-issue-td4989274.html
 # the following directories need some cleanup and consolidation, they include support libraries and other content
 
 jquery

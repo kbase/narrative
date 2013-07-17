@@ -23,6 +23,9 @@ ws_client = None
 inv_session = None
 inv_cwd = '/'
 
+# Flag set by a JS callback to let is know if we have a browser or not
+have_browser = None
+
 # End points for various services
 endpoint = { 'invocation' : 'https://kbase.us/services/invocation' }
 
@@ -67,41 +70,12 @@ dialog.dialog({
 });
 """ % (user_id,user_id)), include=['application/javascript'])
                                   
-def nb_raw_input(prompt, name="raw_input_reply"):
-    display(Javascript("""
-var dialog = $('<div/>').append(
-    $('<input/>')
-    .attr('id', 'theinput')
-    .attr('value', '')
-);
-$(document).append(dialog);
-dialog.dialog({
-    resizable: false,
-    modal: true,
-    title: "%s",
-    closeText: '',
-    buttons : {
-        "Okay": function () {
-            IPython.notebook.kernel.execute(
-                "%s = '" + $("input#theinput").attr('value') + "'"
-            );
-            $(this).dialog('close');
-            dialog.remove();
-        },
-        "Cancel": function () {
-            $(this).dialog('close');
-            dialog.remove();
-        }
-    }
-});
-""" % (prompt, name)), include=['application/javascript'])
 
 # Actually performs the login with username and password
-def do_login( user, password, t=None):
+def do_login( user, password):
     global user_id, token, user_profile, inv_client, inv_session
     try:
-        if t is None:
-            t = Auth.Token( user_id = user, password = password)
+        t = Auth.Token( user_id = user, password = password)
         if t.token:
             user_id = t.user_id
             token = t.token
@@ -131,9 +105,10 @@ class KBaseMagics(Magics):
     def kblogin(self,user):
         global user_id, token, user_profile, inv_client, inv_session
         "Login using username and password to KBase and then push necessary info into the environment"
+        # display(Javascript("IPython.notebook.kernel.execute( 'biokbase.narrative.have_browser = 1')"))
         if user_id is not None:
-            raise Exception( "Already logged in as %s. Please logout first if you want to re-login" % user_id)
-        if user is None:
+            print "Already logged in as %s. Please kblogout first if you want to re-login" % user_id
+        elif user is None:
             print "kblogin requires at least a username"
         else:
             try:
@@ -161,6 +136,39 @@ class KBaseMagics(Magics):
         if token is not None:
             return user_id
         else:
+            return None
+
+
+    @line_magic
+    def kb_nblogin(self,user):
+        global user_id, token, user_profile, inv_client, inv_session
+        "Notebook interface specific Login using username and password to KBase and then push necessary info into the environment"
+        if user_id is not None:
+            raise Exception( "Already logged in as %s. Please logout first if you want to re-login" % user_id)
+        if user is None:
+            print "kb_nblogin requires at least a username"
+        else:
+            # try to login with only user_id in case there is an ssh_agent running
+            try:
+                t = Auth.Token( user_id = user)
+                if t.token:
+                    user_id = t.user_id
+                    token = t.token
+                    user_profile = Auth.User( token = token)
+                    # If we had a previous session, clear it out
+                    if inv_session is not None:
+                        print "Clearing anonymous invocation session"
+                        inv_client.exit_session( inv_session)
+                    inv_client = None
+                    inv_session = None
+                    ws_client = None
+            except Auth.AuthFail, a:
+                # use javascript callback
+                nbgetpass( user)
+        if token is not None:
+            return user_id
+        else:
+            # The JS callback was used return None
             return None
 
     @line_magic
@@ -336,6 +344,7 @@ except:
     raise
 if ip is not None:
     ip.register_magics( KBaseMagics)
+    # If we have a browser, have it set the have_browser flag
     # Try to bring in a token to the environment
     t = Auth.Token()
     if t.token is not None:

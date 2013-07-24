@@ -1,15 +1,20 @@
 TOP_DIR = ../..
 DEPLOY_RUNTIME ?= /kb/runtime
 TARGET ?= /kb/deployment
-include $(TOP_DIR)/tools/Makefile.common
-
-SERVICE_SPEC = 
+SERVICE_SPEC =
 SERVICE_NAME =
-SERVICE_PORT =
-SERVICE_DIR  =
+REPO_NAME = narrative
+SERVICE_PORT = 8090
 
-SERVICE_PSGI = $(SERVICE_NAME).psgi
-TPAGE_ARGS = --define kb_top=$(TARGET) --define kb_runtime=$(DEPLOY_RUNTIME) --define kb_service_name=$(SERVICE_NAME) --define kb_service_dir=$(SERVICE_DIR) --define kb_service_port=$(SERVICE_PORT) --define kb_psgi=$(SERVICE_PSGI)
+ROOT_DEV_MODULE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+KB_DEPLOYMENT_CONFIG ?= $(ROOT_DEV_MODULE_DIR)/deploy.cfg
+
+#include $(TOP_DIR)/tools/Makefile.common
+#include $(TOP_DIR)/tools/Makefile.common.rules
+SERVICE_DIR = /kb/deployment/services/$(SERVICE_NAME)
+PID_FILE = $(SERVICE_DIR)/service.pid
+LOG_FILE = $(SERVICE_DIR)/log/uwsgi.log
+ERR_LOG_FILE = $(SERVICE_DIR)/log/error.log
 
 # to wrap scripts and deploy them to $(TARGET)/bin using tools in
 # the dev_container. right now, these vars are defined in
@@ -21,9 +26,9 @@ SRC_PERL = $(wildcard scripts/*.pl)
 
 # You can change these if you are putting your tests somewhere
 # else or if you are not using the standard .t suffix
-CLIENT_TESTS = $(wildcard client-tests/*.t)
-SCRIPTS_TESTS = $(wildcard script-tests/*.t)
-SERVER_TESTS = $(wildcard server-tests/*.t)
+CLIENT_TESTS = $(wildcard test/client-tests/*.t)
+SCRIPT_TESTS = $(wildcard test/script-tests/*.t)
+SERVER_TESTS = $(wildcard test/server-tests/*.t)
 
 # This is a very client-centric view of release engineering.
 # We assume our primary product for the community is the client
@@ -51,7 +56,7 @@ SERVER_TESTS = $(wildcard server-tests/*.t)
 # a deploy-service target that does nothing, the other is to
 # remove the dependancy from the deploy target.
 #
-# A smiliar naming convention is used for tests. 
+# A similar naming convention is used for tests. 
 
 
 default:
@@ -65,35 +70,16 @@ default:
 # For starters, we will consider cpan style packages for perl
 # code, we will consider egg for python, npm for javascript,
 # and it is not clear at this time what is right for java.
-#
-# In all cases, it is important not to implement into these
-# targets the actual distribution. What these targets deal
-# with is creating the distributable object (.tar.gz, .jar,
-# etc) and placing it in the top level directory of the module
-# distrubution directory.
-#
-# Use <module_name>/distribution as the top level distribution
-# directory
-dist: dist-cpan dist-egg dist-npm dist-java dist-r
+
+dist: dist-cpan dist-egg dist-npm dist-java
 
 dist-cpan: dist-cpan-client dist-cpan-service
 
 dist-egg: dist-egg-client dist-egg-service
 
-# In this case, it is not clear what npm service would mean,
-# unless we are talking about a service backend implemented
-# in javascript, which I can imagine happing. So the target
-# is here, even though we don't have support for javascript
-# on the back end of the compiler at this time.
-dist-npm: dist-npm-client dist-npm-service
+dist-npm: dist-nmp-client dist-npm-service
 
 dist-java: dist-java-client dist-java-service
-
-# in this case, I'm using the word client just for consistency
-# sake. What we mean by client is an R library. At this time
-# the meaning of a r-service is not understood. It can be
-# added at a later time if there is a good reason.
-dist-r: dist-r-client
 
 dist-cpan-client:
 	echo "cpan client distribution not supported"
@@ -119,9 +105,6 @@ dist-java-client:
 dist-java-service:
 	echo "java service distribuiton not supported"
 
-dist-r-client:
-	echo "r client lib distribution not supported"
-
 # Test Section
 
 test: test-client test-scripts test-service
@@ -140,7 +123,7 @@ test-client:
 	# run each test
 	for t in $(CLIENT_TESTS) ; do \
 		if [ -f $$t ] ; then \
-			$(DEPLOY_RUNTIME)/bin/perl $$t ; \
+			/usr/bin/env python $$t ; \
 			if [ $$? -ne 0 ] ; then \
 				exit 1 ; \
 			fi \
@@ -158,7 +141,7 @@ test-scripts:
 	# run each test
 	for t in $(SCRIPT_TESTS) ; do \
 		if [ -f $$t ] ; then \
-			$(DEPLOY_RUNTIME)/bin/perl $$t ; \
+			/usr/bin/env python $$t ; \
 			if [ $$? -ne 0 ] ; then \
 				exit 1 ; \
 			fi \
@@ -173,7 +156,7 @@ test-service:
 	# run each test
 	for t in $(SERVER_TESTS) ; do \
 		if [ -f $$t ] ; then \
-			$(DEPLOY_RUNTIME)/bin/perl $$t ; \
+			/usr/bin/env python $$t ; \
 			if [ $$? -ne 0 ] ; then \
 				exit 1 ; \
 			fi \
@@ -213,7 +196,7 @@ deploy-client: deploy-libs deploy-scripts deploy-docs
 # individual API functions and aggregated sets of API functions.
 
 deploy-libs: build-libs
-
+	rsync --exclude '*.bak*' -arv lib/. $(TARGET)/lib/.
 
 # Deploying scripts needs some special care. They need to run
 # in a certain runtime environment. Users should not have
@@ -250,21 +233,42 @@ deploy-scripts:
 		$(WRAP_PERL_SCRIPT) "$(TARGET)/plbin/$$basefile" $(TARGET)/bin/$$base ; \
 	done
 
-
 # Deploying a service refers to to deploying the capability
 # to run a service. Becuase service code is often deployed 
 # as part of the libs, meaning service code gets deployed
 # when deploy-libs is called, the deploy-service target is
 # generally concerned with the service start and stop scripts.
 
-deploy-service:
-	mkdir -p $(TARGET)/services/$(SERVICE_DIR)
-	$(TPAGE) $(TPAGE_ARGS) service/start_service.tt > $(TARGET)/services/$(SERVICE_DIR)/start_service
-	chmod +x $(TARGET)/services/$(SERVICE_DIR)/start_service
-	$(TPAGE) $(TPAGE_ARGS) service/stop_service.tt > $(TARGET)/services/$(SERVICE_DIR)/stop_service
-	chmod +x $(TARGET)/services/$(SERVICE_DIR)/stop_service
-	$(MK_CONFIG)
-	echo "done executing deploy-service target"
+deploy-service: deploy-service-libs deploy-service-scripts
+
+deploy-service-libs:
+	mkdir -p $(TARGET)/lib/biokbase/$(SERVICE_NAME)
+	touch $(TARGET)/lib/biokbase/__init__.py
+	rsync -arv --exclude adapter  $(TOP_DIR)/modules/$(REPO_NAME)/service/lib/biokbase/$(SERVICE_NAME)/* $(TARGET)/lib/biokbase/$(SERVICE_NAME)/.
+	mkdir -p $(SERVICE_DIR)
+	echo "deployed service for $(SERVICE_NAME)."
+
+deploy-service-scripts:	
+	# Create the start script (should be a better way to do this...)
+	echo '#!/bin/sh' > $(SERVICE_DIR)/start_service
+	echo "echo starting $(SERVICE_NAME) service." >> $(SERVICE_DIR)/start_service
+	echo 'export PYTHONPATH=$(TARGET)/lib:$$PYTHONPATH' >> $(SERVICE_DIR)/start_service
+	echo 'export KB_DEPLOYMENT_CONFIG=$(KB_DEPLOYMENT_CONFIG)' >> $(SERVICE_DIR)/start_service
+	echo 'export KB_SERVICE_NAME=$(SERVICE_NAME)' >> $(SERVICE_DIR)/start_service
+	echo " " >> $(SERVICE_DIR)/start_service
+	echo "echo $(SERVICE_NAME) service is listening on port $(SERVICE_PORT).\n" >> $(SERVICE_DIR)/start_service
+	
+	# Create the stop script (should be a better way to do this...)
+	echo '#!/bin/sh' > $(SERVICE_DIR)/stop_service
+	echo "echo trying to stop $(SERVICE_NAME) service." >> $(SERVICE_DIR)/stop_service
+	echo "if [ ! -f $(PID_FILE) ] ; then " >> $(SERVICE_DIR)/stop_service
+	echo "\techo \"No pid file: $(PID_FILE) found for service $(SERVICE_NAME).\"\n\texit 1\nfi" >> $(SERVICE_DIR)/stop_service
+	echo " " >> $(SERVICE_DIR)/stop_service
+	
+	# Actually run the deployment of these scripts
+	chmod +x $(SERVICE_DIR)/*
+	mkdir -p $(SERVICE_DIR)/log
+
 
 # Deploying docs here refers to the deployment of documentation
 # of the API. We'll include a description of deploying documentation
@@ -272,15 +276,15 @@ deploy-service:
 # how to standardize and automate CLI documentation.
 
 deploy-docs: build-docs
-	-mkdir -p $(TARGET)/services/$(SERVICE_DIR)/webroot/.
-	cp docs/*.html $(TARGET)/services/$(SERVICE_DIR)/webroot/.
+	-mkdir -p $(TARGET)/services/$(SERVICE_NAME)/webroot/.
+	cp docs/*.html $(TARGET)/services/$(SERVICE_NAME)/webroot/.
 
 # The location of the Client.pm file depends on the --client param
 # that is provided to the compile_typespec command. The
 # compile_typespec command is called in the build-libs target.
 
 build-docs: compile-docs
-#	pod2html --infile=lib/Bio/KBase/$(SERVICE_NAME)/Client.pm --outfile=docs/$(SERVICE_NAME).html
+	pod2html --infile=lib/Bio/KBase/$(SERVICE_NAME)/Client.pm --outfile=docs/$(SERVICE_NAME).html
 
 # Use the compile-docs target if you want to unlink the generation of
 # the docs from the generation of the libs. Not recommended, but there
@@ -299,11 +303,8 @@ compile-docs: build-libs
 # target depends on the compiled libs.
 
 build-libs:
-#	compile_typespec \
-		--psgi $(SERVICE_PSGI)  \
-		--impl Bio::KBase::$(SERVICE_NAME)::$(SERVICE_NAME)Impl \
-		--service Bio::KBase::$(SERVICE_NAME)::Service \
-		--client Bio::KBase::$(SERVICE_NAME)::Client \
-		--py biokbase/$(SERVICE_NAME)/Client \
-		--js javascript/$(SERVICE_NAME)/Client \
-		$(SERVICE_SPEC) lib
+	virtualenv narrative
+	pip install ipython
+
+clean:
+	#nothing yet

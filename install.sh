@@ -4,68 +4,73 @@ installPath=`pwd`
 venv="narrative-venv"
 commit="" 
 
-while getopts "p:v:c:" opt; do
-
-    case $opt in
-        p)
-            echo "Using $OPTARG as the base directory for installation..."
-            installPath="$OPTARG"
+while :
+do
+    case $1 in
+        -h | --help | -\?)
+            printf "usage: $0 [{-p | --install_path} root_install_path] [{-v | --virtual_env} environment_name] [{-c | commit_id} git_commit_id]\n"        
+            exit 0
             ;;
-        v)
-            venv="$OPTARG"
-            echo "Virtual environment will be created under $OPTARG..."
+        -p | --install_path)
+            printf "Using $2 as the base directory for installation...\n"
+            installPath=$2
+            shift 2
             ;;
-        c)
-            commit="$OPTARG"
-            echo "Using commit $OPTARG..."
+        -v | --virtualenv)
+            printf "Virtual environment will be created under $2...\n"
+            venv=$2
+            shift 2
             ;;
-        \?)
-            echo "Unrecognized option: -$OPTARG"
-            exit 1
+        -c | --commit_id)
+            printf "Using commit $2...\n"
+            commit=$2
+            shift 2
             ;;
-        :)
-            echo "-$OPTARG requires an argument."
-            exit 1
+        -*|--*) # Unrecognized option
+            printf "WARN: Unknown option (ignored): $1\n" >&2
+            shift
+            ;;
+        *)  # no more options. Stop while loop
+            break
             ;;
     esac
-    
 done
 
-# Clear options
-shift $(( OPTIND -1 ))
 
-if [ -z "$1" ]; then
-    echo "usage: $0 [-p root_install_path] [-v environment_name] [-c git_commit_id]"
-fi
+dependency_commands="python virtualenv git"
 
-echo "Creating virtual environment..."
+for dcommand in $dependency_commands; do
+  if ! hash "$dcommand" >/dev/null 2>&1; then
+    printf "Command not found in PATH: %s\n" "$dcommand\n" >&2
+    exit 1
+  fi
+done
+
+
+printf "Creating virtual environment $venv...\n"
 virtualenv $installPath/$venv
 
-echo "Pulling ipython master from github..."
+printf "Pulling ipython master from github...\n"
 git clone https://github.com/ipython/ipython.git
 
 # Move into the ipython git directory to run the install
 cd ipython
 
 if [ -n "$commit" ]; then
-    echo "Pulling commit $commit..."
-    echo "git checkout $commit"
+    printf "Pulling commit $commit...\n"
     git checkout $commit
 fi
 
-echo "Installing ipython into the virtual environment..."
-echo "$installPath/$venv/bin/pip install .[$venv]"
-
+printf "Installing ipython into the virtual environment $venv...\n"
 source $installPath/$venv/bin/activate
-#$installPath/$venv/bin/pip install -e .[$venv]
 python setup.py install
 cd ..
 
-echo "Creating start script for ipython notebook..."
+#printf "Creating start script for ipython notebook...\n"
 
 # incomplete
 
-echo "Cleaning up after install.sh script..."
+printf "Cleaning up after install.sh script...\n"
 rm -rf ipython
 
-echo "Done."
+printf "Done.\n"

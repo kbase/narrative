@@ -36,9 +36,10 @@ do
     esac
 done
 
-
+# Make sure that the necessary dependencies for installing the notebook in a virtualenv are available
 dependency_commands="python virtualenv git"
 
+# Exit if we are missing a dependency
 for dcommand in $dependency_commands; do
   if ! hash "$dcommand" >/dev/null 2>&1; then
     printf "Command not found in PATH: %s\n" "$dcommand\n" >&2
@@ -66,9 +67,17 @@ source $installPath/$venv/bin/activate
 python setup.py install
 cd ..
 
-#printf "Creating start script for ipython notebook...\n"
+printf "Creating start script for ipython notebook...\n"
 
-# incomplete
+printf 'source %s/bin/activate
+export NARRATIVEDIR=%s
+export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
+export PYTHONPATH=$NARRATIVEDIR:$PYTHONPATH
+
+ipython $* --NotebookManager.notebook_dir=~/.narrative --profile=narrative
+' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" &> $installPath/$venv/bin/run_notebook.sh
+
+chmod +x $installPath/$venv/bin/run_notebook.sh
 
 printf "Cleaning up after install.sh script...\n"
 rm -rf ipython

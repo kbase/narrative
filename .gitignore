@@ -1,0 +1,16 @@
+MANIFEST
+build
+dist
+_build
+docs/man/*.gz
+docs/source/api/generated
+docs/gh-pages
+IPython/html/notebook/static/mathjax
+*.py[co]
+__pycache__
+build
+*.egg-info
+*~
+*.bak
+.ipynb_checkpoints
+.tox

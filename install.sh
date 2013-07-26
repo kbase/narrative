@@ -67,12 +67,13 @@ source $installPath/$venv/bin/activate
 python setup.py install
 cd ..
 
+cp -R "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/biokbase" $installPath/$venv/lib/python2.7/site-packages/
+
 printf "Creating start script for ipython notebook...\n"
 
 printf 'source %s/bin/activate
 export NARRATIVEDIR=%s
 export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
-export PYTHONPATH=$NARRATIVEDIR:$PYTHONPATH
 
 ipython $* --NotebookManager.notebook_dir=~/.narrative --profile=narrative
 ' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" &> $installPath/$venv/bin/run_notebook.sh

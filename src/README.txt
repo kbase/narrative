@@ -44,11 +44,11 @@
 
    MG-RAST_ipy-mkmq - glue code to connect Retina and R stuff into IPython
    MG-RAST_Retina   - viz libraries from Folker's group
-   biokbase/        - root of kbase pythong libraries to support the notebook
+   biokbase/        - root of kbase python libraries to support the notebook
    notebook/        - contains all ipython specific styling, customizations, etc
-      extensions/       - directory for ipython extensions (the type used with %load_ext)
       ipython.sh        - helper script that runs ipython with narrative stuff loaded
       ipython_profiles/ - the equivalent of ~/.ipython for storing configs, used with ipython.sh script for configuration
+          extensions/   - directory for ipython extensions (the type used with %load_ext)
       usercustomize.py  - Ugly hack needed to deal with PYTHONPATH being munged when the kbase notebook forks a 
                           process. See http://python.6.x6.nabble.com/Weird-PYTHONPATH-etc-issue-td4989274.html
 

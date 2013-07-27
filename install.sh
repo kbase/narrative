@@ -49,7 +49,7 @@ done
 
 
 printf "Creating virtual environment $venv...\n"
-virtualenv $installPath/$venv
+virtualenv --system-site-packages $installPath/$venv
 
 printf "Pulling ipython master from github...\n"
 git clone https://github.com/ipython/ipython.git

@@ -1,1 +1,1 @@
-from nexus.client import NexusClient as Client
+from client import NexusClient as Client

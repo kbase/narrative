@@ -12,8 +12,8 @@ import urllib
 import urlparse
 
 import yaml
-import nexus.token_utils as token_utils
-from nexus.utils import (
+import token_utils as token_utils
+from utils import (
         read_openssh_public_key,
         read_openssh_private_key,
         canonical_time,
@@ -25,7 +25,7 @@ import requests
 import rsa
 import paramiko.agent
 import os
-import nexus.sshagent
+import sshagent
 
 log = logging.getLogger()
 
@@ -44,12 +44,12 @@ class NexusClient(object):
             raise AttributeError("No configuration was specified")
         self.server = self.config['server']
         cache_config = self.config.get('cache', {
-                    'class': 'nexus.token_utils.InMemoryCache',
+                    'class': 'token_utils.InMemoryCache',
                     'args': [],
                     })
         self.client = self.config['client']
         if 'SSH_AUTH_SOCK' in os.environ:
-            self.agent = nexus.sshagent.Agent2()
+            self.agent = sshagent.Agent2()
             sshkeys = self.agent.keys
             # strip out DSA keys since they are unusable for GO
             self.agent_keys = { name : sshkeys[name] for name in sshkeys.keys() if sshkeys[name].get_name() == 'ssh-rsa' }

@@ -6,7 +6,7 @@ and the python version
 In this module, we follow standard Python idioms of raising exceptions for
 various failure states ( Perl modules returned error states in error_msg field)
 """
-from biokbase.nexus.client import NexusClient
+from nexus.client import NexusClient
 from ConfigParser import ConfigParser
 import os
 from urlparse import urlparse
@@ -54,7 +54,7 @@ AuthSvcHost = authdata.get( 'servicehost', "https://nexus.api.globusonline.org/"
 # Copied from perl libs for reference, not used here
 #ProfilePath = authdata.get( 'authpath', "/goauth/token")
 RoleSvcURL = authdata.get( 'rolesvcurl', "https://kbase.us/services/authorization/Roles")
-nexusconfig = { 'cache' : { 'class': 'token_utils.InMemoryCache',
+nexusconfig = { 'cache' : { 'class': 'nexus.token_utils.InMemoryCache',
                             'args': [],
                             },
                 'server' : urlparse(AuthSvcHost).netloc,
@@ -89,7 +89,7 @@ def LoadConfig():
     # Copied from perl libs for reference, not used here
     #ProfilePath = authdata.get( 'authpath', "/goauth/token")
     RoleSvcURL = authdata.get( 'rolesvcurl', "https://kbase.us/services/authorization/Roles")
-    nexusconfig = { 'cache' : { 'class': 'token_utils.InMemoryCache',
+    nexusconfig = { 'cache' : { 'class': 'nexus.token_utils.InMemoryCache',
                                 'args': [],
                                 },
                     'server' : urlparse(AuthSvcHost).netloc,

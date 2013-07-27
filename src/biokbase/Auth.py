@@ -54,7 +54,7 @@ AuthSvcHost = authdata.get( 'servicehost', "https://nexus.api.globusonline.org/"
 # Copied from perl libs for reference, not used here
 #ProfilePath = authdata.get( 'authpath', "/goauth/token")
 RoleSvcURL = authdata.get( 'rolesvcurl', "https://kbase.us/services/authorization/Roles")
-nexusconfig = { 'cache' : { 'class': 'nexus.token_utils.InMemoryCache',
+nexusconfig = { 'cache' : { 'class': 'token_utils.InMemoryCache',
                             'args': [],
                             },
                 'server' : urlparse(AuthSvcHost).netloc,
@@ -89,7 +89,7 @@ def LoadConfig():
     # Copied from perl libs for reference, not used here
     #ProfilePath = authdata.get( 'authpath', "/goauth/token")
     RoleSvcURL = authdata.get( 'rolesvcurl', "https://kbase.us/services/authorization/Roles")
-    nexusconfig = { 'cache' : { 'class': 'nexus.token_utils.InMemoryCache',
+    nexusconfig = { 'cache' : { 'class': 'token_utils.InMemoryCache',
                                 'args': [],
                                 },
                     'server' : urlparse(AuthSvcHost).netloc,

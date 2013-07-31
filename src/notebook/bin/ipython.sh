@@ -8,4 +8,5 @@ export PYTHONPATH=$IPYTHONSRC/ipython:$PYTHONPATH
 export IPYTHONDIR=$IPYTHONSRC/notebook/ipython_profiles
 
 cd $IPYTHONSRC/ipython
-python -m IPython $* --notebook-dir=~/.narrative --profile=narrative
+python -m IPython $* --NotebookManager.notebook_dir=~/.narrative --profile=narrative
+cd -

@@ -53,7 +53,7 @@
     $.kbWidget("kbaseLogin", 'kbaseWidget', {
         version: "1.0.0",
         options: {
-            style : 'button',
+            style : 'text',
             //loginURL : "http://140.221.92.231/services/authorization/Sessions/Login",
             loginURL : "http://kbase.us/services/authorization/Sessions/Login",
             possibleFields : ['verified','name','opt_in','kbase_sessionid','token','groups','user_id','email','system_admin'],
@@ -121,8 +121,37 @@
                 }
 
                 this.data('_session', kbaseCookie);
+                this.trigger('loggedIn', this.get_kbase_cookie());
 
             }
+
+            $(document).on(
+                'loggedInQuery.kbase',
+                $.proxy(function (e, callback) {
+
+                var cookie = this.get_kbase_cookie()
+                    if (callback) {
+                        callback(cookie);
+                    }
+                }, this)
+            );
+
+            $(document).on(
+                'promptForLogin.kbase',
+                $.proxy(function (e, args) {
+                    if (args.user_id) {
+                        this.data('passed_user_id', args.user_id);
+                    }
+                    this.openDialog();
+                }, this)
+            );
+
+            $(document).on(
+                'logout.kbase',
+                $.proxy(function (e, rePrompt) {
+                    this.logout(rePrompt);
+                }, this)
+            );
 
             return this;
 
@@ -187,6 +216,7 @@
                 $ld.dialogModal().trigger('clearMessages');
 
         		this.data('loginDialog').openPrompt();
+
         	}
         },
 
@@ -226,7 +256,6 @@
                                 function(e) {
                                     e.preventDefault(); e.stopPropagation();
                                     $(this).next().toggle();//slideToggle('fast');
-                                    console.log($(this).next());
                                 }
                                 //, this)
                                 )
@@ -854,6 +883,17 @@
                 }
             );
 
+            $ld.dialogModal().on('shown',
+                function (e) {
+                    if ($(this).data('user_id').val().length == 0) {
+                        $(this).data('user_id').focus();
+                    }
+                    else {
+                        $(this).data('password').focus();
+                    }
+                }
+            );
+
             return $ld;
 
         },
@@ -916,12 +956,17 @@
                                     $.cookie('kbase_session', cookieArray.join('|'));
 
                                     this.populateLoginInfo(args);
-                                    callback.call(this,args)
+
+                                    this.trigger('loggedIn', this.get_kbase_cookie());
+
+                                    callback.call(this,args);
                                 }
                                 else {
                                     $.removeCookie('kbase_session');
                                     this.populateLoginInfo({});
                                     callback.call(this, {status : 0, message : data.error_msg});
+
+                                    this.trigger('loggedInFailure', {status : 0, message : data.error_msg});
                                 }
 
                             },
@@ -953,7 +998,17 @@
             }
         },
 
-        logout : function() {
+        logout : function(rePrompt) {
+
+            if (rePrompt == undefined) {
+                rePrompt = true;
+            }
+
+            var session_id = this.get_kbase_cookie('kbase_sessionid');
+
+            if (session_id == undefined) {
+                return;
+            }
 
             $.removeCookie('kbase_session');
 
@@ -966,9 +1021,11 @@
             this.populateLoginInfo({});
 
             //automatically prompt to log in again
-            if (this.data('loginDialog') != undefined) {
+            if (this.data('loginDialog') != undefined && rePrompt) {
                 this.openDialog();
             }
+
+            this.trigger('loggedOut');
 
             if (this.options.logout_callback) {
                 this.options.logout_callback.call(this);

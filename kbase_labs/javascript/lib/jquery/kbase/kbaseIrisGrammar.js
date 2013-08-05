@@ -94,7 +94,7 @@
 
 
         evaluate : function (string, callback) {
-//++        console.log("evaluating " + string);
+
             var tokens  = this.tokenize(string);
             var grammar = this.grammar;
 
@@ -121,29 +121,20 @@
                 returnObj.explain = 1;
             }
 
-//++                console.log("GRAMMAR");console.log(returnObj.grammar);
-//++console.log("evaluating " + tokens);
             for (var idx = 0; idx < tokens.length; idx++) {
 
                 var token = tokens[idx];
                 var childFound = false;
-//--console.log('checking token ' + token);
-//--console.log("AGAINST");//--console.log(returnObj.grammar);
+
                 for (child in returnObj.grammar.children) {
-                //--console.log("CHILD IS " + child + ' against ' + token);
-                //--console.log(returnObj.grammar.children);
-                if (child.match(/^\$/)) {
-                    //--console.log("VARIABLE ATTEMPT!");
-                }
+
                     var info = returnObj.grammar.children[child];
 
                     if (info.regex && token.match(info.regex)) {
-                        //--console.log('regex match');
                         returnObj.grammar = returnObj.grammar.children[child];
                         childFound = true
                     }
                     else if (child.match(/^\$/)) {
-                    //--console.log("VARIABLE MATCH ON " + child + " which is " + token);
                         returnObj.grammar = returnObj.grammar.children[child];
                         childFound = true;
                     }
@@ -155,10 +146,7 @@
                     else if (! info.caseSensitive) {
                         var regex = new RegExp('^' + child + '$', 'i');
                         if (token.match(regex)) {
-                        //--console.log("INSENSITIVE MATCH on " + token + ', ' + child);
-                        //--console.log(returnObj.grammar);
                             returnObj.grammar = returnObj.grammar.children[child];
-                        //--console.log(returnObj.grammar);
                             childFound = true;
                         }
                     }
@@ -167,17 +155,14 @@
                         if (child.match(/^\$/)) {
                             variables[child] = token;
                         }
-                        //else {
-                            if (returnObj.parsed.length) {
-                                returnObj.parsed = returnObj.parsed + ' ' + token;
-                            }
-                            else {
-                                returnObj.parsed = token;
-                            }
-                        //}
-                        //--console.log("LOOPING BACK IN WITH");
-                        //--console.log(returnObj.grammar);
-                        //--console.log(info.children);
+
+                        if (returnObj.parsed.length) {
+                            returnObj.parsed = returnObj.parsed + ' ' + token;
+                        }
+                        else {
+                            returnObj.parsed = token;
+                        }
+
                         returnObj.grammar = info;
                         returnObj.execute = info.execute;
                         break;
@@ -185,14 +170,11 @@
 
                 }
                 if (! childFound && ! returnObj.grammar.childrenOptional) {
-                console.log("COULD NOT FIND CHILD = " + token);
                     returnObj.tail = tokens.splice(idx, tokens.length - idx).join(' ');
-                    console.log(returnObj.tail);
                     break;
                 }
             }
-//--console.log("CHILDREN");//--console.log(returnObj.grammar.children);
-////--console.log("T1 - " + Object.keys(returnObj.grammar.children).length + ', T2 - ' + ! returnObj.grammar.childrenOptional);
+
             if (returnObj.grammar.children != undefined && Object.keys(returnObj.grammar.children).length && ! returnObj.grammar.childrenOptional) {
                 returnObj.error = "Parse error at " + token;
                 returnObj.fail = 1;
@@ -218,12 +200,8 @@
 
             returnObj.rawExecute = returnObj.execute;
             for (var variable in variables) {
-            //--console.log("(" + variable + ")" + '(' + variables[variable] + ')');
                 returnObj.execute = returnObj.execute.replace(variable, variables[variable]);
             }
-
-            //--console.log("will execute : " + returnObj.execute);
-            //--console.log(variables);
 
             if (returnObj.tail) {
                 var m;
@@ -245,7 +223,7 @@
         },
 
         nextForGrammar : function(next, grammar) {
-//console.log("NEXT 4 - " + next);
+
             if (next == undefined) {
                 next = '';
             }
@@ -253,22 +231,20 @@
             var nextGrammar = grammar[next].children;
             var ng;
             var throttle = 1000;
-//console.log(nextGrammar);
-//console.log(Object.keys(nextGrammar).length);
 
             while (nextGrammar != undefined && throttle-- > 0) {
                 if (Object.keys(nextGrammar).length == 1) {
                     var prop = Object.keys(nextGrammar)[0];
-                    //console.log("FOUND PROP");console.log(prop);
+
                     next = next.length
                         ? next + ' ' + prop
                         : prop;
-                    //console.log("FOUND " + next + ', ' + prop);
+
                     nextGrammar = nextGrammar[prop].children;
-                    //console.log("NG NOW");console.log(nextGrammar);
+
                 }
             }
-//console.log("NEXT return - " + next);
+
             return next;
         },
 
@@ -339,7 +315,6 @@
                 var qRegex = new RegExp(filter);
                 for (var idx = 0; idx < questions.length; idx++) {
                     var q = questions[idx];
-                    console.log(q + ' match ' + qRegex);
                     if (q.match(qRegex)) {
                         filteredQ.push(q);
                     }
@@ -352,8 +327,7 @@
             if (prefix == undefined) {
                 prefix = '';
             }
-            console.log("CALL AQ");
-            console.log(this.grammar);
+
             if (grammar == undefined) {
                 if (this.grammar == undefined) {
                     this.retrieveGrammar(this.options.defaultGrammarURL, $.proxy(function() {this.allQuestions(); }, this));
@@ -363,26 +337,20 @@
                     grammar = this.grammar._root.children;
                 }
             }
-            console.log("checks it now!");
-            console.log(grammar);
+
             for (var child in grammar) {
-                //console.log(child);
 
                 var childPrefix = prefix.length
                     ? prefix + ' ' + child
                     : child;
 
-                console.log(childPrefix);
-                //var questions = this.allQuestions(grammar[child].children, childPrefix);
             }
         },
 
         retrieveGrammar : function(url, callback) {
 
             var token = undefined;
-            //this.$loginbox.token();
-            ////--console.log(token);
-//--console.log(url);
+
             $.ajax(
                 {
     		        async : true,
@@ -398,17 +366,6 @@
 
             		    var json = JSON.parse(data);
 
-            		    /*for (id in json) {
-            		        var newChildren = {};
-            		        for (var idx = 0; idx < json[id].children.length; idx++) {
-            		            var childId = json[id].children[idx];
-            		            newChildren[childId] = json[childId];
-            		        }
-            		        ////--console.log("NC");//--console.log(newChildren);
-            		        json[id].children = newChildren;
-            		    }
-
-            		    //--console.log(json);*/
             		    this.grammar = json;
 
             		    if (callback) {

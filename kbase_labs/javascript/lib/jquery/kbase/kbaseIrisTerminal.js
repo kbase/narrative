@@ -6,8 +6,9 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisTerminal", 'kbaseWidget', {
+    $.kbWidget("kbaseIrisTerminal", 'kbaseAuthenticatedWidget', {
         version: "1.0.0",
+        _accessors : ['terminalHeight', 'client'],
         options: {
             invocationURL : 'http://localhost:5000',
             searchURL : 'https://kbase.us/services/search-api/search/$category/$keyword?start=$start&count=$count&format=json',
@@ -19,8 +20,9 @@
 //            invocationURL : 'http://bio-data-1.mcs.anl.gov/services/invocation',
             maxOutput : 100,
             scrollSpeed : 750,
-            terminalHeight : '500px',
+            terminalHeight : '450px',
             promptIfUnauthenticated : 1,
+            autocreateFileBrowser: true,
         },
 
         init: function(options) {
@@ -64,77 +66,20 @@
 
             //end embedded plugin
 
-            if (this.options.client) {
-                this.client = this.options.client;
-            }
-            else {
-                this.client = new InvocationService(this.options.invocationURL, undefined,
-                    jQuery.proxy(function() {
-                        var cookie_obj = this.$loginbox.kbaseLogin('get_kbase_cookie');
-                        if (cookie_obj) {
-                            var token = cookie_obj['token'];
-                            this.dbg("returning token from auth_cb " + token);
-                            return token;
-                        }
-                        else {
-                            this.dbg("returning undef from auth_cb ");
-                            return undefined;
-                        }
-                    }, this));
-            }
-
-            this.$loginbox =
-                $("<div></div>").kbaseLogin(
-                    {
-                        style : 'text',
-                        login_callback :
-                            jQuery.proxy(
-                                function(args) {
-                                    if (args.success) {
-                                        //this.out_line();
-
-                                        this.client.start_session(
-                                            args.user_id,
-                                            jQuery.proxy(
-                                                function (newsid) {
-                                                    this.set_session(args.user_id);
-                                                    this.loadCommandHistory();
-                                                    this.out("Authenticated as " + args.name);
-                                                    this.out_line();
-                                                    this.scroll();
-                                                },
-                                                this
-                                            ),
-                                            jQuery.proxy(
-                                                function (err) {
-                                                    this.out("<i>Error on session_start:<br>" +
-                                                    err.message.replace("\n", "<br>\n") + "</i>");
-                                                },
-                                                this
-                                            )
-                                        );
-
-                                        this.sessionId = args.kbase_sessionid;
-                                        this.input_box.focus();
-
-                                        this.refreshFileBrowser();
-                                    }
-                                },
-                                this
-                            ),
-                        logout_callback :
-                            jQuery.proxy(
-                                function() {
-                                    this.sessionId = undefined;
-                                    this.cwd = '/';
-                                    this.dbg("LOGOUT CALLBACK");
-                                    this.refreshFileBrowser();
-                                    this.terminal.empty();
-                                },
-                                this
-                            )
-                    }
+            if (this.client() == undefined) {
+                this.client(
+                    new InvocationService(
+                        this.options.invocationURL,
+                        undefined,
+                        $.proxy(function() {
+                            var toke = this.auth()
+                                ? this.auth().token
+                                : undefined;
+                                return toke;
+                        }, this)
+                    )
                 );
+            }
 
             this.tutorial = $('<div></div>').kbaseIrisTutorial();
 
@@ -148,38 +93,17 @@
 
             this.appendUI( $( this.$elem ) );
 
-            var cookie;
-
-            if (cookie = this.$loginbox.get_kbase_cookie()) {
-                var $commandDiv = $("<div></div>").css('white-space', 'pre');
-                this.terminal.append($commandDiv);
-                if (cookie.user_id) {
-                    this.out_line();
-                    this.out_to_div($commandDiv, 'Already authenticated as ' + cookie.name + "\n");
-                    this.set_session(cookie.user_id);
-                    this.loadCommandHistory();
-                    //this.out_to_div($commandDiv, "Set session to " + cookie.user_id);
-                }
-                else if (this.options.promptIfUnauthenticated) {
-                    this.$loginbox.kbaseLogin('openDialog');
-                }
-            }
-            else if (this.options.promptIfUnauthenticated) {
-                this.$loginbox.kbaseLogin('openDialog');
-            }
-
             this.fileBrowsers = [];
-
             if (this.options.fileBrowser) {
                 this.addFileBrowser(this.options.fileBrowser);
             }
-            else {
+            else if (this.options.autocreateFileBrowser) {
+
                 this.addFileBrowser(
                     $('<div></div>').kbaseIrisFileBrowser (
                         {
-                            client : this.client,
-                            $terminal : this,
-                            externalControls : false,
+                            client              : this.client(),
+                            externalControls    : false,
                         }
                     )
                 )
@@ -187,6 +111,47 @@
 
             return this;
 
+        },
+
+        loggedInCallback : function(e, args) {
+
+
+            if (args.success) {
+                this.client().start_session(
+                    args.user_id,
+                    $.proxy( function (newsid) {
+                        this.loadCommandHistory();
+                        if (args.token) {
+                            this.out("Authenticated as " + args.name);
+                        }
+                        else {
+                            this.out("Unauthenticated logged in as " + args.kbase_sessionid);
+                        }
+                        this.out_line();
+                        this.scroll();
+                    }, this ),
+                    $.proxy( function (err) {
+                        this.out("<i>Error on session_start:<br>" +
+                        err.error.message.replace("\n", "<br>\n") + "</i>", 0, 1);
+                    }, this )
+                );
+
+                this.input_box.focus();
+            }
+        },
+
+        loggedInQueryCallback : function(args) {
+            this.loggedInCallback(undefined,args);
+            if (! args.success && this.options.promptIfUnauthenticated) {
+                this.trigger('promptForLogin');
+            }
+        },
+
+        loggedOutCallback : function(e) {
+
+            this.cwd = '/';
+            this.commandHistory = undefined;
+            this.terminal.empty();
         },
 
         addFileBrowser : function ($fb) {
@@ -200,24 +165,6 @@
         refreshFileBrowser : function() {
             for (var idx = 0; idx < this.fileBrowsers.length; idx++) {
                 this.fileBrowsers[idx].refreshDirectory(this.cwd);
-            }
-        },
-
-        loginbox : function () {
-            return this.$loginbox;
-        },
-
-        getClient : function() {
-            return this.client;
-        },
-
-        authToken : function() {
-            var cookieObj = this.$loginbox.kbaseLogin('get_kbase_cookie');
-            if (cookieObj != undefined) {
-                return cookieObj['token'];
-            }
-            else {
-                return undefined;
             }
         },
 
@@ -307,8 +254,8 @@
         },
 
         saveCommandHistory : function() {
-            this.client.put_file(
-                this.sessionId,
+            this.client().put_file(
+                this.sessionId(),
                 "history",
                 JSON.stringify(this.commandHistory),
                 "/",
@@ -318,8 +265,8 @@
         },
 
         loadCommandHistory : function() {
-            this.client.get_file(
-                this.sessionId,
+            this.client().get_file(
+                this.sessionId(),
                 "history", "/",
                 jQuery.proxy(
                     function (txt) {
@@ -329,14 +276,14 @@
                     this
                 ),
                 jQuery.proxy(function (e) {
-                    this.dbg("error on history load : " + e);
+                    this.dbg("error on history load : ");this.dbg(e);
 		    }, this)
             );
         },
 
-        set_session: function(session) {
-            this.sessionId = session;
-        },
+//        set_session: function(session) {
+//            this.sessionId() = session;
+//        },
 
         resize_contents: function($container) {
             //	var newx = window.getSize().y - document.id(footer).getSize().y - 35;
@@ -457,15 +404,7 @@
                                     pad = '';
                                 }
                                 this.appendInput(pad + ret['next'][0] + ' ', 0);
-                                /*if (ret['next'][0].match(/^\$/)) {
-                                    console.log("RET NEXT VARIABLE " + ret['next'][0]);
-                                    console.log(this.input_box.val().length - ret['next'][0]);
-                                    console.log(this.input_box.val().length);
-                                    console.log(ret['next'][0].length);
-                                    var start = this.input_box.val().length - ret['next'][0].length - 1;
-                                    console.log(start);
-                                    this.input_box.setSelection(start, this.input_box.val().length);
-                                }*/
+
                                 this.selectNextInputVariable();
                                 return;
                             }
@@ -726,6 +665,16 @@
             this.terminal.animate({scrollTop: this.terminal.prop('scrollHeight') - this.terminal.height()}, speed);
         },
 
+        cleanUp : function ($commandDiv) {
+            setTimeout(function() {
+                var cleanupTime = 5000;
+                setTimeout(function() {$commandDiv.prev().fadeOut(500, function() {$commandDiv.prev().remove()})}, cleanupTime);
+                setTimeout(function() {$commandDiv.next().fadeOut(500, function() {$commandDiv.next().remove()})}, cleanupTime);
+                setTimeout(function() {$commandDiv.fadeOut(500, function() {$commandDiv.remove()})}, cleanupTime);
+            }, 1000);
+        },
+
+
         // Executes a command
         run: function(command) {
 
@@ -754,21 +703,23 @@
                 sid = args[0];
 
                 //old login code. copy and pasted into iris.html.
-                this.client.start_session(
+                this.client().start_session(
                     sid,
                     jQuery.proxy(
                         function (newsid) {
-                            this.set_session(sid);
-                            this.loadCommandHistory();
-                            this.out_to_div($commandDiv, "Unauthenticated logged in as " + sid);
-                            this.refreshFileBrowser();
+                            var auth = {'kbase_sessionid' : sid, success : true};
+
+                            this.terminal.empty();
+                            this.trigger(  'logout', false);
+                            this.trigger('loggedIn', auth );
+
                         },
                         this
                     ),
                     jQuery.proxy(
                         function (err) {
                             this.out_to_div($commandDiv, "<i>Error on session_start:<br>" +
-                                err.message.replace("\n", "<br>\n") + "</i>");
+                                err.error.message.replace("\n", "<br>\n") + "</i>", 0, 1);
                         },
                         this
                     )
@@ -785,30 +736,27 @@
                 }
                 sid = args[0];
 
-                this.$loginbox.kbaseLogin('data', 'passed_user_id', sid);
-                this.$loginbox.data('passed_user_id', sid);
-
-                this.$loginbox.kbaseLogin('openDialog');
+                this.trigger('promptForLogin', {user_id : sid});
 
                 return;
             }
 
             if (m = command.match(/^unauthenticate/)) {
 
-                this.$loginbox.kbaseLogin('logout');
+                this.trigger('logout');
                 this.scroll();
                 return;
             }
 
             if (m = command.match(/^logout/)) {
 
-                this.sessionId = undefined;
+                this.trigger('logout', false);
                 this.scroll();
                 return;
             }
 
 
-            if (! this.sessionId) {
+            if (! this.sessionId()) {
                 this.out_to_div($commandDiv, "You are not logged in.");
                 this.scroll();
                 return;
@@ -875,8 +823,8 @@
                 }
                 dir = args[0];
 
-                this.client.change_directory(
-                    this.sessionId,
+                this.client().change_directory(
+                    this.sessionId(),
                     this.cwd,
                     dir,
                         jQuery.proxy(
@@ -887,8 +835,9 @@
                         ),
                     jQuery.proxy(
                         function (err) {
-                            var m = err.message.replace("/\n", "<br>\n");
-                            this.out_to_div($commandDiv, "<i>Error received:<br>" + err.code + "<br>" + m + "</i>");
+                            var m = err.error.message.replace("/\n", "<br>\n");
+                            this.out_to_div($commandDiv, "<i>Error received:<br>" + err.error.code + "<br>" + m + "</i>", 0, 1);
+                            this.cleanUp($commandDiv);
                         },
                         this
                     )
@@ -906,6 +855,48 @@
                 this.aliases[m[1]] = m[2];
                 this.out_to_div($commandDiv, m[1] + ' set to ' + m[2]);
                 return;
+            }
+
+            if (m = command.match(/^upload\s*(\S+)?$/)) {
+                var file = m[1];
+                if (this.fileBrowsers.length) {
+                    var $fb = this.fileBrowsers[0];
+                    if (file) {
+                        $fb.data('override_filename', file);
+                    }
+                    $fb.data('active_directory', this.cwd);
+                    $fb.uploadFile();
+                }
+                return;
+            }
+
+            if (m = command.match(/^view\s+(\S+)$/)) {
+                var file = m[1];
+
+                this.client().get_file(
+                    this.sessionId(),
+                    file,
+                    this.cwd
+                )
+                .done($.proxy(function(res) {
+                    if (file.match(/\.(jpg|gif|png)$/)) {
+                        var $img = $.jqElem('img')
+                            .attr('src', 'data:image/jpeg;base64,' + btoa(res));
+                        $commandDiv.append($img);
+                    }
+                    else {
+                        $commandDiv.append(res);
+                    }
+                    this.scroll();
+                }, this))
+                .fail($.proxy(function(res) {
+                    $commandDiv.append($.jqElem('i').text('No such file'));
+                    this.cleanUp($commandDiv);
+                }, this));
+
+                return;
+
+
             }
 
             if (m = command.match(/^search\s+(\S+)\s+(\S+)(?:\s*(\S+)\s+(\S+)(?:\s*(\S+))?)?/)) {
@@ -944,8 +935,9 @@
                          },
                         success         : $.proxy(
                             function (data,res,jqXHR) {
+                                this.out_to_div($commandDiv, $('<br>'));
                                 this.out_to_div($commandDiv, $('<i></i>').html("Command completed."));
-                                this.out_to_div($commandDiv, $('<br/>'));
+                                this.out_to_div($commandDiv, $('<br>'));
                                 this.out_to_div($commandDiv,
                                     $('<span></span>')
                                         .append($('<b></b>').html(data.found))
@@ -981,8 +973,8 @@
                 }
                 from = args[0];
                 to   = args[1];
-                this.client.copy(
-                    this.sessionId,
+                this.client().copy(
+                    this.sessionId(),
                     this.cwd,
                     from,
                     to,
@@ -993,8 +985,9 @@
                     ),
                     jQuery.proxy(
                         function (err) {
-                            var m = err.message.replace("\n", "<br>\n");
-                            this.out_to_div($commandDiv, "<i>Error received:<br>" + err.code + "<br>" + m + "</i>");
+                            var m = err.error.message.replace("\n", "<br>\n");
+                            this.out_to_div($commandDiv, "<i>Error received:<br>" + err.error.code + "<br>" + m + "</i>", 0, 1);
+                            this.cleanUp($commandDiv);
                         },
                         this
                     )
@@ -1010,8 +1003,8 @@
 
                 from = args[0];
                 to   = args[1];
-                this.client.rename_file(
-                    this.sessionId,
+                this.client().rename_file(
+                    this.sessionId(),
                     this.cwd,
                     from,
                     to,
@@ -1022,8 +1015,9 @@
                     ),
                     jQuery.proxy(
                         function (err) {
-                            var m = err.message.replace("\n", "<br>\n");
-                            this.out_to_div($commandDiv, "<i>Error received:<br>" + err.code + "<br>" + m + "</i>");
+                            var m = err.error.message.replace("\n", "<br>\n");
+                            this.out_to_div($commandDiv, "<i>Error received:<br>" + err.error.code + "<br>" + m + "</i>", 0, 1);
+                            this.cleanUp($commandDiv);
                         },
                         this
                     ));
@@ -1032,81 +1026,96 @@
 
             if (m = command.match(/^mkdir\s*(.*)/)) {
                 var args = m[1].split(/\s+/)
-                if (args.length != 1){
+                if (args.length < 1){
                     this.out_to_div($commandDiv, "Invalid mkdir syntax.");
                     return;
                 }
-                dir = args[0];
-                this.client.make_directory(
-                    this.sessionId,
-                    this.cwd,
-                    dir,
-                    $.proxy(
-                        function () {
-                            this.refreshFileBrowser();
-                        },this
-                    ),
-                    jQuery.proxy(
-                        function (err) {
-                            var m = err.message.replace("\n", "<br>\n");
-                            this.out_to_div($commandDiv, "<i>Error received:<br>" + err.code + "<br>" + m + "</i>");
-                        },
-                        this
-                    )
-                );
+                $.each(
+                    args,
+                    $.proxy(function (idx, dir) {
+                        this.client().make_directory(
+                            this.sessionId(),
+                            this.cwd,
+                            dir,
+                            $.proxy(
+                                function () {
+                                    this.refreshFileBrowser();
+                                },this
+                            ),
+                            jQuery.proxy(
+                                function (err) {
+                                    var m = err.error.message.replace("\n", "<br>\n");
+                                    this.out_to_div($commandDiv, "<i>Error received:<br>" + err.error.code + "<br>" + m + "</i>", 0, 1);
+                                    this.cleanUp($commandDiv);
+                                },
+                                this
+                            )
+                        );
+                    }, this)
+                )
                 return;
             }
 
             if (m = command.match(/^rmdir\s*(.*)/)) {
                 var args = m[1].split(/\s+/)
-                if (args.length != 1) {
+                if (args.length < 1) {
                     this.out_to_div($commandDiv, "Invalid rmdir syntax.");
                     return;
                 }
-                dir = args[0];
-                this.client.remove_directory(
-                    this.sessionId,
-                    this.cwd,
-                    dir,
-                    $.proxy(
-                        function () {
-                            this.refreshFileBrowser();
-                        },this
-                    ),
-                    jQuery.proxy(
-                        function (err) {
-                            var m = err.message.replace("\n", "<br>\n");
-                            this.out_to_div($commandDiv, "<i>Error received:<br>" + err.code + "<br>" + m + "</i>");
-                        },
-                        this
-                    )
+                $.each(
+                    args,
+                    $.proxy( function(idx, dir) {
+                        this.client().remove_directory(
+                            this.sessionId(),
+                            this.cwd,
+                            dir,
+                            $.proxy(
+                                function () {
+                                    this.refreshFileBrowser();
+                                },this
+                            ),
+                            jQuery.proxy(
+                                function (err) {
+                                    var m = err.error.message.replace("\n", "<br>\n");
+                                    this.out_to_div($commandDiv, "<i>Error received:<br>" + err.error.code + "<br>" + m + "</i>", 0, 1);
+                                    this.cleanUp($commandDiv);
+                                },
+                                this
+                            )
+                        );
+                    }, this)
                 );
                 return;
             }
 
             if (m = command.match(/^rm\s*(.*)/)) {
                 var args = m[1].split(/\s+/)
-                if (args.length != 1) {
+                if (args.length < 1) {
                     this.out_to_div($commandDiv, "Invalid rm syntax.");
                     return;
                 }
-                file = args[0];
-                this.client.remove_files(
-                    this.sessionId,
-                    this.cwd,
-                    file,
-                    $.proxy(
-                        function () {
-                            this.refreshFileBrowser();
-                        },this
-                    ),
-                    jQuery.proxy(
-                        function (err) {
-                            var m = err.message.replace("\n", "<br>\n");
-                            this.out_to_div($commandDiv, "<i>Error received:<br>" + err.code + "<br>" + m + "</i>");
-                        },
-                        this
-                    )
+                $.each(
+                    args,
+                    $.proxy(function (idx, file) {
+                        this.client().remove_files(
+                            this.sessionId(),
+                            this.cwd,
+                            file,
+                            $.proxy(
+                                function () {
+                                    this.refreshFileBrowser();
+                                },this
+                            ),
+                            jQuery.proxy(
+                                function (err) {
+                                    var m = err.error.message.replace("\n", "<br>\n");
+                                    this.out_to_div($commandDiv, "<i>Error received:<br>" + err.error.code + "<br>" + m + "</i>", 0, 1);
+                                    this.cleanUp($commandDiv);
+                                },
+                                this
+                            )
+                        );
+                    }, this)
                 );
                 return;
             }
@@ -1128,18 +1137,24 @@
 
             if (command == 'tutorial list') {
                 var list = this.tutorial.list();
+
+                if (list.length == 0) {
+                    this.out_to_div($commandDiv, "Could not load tutorials");
+                    return;
+                }
+
                 $.each(
                     list,
                     $.proxy( function (idx, val) {
                         $commandDiv.append(
                             $('<a></a>')
                                 .attr('href', '#')
-                                .append(val)
+                                .append(val.title)
                                 .bind('click', $.proxy( function (e) {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    this.out_to_div($commandDiv, 'Set tutorial to <i>' + val + '</i><br>', 0, 1);
-                                    this.tutorial = $('<div></div>').kbaseIrisTutorial({tutorial : val});
+                                    this.out_to_div($commandDiv, 'Set tutorial to <i>' + val.title + '</i><br>', 0, 1);
+                                    this.tutorial.retrieveTutorial(val.url);
                                     this.input_box.focus();
                                 }, this))
                             .append('<br>')
@@ -1153,7 +1168,15 @@
             }
 
             if (command == 'show_tutorial') {
-                var $page = this.tutorial.contentForCurrentPage().clone();
+                var $page = this.tutorial.contentForCurrentPage();
+
+                if ($page == undefined) {
+                    this.out_to_div($commandDiv, "Could not load tutorial");
+                    return;
+                }
+
+                $page = $page.clone();
+
                 var headerCSS = { 'text-align' : 'left', 'font-size' : '100%' };
                 $page.find('h1').css( headerCSS );
                 $page.find('h2').css( headerCSS );
@@ -1173,7 +1196,7 @@
             }
 
             if (command == 'commands') {
-                this.client.valid_commands(
+                this.client().valid_commands(
                     jQuery.proxy(
                         function (cmds) {
                             var $tbl = $('<table></table>');
@@ -1270,8 +1293,8 @@
                     }
                 }
 
-                this.client.list_files(
-                    this.sessionId,
+                this.client().list_files(
+                    this.sessionId(),
                     this.cwd,
                     d,
                     jQuery.proxy(
@@ -1279,71 +1302,79 @@
                             var dirs = filelist[0];
                             var files = filelist[1];
 
+                            var allFiles = [];
+
                             var $tbl = $('<table></table>')
                                 //.attr('border', 1);
 
-                            jQuery.each(
+                            $.each(
                                 dirs,
                                 function (idx, val) {
-                                    $tbl.append(
-                                        $('<tr></tr>')
-                                            .append(
-                                                $('<td></td>')
-                                                    .text('0')
-                                                )
-                                            .append(
-                                                $('<td></td>')
-                                                    .html(val['mod_date'])
-                                                )
-                                            .append(
-                                                $('<td></td>')
-                                                    .html(val['name'])
-                                                )
-                                        );
+                                    allFiles.push(
+                                        {
+                                            size    : '(directory)',
+                                            mod_date: val.mod_date,
+                                            name    : val.name,
+                                            nameTD  : val.name,
+                                        }
+                                    );
                                 }
                             );
 
-                            jQuery.each(
+                            $.each(
                                 files,
+                                $.proxy( function (idx, val) {
+                                    allFiles.push(
+                                        {
+                                            size    : val.size,
+                                            mod_date: val.mod_date,
+                                            name    : val.name,
+                                            nameTD  :
+                                                $('<a></a>')
+                                                    .text(val.name)
+                                                    //uncomment these two lines to click and open in new window
+                                                    //.attr('href', url)
+                                                    //.attr('target', '_blank')
+                                                    //comment out this block if you don't want the clicks to pop up via the api
+                                                    //*
+                                                    .attr('href', '#')
+                                                    .bind(
+                                                        'click',
+                                                        jQuery.proxy(
+                                                            function (event) {
+                                                                event.preventDefault();
+                                                                this.open_file(val['full_path']);
+                                                            },
+                                                            this
+                                                        )
+                                                    ),
+                                                    //*/,
+                                            url     : this.options.invocationURL + "/download/" + val.full_path + "?session_id=" + this.sessionId()
+                                        }
+                                    );
+                                }, this)
+                            );
+
+
+                            jQuery.each(
+                                allFiles.sort(this.sortByKey('name', 'insensitively')),
                                 jQuery.proxy(
                                     function (idx, val) {
-                                        var url = this.options.invocationURL + "/download/" + val['full_path'] + "?session_id=" + this.sessionId;
-                                        console.log("URL IS " + url);
                                         $tbl.append(
                                             $('<tr></tr>')
                                                 .append(
                                                     $('<td></td>')
-                                                        .text(val['size'])
+                                                        .text(val.size)
                                                     )
                                                 .append(
                                                     $('<td></td>')
-                                                        .html(val['mod_date'])
+                                                        .html(val.mod_date)
                                                     )
                                                 .append(
                                                     $('<td></td>')
-                                                        .append(
-                                                            $('<a></a>')
-                                                                .text(val['name'])
-                                                                //uncomment these two lines to click and open in new window
-                                                                //.attr('href', url)
-                                                                //.attr('target', '_blank')
-                                                                //comment out this block if you don't want the clicks to pop up via the api
-                                                                //*
-                                                                .attr('href', '#')
-                                                                .bind(
-                                                                    'click',
-                                                                    jQuery.proxy(
-                                                                        function (event) {
-                                                                            event.preventDefault();
-                                                                            this.open_file(val['full_path']);
-                                                                        },
-                                                                        this
-                                                                    )
-                                                                )
-                                                                //*/
-                                                            )
-                                                    )
-                                            );
+                                                        .append(val.nameTD)
+                                                )
+                                        );
                                     },
                                     this
                                 )
@@ -1356,8 +1387,9 @@
                      ),
                      function (err)
                      {
-                         var m = err.message.replace("\n", "<br>\n");
-                         obj.out_to_div($commandDiv, "<i>Error received:<br>" + err.code + "<br>" + m + "</i>");
+                         var m = err.error.message.replace("\n", "<br>\n");
+                         obj.out_to_div($commandDiv, "<i>Error received:<br>" + err.error.code + "<br>" + m + "</i>", 0, 1);
+                        obj.cleanUp($commandDiv);
                      }
                     );
                 return;
@@ -1384,14 +1416,18 @@
             command = command.replace(/\\\n/g, " ");
             command = command.replace(/\n/g, " ");
 
-            var $pendingProcessElem;
+            var pid = this.uuid();
 
-            if (this.data('processList')) {
-                $pendingProcessElem = this.data('processList').addProcess(command);
-            }
+            this.trigger(
+                'updateIrisProcess',
+                {
+                    pid : pid,
+                    msg : command
+                }
+            );
 
-            this.client.run_pipeline(
-                this.sessionId,
+            this.client().run_pipeline(
+                this.sessionId(),
                 command,
                 [],
                 this.options.maxOutput,
@@ -1399,11 +1435,10 @@
                 jQuery.proxy(
                     function (runout) {
 
-                        if (this.data('processList')) {
-                            this.data('processList').removeProcess($pendingProcessElem);
-                        }
+                        this.trigger( 'removeIrisProcess', pid );
 
                         if (runout) {
+
                             var output = runout[0];
                             var error  = runout[1];
 
@@ -1455,25 +1490,29 @@
                                         this
                                     )
                                 );
+                            }
 
-                                if (error.length) {
-                                    jQuery.each(
-                                        error,
-                                        jQuery.proxy(
-                                            function (idx, val) {
-                                                this.out_to_div($commandDiv, $('<i></i>').html(val));
-                                            },
-                                            this
-                                        )
-                                    );
+                            if (error.length) {
+                                jQuery.each(
+                                    error,
+                                    jQuery.proxy(
+                                        function (idx, val) {
+                                            this.out_to_div($commandDiv, $('<i></i>').html(val));
+                                        },
+                                        this
+                                    )
+                                );
+                                if (error.length != 1 || ! error[0].match(/^Output truncated/)) {
+                                    this.cleanUp($commandDiv);
                                 }
-                                else {
-                                    this.out_to_div($commandDiv, $('<i></i>').html("Command completed."));
-                                }
+                            }
+                            else {
+                                this.out_to_div($commandDiv, $('<i></i>').html("<br>Command completed."));
                             }
                         }
                         else {
                             this.out_to_div($commandDiv, "Error running command.");
+                            this.cleanUp($commandDiv);
                         }
                         this.scroll();
                     },

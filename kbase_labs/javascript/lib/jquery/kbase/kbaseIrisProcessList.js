@@ -7,17 +7,82 @@
 
     $.kbWidget("kbaseIrisProcessList", 'kbaseWidget', {
         version: "1.0.0",
+        _accessors : ['processList'],
         options: {
-
+            processList : {},
         },
 
         init: function (options) {
 
             this._super(options);
 
+            $(document).on(
+                'updateIrisProcess.kbaseIris',
+                $.proxy(function (e, params) {
+                    this.updateProcess(e, params);
+                }, this)
+            );
+
+            $(document).on(
+                'removeIrisProcess.kbaseIris',
+                $.proxy(function (e, pid) {
+                    this.removeProcess(e, pid);
+                }, this)
+            );
+
             this.appendUI(this.$elem);
 
             return this;
+
+        },
+
+        updateProcess : function (e, params) {
+
+            var pid = params.pid;
+
+            if (pid == undefined) {
+                throw "Cannot update process w/o pid";
+            }
+
+            this.pendingLi().remove();
+
+            var $processElem = this.processList()[pid] != undefined
+                ? this.processList()[pid]
+                : $.jqElem('li');
+
+            $processElem.empty();
+            if (params.msg) {
+                $processElem.text(params.msg);
+            }
+            else if (params.content) {
+                $processElem.append(params.content);
+            }
+
+            if (this.processList()[pid] == undefined) {
+                this.$elem.find('ul').append($processElem);
+                this.processList()[pid] = $processElem;
+            }
+
+            return $processElem;
+
+        },
+
+        removeProcess : function (e, pid) {
+
+            if (pid == undefined) {
+                throw "Cannot update process w/o pid";
+            }
+
+            var $processElem = this.processList()[pid];
+
+            $processElem.remove();
+            if (this.$elem.find('ul').children().length == 0) {
+                this.$elem.find('ul').append(this.pendingLi());
+            }
+
+            this.processList()[pid] = undefined;
+
+            return pid;
 
         },
 
@@ -49,24 +114,6 @@
             return this.data('pendingLi');
         },
 
-        addProcess : function (process) {
-
-            this.pendingLi().remove();
-
-            var $li = $('<li></li>')
-                .text(process);
-
-            this.$elem.find('ul').append($li);
-
-            return $li;
-        },
-
-        removeProcess : function ($li) {
-            $li.remove();
-            if (this.$elem.find('ul').children().length == 0) {
-                this.$elem.find('ul').append(this.pendingLi());
-            }
-        }
 
     });
 

@@ -8,16 +8,36 @@
     $.kbWidget("kbaseIrisTutorial", 'kbaseWidget', {
         version: "1.0.0",
         options: {
-            configURL : 'http://www.prototypesite.net/iris-dev/tutorial.cfg',
+            configURL : 'http://www.prototypesite.net/kbase/tutorials.cfg',
+        },
+
+        format_tutorial_url : function (doc_format_string, repo, filespec) {
+            var url = doc_format_string;
+            url = url.replace(/\$repo/, repo);
+            url = url.replace(/\$filespec/, filespec);
+
+            return url;
         },
 
         list : function() {
             var output = [];
-            for (key in this.dispatch) {
-                output.push(key);
+            for (key in this.repos) {
+
+                var url = this.format_tutorial_url(
+                    this.doc_format_string,
+                    key,
+                    this.repos[key].file
+                );
+
+                output.push(
+                    {
+                        title : this.repos[key].title,
+                        url : url,
+                    }
+                );
             }
 
-            return output.sort();
+            return output.sort(this.sortByKey('title'));
         },
 
         init : function (options) {
@@ -29,12 +49,15 @@
             $.getJSON(
                 this.options.configURL,
                 $.proxy(function(data) {
-                    this.dispatch = data.dispatch;
+                    this.repos = data.repos;
+                    this.doc_format_string = data.doc_format_string;
                     if (this.options.tutorial == undefined) {
                         this.options.tutorial = data.default;
                     }
 
-                    this.retrieveTutorial(this.options.tutorial);
+                    if (this.options.tutorial) {
+                        this.retrieveTutorial(this.options.tutorial);
+                    }
 
                 }, this)
             );
@@ -43,9 +66,7 @@
             return this;
         },
 
-        retrieveTutorial : function(tutorial) {
-
-            var url = this.dispatch[tutorial];
+        retrieveTutorial : function(url) {
 
             this.pages = [];
 
@@ -63,47 +84,21 @@
 		                }
             		},
             		success: $.proxy(function (data, status, xhr) {
-            		    var $resp = $('<div></div>').append(data);
-            		    $resp = $resp.find('#tutorial');
-            		    $resp.find('a').attr('target', '_blank');
-            		    var children = $resp.children();
-            		    this.$title = $(children[0]);
-            		    this.$summary = $(children[1]);
-            		    var $pages = $(children[2]);
 
-            		    this.pages.push(
-            		        {
-            		            title   : this.$title,
-            		            content : this.$summary
-            		        }
-            		    );
+            		    var $resp = $('<div></div>').append(data);
 
             		    $.each(
-            		        $pages.children(),
-            		        $.proxy(function (idx, page) {
-            		            var $head = $(page).find('h2');
-            		            var $content = $(page).find('div');
+            		        $resp.children(),
+            		        $.proxy( function(idx, page) {
             		            $(page).find('.example').remove();
-            		            /*$.each(
-            		                $(page).find('pre'),
-            		                function (idx, pre) {
-            		                    var html = $(pre).html();
-            		                    html = html.replace(/^\s+/mg, '');
-            		                    $(pre).html(html);
-            		                }
-            		            );*/
-            		            $head.remove();
-            		            this.pages.push(
-            		                {
-            		                    title   : $head,
-            		                    content : $(page)
-            		                }
-            		            );
+                                this.pages.push($(page));
             		        }, this)
             		    );
+
             		    this.renderAsHTML();
 		            }, this),
             		error: $.proxy(function(xhr, textStatus, errorThrown) {
+            		    this.dbg(xhr);
                         throw xhr;
 		            }, this),
                     type: 'GET',
@@ -114,13 +109,10 @@
 
         renderAsHTML : function() {
             this.$elem.empty();
-            this.$elem.append(this.$title);
-            this.$elem.append(this.$summary);
             $.each(
                 this.pages,
-                $.proxy(function (idx, val) {
-                    this.$elem.append(val.title);
-                    this.$elem.append(val.content);
+                $.proxy(function (idx, page) {
+                    this.$elem.append(page);
                 }, this)
             );
         },
@@ -156,9 +148,12 @@
         },
 
         contentForPage : function(idx) {
-            return $('<div></div>')
-                .append(this.pages[this.currentPage].title)
-                .append(this.pages[this.currentPage].content);
+            if (this.pages.length == 0) {
+                return undefined;
+            }
+            else {
+                return this.pages[this.currentPage];
+            }
         },
 
         contentForCurrentPage : function () {

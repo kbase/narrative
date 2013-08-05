@@ -6,7 +6,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseDataBrowser", 'kbaseWidget', {
+    $.kbWidget("kbaseDataBrowser", 'kbaseAuthenticatedWidget', {
         version: "1.0.0",
         /*options: {
             'root' : '/',

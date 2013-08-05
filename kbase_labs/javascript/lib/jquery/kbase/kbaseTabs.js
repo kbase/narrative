@@ -37,6 +37,9 @@
 
     $.kbWidget("kbaseTabs", 'kbaseWidget', {
         version: "1.0.0",
+
+        _accessors : ['tabsHeight'],
+
         options: {
             tabPosition : 'top',
             canDelete : false,
@@ -70,6 +73,7 @@
             var $tabs = $('<div></div>')
                 .addClass('tab-content')
                 .attr('id', 'tabs-content')
+                .css('height', this.tabsHeight())
             ;
             var $nav = $('<ul></ul>')
                 .addClass('nav nav-tabs')
@@ -145,7 +149,7 @@
                                 //so we just do what show does and call activate directly.
                                 //
                                 //oh, but we can't just say $(this).tab('activate',...) because bootstrap is specifically
-                                //wired up now to pass along any arguments to methods invoked in this manner.
+                                //wired up not to pass along any arguments to methods invoked in this manner.
                                 //
                                 //Because bootstrap -sucks-.
                                 $.fn.tab.Constructor.prototype.activate.call(
@@ -181,7 +185,12 @@
                                 e.preventDefault();
                                 e.stopPropagation();
 
-                                this.deletePrompt(tab.tab);
+                                if (tab.deleteCallback != undefined) {
+                                    tab.deleteCallback(tab.tab);
+                                }
+                                else {
+                                    this.deletePrompt(tab.tab);
+                                }
                             },this))
                     )
                 )
@@ -210,10 +219,34 @@
             return 'Remove ' + tabName;
         },
 
+        hasTab : function(tabName) {
+            return this.data('tabs')[tabName];
+        },
+
         showTab : function (tab) {
             if (this.shouldShowTab(tab)) {
                 this.data('nav')[tab].find('a').trigger('click');
             }
+        },
+
+        removeTab : function (tabName) {
+            var $tab = this.data('tabs')[tabName];
+            var $nav = this.data('nav')[tabName];
+
+            if ($nav.hasClass('active')) {
+                if ($nav.next('li').length) {
+                    $nav.next().find('a').trigger('click');
+                }
+                else {
+                    $nav.prev('li').find('a').trigger('click');
+                }
+            }
+
+            $tab.remove();
+            $nav.remove();
+
+            this.data('tabs')[tabName] = undefined;
+            this.data('nav')[tabName] = undefined;
         },
 
         shouldShowTab : function (tab) { return 1; },
@@ -235,20 +268,8 @@
                     $prompt.closePrompt();
                 }
 
-                var $tab = this.data('tabs')[tabName];
-                var $nav = this.data('nav')[tabName];
-
-                if ($nav.hasClass('active')) {
-                    if ($nav.next('li').length) {
-                        $nav.next().find('a').trigger('click');
-                    }
-                    else {
-                        $nav.prev('li').find('a').trigger('click');
-                    }
-                }
                 if (this.shouldDeleteTab(tabName)) {
-                    $tab.remove();
-                    $nav.remove();
+                    this.removeTab(tabName);
                 }
             }, this);
         },

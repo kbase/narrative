@@ -125,9 +125,6 @@
 
                         var $th = $('<th></th>')
                             .append(h)
-                            .bind('mouseover', function(e) {
-                                console.log("H " + h);
-                            })
                         ;
 
                         if (typeof header != 'string') {
@@ -182,13 +179,9 @@
 
                                 $th.append($button);
                                 $th.bind('mouseover', $.proxy(function(e) {
-                                console.log(this);
-                                console.log(this.data());
-                                console.log(buttonId);
                                     $button.css('display', 'inline');
                                 }, this));
                                 $th.bind('mouseout', $.proxy(function(e) {
-                                console.log($button.data());
                                     if ($button.data('shouldHide')) {
                                         $button.css('display', 'none');
                                     }
@@ -263,13 +256,9 @@
                     )
                 ;
             }
-            console.log("SORT");
-            console.log(this.options.structure.rows);
-            console.log(sortedRows);
 
             this.layoutRows(sortedRows, this.options.structure.header);
 
-            console.log(header);
         },
 
         nameOfHeader : function (header) {
@@ -301,7 +290,6 @@
                 $.each(
                     classes,
                     $.proxy(function(idx, cl) {
-                    console.log("ADD CLASS " + cl);
                         $cell.addClass(cl);
                     }, this)
                 );
@@ -312,7 +300,6 @@
                 events,
                 $.proxy(function(idx, e) {
                     if (options[e] != undefined) {
-                    console.log("BINDS " + e + ', ' + options[e]);
                         $cell.bind(e,options[e])
                     }
                 }, this)
@@ -351,8 +338,6 @@
                         if (typeof rowData[h] != 'string') {
                             this.addOptions($td, rowData[h]);
                         }
-
-                        console.log("APPEND " + h + ' , ');console.log(rowData[h]);
                     }
 
                     if (value != undefined) {

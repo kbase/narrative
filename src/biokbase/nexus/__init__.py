@@ -1,1 +1,1 @@
-from client import NexusClient as Client
+from biokbase.nexus.client import NexusClient as Client

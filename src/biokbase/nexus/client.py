@@ -12,7 +12,7 @@ import urllib
 import urlparse
 
 import yaml
-import token_utils as token_utils
+import token_utils
 from utils import (
         read_openssh_public_key,
         read_openssh_private_key,

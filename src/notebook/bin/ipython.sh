@@ -4,7 +4,7 @@
 # everything - intended solely for development work in the src repo
 #
 export IPYTHONSRC="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../../
-export PYTHONPATH=$IPYTHONSRC/ipython:$PYTHONPATH
+export PYTHONPATH=$IPYTHONSRC/ipython:$IPYTHONSRC:$PYTHONPATH
 export IPYTHONDIR=$IPYTHONSRC/notebook/ipython_profiles
 
 cd $IPYTHONSRC/ipython

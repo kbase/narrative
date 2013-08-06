@@ -176,7 +176,7 @@ class Token:
         attrs = [ 'keyfile','keyfile_passphrase','user_id','password','token','client_secret','sshagent_keyname']
         for attr in attrs:
             setattr( self, attr, kwargs.get(attr,None))
-        self.nclient = NexusClient(nexusconfig)
+        self.nclient = biokbase.nexus.client.NexusClient(nexusconfig)
         self.nclient.user_key_file = self.keyfile
 
         if self.nclient.__dict__.has_key("agent_keys"):

@@ -50,7 +50,7 @@
 
 (function( $, undefined ) {
 
-    $.kbWidget("kbaseLogin", 'kbaseWidget', {
+    $.KBWidget("kbaseLogin", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             style : 'text',

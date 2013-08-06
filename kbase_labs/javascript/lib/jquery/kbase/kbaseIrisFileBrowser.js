@@ -6,7 +6,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisFileBrowser", 'kbaseDataBrowser', {
+    $.KBWidget("kbaseIrisFileBrowser", 'kbaseDataBrowser', {
         version: "1.0.0",
         _accessors : ['client', 'addFileCallback', 'editFileCallback', 'singleFileSize', 'chunkSize', 'stalledUploads'],
         options: {

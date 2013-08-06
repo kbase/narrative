@@ -5,7 +5,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseAuthenticatedWidget", 'kbaseWidget', {
+    $.KBWidget("kbaseAuthenticatedWidget", 'kbaseWidget', {
         version: "1.0.0",
         _accessors : [
             {name : 'auth', setter: 'setAuth'},

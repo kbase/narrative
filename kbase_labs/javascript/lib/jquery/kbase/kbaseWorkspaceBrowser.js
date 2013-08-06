@@ -6,7 +6,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseWorkspaceBrowser", 'kbaseFileBrowser', {
+    $.KBWidget("kbaseWorkspaceBrowser", 'kbaseFileBrowser', {
         version: "1.0.0",
         options: {
             name : 'Workspace Browser',

@@ -5,7 +5,7 @@
 
 (function( $, undefined ) {
 
-    $.kbWidget("kbaseIrisProcessList", 'kbaseWidget', {
+    $.KBWidget("kbaseIrisProcessList", 'kbaseWidget', {
         version: "1.0.0",
         _accessors : ['processList'],
         options: {

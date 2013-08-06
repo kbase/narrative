@@ -6,7 +6,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisTerminal", 'kbaseAuthenticatedWidget', {
+    $.KBWidget("kbaseIrisTerminal", 'kbaseAuthenticatedWidget', {
         version: "1.0.0",
         _accessors : ['terminalHeight', 'client'],
         options: {

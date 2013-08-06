@@ -3,7 +3,7 @@
     var widgetRegistry = {};
 
     function subclass(constructor, superConstructor) {
-        function surrogateConstructor(){}
+        function surrogateConstructor() {}
 
         surrogateConstructor.prototype = superConstructor.prototype;
 
@@ -13,24 +13,23 @@
         constructor.prototype = prototypeObject;
     }
 
-    $.kbWidget = function(name, parent, def) {
+    $.KBWidget = function (def) {
+        def = (def || {});
+        
+        var name   = def["name"],
+            parent = def["parent"];
 
         if (widgetRegistry[name] != undefined) {
             //throw "Cannot re-register widget: " + name;
             return;
         }
-        var Widget = function($elem) {
+        var Widget = function ($elem) {
             this.$elem = $elem;
             this.options = $.extend(true, {}, def.options);
             return this;
         }
 
         widgetRegistry[name] = Widget;
-
-        if (def == undefined) {
-            def = parent;
-            parent = undefined;
-        }
 
         if (parent) {
             subclass(Widget, widgetRegistry[parent]);
@@ -43,7 +42,7 @@
 
             if ($.isFunction(defCopy[prop])) {
 
-                Widget.prototype[prop] = (function(methodName, method) {
+                Widget.prototype[prop] = (function (methodName, method) {
                     var _super = function() {
                         throw "No parent method defined! Play by the rules!";
                     }
@@ -56,12 +55,12 @@
                             return widgetRegistry[parent].prototype[methodName].apply(this, arguments);
                         }
 
-                        var _superMethod = function(superMethodName) {
+                        var _superMethod = function (superMethodName) {
                             return widgetRegistry[parent].prototype[superMethodName].apply(this, Array.prototype.slice.apply(arguments, [1]));
                         }
                     }
 
-                    return function() {
+                    return function () {
                         var _oSuper = this._super;
                         var _oSuperMethod = this._superMethod;
                         this._super = _super;
@@ -120,7 +119,7 @@
         return $.fn[name];
     }
 
-    $.kbWidget('kbaseWidget',
+    $.KBWidget('kbaseWidget',
         {
             options : {},
 
@@ -218,7 +217,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseAuthenticatedWidget", 'kbaseWidget', {
+    $.KBWidget("kbaseAuthenticatedWidget", 'kbaseWidget', {
         version: "1.0.0",
         options: {
 
@@ -276,7 +275,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseAccordion", 'kbaseWidget', {
+    $.KBWidget("kbaseAccordion", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             fontSize : '100%',
@@ -433,7 +432,7 @@ Widget to create an accordion control. Easy to use!
 
 (function( $, undefined ) {
 
-    $.kbWidget("kbaseBox", 'kbaseWidget', {
+    $.KBWidget("kbaseBox", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             canCollapse : true,
@@ -673,7 +672,7 @@ Widget to create an accordion control. Easy to use!
 
 (function( $, undefined ) {
 
-    $.kbWidget("kbasePrompt", 'kbaseWidget', {
+    $.KBWidget("kbasePrompt", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             controls : ['cancelButton', 'okayButton']
@@ -915,7 +914,7 @@ Widget to create an accordion control. Easy to use!
 */
 
 (function( $, undefined ) {
-    $.kbWidget("kbaseDeletePrompt", 'kbasePrompt', {
+    $.KBWidget("kbaseDeletePrompt", 'kbasePrompt', {
         version: "1.0.0",
         options: {
             controls : ['cancelButton', 'okayButton']
@@ -966,7 +965,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseErrorPrompt", 'kbasePrompt', {
+    $.KBWidget("kbaseErrorPrompt", 'kbasePrompt', {
         version: "1.0.0",
         options: {
             controls : ['cancelButton', 'okayButton']
@@ -1114,7 +1113,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseFormBuilder", 'kbaseWidget', {
+    $.KBWidget("kbaseFormBuilder", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             elements : [],
@@ -1658,7 +1657,7 @@ Widget to create an accordion control. Easy to use!
 
 (function( $, undefined ) {
 
-    $.kbWidget("kbaseLogin", 'kbaseWidget', {
+    $.KBWidget("kbaseLogin", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             style : 'button',
@@ -2602,7 +2601,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseTable", 'kbaseWidget', {
+    $.KBWidget("kbaseTable", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             sortable    : false,
@@ -2952,7 +2951,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseTabs", 'kbaseWidget', {
+    $.KBWidget("kbaseTabs", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             tabPosition : 'top',
@@ -3188,7 +3187,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseFileBrowser", 'kbaseWidget', {
+    $.KBWidget("kbaseFileBrowser", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             'root' : '/',
@@ -3770,7 +3769,7 @@ Widget to create an accordion control. Easy to use!
 
 (function( $, undefined ) {
 
-    $.kbWidget("kbaseIrisCommands", 'kbaseAccordion', {
+    $.KBWidget("kbaseIrisCommands", 'kbaseAccordion', {
         version: "1.0.0",
         options: {
             link : function (evt) {
@@ -4163,7 +4162,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisFileBrowser", 'kbaseWidget', {
+    $.KBWidget("kbaseIrisFileBrowser", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             'root' : '/',
@@ -4724,7 +4723,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisGrammar", 'kbaseWidget', {
+    $.KBWidget("kbaseIrisGrammar", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             defaultGrammarURL : 'http://www.prototypesite.net/iris-dev/grammar.json',
@@ -5124,7 +5123,7 @@ Widget to create an accordion control. Easy to use!
 
 (function( $, undefined ) {
 
-    $.kbWidget("kbaseIrisProcessList", 'kbaseWidget', {
+    $.KBWidget("kbaseIrisProcessList", 'kbaseWidget', {
         version: "1.0.0",
         options: {
 
@@ -5210,7 +5209,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisTerminal", 'kbaseWidget', {
+    $.KBWidget("kbaseIrisTerminal", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             invocationURL : 'http://localhost:5000',
@@ -6693,7 +6692,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisTutorial", 'kbaseWidget', {
+    $.KBWidget("kbaseIrisTutorial", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             default : 'How to annotate a genome',
@@ -6862,7 +6861,7 @@ Widget to create an accordion control. Easy to use!
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseWorkspaceBrowser", 'kbaseFileBrowser', {
+    $.KBWidget("kbaseWorkspaceBrowser", 'kbaseFileBrowser', {
         version: "1.0.0",
         options: {
             name : 'Workspace Browser',

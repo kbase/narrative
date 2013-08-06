@@ -318,10 +318,10 @@
             asPlugin = false;
         }
 
-        return $.kbWidget(name, parent, def, asPlugin);
+        return $.KBWidget(name, parent, def, asPlugin);
     }
 
-    $.kbWidget = function(name, parent, def, asPlugin) {
+    $.KBWidget = function(name, parent, def, asPlugin) {
 
         if (asPlugin == undefined) {
             asPlugin = true;
@@ -521,7 +521,7 @@
         return $.fn[name];
     }
 
-    $.kbWidget('kbaseWidget',
+    $.KBWidget('kbaseWidget',
 
         {
             _accessors : ['wing', 'wong'],

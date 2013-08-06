@@ -102,7 +102,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseFormBuilder", 'kbaseWidget', {
+    $.KBWidget("kbaseFormBuilder", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             elements : [],

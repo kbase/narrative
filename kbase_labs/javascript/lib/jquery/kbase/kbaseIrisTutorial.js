@@ -5,7 +5,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisTutorial", 'kbaseWidget', {
+    $.KBWidget("kbaseIrisTutorial", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             configURL : 'http://www.prototypesite.net/kbase/tutorials.cfg',

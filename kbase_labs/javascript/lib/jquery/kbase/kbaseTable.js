@@ -60,7 +60,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseTable", 'kbaseWidget', {
+    $.KBWidget("kbaseTable", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             sortable    : false,

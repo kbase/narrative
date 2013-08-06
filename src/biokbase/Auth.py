@@ -6,8 +6,7 @@ and the python version
 In this module, we follow standard Python idioms of raising exceptions for
 various failure states ( Perl modules returned error states in error_msg field)
 """
-from biokbase.nexus.client import NexusClient
-#import biokbase.nexus.token_utils
+import biokbase.nexus.client
 from ConfigParser import ConfigParser
 import os
 from urlparse import urlparse
@@ -179,7 +178,11 @@ class Token:
             setattr( self, attr, kwargs.get(attr,None))
         self.nclient = NexusClient(nexusconfig)
         self.nclient.user_key_file = self.keyfile
-        self.sshagent_keys = self.nclient.agent_keys
+
+        if self.nclient.__dict__.has_key("agent_keys"):
+            self.sshagent_keys = self.nclient.agent_keys
+        else:
+            self.sshagent_keys = dict()
 
         # Flag to mark if we got default values from .kbase_config file
         defattr = reduce( lambda x,y: x or (authconf.get(y, None) is not None), attrs)

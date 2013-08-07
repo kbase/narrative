@@ -220,7 +220,7 @@
                                 }
                             },
                             id : 'helpButton',
-                            'tooltip' : {title : label + ' help', placement : 'bottom'},
+                           // 'tooltip' : {title : label + ' help', placement : 'bottom'},
                         },
                     ]
                 }
@@ -242,222 +242,168 @@
 
             this.data('focused', $(':focus'));
 
-            /*
-            var $div = $('<div></div>')
-                .css('border', '1px solid lightgray')
-                .css('padding', '2px')
+            var $form = $.jqElem('form')
+                .addClass('form-search')
+                .css('margin-bottom', '2px')
                 .append(
-                    $('<h5></h5>')
-                        .addClass('text-left')
-                        .text("Command List")
-                        .css('background-color', 'lightgray')
-                        .css('padding', '2px')
-                        .css('margin', '0px')
-                        .css('position', 'relative')
-                        .bind('click',
-                            function(e) {
-                                $(this).parent().children().last().collapse('toggle');
-                                if (that.options.fileBrowser) {
-                                    that.options.fileBrowser.toggleNavHeight();
-                                }
-                            }
-                        )
+                    $('<div></div>')
+                        .css('max-height', this.options.overflow ? this.options.sectionHeight : '5000px')
+                        .css('overflow', this.options.overflow ? 'auto' : 'visible')
                         .append(
                             $('<div></div>')
-                            .css('right', '0px')
-                            .css('top', '0px')
-                            .css('position', 'absolute')
-                            .append(
-                                $('<button></button>')
-                                    .attr('id', 'deleteSearchResults')
-                                    .addClass('btn btn-mini')
-                                    .append($('<i></i>').addClass('icon-remove'))
-                                    .css('padding-top', '1px')
-                                    .css('padding-bottom', '1px')
-                                    .css('display', 'none')
-                                    .attr('title', 'Remove search results')
-                                    .tooltip()
-                                    .bind('click', $.proxy(function (e) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        this.data('searchResults').empty();
-                                        this.data('deleteSearchResults').hide();
-                                        this.data('searchFieldBox').hide();
-                                    },this))
-                            )
-                            .append(
-                                $('<button></button>')
-                                    .addClass('btn btn-mini')
-                                    .append($('<i></i>').addClass('icon-search'))
-                                    .css('padding-top', '1px')
-                                    .css('padding-bottom', '1px')
-                                    .attr('title', 'Search for command')
-                                    .tooltip()
-                                    .bind('click', $.proxy(function (e) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        this.data('searchResults').empty();
-                                        this.data('searchFieldBox').toggle();
-//                                        this.data('deleteSearchResults').hide();
-                                        if (this.data('searchFieldBox').is(':hidden')) {
-                                            this.data('searchField').blur();
-                                            this.data('focused').focus();
-                                        }
-                                        else {
-                                            this.data('searchField').val('');
-                                            this.data('searchField').focus();
-                                        }
-                                    },this))
-                            )
-                        )
-                        .append(
-                            $('<div></div>')
-                                .css('right', '0px')
-                                .css('top', '24px')
-                                .css('position', 'absolute')
-                                .css('z-index', '999')
-                                .css('display', 'none')
+                                .addClass('input-append')
+                                .addClass('pull-right')
+                                .css('margin-top', '5px')
                                 .attr('id', 'searchFieldBox')
                                 .append(
-                                    $('<input></input')
+                                    $('<input></input>')
                                         .attr('type', 'text')
-                                        .addClass('input-medium search-query')
+                                        .addClass('input-small search-query')
                                         .attr('name', 'search')
                                         .css('padding-top', '1px')
                                         .css('padding-bottom', '1px')
                                         .attr('id', 'searchField')
-                                        .keypress($.proxy(function (e) {
-                                            if (e.which == 13) {
-                                                var regex = new RegExp(this.data('searchField').val(), 'i');
-                                                var commands = this.commandsMatchingRegex(regex);
+                                        .attr('size', '50')
+                                        .keyup($.proxy(function (e) {
+                                            e.preventDefault(); e.stopPropagation();
 
-                                                $.each(
-                                                    commands,
-                                                    $.proxy( function (idx, cmd) {
-                                                        this.data('searchResults').append(
-                                                            this.createLI(
-                                                                cmd,
-                                                                cmd,
-                                                                function (e) {
-                                                                    that.options.link.call(this, e);
-                                                                    //that.data('deleteSearchResults').trigger('click');
-                                                                }
-                                                            )
-                                                        );
-                                                    }, this)
-                                                );
+                                            if (e.metaKey || e.altKey || e.ctrlKey) {
+                                                return;
+                                            }
 
-                                                if (! commands.length) {
-                                                    this.data('searchResults').append(
-                                                        $('<li></li>')
-                                                            .css('font-style', 'italic')
-                                                            .text('No matching commands found')
-                                                    );
-                                                };
+                                            var value = this.data('searchField').val();
 
-                                                this.data('deleteSearchResults').show();
-                                                this.data('searchFieldBox').hide();
-                                                if (! commands.length) {
-                                                    this.data('focused').focus();
+                                            if (value.length < 3) {
+                                                if (value.length == 0) {
+                                                    this.data('test').animate({left : "-100%"}, 150);
                                                 }
+                                                return;
+                                            }
+
+                                            this.data('test').animate({left : "0px"}, 150);
+
+                                            var regex = new RegExp(value, 'i');
+                                            var commands = this.commandsMatchingRegex(regex);
+
+                                            var $ul = $.jqElem('ul')
+                                                .css('font-size', this.options.fontSize)
+                                                .css('padding-left', '15px')
+                                                .addClass('unstyled');
+
+
+                                            $.each(
+                                                commands,
+                                                $.proxy( function (idx, cmd) {
+                                                    $ul.append(
+                                                        this.createLI(
+                                                            cmd,
+                                                            cmd,
+                                                            function (e) {
+                                                                that.options.link.call(this, e);
+                                                            }
+                                                        )
+                                                    );
+                                                }, this)
+                                            );
+
+                                            if (! commands.length) {
+                                                $ul.append(
+                                                    $('<li></li>')
+                                                        .css('font-style', 'italic')
+                                                        .text('No matching commands found')
+                                                );
                                             };
+
+                                            this.data('searchResults').empty();
+                                            this.data('searchResults').append($ul);
+
+                                            this.data('searchResults').prepend(
+                                                $.jqElem('div')
+                                                    .css('position', 'relative')
+                                                    .css('top', '2px')
+                                                    .css('left', '90%')
+                                                    .append(
+                                                        $.jqElem('button')
+                                                            .addClass('btn btn-mini')
+                                                            .append($.jqElem('i').addClass('icon-remove'))
+                                                            .on('click',
+                                                                $.proxy(function(e) {
+                                                                    this.data('searchField').val('');
+                                                                    this.data('searchField').trigger('keyup');
+                                                                }, this)
+                                                            )
+                                                    )
+                                            );
+
                                         }, this))
                                 )
-                        )
-                )
-                .append(
-                    $('<ul></ul>')
-                        .css('font-size', this.options.fontSize)
-                        .css('padding-left', '15px')
-                        .attr('id', 'searchResults')
-                        .addClass('unstyled')
-                        .css('max-height', this.options.overflow ? this.options.sectionHeight : '5000px')
-                        .css('overflow', this.options.overflow ? 'auto' : 'visible')
-                )
-            ;*/
-
-            var $div = $('<div></div>')
-                .css('max-height', this.options.overflow ? this.options.sectionHeight : '5000px')
-                .css('overflow', this.options.overflow ? 'auto' : 'visible')
-                .append(
-                    $('<div></div>')
-                        .css('right', '0px')
-                        .css('top', '24px')
-                        .css('position', 'absolute')
-                        .css('z-index', '999')
-                        .css('display', 'none')
-                        .attr('id', 'searchFieldBox')
-                        .append(
-                            $('<input></input')
-                                .attr('type', 'text')
-                                .addClass('input-medium search-query')
-                                .attr('name', 'search')
-                                .css('padding-top', '1px')
-                                .css('padding-bottom', '1px')
-                                .attr('id', 'searchField')
-                                .keypress($.proxy(function (e) {
-                                    if (e.which == 13) {
-                                        var regex = new RegExp(this.data('searchField').val(), 'i');
-                                        var commands = this.commandsMatchingRegex(regex);
-
-                                        $.each(
-                                            commands,
-                                            $.proxy( function (idx, cmd) {
-                                                this.data('searchResults').append(
-                                                    this.createLI(
-                                                        cmd,
-                                                        cmd,
-                                                        function (e) {
-                                                            that.options.link.call(this, e);
-                                                            //that.data('deleteSearchResults').trigger('click');
-                                                        }
-                                                    )
-                                                );
+                                .append(
+                                    $.jqElem('button')
+                                        .addClass('btn btn-small')
+                                        .css('padding-top', '1px')
+                                        .css('padding-bottom', '1px')
+                                        .attr('id', 'search-button')
+                                        .append($.jqElem('i').attr('id', 'search-button-icon').addClass('icon-search'))
+                                        .on(
+                                            'click',
+                                            $.proxy(function(e) {
+                                                e.preventDefault(); e.stopPropagation();
+                                                this.data('searchField').trigger('keyup');
                                             }, this)
-                                        );
-
-                                        if (! commands.length) {
-                                            this.data('searchResults').append(
-                                                $('<li></li>')
-                                                    .css('font-style', 'italic')
-                                                    .text('No matching commands found')
-                                            );
-                                        };
-
-                                        this.data('deleteSearchResults').show();
-                                        this.data('searchFieldBox').hide();
-                                        if (! commands.length) {
-                                            this.data('focused').focus();
-                                        }
-                                    };
-                                }, this))
+                                        )
+                                )
+                            )
                         )
-                    )
-            ;
+                    ;
 
-            var $box = $div.kbaseBox(
+            var $box = $.jqElem('div').kbaseBox(
                 {
                     'title' : 'Command list',
                     'content' :
-                        $('<ul></ul>')
-                            .css('font-size', this.options.fontSize)
-                            .css('padding-left', '15px')
-                            .attr('id', 'searchResults')
-                            .addClass('unstyled'),
-                    'controls' : [
-                        {
-                            'icon' : 'icon-search',
-                            tooltip : {title : 'search for a command', placement : 'bottom', container : 'body'},
-                        },
-                    ]
+                        $.jqElem('div')
+                            .append(
+                                $.jqElem('div')
+                                    .attr('id', 'command-container')
+                                    .css('max-height', this.options.overflow ? this.options.sectionHeight : '5000px')
+                                    .css('overflow', this.options.overflow ? 'auto' : 'visible')
+                                    .append(
+                                        $.jqElem('div')
+                                            .attr('id', 'test')
+                                            .css('position', 'relative')
+                                            .css('left', '-100%')
+                                            .css('width', '200%')
+                                            .append(
+                                                $.jqElem('div')
+                                                    //.css('width', '50%')
+                                                    //.css('border', '1px solid black')
+                                                    .text("This is my left div right here")
+                                                    .css('width', '50%')
+                                                    .css('float', 'left')
+                                                    .attr('id', 'searchResults')
+                                            )
+                                            .append(
+                                                $.jqElem('div')
+                                                    .css('width', '50%')
+                                                    .css('float', 'right')
+                                                    .append(
+                                                        $.jqElem('div')
+                                                            .attr('id', 'all-commands')
+                                                            .css('white-space', 'nowrap')
+                                                    )
+                                            )
+
+                                    )
+                            )
+                        .append($form)
+                    ,
                 }
             );
 
-            $elem.append($div);
+            $elem.append($box.$elem);
 
-            this._rewireIds($div, this);
+            this._rewireIds($box.$elem, this);
 
-            this._superMethod('appendUI', $div.kbaseBox('content'), commands);
+            this._superMethod('appendUI', this.data('all-commands'), commands);
 
             this.data('accordion').css('margin-bottom', '0px');
 

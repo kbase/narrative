@@ -81,7 +81,7 @@ body {
 }
 
 #ws-table-div {
-    height: 100%;
+    position: absolute;
     top: 0px;
     bottom: 0px;
     left: 0px;

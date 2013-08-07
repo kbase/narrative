@@ -75,6 +75,10 @@
 
             var $processElem = this.processList()[pid];
 
+            if ($processElem == undefined) {
+                return;
+            }
+
             $processElem.remove();
             if (this.$elem.find('ul').children().length == 0) {
                 this.$elem.find('ul').append(this.pendingLi());

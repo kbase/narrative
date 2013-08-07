@@ -327,10 +327,10 @@
             asPlugin = true;
         }
 
-        if (widgetRegistry[name] != undefined) {
-            //throw "Cannot re-register widget: " + name;
-            return;
-        }
+        //if (widgetRegistry[name] != undefined) {
+        //    //throw "Cannot re-register widget: " + name;
+        //    return;
+        //}
 
         var Widget = function($elem) {
             this.$elem = $elem;

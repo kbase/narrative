@@ -216,11 +216,12 @@
             this.terminal = this.data('terminal');
             this.input_box = this.data('input_box');
 
-            this.out("Welcome to the interactive KBase terminal!<br/>\n"
-                    +"Please click the 'Sign in' button in the upper right to get started.<br/>\n"
-                    +"Type <b>commands</b> for a list of commands.<br/>\n"
-                    +"For usage information about a specific command, type the command name with -h or --help after it.<br/>\n"
-                    +"Please visit <a href = 'http://kbase.us/for-users/tutorials/navigating-iris/' target = '_blank'>http://kbase.us/for-users/tutorials/navigating-iris/</a> or type <b>tutorial</b> for an IRIS tutorial.",
+            this.out("Welcome to the interactive KBase terminal!<br>\n"
+                    +"Please click the 'Sign in' button in the upper right to get started.<br>\n"
+                    +"Type <b>commands</b> for a list of commands.<br>\n"
+                    +"For usage information about a specific command, type the command name with -h or --help after it.<br>\n"
+                    +"Please visit <a href = 'http://kbase.us/for-users/tutorials/navigating-iris/' target = '_blank'>http://kbase.us/for-users/tutorials/navigating-iris/</a> or type <b>tutorial</b> for an IRIS tutorial.<br>\n"
+                    +"To find out what's new, type <b>whatsnew</b><br>\n",
                     0,1);
             this.out_line();
 
@@ -280,10 +281,6 @@
 		    }, this)
             );
         },
-
-//        set_session: function(session) {
-//            this.sessionId() = session;
-//        },
 
         resize_contents: function($container) {
             //	var newx = window.getSize().y - document.id(footer).getSize().y - 35;
@@ -588,7 +585,7 @@
                 {
                     controls : [
                         {
-                            icon : 'icon-download-alt',
+                            icon : 'icon-eye-open',
                             callback :
                                 function (e) {
                                     var win = window.open();
@@ -772,42 +769,47 @@
             }
 
             if (command == 'history') {
-                var $tbl = $('<table></table>');
+
+                var data = {
+                    structure : {
+                        header      : [],
+                        rows        : [],
+                    },
+                    sortable    : true,
+                };
+
                 jQuery.each(
                     this.commandHistory,
                     jQuery.proxy(
                         function (idx, val) {
-                            $tbl.append(
-                                $('<tr></tr>')
-                                    .append(
-                                        $('<td></td>')
-                                            .text(idx)
-                                    )
-                                    .append(
-                                        $('<td></td>')
-                                            .css('padding-left', '10px')
-                                            .append(
-                                                $('<a></a>')
-                                                    .attr('href', '#')
-                                                    .text(val)
-                                                    .bind('click',
-                                                        jQuery.proxy(
-                                                            function (evt) {
-                                                                evt.preventDefault();
-                                                                this.appendInput(val + ' ');
-                                                            },
-                                                            this
-                                                        )
-                                                    )
-                                            )
-                                    )
-                                );
+                            data.structure.rows.push(
+                                [
+                                    idx,
+                                    {
+                                        value : $('<a></a>')
+                                            .attr('href', '#')
+                                            .text(val)
+                                            .bind('click',
+                                                jQuery.proxy(
+                                                    function (evt) {
+                                                        evt.preventDefault();
+                                                        this.appendInput(val + ' ');
+                                                    },
+                                                    this
+                                                )
+                                            ),
+                                        style : 'padding-left : 10px',
+                                    }
+                                ]
+                            );
                         },
                         this
                     )
                 );
 
-                this.out_to_div($commandDiv, $tbl);
+                var $tbl = $.jqElem('div').kbaseTable(data);
+
+                this.out_to_div($commandDiv, $tbl.$elem);
                 return;
             }
             else if (m = command.match(/^!(\d+)/)) {
@@ -867,6 +869,34 @@
                     $fb.data('active_directory', this.cwd);
                     $fb.uploadFile();
                 }
+                return;
+            }
+
+            if (m = command.match(/^#\s*(.+)/)) {
+                $commandDiv.prev().remove();
+                this.out_to_div($commandDiv, $('<i></i>').text(m[1]));
+                return;
+            }
+
+            if (m = command.match(/^whatsnew/)) {
+                $commandDiv.css('white-space', '');
+                $.ajax(
+                    {
+                        async : true,
+                        dataType: "text",
+                        url: "whatsnew.html",
+                        crossDomain : true,
+                        success: $.proxy(function (data, status, xhr) {
+                            $commandDiv.append(data);
+                            this.scroll();
+                        }, this),
+                        error : $.proxy(function(xhr, textStatus, errorThrown) {
+                            $commandDiv.append(xhr.responseText);
+                            this.scroll();
+                        }, this),
+                        type: 'GET',
+                    }
+                );
                 return;
             }
 
@@ -943,7 +973,7 @@
                                         .append($('<b></b>').html(data.found))
                                         .append(" records found.")
                                 );
-                                this.out_to_div($commandDiv, $('<br/>'));
+                                this.out_to_div($commandDiv, $('<br>'));
                                 this.out_to_div($commandDiv, this.search_json_to_table(data.body, filter));
                                 var res = this.search_json_to_table(data.body, filter);
 
@@ -1140,6 +1170,7 @@
 
                 if (list.length == 0) {
                     this.out_to_div($commandDiv, "Could not load tutorials");
+                    this.out_to_div($commandDiv, "Type <i>tutorial list</i> to see available tutorials.");
                     return;
                 }
 
@@ -1196,42 +1227,41 @@
             }
 
             if (command == 'commands') {
+
                 this.client().valid_commands(
                     jQuery.proxy(
                         function (cmds) {
-                            var $tbl = $('<table></table>');
+
+                            var data = {
+                                structure : {
+                                    header      : [],
+                                    rows        : [],
+                                },
+                                sortable    : true,
+                                hover       : false,
+                            };
+
                             jQuery.each(
                                 cmds,
                                 function (idx, group) {
-                                    $tbl.append(
-                                        $('<tr></tr>')
-                                            .append(
-                                                $('<th></th>')
-                                                    .attr('colspan', 2)
-                                                    .html(group.title)
-                                                )
-                                        );
+                                    data.structure.rows.push( [ { value : group.title, colspan : 2, style : 'font-weight : bold; text-align : center' } ] );
 
                                     for (var ri = 0; ri < group.items.length; ri += 2) {
-                                        $tbl.append(
-                                            $('<tr></tr>')
-                                                .append(
-                                                    $('<td></td>')
-                                                        .html(group.items[ri].cmd)
-                                                    )
-                                                .append(
-                                                    $('<td></td>')
-                                                        .html(
-                                                            group.items[ri + 1] != undefined
-                                                                ? group.items[ri + 1].cmd
-                                                                : ''
-                                                        )
-                                                    )
-                                            );
+                                        data.structure.rows.push(
+                                            [
+                                                group.items[ri].cmd,
+                                                group.items[ri + 1] != undefined
+                                                    ? group.items[ri + 1].cmd
+                                                    : ''
+                                            ]
+                                        );
                                     }
                                 }
                             );
-                            $commandDiv.append($tbl);
+
+                            var $tbl = $.jqElem('div').kbaseTable(data);
+
+                            $commandDiv.append($tbl.$elem);
                             this.scroll();
 
                         },
@@ -1244,34 +1274,45 @@
             if (m = command.match(/^questions\s*(\S+)?/)) {
 
                 var questions = this.options.grammar.allQuestions(m[1]);
-                var $tbl = $('<table></table>');
+
+                var data = {
+                    structure : {
+                        header      : [],
+                        rows        : [],
+                    },
+                    sortable    : true,
+                };
+
                 $.each(
                     questions,
-                    $.proxy(function (idx, question) {
-                        $tbl.append(
-                            $('<tr></tr>')
-                                .append(
-                                    $('<td></td>')
-                                        .append(
-                                            $('<a></a>')
-                                                .attr('href', '#')
-                                                .text(question)
-                                                .bind('click',
-                                                    jQuery.proxy(
-                                                        function (evt) {
-                                                            evt.preventDefault();
-                                                            this.input_box.val(question);
-                                                            this.selectNextInputVariable();
-                                                        },
-                                                        this
-                                                    )
-                                                )
+                    $.proxy( function (idx, question) {
+                        data.structure.rows.push(
+                            [
+                                {
+                                    value :
+                                        $.jqElem('a')
+                                        .attr('href', '#')
+                                        .text(question)
+                                        .bind('click',
+                                            jQuery.proxy(
+                                                function (evt) {
+                                                    evt.preventDefault();
+                                                    this.input_box.val(question);
+                                                    this.selectNextInputVariable();
+                                                },
+                                                this
+                                            )
                                         )
-                                    )
-                            );
+                                }
+                            ]
+                        );
+
                     }, this)
                 );
-                $commandDiv.append($tbl);
+
+                var $tbl = $.jqElem('div').kbaseTable(data);
+
+                $commandDiv.append($tbl.$elem);
                 this.scroll();
 
                 return;
@@ -1303,9 +1344,6 @@
                             var files = filelist[1];
 
                             var allFiles = [];
-
-                            var $tbl = $('<table></table>')
-                                //.attr('border', 1);
 
                             $.each(
                                 dirs,
@@ -1352,35 +1390,35 @@
                                             url     : this.options.invocationURL + "/download/" + val.full_path + "?session_id=" + this.sessionId()
                                         }
                                     );
+
                                 }, this)
                             );
 
+                            var data = {
+                                structure : {
+                                    header      : [],
+                                    rows        : [],
+                                },
+                                sortable    : true,
+                                bordered    : false
+                            };
 
-                            jQuery.each(
+                            $.each(
                                 allFiles.sort(this.sortByKey('name', 'insensitively')),
-                                jQuery.proxy(
-                                    function (idx, val) {
-                                        $tbl.append(
-                                            $('<tr></tr>')
-                                                .append(
-                                                    $('<td></td>')
-                                                        .text(val.size)
-                                                    )
-                                                .append(
-                                                    $('<td></td>')
-                                                        .html(val.mod_date)
-                                                    )
-                                                .append(
-                                                    $('<td></td>')
-                                                        .append(val.nameTD)
-                                                )
-                                        );
-                                    },
-                                    this
-                                )
+                                $.proxy( function (idx, val) {
+                                    data.structure.rows.push(
+                                        [
+                                            val.size,
+                                            val.mod_date,
+                                            { value : val.nameTD }
+                                        ]
+                                    );
+                                }, this)
                             );
 
-                            $commandDiv.append($tbl);
+                            var $tbl = $.jqElem('div').kbaseTable(data);
+
+                            $commandDiv.append($tbl.$elem);
                             this.scroll();
                          },
                          this
@@ -1413,18 +1451,42 @@
                 }
             }
 
-            command = command.replace(/\\\n/g, " ");
-            command = command.replace(/\n/g, " ");
+            //command = command.replace(/\\\n/g, " ");
+            //command = command.replace(/\n/g, " ");
 
             var pid = this.uuid();
+
+            var $pe = $('<div></div>').text(command);
+            $pe.kbaseButtonControls(
+                {
+                    onMouseover : true,
+                    context : this,
+                    controls : [
+                        {
+                            'icon' : 'icon-ban-circle',
+                            //'tooltip' : 'Cancel',
+                            callback : function(e, $term) {
+                                $commandDiv.prev().remove();
+                                $commandDiv.next().remove();
+                                $commandDiv.remove();
+
+                                $term.trigger('removeIrisProcess', pid);
+                            }
+                        },
+                    ]
+
+                }
+            );
 
             this.trigger(
                 'updateIrisProcess',
                 {
                     pid : pid,
-                    msg : command
+                    content : $pe
                 }
             );
+
+            //var commands = command.split(/[;\r\n]/) {
 
             this.client().run_pipeline(
                 this.sessionId(),

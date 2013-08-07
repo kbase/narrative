@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>KBase Taxonomy Page</title>
+    <link rel="icon" href="assets/img/KBase_favicon.ico" type="image/x-icon">
+    <style type="text/css">
+      body {
+        padding-top: 40px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.min.css" rel="stylesheet">    
+    <link href="assets/css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="assets/css/kbase-common.css" rel="stylesheet">
+    <link href="assets/css/kbase-taxon.css" rel="stylesheet">
+    <link href="assets/css/kbase-treeview.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <div class="navbar">
+      <div class="navbar-inner navbar-fixed-top">
+        <a href="http://www.kbase.us"><img class="logo" src="assets/img/labs_icon.png" width="46"></a>
+        <a class="brand" href="index.html">Taxon</a>
+        <ul class="nav">
+          <li class="active"><a href="taxon.html">Taxa</a></li>
+          <li><a href="aboutTaxon.html">About</a></li>
+          <li><a href="contactTaxon.html">Contact</a></li>
+        </ul>
+        <ul class="nav" style="float:right; padding : 9px 0px 7px 10px; margin-right: -1px" >
+          <li id="signin"></li>
+        </ul>
+      </div>
+    </div>
+    <!-- End of page nav bar -->
+
+    <div class="container">
+      <div class="taxon-header">
+        Taxonomy!
+      </div>
+
+      <div class="row">
+        <div class="span6">
+          <div id="description-box">
+          </div>
+          <div id="property-box">
+          </div>
+        </div>
+        <div class="span6">
+          <div class="row">
+            <div class="span3">
+              <div id="lineage-box">
+                lineage table
+              </div>
+            </div>
+            <div class="span3">
+              <div id="synonym-box">
+                synonyms
+              </div>
+              <div id="version-box">
+                version history
+              </div>
+            </div>
+          </div>
+          <div id="environment-box">
+            map
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="span12">
+          <div id="phylogenetic-box" class="tbox">
+            <div class="box-header">
+              Phylogenetic Context
+            </div>
+            <div class="box-body">
+              <div class="row">
+                <div class="span5">
+                  <div id="spp-tree-box">
+                    species tree.
+                  </div>
+                </div>
+                <div class="span6 pull-right">
+                  <div id="nearby-taxa-box">
+                    nearby taxa.
+                  </div>
+                  <div id="variants-box">
+                    variants.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="span12">
+          <div id="genome-box">
+          </div>
+          <div id="taxon-data-box">
+          </div>
+          <div id="models-box">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+
+    <script src = "http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.5/require.min.js"></script>
+    <script src = "http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script src = "http://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.3.1/jquery.cookie.min.js"></script>
+    <script src = "http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+    <script src = "assets/js/jquery/kbase.min.js"></script>
+    <script src = "https://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>
+    <script src = "assets/js/kbase/kbase-wiki-scraper.js"></script>
+    <script src = "assets/js/kbase/kbase-taxonomy-client.js"></script>
+    <script src = "assets/js/kbase/kbase-treeview.js"></script>
+    <script src = "assets/js/kbase/kbase-taxon-page.js"></script>
+  </body>
+</html>

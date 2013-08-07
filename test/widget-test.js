@@ -1,8 +1,8 @@
-var util   = require("util");
 global.jQuery = require("jquery");
 global.$      = jQuery;
 
 require("../src/kbase.js");
+// TODO: Reset jQuery namespaces for each test.
 
 describe("KBWidget", function () {
     it("should be a function", function (done) {
@@ -44,7 +44,12 @@ describe("KBWidget", function () {
     })
     it("should throw a useful message if a parent isn't registered",
     function (done) {
-        // FIXME: Write test.
+        (function () {
+            $.KBWidget({
+                name: "HelloWidget",
+                parent: "NonExistentWidget"
+            })
+        }).should.throw("Parent widget is not registered");
         done();
     });
 });

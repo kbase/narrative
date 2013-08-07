@@ -32,7 +32,11 @@
         widgetRegistry[name] = Widget;
 
         if (parent) {
-            subclass(Widget, widgetRegistry[parent]);
+            var pWidget = widgetRegistry[parent];
+            console.log("PARENT IS ", pWidget);
+            if (pWidget === undefined)
+                throw new Error("Parent widget is not registered");
+            subclass(Widget, pWidget);
         }
 
         var defCopy = $.extend(true, {}, def);

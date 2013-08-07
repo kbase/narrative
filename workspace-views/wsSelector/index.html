@@ -47,7 +47,7 @@
                 var userToken = $("#signin-button").kbaseLogin('session').token;
 
                 // instantiating the workspace selector
-                var wsSelector = $('#ws-selector-container').kbaseWSSelector({userToken: userToken, selectHandler: selectHandler});
+                var wsSelector = $('#ws-container').kbaseWSSelector({userToken: userToken, selectHandler: selectHandler});
 
                 function selectHandler(selected) {
                     // the argument selected is a list of selected ws ids, I still need to add a flag
@@ -65,9 +65,17 @@
 
 
     <body>
-        This is an example of a KBase workspace selector plugin
-        <div id="signin-button"></div>
-        <div id="ws-selector-container" style="float: left; width: 300px;"></div>
+        <div id="main">
+          <div id="main-left"><div id="ws-container"></div></div>
+          <div id="main-right">
+            <div id="main-right-content">
+                This is an example of a KBase workspace selector plugin
+                <div id="signin-button"></div>
+            </div>
+          </div>
+          <div style="clear:both"></div>
+        </div>
+
     </body>
 
 </html>

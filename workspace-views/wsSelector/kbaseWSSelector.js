@@ -7,7 +7,6 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
     },
     init:  function(options) {
     this._super(options);
-    console.log(this.$elem)
     var self = this;
 
     // arguments
@@ -26,7 +25,6 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
         lastSelectedRow = null,
         lastShiftSelect = null,
         container = self.$elem;
-    console.log(container)
 
     wsHandler.getWorkspaces()
         .done(handleGetWorkspaces)
@@ -172,7 +170,7 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
 
     container.append(filterCollapse);
 
-    var filterSearch = $('<input type="text" class="search-query" style="margin-bottom: 5px; width:100%;"\
+    var filterSearch = $('<input type="text" class="search-query" style="margin-bottom: 5px;"\
              placeholder="Filter Workspaces">');
     container.append(filterSearch);
 
@@ -230,7 +228,7 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
     this.resizeTable = resizeTable;
 
     function resizeTable() {
-        tableDiv.css('top', filterCollapse.outerHeight(true) + filterSearch.outerHeight(true) + 'px');
+        tableDiv.css('top', filterCollapse.outerHeight(true) + filterSearch.outerHeight(true)+ 'px');
     }
 
     var initialized = false;
@@ -641,10 +639,10 @@ $.kbWidget("kbaseWSSelector", 'kbaseWidget', {
 
     function filterCollapseHtml() {
         return '' +
-            '<div class="accordion" style="margin-bottom: 0px;>'
+            '<div class="accordion" style="margin-bottom: 0px;">'
             + '<div class="accordion-group">'
             + '<div class="accordion-heading" style="text-align: center; position: relative;">'
-            + '<button class="btn btn-link" title="Filter Workspaces" style="width: 100%;">'
+            + '<button class="btn btn-link" title="Filter Workspaces" style="width: 100%; height: 100%;">'
             + 'Workspaces <span class="caret"></span>'
             + '</button>'
             + '<button id="create-workspace" class="btn btn-mini"'

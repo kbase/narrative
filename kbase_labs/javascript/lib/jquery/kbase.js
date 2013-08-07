@@ -1,3 +1,6 @@
+/**
+ * @module KBWidget
+ */
 (function( $, undefined) {
 
     var widgetRegistry = {};
@@ -33,7 +36,6 @@
 
         if (parent) {
             var pWidget = widgetRegistry[parent];
-            console.log("PARENT IS ", pWidget);
             if (pWidget === undefined)
                 throw new Error("Parent widget is not registered");
             subclass(Widget, pWidget);
@@ -214,6 +216,16 @@
 
 
 }( jQuery ));
+
+/**
+ * @module KBApplication
+ */
+(function ($, undefined) {
+    $.KBWidget({
+        name: "KBApplication"
+    });
+})(jQuery);
+
 /*
 
 */

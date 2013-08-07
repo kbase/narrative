@@ -9,10 +9,12 @@ describe("KBWidget", function () {
         $.KBWidget.should.be.a.function;
         done();
     });
+
     it("should support an empty constructor", function (done) {
         $.KBWidget().should.not.be.null;
         done();
     });
+
     it("should expose 'name' as a plugin", function (done) {
         var widget = $.KBWidget({
             name: "NewKBWidget"
@@ -20,6 +22,7 @@ describe("KBWidget", function () {
         $.NewKBWidget.should.be.a.function;
         done();
     });
+
     it("should allow a parent to be specified as a property", function (done) {
         var parent = $.KBWidget({
             name: "ParentWidget1"
@@ -31,6 +34,7 @@ describe("KBWidget", function () {
         child.should.be.a.function;
         done();
     });
+
     it("should allow a child to be extended directly from a parent",
     function (done) {
         $.KBWidget({
@@ -41,7 +45,8 @@ describe("KBWidget", function () {
         });
         $.ChildWidget2.should.be.a.function;
         done();
-    })
+    });
+
     it("should throw a useful message if a parent isn't registered",
     function (done) {
         (function () {

@@ -34,7 +34,6 @@ return $(tag);}
 $.kbObject=function(name,parent,def,asPlugin){if(asPlugin==undefined){asPlugin=false;}
 return $.kbWidget(name,parent,def,asPlugin);}
 $.kbWidget=function(name,parent,def,asPlugin){if(asPlugin==undefined){asPlugin=true;}
-if(widgetRegistry[name]!=undefined){return;}
 var Widget=function($elem){this.$elem=$elem;this.options=$.extend(true,{},def.options,this.constructor.prototype.options);return this;}
 var directName=name;directName=directName.replace(/^kbase/,'');directName=directName.charAt(0).toLowerCase()+directName.slice(1);KBase[directName]=function(options,$elem){var $w=new Widget();if($elem==undefined){$elem=$.jqElem('div');}
 $w.$elem=$elem;$w.init(options);$w._init=true;$w.trigger('initialized');return $w;}
@@ -579,8 +578,11 @@ else{return 0}});}
 this.layoutRows(sortedRows,this.options.structure.header);},nameOfHeader:function(header){return typeof header=='string'?header:header.value;},layoutRows:function(rows,header){this.data('tbody').empty();for(var idx=0;idx<rows.length;idx++){this.data('tbody').append(this.createRow(rows[idx],header));}},addOptions:function($cell,options){if(options.style!=undefined){$cell.attr('style',options.style);}
 if(options.class!=undefined){var classes=typeof options.class=='string'?[options.class]:options.class;$.each(classes,$.proxy(function(idx,cl){$cell.addClass(cl);},this));}
 var events=['mouseover','mouseout','click'];$.each(events,$.proxy(function(idx,e){if(options[e]!=undefined){$cell.bind(e,options[e])}},this));if(options.colspan){$cell.attr('colspan',options.colspan);}
-if(options.rowspan){$cell.attr('rowspan',options.rowspan);}},createRow:function(rowData,headers){var $tr=$('<tr></tr>');$.each(headers,$.proxy(function(hidx,header){var h=this.nameOfHeader(header);var $td=$('<td></td>');if(rowData[h]!=undefined){var value=typeof rowData[h]=='string'?rowData[h]:rowData[h].value;$td.append(value);if(typeof rowData[h]!='string'){this.addOptions($td,rowData[h]);}}
-if(value!=undefined){$tr.append($td);}},this));return $tr;},deletePrompt:function(row){var $deleteModal=$('<div></div>').kbaseDeletePrompt({name:row,callback:this.deleteRowCallback(row),});$deleteModal.openPrompt();},deleteRowCallback:function(row){},shouldDeleteRow:function(row){return 1;},});}(jQuery));(function($,undefined){$.kbWidget("kbaseTabs",'kbaseWidget',{version:"1.0.0",_accessors:['tabsHeight'],options:{tabPosition:'top',canDelete:false,borderColor:'lightgray',},init:function(options){this._super(options);this.data('tabs',{});this.data('nav',{});this.appendUI($(this.$elem));return this;},appendUI:function($elem,tabs){if(tabs==undefined){tabs=this.options.tabs;}
+if(options.rowspan){$cell.attr('rowspan',options.rowspan);}},createRow:function(rowData,headers){var $tr=$('<tr></tr>');if($.isArray(rowData)){$.each(rowData,$.proxy(function(idx,row){var value=typeof row=='string'||typeof row=='number'?row:row.value;var $td=$.jqElem('td').append(value);if(typeof row!='string'&&typeof row!='number'){this.addOptions($td,row);}
+if(value!=undefined){$tr.append($td);}},this));}
+else{$.each(headers,$.proxy(function(hidx,header){var h=this.nameOfHeader(header);var $td=$('<td></td>');if(rowData[h]!=undefined){var value=typeof rowData[h]=='string'?rowData[h]:rowData[h].value;$td.append(value);if(typeof rowData[h]!='string'){this.addOptions($td,rowData[h]);}}
+if(value!=undefined){$tr.append($td);}},this));}
+return $tr;},deletePrompt:function(row){var $deleteModal=$('<div></div>').kbaseDeletePrompt({name:row,callback:this.deleteRowCallback(row),});$deleteModal.openPrompt();},deleteRowCallback:function(row){},shouldDeleteRow:function(row){return 1;},});}(jQuery));(function($,undefined){$.kbWidget("kbaseTabs",'kbaseWidget',{version:"1.0.0",_accessors:['tabsHeight'],options:{tabPosition:'top',canDelete:false,borderColor:'lightgray',},init:function(options){this._super(options);this.data('tabs',{});this.data('nav',{});this.appendUI($(this.$elem));return this;},appendUI:function($elem,tabs){if(tabs==undefined){tabs=this.options.tabs;}
 var $block=$('<div></div>')
 .addClass('tabbable');var $tabs=$('<div></div>')
 .addClass('tab-content')

@@ -320,32 +320,58 @@
 
             var $tr = $('<tr></tr>');
 
-            $.each(
-                headers,
-                $.proxy(function (hidx, header) {
-                    var h = this.nameOfHeader(header);
+            if ( $.isArray(rowData) ) {
 
-                    var $td = $('<td></td>');
+                $.each(
+                    rowData,
+                    $.proxy( function(idx, row) {
 
-                    if (rowData[h] != undefined) {
+                        var value = typeof row == 'string' || typeof row == 'number'
+                            ? row
+                            : row.value;
 
-                        var value = typeof rowData[h] == 'string'
-                            ? rowData[h]
-                            : rowData[h].value;
+                        var $td = $.jqElem('td').append(value);
 
-                        $td.append(value);
-
-                        if (typeof rowData[h] != 'string') {
-                            this.addOptions($td, rowData[h]);
+                        if (typeof row != 'string' && typeof row != 'number') {
+                            this.addOptions($td, row);
                         }
-                    }
 
-                    if (value != undefined) {
-                        $tr.append($td);
-                    }
+                        if (value != undefined) {
+                            $tr.append($td);
+                        }
 
-                }, this)
-            );
+                    }, this)
+                );
+            }
+            else {
+
+                $.each(
+                    headers,
+                    $.proxy(function (hidx, header) {
+                        var h = this.nameOfHeader(header);
+
+                        var $td = $('<td></td>');
+
+                        if (rowData[h] != undefined) {
+
+                            var value = typeof rowData[h] == 'string'
+                                ? rowData[h]
+                                : rowData[h].value;
+
+                            $td.append(value);
+
+                            if (typeof rowData[h] != 'string') {
+                                this.addOptions($td, rowData[h]);
+                            }
+                        }
+
+                        if (value != undefined) {
+                            $tr.append($td);
+                        }
+
+                    }, this)
+                );
+            }
 
             return $tr;
 

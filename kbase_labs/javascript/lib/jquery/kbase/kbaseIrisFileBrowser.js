@@ -8,13 +8,13 @@
 
     $.kbWidget("kbaseIrisFileBrowser", 'kbaseDataBrowser', {
         version: "1.0.0",
-        _accessors : ['client', 'addFileCallback', 'editFileCallback', 'singleFileSize', 'chunkSize', 'stalledUploads'],
+        _accessors : ['invocationURL', 'client', 'addFileCallback', 'editFileCallback', 'singleFileSize', 'chunkSize', 'stalledUploads'],
         options: {
             stalledUploads : {},
             uploadDir : '.uploads',
             concurrentUploads : 4,
-            singleFileSize  : 3000000,
-            chunkSize       :  1000000,
+            singleFileSize  : 15000000,
+            chunkSize       :  5000000,
             title : 'File Browser',
             'root' : '/',
             types : {
@@ -27,15 +27,15 @@
                                 $fb.deleteFile($(this).data('id'), 'file');
                             },
                             id : 'removeButton',
-                            tooltip : 'delete this file',
+                            //tooltip : 'delete this file',
                         },
                         {
-                            icon : 'icon-eye-open',
+                            icon : 'icon-download-alt',
                             callback : function(e, $fb) {
                                 $fb.openFile($(this).data('id'));
                             },
                             id : 'viewButton',
-                            'tooltip' : 'view this file',
+                            //'tooltip' : 'download this file',
                         },
                         {
                             icon : 'icon-pencil',
@@ -45,7 +45,7 @@
                                 }
                             },
                             id : 'editButton',
-                            tooltip : 'edit this file',
+                            //tooltip : 'edit this file',
                             condition : function (control, $fb) {
                                 var size = this.$elem.data('data').size;
                                 if (size > $fb.singleFileSize() ) {
@@ -66,7 +66,7 @@
                                 }
                             },
                             id : 'addButton',
-                            'tooltip' : 'add this file to terminal input',
+                            //'tooltip' : 'add this file to terminal input',
                         },
                     ],
                 },
@@ -80,7 +80,7 @@
                     controls : [
                         {
                             icon : 'icon-minus',
-                            'tooltip' : 'delete this folder',
+                            //'tooltip' : 'delete this folder',
                             callback : function(e, $fb) {
                                 $fb.deleteFile($(this).data('id'), 'folder');
                             },
@@ -88,7 +88,7 @@
                         },
                         {
                             icon : 'icon-plus',
-                            'tooltip' : 'add a subdirectory',
+                            //'tooltip' : 'add a subdirectory',
                             callback : function(e, $fb) {
                                 $fb.addDirectory($(this).data('id'));
                             },
@@ -96,7 +96,7 @@
                         },
                         {
                             icon : 'icon-arrow-up',
-                            'tooltip' : 'upload a file',
+                            //'tooltip' : 'upload a file',
                             callback : function(e, $fb) {
                                 $fb.data('active_directory', $(this).data('id'));
                                 $fb.data('fileInput').trigger('click');
@@ -120,17 +120,6 @@
             this.listDirectory(this.options.root, $.proxy(function (results) {
                 this.appendContent(results, this.data('ul-nav'))
             }, this));
-
-            this.client().make_directory(
-                this.sessionId(),
-                '/',
-                this.options.uploadDir
-            )
-            .always(
-                $.proxy( function(res) {
-                    this.checkStalledUploads();
-                }, this)
-            );
 
             return this;
 
@@ -220,7 +209,7 @@
                     controls : [
                         {
                             'icon' : 'icon-plus',
-                            'tooltip' : 'add directory',
+                            //'tooltip' : 'add directory',
                             callback : function(e, $fb) {
                                 $fb.addDirectory('/');
                             },
@@ -228,7 +217,7 @@
                         },
                         {
                             'icon' : 'icon-arrow-up',
-                            'tooltip' : 'upload a file',
+                            //'tooltip' : 'upload a file',
                             callback : function(e, $fb) {
                                 $fb.data('active_directory', $(this).data('id'));
                                 $fb.data('fileInput').trigger('click');
@@ -565,7 +554,6 @@
                             }
 
                             var callback = $.proxy(function (res) {
-
                                 $.each(
                                     chunkMap.chunks,
                                     function (idx, chunk) {
@@ -587,13 +575,13 @@
 
                             ).always(
                                 $.proxy(function() {
-
                                     this.client().put_file(
                                         this.sessionId(),
                                         'chunkMap',
                                         JSON.stringify(chunkMap, undefined, 2),
                                         '/' + chunkMap.fullUploadPath
                                     ).done(callback)
+                                    .fail($.proxy(function (res) {this.dbg(res)}, this))
                                 }, this)
                             );
 
@@ -719,6 +707,8 @@
 
                     var concatenatedFileSize = fileSizes['upload'] || 0;
                     var newDoneChunks = [];
+
+                    chunkMap.doneChunks = chunkMap.doneChunks.sort(this.sortByKey('name'));
 
                     $.each(
                         chunkMap.doneChunks,
@@ -865,7 +855,7 @@
                                 controls : [
                                     {
                                         'icon' : 'icon-refresh',
-                                        'tooltip' : 'Resume',
+                                        //'tooltip' : 'Resume',
                                         callback : function(e, $fb) {
                                             $fb.data('resumed_chunkMap', chunkMap);
                                             $fb.data('fileInput').trigger('click');
@@ -874,7 +864,7 @@
                                     },
                                     {
                                         'icon' : 'icon-ban-circle',
-                                        'tooltip' : 'Cancel',
+                                        //'tooltip' : 'Cancel',
                                         callback : function(e, $fb) {
 
                                             $fb.client().remove_directory(
@@ -1002,41 +992,9 @@
 
         openFile : function(file) {
 
-            // can't open the window in trhe callback!
-            var win = window.open();
-            win.document.open();
+            var url = this.options.invocationURL + "/download/" + file + "?session_id=" + this.sessionId();
+            window.location.href = url;
 
-            this.client().get_file(
-                this.sessionId(),
-                file,
-                '/',
-                $.proxy(
-                    function (res) {
-
-                        try {
-                            var obj = JSON.parse(res);
-                            res = JSON.stringify(obj, undefined, 2);
-                        }
-                        catch(e) {
-                            this.dbg("FAILURE");
-                            this.dbg(e);
-                        }
-
-                        win.document.write(
-                            $('<div></div>').append(
-                                $('<div></div>')
-                                    .css('white-space', 'pre')
-                                    .append(res)
-                            )
-                            .html()
-                        );
-                        win.document.close();
-
-                    },
-                    this
-                ),
-                function (err) { this.dbg("FILE FAILURE"); this.dbg(err) }
-            );
         },
 
         deleteFile : function(file, type) {

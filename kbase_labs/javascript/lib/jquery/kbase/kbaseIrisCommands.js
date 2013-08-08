@@ -24,7 +24,7 @@
 
 (function( $, undefined ) {
 
-    $.kbWidget("kbaseIrisCommands", 'kbaseAccordion', {
+    $.KBWidget("kbaseIrisCommands", 'kbaseAccordion', {
         version: "1.0.0",
         options: {
             link : function (evt) {

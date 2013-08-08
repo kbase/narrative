@@ -29,7 +29,7 @@
 */
 
 (function( $, undefined ) {
-    $.kbWidget("kbaseDeletePrompt", 'kbasePrompt', {
+    $.KBWidget("kbaseDeletePrompt", 'kbasePrompt', {
         version: "1.0.0",
         options: {
             controls : ['cancelButton', 'okayButton']

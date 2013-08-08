@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseFBAView", 'kbaseWidget', {
+$.KBWidget("kbaseFBAView", 'kbaseWidget', {
     version: "1.0.0",
     options: {
     },

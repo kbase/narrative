@@ -5,7 +5,7 @@
 (function( $, undefined ) {
 
 
-    $.kbWidget("kbaseIrisGrammar", 'kbaseWidget', {
+    $.KBWidget("kbaseIrisGrammar", 'kbaseWidget', {
         version: "1.0.0",
         options: {
             defaultGrammarURL : 'http://www.prototypesite.net/iris-dev/grammar.json',

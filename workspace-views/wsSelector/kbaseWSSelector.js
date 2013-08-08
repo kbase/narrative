@@ -1,7 +1,7 @@
 
 (function( $, undefined ) {
 
-$.kbWidget("kbaseWSSelector", 'kbaseWidget', {
+$.KBWidget("kbaseWSSelector", 'kbaseWidget', {
     version: "1.0.0",
     options: {
     },

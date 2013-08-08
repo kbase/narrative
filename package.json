@@ -1,0 +1,20 @@
+{
+    "name"         : "ui-common"
+  , "description"  : "Common repository for UI components"
+  , "version"      : "0.0.1"
+  , "private"      : true
+  , "repository"   : "git.kbase.us/ui-common.git"
+  , "scripts"      : {
+      "test"       : "./node_modules/.bin/mocha"
+  }
+  , "version": "0.0.1"
+  , "dependencies" : {
+        "requirejs"  : "=2.1.5"
+      , "underscore" : ">=1.4.4"
+  }
+  , "devDependencies" : {
+        "jquery" : ">=1.8.3"
+      , "mocha"  : ">=1.8.1"
+      , "should" : ">=1.2.2"
+  }
+}

@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseModelView", 'kbaseWidget', {
+$.KBWidget("kbaseModelView", 'kbaseWidget', {
     version: "1.0.0",
     options: {
     },

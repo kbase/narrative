@@ -1,0 +1,27 @@
+body {
+    padding-top: 70px;
+}
+
+/* bootstrap overrides */
+.navbar { background-color: #363636; }
+.wrapper { width: 95%; margin-left: auto; margin-right: auto; }
+.navbar-nav > .active > a, 
+.navbar-nav > .active > a:hover, 
+.navbar-nav > .active > a:focus { color: #FFFFFF; background-color: #494949; border-bottom: 3px solid #f78d1e;}
+.navbar-nav > li > a {
+    padding-bottom: 12px;
+}
+
+.navbar-nav > li > a:hover,
+.navbar-nav > li > a:focus { color: #c4cd1c; background-color: transparent;}
+/* end bootstrap overrides */
+
+
+
+
+#logo {
+    margin: 2px 10px 0 0;
+}
+#kbase-search-box {
+    margin-left: 100px;
+}

@@ -23,6 +23,7 @@
             parent = def["parent"];
 
         if (widgetRegistry[name] != undefined) {
+            // TODO: Decide on override behavior
             //throw "Cannot re-register widget: " + name;
             return;
         }
@@ -83,7 +84,6 @@
 
             }
             else {
-//*/
                 Widget.prototype[prop] = defCopy[prop];
             }
         }
@@ -209,6 +209,14 @@
             on : function () {
                 this.$elem.on.apply(this.$elem, arguments);
             },
+
+            off : function () {
+                this.$elem.off.apply(this.$elem, arguments);
+            },
+
+            emit: function (evt, data) {
+                this.$elem.trigger(evt, data)
+            } 
 
         }
     );

@@ -5,17 +5,20 @@ require("../src/kbase.js");
 // TODO: Reset jQuery namespaces for each test.
 
 describe("KBWidget", function () {
-    it("should be a function", function (done) {
+    it("should be a function",
+    function (done) {
         $.KBWidget.should.be.a.function;
         done();
     });
 
-    it("should support an empty constructor", function (done) {
+    it("should support an empty constructor",
+    function (done) {
         $.KBWidget().should.not.be.null;
         done();
     });
 
-    it("should expose 'name' as a plugin", function (done) {
+    it("should expose 'name' as a plugin",
+    function (done) {
         var widget = $.KBWidget({
             name: "NewKBWidget"
         });
@@ -23,7 +26,8 @@ describe("KBWidget", function () {
         done();
     });
 
-    it("should allow a parent to be specified as a property", function (done) {
+    it("should allow a parent to be specified as a property",
+    function (done) {
         var parent = $.KBWidget({
             name: "ParentWidget1"
         });
@@ -55,6 +59,15 @@ describe("KBWidget", function () {
                 parent: "NonExistentWidget"
             })
         }).should.throw("Parent widget is not registered");
+        done();
+    });
+
+    it("should allow events to be emitted",
+    function (done) {
+        var widget = $.KBWidget();
+        widget.on.should.be.a.function;
+        widget.off.should.be.a.function;
+        widget.emit.should.be.a.function;
         done();
     });
 });

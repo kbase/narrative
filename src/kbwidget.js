@@ -1,5 +1,5 @@
 (function( $, undefined) {
-
+    var KBase;
     var ucfirst = function(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     };
@@ -260,8 +260,8 @@
 
 
     var widgetRegistry = {};
-    if (window.KBase == undefined) {
-        window.KBase = {
+    if (KBase === undefined) {
+        KBase = window.KBase = {
             _functions : {
 
                 getter :

@@ -1,7 +1,9 @@
 global.jQuery = require("jquery");
 global.$      = jQuery;
+var jsdom     = require("jsdom");
+global.window = jsdom.jsdom().parentWindow;
 
-require("../src/kbase.js");
+require("../src/kbwidget.js");
 // TODO: Reset jQuery namespaces for each test.
 
 describe("KBWidget", function () {

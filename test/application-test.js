@@ -1,7 +1,7 @@
 global.jQuery = require("jquery");
 global.$      = jQuery;
 
-require("../src/kbase.js");
+// require("../src/kbapplication.js");
 
 describe("KBApplication", function () {
     it("should exist", function () {

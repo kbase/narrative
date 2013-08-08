@@ -53,18 +53,10 @@ $.KBWidget("kbaseModelView", 'kbaseWidget', {
 
         container.append(tab_pane)
 
-        // tab events
-        /*
-        $('.nav-tabs li').click(function(){
-            console.log('doing')
-            $('.view').hide(); // hide all views
-            $('.nav-tabs li').removeClass('active'); //fixme: this is not neccessary
-            $(this).addClass('active')
-
-            var view = $(this).children('a').attr('view');
-            $('.'+view+'-view').show();
+        $('#table-tabs a').click(function (e) {
+            e.preventDefault();
+            $(this).tab('show');
         })
-        */
 
         var tableSettings = {"fnDrawCallback": events,
             //sScrollY: '100px',
@@ -155,13 +147,6 @@ $.KBWidget("kbaseModelView", 'kbaseWidget', {
     
             $('.loader-tables').remove();
         })
-
-
-        $('#table-tabs a').click(function (e) {
-            e.preventDefault();
-            $(this).tab('show');
-        })
-
 
         function getColumns(keys, labels) {
             var cols = [];

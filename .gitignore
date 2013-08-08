@@ -1,1 +1,3 @@
 node_modules/
+dist/kbase.js
+dist/kbase.min.js

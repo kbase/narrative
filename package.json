@@ -9,13 +9,12 @@
   }
   , "version": "0.0.1"
   , "dependencies" : {
-        "requirejs"  : "=2.1.5"
+        "jquery"     : ">=1.8.3"
+      , "jsdom"      : ">=0.8.3"
+      , "mocha"      : ">=1.8.1"
+      , "requirejs"  : "=2.1.5"
+      , "should"     : ">=1.2.2"
+      , "uglify-js"  : ">=2.3.6"
       , "underscore" : ">=1.4.4"
-  }
-  , "devDependencies" : {
-        "jquery" : ">=1.8.3"
-      , "mocha"  : ">=1.8.1"
-      , "should" : ">=1.2.2"
-      , "jsdom"  : ">=0.8.3"
   }
 }

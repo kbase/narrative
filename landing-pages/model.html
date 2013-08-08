@@ -1,0 +1,51 @@
+
+
+<html>
+    <head>
+        <title>KBase Model Plugin Example</title>
+
+        <!-- Global KBass css -->
+        <link href="../common/css/bootstrap.css" rel="stylesheet">
+        <link href="../common/css/jquery.dataTables.css" rel="stylesheet">
+
+        <!-- custom css for application -->
+
+
+        <!-- custom css for plugin-->
+
+
+        <!-- start dependancies for application -->
+        <!-- end dependancies for application -->
+
+        <!-- dependancies for KBase view (if not already included) -->
+        <script src="../common/js/jquery.min.js"></script>
+        <script src="../common/js/jquery.dataTables.js"></script>
+        <script src="../common/js/bootstrap.js"></script>
+        <script src="../common/js/kbclient/fbaModelServices.js"></script>
+        <script src="../common/js/kbclient/workspaceService.js"></script>
+
+        <script src="../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script>
+
+        <script src="../widgets/kbaseModelView.js"></script>
+
+        <!-- This would scripts for be the actual
+             KBase application/lab/ui/web-tool/narrative/etc. -->
+        <!--<script src="js/main.js"></script>-->
+
+        <script>
+            <!--
+                $(function() {
+                    $('#new-view').kbaseModelView({ids : ['kb|g.19.fbamdl.0'], workspaces : ['KBaseFBA']});
+                })
+            //-->
+        </script>
+
+    </head>
+
+
+    <body>
+        This is an example of a "KBase View" plugin
+        <div id="new-view" style="margin-left: auto; margin-right: auto; width: 50%";></div>
+    </body>
+
+</html>

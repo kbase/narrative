@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.KBWidget("kbaseRxnMeta", 'kbaseWidget', {
+$.kbWidget("kbaseRxnMeta", 'kbaseWidget', {
     version: "1.0.0",
     options: {
     },

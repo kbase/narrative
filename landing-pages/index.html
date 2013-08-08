@@ -1,0 +1,108 @@
+
+
+<html>
+    <head>
+        <title>KBase Model Plugin Example</title>
+        <link rel="icon" href="../common/img/KBase_favicon.ico" type="image/x-icon">
+        <!-- Global KBass css -->
+        <link href="../common/css/bootstrap.css" rel="stylesheet">
+        <link href="../common/css/jquery.dataTables.css" rel="stylesheet">
+
+        <link href="../common/css/landing-pages.css" rel="stylesheet">
+
+
+        <!-- custom css for application -->
+
+        <!-- custom css for plugin-->
+
+        <!-- start dependancies for application -->
+        <!-- end dependancies for application -->
+
+        <!-- dependancies for KBase view (if not already included) -->
+        <script src="../common/js/jquery.min.js"></script>
+        <script src="../common/js/jquery.dataTables.js"></script>
+        <script src="../common/js/bootstrap.js"></script>
+
+        <script src="../common/js/jquery.cookie.min.js"></script>
+
+        <script src="../common/js/viz/raphael-min.js"></script>
+
+        <script src="../common/js/kbclient/fbaModelServices.js"></script>
+        <script src="../common/js/kbclient/workspaceService.js"></script>
+
+        <script src="../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script>
+
+        <script src="../widgets/kbaseModelTabs.js"></script>
+        <script src="../widgets/kbaseModelCore.js"></script>        
+
+        <!-- This would scripts for be the actual
+             KBase application/lab/ui/web-tool/narrative/etc. -->
+        <!--<script src="js/main.js"></script>-->
+
+        <script>
+            $(function() {
+                $('#signin-button').kbaseLogin({style: 'text', 
+                    login_callback: login_cb, logout_callback: logout_cb});
+                var USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+
+
+                $('#tabs-widget').kbaseModelTabs({ids : ['kb|g.19.fbamdl.0'], 
+                                                  workspaces : ['KBaseFBA'],
+                                                  auth: USER_TOKEN});
+
+                $('#core-widget').kbaseModelCore({ids : ['kb|g.19.fbamdl.0'], 
+                                                  workspaces : ['KBaseFBA'],
+                                                  auth: USER_TOKEN});
+
+                $('#rxn-widget').kbaseRxnMeta({ids : ['rxn00001'], 
+                                               auth: USER_TOKEN});
+
+                function login_cb() {
+                    window.location.reload()
+                }
+                function logout_cb() {
+                    window.location.reload()
+                }
+            })
+        </script>
+    </head>
+
+    <body>
+        <div class="navbar navbar-fixed-top">
+            <a href="http://www.kbase.us/labs/" class="pull-left">
+                <img id="logo" src="../common/img/labs_icon.png" width="46">
+            </a>
+            <!--<a class="navbar-brand" href="#">Data</a>-->
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Data</a></li>
+                <li><a href="#">Workspaces</a></li>
+                <li><a href="#">Analysis</a></li>
+            </ul>
+            <form class="navbar-form pull-left" id="kbase-search-box" action="">
+              <input type="text" class="form-control col-lg-8" placeholder="Search">
+            </form>            
+            <p id="signin-button" class="pull-right"></p>
+        </div>
+
+        <div class="wrapper">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div id="tabs-widget"></div>
+                </div>
+                <div class="col-lg-6">blah blah blah</div>
+            </div>        
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div id="core-widget"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- modals -->
+        <div id="rxn-widget"></div>
+
+    </body>
+
+</html>

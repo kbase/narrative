@@ -15,6 +15,7 @@
 
         <script>
             <!--
+            // example code for setting up two widgets to talk to each other
                 $(function() {
                     var widget1 = $('#widget1').testWidget1();
                     $(document).on("WidgetInited", function(event, data) {
@@ -22,7 +23,7 @@
                     	window.alert("Some widget " + data);
                     });
 
-                    widget1.on("WidgetRendered", function(event, data) {
+                    $(document).on("WidgetRendered", function(event, data) {
                     	widget1.$elem.append("Some widget " + data);
                     });
                     widget1.render();

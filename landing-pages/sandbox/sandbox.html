@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>KBase Widget Sandbox</title>
+	</head>
+
+	<body>
+		<div id="widget1"></div>
+		<div id="widget2"></div>
+
+        <script src="../../common/js/jquery.min.js"></script>
+        <script src="../../common/js/bootstrap.js"></script>
+		<script src="../../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script>
+		<script src="widget-sandbox.js"></script>
+
+        <script>
+            <!--
+                $(function() {
+                    var widget1 = $('#widget1').testWidget1();
+                    $(document).on("WidgetInited", function(event, data) {
+                    	widget1.$elem.append("Some widget " + data);
+                    	window.alert("Some widget " + data);
+                    });
+
+                    widget1.on("WidgetRendered", function(event, data) {
+                    	widget1.$elem.append("Some widget " + data);
+                    });
+                    widget1.render();
+
+                    var widget2 = $('#widget2').testWidget2();
+                    widget2.render();
+                })
+            //-->
+        </script>
+
+	</body>
+</html>

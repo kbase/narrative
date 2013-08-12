@@ -141,7 +141,7 @@ c = get_config()
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-c.IPKernelApp.exec_lines = [ 'import biokbase.narrative' ]
+c.IPKernelApp.exec_lines = [ 'from biokbase.narrative import *' ]
 
 # The importstring for the OutStream factory
 # c.IPKernelApp.outstream_class = 'IPython.zmq.iostream.OutStream'

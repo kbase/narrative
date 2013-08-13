@@ -1,0 +1,24 @@
+html {
+	height: 100%;
+}
+
+.workspace-container {
+	position: relative;
+	float: left;
+	width: 300px;	
+	border: 1px solid #aaa;
+}
+
+.workspace-header {
+	padding: 5px 10px;
+	text-align: center;
+	font-weight: bold;
+	background-color: #00aabb;
+	border-bottom: 1px solid #aaa;
+}
+
+.workspace-panel {
+	height: 150px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}

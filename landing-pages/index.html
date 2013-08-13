@@ -28,6 +28,7 @@
 
         <script>
             $(function() {
+                //fix me
                 $('#signin-button').kbaseLogin({style: 'text', 
                     login_callback: reload_window, logout_callback: reload_window});
                 var USER_TOKEN = $("#signin-button").kbaseLogin('session').token;

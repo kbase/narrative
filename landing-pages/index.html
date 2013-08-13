@@ -16,8 +16,8 @@
         <script src="../common/js/bootstrap.js"></script>
         <script src="../common/js/jquery.cookie.min.js"></script>
         <script src="../common/js/viz/raphael-min.js"></script>
-        <script src="../common/js/kbclient/fbaModelServices.js"></script>
-        <script src="../common/js/kbclient/workspaceService.js"></script>
+
+        <script src="../common/js/kbclient/kbase.js"></script>
         <script src="../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script>
 
         <!-- widgets -->
@@ -26,42 +26,7 @@
         <script src="../widgets/kbaseModelCore.js"></script>
         <script src="../widgets/kbaseRxnMeta.js"></script>
 
-        <script>
-            $(function() {
-                $('#navigation').load('../common/templates/nav.html', function() {
-                    init_page();
-                })
-
-                function init_page() {
-                    //fix me
-                    $('#signin-button').kbaseLogin({style: 'text', 
-                        login_callback: reload_window, logout_callback: reload_window});
-                    var USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-                    
-                    $('#model-meta').kbaseModelMeta({ids : ['kb|g.19.fbamdl.0'], 
-                                                     workspaces : ['KBaseFBA'],
-                                                     auth: USER_TOKEN});
-                
-                    $('#model-tabs').kbaseModelTabs({ids : ['kb|g.19.fbamdl.0'], 
-                                                     workspaces : ['KBaseFBA'],
-                                                     auth: USER_TOKEN});
-
-                    $('#core-map').kbaseModelCore({ids : ['kb|g.19.fbamdl.0'], 
-                                                   workspaces : ['KBaseFBA'],
-                                                   auth: USER_TOKEN});
-                    
-                    var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});
-                    
-                    $(document).on("rxnClick", function(e, data) {
-                        rxn_modal.show({rxns: data.rxns});
-                    })
-
-                    function reload_window() {
-                        window.location.reload();
-                    }
-                }
-            })
-        </script>
+        <script src="landing-pages.js"></script>
     </head>
 
     <body>

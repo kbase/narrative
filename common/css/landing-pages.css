@@ -17,20 +17,9 @@ a:hover {
 }
 
 /* bootstrap overrides */
-.navbar { background-color: #363636; }
+
 .wrapper { width: 95%; margin-left: auto; margin-right: auto; }
-.navbar-nav > .active > a, 
-.navbar-nav > .active > a:hover, 
-.navbar-nav > .active > a:focus { color: #FFFFFF; background-color: #494949; border-bottom: 3px solid #f78d1e;}
-.navbar-nav > li > a {
-    padding-bottom: 12px;
-}
-
-.navbar-nav > li > a:hover,
-.navbar-nav > li > a:focus { color: #ddd; background-color: transparent;}
-
-/* yuck... some of the new colors are ugly */
-.label-info { background-color: #3a87ad; }
+.label-info { background-color: #3a87ad; } /* yuck... some of the new colors are ugly */
 
 /* end bootstrap overrides */
 

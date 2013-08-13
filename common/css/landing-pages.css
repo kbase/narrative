@@ -16,6 +16,10 @@ a:hover {
     width: 300px;
 }
 
+#signin-button a {
+    color: #fff;
+}
+
 /* bootstrap overrides */
 
 .wrapper { width: 95%; margin-left: auto; margin-right: auto; }

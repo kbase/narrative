@@ -38,11 +38,11 @@ $.kbWidget("kbaseModelMeta", 'kbaseWidget', {
             }
             container.append(table);
             // model viewer link
-            container.append('<a class="app-icon" href="http://140.221.84.128/model_viewer/#models?tab=model-selection&kbids='+
+            container.append('<a class="app-icon" href="http://140.221.84.128/#models?tab=model-selection&kbids='+
                     models[0]+'&ws='+workspaces[0]+'" >\
                         <img src="http://www.kbase.us/files/6313/6148/9465/model_icon.png" width=30 >\
                     </a>\
-                    <a href="http://140.221.84.128/model_viewer/#models?tab=model-selection&kbids='+
+                    <a href="http://140.221.84.128/#models?tab=model-selection&kbids='+
                     models[0]+'&ws='+workspaces[0]+'" >Add to Model Viewer</a>')
         })
 

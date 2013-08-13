@@ -12,7 +12,7 @@ $.kbWidget("kbaseModelCore", 'kbaseWidget', {
         var token = options.auth;
 
         this.$elem.append('<div id="kbase-model-core" class="panel">\
-                                <div class="panel-heading"><b>Central Carbon Core Pathway</b><br> '
+                                <div class="panel-heading"><b>Central Carbon Core Pathway</b></div><br> '
                                 +models[0]+
                                 ' <div style="float:right;"><span class="label label-info">'+workspaces[0]+'</span></div>\
                                 <div id="core-model" style="overflow: auto;"><div>\

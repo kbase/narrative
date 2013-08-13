@@ -2,6 +2,20 @@ body {
     padding-top: 70px;
 }
 
+a:hover {
+    cursor: hand;
+    cursor: pointer;
+}
+
+.app-icon:hover {
+    opacity: 0.9;
+    text-decoration: none;
+}
+
+#kbase-search-box {
+    width: 300px;
+}
+
 /* bootstrap overrides */
 .navbar { background-color: #363636; }
 .wrapper { width: 95%; margin-left: auto; margin-right: auto; }
@@ -13,9 +27,12 @@ body {
 }
 
 .navbar-nav > li > a:hover,
-.navbar-nav > li > a:focus { color: #c4cd1c; background-color: transparent;}
-/* end bootstrap overrides */
+.navbar-nav > li > a:focus { color: #ddd; background-color: transparent;}
 
+/* yuck... some of the new colors are ugly */
+.label-info { background-color: #3a87ad; }
+
+/* end bootstrap overrides */
 
 
 
@@ -23,5 +40,9 @@ body {
     margin: 2px 10px 0 0;
 }
 #kbase-search-box {
-    margin-left: 100px;
+    margin-left: 200px;
+}
+
+table {  /* what's this about */
+    font-size: 14px;
 }

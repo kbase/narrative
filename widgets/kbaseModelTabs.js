@@ -6,22 +6,23 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
     },
     init: function(options) {
         this._super(options);
+        var self = this;        
         var models = options.ids;
         var workspaces = options.workspaces;
         var token = options.auth;
 
         this.$elem.append('<div id="kbase-model-tabs" class="panel">\
-                                <div class="panel-heading"><b>Model Info</b><br> '
+                                <div class="panel-heading"><b>Model Details</b><br> '
                                 +models[0]+
-                                ' <div style="float:right;">Workspace: '+workspaces[0]+'</div></div>\
+                                ' <div style="float:right;"><span class="label label-info">'+workspaces[0]+'</span></div></div>\
                            </div>');
         var container = $('#kbase-model-tabs');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
-        var tables = ['Overview', 'Compartment', 'Reactions', 'Compounds', 'Biomass', 'Gapfilling', 'Gapgen']
-        var tableIds = ['overview', 'compartment', 'reaction', 'compound', 'biomass', 'gapfilling', 'gapgen']
+        var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfilling', 'Gapgen']
+        var tableIds = ['reaction', 'compound', 'compartment', 'biomass', 'gapfilling', 'gapgen']
 
         // build tabs
         var tabs = $('<ul id="table-tabs" class="nav nav-tabs"> \
@@ -52,22 +53,22 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
 
         container.append(tab_pane)
 
+        // event for showing tabs
         $('#table-tabs a').click(function (e) {
             e.preventDefault();
             $(this).tab('show');
         })
 
-        var tableSettings = {"fnDrawCallback": events,
-            //sScrollY: '100px',
-            //sScrollX: '100%',
+        var tableSettings = {
             "sPaginationType": "full_numbers",
-            "iDisplayLength": 20,
+            "iDisplayLength": 5,
             "aaData": [],
             "oLanguage": {
-            "sSearch": "Search all:"
+                "sSearch": "Search all:"
             }
         }
 
+        /*
         var meta_AJAX = kbws.get_objectmeta({type: 'Model',
                 workspace: workspaces[0], id: models[0]});
         $('.tab-pane').append('<p class="muted loader-overview"> \
@@ -83,6 +84,7 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
             }
             $('.loader-overview').remove();
         })
+        */
 
         var models_AJAX = fba.get_models({models: models, workspaces: workspaces});
         $('.tab-pane').not('#overview').append('<p class="muted loader-tables"> \
@@ -95,27 +97,29 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
             var keys = ["id", "index", "name", "pH", "potential"];
             var labels = ["id", "index", "name", "pH", "potential"];
             var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = getColumns(keys, labels);
+            tableSettings.aoColumns = cols;
             var table = $('#compartment-table').dataTable(tableSettings);
             table.fnAddData(dataDict);
 
             // reaction table
-            var dataDict = model.reactions;
-            var keys = ["reaction", "compartment", "definition", "direction", "equation",
-                        "features","id","name"];
-            var labels = ["reaction", "compartment", "definition", "direction", "equation",
-                        "features","id","name"];
-            var cols = getColumns(keys, labels)
-            tableSettings.aoColumns = getColumns(keys, labels)
-            var table = $('#reaction-table').dataTable(tableSettings);
+            var dataDict = formatRxnObjs(model.reactions)
+
+            var keys = ["reaction", "definition",
+                        "features","name"];
+            var labels = ["reaction", "equation",
+                        "features","name"];
+            var cols = getColumns(keys, labels);
+            var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
+            rxnTableSettings.aoColumns = cols;
+            var table = $('#reaction-table').dataTable(rxnTableSettings);
             table.fnAddData(dataDict);
 
             // compound table
             var dataDict = model.compounds;
-            var keys = ["compartment", "compound", "id", "name"];
-            var labels = ["compartment", "compound", "id", "name"];
+            var keys = ["compartment", "compound", "name"];
+            var labels = ["compartment", "compound", "name"];
             var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = getColumns(keys, labels);
+            tableSettings.aoColumns = cols;
             var table = $('#compound-table').dataTable(tableSettings);
             table.fnAddData(dataDict);
 
@@ -124,7 +128,7 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
             var keys = ["definition", "id", "name"];
             var labels = ["definition", "id", "name"];
             var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = getColumns(keys, labels);
+            tableSettings.aoColumns = cols;
             var table = $('#biomass-table').dataTable(tableSettings);
             table.fnAddData(dataDict);
 
@@ -133,7 +137,7 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
             var keys = ["id", "index", "name", "pH","potential"];
             var labels = ["id", "index", "name", "pH","potential"];
             var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = getColumns(keys, labels);
+            tableSettings.aoColumns = cols;
             var table = $('#gapfill-table').dataTable(tableSettings);
 
             // gapgen table
@@ -141,11 +145,22 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
             var keys = ["id", "index", "name", "pH","potential"];
             var labels = ["id", "index", "name", "pH","potential"];
             var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = getColumns(keys, labels);
+            tableSettings.aoColumns = cols;
             var table = $('#gapgen-table').dataTable(tableSettings);
     
             $('.loader-tables').remove();
         })
+
+
+        function formatRxnObjs(rxnObjs) {
+            for (var i in rxnObjs) {
+                var rxn = rxnObjs[i];
+                rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'
+                            +rxn.reaction+'</a> ('+rxn.compartment+')'
+                rxn.features = rxn.features.join('<br>')
+            }
+            return rxnObjs
+        }
 
         function getColumns(keys, labels) {
             var cols = [];
@@ -156,25 +171,16 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
             return cols;
         }
 
-        function events() {
-        }
-
-        this.hideView = function(){
-            container.hide()
-        }
-
-        this.showView = function(){
-            container.show()
-        }
-
-        this.destroyView = function(){
-            container.remove();
+        function rxnEvents() {
+            $('.rxn-click').unbind('click');
+            $('.rxn-click').click(function() {
+                var rxn = [$(this).data('rxn')];
+                self.trigger('rxnClick', {rxns: rxn});
+            });            
         }
 
         //this._rewireIds(this.$elem, this);
-
         return this;
-
     }  //end init
 
 

@@ -6,6 +6,7 @@ $.kbWidget("kbaseModelCore", 'kbaseWidget', {
     },
     init: function(options) {
         this._super(options);
+        var self = this;
         var models = options.ids;
         var workspaces = options.workspaces;
         var token = options.auth;
@@ -13,7 +14,7 @@ $.kbWidget("kbaseModelCore", 'kbaseWidget', {
         this.$elem.append('<div id="kbase-model-core" class="panel">\
                                 <div class="panel-heading"><b>Central Carbon Core Pathway</b><br> '
                                 +models[0]+
-                                ' <div style="float:right;">Workspace: '+workspaces[0]+'</div></div>\
+                                ' <div style="float:right;"><span class="label label-info">'+workspaces[0]+'</span></div>\
                                 <div id="core-model" style="overflow: auto;"><div>\
                            </div>');
 
@@ -231,9 +232,8 @@ $.kbWidget("kbaseModelCore", 'kbaseWidget', {
           // event for reaction view
           $('.model-rxn').unbind('click')
           $('.model-rxn').click(function(event){
-              event.stopPropagation();  
-              var rxns = $(this).data('rxns').split(',')
-              reaction_view(rxns);
+                var rxns = $(this).data('rxns').split(',');
+                self.trigger('rxnClick', {rxns: rxns});
           })  
 
           return stage;
@@ -455,24 +455,9 @@ $.kbWidget("kbaseModelCore", 'kbaseWidget', {
             return ws_id;
         }
 
-        function events() {
-        }
-
-        this.hideView = function(){
-            container.hide()
-        }
-
-        this.showView = function(){
-            container.show()
-        }
-
-        this.destroyView = function(){
-            container.remove();
-        }
-
         //this._rewireIds(this.$elem, this);
 
-        return this;
+        return self;
     }  //end init
 })
 }( jQuery ) );

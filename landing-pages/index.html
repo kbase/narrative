@@ -2,65 +2,55 @@
 
 <html>
     <head>
-        <title>KBase Model Plugin Example</title>
+        <title>KBase Data Pages</title>
         <link rel="icon" href="../common/img/KBase_favicon.ico" type="image/x-icon">
+
         <!-- Global KBass css -->
         <link href="../common/css/bootstrap.css" rel="stylesheet">
         <link href="../common/css/jquery.dataTables.css" rel="stylesheet">
-
         <link href="../common/css/landing-pages.css" rel="stylesheet">
-
-
-        <!-- custom css for application -->
-
-        <!-- custom css for plugin-->
-
-        <!-- start dependancies for application -->
-        <!-- end dependancies for application -->
 
         <!-- dependancies for KBase view (if not already included) -->
         <script src="../common/js/jquery.min.js"></script>
         <script src="../common/js/jquery.dataTables.js"></script>
         <script src="../common/js/bootstrap.js"></script>
-
         <script src="../common/js/jquery.cookie.min.js"></script>
-
         <script src="../common/js/viz/raphael-min.js"></script>
-
         <script src="../common/js/kbclient/fbaModelServices.js"></script>
         <script src="../common/js/kbclient/workspaceService.js"></script>
-
         <script src="../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script>
 
+        <!-- widgets -->
+        <script src="../widgets/kbaseModelMeta.js"></script>
         <script src="../widgets/kbaseModelTabs.js"></script>
-        <script src="../widgets/kbaseModelCore.js"></script>        
-
-        <!-- This would scripts for be the actual
-             KBase application/lab/ui/web-tool/narrative/etc. -->
-        <!--<script src="js/main.js"></script>-->
+        <script src="../widgets/kbaseModelCore.js"></script>
+        <script src="../widgets/kbaseRxnMeta.js"></script>
 
         <script>
             $(function() {
                 $('#signin-button').kbaseLogin({style: 'text', 
-                    login_callback: login_cb, logout_callback: logout_cb});
+                    login_callback: reload_window, logout_callback: reload_window});
                 var USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-
-
-                $('#tabs-widget').kbaseModelTabs({ids : ['kb|g.19.fbamdl.0'], 
+                
+                $('#model-meta').kbaseModelMeta({ids : ['kb|g.19.fbamdl.0'], 
+                                                  workspaces : ['KBaseFBA'],
+                                                  auth: USER_TOKEN});
+            
+                $('#model-tabs').kbaseModelTabs({ids : ['kb|g.19.fbamdl.0'], 
                                                   workspaces : ['KBaseFBA'],
                                                   auth: USER_TOKEN});
 
-                $('#core-widget').kbaseModelCore({ids : ['kb|g.19.fbamdl.0'], 
+                $('#core-map').kbaseModelCore({ids : ['kb|g.19.fbamdl.0'], 
                                                   workspaces : ['KBaseFBA'],
                                                   auth: USER_TOKEN});
+                
+                var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});
+                
+                $(document).on("rxnClick", function(e, data) {
+                    rxn_modal.show({rxns: data.rxns})
+                })
 
-                $('#rxn-widget').kbaseRxnMeta({ids : ['rxn00001'], 
-                                               auth: USER_TOKEN});
-
-                function login_cb() {
-                    window.location.reload()
-                }
-                function logout_cb() {
+                function reload_window() {
                     window.location.reload()
                 }
             })
@@ -68,40 +58,58 @@
     </head>
 
     <body>
-        <div class="navbar navbar-fixed-top">
+        <div class="navbar navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
             <a href="http://www.kbase.us/labs/" class="pull-left">
                 <img id="logo" src="../common/img/labs_icon.png" width="46">
             </a>
             <!--<a class="navbar-brand" href="#">Data</a>-->
             <ul class="nav navbar-nav">
+                <li><a href="#">Apps</a></li>                
                 <li class="active"><a href="#">Data</a></li>
                 <li><a href="#">Workspaces</a></li>
                 <li><a href="#">Analysis</a></li>
             </ul>
-            <form class="navbar-form pull-left" id="kbase-search-box" action="">
-              <input type="text" class="form-control col-lg-8" placeholder="Search">
-            </form>            
+
+            <form class="navbar-form pull-left input-group" id="kbase-search-box" action="http://www.kbase.us/services/search/process" method="POST">
+                <input type="text" class="form-control" name="keyword" placeholder="Search KBase">
+                <div class="input-group-btn">
+                    <button type="Submit" class="btn btn-default " tabindex="-1">Search</button>
+                    <button type="button" class="btn btn-default btn-group dropdown-toggle" 
+                    data-toggle="dropdown" tabindex="-1" style="height: 34px;">
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu pull-right">
+                        <li><a href="#">Models</a></li>
+                        <li><a href="#">Genomes</a></li>
+                        <li><a href="#">Blah</a></li>
+                    </ul>
+                </div>
+            </form>
+
             <p id="signin-button" class="pull-right"></p>
+        
         </div>
 
         <div class="wrapper">
             <div class="row">
-                <div class="col-lg-6">
-                    <div id="tabs-widget"></div>
+                <div class="col-lg-4">
+                    <div id="model-meta"></div>
                 </div>
-                <div class="col-lg-6">blah blah blah</div>
-            </div>        
+                <div class="col-lg-8">
+                    <div id="model-tabs"></div>
+                </div>
+            </div>       
 
             <div class="row">
                 <div class="col-lg-12">
-                    <div id="core-widget"></div>
+                    <div id="core-map"></div>
                 </div>
             </div>
         </div>
 
-
         <!-- modals -->
-        <div id="rxn-widget"></div>
+        <div id="rxn-modal">
+        </div>
 
     </body>
 

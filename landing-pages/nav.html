@@ -1,0 +1,61 @@
+
+
+<div class="navbar navbar-inverse navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
+    <a href="http://www.kbase.us/labs/" class="pull-left">
+        <img id="logo" src="../common/img/labs_icon.png" width="46">
+    </a>
+    <ul class="nav navbar-nav">
+        <li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tools <b class="caret"></b></a>
+                <ul class="dropdown-menu">                     
+                    <li><a href="http://www.kbase.us/services/docs/invocation/Iris/iris.html">
+                        <img src="http://kbase.us/files/8013/4333/3409/iris_icon.png" alt="iris icon" width="25" height="25"> IRIS</a>
+                    </li>
+                    <li><a href="http://140.221.84.128/model_viewer/#models?ws=KBaseFBA">
+                      <img src="http://kbase.us/files/6313/6148/9465/model_icon.png" alt="Model Viewer Icon" height="25" width="25"> Model Viewer</a>
+                    </li>
+                    <li><a href="http://140.221.84.217:7040/glamm/">
+                        <img src="http://kbase.us/files/6713/4333/3405/glamm_icon.png" alt="glamm icon" height="25"> GLAMM</a>
+                    </li>
+                    <li class="divider"></li>
+                    <li><a href="http://www.mcs.anl.gov/~nconrad/seq_search/">Sequence Search</a></li>
+                </ul>
+            </li>
+        </li>
+        <li class="active">
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Data <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li><a href="http://140.221.84.217/genome_info/genome.html">Genomes</a></li>
+                    <li><a href="#">Organisms</a></li>
+                    <li><a href="./">Models</a></li>
+                    <li><a href="#">Media</a></li>
+                    <li><a href="#">FBA Studies</a></li>                          
+                    <li class="divider"></li>
+                    <li><a href="#">Rxns</a></li>
+                    <li><a href="#">Compounds</a></li>
+                </ul>
+            </li>
+        </li>
+        <li><a href="http://140.221.84.142/browse.html">Workspaces</a></li>
+    </ul>
+
+    <form class="navbar-form pull-left input-group" id="kbase-search-box" action="http://www.kbase.us/services/search/process" method="POST">
+        <input type="text" class="form-control" name="keyword" placeholder="Search KBase">
+        <div class="input-group-btn">
+            <button type="Submit" class="btn btn-default " tabindex="-1">Search</button>
+            <button type="button" class="btn btn-default btn-group dropdown-toggle" 
+            data-toggle="dropdown" tabindex="-1" style="height: 34px;">
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu pull-right">
+                <li><a href="#">Models</a></li>
+                <li><a href="#">Genomes</a></li>
+                <li><a href="#">Blah</a></li>
+            </ul>
+        </div>
+    </form>
+
+    <p id="signin-button" class="pull-right"></p>
+</div>

@@ -28,69 +28,46 @@
 
         <script>
             $(function() {
-                //fix me
-                $('#signin-button').kbaseLogin({style: 'text', 
-                    login_callback: reload_window, logout_callback: reload_window});
-                var USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-                
-                $('#model-meta').kbaseModelMeta({ids : ['kb|g.19.fbamdl.0'], 
-                                                  workspaces : ['KBaseFBA'],
-                                                  auth: USER_TOKEN});
-            
-                $('#model-tabs').kbaseModelTabs({ids : ['kb|g.19.fbamdl.0'], 
-                                                  workspaces : ['KBaseFBA'],
-                                                  auth: USER_TOKEN});
-
-                $('#core-map').kbaseModelCore({ids : ['kb|g.19.fbamdl.0'], 
-                                                  workspaces : ['KBaseFBA'],
-                                                  auth: USER_TOKEN});
-                
-                var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});
-                
-                $(document).on("rxnClick", function(e, data) {
-                    rxn_modal.show({rxns: data.rxns})
+                $('#navigation').load('nav.html', function() {
+                    init_page();
                 })
 
-                function reload_window() {
-                    window.location.reload()
+                function init_page() {
+                    //fix me
+                    $('#signin-button').kbaseLogin({style: 'text', 
+                        login_callback: reload_window, logout_callback: reload_window});
+                    var USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+                    
+                    $('#model-meta').kbaseModelMeta({ids : ['kb|g.19.fbamdl.0'], 
+                                                     workspaces : ['KBaseFBA'],
+                                                     auth: USER_TOKEN});
+                
+                    $('#model-tabs').kbaseModelTabs({ids : ['kb|g.19.fbamdl.0'], 
+                                                     workspaces : ['KBaseFBA'],
+                                                     auth: USER_TOKEN});
+
+                    $('#core-map').kbaseModelCore({ids : ['kb|g.19.fbamdl.0'], 
+                                                   workspaces : ['KBaseFBA'],
+                                                   auth: USER_TOKEN});
+                    
+                    var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});
+                    
+                    $(document).on("rxnClick", function(e, data) {
+                        rxn_modal.show({rxns: data.rxns});
+                    })
+
+                    function reload_window() {
+                        window.location.reload();
+                    }
                 }
             })
         </script>
     </head>
 
     <body>
-        <div class="navbar navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
-            <a href="http://www.kbase.us/labs/" class="pull-left">
-                <img id="logo" src="../common/img/labs_icon.png" width="46">
-            </a>
-            <!--<a class="navbar-brand" href="#">Data</a>-->
-            <ul class="nav navbar-nav">
-                <li><a href="#">Apps</a></li>                
-                <li class="active"><a href="#">Data</a></li>
-                <li><a href="#">Workspaces</a></li>
-                <li><a href="#">Analysis</a></li>
-            </ul>
+        <div id="navigation"></div>
 
-            <form class="navbar-form pull-left input-group" id="kbase-search-box" action="http://www.kbase.us/services/search/process" method="POST">
-                <input type="text" class="form-control" name="keyword" placeholder="Search KBase">
-                <div class="input-group-btn">
-                    <button type="Submit" class="btn btn-default " tabindex="-1">Search</button>
-                    <button type="button" class="btn btn-default btn-group dropdown-toggle" 
-                    data-toggle="dropdown" tabindex="-1" style="height: 34px;">
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu pull-right">
-                        <li><a href="#">Models</a></li>
-                        <li><a href="#">Genomes</a></li>
-                        <li><a href="#">Blah</a></li>
-                    </ul>
-                </div>
-            </form>
-
-            <p id="signin-button" class="pull-right"></p>
-        
-        </div>
-
+        <!-- start app -->
         <div class="wrapper">
             <div class="row">
                 <div class="col-lg-4">
@@ -107,6 +84,7 @@
                 </div>
             </div>
         </div>
+        <!-- end app -->
 
         <!-- modals -->
         <div id="rxn-modal">

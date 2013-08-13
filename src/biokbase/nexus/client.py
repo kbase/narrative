@@ -25,7 +25,7 @@ import requests
 import rsa
 import paramiko.agent
 import os
-import sshagent
+from .sshagent import Agent2
 
 log = logging.getLogger()
 
@@ -49,7 +49,7 @@ class NexusClient(object):
                     })
         self.client = self.config['client']
         if 'SSH_AUTH_SOCK' in os.environ:
-            self.agent = sshagent.Agent2()
+            self.agent = Agent2()
             sshkeys = self.agent.keys
             # strip out DSA keys since they are unusable for GO
             self.agent_keys = { name : sshkeys[name] for name in sshkeys.keys() if sshkeys[name].get_name() == 'ssh-rsa' }

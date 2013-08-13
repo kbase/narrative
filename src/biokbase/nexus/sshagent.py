@@ -46,7 +46,7 @@ class Agent2( Agent ):
         @raise SSHException: if an SSH agent is found, but speaks an
             incompatible protocol
         """
-        self.conn = None
+        self._conn = None
         self.keys = dict()
         if ('SSH_AUTH_SOCK' in os.environ) and (sys.platform != 'win32'):
             conn = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -55,11 +55,11 @@ class Agent2( Agent ):
             except:
                 # probably a dangling env var: the ssh agent is gone
                 return
-            self.conn = conn
+            self._conn = conn
         elif sys.platform == 'win32':
             import win_pageant
             if win_pageant.can_talk_to_agent():
-                self.conn = win_pageant.PageantConnection()
+                self._conn = win_pageant.PageantConnection()
             else:
                 return
         else:

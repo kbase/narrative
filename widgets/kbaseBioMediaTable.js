@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
+$.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
     version: "1.0.0",
     options: {
     },
@@ -9,16 +9,16 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
         var self = this;        
         var token = options.auth;
 
-        this.$elem.append('<div id="kbase-bio-rxn-table" class="panel">\
-                                <div class="panel-heading"><b>Biochemistry Reactions</b><br>\
+        this.$elem.append('<div id="kbase-bio-media-table" class="panel">\
+                                <div class="panel-heading"><b>Biochemistry Media</b><br>\
                            </div>');
-        var container = $('#kbase-bio-rxn-table');
+        var container = $('#kbase-bio-media-table');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
         var tableSettings = {
-            "fnDrawCallback": rxnEvents,
+            "fnDrawCallback": mediaEvents,
             "sPaginationType": "full_numbers",
             "iDisplayLength": 20,
             "aaData": [],
@@ -27,7 +27,7 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
             }
         }
 
-        var chunk = 250;
+        var chunk = 3;
 
         var bioAJAX = fba.get_biochemistry({});
 
@@ -39,35 +39,36 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
         var proms = [];
         k = 1;        
         $.when(bioAJAX).done(function(data){
-
-            var rxns = data.reactions;
-            var total_rxns = rxns.length
-            var iterations = parseInt(total_rxns / chunk)
-            var reaction_data = []
+            console.log(data)
+            var medias = data.media;
+            var total = medias.length
+            var iterations = parseInt(total / chunk)
+            var media_data = []
 
             for (var i=0; i<iterations; i++) {
-                var rxn_subset = rxns.slice( i*chunk, (i+1)*chunk -1) ;
-
-                var rxnAJAX = fba.get_reactions({reactions: rxn_subset });
-                proms.push(rxnAJAX); // doesn't work for whatever reason
-                $.when(rxnAJAX).done(function(rxn_data){
+                var media_subset = medias.slice( i*chunk, (i+1)*chunk -1) ;
+                console.log(media_subset)
+                var AJAX = fba.get_media({medias: media_subset });
+                proms.push(AJAX); // doesn't work for whatever reason
+                $.when(AJAX).done(function(media){
                     k = k + 1;
-                    reaction_data =  reaction_data.concat(rxn_data);
-                    var percent = (reaction_data.length / total_rxns) * 100+'%';
+                    media_data =  media_data.concat(media);
+                    var percent = (media_data.length / total) * 100+'%';
                     $('.progress-bar').css('width', percent)
 
                     if (k == iterations) {
+                        console.log(media_data);
                         $('.progress').remove();                        
-                        load_table(reaction_data)
+                        load_table(cpd_data)
                     }            
                 });
             }
         })
 
-        function load_table(reaction_data) {
-            var dataDict = formatRxnObjs(reaction_data);
-            var keys = ["id", "abbrev", "definition", "deltaG", "deltaGErr", "enzymes", "name"];
-            var labels = ["id", "abbrev", "definition", "deltaG", "deltaGErr", "enzymes", "name"];
+        function load_table(media_data) {
+            var dataDict = formatObjs(media_data);
+            var keys = ["id", "abbrev", "formula",  "charge", "deltaG", "deltaGErr", "name", "aliases"];
+            var labels = ["id", "abbrev", "formula", "charge", "deltaG", "deltaGErr", "name", "aliases"];
             var cols = getColumns(keys, labels);
             tableSettings.aoColumns = cols;
             container.append('<table id="rxn-table" class="table table-striped table-bordered"></table>')
@@ -75,14 +76,14 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
             table.fnAddData(dataDict);
         }
 
-        function formatRxnObjs(rxnObjs) {
-            for (var i in rxnObjs) {
-                var rxn = rxnObjs[i];
-                rxn.id = '<a class="rxn-click" data-rxn="'+rxn.id+'">'
-                            +rxn.id+'</a>'
-                rxn.enzymes = rxn.enzymes.join('<br>')
+        function formatObjs(media_data) {
+            for (var i in media_data) {
+                var media = media_data[i];
+                media.id = '<a class="media-click" data-media="'+media.id+'">'
+                            +media.id+'</a>'
+                media.aliases = media.aliases.join('<br>')
             }
-            return rxnObjs
+            return media_data;
         }
 
         function getColumns(keys, labels) {
@@ -94,11 +95,11 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
             return cols;
         }
 
-        function rxnEvents() {
-            $('.rxn-click').unbind('click');
-            $('.rxn-click').click(function() {
-                var rxn = [$(this).data('rxn')];
-                self.trigger('rxnClick', {rxns: rxn});
+        function mediaEvents() {
+            $('.media-click').unbind('click');
+            $('.media-click').click(function() {
+                var rxn = [$(this).data('media')];
+                self.trigger('mediaClick', {rxns: rxn});
             });
         }
 

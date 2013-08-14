@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
+$.kbWidget("kbaseBioCpdTable", 'kbaseWidget', {
     version: "1.0.0",
     options: {
     },
@@ -9,16 +9,16 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
         var self = this;        
         var token = options.auth;
 
-        this.$elem.append('<div id="kbase-bio-rxn-table" class="panel">\
-                                <div class="panel-heading"><b>Biochemistry Reactions</b><br>\
+        this.$elem.append('<div id="kbase-bio-cpd-table" class="panel">\
+                                <div class="panel-heading"><b>Biochemistry Compounds</b><br>\
                            </div>');
-        var container = $('#kbase-bio-rxn-table');
+        var container = $('#kbase-bio-cpd-table');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
         var tableSettings = {
-            "fnDrawCallback": rxnEvents,
+            "fnDrawCallback": cpdEvents,
             "sPaginationType": "full_numbers",
             "iDisplayLength": 20,
             "aaData": [],
@@ -39,35 +39,35 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
         var proms = [];
         k = 1;        
         $.when(bioAJAX).done(function(data){
-
-            var rxns = data.reactions;
-            var total_rxns = rxns.length
-            var iterations = parseInt(total_rxns / chunk)
-            var reaction_data = []
+            var cpds = data.compounds;
+            var total_cpds = cpds.length
+            var iterations = parseInt(total_cpds / chunk)
+            var compound_data = []
 
             for (var i=0; i<iterations; i++) {
-                var rxn_subset = rxns.slice( i*chunk, (i+1)*chunk -1) ;
+                var cpd_subset = cpds.slice( i*chunk, (i+1)*chunk -1) ;
 
-                var rxnAJAX = fba.get_reactions({reactions: rxn_subset });
-                proms.push(rxnAJAX); // doesn't work for whatever reason
-                $.when(rxnAJAX).done(function(rxn_data){
+                var cpdAJAX = fba.get_compounds({compounds: cpd_subset });
+                proms.push(cpdAJAX); // doesn't work for whatever reason
+                $.when(cpdAJAX).done(function(cpd_data){
                     k = k + 1;
-                    reaction_data =  reaction_data.concat(rxn_data);
-                    var percent = (reaction_data.length / total_rxns) * 100+'%';
+                    compound_data =  compound_data.concat(cpd_data);
+                    var percent = (compound_data.length / total_cpds) * 100+'%';
                     $('.progress-bar').css('width', percent)
 
                     if (k == iterations) {
+                        console.log(compound_data);
                         $('.progress').remove();                        
-                        load_table(reaction_data)
+                        load_table(cpd_data)
                     }            
                 });
             }
         })
 
         function load_table(reaction_data) {
-            var dataDict = formatRxnObjs(reaction_data);
-            var keys = ["id", "abbrev", "definition", "deltaG", "deltaGErr", "enzymes", "name"];
-            var labels = ["id", "abbrev", "definition", "deltaG", "deltaGErr", "enzymes", "name"];
+            var dataDict = formatCpdObjs(reaction_data);
+            var keys = ["id", "abbrev", "formula",  "charge", "deltaG", "deltaGErr", "name", "aliases"];
+            var labels = ["id", "abbrev", "formula", "charge", "deltaG", "deltaGErr", "name", "aliases"];
             var cols = getColumns(keys, labels);
             tableSettings.aoColumns = cols;
             container.append('<table id="rxn-table" class="table table-striped table-bordered"></table>')
@@ -75,14 +75,14 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
             table.fnAddData(dataDict);
         }
 
-        function formatRxnObjs(rxnObjs) {
-            for (var i in rxnObjs) {
-                var rxn = rxnObjs[i];
-                rxn.id = '<a class="rxn-click" data-rxn="'+rxn.id+'">'
-                            +rxn.id+'</a>'
-                rxn.enzymes = rxn.enzymes.join('<br>')
+        function formatCpdObjs(cpdObjs) {
+            for (var i in cpdObjs) {
+                var cpd = cpdObjs[i];
+                cpd.id = '<a class="cpd-click" data-cpd="'+cpd.id+'">'
+                            +cpd.id+'</a>'
+                cpd.aliases = cpd.aliases.join('<br>')
             }
-            return rxnObjs
+            return cpdObjs;
         }
 
         function getColumns(keys, labels) {
@@ -94,11 +94,11 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
             return cols;
         }
 
-        function rxnEvents() {
-            $('.rxn-click').unbind('click');
-            $('.rxn-click').click(function() {
-                var rxn = [$(this).data('rxn')];
-                self.trigger('rxnClick', {rxns: rxn});
+        function cpdEvents() {
+            $('.cpd-click').unbind('click');
+            $('.cpd-click').click(function() {
+                var rxn = [$(this).data('cpd')];
+                self.trigger('cpdClick', {rxns: rxn});
             });
         }
 

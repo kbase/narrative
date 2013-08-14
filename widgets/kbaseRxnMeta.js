@@ -16,6 +16,7 @@ $.kbWidget("kbaseRxnMeta", 'kbaseWidget', {
             var rxns = options.rxns
             var model_id = options.model_id;
 
+            self.$elem.html('')
             self.$elem.append('<div id="rxn-modal-container" class="modal">\
                                    <div class="modal-dialog">\
                                       <div class="modal-content">\
@@ -29,13 +30,10 @@ $.kbWidget("kbaseRxnMeta", 'kbaseWidget', {
                                 </div>');
 
             var container = $('#rxn-modal-container');
-            container.find('.modal-body').append('<p class="muted loader-overview"> \
+            container.find('.modal-body').append('<p class="muted loader-rxn"> \
                     <img src="../common/img/ajax-loader.gif"> loading...</p>')
 
             container.modal();
-            container.find('.modal-header')
-                .html('<h3 class="modal-title">Reaction Info</h3>\
-                    <span class="text-error">Note: this view is currently under development.</span>');
 
             var selection_list = $('<ul id="rxn-tabs" class="sub-nav nav nav-tabs">');    
             for (var i in rxns) {
@@ -48,13 +46,12 @@ $.kbWidget("kbaseRxnMeta", 'kbaseWidget', {
                 selection_list.append(li);
             }
 
-            container.find('.modal-body').html('')
             container.find('.modal-body').append(selection_list);
             
+            container.find('.modal-header')
+                .html('<h3 class="modal-title">Reaction Info</h3>\
+                    <span class="text-error">Note: this view is currently under development.</span>');            
             var fbaAJAX = fba.get_reactions({reactions: rxns, auth: token})
-            container.find('.modal-body').append('<p class="muted loader-rxn" > \
-                              <img src="../common/img/ajax-loader.gif"> loading...</p>');
-
             $.when(fbaAJAX).done(function(data){
                 if (model_id) {
                     model_rxn_tab(container, data);

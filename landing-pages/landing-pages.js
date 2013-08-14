@@ -9,10 +9,13 @@ $(function() {
 
         router()
     })
+
+
+
+
 })
 
 function router() {
-
     // App routes
     Path.map("#/seq-search").to(function(){
         seq_search_view();
@@ -90,6 +93,7 @@ function model_view(ws_id, id) {
     var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});
     
     $(document).on("rxnClick", function(e, data) {
+        console.log('test')        
         rxn_modal.show({rxns: data.rxns});
     })
 }
@@ -132,8 +136,6 @@ function seq_search_view() {
 }
 
 
-
-
 //
 //  Layouts.  This could be part of a template system or whatever
 //
@@ -163,4 +165,5 @@ function simple_layout2(id1) {
                         </div>'
     return simple_layout;
 }
+
 

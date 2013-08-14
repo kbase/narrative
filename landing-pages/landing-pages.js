@@ -12,6 +12,13 @@ $(function() {
 })
 
 function router() {
+
+    // App routes
+    Path.map("#/seq-search").to(function(){
+        seq_search_view();
+    });
+
+    // Data routes
     Path.map("#/models").to(function(){
         model_view();
     });
@@ -30,11 +37,13 @@ function router() {
         cpd_view();
     });
     Path.map("#/media").to(function(){ 
-        media_view()
+        media_view();
     });    
 
+
+
     Path.rescue(function(){ 
-        page_not_found() 
+        page_not_found();
     });
 
     Path.root("#/models");
@@ -57,6 +66,8 @@ function reload_window() {
 /*
  *  "Views" which load widgets on page.
  */
+
+
 
 function model_view(ws_id, id) {
     var ws_id = ws_id ? ws_id : 'KBaseFBA';
@@ -81,7 +92,6 @@ function model_view(ws_id, id) {
     $(document).on("rxnClick", function(e, data) {
         rxn_modal.show({rxns: data.rxns});
     })
-
 }
 
 function rxn_view(ws_id, id) {
@@ -103,28 +113,30 @@ function cpd_view(ws_id, id) {
     var id = id ? id : 'kb|g.19.fbamdl.0';
 
     $('#app').html(simple_layout2('bio-cpd-table'))
-
     $('#bio-cpd-table').kbaseBioCpdTable({});
-    //var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});    
-
-    //$(document).on("rxnClick", function(e, data) {
-    //    rxn_modal.show({rxns: data.rxns});
-    //})
 }
 
 function media_view(ws_id, id) {
-    var ws_id = ws_id ? ws_id : 'KBaseFBA';
-    var id = id ? id : 'kb|g.19.fbamdl.0';
-
     $('#app').html(simple_layout2('bio-media-table'))
-
     $('#bio-media-table').kbaseBioMediaTable({});
-    //var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});    
-
-    //$(document).on("rxnClick", function(e, data) {
-    //    rxn_modal.show({rxns: data.rxns});
-    //})
 }
+
+
+function seq_search_view() {
+    // load template
+    $('#app').load('../common/app-templates/seq-search.html', function() {
+
+        // load app
+        $('#seq-search').kbaseSeqSearch({});
+    })
+}
+
+
+
+
+//
+//  Layouts.  This could be part of a template system or whatever
+//
 
 function simple_layout1(id1, id2, id3) {
     var simple_layout = '<div class="row">\

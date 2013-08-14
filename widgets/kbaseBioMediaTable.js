@@ -27,17 +27,17 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
             }
         }
 
-        var chunk = 3;
+        var chunk = 5;
 
         var bioAJAX = fba.get_biochemistry({});
 
         container.append('<div class="progress">\
-              <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 3%;">\
+              <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 1%;">\
               </div>\
             </div>')
 
         var proms = [];
-        k = 1;        
+        k = 0;        
         $.when(bioAJAX).done(function(data){
             console.log(data)
             var medias = data.media;
@@ -47,10 +47,11 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
 
             for (var i=0; i<iterations; i++) {
                 var media_subset = medias.slice( i*chunk, (i+1)*chunk -1) ;
-                console.log(media_subset)
-                var AJAX = fba.get_media({medias: media_subset });
-                proms.push(AJAX); // doesn't work for whatever reason
+
+                var ws = ws_list(media_subset.length);
+                var AJAX = fba.get_media({medias: media_subset, workspaces: ws });
                 $.when(AJAX).done(function(media){
+                    console.log(media)
                     k = k + 1;
                     media_data =  media_data.concat(media);
                     var percent = (media_data.length / total) * 100+'%';
@@ -64,6 +65,12 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
                 });
             }
         })
+
+        function ws_list(count) {
+            var ws = []
+            for (var i=0; i < count; i++ ) { ws.push('KBaseMedia'); }
+            return ws
+        }
 
         function load_table(media_data) {
             var dataDict = formatObjs(media_data);

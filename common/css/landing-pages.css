@@ -2,7 +2,8 @@ body {
     padding-top: 70px;
 }
 
-a:hover {
+a:hover, 
+rect:hover {
     cursor: hand;
     cursor: pointer;
 }
@@ -26,8 +27,6 @@ a:hover {
 .label-info { background-color: #3a87ad; } /* yuck... some of the new colors are ugly */
 
 /* end bootstrap overrides */
-
-
 
 #logo {
     margin: 2px 10px 0 0;

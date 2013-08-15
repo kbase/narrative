@@ -1,7 +1,5 @@
 PACKAGE  = ui-common
 MOCHA    = ./node_modules/.bin/mocha
-NPM      = npm
-GIT      = git
 
 UGLIFY   = ./node_modules/.bin/uglifyjs
 
@@ -12,16 +10,12 @@ MINDISTLIB   ?= ./dist/kbase.min.js
 all: test
 
 init:
-	@ $(NPM) install
-	@ $(GIT) submodule update --init
+	@ npm install
+	@ git submodule update --init
 
 dist: init
 	@ $(UGLIFY) $(DISTSRCFILES) --beautify --output $(DISTLIB)
 	@ $(UGLIFY) $(DISTLIB) --comments --compress --mangle --output $(MINDISTLIB)
-
-build: init
-	@ $(RJS) -o $(BUILD) \
-		appDir=./public dir=$(BUILDDIR) baseUrl=js namespace=
 
 test: init
 	@ $(MOCHA)

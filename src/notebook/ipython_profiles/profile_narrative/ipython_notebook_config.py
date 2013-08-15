@@ -1,3 +1,6 @@
+import os
+import inspect
+
 # Configuration file for ipython-notebook.
 
 c = get_config()
@@ -93,6 +96,20 @@ c = get_config()
 # Supply overrides for the tornado.web.Application that the IPython notebook
 # uses.
 # c.NotebookApp.webapp_settings = {}
+
+# Supply overrides for the tornado.web.Application that the IPython notebook
+# uses.
+#c.NotebookApp.webapp_settings = { 'template_path': '/Users/wjriehl/Projects/kbase/narrative/src/ipythondir/profile_narrative/kbase_templates',
+#                                  'static_path': '/Users/wjriehl/Projects/kbase/narrative/src/ipythondir/profile_narrative/kbase_templates/static' }
+try:
+	myfile = __file__
+except NameError:
+	myfile = os.path.abspath(inspect.getsourcefile(lambda _: None))
+
+myfile = os.path.dirname( myfile)
+c.NotebookApp.webapp_settings = { 'template_path': os.path.join(myfile,"kbase_templates"),
+                                  'static_path': os.path.join(myfile,"kbase_templates","static") }
+
 
 # Specify what command to use to invoke a web browser when opening the notebook.
 # If not specified, the default browser will be determined by the `webbrowser`

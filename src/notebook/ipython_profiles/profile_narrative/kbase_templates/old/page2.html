@@ -1,0 +1,87 @@
+
+
+<!DOCTYPE HTML>
+{% macro static_url(name) -%}
+   {{ base_project_url }}static/{{ name }}
+{%- endmacro %}
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    <title>{% block title %}KBase Narrative{% endblock %}</title>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="{{ static_url("jquery/css/themes/base/jquery-ui.min.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("css/boilerplate.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("css/page.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("css/kbase_stylesheet.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("css/narrative.css") }}" type="text/css" />
+    {% block stylesheet %}
+    {% block lesscss %}
+        {% if use_less %}
+            <link rel="stylesheet/less" href="{{ static_url("less/style.less") }}" type="text/css" />
+        {% else %}
+            <link rel="stylesheet" href="{{ static_url("css/style.min.css") }}" type="text/css"/>
+        {% endif %}
+    {% endblock lesscss %}
+    {% endblock %}
+    <link rel="stylesheet" href="{{ static_url("css/custom.css") }}" type="text/css" />
+
+
+    {% block meta %}
+    {% endblock %}
+
+</head>
+
+<body {% block params %}{% endblock %}>
+
+    <header>
+        <p id="site-title">
+            <a href="kbase.us">KBase</a>
+        </p>
+        <nav>
+            <ul>
+                <li class="selected">Narratives</li>
+                <li>Newsfeed</li>
+                <li>Notifications</li>
+                <li>Search</li>
+            </ul>
+        </nav>
+        {% block login_widget %}
+
+        <div id="login-info">
+            janescientist@mu.edu
+            {% if logged_in %}
+                <button id="logout">Logout</button>
+            {% elif login_available and not logged_in %}
+                <button id="login">Login</button>
+            {% endif %}
+        </div>
+
+        {% endblock %}
+    </header>
+
+    <div id="maincontainer">
+        <div id="site">
+        {% block site %}
+        {% endblock %}
+        </div>
+    </div>
+
+    <script src="{{static_url("jquery/js/jquery-1.7.1.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{static_url("jquery/js/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{static_url("js/namespace.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{static_url("js/page.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{static_url("js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
+
+    {% block script %}
+        {% if use_less %}
+            <script src="{{ static_url("components/less.js/dist/less-1.3.3.min.js") }}" charset="utf-8"></script>
+        {% endif %}
+    {% endblock %}
+
+    <script src="{{static_url("js/custom.js") }}" type="text/javascript" charset="utf-8"></script>
+
+</body>
+
+</html>

@@ -8,7 +8,11 @@ while :
 do
     case $1 in
         -h | --help | -\?)
-            printf "usage: $0 [{-p | --install_path} root_install_path] [{-v | --virtual_env} environment_name] [{-c | commit_id} git_commit_id]\n"        
+            printf "usage: $0 [{-p | --install_path} root_install_path] [{-v | --virtual_env} environment_name] [{-c | commit_id} git_commit_id]\n"
+            printf "   p : this is an existing absolute path where you would like the virtualenv directory created inside, \n"
+            printf "       e.g. /home/user/my_virtualenv_area\n"
+            printf "   v : the name of the virtualenv, e.g. /home/user/my_virtualenv_area/my_venv\n"
+            printf "   c : use this git commit id to checkout code\n"
             exit 0
             ;;
         -p | --install_path)
@@ -52,7 +56,9 @@ printf "Creating virtual environment $venv...\n"
 virtualenv --system-site-packages $installPath/$venv
 
 printf "Pulling ipython master from github...\n"
-git clone https://github.com/ipython/ipython.git
+#git clone https://github.com/ipython/ipython.git
+# pull this fork until an issue is resolved
+git clone https://github.com/mlhenderson/ipython.git
 
 # Move into the ipython git directory to run the install
 cd ipython

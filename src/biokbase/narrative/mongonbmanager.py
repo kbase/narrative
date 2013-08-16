@@ -35,7 +35,7 @@ from pymongo.read_preferences import ReadPreference
 from IPython.html.services.notebooks.nbmanager import NotebookManager
 from IPython.config.configurable import LoggingConfigurable
 from IPython.nbformat import current
-from IPython.utils.traitlets import Unicode, Dict, Bool, TraitError
+from IPython.utils.traitlets import Unicode, Dict, Bool, List, TraitError
 from IPython.utils import tz
 
 #-----------------------------------------------------------------------------
@@ -184,122 +184,77 @@ class MongoNotebookManager(NotebookManager):
 
     def delete_notebook(self, notebook_id):
         """Delete notebook by notebook_id."""
-        nb_path = self.get_path(notebook_id)
-        if not os.path.isfile(nb_path):
-            raise web.HTTPError(404, u'Notebook does not exist: %s' % notebook_id)
-        
-        # clear checkpoints
-        for checkpoint in self.list_checkpoints(notebook_id):
-            checkpoint_id = checkpoint['checkpoint_id']
-            path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-            self.log.debug(path)
-            if os.path.isfile(path):
-                self.log.debug("unlinking checkpoint %s", path)
-                os.unlink(path)
-        
+        if notebook_id is None:
+            raise web.HTTPError(400, u'Missing notebookd_id')
+        doc = self.collection.find_one( { '_id' : notebook_id });
+        if doc is None:
+            raise web.HTTPError(404, u'Notebook not found')
         self.log.debug("unlinking notebook %s", nb_path)
-        os.unlink(nb_path)
+        self.collection.remove( { '_id' : notebook_id })
         self.delete_notebook_id(notebook_id)
 
-    def increment_filename(self, basename):
-        """Return a non-used filename of the form basename<int>.
-        
-        This searches through the filenames (basename0, basename1, ...)
-        until is find one that is not already being used. It is used to
-        create Untitled and Copy names that are unique.
-        """
-        i = 0
-        while True:
-            name = u'%s%i' % (basename,i)
-            path = self.get_path_by_name(name)
-            if not os.path.isfile(path):
-                break
-            else:
-                i = i+1
-        return name
-    
-    # Checkpoint-related utilities
-    
-    def get_checkpoint_path_by_name(self, name, checkpoint_id):
-        """Return a full path to a notebook checkpoint, given its name and checkpoint id."""
-        filename = u"{name}-{checkpoint_id}{ext}".format(
-            name=name,
-            checkpoint_id=checkpoint_id,
-            ext=self.filename_ext,
-        )
-        path = os.path.join(self.checkpoint_dir, filename)
-        return path
-    
-    def get_checkpoint_path(self, notebook_id, checkpoint_id):
-        """find the path to a checkpoint"""
-        name = self.get_name(notebook_id)
-        return self.get_checkpoint_path_by_name(name, checkpoint_id)
-    
-    def get_checkpoint_info(self, notebook_id, checkpoint_id):
-        """construct the info dict for a given checkpoint"""
-        path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-        stats = os.stat(path)
-        last_modified = tz.utcfromtimestamp(stats.st_mtime)
-        info = dict(
-            checkpoint_id = checkpoint_id,
-            last_modified = last_modified,
-        )
-        
-        return info
-        
     # public checkpoint API
     
     def create_checkpoint(self, notebook_id):
         """Create a checkpoint from the current state of a notebook"""
-        nb_path = self.get_path(notebook_id)
+        #nb_path = self.get_path(notebook_id)
         # only the one checkpoint ID:
-        checkpoint_id = u"checkpoint"
-        cp_path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-        self.log.debug("creating checkpoint for notebook %s", notebook_id)
-        if not os.path.exists(self.checkpoint_dir):
-            os.mkdir(self.checkpoint_dir)
-        shutil.copy2(nb_path, cp_path)
+        #checkpoint_id = u"checkpoint"
+        #cp_path = self.get_checkpoint_path(notebook_id, checkpoint_id)
+        #self.log.debug("creating checkpoint for notebook %s", notebook_id)
+        #if not os.path.exists(self.checkpoint_dir):
+        #    os.mkdir(self.checkpoint_dir)
+        #shutil.copy2(nb_path, cp_path)
         
         # return the checkpoint info
-        return self.get_checkpoint_info(notebook_id, checkpoint_id)
-    
+        #return self.get_checkpoint_info(notebook_id, checkpoint_id)
+        pass
+
     def list_checkpoints(self, notebook_id):
         """list the checkpoints for a given notebook
         
         This notebook manager currently only supports one checkpoint per notebook.
         """
-        checkpoint_id = u"checkpoint"
-        path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-        if not os.path.exists(path):
-            return []
-        else:
-            return [self.get_checkpoint_info(notebook_id, checkpoint_id)]
-        
+        #checkpoint_id = u"checkpoint"
+        #path = self.get_checkpoint_path(notebook_id, checkpoint_id)
+        #if not os.path.exists(path):
+        #    return []
+        #else:
+        #    return [self.get_checkpoint_info(notebook_id, checkpoint_id)]
+        pass
     
     def restore_checkpoint(self, notebook_id, checkpoint_id):
         """restore a notebook to a checkpointed state"""
-        self.log.info("restoring Notebook %s from checkpoint %s", notebook_id, checkpoint_id)
-        nb_path = self.get_path(notebook_id)
-        cp_path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-        if not os.path.isfile(cp_path):
-            self.log.debug("checkpoint file does not exist: %s", cp_path)
-            raise web.HTTPError(404,
-                u'Notebook checkpoint does not exist: %s-%s' % (notebook_id, checkpoint_id)
-            )
+        #self.log.info("restoring Notebook %s from checkpoint %s", notebook_id, checkpoint_id)
+        #nb_path = self.get_path(notebook_id)
+        #cp_path = self.get_checkpoint_path(notebook_id, checkpoint_id)
+        #if not os.path.isfile(cp_path):
+        #    self.log.debug("checkpoint file does not exist: %s", cp_path)
+        #    raise web.HTTPError(404,
+        #        u'Notebook checkpoint does not exist: %s-%s' % (notebook_id, checkpoint_id)
+        #    )
         # ensure notebook is readable (never restore from an unreadable notebook)
-        last_modified, nb = self.read_notebook_object_from_path(cp_path)
-        shutil.copy2(cp_path, nb_path)
-        self.log.debug("copying %s -> %s", cp_path, nb_path)
-    
+        #last_modified, nb = self.read_notebook_object_from_path(cp_path)
+        #shutil.copy2(cp_path, nb_path)
+        #self.log.debug("copying %s -> %s", cp_path, nb_path)
+        pass
+
     def delete_checkpoint(self, notebook_id, checkpoint_id):
         """delete a notebook's checkpoint"""
-        path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-        if not os.path.isfile(path):
-            raise web.HTTPError(404,
-                u'Notebook checkpoint does not exist: %s-%s' % (notebook_id, checkpoint_id)
-            )
-        self.log.debug("unlinking %s", path)
-        os.unlink(path)
-    
+        #path = self.get_checkpoint_path(notebook_id, checkpoint_id)
+        #if not os.path.isfile(path):
+        #    raise web.HTTPError(404,
+        #        u'Notebook checkpoint does not exist: %s-%s' % (notebook_id, checkpoint_id)
+        #    )
+        #self.log.debug("unlinking %s", path)
+        #os.unlink(path)
+        pass
+
+    def log_info(self):
+        self.log.info("Serving notebooks from MongoDB URI %s" %self.mongodb_uri)
+        self.log.info("Serving notebooks from MongoDB db %s" %self.mongodb_database)
+        self.log.info("Serving notebooks from MongoDB collection %s" %self.mongodb_collection)
+
     def info_string(self):
-        return "Serving notebooks from local directory: %s" % self.notebook_dir
+        return "Serving notebooks from mongodb database %s and collection %s" % (self.mongodb_database,
+                                                                                 self.mongodb_collection)

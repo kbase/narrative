@@ -19,6 +19,7 @@ Authors:
 #-----------------------------------------------------------------------------
 
 import datetime
+import dateutil.parser
 import io
 import os
 import glob
@@ -54,7 +55,7 @@ class MongoNotebookManager(NotebookManager):
     #     'created' : { creation/update timestamp }
     # }
 
-    mongodb_uri = Unicode('mongodb://localhost:17017', config=True, help='MongoDB connection URI')
+    mongodb_uri = Unicode('mongodb://localhost/', config=True, help='MongoDB connection URI')
     mongodb_database = Unicode('narrative', config=True, help='MongoDB database')
     mongodb_collection = Unicode('notebooks', config=True, help='MongoDB collection')
     checkpoint_id = Unicode('%(username)_ipynb_checkpoints',config=True,
@@ -82,7 +83,7 @@ class MongoNotebookManager(NotebookManager):
         try:
             self.mclient = MongoClient( self.mongodb_uri, read_preference = ReadPreference.PRIMARY_PREFERRED)
             self.db = self.mclient[self.mongodb_database]
-            self.collection = db[self.mongodb_collection]
+            self.collection = self.db[self.mongodb_collection]
         except Exception as e:
             raise web.HTTPError( 500, u"Unable to connect to MongoDB service: %s " % e)
         # setup a mapping dict for MongoDB/notebook_id <-> Notebook name
@@ -99,8 +100,8 @@ class MongoNotebookManager(NotebookManager):
         """
 
         all_ipynb = self.collection.find( {'doc_type' : self.ipynb_type})
-        self.mapping = { doc._id : doc.pynb.metadata.name for doc in all_ipynb }
-        self.rev_mapping = { doc.pynb.metadata.name : doc._id for doc in all_ipynb }
+        self.mapping = { doc['_id'] : doc['ipynb']['metadata']['name'] for doc in all_ipynb }
+        self.rev_mapping = { doc['pynb']['metadata']['name'] : doc['_id'] for doc in all_ipynb }
 
         data = [ dict(notebook_id = it[0], name = it[1]) for it in self.mapping.items()]
         data = sorted(data, key=lambda item: item['name'])
@@ -141,9 +142,9 @@ class MongoNotebookManager(NotebookManager):
         if doc is None:
             raise web.HTTPError(500, u'Notebook % not found' % notebook_id)
         # Convert from MongoDB doc to plain JSON and then conver to notebook format
-        jsonnb = dumps( doc.ipynb )
+        jsonnb = dumps( doc['ipynb'] )
         nb = current.reads( jsonnb, u'json')
-        last_modified = doc['created']
+        last_modified = dateutil.parser.parse(doc['created'])
         return last_modified, nb
     
     def write_notebook_object(self, nb, notebook_id=None):
@@ -162,7 +163,7 @@ class MongoNotebookManager(NotebookManager):
                 nb.metadata.type = 'generic'
             if not hasattr(nb.metadata, 'description'):
                 nb.metadata.description = ''
-            nb.metadata.created = datetime.datetime.utcnow()
+            nb.metadata.created = datetime.datetime.utcnow().isoformat()
             nb.metadata.format = self.node_format
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
@@ -173,7 +174,7 @@ class MongoNotebookManager(NotebookManager):
             doc = { '_id' : notebook_id,
                     'owner' : nb.metadata.owner,
                     'doc_type' : self.ipynb_type,
-                    'create' : nb.metadata.created,
+                    'created' : nb.metadata.created,
                     'ipynb' : nb
                     }
             id = self.collection.save( doc, manipulate = True, safe=True)

@@ -100,8 +100,9 @@ class MongoNotebookManager(NotebookManager):
         """
 
         all_ipynb = self.collection.find( {'doc_type' : self.ipynb_type})
-        self.mapping = { doc['_id'] : doc['ipynb']['metadata']['name'] for doc in all_ipynb }
-        self.rev_mapping = { doc['pynb']['metadata']['name'] : doc['_id'] for doc in all_ipynb }
+        all2 = list( all_ipynb)
+        self.mapping = { doc['_id'] : doc['ipynb']['metadata']['name'] for doc in all2 }
+        self.rev_mapping = { doc['ipynb']['metadata']['name'] : doc['_id'] for doc in all2 }
 
         data = [ dict(notebook_id = it[0], name = it[1]) for it in self.mapping.items()]
         data = sorted(data, key=lambda item: item['name'])
@@ -190,7 +191,7 @@ class MongoNotebookManager(NotebookManager):
         doc = self.collection.find_one( { '_id' : notebook_id });
         if doc is None:
             raise web.HTTPError(404, u'Notebook not found')
-        self.log.debug("unlinking notebook %s", nb_path)
+        self.log.debug("unlinking notebook %s", notebook_id)
         self.collection.remove( { '_id' : notebook_id })
         self.delete_notebook_id(notebook_id)
 

@@ -10,24 +10,28 @@ $(function() {
         router()
     })
 
-
-
-
 })
+
+function navEvent() {
+    console.log('trigged nav event')
+    $(document).trigger("navEvent");
+}
+
 
 function router() {
     // App routes
     Path.map("#/seq-search").to(function(){
         seq_search_view();
-    });
+    }).enter(navEvent);
 
     // Data routes
     Path.map("#/models").to(function(){
         model_view();
-    });
+    }).enter(navEvent);
+
     Path.map("#/models/:ws_id/:id").to(function(){
         model_view(this.params['ws_id'], this.params['id']);
-    });
+    }).enter(navEvent);
 
     Path.map("#/organisms").to(function(){ empty_page() });
     Path.map("#/fba").to(function(){ empty_page() });
@@ -35,19 +39,26 @@ function router() {
 
     Path.map("#/rxns").to(function(){
         rxn_view();
-    });
+    }).enter(navEvent);
+
     Path.map("#/cpds").to(function(){ 
         cpd_view();
-    });
+    }).enter(navEvent);
+
     Path.map("#/media").to(function(){ 
         media_view();
-    });    
+    }).enter(navEvent);
+
+
+    Path.map("#/media").to(function(){ 
+        media_view();
+    }).enter(navEvent);
 
 
 
     Path.rescue(function(){ 
         page_not_found();
-    });
+    })
 
     Path.root("#/models");
     Path.listen();
@@ -70,8 +81,6 @@ function reload_window() {
  *  "Views" which load widgets on page.
  */
 
-
-
 function model_view(ws_id, id) {
     var ws_id = ws_id ? ws_id : 'KBaseFBA';
     var id = id ? id : 'kb|g.19.fbamdl.0';
@@ -92,8 +101,8 @@ function model_view(ws_id, id) {
     
     var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});
     
+    $(document).off("rxnClick");
     $(document).on("rxnClick", function(e, data) {
-        console.log('test')        
         rxn_modal.show({rxns: data.rxns});
     })
 }
@@ -105,8 +114,9 @@ function rxn_view(ws_id, id) {
     $('#app').html(simple_layout2('bio-rxn-table'))
 
     $('#bio-rxn-table').kbaseBioRxnTable({});
-    var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});    
+    var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});
 
+    $(document).off("rxnClick");
     $(document).on("rxnClick", function(e, data) {
         rxn_modal.show({rxns: data.rxns});
     })
@@ -123,6 +133,13 @@ function cpd_view(ws_id, id) {
 function media_view(ws_id, id) {
     $('#app').html(simple_layout2('bio-media-table'))
     $('#bio-media-table').kbaseBioMediaTable({});
+
+    var media_modal = $('#media-modal').kbaseMediaModal({auth: USER_TOKEN});        
+
+    $(document).off("mediaClick");
+    $(document).on("mediaClick", function(e, data) {
+        media_modal.show({media: data.media});
+    })    
 }
 
 

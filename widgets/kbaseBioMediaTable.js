@@ -9,8 +9,11 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
         var self = this;        
         var token = options.auth;
 
+        var bio_media_ws = "KBaseMedia"
+
         this.$elem.append('<div id="kbase-bio-media-table" class="panel">\
-                                <div class="panel-heading"><b>Biochemistry Media</b><br>\
+                                <div class="panel-heading"><b>Biochemistry Media</b>\
+                                <span class="label label-info pull-right">'+bio_media_ws+'</span><br>\
                            </div>');
         var container = $('#kbase-bio-media-table');
 
@@ -27,44 +30,29 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
             }
         }
 
-        var chunk = 5;
+        //var bioAJAX = fba.get_biochemistry({});
+        var wsAJAX = kbws.list_workspace_objects({workspace: bio_media_ws, type:"Media"})
 
-        var bioAJAX = fba.get_biochemistry({});
+        container.append('<p class="muted loader-table"> \
+                                  <img src="../common/img/ajax-loader.gif"> loading...</p>')
 
-        container.append('<div class="progress">\
-              <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 1%;">\
-              </div>\
-            </div>')
-
-        var proms = [];
-        k = 0;        
-        $.when(bioAJAX).done(function(data){
+        $.when(wsAJAX).done(function(data){
             console.log(data)
-            var medias = data.media;
-            var total = medias.length
-            var iterations = parseInt(total / chunk)
-            var media_data = []
 
-            for (var i=0; i<iterations; i++) {
-                var media_subset = medias.slice( i*chunk, (i+1)*chunk -1) ;
+            var dataList = formatObjs(data);
+            var labels = ["id", "abbrev", "formula", "charge", "deltaG", "deltaGErr", "name", "aliases"];
+            var cols = getColumnsByLabel(labels);
+            tableSettings.aoColumns = cols;
+//            tableSettings.aaData = dataList
+            container.append('<table id="rxn-table" class="table table-striped table-bordered"></table>')
+            var table = $('#rxn-table').dataTable(tableSettings);
+            table.fnAddData(dataList);
 
-                var ws = ws_list(media_subset.length);
-                var AJAX = fba.get_media({medias: media_subset, workspaces: ws });
-                $.when(AJAX).done(function(media){
-                    console.log(media)
-                    k = k + 1;
-                    media_data =  media_data.concat(media);
-                    var percent = (media_data.length / total) * 100+'%';
-                    $('.progress-bar').css('width', percent)
+            $('.loader-table').remove()
 
-                    if (k == iterations) {
-                        console.log(media_data);
-                        $('.progress').remove();                        
-                        load_table(cpd_data)
-                    }            
-                });
-            }
-        })
+        });
+
+
 
         function ws_list(count) {
             var ws = []
@@ -76,28 +64,26 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
             var dataDict = formatObjs(media_data);
             var keys = ["id", "abbrev", "formula",  "charge", "deltaG", "deltaGErr", "name", "aliases"];
             var labels = ["id", "abbrev", "formula", "charge", "deltaG", "deltaGErr", "name", "aliases"];
-            var cols = getColumns(keys, labels);
+            var cols = getColumnsByLabel(labels);
             tableSettings.aoColumns = cols;
             container.append('<table id="rxn-table" class="table table-striped table-bordered"></table>')
             var table = $('#rxn-table').dataTable(tableSettings);
             table.fnAddData(dataDict);
         }
 
-        function formatObjs(media_data) {
-            for (var i in media_data) {
-                var media = media_data[i];
-                media.id = '<a class="media-click" data-media="'+media.id+'">'
-                            +media.id+'</a>'
-                media.aliases = media.aliases.join('<br>')
+        function formatObjs(media_meta) {
+            for (var i in media_meta) {
+                var media = media_meta[i];
+                media[0] = '<a class="media-click" data-media="'+media[0]+'">'
+                            +media[0]+'</a>'
             }
-            return media_data;
+            return media_meta;
         }
 
-        function getColumns(keys, labels) {
+        function getColumnsByLabel(labels) {
             var cols = [];
-
-            for (var i=0; i<keys.length; i++) {
-                cols.push({sTitle: labels[i], mData: keys[i]})
+            for (var i in labels) {
+                cols.push({sTitle: labels[i]})
             }
             return cols;
         }
@@ -105,10 +91,11 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
         function mediaEvents() {
             $('.media-click').unbind('click');
             $('.media-click').click(function() {
-                var rxn = [$(this).data('media')];
-                self.trigger('mediaClick', {rxns: rxn});
+                var media = $(this).data('media');
+                self.trigger('mediaClick', {media: media});
             });
         }
+
 
         //this._rewireIds(this.$elem, this);
         return this;

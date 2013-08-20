@@ -9,6 +9,8 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
         var self = this;        
         var token = options.auth;
 
+        self.reaction_data = [];
+
         this.$elem.append('<div id="kbase-bio-rxn-table" class="panel">\
                                 <div class="panel-heading"><b>Biochemistry Reactions</b><br>\
                            </div>');
@@ -27,42 +29,44 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
             }
         }
 
-        var chunk = 250;
+        var chunk = 500;
 
         var bioAJAX = fba.get_biochemistry({});
-
         container.append('<div class="progress">\
               <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 3%;">\
               </div>\
-            </div>')
+            </div>');
 
-        var proms = [];
-        k = 1;        
-        $.when(bioAJAX).done(function(data){
+        // add optimization later
+        if (self.reaction_data.length > 0) {
+            $('.progress').remove();                        
+            load_table(self.reaction_data)
+        } else {
+            k = 1;        
+            $.when(bioAJAX).done(function(data){
 
-            var rxns = data.reactions;
-            var total_rxns = rxns.length
-            var iterations = parseInt(total_rxns / chunk)
-            var reaction_data = []
+                var rxns = data.reactions;
+                var total_rxns = rxns.length
+                var iterations = parseInt(total_rxns / chunk)
 
-            for (var i=0; i<iterations; i++) {
-                var rxn_subset = rxns.slice( i*chunk, (i+1)*chunk -1) ;
+                for (var i=0; i<iterations; i++) {
+                    var rxn_subset = rxns.slice( i*chunk, (i+1)*chunk -1) ;
 
-                var rxnAJAX = fba.get_reactions({reactions: rxn_subset });
-                proms.push(rxnAJAX); // doesn't work for whatever reason
-                $.when(rxnAJAX).done(function(rxn_data){
-                    k = k + 1;
-                    reaction_data =  reaction_data.concat(rxn_data);
-                    var percent = (reaction_data.length / total_rxns) * 100+'%';
-                    $('.progress-bar').css('width', percent)
+                    var rxnAJAX = fba.get_reactions({reactions: rxn_subset });
+                    $.when(rxnAJAX).done(function(rxn_data){
+                        k = k + 1;
+                        self.reaction_data = self.reaction_data.concat(rxn_data);
+                        var percent = (self.reaction_data.length / total_rxns) * 100+'%';
+                        $('.progress-bar').css('width', percent)
 
-                    if (k == iterations) {
-                        $('.progress').remove();                        
-                        load_table(reaction_data)
-                    }            
-                });
-            }
-        })
+                        if (k == iterations) {
+                            $('.progress').remove();                        
+                            load_table(self.reaction_data)
+                        }            
+                    });
+                }
+            })
+        }
 
         function load_table(reaction_data) {
             var dataDict = formatRxnObjs(reaction_data);

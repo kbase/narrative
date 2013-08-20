@@ -53,14 +53,21 @@ function router() {
     Path.map("#/media").to(function(){ 
         media_view();
     }).enter(navEvent);
+    Path.map("#/media/:workspace").to(function(){ 
+        media_view(workspace);
+    }).enter(navEvent);
 
 
+    // help routes
+    Path.map("#/data-view-api").to(function(){ 
+        help_view();
+    }).enter(navEvent);
 
     Path.rescue(function(){ 
         page_not_found();
     })
 
-    Path.root("#/models");
+    Path.root("#/data-view-api");
     Path.listen();
 }
 
@@ -99,7 +106,7 @@ function model_view(ws_id, id) {
                                    workspaces : [ws_id],
                                    auth: USER_TOKEN});
     
-    var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});
+    var rxn_modal = $('#rxn-modal').kbaseRxnModal({auth: USER_TOKEN});
     
     $(document).off("rxnClick");
     $(document).on("rxnClick", function(e, data) {
@@ -114,7 +121,7 @@ function rxn_view(ws_id, id) {
     $('#app').html(simple_layout2('bio-rxn-table'))
 
     $('#bio-rxn-table').kbaseBioRxnTable({});
-    var rxn_modal = $('#rxn-modal').kbaseRxnMeta({auth: USER_TOKEN});
+    var rxn_modal = $('#rxn-modal').kbaseRxnModal({auth: USER_TOKEN});
 
     $(document).off("rxnClick");
     $(document).on("rxnClick", function(e, data) {
@@ -131,8 +138,9 @@ function cpd_view(ws_id, id) {
 }
 
 function media_view(ws_id, id) {
-    $('#app').html(simple_layout2('bio-media-table'))
-    $('#bio-media-table').kbaseBioMediaTable({});
+    var ws_id = ws_id ? ws_id : 'KBaseMedia';    
+    $('#app').html(simple_layout2('media-table'))
+    $('#media-table').kbaseMediaTable({ws: ws_id});
 
     var media_modal = $('#media-modal').kbaseMediaModal({auth: USER_TOKEN});        
 
@@ -141,6 +149,13 @@ function media_view(ws_id, id) {
         media_modal.show({media: data.media});
     })    
 }
+
+
+function help_view() {
+    $('#app').load('../common/templates/data-view-api.html');
+
+}
+
 
 
 function seq_search_view() {
@@ -153,21 +168,22 @@ function seq_search_view() {
 }
 
 
+
 //
 //  Layouts.  This could be part of a template system or whatever
 //
 
 function simple_layout1(id1, id2, id3) {
     var simple_layout = '<div class="row">\
-                            <div class="col-lg-4">\
+                            <div class="col-md-4">\
                                 <div id="'+id1+'"></div>\
                             </div>\
-                            <div class="col-lg-8">\
+                            <div class="col-md-8">\
                                 <div id="'+id2+'"></div>\
                             </div>\
                         </div>\
                         <div class="row">\
-                            <div class="col-lg-12">\
+                            <div class="col-md-12">\
                                 <div id="'+id3+'"></div>\
                             </div>\
                         </div>'
@@ -176,7 +192,7 @@ function simple_layout1(id1, id2, id3) {
 
 function simple_layout2(id1) {
     var simple_layout = '<div class="row">\
-                            <div class="col-lg-12">\
+                            <div class="col-md-12">\
                                 <div id="'+id1+'"></div>\
                             </div>\
                         </div>'

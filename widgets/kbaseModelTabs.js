@@ -10,13 +10,27 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
         var models = options.ids;
         var workspaces = options.workspaces;
         var token = options.auth;
-
+        /*
         this.$elem.append('<div id="kbase-model-tabs" class="panel">\
                                 <div class="panel-heading"><b>Model Details</b><br> '
                                 +models[0]+
-                                ' <div style="float:right;"><span class="label label-info">'+workspaces[0]+'</span></div></div>\
+                                ' <div style="float:right;"><span class="label label-primary">'+workspaces[0]+'</span></div></div>\
                            </div>');
-        var container = $('#kbase-model-tabs');
+*/
+
+
+
+        this.$elem.append('<div id="kbase-model-tabs" class="panel panel-default">\
+                                <div class="panel-heading">\
+                                    <h4 class="panel-title">Model Details</h4>'
+                                     +models[0]+
+                                    '<span class="label label-primary pull-right">'+workspaces[0]+'</span><br>\
+                                </div>\
+                                <div class="panel-body"></div>\
+                           </div>');
+
+
+        var container = $('#kbase-model-tabs .panel-body');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');

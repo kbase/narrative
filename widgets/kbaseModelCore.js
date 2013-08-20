@@ -11,14 +11,16 @@ $.kbWidget("kbaseModelCore", 'kbaseWidget', {
         var workspaces = options.workspaces;
         var token = options.auth;
 
-        this.$elem.append('<div id="kbase-model-core" class="panel">\
-                                <div class="panel-heading"><b>Central Carbon Core Pathway</b><br> '
-                                +models[0]+
-                                ' <div class="pull-right"><span class="label label-info">'+workspaces[0]+'</span></div></div>\
-                                <div id="core-model" style="overflow: auto;"><div>\
+        this.$elem.append('<div id="kbase-model-core" class="panel panel-default">\
+                                <div class="panel-heading">\
+                                    <h4 class="panel-title">Central Carbon Core Pathway</h4>'
+                                     +models[0]+
+                                    '<span class="label label-primary pull-right">'+workspaces[0]+'</span><br>\
+                                </div>\
+                                <div class="panel-body"><div id="core-model"></div></div>\
                            </div>');
 
-        var container = $('#kbase-model-core');
+        var container = $('#kbase-model-core .panel-body');
 
         container.append('<p class="muted loader-overview"> \
                 <img src="../common/img/ajax-loader.gif"> loading...</p>')

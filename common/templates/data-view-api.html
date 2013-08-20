@@ -17,47 +17,138 @@
         </div>
     </div>
     <div class="col-md-10">
-        <h2 id="Organisms">Data View Api</h2>        
-        <h3>Genomes</h3>
-        <h5>URLs:</h5>
 
-        <h3 id="Reactions">Organisms</h3>
-        <h5>URLs:</h5>
+        <div class="page-header"><h3>Genomes</h3></div>
+        <h4>URLs</h4>
 
-        <h3>Reactions</h3>
-        <h5>URLs:</h5>
-        #/rxns<br>
-        #/rxns/$workspace/<br>
+        <div class="page-header"><h3>Organisms</h3></div>
+        <h4>URLs</h4>
 
-
-
-        <h3>Compounds</h3>
-        <h5>URLs:</h5>
-        #/cpds<br>
-        #/cpds/$workspace/<br>
-
-
-        <h3>Media</h3>
-        <h5>URLs:</h5>
-        #/media  [ points to <span class="label label-primary">KBaseMedia</span> ]<br>
-        #/media/$workspace/<br>
-        #/media/$workspace/$media_id<br>
+        <div class="page-header"><h3>Reactions</h3></div>
+        <h4>URLs</h4>
+            <a href="#/rxns">#/rxns</a> <span class="glyphicon glyphicon-check"></span><br>
+        <h5>Params</h5>        
+            #/rxns/$workspace/<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="rxns">
+              #/rxns/
+              <div class="form-group">
+                <label class="sr-only" for="input1">rxn id</label>
+                <input class="form-control" id="input1" placeholder="rxn00001" value="rxn00001">
+              </div>
+              <button type="submit" class="btn btn-default api-url-submit">Go</button>
+                <span class="glyphicon glyphicon-unchecked"></span>              
+            </form>
 
 
-        <h3>Modals</h3>
-        <h5>URLs:</h5>
-        <table>
-        #/models  [ points to <span class="label label-primary">KBaseModels</span> ]<br>
-        #/models/$workspace/<br>
-        #/models/$workspace/$model_id<br>
-        <form>
-        </form>
 
-        <h3>FBA</h3>
-        <h5>URLs:</h5>
+        <div class="page-header"><h3>Compounds</h3></div>
+        <h4>URLs</h4>
+            <a href="#/cpds">#/cpds</a> <span class="glyphicon glyphicon-check"></span><br>
+        <h5>Params</h5>
+            #/cpds/$workspace/$model <br>
+        <h5>Examples</h5>
+            <form class="form-inline" role="form" type="cpds">
+              #/cpds/
+              <div class="form-group">
+                <label class="sr-only" for="input1">cpd id</label>
+                <input class="form-control" id="input1" placeholder="cpd00001" value="cpd00001">
+              </div>
+              <button type="submit" class="btn btn-default api-url-submit">Go</button>
+                <span class="glyphicon glyphicon-unchecked"></span>               
+            </form>
+
+
+
+
+        <div class="page-header"><h3>Media</h3></div>
+        <h4>URLs</h4>
+            <a href="#/media">#/media</a>  [ points to <span class="label label-primary">KBaseMedia</span> ]
+            <span class="glyphicon glyphicon-check"></span> <br>
+        <h5>Params</h5>
+            #/media/$workspace/<br>   
+            #/media/$workspace/$media_id<br>
+        <h5>Examples</h5>
+            <form class="form-inline" role="form" type="media">
+              #/media/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="KBaseMedia" value="KBaseMedia">
+              </div>
+              <button type="submit" class="btn btn-default api-url-submit">Go</button>
+                <span class="glyphicon glyphicon-check"></span>
+            </form>
+            <form class="form-inline" role="form" type="media">
+              #/media/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="KBaseMedia" value="KBaseMedia">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">media id</label>
+                <input class="form-control" id="input2" placeholder="Biolog-C-cytd" value="Biolog-C-cytd">
+              </div>
+              <button type="submit" class="btn btn-default api-url-submit">Go</button>
+                  <span class="glyphicon glyphicon-unchecked"></span>
+            </form>
+
+
+        <div class="page-header"><h3>Models</h3></div>
+        <h4>URLs</h4>
+            <a href="#/models">#/models</a> [ points to <span class="label label-primary">KBaseCDMModels</span> ] 
+            <span class="glyphicon glyphicon-unchecked"></span><br>
+        <h5>Params</h5>        
+            #/models/$workspace/<br>
+            #/models/$workspace/$model_id<br>
+        <h5>Examples</h5>      
+            <form class="form-inline" role="form" type="models">
+              #/models/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="KBaseCDMModels" value="KBaseCDMModels">
+              </div>
+              <button type="submit" class="btn btn-default api-url-submit">Go</button>
+                <span class="glyphicon glyphicon-unchecked"></span>              
+            </form>
+            <form class="form-inline" role="form" type="models">
+              #/models/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="KBaseCDMModels" value="KBaseCDMModels">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">model id</label>
+                <input class="form-control" id="input2" placeholder="kb|g.19.fbamdl.0" value="kb|g.19.fbamdl.0">
+              </div>
+              <button type="submit" class="btn btn-default api-url-submit">Go</button>
+                    <span class="glyphicon glyphicon-check"></span>              
+            </form>
+
+
+
+
+
+        <div class="page-header"><h3>FBA</h3></div>
+        <h5>Params</h5>
         #/models/$workspace/$fba_id<br>
+
+
 
         <br><br>
         </div>
     </div>
+
+
+    <script>
+        $(function(){
+            $('form').submit(function(){
+                var url = '#/'+$(this).attr('type')+'/'+$(this).find('#input1').val();
+                if ($(this).find('#input2').val()) {
+                    url = url+'/'+$(this).find('#input2').val();
+                }
+
+                document.location = url;
+            })
+        })
+    </script>
 </div>

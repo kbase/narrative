@@ -13,7 +13,7 @@ $(function() {
 })
 
 function navEvent() {
-    console.log('trigged nav event')
+    console.log('trigged nav event');
     $(document).trigger("navEvent");
 }
 
@@ -53,8 +53,8 @@ function router() {
     Path.map("#/media").to(function(){ 
         media_view();
     }).enter(navEvent);
-    Path.map("#/media/:workspace").to(function(){ 
-        media_view(workspace);
+    Path.map("#/media/:ws_id").to(function(){ 
+        media_view(this.params['ws_id']);
     }).enter(navEvent);
 
 
@@ -166,7 +166,6 @@ function seq_search_view() {
         $('#seq-search').kbaseSeqSearch({});
     })
 }
-
 
 
 //

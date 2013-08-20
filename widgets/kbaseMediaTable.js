@@ -9,7 +9,6 @@ $.kbWidget("kbaseMediaTable", 'kbaseWidget', {
         var self = this;        
         var token = options.auth;
         var ws = options.ws
-        console.log(ws)
 
         this.$elem.append('<div id="kbase-media-table" class="panel panel-default">\
                                 <div class="panel-heading">\
@@ -95,7 +94,6 @@ $.kbWidget("kbaseMediaTable", 'kbaseWidget', {
                 self.trigger('mediaClick', {media: media});
             });
         }
-
 
         //this._rewireIds(this.$elem, this);
         return this;

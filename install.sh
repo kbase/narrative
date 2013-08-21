@@ -2,6 +2,7 @@
 
 installPath=`pwd`
 venv="narrative-venv"
+branch="1.x"
 commit="" 
 
 while :
@@ -11,8 +12,15 @@ do
             printf "usage: $0 [{-p | --install_path} root_install_path] [{-v | --virtual_env} environment_name] [{-c | commit_id} git_commit_id]\n"
             printf "   p : this is an existing absolute path where you would like the virtualenv directory created inside, \n"
             printf "       e.g. /home/user/my_virtualenv_area\n"
-            printf "   v : the name of the virtualenv, e.g. /home/user/my_virtualenv_area/my_venv\n"
+            printf "       defaults to the current working directory\n"
+            printf "   v : the name of the virtualenv\n"
+            printf "       e.g. /home/user/my_virtualenv_area/my_venv\n"
+            printf "       defaults to 'narrative-venv'\n"
+            printf "   b : the name of the branch of ipython to use\n"
+            printf "       e.g. master\n"
+            printf "       defaults to '1.x'\n"
             printf "   c : use this git commit id to checkout code\n"
+            printf "       only used if defined, defaults to empty string\n"
             exit 0
             ;;
         -p | --install_path)
@@ -23,6 +31,11 @@ do
         -v | --virtualenv)
             printf "Virtual environment will be created under $2...\n"
             venv=$2
+            shift 2
+            ;;
+        -b | --branch)
+            printf "Using branch $2...\n"
+            branch=$2
             shift 2
             ;;
         -c | --commit_id)
@@ -55,10 +68,10 @@ done
 printf "Creating virtual environment $venv...\n"
 virtualenv --system-site-packages $installPath/$venv
 
-printf "Pulling ipython master from github...\n"
-#git clone https://github.com/ipython/ipython.git
+printf "Pulling ipython branch $branch from github...\n"
+git clone https://github.com/ipython/ipython.git -b $branch
 # pull this fork until an issue is resolved
-git clone https://github.com/mlhenderson/ipython.git
+#git clone https://github.com/mlhenderson/ipython.git
 
 # Move into the ipython git directory to run the install
 cd ipython

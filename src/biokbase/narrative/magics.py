@@ -11,6 +11,7 @@ import biokbase.auth
 import getpass
 import random
 import string
+import os
 import time
 from IPython.core.display import display, Javascript
 
@@ -90,6 +91,9 @@ def set_token( newtoken):
     global user_id, token, user_profile, inv_client, inv_session
     if newtoken:
         token = newtoken
+        print "Calling biokbase.auth.set_environ_token"
+        biokbase.auth.set_environ_token( token)
+        print "%s = %s" % (biokbase.auth.tokenenv, os.environ[ biokbase.auth.tokenenv])
         user_profile = biokbase.auth.User( token = token)
         user_id = user_profile.user_id
         # If we had a previous session, clear it out
@@ -107,6 +111,7 @@ def clear_token():
         user_id = None
         token = None
         user_profile = None
+    biokbase.auth.set_environ_token( None)
     # If we had a previous session, clear it out
     if inv_session is not None:
         print "Clearing anonymous invocation session"
@@ -137,16 +142,7 @@ class kbasemagics(Magics):
                     password = raw_input( "Please enter the KBase password for %s : " % user)
                     t = biokbase.auth.Token( user_id = user, password = password)
                 if t.token:
-                    user_id = t.user_id
-                    token = t.token
-                    user_profile = biokbase.auth.User( token = token)
-                    # If we had a previous session, clear it out
-                    if inv_session is not None:
-                        print "Clearing anonymous invocation session"
-                        inv_client.exit_session( inv_session)
-                    inv_client = None
-                    inv_session = None
-                    ws_client = None
+                    set_token( t.token)
                 else:
                     raise biokbase.auth.AuthFail( "Could not get token with username and password given")
             except biokbase.auth.AuthFail, a:
@@ -171,16 +167,7 @@ class kbasemagics(Magics):
             try:
                 t = biokbase.auth.Token( user_id = user)
                 if t.token:
-                    user_id = t.user_id
-                    token = t.token
-                    user_profile = biokbase.auth.User( token = token)
-                    # If we had a previous session, clear it out
-                    if inv_session is not None:
-                        print "Clearing anonymous invocation session"
-                        inv_client.exit_session( inv_session)
-                    inv_client = None
-                    inv_session = None
-                    ws_client = None
+                    set_token(t.token)
             except biokbase.auth.AuthFail, a:
                 # use javascript callback
                 nbgetpass( user)

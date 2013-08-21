@@ -158,7 +158,7 @@ c.NotebookApp.webapp_settings = { 'template_path': os.path.join(myfile,"kbase_te
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', '_blah = "testing"' ]
+c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
 
 # The importstring for the OutStream factory
 # c.IPKernelApp.outstream_class = 'IPython.zmq.iostream.OutStream'

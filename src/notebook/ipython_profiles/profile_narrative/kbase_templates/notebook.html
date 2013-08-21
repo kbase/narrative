@@ -36,12 +36,6 @@ class="notebook_app"
 
 {% block header %}
 
-<span id="save_widget" class="nav pull-left">
-    <span id="notebook_name"></span>
-    <span id="checkpoint_status"></span>
-    <span id="autosave_status"></span>
-</span>
-
 {% endblock %}
 
 
@@ -185,12 +179,12 @@ class="notebook_app"
         </div>
 
         <div id="narrative-title">
-            <div id="narrative-name" contenteditable="true">
-                Developing a Metabolic Model of a Strain of E. coli
-            </div>
-            <div id="narrative-creator">
-                Jane Scientist, Concordia National Laboratory
-            </div>
+	  <span id="save_widget" class="nav pull-left">
+	    <span id="notebook_name"></span>
+	    <span id="checkpoint_status"></span>
+	    <span id="autosave_status"></span>
+	  </span>
+	  <span> &nbsp;</span>
         </div>
 
         <div id="ipython-main-app">

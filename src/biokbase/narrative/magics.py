@@ -77,16 +77,7 @@ def do_login( user, password):
     try:
         t = biokbase.auth.Token( user_id = user, password = password)
         if t.token:
-            user_id = t.user_id
-            token = t.token
-            user_profile = biokbase.auth.User( token = token)
-            # If we had a previous session, clear it out
-            if inv_session is not None:
-                print "Clearing anonymous invocation session"
-                inv_client.exit_session( inv_session)
-            inv_client = None
-            inv_session = None
-            ws_client = None
+            set_token(t.token)
         else:
             raise biokbase.auth.AuthFail( "Could not get token with username and password given")
     except biokbase.auth.AuthFail, a:
@@ -95,6 +86,34 @@ def do_login( user, password):
     if token is not None:
         print "Logged in as %s" % user_id
 
+def set_token( newtoken):
+    global user_id, token, user_profile, inv_client, inv_session
+    if newtoken:
+        token = newtoken
+        user_profile = biokbase.auth.User( token = token)
+        user_id = user_profile.user_id
+        # If we had a previous session, clear it out
+        if inv_session is not None:
+            print "Clearing anonymous invocation session"
+            inv_client.exit_session( inv_session)
+        inv_client = None
+        inv_session = None
+        ws_client = None
+
+def clear_token():
+    global user_id, token, user_profile, inv_client, inv_session
+    if token is not None:
+        print "Clearing credentials and profile for %s" % user_id
+        user_id = None
+        token = None
+        user_profile = None
+    # If we had a previous session, clear it out
+    if inv_session is not None:
+        print "Clearing anonymous invocation session"
+        inv_client.exit_session( inv_session)
+    inv_client = None
+    inv_session = None
+    ws_client = None
 
 # Define the KBase notebook magics
 
@@ -174,20 +193,8 @@ class kbasemagics(Magics):
     @line_magic
     def kblogout(self,line):
         "Logout by removing credentials from environment and clearing session objects"
-        global user_id, token, user_profile, inv_client, inv_session
-        if token is not None:
-            print "Clearing credentials and profile for %s" % user_id
-            user_id = None
-            token = None
-            user_profile = None
-        else:
-            print "Not currently logged in"
-        if inv_session is not None:
-            print "Clearing anonymous invocation session"
-            inv_client.exit_session( inv_session)
-        inv_client = None
-        inv_session = None
-        ws_client = None
+        # Call the clear_token method
+        clear_token()
         return
         
 

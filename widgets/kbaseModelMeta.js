@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseModelMeta", 'kbaseWidget', {
+$.KBWidget("kbaseModelMeta", {
     version: "1.0.0",
     options: {
     },
@@ -10,7 +10,6 @@ $.kbWidget("kbaseModelMeta", 'kbaseWidget', {
         var models = options.ids;
         var workspaces = options.workspaces;
         var token = options.auth;
-
 
         this.$elem.append('<div id="kbase-model-meta" class="panel panel-default">\
                                 <div class="panel-heading">\
@@ -44,14 +43,13 @@ $.kbWidget("kbaseModelMeta", 'kbaseWidget', {
             container.append(table);
             // model viewer link
             container.append('<a class="app-icon" href="http://140.221.84.128/#models?tab=model-selection&kbids='+
-                    models[0]+'&ws='+workspaces[0]+'" >\
+                    models[0]+'&ws='+workspaces[0]+'" target="_blank">\
                         <img src="http://www.kbase.us/files/6313/6148/9465/model_icon.png" width=30 >\
                     </a>\
                     <a href="http://140.221.84.128/#models?tab=model-selection&kbids='+
-                    models[0]+'&ws='+workspaces[0]+'" >Add to Model Viewer</a>');
+                    models[0]+'&ws='+workspaces[0]+'" target="_blank">Add to Model Viewer</a>');
         })
 
-        //this._rewireIds(this.$elem, this);
         return this;
 
     }  //end init

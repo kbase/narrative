@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseSeqSearch", 'kbaseWidget', {
+$.KBWidget("kbaseSeqSearch", {
     version: "1.0.0",
     options: {
     },

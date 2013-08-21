@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
+$.KBWidget("kbaseBioRxnTable", {
     version: "1.0.0",
     options: {
     },

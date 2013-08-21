@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseMediaModal", 'kbaseWidget', {
+$.KBWidget("kbaseMediaModal", {
     version: "1.0.0",
     options: {
     },

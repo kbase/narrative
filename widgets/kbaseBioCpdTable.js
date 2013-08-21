@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseBioCpdTable", 'kbaseWidget', {
+$.KBWidget("kbaseBioCpdTable", {
     version: "1.0.0",
     options: {
     },
@@ -47,22 +47,19 @@ $.kbWidget("kbaseBioCpdTable", 'kbaseWidget', {
             var total_cpds = cpds.length
             var iterations = parseInt(total_cpds / chunk)
             var compound_data = []
-
             for (var i=0; i<iterations; i++) {
                 var cpd_subset = cpds.slice( i*chunk, (i+1)*chunk -1) ;
-
                 var cpdAJAX = fba.get_compounds({compounds: cpd_subset });
-                proms.push(cpdAJAX); // doesn't work for whatever reason
+
                 $.when(cpdAJAX).done(function(cpd_data){
                     k = k + 1;
-                    compound_data =  compound_data.concat(cpd_data);
+                    compound_data = compound_data.concat(cpd_data);
                     var percent = (compound_data.length / total_cpds) * 100+'%';
                     $('.progress-bar').css('width', percent)
 
                     if (k == iterations) {
-                        console.log(compound_data);
                         $('.progress').remove();                        
-                        load_table(cpd_data)
+                        load_table(compound_data)
                     }            
                 });
             }

@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseRxnModal", 'kbaseWidget', {
+$.KBWidget("kbaseRxnModal", {
     version: "1.0.0",
     options: {
     },

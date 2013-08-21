@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseModelTabs", 'kbaseWidget', {
+$.KBWidget("kbaseModelTabs", {
     version: "1.0.0",
     options: {
     },
@@ -10,15 +10,6 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
         var models = options.ids;
         var workspaces = options.workspaces;
         var token = options.auth;
-        /*
-        this.$elem.append('<div id="kbase-model-tabs" class="panel">\
-                                <div class="panel-heading"><b>Model Details</b><br> '
-                                +models[0]+
-                                ' <div style="float:right;"><span class="label label-primary">'+workspaces[0]+'</span></div></div>\
-                           </div>');
-*/
-
-
 
         this.$elem.append('<div id="kbase-model-tabs" class="panel panel-default">\
                                 <div class="panel-heading">\
@@ -81,24 +72,6 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
                 "sSearch": "Search all:"
             }
         }
-
-        /*
-        var meta_AJAX = kbws.get_objectmeta({type: 'Model',
-                workspace: workspaces[0], id: models[0]});
-        $('.tab-pane').append('<p class="muted loader-overview"> \
-                                  <img src="../common/img/ajax-loader.gif"> loading...</p>')
-        $.when(meta_AJAX).done(function(data){
-            var labels = ['ID','Type','Moddate','Instance',
-                          'Command','Last Modifier','Owner','Workspace','Ref',
-                          'Check Sum']
-
-            for (var i=0; i<data.length-1; i++){
-                $('#overview-table').append('<tr><td>'+labels[i]+'</td> \
-                                                 <td>'+data[i]+'</td></tr>')
-            }
-            $('.loader-overview').remove();
-        })
-        */
 
         var models_AJAX = fba.get_models({models: models, workspaces: workspaces});
         $('.tab-pane').not('#overview').append('<p class="muted loader-tables"> \
@@ -196,9 +169,6 @@ $.kbWidget("kbaseModelTabs", 'kbaseWidget', {
         //this._rewireIds(this.$elem, this);
         return this;
     }  //end init
-
-
-
 
 
 })

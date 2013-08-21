@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseMediaTable", 'kbaseWidget', {
+$.KBWidget("kbaseWSMediaTable", {
     version: "1.0.0",
     options: {
     },
@@ -10,14 +10,14 @@ $.kbWidget("kbaseMediaTable", 'kbaseWidget', {
         var token = options.auth;
         var ws = options.ws
 
-        this.$elem.append('<div id="kbase-media-table" class="panel panel-default">\
+        this.$elem.append('<div id="kbase-ws-media-table" class="panel panel-default">\
                                 <div class="panel-heading">\
                                     <h4 class="panel-title">Biochemistry Media</h4>\
                                     <span class="label label-primary pull-right">'+ws+'</span><br>\
                                 </div>\
                                 <div class="panel-body"></div>\
                            </div>');
-        var container = $('#kbase-media-table .panel-body');
+        var container = $('#kbase-ws-media-table .panel-body');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');

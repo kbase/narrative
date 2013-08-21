@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.KBwidget("kbaseModelTable", {
+$.KBWidget("kbaseWSFbaTable", {
     version: "1.0.0",
     options: {
     },
@@ -10,14 +10,14 @@ $.KBwidget("kbaseModelTable", {
         var token = options.auth;
         var ws = options.ws
 
-        this.$elem.append('<div id="kbase-model-table" class="panel panel-default">\
+        this.$elem.append('<div id="kbase-ws-fba-table" class="panel panel-default">\
                                 <div class="panel-heading">\
-                                    <h4 class="panel-title">Models</h4>\
+                                    <h4 class="panel-title">FBA Objects</h4>\
                                     <span class="label label-primary pull-right">'+ws+'</span><br>\
                                 </div>\
                                 <div class="panel-body"></div>\
                            </div>');
-        var container = $('#kbase-model-table .panel-body');
+        var container = $('#kbase-ws-fba-table .panel-body');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
@@ -32,30 +32,29 @@ $.KBwidget("kbaseModelTable", {
             }
         }
 
-        var wsAJAX = kbws.list_workspace_objects({workspace: ws, type: "Model", auth: token})
+        var wsAJAX = kbws.list_workspace_objects({workspace: ws, type: "FBA", auth: token})
 
         container.append('<p class="muted loader-table"> \
                                   <img src="../common/img/ajax-loader.gif"> loading...</p>')
 
         $.when(wsAJAX).done(function(data){
             var dataList = formatObjs(data);
-            var labels = ["id", "Type", "Modified", "Command", "Something?", "Owner"];
+            var labels = ["id", "Type", "Modified", "Something", "Command", "Owner"];
             var cols = getColumnsByLabel(labels);
             tableSettings.aoColumns = cols;
-            container.append('<table id="rxn-table" class="table table-striped table-bordered"></table>')
-            var table = $('#rxn-table').dataTable(tableSettings);
+            container.append('<table id="ws-fba-table" class="table table-striped table-bordered"></table>')
+            var table = $('#ws-fba-table').dataTable(tableSettings);
             table.fnAddData(dataList);
-
             $('.loader-table').remove()
         });
 
-        function formatObjs(models) {
-            for (var i in models) {
-                var model = models[i];
-                model[0] = '<a class="model-click" data-model="'+model[0]+'">'
-                            +model[0]+'</a>'
+        function formatObjs(objs) {
+            for (var i in objs) {
+                var obj = objs[i];
+                obj[0] = '<a class="fba-click" data-fba="'+obj[0]+'">'
+                            +obj[0]+'</a>'
             }
-            return models;
+            return objs;
         }
 
         function getColumnsByLabel(labels) {
@@ -67,17 +66,14 @@ $.KBwidget("kbaseModelTable", {
         }
 
         function modelEvents() {
-            $('.model-click').unbind('click');
-            $('.model-click').click(function() {
-                var model = $(this).data('model');
-                self.trigger('modelClick', {model: model});
+            $('.fba-click').unbind('click');
+            $('.fba-click').click(function() {
+                var fba = $(this).data('fba');
+                self.trigger('fbaClick', {fba: fba});
             });
         }
 
-        //this._rewireIds(this.$elem, this);
         return this;
     }  //end init
-
-
 })
 }( jQuery ) );

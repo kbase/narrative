@@ -1,3 +1,0 @@
-[submodule "external/jsduck"]
-	path = external/jsduck
-	url = git://github.com/senchalabs/jsduck

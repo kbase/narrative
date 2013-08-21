@@ -145,12 +145,12 @@
     <script>
         $(function(){
             $('form').submit(function(){
-                var url = '#/'+$(this).attr('type')+'/'+$(this).find('#input1').val();
+                var url = '/#/'+$(this).attr('type')+'/'+$(this).find('#input1').val();
                 if ($(this).find('#input2').val()) {
                     url = url+'/'+$(this).find('#input2').val();
                 }
 
-                document.location = url;
+                document.location.href = url;
             })
         })
     </script>

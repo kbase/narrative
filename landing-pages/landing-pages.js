@@ -26,8 +26,12 @@ function router() {
 
     // Data routes
     Path.map("#/models").to(function(){
-        model_view();
+        ws_model_view();
     }).enter(navEvent);
+
+    Path.map("#/models/:ws_id").to(function(){
+        ws_model_view(this.params['ws_id']);
+    }).enter(navEvent);    
 
     Path.map("#/models/:ws_id/:id").to(function(){
         model_view(this.params['ws_id'], this.params['id']);
@@ -87,6 +91,21 @@ function reload_window() {
 /*
  *  "Views" which load widgets on page.
  */
+
+
+ function ws_model_view(ws_id) {
+    var ws_id = ws_id ? ws_id : 'KBaseCDMModels';
+
+    $('#app').html(simple_layout2('ws-models') )
+    
+    $('#ws-models').kbaseModelTable({ws : ws_id,
+                                     auth: USER_TOKEN});
+
+    $(document).off("modelClick");
+    $(document).on("modelClick", function(e, data) {
+        window.location.hash = '/models/'+ws_id+'/'+data.model;
+    })
+}
 
 function model_view(ws_id, id) {
     var ws_id = ws_id ? ws_id : 'KBaseFBA';

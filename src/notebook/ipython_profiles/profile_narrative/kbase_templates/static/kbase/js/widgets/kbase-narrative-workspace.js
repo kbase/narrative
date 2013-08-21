@@ -6,7 +6,7 @@
  */
 
 (function( $, undefined ) {
-	$.kbWidget("kbaseNarrativeWorkspace", 'kbaseWidget', {
+	$.KBWidget("kbaseNarrativeWorkspace", 'kbaseWidget', {
 		version: "1.0.0",
 		$buttonList: null,
 		$viewPort: null,

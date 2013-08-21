@@ -8,7 +8,7 @@
  */
 (function( $, undefined ) {
 
-	$.kbWidget("kbaseMiniWorkspace", 'kbaseWidget', {
+	$.KBWidget("kbaseMiniWorkspace", 'kbaseWidget', {
 		version: "1.0.0",
 		wsClient: null,
 		table: null,

@@ -2,6 +2,14 @@
 	var loggedIn = false;
 
 	$(function() {
+		$(document).on('loggedIn.kbase', function(token) {
+			narrativeWsWidget.loggedIn(token);
+		});
+
+		$(document).on('loggedOut.kbase', function(token) {
+			narrativeWsWidget.loggedOut(token);
+		});
+
 		narrativeWsWidget = $("#narrative-workspace-view").kbaseNarrativeWorkspace({
 															tabs: [
 																	{ 
@@ -25,22 +33,20 @@
 
 								login_callback: function(args) {
 									loggedIn = true;
-									narrativeWsWidget.loggedIn(args);
 								},
 
 								logout_callback: function(args) {
 									// flag as not logged in.
 									loggedIn = false;
-									narrativeWsWidget.loggedOut(args);
 
 								},
 
 								prior_login_callback: function(args) {
 									loggedIn = true;
-									narrativeWsWidget.loggedIn(args);
 								}
 
 							});
+
 	});
 
 })( jQuery );

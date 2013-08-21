@@ -2,6 +2,7 @@ PACKAGE  = ui-common
 MOCHA    = ./node_modules/.bin/mocha
 
 UGLIFY   = ./node_modules/.bin/uglifyjs
+GENDOC   = ./external/jsduck/bin/jsduck
 
 DISTLIB      ?= ./dist/kbase.js
 DISTSRCFILES  = ./src/*.js ./src/widgets/*.js

@@ -9,10 +9,14 @@ $.kbWidget("kbaseBioCpdTable", 'kbaseWidget', {
         var self = this;        
         var token = options.auth;
 
-        this.$elem.append('<div id="kbase-bio-cpd-table" class="panel">\
-                                <div class="panel-heading"><b>Biochemistry Compounds</b><br>\
+        this.$elem.append('<div id="kbase-bio-cpd-table" class="panel panel-default">\
+                                <div class="panel-heading">\
+                                    <h4 class="panel-title">Biochemistry Compounds</h4>\
+                                </div>\
+                                <div class="panel-body"></div>\
                            </div>');
-        var container = $('#kbase-bio-cpd-table');
+
+        var container = $('#kbase-bio-cpd-table .panel-body');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');

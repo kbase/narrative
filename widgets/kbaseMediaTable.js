@@ -1,6 +1,6 @@
 (function( $, undefined ) {
 
-$.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
+$.kbWidget("kbaseMediaTable", 'kbaseWidget', {
     version: "1.0.0",
     options: {
     },
@@ -8,14 +8,16 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
         this._super(options);
         var self = this;        
         var token = options.auth;
+        var ws = options.ws
 
-        var bio_media_ws = "KBaseMedia"
-
-        this.$elem.append('<div id="kbase-bio-media-table" class="panel">\
-                                <div class="panel-heading"><b>Biochemistry Media</b>\
-                                <span class="label label-info pull-right">'+bio_media_ws+'</span><br>\
+        this.$elem.append('<div id="kbase-media-table" class="panel panel-default">\
+                                <div class="panel-heading">\
+                                    <h4 class="panel-title">Biochemistry Media</h4>\
+                                    <span class="label label-primary pull-right">'+ws+'</span><br>\
+                                </div>\
+                                <div class="panel-body"></div>\
                            </div>');
-        var container = $('#kbase-bio-media-table');
+        var container = $('#kbase-media-table .panel-body');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
@@ -31,14 +33,12 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
         }
 
         //var bioAJAX = fba.get_biochemistry({});
-        var wsAJAX = kbws.list_workspace_objects({workspace: bio_media_ws, type:"Media"})
+        var wsAJAX = kbws.list_workspace_objects({workspace: ws, type:"Media"})
 
         container.append('<p class="muted loader-table"> \
                                   <img src="../common/img/ajax-loader.gif"> loading...</p>')
 
         $.when(wsAJAX).done(function(data){
-            console.log(data)
-
             var dataList = formatObjs(data);
             var labels = ["id", "abbrev", "formula", "charge", "deltaG", "deltaGErr", "name", "aliases"];
             var cols = getColumnsByLabel(labels);
@@ -49,7 +49,6 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
             table.fnAddData(dataList);
 
             $('.loader-table').remove()
-
         });
 
 
@@ -95,7 +94,6 @@ $.kbWidget("kbaseBioMediaTable", 'kbaseWidget', {
                 self.trigger('mediaClick', {media: media});
             });
         }
-
 
         //this._rewireIds(this.$elem, this);
         return this;

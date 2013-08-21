@@ -11,10 +11,14 @@ $.kbWidget("kbaseBioRxnTable", 'kbaseWidget', {
 
         self.reaction_data = [];
 
-        this.$elem.append('<div id="kbase-bio-rxn-table" class="panel">\
-                                <div class="panel-heading"><b>Biochemistry Reactions</b><br>\
+        this.$elem.append('<div id="kbase-bio-rxn-table" class="panel panel-default">\
+                                <div class="panel-heading">\
+                                    <h4 class="panel-title">Biochemistry Reactions</h4>\
+                                </div>\
+                                <div class="panel-body"></div>\
                            </div>');
-        var container = $('#kbase-bio-rxn-table');
+
+        var container = $('#kbase-bio-rxn-table .panel-body');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');

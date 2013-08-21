@@ -121,6 +121,10 @@ def SetConfigs( configs):
         conf.write(configfile)
     LoadConfig()
 
+def set_environ_token(token):
+    os.environ[tokenenv] = token
+
+
 class AuthCredentialsNeeded( Exception ):
     """
     Simple wrapper around Exception class that flags the fact that we don't have

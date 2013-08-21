@@ -72,7 +72,7 @@ c = get_config()
 # c.TerminalIPythonApp.display_banner = True
 
 # lines of code to run at IPython startup.
-c.TerminalIPythonApp.exec_lines = [ 'from biokbase.narrative import *']
+c.TerminalIPythonApp.exec_lines = [ 'import biokbase.narrative.magics']
 
 # Enable GUI event loop integration ('qt', 'wx', 'gtk', 'glut', 'pyglet',
 # 'osx').

@@ -1,3 +1,23 @@
+/**
+ * @class KBWidget
+ *
+ * A KBase widget. Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+ * sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+ * ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+ * ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+ * velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+ * cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
+ * est laborum.
+ *
+ * And here's an example:
+ *
+ *     @example
+ *     var widget = $.KBWidget({
+ *         name: "MyFancyWidget",
+ *         parent: "MommyWidget",
+ *         init: function () {}
+ *     });
+ */
 (function( $, undefined) {
     var KBase;
     var ucfirst = function(string) {
@@ -526,11 +546,19 @@
         {
             _accessors : ['wing', 'wong'],
 
+            /**
+             * Returns the DOM element
+             */
             element : function() {
                 return this;
             },
 
+            /**
+             * Writes text to console.
+             * @param {String} txt The text to write.
+             */
             dbg : function (txt) { if (window.console) console.log(txt); },
+
 
             callAfterInit : function (func) {
                 var $me = this;
@@ -550,6 +578,10 @@
                 return delayer;
             },
 
+            /**
+             * Initializes the widget.
+             * @param {Object} args Initialization arguments
+             */
             init : function(args) {
 
                 this._attributes = {};
@@ -567,6 +599,10 @@
                 return this;
             },
 
+            /**
+             * Sets an alert to display
+             * @param {String} msg The message to display
+             */
             alert : function(msg) {
                 if (msg == undefined ) {
                     msg = this.data('msg');
@@ -611,6 +647,11 @@
                     return this.valueForKey(attribute);
                 },
 
+            /**
+             * Sets data.
+             * @param {Object} key The key for the data
+             * @param {Object} value The data itself
+             */
             data : function (key, val) {
 
                 if (this.options._storage == undefined) {

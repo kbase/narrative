@@ -50,24 +50,18 @@ class MongoNotebookManager(NotebookManager):
     # {
     #     '_id' : {mongodb UUID - we set it manually using notebook_id},
     #     'owner' : {username of the owner of this notebook},
-    #     'doc_type' : (ipynb_chkpt|ipynb),
-    #     'ipynb' : { actual ipython notebook hash },
+    #     'doc_type' : (ipynb),
+    #     'ipynb' : { actual ipython notebook dict },
+    #     'ipynb_chkpt' : { dict for checkpointed notebook },
     #     'created' : { creation/update timestamp }
+    #     'chkpt_created' : { timestamp for ipynb_chkpt }
     # }
 
     mongodb_uri = Unicode('mongodb://localhost/', config=True, help='MongoDB connection URI')
     mongodb_database = Unicode('narrative', config=True, help='MongoDB database')
     mongodb_collection = Unicode('notebooks', config=True, help='MongoDB collection')
-    checkpoint_id = Unicode('%(username)_ipynb_checkpoints',config=True,
-                            help="""The MongoDB notebook_name in which to keep notebook checkpoints
-        This is a python string format that supports the following mapping keys
-        username : username of the user using the notebook
-        time : Current time as an integer (int(time.time())
-        By default, it is %(username)_ipynb_checkpoints
-        """
-                            )
+
     ipynb_type = Unicode(u'ipynb')
-    chkpt_type = Unicode(u'ipynb_chkpt')
     allowed_formats = List([u'json'])
     node_format = ipynb_type
 
@@ -177,9 +171,14 @@ class MongoNotebookManager(NotebookManager):
                     'created' : nb.metadata.created,
                     'ipynb' : nb
                     }
+            # Preserve the old checkpoint if it is there
+            old = self.collection.find_one( { '_id' : notebook_id })
+            if old and 'ipynb_chkpt' in old:
+                doc['ipynb_chkpt'] = old['ipynb_chkpt']
+                doc['chkpt_created'] = old['chkpt_created']
             id = self.collection.save( doc, manipulate = True, safe=True)
         except Exception as e:
-            raise web.HTTPError(500, u'Error saving notebook: %s' % e)
+            raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
         self.mapping[id] = new_name
         return id
 
@@ -195,61 +194,68 @@ class MongoNotebookManager(NotebookManager):
         self.delete_notebook_id(notebook_id)
 
     # public checkpoint API
-    
+    # Checkpoints in the MongoDB manager are just another field in the
+    # overall MongoDB document. We copy the ipynb field into the ipynb_chkpt
+    # field (and vice versa for revert)
     def create_checkpoint(self, notebook_id):
         """Create a checkpoint from the current state of a notebook"""
-        #nb_path = self.get_path(notebook_id)
         # only the one checkpoint ID:
-        #checkpoint_id = u"checkpoint"
-        #cp_path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-        #self.log.debug("creating checkpoint for notebook %s", notebook_id)
-        #if not os.path.exists(self.checkpoint_dir):
-        #    os.mkdir(self.checkpoint_dir)
-        #shutil.copy2(nb_path, cp_path)
-        
+        checkpoint_id = u"checkpoint"
+        doc = self.collection.find_one( { '_id' : notebook_id })
+        if doc is None:
+            raise web.HTTPError(500, u'Notebook % not found' % notebook_id)
+        chkpt_created = datetime.datetime.utcnow()
+        self.collection.update( { '_id' : notebook_id } ,
+                                { '$set' : { 'ipynb_chkpt' : doc['ipynb'],
+                                             'chkpt_created' : chkpt_created.isoformat() } } );
         # return the checkpoint info
-        #return self.get_checkpoint_info(notebook_id, checkpoint_id)
-        pass
+        return { 'checkpoint_id' : checkpoint_id , 'last_modified' : chkpt_created}
+
 
     def list_checkpoints(self, notebook_id):
         """list the checkpoints for a given notebook
         
         This notebook manager currently only supports one checkpoint per notebook.
         """
-        #checkpoint_id = u"checkpoint"
-        #path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-        #if not os.path.exists(path):
-        #    return []
-        #else:
-        #    return [self.get_checkpoint_info(notebook_id, checkpoint_id)]
-        pass
+        checkpoint_id = u"checkpoint"
+        doc = self.collection.find_one( { '_id' : notebook_id })
+        if 'ipynb_chkpt' in doc:
+            return [{'checkpoint_id' : checkpoint_id, 'last_modified' : dateutil.parser.parse(doc['chkpt_created']) } ]
+        else:
+            return []
     
     def restore_checkpoint(self, notebook_id, checkpoint_id):
         """restore a notebook to a checkpointed state"""
-        #self.log.info("restoring Notebook %s from checkpoint %s", notebook_id, checkpoint_id)
-        #nb_path = self.get_path(notebook_id)
-        #cp_path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-        #if not os.path.isfile(cp_path):
-        #    self.log.debug("checkpoint file does not exist: %s", cp_path)
-        #    raise web.HTTPError(404,
-        #        u'Notebook checkpoint does not exist: %s-%s' % (notebook_id, checkpoint_id)
-        #    )
-        # ensure notebook is readable (never restore from an unreadable notebook)
-        #last_modified, nb = self.read_notebook_object_from_path(cp_path)
-        #shutil.copy2(cp_path, nb_path)
-        #self.log.debug("copying %s -> %s", cp_path, nb_path)
-        pass
+        doc = self.collection.find_one( { '_id' : notebook_id })
+        if doc:
+            if 'ipynb_chkpt' in doc:
+                doc['ipynb'] = doc['ipynb_chkpt']
+                doc['created'] = doc['chkpt_created']
+                id = self.collection.save( doc, manipulate = True, safe=True)
+                self.log.debug("copying ipynb_chkpt to ipynb for %s", notebook_id)
+            else:
+                 self.log.debug("checkpoint for %s does not exist" % notebook_id)
+                 raise web.HTTPError(404,
+                                     u'Notebook checkpoint does not exist: %s' % notebook_id)
+        else:
+            self.log( "notebook %s does not exist" % notebook_id)
+            raise web.HTTPError(404,
+                                u'Notebook %s does not exist' % notebook_id)
 
     def delete_checkpoint(self, notebook_id, checkpoint_id):
         """delete a notebook's checkpoint"""
-        #path = self.get_checkpoint_path(notebook_id, checkpoint_id)
-        #if not os.path.isfile(path):
-        #    raise web.HTTPError(404,
-        #        u'Notebook checkpoint does not exist: %s-%s' % (notebook_id, checkpoint_id)
-        #    )
-        #self.log.debug("unlinking %s", path)
-        #os.unlink(path)
-        pass
+        doc = self.collection.find_one( { '_id' : notebook_id })
+        if doc:
+            if 'ipynb_chkpt' in doc:
+                self.collection.update( { '_id' : notebook_id },
+                                        { '$unset' : { 'ipynb_chkpt' : 1,
+                                                       'chkpt_created' : 1}})
+            else:
+                 raise web.HTTPError(404,
+                                     u'Notebook checkpoint does not exist: %s' % notebook_id)
+        else:
+            raise web.HTTPError(404,
+                                u'Notebook %s does not exist' % notebook_id)
 
     def log_info(self):
         self.log.info("Serving notebooks from MongoDB URI %s" %self.mongodb_uri)

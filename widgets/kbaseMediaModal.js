@@ -18,7 +18,7 @@ $.KBWidget("kbaseMediaModal", {
 
             self.$elem.html('')
             self.$elem.append('<div id="media-modal-container" class="modal">\
-                                   <div class="modal-dialog">\
+                                   <div class="modal-dialog media-info-modal">\
                                       <div class="modal-content">\
                                         <div class="modal-header"></div>\
                                         <div class="modal-body"></div>\

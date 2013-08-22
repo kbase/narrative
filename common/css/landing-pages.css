@@ -38,3 +38,7 @@ rect:hover {
 table {  /* what's this about */
     font-size: 14px;
 }
+
+.media-info-modal {
+    width: 800px;
+}

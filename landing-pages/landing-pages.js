@@ -78,6 +78,8 @@ function router() {
         help_view();
     }).enter(navEvent);
 
+
+
     Path.rescue(function(){ 
         page_not_found();
     })
@@ -154,7 +156,7 @@ function ws_fba_view(ws_id) {
 
     $(document).off("fbaClick");
     $(document).on("fbaClick", function(e, data) {
-        window.location.hash = '/fba/'+ws_id+'/'+data.fba;
+        window.location.hash = '/fbas/'+ws_id+'/'+data.fba;
     });
 }
 
@@ -169,7 +171,6 @@ function fba_view(ws_id, id) {
         rxn_modal.show({rxns: data.rxns});
     })
 }
-
 
 function rxn_view(ws_id, id) {
     var ws_id = ws_id ? ws_id : 'KBaseFBA';
@@ -211,11 +212,18 @@ function media_view(ws_id, id) {
 
 
 function help_view() {
-    $('#app').load('../common/templates/data-view-api.html');
-
+    $('#app').load('../common/templates/data-view-api.html', function() {
+        $('.api-url-submit').click(function(){
+            var form = $(this).parents('form')
+            var url = '/'+form.attr('type')+'/'+form.find('#input1').val();
+            alert(url)
+            if (form.find('#input2').val()) {
+                url = url+'/'+form.find('#input2').val();
+            }
+            window.location.hash = url;
+        })
+    });
 }
-
-
 
 function seq_search_view() {
     // load template

@@ -1,1 +1,0 @@
-setting a directory structure.  This is the annotation directory.

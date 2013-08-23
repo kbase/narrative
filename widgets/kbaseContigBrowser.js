@@ -34,7 +34,6 @@
  *        $("#contigZoomOut").click(function()   { genomeWidget.zoomOut(); });
  */ 
 
-
 (function( $, undefined ) {
     $.KBWidget("KBaseContigBrowser", 'kbaseWidget', {
         version: "1.0.0",
@@ -61,6 +60,7 @@
         proteinInfoURL: "http://kbase.us/services/protein_info_service",
         workspaceURL: "http://kbase.us/services/workspace",
         tooltip: null,
+        operonFeatures: [],
 
         init: function(options) {
             this._super(options);
@@ -78,6 +78,9 @@
             return this.render();
         },
 
+        /**
+         * 
+         */
         render: function() {
             // tooltip inspired from
             // https://gist.github.com/1016860
@@ -108,17 +111,27 @@
                                .attr("transform", "translate(0, " + this.options.topMargin + ")")
                                .call(this.xAxis);
 
-            this.setContig(this.options.contig);
-//          this.update(true);
-
             var self = this;
             $(window).on("resize", function() {
                 self.resize();
             });
 
+            // Kickstart the whole thing
+            if (this.options.centerFeature != null)
+                this.setCenterFeature(this.options.centerFeature);
+
+            this.setContig();
+
             return this;
         },
 
+        /**
+         * An internal class used to define and calculate which features belong on which tracks.
+         * A 'track' in this case is a horizontal representation of features on a contig. If
+         * two features overlap on the contig, then they belong on separate tracks.
+         *
+         * This is only used internally to shuffle the features and avoid visual overlapping.
+         */
         track: function() {
             var that = {};
 
@@ -187,8 +200,18 @@
             return that;
         },
 
-        updateContig: function(contigId) {
-            this.options.contig = contigId;
+        /**
+         * Updates the internal representation of a contig to match what should be displayed.
+         */
+        setContig : function(contigId) {
+            // If we're getting a new contig, then our central feature (if we have one)
+            // isn't on it. So remove that center feature and its associated operon info.
+            if (contigId && this.options.contig !== contigId) {
+                this.options.centerFeature = null;
+                this.operonFeatures = [];
+                this.options.contig = contigId;
+            }
+
             var self = this;
 
             this.cdmiClient.contigs_to_lengths([this.options.contig], function(contigLength) {
@@ -197,6 +220,32 @@
                 if (self.options.length > self.contigLength)
                     self.options.length = self.contigLength;
             });
+
+            if (this.options.centerFeature) {
+                this.setCenterFeature();
+            }
+            else {
+                this.update();
+            }
+        },
+
+        setCenterFeature : function(centerFeature) {
+            // if we're getting a new center feature, make sure to update the operon features, too.
+            if (centerFeature)
+                this.options.centerFeature = centerFeature;
+
+            var self = this;
+            this.proteinInfoClient.fids_to_operons([this.options.centerFeature],
+                // on success
+                function(operonGenes) {
+                    self.operonFeatures = operonGenes[self.options.centerFeature];
+                    self.update();
+                },
+                // on error
+                function(error) {
+                    self.throwError(error);
+                }
+            );
         },
 
         setGenome : function(genomeId) {
@@ -206,11 +255,14 @@
             });
         },
 
-        setContig : function(contigId) {
-            // set contig info and re-render
-            this.updateContig(contigId);
-            this.update();
-        },
+        /**
+         * Call this to set a new contig to view.
+         */
+        // setContig : function(contigId) {
+        //     // set contig info and re-render
+        //     this.updateContig(contigId);
+        //     this.update();
+        // },
 
         setRange : function(start, length) {
             // set range and re-render
@@ -242,16 +294,16 @@
                 return a.feature_location[0][1] - b.feature_location[0][1];
             });
 
-            var self = this;
-            if (this.options.centerFeature) {
-                operonGenes = this.proteinInfoClient.fids_to_operons([this.options.centerFeature], 
-                    //on success
-                    function(operonGenes) {
-                        operonGenes = operonGenes[self.options.centerFeature];
+            // var self = this;
+            // if (this.options.centerFeature) {
+            //     operonGenes = this.proteinInfoClient.fids_to_operons([this.options.centerFeature], 
+            //         //on success
+            //         function(operonGenes) {
+            //             operonGenes = operonGenes[self.options.centerFeature];
 
-                    }
-                );
-            }
+            //         }
+            //     );
+            // }
 
             // Foreach feature...
             for (var j=0; j<features.length; j++) {
@@ -299,7 +351,6 @@
             // Either way, this is the deepest chain of callbacks in here, so it should be okay.
             var self = this;
 
-
             var renderFromCenter = function(feature) {
                 if (feature) {
                     feature = feature[self.options.centerFeature];
@@ -317,24 +368,14 @@
 
             var getOperonData = function(features) {
                 if(self.options.centerFeature) {
-                    self.proteinInfoClient.fids_to_operons([self.options.centerFeature],
-                        function(operonGenes) {
-                            operonGenes = operonGenes[self.options.centerFeature];
-                            for (var j in features) {
-                                for (var i in operonGenes)
-                                {
-                                    if (features[j].feature_id === operonGenes[i])
-                                        features[j].isInOperon = 1;
-                                }
-                            }
-
-                            self.renderFromRange(features);
+                    for (var j in features) {
+                        for (var i in self.operonFeatures) {
+                            if (features[j].feature_id === self.operonFeatures[i])
+                                features[j].isInOperon = 1;
                         }
-                    );
+                    }
                 }
-                else {
-                    self.renderFromRange(features);
-                }
+                self.renderFromRange(features);
             };
 
             if (self.options.centerFeature && useCenter)
@@ -609,6 +650,11 @@
             this.update();
         },
 
+        /**
+         * Moves the viewport to the right end (furthest downstream) of the contig, maintaining the 
+         * current view window size.
+         * @method
+         */
         moveRightEnd : function() {
             this.options.start = this.contigLength - this.options.length;
             this.update();

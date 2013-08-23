@@ -6,7 +6,7 @@
 															'contig' : 'kb|g.0.c.1',
 															'allowResize' : true,
 															'onClickFunction' : selectHighlight,
-															'centerFeature' : 'kb|g.0.peg.3472'
+															'centerFeature' : 'kb|g.0.peg.2173'
 														});
 
 		console.log(genomeWidget);

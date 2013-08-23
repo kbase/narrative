@@ -76,6 +76,7 @@ $.KBWidget("kbaseFbaTabs", 'kbaseWidget', {
         $('.tab-pane').append('<p class="muted loader-tables"> \
                                   <img src="../common/img/ajax-loader.gif"> loading...</p>')
         $.when(fbaAJAX).done(function(data){
+            console.log(data)
             var fba = data[0];
             console.log(fba)
 

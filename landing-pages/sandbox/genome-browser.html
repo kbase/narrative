@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html lang="en-us">
+	<head>
+		<link rel="stylesheet" href="assets/css/kbase-genome-browser-demo.css" type="text/css"/>
+		<link rel="stylesheet" href="assets/css/kbase-genome-widget.css" type="text/css"/>
+		<link rel="stylesheet" href="assets/css/kbase-landingpage-card.css" type="text/css"/>
+	</head>
+
+	<body>
+		<div style="float:right">
+			<div id="login-widget">
+			</div>
+		</div>
+
+		<div id="genome-browser-container">
+		</div>
+
+		<div>
+			<button id="contigFirstBase">First</button>
+			<button id="contigStepPrev">Previous</button>
+			<button id="contigZoomIn">Zoom In</button>
+			<button id="contigZoomOut">Zoom Out</button>
+			<button id="contigStepNext">Next</button>
+			<button id="contigLastBase">Last</button>
+		</div>
+
+
+		<div id="test-card">
+		</div>
+
+		<script src = "../../common/js/jquery.min.js"></script>
+		<script src = "../../common/js/jquery.cookie.min.js"></script>
+		<script src = "../../common/js/d3.v3.min.js"></script>
+		<script src = "../../common/js/kbclient/kbase.js"></script>
+
+<!--		<script src = "../../common/js/kbclient/workspaceService.js"></script> -->
+<!--		<script src = "../../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script> -->
+
+		<script src = "../../src/kbwidget.js"></script>
+		<script src = "assets/js/kbase-landingpage-card.js"></script>
+
+		<script src = "../../widgets/kbaseContigBrowser.js"></script>
+
+		<script src = "assets/js/genome-browser-controller.js"></script>
+	</body>
+</html>

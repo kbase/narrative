@@ -216,7 +216,6 @@ function help_view() {
         $('.api-url-submit').click(function(){
             var form = $(this).parents('form')
             var url = '/'+form.attr('type')+'/'+form.find('#input1').val();
-            alert(url)
             if (form.find('#input2').val()) {
                 url = url+'/'+form.find('#input2').val();
             }

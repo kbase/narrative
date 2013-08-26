@@ -6,7 +6,11 @@
 (function( $, undefined ) {
 
 
-    $.KBWidget("kbaseIrisFileEditor", 'kbaseAuthenticatedWidget', {
+    $.KBWidget({
+
+		  name: "kbaseIrisFileEditor",
+		parent: 'kbaseAuthenticatedWidget',
+
         version: "1.0.0",
         _accessors : [
             'client',

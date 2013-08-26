@@ -18,7 +18,11 @@
 (function( $, undefined ) {
 
 
-    $.KBWidget("kbaseErrorPrompt", 'kbasePrompt', {
+    $.KBWidget({
+
+		  name: "kbaseErrorPrompt",
+		parent: 'kbasePrompt',
+
         version: "1.0.0",
         options: {
             controls : ['cancelButton', 'okayButton']

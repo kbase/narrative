@@ -5,7 +5,10 @@
 
 (function( $, undefined ) {
 
-    $.KBWidget("kbaseIrisProcessList", 'kbaseWidget', {
+    $.KBWidget({
+
+		  name: "kbaseIrisProcessList",
+
         version: "1.0.0",
         _accessors : ['processList'],
         options: {

@@ -333,16 +333,24 @@
         return $(tag);
     }
 
-    $.kbObject = function(name, parent, def, asPlugin) {
-        if (asPlugin == undefined) {
-            asPlugin = false;
+    $.KBObject = function(def) {
+        if (def.asPlugin == undefined) {
+            def.asPlugin = false;
         }
 
-        return $.KBWidget(name, parent, def, asPlugin);
+        return $.KBWidget(def);
     }
 
-    $.KBWidget = function(name, parent, def, asPlugin) {
+    $.KBWidget = function(def) {
 
+        var name    = def.name;
+        var parent  = def.parent;
+
+        if (parent == undefined) {
+            parent = 'kbaseWidget';
+        }
+
+        var asPlugin= def.asPlugin;
         if (asPlugin == undefined) {
             asPlugin = true;
         }
@@ -541,17 +549,9 @@
         return $.fn[name];
     }
 
-    $.KBWidget('kbaseWidget',
-
+    $.KBWidget(
         {
-            _accessors : ['wing', 'wong'],
-
-            /**
-             * Returns the DOM element
-             */
-            element : function() {
-                return this;
-            },
+            name : 'kbaseWidget',
 
             /**
              * Writes text to console.

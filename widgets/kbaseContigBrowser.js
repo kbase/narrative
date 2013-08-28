@@ -100,6 +100,10 @@
             if (this.options.showButtons) {
                 this.$elem.KBaseContigBrowserButtons({ browser: self });
             }
+
+            this.options.onClickFunction = function(svgElement, feature) {
+                self.trigger("featureClick", feature);
+            }
             return this;
 
         },

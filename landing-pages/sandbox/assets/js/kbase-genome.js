@@ -9,12 +9,16 @@
 
         /* Initialize the landing page with a few open cards */
 
+        $(document).on("featureClick", function(event, data) {
+            addNewCard("KBaseGeneInfo", { featureID: data.feature_id, embedInCard: true });
+        });
+
         addNewCard("KBaseGenomeOverview", { genomeID: "kb|g.0", embedInCard: true });
         addNewCard("KBaseContigBrowser", { contig: "kb|g.0.c.1",
                                            centerFeature: "kb|g.0.peg.2173", 
                                            showButtons: true,
                                            embedInCard: true,
-                                           loadingImage: "../../widgets/images/ajax-loader.gif"
+                                           loadingImage: "../../widgets/images/ajax-loader.gif",
                                          });
 
 

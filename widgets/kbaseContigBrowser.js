@@ -4,6 +4,8 @@
  * A KBase widget that displays an interactive view of a single contig. It 
  * comes with hooks for navigating up and downstream, and a number of
  * different view and styling options.
+ *
+ * Note: this relies on kbaseContigBrowser.css in order to be pretty.
  * 
  *       @example
  *       // Setting up the browser:
@@ -35,17 +37,18 @@
  */ 
 
 (function( $, undefined ) {
-    $.KBWidget("KBaseContigBrowser", 'kbaseWidget', {
+    $.KBWidget({
+        name: "KBaseContigBrowser", 
+        parent: "kbaseWidget",
         version: "1.0.0",
         options: {
             contig: null,
             centerFeature: null,
-            onClickFunction: null,
             onClickUrl: null,
-            allowResize: false,
+            allowResize: true,
 
             svgWidth: 500,              // all numbers = pixels.
-            svgHeight: 500,
+            svgHeight: 100,
             trackMargin: 5,
             trackThickness: 15,
             leftMargin: 5,
@@ -53,7 +56,13 @@
             arrowSize: 10,
 
             start: 1,                   // except these two - they're contig positions
-            length: 10000               
+            length: 10000,
+
+            embedInCard: false,
+            showButtons: false,
+            cardContainer: null,
+            onClickFunction: null
+
         },
 
         cdmiURL: "http://kbase.us/services/cdmi_api",
@@ -61,6 +70,7 @@
         workspaceURL: "http://kbase.us/services/workspace",
         tooltip: null,
         operonFeatures: [],
+        $messagePane: null,
 
         init: function(options) {
             this._super(options);
@@ -70,30 +80,48 @@
                 // throw an error.
             }
 
+            this.$messagePane = $("<div/>")
+                                .addClass("kbwidget-message-pane")
+                                .addClass("kbwidget-hide-message");
+            this.$elem.append(this.$messagePane);
+
             this.cdmiClient = new CDMI_API(this.cdmiURL);
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
             this.proteinInfoClient = new ProteinInfo(this.proteinInfoURL);
             this.workspaceClient = new workspaceService(this.workspaceURL);
 
-            return this.render();
+            if (this.options.embedInCard) {
+                this.$elem.LandingPageCard({ title: "Contig Browser - " + this.options.contig,
+                                             width: 550 });
+            }
+            this.render();
+
+            var self = this;
+            if (this.options.showButtons) {
+                this.$elem.KBaseContigBrowserButtons({ browser: self });
+            }
+            return this;
+
         },
 
         /**
          * 
          */
         render: function() {
+            this.loading(false);
+
             // tooltip inspired from
             // https://gist.github.com/1016860
             this.tooltip = d3.select("body")
                              .append("div")
-                             .classed("kbgb-tooltip", true);
+                             .classed("kbcb-tooltip", true);
 
             // Init the SVG container to be the right size.
-            this.svg = d3.select(this.$elem.selector)
+            this.svg = d3.select(this.$elem[0])
                          .append("svg")
                          .attr("width", this.options.svgWidth)
                          .attr("height", this.options.svgHeight)
-                         .classed("kbgb-widget", true);
+                         .classed("kbcb-widget", true);
 
             this.trackContainer = this.svg.append("g");
 
@@ -107,7 +135,7 @@
                            .tickFormat(d3.format(",.0f"));
 
             this.axisSvg = this.svg.append("g")
-                               .attr("class", "kbgb-axis")
+                               .attr("class", "kbcb-axis")
                                .attr("transform", "translate(0, " + this.options.topMargin + ")")
                                .call(this.xAxis);
 
@@ -255,15 +283,6 @@
             });
         },
 
-        /**
-         * Call this to set a new contig to view.
-         */
-        // setContig : function(contigId) {
-        //     // set contig info and re-render
-        //     this.updateContig(contigId);
-        //     this.update();
-        // },
-
         setRange : function(start, length) {
             // set range and re-render
             this.options.start = start;
@@ -408,9 +427,9 @@
 
             trackSet.enter()
                     .append("path")
-                         .classed("kbgb-feature", true)  // incl feature_type later (needs call to get_entity_Feature?)
-                         .classed("kbgb-operon", function(d) { return self.isOperonFeature(d); })
-                         .classed("kbgb-center", function(d) { return self.isCenterFeature(d); })
+                         .classed("kbcb-feature", true)  // incl feature_type later (needs call to get_entity_Feature?)
+                         .classed("kbcb-operon", function(d) { return self.isOperonFeature(d); })
+                         .classed("kbcb-center", function(d) { return self.isCenterFeature(d); })
                          .attr("id", function(d) { return d.feature_id; })
                          .on("mouseover", 
                                 function(d) { 
@@ -460,6 +479,7 @@
             self.axisSvg.call(self.xAxis);
             
             self.resize();
+            this.loading(true);
         },
 
         featurePath : function(feature) {
@@ -660,6 +680,24 @@
             this.update();
         },
 
+        loading: function(doneLoading) {
+            if (doneLoading)
+                this.hideMessage();
+            else
+                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+        },
+
+        showMessage: function(message) {
+            var span = $("<span/>").append(message);
+
+            this.$messagePane.append(span);
+            this.$messagePane.removeClass("kbwidget-hide-message");
+        },
+
+        hideMessage: function() {
+            this.$messagePane.addClass("kbwidget-hide-message");
+            this.$messagePane.empty();
+        },
     });
 
 })( jQuery );

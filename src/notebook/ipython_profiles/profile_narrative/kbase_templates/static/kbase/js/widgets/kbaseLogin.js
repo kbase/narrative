@@ -99,12 +99,14 @@
         init: function(options) {
 
             this._super(options);
+            console.log(options);
 
             var kbaseCookie = this.get_kbase_cookie();
 
             this.$elem.empty();
 
             var style = '_' + this.options.style + 'Style';
+            var rePrompt = false;
 
             this.ui = this[style]();
             if (this.ui) {
@@ -149,7 +151,7 @@
             $(document).on(
                 'logout.kbase',
                 $.proxy(function (e, rePrompt) {
-                    this.logout(rePrompt);
+                    this.logout(false);
                 }, this)
             );
 

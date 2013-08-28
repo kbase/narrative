@@ -3,29 +3,33 @@
     $(function() {
         $(document).on('loggedIn.kbase', function(event, token) {
             narrativeWsWidget.loggedIn(token);
+            narrativeUploadWidget.loggedIn(token);
         });
 
         $(document).on('loggedOut.kbase', function(event, token) {
             narrativeWsWidget.loggedOut(token);
+            narrativeUploadWidget.loggedOut(token);
         });
 
         narrativeWsWidget = $("#narrative-workspace-view").kbaseNarrativeWorkspace({
-                                                                                    tabs: [
-                                                                                        { 
-                                                                                            name: "Narrative",
-                                                                                            workspace: "KBaseFBA"
-                                                                                        },
-                                                                                        {
-                                                                                            name: "Workspace",
-                                                                                            workspace: "bill_models"
-                                                                                        },
-                                                                                        {
-                                                                                            name: "Project",
-                                                                                            workspace: "billbootcamp"
-                                                                                        }
-                                                                                    ],
-                                                                                    loadingImage: "/static/kbase/images/ajax-loader.gif"
-                                                                                   });
+            tabs: [
+            { 
+                name: "Narrative",
+                workspace: "KBaseFBA"
+            },
+            {
+                name: "Workspace",
+                workspace: "bill_models"
+            },
+            {
+                name: "Project",
+                workspace: "billbootcamp"
+            }
+            ],
+            loadingImage: "/static/kbase/images/ajax-loader.gif"
+        });
+
+        narrativeUploadWidget = $("#data-add-btn").kbaseUploadWidget({});
 
         // set the auth token by calling the kernel execute method on a function in
         // the magics module

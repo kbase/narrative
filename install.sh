@@ -4,12 +4,13 @@ installPath=`pwd`
 venv="narrative-venv"
 branch="1.x"
 commit="" 
+profile_name="narrative"
 
 while :
 do
     case $1 in
         -h | --help | -\?)
-            printf "usage: $0 [{-p | --install_path} root_install_path] [{-v | --virtual_env} environment_name] [{-c | commit_id} git_commit_id]\n"
+            printf "usage: $0 [{-p | --install_path} root_install_path] [{-v | --virtual_env} environment_name] [{-c | commit_id} git_commit_id] [{-n | --name} profile_name]\n"
             printf "   p : this is an existing absolute path where you would like the virtualenv directory created inside, \n"
             printf "       e.g. /home/user/my_virtualenv_area\n"
             printf "       defaults to the current working directory\n"
@@ -21,6 +22,9 @@ do
             printf "       defaults to '1.x'\n"
             printf "   c : use this git commit id to checkout code\n"
             printf "       only used if defined, defaults to empty string\n"
+            printf "   n : the name of the profile, e.g. narrative_mongo\n"
+            printf "       the default is ${profile_name}\n"
+            exit 0
             exit 0
             ;;
         -p | --install_path)
@@ -41,6 +45,11 @@ do
         -c | --commit_id)
             printf "Using commit $2...\n"
             commit=$2
+            shift 2
+            ;;
+        -n | --name)
+            printf "Using profile name $2...\n"
+            profile_name=$2
             shift 2
             ;;
         -*|--*) # Unrecognized option
@@ -94,7 +103,7 @@ printf 'source %s/bin/activate
 export NARRATIVEDIR=%s
 export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
 
-ipython $* --NotebookManager.notebook_dir=~/.narrative --profile=narrative
+ipython $* --NotebookManager.notebook_dir=~/.narrative --profile=${profile_name}
 ' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" &> $installPath/$venv/bin/run_notebook.sh
 
 chmod +x $installPath/$venv/bin/run_notebook.sh

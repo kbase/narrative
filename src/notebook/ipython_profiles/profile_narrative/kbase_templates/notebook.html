@@ -15,9 +15,10 @@
     <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
 
     {{super()}}
-
+    <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrap-fileupload.min.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbase-workspace-mini.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbase-narrative-workspace.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbase_upload.css") }}" type="text/css" />
 
     <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
 
@@ -210,7 +211,8 @@ class="notebook_app"
             </div>
 
             <div id="narrative-workspace-view">
-            </div>            
+            </div>
+            <div id="narrative-upload-dialog" style="display: none"/>
 <!--             <div id="data-tab-nav">
                 <ul>
                     <li class="selected"><a href="#">Narrative</a></li>
@@ -352,13 +354,17 @@ class="notebook_app"
 <!-- inserted KBase Javascript below -->
 <script src="{{ static_url("kbase/js/jquery.cookie.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <!-- <script src="{{ static_url("kbase/js/kbase.min.js") }}"  type="text/javascript" charset="utf-8"></script> -->
+<script src="{{ static_url("kbase/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbwidget.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseLogin.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbase-narrative.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("kbase/js/workspaceService.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbase-workspace-mini.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbase-narrative-workspace.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
+
 
 {% endblock %}

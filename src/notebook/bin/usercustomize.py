@@ -5,5 +5,5 @@
 import os
 import sys
 basepath = os.path.dirname(os.path.abspath(__file__))
-sys.path = [ basepath, basepath+"/KBNB"] + sys.path 
+#sys.path = [ basepath, basepath+"/KBNB"] + sys.path 
 

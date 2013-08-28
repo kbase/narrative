@@ -17,7 +17,8 @@
 		options: {
 			tabs: [
 				{ 
-					name: "Narrative",
+					//name: "Narrative",
+					name: "MrPibbs",
 					workspace: "workspace1"
 				},
 				{

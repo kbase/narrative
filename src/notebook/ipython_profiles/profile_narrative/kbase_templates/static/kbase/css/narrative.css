@@ -1,3 +1,13 @@
+.whiteout-pane {
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	background-color: #fff;
+	text-align: center;
+}
+
 html { 
 	background-color: #a2a2a2;
 	/*border: 1px solid #000;*/

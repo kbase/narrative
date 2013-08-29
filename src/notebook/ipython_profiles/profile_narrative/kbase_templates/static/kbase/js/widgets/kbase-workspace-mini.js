@@ -62,7 +62,7 @@
 			this.loading(true);
 		},
 
-		loggedIn: function(args) {
+		loggedIn: function(token) {
 			this.hideMessage();
 
 			this.wsClient = new workspaceService(this.options.workspaceURL);
@@ -82,7 +82,7 @@
 			*/
 
 			var browser = this;
-			this.wsClient.list_workspace_objects({ workspace: this.options.workspaceName, auth: args.token }, 
+			this.wsClient.list_workspace_objects({ workspace: this.options.workspaceName, auth: token }, 
 				function(results) {
 					browser.render(results);
 				},

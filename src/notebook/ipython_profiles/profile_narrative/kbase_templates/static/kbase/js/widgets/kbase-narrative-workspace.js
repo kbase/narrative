@@ -104,14 +104,14 @@
 			return this;
 		},
 
-		loggedIn: function(args) {
+		loggedIn: function(token) {
 			for (var i=0; i<this.workspaceWidgets.length; i++)
-				this.workspaceWidgets[i].loggedIn(args);
+				this.workspaceWidgets[i].loggedIn(token);
 		},
 
-		loggedOut: function(args) {
+		loggedOut: function(token) {
 			for (var i=0; i<this.workspaceWidgets.length; i++)
-				this.workspaceWidgets[i].loggedOut(args);
+				this.workspaceWidgets[i].loggedOut(token);
 		}
 	});
 

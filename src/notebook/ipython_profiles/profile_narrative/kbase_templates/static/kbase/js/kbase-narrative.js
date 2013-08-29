@@ -29,12 +29,13 @@
             loadingImage: "/static/kbase/images/ajax-loader.gif"
         });
 
-        narrativeUploadWidget = $("#data-add-btn").kbaseUploadWidget({});
+        var narrativeUploadWidget = $("#data-add-btn").kbaseUploadWidget({});
 
         var token = $("#login-widget").kbaseLogin("session", "token");
         if (token) {
+            console.log(token);
             narrativeWsWidget.loggedIn(token);
-            narrativeUploadWidget.loggedIn(token);
+//            narrativeUploadWidget.loggedIn(token);
         }
 
 

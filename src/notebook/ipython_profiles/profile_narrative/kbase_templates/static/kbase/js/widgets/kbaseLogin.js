@@ -99,7 +99,6 @@
         init: function(options) {
 
             this._super(options);
-            console.log(options);
 
             var kbaseCookie = this.get_kbase_cookie();
 

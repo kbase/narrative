@@ -6,7 +6,11 @@
 (function( $, undefined ) {
 
 
-    $.KBWidget("kbaseWorkspaceBrowser", 'kbaseFileBrowser', {
+    $.KBWidget({
+
+		  name: "kbaseWorkspaceBrowser",
+		parent: 'kbaseFileBrowser',
+
         version: "1.0.0",
         options: {
             name : 'Workspace Browser',

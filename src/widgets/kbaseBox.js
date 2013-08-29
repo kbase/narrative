@@ -38,7 +38,10 @@
 
 (function( $, undefined ) {
 
-    $.KBWidget("kbaseBox", 'kbaseWidget', {
+    $.KBWidget({
+
+		  name: "kbaseBox",
+
         version: "1.0.0",
         options: {
             canCollapse : true,

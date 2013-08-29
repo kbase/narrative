@@ -30,7 +30,10 @@
 
 (function( $, undefined ) {
 
-    $.KBWidget("kbaseButtonControls", 'kbaseWidget', {
+    $.KBWidget({
+
+		  name: "kbaseButtonControls",
+
         version: "1.0.0",
         options: {
             controls : [],

@@ -35,7 +35,10 @@
 (function( $, undefined ) {
 
 
-    $.KBWidget("kbaseTabs", 'kbaseWidget', {
+    $.KBWidget({
+
+		  name: "kbaseTabs",
+
         version: "1.0.0",
 
         _accessors : ['tabsHeight'],

@@ -1,4 +1,5 @@
-/*  File upload widget.
+/**
+ *  File upload widget.
  *
  * Author: Dan Gunter <dkgunter@lbl.gov>
  * Created: 27 Aug 2013
@@ -16,20 +17,28 @@
 		workspaceWidgets: [],
 
 		options: {},
-		
+
+        /**
+         * Initialize the widget.
+         *
+         * @param options
+         * @returns {*}
+         */
 		init: function(options) {
             this._super(options);
 			//alert("widget init");
             var that = this;
             this.$elem.on("click", function(event) {
-                that.newDialog();
+                that.render();
             });
             return this;
 		},
-		render: function() {
-			return this;
-		},
-        newDialog: function() {
+        /**
+         * Render the widget.
+         *
+         * @returns {*}
+         */
+        render: function() {
             var opts = {
                 modal: true,
                 closeOnEscape: true,
@@ -118,7 +127,7 @@
             $frm.append($actions);
             // Set up respones
             var that = this;
-            $frm.on( "submit", function( event ) {
+            $frm.on( "submit", function(event) {
                 event.preventDefault();
                 console.log( $(this).serialize() );
                 that.uploadFile($(this).serializeArray());
@@ -128,19 +137,14 @@
             return this;
         },
 
+        /**
+         * Upload the file into the workspace.
+         *
+         * @param values File path and metadata
+         * @returns {*}
+         */
         uploadFile: function(values) {
             return this;
         }
-/*
-		loggedIn: function(args) {
-			for (var i=0; i < this.workspaceWidgets.length; i++)
-				this.workspaceWidgets[i].loggedIn(args);
-		},
-
-		loggedOut: function(args) {
-			for (var i=0; i < this.workspaceWidgets.length; i++)
-				this.workspaceWidgets[i].loggedOut(args);
-		}
-*/
 	});
 })( jQuery );

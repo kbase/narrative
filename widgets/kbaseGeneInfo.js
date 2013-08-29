@@ -51,7 +51,8 @@
 			 */
 			var self = this;
 
-			this.$table = $("<table />");
+			this.$table = $("<table />")
+						  .addClass("kbgo-table");
 			this.entityClient.get_entity_Feature(
 				[this.options.featureID], 
 				['feature_type', 'function', 'alias'],
@@ -71,9 +72,16 @@
 						function(featureData) {
 							featureData = featureData[self.options.featureID];
 							if (featureData.feature_publications && featureData.feature_publications.length > 0) {
-								var pubStr = "";
-								for (var i=0; i<featureData.feature_publications.length; i++) {
-									pubStr += "<a href='" + featureData.feature_publications[i][1] + "' target='_new'>" + featureData.feature_publications[i][2] + "</a><br>";
+								var pubStr;
+								if (featureData.feature_publications.length === 1)
+									pubStr = self.buildPublicationString(featureData.feature_publications[0]);
+								else {
+									pubStr = "<ol>";
+									for (var i=0; i<featureData.feature_publications.length; i++) {
+										pubStr += "<li>" + self.buildPublicationString(featureData.feature_publications[i]) + "</li>";
+									}
+									pubStr += "</ol>";
+
 								}
 								self.$table.append("<tr><td>Publications</td><td>" + pubStr + "</td></tr>");
 							}
@@ -86,21 +94,21 @@
 				this.clientError
 			);
 
-			// this.cdmiClient.fids_to_feature_data(
-			// 	[this.options.featureID],
-			// 	function(featureData) {
-			// 		console.log(featureData);
-			// 	},
-			// 	this.clientError
-			// );
-
-
 			return this;
+		},
+
+		buildPublicationString: function(pub) {
+			if (pub.length < 3)
+				return "";
+			else
+				return "<a href='" + pub[1] + "' target='_new'>" + pub[2] + "</a>";
 		},
 
 		clientError: function(error) {
 
-		}
+		},
+
+
 
 
 	})

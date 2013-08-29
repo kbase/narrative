@@ -29,21 +29,8 @@
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
             this.workspaceClient = new workspaceService(this.workspaceURL);
 
-//            this.render();
             if (this.options.embedInCard) {
                 this.$elem.LandingPageCard({ title: "Genome Overview" });
-
-                // var self = this;
-                // this.$elem.dialog({
-                //     autoOpen: true,
-                //     title: "Genome Overview",
-                //     open: function(event, ui) {
-                //         self.$elem.css('overflow', 'hidden');
-                //     },
-                //     close: function(event, ui) {
-                //         self.$elem.remove();
-                //     }
-                // });
             }
 
             return this.render();
@@ -79,6 +66,8 @@
 
                     var $infoTable = $("<div />")  // should probably be styled somehow. Bootstrapish?
                                      .append($("<table/>")
+                                             .addClass("kbgo-table")
+//                                             .addClass("table table-bordered table-striped")
                                              .append($("<tr/>")
                                                      .append("<td>ID</td><td>" + genome.id + "</td>")
                                                     )
@@ -101,7 +90,7 @@
                                                      .append("<td>Number of Contigs</td><td>" + genome.contigs + "</td>")
                                                     )
                                              .append($("<tr/>")
-                                                     .append("<td>GC Content</td><td>" + genome.gc_content + "</td>")
+                                                     .append("<td>GC Content</td><td>" + Number(genome.gc_content).toFixed(2) + " %" + "</td>")
                                                     )
                                              .append($("<tr/>")
                                                      .append("<td>Protein encoding genes</td><td>" + genome.pegs + "</td>")
@@ -111,7 +100,6 @@
                                                     )
                                      );
                     self.$elem.append($infoTable);
-
                 },
 
                 self.rpcError

@@ -71,6 +71,7 @@
 
 						function(featureData) {
 							featureData = featureData[self.options.featureID];
+							console.log(featureData);
 							if (featureData.feature_publications && featureData.feature_publications.length > 0) {
 								var pubStr;
 								if (featureData.feature_publications.length === 1)

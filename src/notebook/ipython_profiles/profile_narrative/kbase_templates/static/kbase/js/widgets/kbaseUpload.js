@@ -42,7 +42,7 @@
             var opts = {
                 modal: true,
                 closeOnEscape: true,
-                title: "Add file",
+                title: "Upload file",
                 width: "50em"
             };
             var dlg = $('#narrative-upload-dialog').dialog(opts);
@@ -65,12 +65,20 @@
                     type:'text',
                     id:'dataset_name',
                     label:'Dataset Name:',
-                    placeholder: "I pity the fool who doesn't name their dataset"
+                    placeholder: "Name or identifying phrase"
                 }
             };
             // Populate data types
             // XXX: fetch these from somewhere!
-            fields.datatype.options = ['Foo', 'Bar', 'Baz'];
+            fields.datatype.options = [
+                'FBA',
+                'Genome',
+                'Media',
+                'Model',
+                'PhenotypeSet',
+                'PhenotypeSimulationSet',
+                'PromConstraints',
+            ];
             // Add each field
             $.each(fields, function(key, value) {
                 var $frm_grp = $("<div class='control-group'></div>");
@@ -83,19 +91,19 @@
                 switch (value.type) {
                     case "file":
                         // This uses Bootstrap file-upload, see: http://jasny.github.io/bootstrap/javascript.html#fileupload
-                        $control = $('<div class="fileupload fileupload-new" data-provides="fileupload"></div>');
-                        var $fu2 = $('<div class="input-append"></div>');
-                        var $fu3 = $('<div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i>' +
-                            '<span class="fileupload-preview"></span></div>' +
-                            '<span class="btn btn-file">' +
-                                '<span class="fileupload-new">Select file</span>' +
-                                '<span class="fileupload-exists">Change</span><input type="file" />' +
-                            '</span>' +
-                            '</div>');
-                        $fu2.append($fu3);
-                        $control.append($fu2);
+                        $control = $('<div class="fileupload fileupload-new" data-provides="fileupload"></div>')
+                            .append($('<div class="input-append"></div>')
+                                .append($('<div class="uneditable-input span3">' +
+                                             '<i class="icon-file fileupload-exists"></i>' +
+                                             '<span class="fileupload-preview"></span>' +
+                                          '</div>' +
+                                          '<span class="btn btn-file">' +
+                                            '<span class="fileupload-new">Select file</span>' +
+                                            '<span class="fileupload-exists">Change</span>' +
+                                            '<input type="file" id="' + value.id + '"/>' +
+                                          '</span>')));
                         // register file upload widget
-                        $('.fileupload').fileupload({name: value.id});
+                        $('.fileupload').fileupload({'name': value.id});
                         break;
                     case "text":
                         $control = $('<input type="text" name="' + value.id +  '" ' +
@@ -129,12 +137,30 @@
             var that = this;
             $frm.on( "submit", function(event) {
                 event.preventDefault();
-                console.log( $(this).serialize() );
-                that.uploadFile($(this).serializeArray());
+                var frm_arr = $(this).serializeArray();
+                var $file_input = $('#' + fields.filename.id);
+                var formData = new FormData($file_input[0]);
+                frm_arr.push({name: that._getFileName($file_input), data: formData});
+                that.uploadFile(frm_arr);
             });
             // Populate dialog with form
             dlg.append($frm);
             return this;
+        },
+
+        /**
+         * Get file name from input.
+         * Has a workaround for chrome
+         */
+        _getFileName: function(element) {
+            var fname = "";
+            if (navigator.userAgent.indexOf('Chrome')) {
+                fname = element.val().replace(/C:\\fakepath\\/i, '');
+            }
+            else {
+                fname = element.val();
+            }
+            return fname;
         },
 
         /**
@@ -144,6 +170,13 @@
          * @returns {*}
          */
         uploadFile: function(values) {
+            console.log("upload called with:");
+            $.each(values, function(index, value) {
+                console.log("(" + index + ")");
+                $.each(value, function(key, val) {
+                    console.log("   - " + key + '=' + val);
+                });
+            });
             return this;
         }
 	});

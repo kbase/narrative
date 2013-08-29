@@ -54,7 +54,10 @@
 
 (function( $, undefined ) {
 
-    $.KBWidget("kbasePrompt", 'kbaseWidget', {
+    $.KBWidget({
+
+		  name: "kbasePrompt",
+
         version: "1.0.0",
         options: {
             controls : ['cancelButton', 'okayButton'],

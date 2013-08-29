@@ -22,9 +22,11 @@ function router() {
         seq_search_view();
     }).enter(navEvent);
 
+    /*
     Path.map("#/workspace-browser").to(function(){
         workspace_view();
     }).enter(navEvent);    
+    */
 
     // Data routes
     Path.map("#/genomes").to(function(){ empty_page() });
@@ -260,6 +262,7 @@ function run_fba_view(ws_id) {
 //
 // "apps"
 //
+/*
 function workspace_view() {
     // load template
     $('#app').load('../common/app-templates/ws-browser.html', function() {
@@ -271,7 +274,7 @@ function workspace_view() {
                                                 selectHandler: selectHandler});
     })
 }
-
+*/
 
 //
 //  Layouts.  This could be part of a template system or whatever

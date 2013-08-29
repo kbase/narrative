@@ -1,6 +1,7 @@
 (function( $, undefined ) {
 
-$.KBWidget("kbaseWSMediaTable", {
+$.KBWidget({
+    name: "kbaseWSMediaTable",      
     version: "1.0.0",
     options: {
     },

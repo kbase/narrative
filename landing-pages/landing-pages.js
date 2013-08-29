@@ -9,7 +9,6 @@ $(function() {
 
         router()
     })
-
 })
 
 function navEvent() {
@@ -17,12 +16,15 @@ function navEvent() {
     $(document).trigger("navEvent");
 }
 
-
 function router() {
     // App routes
     Path.map("#/seq-search").to(function(){
         seq_search_view();
     }).enter(navEvent);
+
+    Path.map("#/workspace-browser").to(function(){
+        workspace_view();
+    }).enter(navEvent);    
 
     // Data routes
     Path.map("#/genomes").to(function(){ empty_page() });
@@ -73,12 +75,16 @@ function router() {
     }).enter(navEvent);
 
 
+    // Analysis Routes
+    Path.map("#/run-fba/:ws_id").to(function(){ 
+        run_fba_view(this.params['ws_id']);
+    }).enter(navEvent);
+
+
     // help routes
     Path.map("#/data-view-api").to(function(){ 
         help_view();
     }).enter(navEvent);
-
-
 
     Path.rescue(function(){ 
         page_not_found();
@@ -105,7 +111,6 @@ function reload_window() {
  *  "Views" which load widgets on page.
  */
 
-
  function ws_model_view(ws_id) {
     var ws_id = ws_id ? ws_id : 'KBaseCDMModels';
 
@@ -124,11 +129,16 @@ function model_view(ws_id, id) {
     var ws_id = ws_id ? ws_id : 'KBaseFBA';
     var id = id ? id : 'kb|g.19.fbamdl.0';
 
-    $('#app').html(simple_layout1('model-meta', 'model-tabs', 'core-map') )
+    $('#app').html(simple_layout1('model-meta', 'model-opts',
+                                  'model-tabs', 'core-map') )
     
     $('#model-meta').kbaseModelMeta({ids : [id], 
                                      workspaces : [ws_id],
                                      auth: USER_TOKEN});
+
+    $('#model-opts').kbaseModelOpts({id : id, 
+                                 workspace : ws_id,
+                                 auth: USER_TOKEN});    
 
     $('#model-tabs').kbaseModelTabs({ids : [id], 
                                      workspaces : [ws_id],
@@ -201,35 +211,64 @@ function media_view(ws_id, id) {
     $('#media-table').kbaseWSMediaTable({ws: ws_id});
 
     var media_modal = $('#media-modal').kbaseMediaModal({auth: USER_TOKEN});        
+    var save_ws_modal = $('#save-ws-modal').kbaseSimpleWSSelect({auth: USER_TOKEN});   
 
     $(document).off("mediaClick");
     $(document).on("mediaClick", function(e, data) {
         media_modal.show({media: data.media});
-    })    
+    });   
+
+    $(document).off("saveToWSClick");
+    $(document).on("saveToWSClick", function(e, data) {
+        console.log('save to ws click event');
+        save_ws_modal.show();
+    });
+
+    $(document).off("selectedWS");
+    $(document).on("selectedWS", function(e, data) {
+        console.log(data.ws);
+    });
 }
-
-
-
 
 function help_view() {
     $('#app').load('../common/templates/data-view-api.html', function() {
-        $('.api-url-submit').click(function(){
+        $('.api-url-submit').click(function() {
             var form = $(this).parents('form')
             var url = '/'+form.attr('type')+'/'+form.find('#input1').val();
             if (form.find('#input2').val()) {
                 url = url+'/'+form.find('#input2').val();
             }
             window.location.hash = url;
-        })
+        });
     });
 }
 
-function seq_search_view() {
-    // load template
-    $('#app').load('../common/app-templates/seq-search.html', function() {
+//
+// Analysis Views
+//
+function run_fba_view(ws_id) {
+    var ws_id = ws_id ? ws_id : 'KBaseCDMModels';
+    console.log(ws_id)
 
-        // load app
-        $('#seq-search').kbaseSeqSearch({});
+    $('#app').html(simple_layout2('media-table') )
+    
+    $('#media-table').kbaseWSMediaTable({ws : ws_id,
+                                     auth: USER_TOKEN});
+}
+
+
+//
+// "apps"
+//
+function workspace_view() {
+    // load template
+    $('#app').load('../common/app-templates/ws-browser.html', function() {
+        $('#app').html(simple_layout3('ws-selector', 'ws-object-table') );
+
+        objectTable = $('#ws-object-table').kbaseWSObjectTable({auth:USER_TOKEN})
+
+        wsSelector = $('#ws-selector').kbaseWSSelector({userToken: USER_TOKEN,
+                                                selectHandler: selectHandler});
     })
 }
 
@@ -237,19 +276,23 @@ function seq_search_view() {
 //
 //  Layouts.  This could be part of a template system or whatever
 //
-
-function simple_layout1(id1, id2, id3) {
+function simple_layout1(id1, id2, id3, id4) {
     var simple_layout = '<div class="row">\
                             <div class="col-md-4">\
-                                <div id="'+id1+'"></div>\
+                                <div class="row">\
+                                    <div id="'+id1+'"></div>\
+                                </div>\
+                                <div class="row">\
+                                    <div id="'+id2+'"></div>\
+                                </div>\
                             </div>\
                             <div class="col-md-8">\
-                                <div id="'+id2+'"></div>\
+                                <div id="'+id3+'"></div>\
                             </div>\
                         </div>\
                         <div class="row">\
                             <div class="col-md-12">\
-                                <div id="'+id3+'"></div>\
+                                <div id="'+id4+'"></div>\
                             </div>\
                         </div>'
     return simple_layout;
@@ -263,5 +306,194 @@ function simple_layout2(id1) {
                         </div>'
     return simple_layout;
 }
+
+function simple_layout3(id1, id2) {
+    var simple_layout = '<div class="row">\
+                            <div class="col-md-4">\
+                                <div id="'+id1+'"></div>\
+                            </div>\
+                            <div class="col-md-8">\
+                                <div id="'+id2+'"></div>\
+                            </div>\
+                        </div>'
+    return simple_layout;
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+//
+// workspace browser handler
+//
+/////////////////////////////////////////////////////////////////////////////////////////////
+    var first = true;
+    var prevPromises = []; // store previous promises to cancel
+    function selectHandler(selected) {
+        workspaces = wsSelector.workspaces;
+
+        // tell the previous promise(s) not to fire
+        prevPromises.cancel = true;
+
+        // workspaces might have data loaded already
+        var promises = [];
+        prevPromises = promises;
+
+        // loop through selected workspaces and download objects if they haven't been downloaded yet
+        for (var i=0; i<selected.length; i++) {
+            var workspace = selected[i];
+
+            var objType = $.type(workspace.objectData);
+            if (objType === 'undefined') {
+                // no data and not being downloaded
+                var p = workspace.getAllObjectsMeta();
+                workspace.objectData = p; // save the promise
+                promises.push(p);
+
+                // provide closure over workspace
+                (function(workspace) {
+                    p.done(function(data) {
+                    // save the data and tell workspace selector that the workspace has it's data
+                        workspace.objectData = data;
+                        wsSelector.setLoaded(workspace);
+                    });
+                })(workspace);
+            } else if (objType === 'object') {
+                // data being downloaded (objectData is a promise)
+                promises.push(workspace.objectData);
+            }
+        }
+
+        if (promises.length > 0) {
+            // may take some time to load
+            objectTable.loading(true);
+        }
+
+        // when all the promises are done...
+        $.when.apply($, promises).done(function() {
+            if (promises.cancel) {
+                // do nothing if it was cancelled
+                return;
+            }
+
+            // reload the object table
+            objectTable.reload(selected).done(function() {
+                if (promises.cancel) {
+                    return;
+                }
+
+                if (first) {
+                    firstSelect();
+                    first = false;
+                }
+            });
+        });
+
+        // this function is called upon the first selection event
+        //  it sets absolute position for the data table so that it scrolls nicely
+        function firstSelect() {
+            objectTable.fixColumnSize();
+
+            // move table element into new scrollable div with absolute position
+            var otable = $('#object-table');
+            var parts = otable.children().children();
+                    
+            var header = parts.eq(0);
+            var table = parts.eq(1);
+            var footer = parts.eq(2);
+
+            header.css({
+                position: 'absolute',
+                top: '0px',
+                left: '0px',
+                right: '0px'
+            });
+
+            table.css({
+                position: 'absolute',
+                top: (header.height() + 2) + 'px',
+                left: '0px',
+                right: '0px',
+                bottom: (footer.height() + 2) + 'px'
+            });
+
+            table.find('.dataTables_scrollBody').css({
+                position: 'absolute',
+                height: '',
+                width: '',
+                top: table.find('.dataTables_scrollHead').height(),
+                left: '0px',
+                right: '0px',
+                bottom: '0px'
+            });
+
+            footer.css({
+                position: 'absolute',
+                bottom: '0px',
+                left: '0px',
+                right: '0px'
+            });
+        }
+    }
+
+
+
+
+
+
+/*
+ *  Function to store state in local storage.
+ * 
+ *  Better than storing list of selected workspaces
+ *  in the URL (e.g. #workspace1&workspace2&workspace3...)
+ * 
+ *  Not optimized for large quantities of data
+ */
+function State() {
+    // Adapted from here: http://diveintohtml5.info/storage.html
+    var ls;
+    try {
+        ls = 'localStorage' in window && window['localStorage'] !== null;
+    } catch (e) {
+        ls = false;
+    }
+
+    //var user = (auth.isLoggedIn() ? auth.getUserData().user_id : 'public');
+
+    this.get = function(key) {
+        if (!ls) {
+            return null;
+        }
+
+        //key = user + '.' + key;
+
+        var val = localStorage.getItem(key);
+
+        try {
+            val = JSON.parse(val);
+        } catch(e) {
+            return null;
+        };
+
+        return val;
+    };
+
+    this.set = function(key, val) {
+        if (!ls) {
+            return null;
+        }
+
+        //key = user + '.' + key;
+        
+        try {
+            val = JSON.stringify(val);
+        } catch(e) {
+            return null;
+        }
+
+        return localStorage.setItem(key, val);
+    };
+}
+
 
 

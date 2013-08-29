@@ -62,20 +62,20 @@ $.KBWidget("kbaseMediaModal", {
             for (var i in data.compounds) {
                 table.append('<tr><td>'+data.compounds[i]+'</td><td>'+data.concentrations[i]+'</td></tr>');
             }
-            container.find('.modal-body').append(table)
+            modal_body.append(table)
+
+            modal_body.append('<a class="btn btn-primary save-to-ws-btn">Save to Workspace -></a>');
+            events(container);
         }
 
 
-        function get_genome_id(ws_id) {
-            var pos = ws_id.indexOf('.');
-            var ws_id = ws_id.slice(0, ws_id.indexOf('.', pos+1));
-            return ws_id;
+        function events(container) {
+            $('.save-to-ws-btn').unbind('click');
+            $('.save-to-ws-btn').click(function() {
+                self.trigger('saveToWSClick');
+            });
         }
 
-        $('#rxn-tabs a').click(function (e) {
-            e.preventDefault();
-            $(this).tab('show');
-        })
 
         //this._rewireIds(this.$elem, this);
         return this;

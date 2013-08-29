@@ -13,7 +13,8 @@ $.KBWidget("kbaseWSMediaTable", {
         this.$elem.append('<div id="kbase-ws-media-table" class="panel panel-default">\
                                 <div class="panel-heading">\
                                     <h4 class="panel-title">Biochemistry Media</h4>\
-                                    <span class="label label-primary pull-right">'+ws+'</span><br>\
+                                    <span class="label label-primary pull-right select-ws" \
+                                    data-ws="'+ws+'">'+ws+'</span><br>\
                                 </div>\
                                 <div class="panel-body"></div>\
                            </div>');
@@ -93,6 +94,12 @@ $.KBWidget("kbaseWSMediaTable", {
                 var media = $(this).data('media');
                 self.trigger('mediaClick', {media: media});
             });
+
+            $('.select-ws').unbind('click');
+            $('.select-ws').click(function() {
+                var ws = $(this).data('ws');
+                self.trigger('selectWS', {ws: ws});
+            });            
         }
 
         //this._rewireIds(this.$elem, this);

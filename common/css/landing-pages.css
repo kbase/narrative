@@ -28,6 +28,10 @@ rect:hover {
 /* end bootstrap overrides */
 
 
+#core-model { 
+    overflow-x: auto; 
+}
+
 #logo {
     margin: 2px 10px 0 10px;
 }

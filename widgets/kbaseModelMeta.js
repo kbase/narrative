@@ -41,13 +41,6 @@ $.KBWidget("kbaseModelMeta", {
                                                  <td>'+data[i]+'</td></tr>');
             }
             container.append(table);
-            // model viewer link
-            container.append('<a class="app-icon" href="http://140.221.84.128/#models?tab=model-selection&kbids='+
-                    models[0]+'&ws='+workspaces[0]+'" target="_blank">\
-                        <img src="http://www.kbase.us/files/6313/6148/9465/model_icon.png" width=30 >\
-                    </a>\
-                    <a href="http://140.221.84.128/#models?tab=model-selection&kbids='+
-                    models[0]+'&ws='+workspaces[0]+'" target="_blank">Add to Model Viewer</a>');
         })
 
         return this;

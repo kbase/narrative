@@ -6,6 +6,7 @@
 	left: 0;
 	background-color: #fff;
 	text-align: center;
+	tabindex: -1;
 }
 
 html { 
@@ -40,8 +41,9 @@ body{
 }
 
 #narrative-title {
-	padding-left: 30px;
-	margin: 10px 0;
+	padding-left: 24px;
+	padding-bottom: 10px;
+	margin: 10px 0; 
 }
 
 #menubar-container {
@@ -73,7 +75,7 @@ p#site-title {
 #login-info {
 	position: absolute;
 	right: 0px;
-	top: 26px;
+	top: 17px;
 	margin: 5px;
 	font-size: 1.2em;
 }

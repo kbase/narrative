@@ -106,7 +106,6 @@
             this.$elem.empty();
 
             var style = '_' + this.options.style + 'Style';
-            var rePrompt = false;
 
             this.ui = this[style]();
             if (this.ui) {
@@ -151,7 +150,7 @@
             $(document).on(
                 'logout.kbase',
                 $.proxy(function (e, rePrompt) {
-                    this.logout(false);
+                    this.logout(rePrompt);
                 }, this)
             );
 
@@ -220,6 +219,86 @@
         		this.data('loginDialog').openPrompt();
 
         	}
+        },
+
+        _narrativeStyle: function() {
+            this._createLoginDialog();
+
+            var $prompt = $('<span></span>')
+                .append(
+                    $('<a></a>')
+                        .attr('id', 'loginlink')
+                        .attr('href', '#')
+                        .text('Sign In')
+                        .bind('click',
+                            $.proxy( function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                this.openDialog();
+                            }, this)
+                        )
+                )
+                .append(
+                    $('<span></span>')
+                        .attr('id', 'userdisplay')
+                        .attr('style', 'display : none;')
+                        .addClass('input-prepend')
+                        .append(
+                            $('<span></span>')
+                                .addClass('add-on')
+                                //.attr('style', 'text-align : center')
+                                .append('Logged in as ')
+                                .append(
+                                    $('<span></span>')
+                                        .attr('id', 'loggedinuser_id')
+                                        .attr('style', 'font-weight : bold')
+                                        .append('user_id\n')
+                                )
+                            )
+                        .append(
+                            $('<button></button>')
+                                .addClass('btn')
+                                .attr('id', 'logoutbutton')
+                                .append(
+                                    $('<i></i>')
+                                        .attr('id', 'logouticon')
+                                        .addClass('icon-signout')
+                                )
+                        )
+                );
+
+            this._rewireIds($prompt, this);
+
+            this.registerLogin =
+                function(args) {
+
+                    if ( args.success ) {
+                        this.data("loginlink").hide();
+                        this.data('loggedinuser_id').text(args.name);
+                        this.data("userdisplay").show();
+                        this.data('loginDialog').closePrompt();
+                    }
+                    else {
+                        this.data('loginDialog').dialogModal().trigger('error', args.message);
+                    }
+                };
+
+            this.specificLogout = function(args) {
+                this.data("userdisplay").hide();
+                this.data("loginlink").show();
+            };
+
+            this.data('logoutbutton').bind('click',
+                $.proxy(
+                    function(e) {
+                        this.logout();
+                        this.data('user_id').focus();
+                    },
+                    this
+                )
+            );
+
+            return $prompt;
         },
 
         _textStyle : function() {
@@ -1003,7 +1082,7 @@
         logout : function(rePrompt) {
 
             if (rePrompt == undefined) {
-                rePrompt = true;
+                rePrompt = false;
             }
 
             var session_id = this.get_kbase_cookie('kbase_sessionid');

@@ -1,6 +1,7 @@
 (function( $, undefined ) {
 
-$.KBWidget("kbaseModelTabs", {
+$.KBWidget({
+    name: "kbaseModelTabs",    
     version: "1.0.0",
     options: {
     },

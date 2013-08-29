@@ -1,6 +1,7 @@
 (function( $, undefined ) {
 
-$.KBWidget("kbaseWSFbaTable", {
+$.KBWidget({
+    name: "kbaseWSFbaTable",
     version: "1.0.0",
     options: {
     },

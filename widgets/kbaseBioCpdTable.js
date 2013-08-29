@@ -1,6 +1,7 @@
 (function( $, undefined ) {
 
-$.KBWidget("kbaseBioCpdTable", {
+$.KBWidget({
+    name: "kbaseBioCpdTable",
     version: "1.0.0",
     options: {
     },

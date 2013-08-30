@@ -1,4 +1,11 @@
+html, body {
+    height: 100%;
+    width: 100%;
+}
 
+body {
+    min-width: 850px;
+}
 
 #header-login {
     float: right;
@@ -13,7 +20,10 @@
     position: relative;
 }
 
-
+.navbar {
+    margin-bottom: 0px;
+    position: relative;
+}
 
 #loading {
     margin-top: 80px;
@@ -246,115 +256,3 @@ div ::-webkit-scrollbar-thumb {
     background-color: rgba(053, 057, 071, 0.3);
     -webkit-border-radius: 8px;
 }
-
-
-/* start new functionality styling */
-
-
-/* custom checkboxes (prototyped) */
-.ncheck {
-    width: 11px;
-    height: 11px;
-    border: 1px solid #ccc ;
-    margin-left: auto;
-    margin-right: auto;
-}
-.ncheck:hover {
-    border: 1px solid #444 ;    
-}
-.ncheck-btn {
-    width: 11px;
-    height: 11px;
-    border: 1px solid #888 ;
-    margin: 4px 0px 4px -1px;
-}
-.ncheck-btn:hover {
-    border: 1px solid #444 ;    
-}
-.ncheck-checked {
-    background: url(../img/checkmark.png) no-repeat -5px -5px;
-    background-image: -webkit-image-set(url(../img/checkmark.png) 1x,url(../img/checkmark_2x.png) 2x);
-}
-.ncheck-minus {
-    background: url(../img/checkmark-partial.png) no-repeat -5px -5px;
-    background-image: -webkit-image-set(url(../img/checkmark-partial.png) 1x,url(../img/checkmark_2x.png) 2x);
-}
-
-/* option buttons when object is checked */
-.checked-opts {
-    margin: 0 0 0 40px;
-}
-
-/* option buttons for all object option buttons */
-
-
-.select-objs {
-    height: 20px;
-    width:10px;
-    margin: 0 5px 0 0;
-}
-
-.obj-opt {
-    display: inline;
-}
-
-
-.dataTables_length,
-.dataTables_info {
-    float: left;
-}
-
-.dataTables_length {
-    padding: 0 3px;
-    margin: 7px 0 0 15px;
-}
-
-.obj-version:hover {
-    cursor:hand;
-    cursor:pointer;
-}
-
-.history-icon {
-    margin: -2px 0 0 0;
-}
-.history-table {
-    margin: 0 0 0 100px;
-}
-
-.history-table thead:last-child tr:last-child th:first-child, .table-bordered tbody:last-child tr:last-child td:first-child, .table-bordered tfoot:last-child tr:last-child td:first-child {
-    -webkit-border-radius: 0;
-    -moz-border-radius: 0;
-    border-radius: 0;
-    -webkit-border-bottom-left-radius: 0;
-    border-bottom-left-radius: 0;
-    -moz-border-radius-bottomleft: 0;
-}
-
-
-
-.model-icon {
-    height: 17px;
-    width: 17px;
-    margin: -2px 0 0 0;
-}
-
-.model-icon:hover {
-    cursor: hand;
-    cursor: pointer;
-    opacity: .75;
-}
-
-/* temp arrow placement for bootstrap popover */
-.view-options + .popover.bottom .arrow {
-    left: 25%;
-}
-
-
-/* END new functionality styling */
-
-
-
-
-
-
-

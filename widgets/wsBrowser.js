@@ -1288,7 +1288,7 @@ function(    $,        Auth,           util ) {
 
         /* Set the defaults for DataTables initialisation */
         $.extend( true, $.fn.dataTable.defaults, {
-            "sDom": "<'row-fluid'<'span12 obj-opts'f>r>t<'row-fluid'<'span6'il><'span6'p>>",
+            "sDom": "<'row-fluid'<'spacol-md-12 obj-opts'f>r>t<'row-fluid'<'col-md-6'il><'col-md-4'p>>",
             "sPaginationType": "bootstrap",
             "oLanguage": {
                 "sLengthMenu": "_MENU_ records per page"

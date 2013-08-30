@@ -171,10 +171,11 @@ $.KBWidget({
 
     container.append(filterCollapse);
 
-    var filterSearch = $('<input type="text" class="search-query" style="margin-bottom: 5px;"\
-             placeholder="Filter Workspaces">');
+    var filterSearch = $('<form role="form"><input type="text" class="form-control search-query"\
+             placeholder="Filter Workspaces"></form');
     container.append(filterSearch);
 
+    var filterSearch = filterSearch.find('input');
     filterSearch.keyup(filter);
 
     var prevFilter = state.get('filter');
@@ -642,8 +643,8 @@ $.KBWidget({
         return '' +
             '<div class="accordion" style="margin-bottom: 0px;">'
             + '<div class="accordion-group">'
-            + '<div class="accordion-heading" style="text-align: center; position: relative;">'
-            + '<button class="btn btn-link" title="Filter Workspaces" style="width: 100%; height: 100%;">'
+            + '<div class="accordion-heading" style="text-align: center;">'
+            + '<button class="btn btn-link" title="Filter Workspaces">'
             + 'Workspaces <span class="caret"></span>'
             + '</button>'
             + '<button id="create-workspace" class="btn btn-mini"'
@@ -691,9 +692,9 @@ $.KBWidget({
         });
 
         // add manage button
-        var manage = $('<a class="ws-cell-manage btn btn-mini btn-xmini hide"'
+        var manage = $('<a class="ws-cell-manage btn btn-default btn-mini btn-xmini hide" type="button"'
                        + ' style="margin-right: 2px; padding-bottom: 2px;"'
-                       + ' title="Manage Workspace"><i class="icon-cog"></i></a>');
+                       + ' title="Manage Workspace"><i class="glyphicon glyphicon-cog"></i></a>');
 
         div.append(manage);
 
@@ -711,11 +712,10 @@ $.KBWidget({
          * If using desktop browser (not mobile), hide the buttons
          * and show when hover. Otherwise (if mobile), always show
          */
-         /*
-        if ($.browser.mobile) {
-            manage.removeClass('hide');
-            div.addClass('ws-cell-content-hover');
-        } else {
+        //if ($.browser.mobile) {
+        //    manage.removeClass('hide');
+        //    div.addClass('ws-cell-content-hover');
+        //} else {
             cell.hover(function() {
                 manage.removeClass('hide');
                 div.addClass('ws-cell-content-hover');
@@ -723,8 +723,8 @@ $.KBWidget({
                 manage.addClass('hide');
                 div.removeClass('ws-cell-content-hover');
             });
-        }
-        */
+        //}
+
         this.getHtml = function() {
             return row;
         };
@@ -1096,25 +1096,29 @@ $.KBWidget({
     }    
 
     var baseModal = $(
-        '<div class="modal base-modal hide" style="width: auto;" tabindex="-1" role="dialog"> \
-           <div class="modal-header"> \
-             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> \
-             <h3>Modal</h3> \
-           </div> \
-           <div class="alert base-modal-alert hide"></div> \
-           <div class="base-modal-cover hide"> \
-             <div class="base-modal-cover-table"> \
-               <div class="base-modal-cover-cell"> \
-                 <span class="base-modal-cover-box"> \
-                 </span> \
+        '<div class="modal base-modal hide"> \
+           <div class="modal-dialog">\
+             <div class="modal-content">\
+               <div class="modal-header"> \
+                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> \
+                 <h3 class="modal-title">Modal</h3> \
                </div> \
-             </div> \
-           </div> \
-           <div class="modal-body"></div> \
-           <div class="modal-footer"> \
-             <button data-dismiss="modal" class="btn">Cancel</button> \
-             <button class="btn btn-primary">Submit</button> \
-           </div> \
+               <div class="alert base-modal-alert hide"></div> \
+               <div class="base-modal-cover hide"> \
+                 <div class="base-modal-cover-table"> \
+                   <div class="base-modal-cover-cell"> \
+                     <span class="base-modal-cover-box"> \
+                     </span> \
+                   </div> \
+                 </div> \
+               </div> \
+               <div class="modal-body"></div> \
+               <div class="modal-footer"> \
+                 <button data-dismiss="modal" class="btn">Cancel</button> \
+                 <button class="btn btn-primary">Submit</button> \
+               </div> \
+             </div>\
+           </div>\
          </div>'
     );
 

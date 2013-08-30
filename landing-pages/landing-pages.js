@@ -18,15 +18,15 @@ function navEvent() {
 
 function router() {
     // App routes
+    /*
     Path.map("#/seq-search").to(function(){
         seq_search_view();
     }).enter(navEvent);
+    */
 
-    /*
     Path.map("#/workspace-browser").to(function(){
         workspace_view();
     }).enter(navEvent);    
-    */
 
     // Data routes
     Path.map("#/genomes").to(function(){ empty_page() });
@@ -69,11 +69,11 @@ function router() {
     Path.map("#/cpds/:ws_id/:id").to(function(){ empty_page() });    
 
     Path.map("#/media").to(function(){ 
-        media_view();
+        ws_media_view();
     }).enter(navEvent);
 
-    Path.map("#/media/:ws_id").to(function(){ 
-        media_view(this.params['ws_id']);
+    Path.map("#/media/:ws_id/:id").to(function(){ 
+        media_view(this.params['ws_id'], this.params['id']);
     }).enter(navEvent);
 
 
@@ -119,7 +119,7 @@ function reload_window() {
     $('#app').html(simple_layout2('ws-models') )
     
     $('#ws-models').kbaseWSModelTable({ws : ws_id,
-                                     auth: USER_TOKEN});
+                                      auth: USER_TOKEN});
 
     $(document).off("modelClick");
     $(document).on("modelClick", function(e, data) {
@@ -207,18 +207,27 @@ function cpd_view(ws_id, id) {
     $('#bio-cpd-table').kbaseBioCpdTable({});
 }
 
-function media_view(ws_id, id) {
+function ws_media_view(ws_id) {
     var ws_id = ws_id ? ws_id : 'KBaseMedia';    
     $('#app').html(simple_layout2('media-table'))
-    $('#media-table').kbaseWSMediaTable({ws: ws_id});
 
-    var media_modal = $('#media-modal').kbaseMediaModal({auth: USER_TOKEN});        
-    var save_ws_modal = $('#save-ws-modal').kbaseSimpleWSSelect({auth: USER_TOKEN});   
+    var media_table = $('#media-table').kbaseWSMediaTable({ws: ws_id});
 
     $(document).off("mediaClick");
     $(document).on("mediaClick", function(e, data) {
-        media_modal.show({media: data.media});
+        console.log(data)
+        window.location.hash = /media/+ws_id+'/'+data.media;
     });   
+}
+
+function media_view(ws_id, id) {
+    var ws_id = ws_id ? ws_id : 'KBaseMedia';    
+    $('#app').html(simple_layout2('media-editor'))
+
+    var media_view = $('#media-editor').kbaseMediaEditor({auth: USER_TOKEN, 
+                                                            ws: ws_id,
+                                                            id:id});
+    var save_ws_modal = $('#save-ws-modal').kbaseSimpleWSSelect({auth: USER_TOKEN});   
 
     $(document).off("saveToWSClick");
     $(document).on("saveToWSClick", function(e, data) {
@@ -262,7 +271,7 @@ function run_fba_view(ws_id) {
 //
 // "apps"
 //
-/*
+
 function workspace_view() {
     // load template
     $('#app').load('../common/app-templates/ws-browser.html', function() {
@@ -274,7 +283,7 @@ function workspace_view() {
                                                 selectHandler: selectHandler});
     })
 }
-*/
+
 
 //
 //  Layouts.  This could be part of a template system or whatever
@@ -312,10 +321,10 @@ function simple_layout2(id1) {
 
 function simple_layout3(id1, id2) {
     var simple_layout = '<div class="row">\
-                            <div class="col-md-4">\
+                            <div class="col-md-3">\
                                 <div id="'+id1+'"></div>\
                             </div>\
-                            <div class="col-md-8">\
+                            <div class="col-md-9">\
                                 <div id="'+id2+'"></div>\
                             </div>\
                         </div>'

@@ -8,7 +8,7 @@ $.KBWidget({
     init: function(options) {
         var self = this;
         this._super(options);
-        extendDefaults()
+        //extendDefaults()
 
         this.$elem.append('<div id="object-table-container"></div>')
         var container = $('#object-table-container');
@@ -26,7 +26,7 @@ $.KBWidget({
         tableDiv.addClass('hide');
 
         table.dataTable({
-            sScrollY: '100px',
+            sScrollY: '100%',
             sScrollX: '100%',
             iDisplayLength: 25,
             oLanguage: {
@@ -241,64 +241,24 @@ $.KBWidget({
         }
 
         function objectIdClick() {
-            // popover for click on object id
-            var isVisible = false;
-            var hideAllPopovers = function() {
-               $('.view-options').each(function() {
-                    $(this).popover('hide');
-                });  
-            };
-
-            
-            $('.view-options').each(function(){
+            $('.view-options').unbind('click')
+            $('.view-options').click(function() {
                 var ws = $(this).data('workspace');
                 var type = $(this).data('type')
                 var id = $(this).data('id')
+                console.log(ws,type,id)
 
-                $(this).popover({html:true, content: 
-                        '<button class="btn btn-link view-meta"'
-                        + ' style="padding-right: 5px;"'
-                        + ' data-workspace="' + ws + '"'
-                        + ' data-type="' + type + '"'
-                        + ' data-id="' + id + '">'
-                        + 'View Metadata'
-                        + '</button><br>' +
-                        '<button class="btn btn-link view-obj-page"'
-                        + ' style="padding-right: 5px;"'
-                        + ' data-workspace="' + ws + '"'
-                        + ' data-type="' + type + '"'
-                        + ' data-id="' + id + '">'
-                        + 'View Object'
-                        + '</button>'
-                        ,
-                        placement: 'bottom',
-                        trigger: 'manual', 
-                        title: $(this).data('id'),
-                        container: 'body'
-                    }).on('click', function(e) {                          
-                    // if any other popovers are visible, hide them
-                    if(isVisible) {
-                        hideAllPopovers();
-                    }
-
-                    var pop = $(this).popover('show')
-                    $('.popover').css('left',  10)
-
-
-                    // handle clicking on the popover itself
-                    //$('.popover').off('click').on('click', function(e) {
-                    //    e.stopPropagation(); // prevent event for bubbling up => will not get caught with document.onclick
-                    // d});
-
-                    isVisible = true;
-                    e.stopPropagation();
-                });
+                // fixme:  do this the widget way
+                if (type == 'Genome') {
+                    window.location.hash = '/genomes/'+ws+'/'+id;
+                } else if (type == 'Model') {
+                    window.location.hash = '/models/'+ws+'/'+id;
+                } else if (type == 'FBA') {
+                    window.location.hash = '/fbas/'+ws+'/'+id;
+                } else if (type == 'Media') {
+                    window.location.hash = '/media/'+ws+'/'+id;
+                }
             })
-
-            $(document).on('click', function(e) {
-                hideAllPopovers();
-                isVisible = false;
-            });
         }
 
 
@@ -789,11 +749,11 @@ $.KBWidget({
         function initOptButtons() {
                 // select all objects button
                 $('.select-objs').remove()
-                $('.obj-opts').append('<a class="btn dropdown-toggle select-objs"><div class="ncheck-btn"></div></a>');
+                $('.obj-opts').append('<a class="btn select-objs"><div class="ncheck-btn"></div></a>');
                 //<div class="ncheck-btn"></div>
                 // filter types button
                 $('.type-filter').remove()
-                $('.obj-opts').append('<select class="input-small type-filter"> \
+                $('.obj-opts').append('<select class="form-control col-lg-2 input-sm type-filter"> \
                                               <option selected="selected">All Types</option> \
                                               <option>Genome</option> \
                                               <option>FBA</option> \
@@ -876,13 +836,13 @@ $.KBWidget({
                     $('.obj-opts').append('<div class="checked-opts obj-opt"></div>')
 
                     // delete button
-                    $('.checked-opts').append('<a class="btn obj-btn opt-delete btn-danger">\
-                                               <i class="icon-trash icon-white"></i></a>')
+                    $('.checked-opts').append('<a class="btn btn-danger obj-btn opt-delete ">\
+                                               <i class="glyphicon glyphicon-trash"></i></a>')
 
                     // move, copy, download button
                     $('.checked-opts').append('<div class="dropdown obj-opt opt-dropdown"> \
-                                        <a class="btn obj-btn dropdown-toggle" type="button" data-toggle="dropdown"> \
-                                     <i class="icon-folder-open"></i> <span class="caret"></span></a>\
+                                        <a class="btn btn-default obj-btn dropdown-toggle" type="button" data-toggle="dropdown"> \
+                                     <i class="glyphicon glyphicon-folder-open"></i> <span class="caret"></span></a>\
                                      <ul class="dropdown-menu"> \
                                       <li opt="copy"><a>Copy</a> </li> \
                                       <li  opt="move"><a>Move</a></li> \
@@ -1352,21 +1312,22 @@ $.KBWidget({
         }
 
         var baseModal = $(
-    '<div class="modal base-modal hide" style="width: auto;" tabindex="-1" role="dialog"> \
+    '<div class="modal base-modal" style="width: auto;" tabindex="-1" role="dialog"> \
        <div class="modal-header"> \
          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> \
          <h3>Modal</h3> \
        </div> \
-       <div class="alert base-modal-alert hide"></div> \
-       <div class="base-modal-cover hide"> \
-         <div class="base-modal-cover-table"> \
-           <div class="base-modal-cover-cell"> \
-             <span class="base-modal-cover-box"> \
-             </span> \
+       <div class="modal-body">\
+           <div class="alert base-modal-alert hide"></div> \
+           <div class="base-modal-cover hide"> \
+             <div class="base-modal-cover-table"> \
+               <div class="base-modal-cover-cell"> \
+                 <span class="base-modal-cover-box"> \
+                 </span> \
+               </div> \
+             </div> \
            </div> \
-         </div> \
        </div> \
-       <div class="modal-body"></div> \
        <div class="modal-footer"> \
          <button data-dismiss="modal" class="btn">Cancel</button> \
          <button class="btn btn-primary">Submit</button> \
@@ -1393,9 +1354,11 @@ $.KBWidget({
              *    Taken from here: http://datatables.net/blog/Twitter_Bootstrap_2
              */
 
+
+
             /* Set the defaults for DataTables initialisation */
             $.extend( true, $.fn.dataTable.defaults, {
-                "sDom": "<'row-fluid'<'span12 obj-opts'f>r>t<'row-fluid'<'span6'il><'span6'p>>",
+                "sDom": "<'row'<'col-md-9 obj-opts'f>r>t<'row'<'col-md-4'il><'col-md-5'p>>",
                 "sPaginationType": "bootstrap",
                 "oLanguage": {
                     "sLengthMenu": "_MENU_ records per page"
@@ -1437,7 +1400,7 @@ $.KBWidget({
                         };
 
                         $(nPaging).addClass('pagination').append(
-                            '<ul>'+
+                            '<ul class="pagination">'+
                                 '<li class="prev disabled"><a href="#">&larr; '+oLang.sPrevious+'</a></li>'+
                                 '<li class="next disabled"><a href="#">'+oLang.sNext+' &rarr; </a></li>'+
                                 '</ul>'
@@ -1502,10 +1465,11 @@ $.KBWidget({
             } );
         }
 
-
-
-
-
+        function get_fba_model_id(ws_id) {
+            var pos = ws_id.indexOf('fba.');
+            var ws_id = ws_id.slice(0, ws_id.indexOf('.', pos-4));
+            return ws_id;
+        }
 
         return this;
 

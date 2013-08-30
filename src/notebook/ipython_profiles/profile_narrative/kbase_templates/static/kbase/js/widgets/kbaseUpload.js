@@ -26,29 +26,30 @@
          */
 		init: function(options) {
             this._super(options);
-			//alert("widget init");
+            this.createDialog();
             var that = this;
             this.$elem.on("click", function(event) {
                 that.render();
             });
             return this;
 		},
+
         /**
-         * Render the widget.
+         * Create the dialog widget
          *
          * @returns {*}
          */
-        render: function() {
+        createDialog: function() {
             var opts = {
                 modal: true,
                 closeOnEscape: true,
-                title: "Upload file",
-                width: "50em"
+                title: 'Upload file',
+                autoOpen: false,
+                width: '50em',
             };
-            var dlg = $('#narrative-upload-dialog').dialog(opts);
-            dlg.empty();
+            this.dlg = $('#narrative-upload-dialog').dialog(opts);
             // Build form programmatically
-            var $frm = $("<form class='form-horizontal'></form>");
+            var $frm = $('<form>').addClass('form-horizontal');
             var fields = {
                 'filename': {
                     type:'file',
@@ -65,24 +66,26 @@
                     type:'text',
                     id:'dataset_name',
                     label:'Dataset Name:',
-                    placeholder: "Name or identifying phrase"
+                    placeholder: "Name or identifying phrase",
+                    modified: false
                 }
             };
             // Populate data types
             // XXX: fetch these from somewhere!
-            fields.datatype.options = [
-                'FBA',
-                'Genome',
-                'Media',
-                'Model',
-                'PhenotypeSet',
-                'PhenotypeSimulationSet',
-                'PromConstraints',
-            ];
+            fields.datatype.options = {
+                FastaFile: "FASTA",
+                FastqFile: "FASTQ",
+                BedFile: "BED",
+                Gff3File: "GFF3",
+                SamFile: "SAM",
+                BamFile: "BAM",
+                SbmlFile: "SBML",
+                BiomFile: "BIOM",
+                PdbFile: "PDB" };
             // Add each field
             $.each(fields, function(key, value) {
-                var $frm_grp = $("<div class='control-group'></div>");
-                var $frm_controls = $('<div class="controls"></div>')
+                var $frm_grp = $('<div>').addClass('control-group');
+                var $frm_controls = $('<div>').addClass('controls');
                 // Build and add the label
                 var $label = $('<label class="control-label" for="' + value.id + '">' + value.label + '</label>');
                 $frm_grp.append($label);
@@ -91,30 +94,43 @@
                 switch (value.type) {
                     case "file":
                         // This uses Bootstrap file-upload, see: http://jasny.github.io/bootstrap/javascript.html#fileupload
-                        $control = $('<div class="fileupload fileupload-new" data-provides="fileupload"></div>')
-                            .append($('<div class="input-append"></div>')
-                                .append($('<div class="uneditable-input span3">' +
-                                             '<i class="icon-file fileupload-exists"></i>' +
-                                             '<span class="fileupload-preview"></span>' +
-                                          '</div>' +
-                                          '<span class="btn btn-file">' +
-                                            '<span class="fileupload-new">Select file</span>' +
-                                            '<span class="fileupload-exists">Change</span>' +
-                                            '<input type="file" id="' + value.id + '"/>' +
-                                          '</span>')));
+                        var $buttons = $('<span>').addClass('btn btn-file')
+                        $.each({'Select file': 'fileupload-new',
+                                'Change': 'fileupload-exists'}, function(bname, bclass) {
+                            var $btn = $('<span>').addClass(bclass).text(bname);
+                            $buttons.append($btn);
+                        });
+                        var $input = $('<input>').attr({type: value.type, name: value.id, id: value.id});
+                        $buttons.append($input);
+                        $control = $('<div>')
+                            .addClass('fileupload fileupload-new').attr('data-provides','fileupload');
+                        var $preview = $('<div>').addClass('uneditable-input span3">');
+                        $preview.append($('<i>').addClass('icon-file fileupload-exists'));
+                        $preview.append($('<span>').addClass('fileupload-preview'));
+                        var $ia = $('<div>').addClass('input-append')
+                        $ia.append($preview);
+                        $ia.append($buttons);
+                        $control.append($ia);
                         // register file upload widget
                         $('.fileupload').fileupload({'name': value.id});
                         break;
                     case "text":
-                        $control = $('<input type="text" name="' + value.id +  '" ' +
-                                         'placeholder="' + value.placeholder + '" ' +
-                                         'class="input-xxlarge" ' +
-                                         '></input>');
+                        $control = $('<input>').attr({type:'text', name: value.id,
+                            placeholder: value.placeholder}).addClass('input-xxlarge');
+                        // remember whether this value was modified by the user
+                        $control.change(function() {
+                            // count as modified if non-empty
+                            var modded = this.value === "" ? false : true;
+                            fields.dataset.modified = modded;
+                        });
                         break;
                     case "select":
-                        $control = $('<select name="' + value.id + '"></select>');
-                        $.each(value.options, function(index, value) {
-                           var $opt = $("<option>" + value + "</option>");
+                        $control = $('<select>').attr('name', value.id);
+                        var keys = [];
+                        $.each(value.options, function(k,v){keys.push(v);})
+                        keys.sort();
+                        $.each(keys, function(index, value) {
+                           var $opt = $('<option>').text(value);
                            $control.append($opt);
                         });
                         break;
@@ -127,24 +143,48 @@
                 $frm.append($frm_grp);
             });
             // Add actions
-            var $up_btn = $("<button class='btn btn-primary'>Upload</button>");
-            var $cancel_btn = $("<button class='btn btn-link'>Cancel</button>");
-            var $actions = $("<div class='form-actions'></div>");
+            var $up_btn = $('<button>').addClass('btn btn-primary').text('Upload');
+            var $cancel_btn = $('<button>').addClass('btn btn-link').text('Cancel');
+            var $actions = $('<div>').addClass('form-actions');
             $actions.append($up_btn);
             $actions.append($cancel_btn);
             $frm.append($actions);
-            // Set up respones
-            var that = this;
+            // Populate dialog with form
+            this.dlg.append($frm);
+            var that = this;   // stash one-up this
+            // Put filename in description, unless user entered something
+            $frm.find(':file').change(function(e) {
+                if (fields.dataset.modified) {
+                    return; // don't mess if user typed something
+                }
+                var s = that._getFileName(this.value);
+                var $txt = $frm.find(':text');
+                //alert("val to '" + s + "'");
+                $txt.val(s);
+            });
+            // Set up response
             $frm.on( "submit", function(event) {
                 event.preventDefault();
                 var frm_arr = $(this).serializeArray();
                 var $file_input = $('#' + fields.filename.id);
                 var formData = new FormData($file_input[0]);
-                frm_arr.push({name: that._getFileName($file_input), data: formData});
+                frm_arr.push({name: that._getFileName($file_input.val()), data: formData});
                 that.uploadFile(frm_arr);
             });
-            // Populate dialog with form
-            dlg.append($frm);
+            // Cancel
+            $cancel_btn.click(function() {
+                that.dlg.dialog('close');
+            });
+            return this;
+        },
+
+        /**
+         * Render the dialog.
+         * @returns {*}
+         */
+        render: function() {
+            this.dlg.find(':text').val('');
+            this.dlg.dialog('open');
             return this;
         },
 
@@ -152,15 +192,9 @@
          * Get file name from input.
          * Has a workaround for chrome
          */
-        _getFileName: function(element) {
-            var fname = "";
-            if (navigator.userAgent.indexOf('Chrome')) {
-                fname = element.val().replace(/C:\\fakepath\\/i, '');
-            }
-            else {
-                fname = element.val();
-            }
-            return fname;
+        _getFileName: function(path) {
+            return (navigator.userAgent.indexOf('Chrome')) ?
+                path.replace(/C:\\fakepath\\/i, '') : path;
         },
 
         /**

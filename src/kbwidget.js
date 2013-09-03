@@ -527,6 +527,7 @@
                     //return this.data(name).init( arguments );
                     var args = arguments;
                     $w = this.data(name);
+                    console.log($w)
                     if (! $w._init) {
                         $w = Widget.prototype.init.apply($w, arguments);
                     }

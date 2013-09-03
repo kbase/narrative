@@ -35,9 +35,7 @@ rect:hover {
 #logo {
     margin: 2px 10px 0 10px;
 }
-#kbase-search-box {
-    margin-left: 200px;
-}
+
 
 table {  /* what's this about */
     font-size: 14px;
@@ -45,4 +43,8 @@ table {  /* what's this about */
 
 .media-info-modal {
     width: 800px;
+}
+
+#selected-workspace {
+    margin: 15px 30px 15px 0px;
 }

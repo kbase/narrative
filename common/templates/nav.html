@@ -5,7 +5,26 @@
         <img id="logo" src="../common/img/labs_icon.png" width="46">
     </a>
 
+    <form class="navbar-form pull-left input-group" id="kbase-search-box" action="http://www.kbase.us/services/search/process" method="POST">
+        <input type="text" class="form-control" name="keyword" placeholder="Search KBase">
+        <div class="input-group-btn">
+            <button type="Submit" class="btn btn-default " tabindex="-1">Search</button>
+            <button type="button" class="btn btn-default btn-group dropdown-toggle"
+            data-toggle="dropdown" tabindex="-1" style="height: 34px;">
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu pull-right">
+                <li><a href="#">Genomes</a></li>
+                <li><a href="#">Models</a></li>
+                <li><a href="#">fba</a></li>
+                <li><a href="#">blah</a></li>
+                <li><a href="#">priceless!</a></li>
+            </ul>
+        </div>
+    </form>    
+
     <ul class="nav navbar-nav">
+
         <li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Apps <b class="caret"></b></a>
@@ -55,24 +74,7 @@
         </li>
     </ul>
 
-    <form class="navbar-form pull-left input-group" id="kbase-search-box" action="http://www.kbase.us/services/search/process" method="POST">
-        <input type="text" class="form-control" name="keyword" placeholder="Search KBase">
-        <div class="input-group-btn">
-            <button type="Submit" class="btn btn-default " tabindex="-1">Search</button>
-            <button type="button" class="btn btn-default btn-group dropdown-toggle" 
-            data-toggle="dropdown" tabindex="-1" style="height: 34px;">
-                <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu pull-right">
-                <li><a href="#">Genomes</a></li>
-                <li><a href="#">Models</a></li>
-                <li><a href="#">fba</a></li>
-                <li><a href="#">blah</a></li>                   
-                <li><a href="#">priceless!</a></li>
-            </ul>
-        </div>
-    </form>
+    <div id="signin-button" class="pull-right"></div>
+    <a id="selected-workspace" class="label label-primary pull-right" href="#/workspace-browser">No Workspace</a>
 
-
-    <li id="signin-button" class="pull-right"></li>
 </div> <!-- end navbar -->

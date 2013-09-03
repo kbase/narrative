@@ -215,7 +215,7 @@ function ws_media_view(ws_id) {
 
     $(document).off("mediaClick");
     $(document).on("mediaClick", function(e, data) {
-        console.log(data)
+
         window.location.hash = /media/+ws_id+'/'+data.media;
     });   
 }
@@ -333,120 +333,131 @@ function simple_layout3(id1, id2) {
 
 
 
+//
+// landing page app helper functions
+//
+
+function get_selected_ws() {
+    return $('#selected-workspace').text();
+}
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 //
 // workspace browser handler
 //
 /////////////////////////////////////////////////////////////////////////////////////////////
-    var first = true;
-    var prevPromises = []; // store previous promises to cancel
-    function selectHandler(selected) {
-        workspaces = wsSelector.workspaces;
+var first = true;
+var prevPromises = []; // store previous promises to cancel
+function selectHandler(selected) {
+    workspaces = wsSelector.workspaces;
+    $('#selected-workspace').html(selected[0].id)
 
-        // tell the previous promise(s) not to fire
-        prevPromises.cancel = true;
+    // tell the previous promise(s) not to fire
+    prevPromises.cancel = true;
 
-        // workspaces might have data loaded already
-        var promises = [];
-        prevPromises = promises;
+    // workspaces might have data loaded already
+    var promises = [];
+    prevPromises = promises;
 
-        // loop through selected workspaces and download objects if they haven't been downloaded yet
-        for (var i=0; i<selected.length; i++) {
-            var workspace = selected[i];
+    // loop through selected workspaces and download objects if they haven't been downloaded yet
+    for (var i=0; i<selected.length; i++) {
+        var workspace = selected[i];
 
-            var objType = $.type(workspace.objectData);
-            if (objType === 'undefined') {
-                // no data and not being downloaded
-                var p = workspace.getAllObjectsMeta();
-                workspace.objectData = p; // save the promise
-                promises.push(p);
+        var objType = $.type(workspace.objectData);
+        if (objType === 'undefined') {
+            // no data and not being downloaded
+            var p = workspace.getAllObjectsMeta();
+            workspace.objectData = p; // save the promise
+            promises.push(p);
 
-                // provide closure over workspace
-                (function(workspace) {
-                    p.done(function(data) {
-                    // save the data and tell workspace selector that the workspace has it's data
-                        workspace.objectData = data;
-                        wsSelector.setLoaded(workspace);
-                    });
-                })(workspace);
-            } else if (objType === 'object') {
-                // data being downloaded (objectData is a promise)
-                promises.push(workspace.objectData);
-            }
+            // provide closure over workspace
+            (function(workspace) {
+                p.done(function(data) {
+                // save the data and tell workspace selector that the workspace has it's data
+                    workspace.objectData = data;
+                    wsSelector.setLoaded(workspace);
+                });
+            })(workspace);
+        } else if (objType === 'object') {
+            // data being downloaded (objectData is a promise)
+            promises.push(workspace.objectData);
+        }
+    }
+
+    if (promises.length > 0) {
+        // may take some time to load
+        objectTable.loading(true);
+    }
+
+    // when all the promises are done...
+    $.when.apply($, promises).done(function() {
+        if (promises.cancel) {
+            // do nothing if it was cancelled
+            return;
         }
 
-        if (promises.length > 0) {
-            // may take some time to load
-            objectTable.loading(true);
-        }
-
-        // when all the promises are done...
-        $.when.apply($, promises).done(function() {
+        // reload the object table
+        objectTable.reload(selected).done(function() {
             if (promises.cancel) {
-                // do nothing if it was cancelled
                 return;
             }
 
-            // reload the object table
-            objectTable.reload(selected).done(function() {
-                if (promises.cancel) {
-                    return;
-                }
+            if (first) {
+                firstSelect();
+                first = false;
+            }
+        });
+    });
 
-                if (first) {
-                    firstSelect();
-                    first = false;
-                }
-            });
+    // this function is called upon the first selection event
+    //  it sets absolute position for the data table so that it scrolls nicely
+    function firstSelect() {
+        objectTable.fixColumnSize();
+
+        // move table element into new scrollable div with absolute position
+        var otable = $('#object-table');
+        var parts = otable.children().children();
+                
+        var header = parts.eq(0);
+        var table = parts.eq(1);
+        var footer = parts.eq(2);
+
+        header.css({
+            position: 'absolute',
+            top: '0px',
+            left: '0px',
+            right: '0px'
         });
 
-        // this function is called upon the first selection event
-        //  it sets absolute position for the data table so that it scrolls nicely
-        function firstSelect() {
-            objectTable.fixColumnSize();
+        table.css({
+            position: 'absolute',
+            top: (header.height() + 2) + 'px',
+            left: '0px',
+            right: '0px',
+            bottom: (footer.height() + 2) + 'px'
+        });
 
-            // move table element into new scrollable div with absolute position
-            var otable = $('#object-table');
-            var parts = otable.children().children();
-                    
-            var header = parts.eq(0);
-            var table = parts.eq(1);
-            var footer = parts.eq(2);
+        table.find('.dataTables_scrollBody').css({
+            position: 'absolute',
+            height: '',
+            width: '',
+            top: table.find('.dataTables_scrollHead').height(),
+            left: '0px',
+            right: '0px',
+            bottom: '0px'
+        });
 
-            header.css({
-                position: 'absolute',
-                top: '0px',
-                left: '0px',
-                right: '0px'
-            });
-
-            table.css({
-                position: 'absolute',
-                top: (header.height() + 2) + 'px',
-                left: '0px',
-                right: '0px',
-                bottom: (footer.height() + 2) + 'px'
-            });
-
-            table.find('.dataTables_scrollBody').css({
-                position: 'absolute',
-                height: '',
-                width: '',
-                top: table.find('.dataTables_scrollHead').height(),
-                left: '0px',
-                right: '0px',
-                bottom: '0px'
-            });
-
-            footer.css({
-                position: 'absolute',
-                bottom: '0px',
-                left: '0px',
-                right: '0px'
-            });
-        }
+        footer.css({
+            position: 'absolute',
+            bottom: '0px',
+            left: '0px',
+            right: '0px'
+        });
     }
+}
 
 
 

@@ -8,7 +8,9 @@ $.KBWidget({
     init: function(options) {
         var self = this;
         this._super(options);
-        //extendDefaults()
+        extendDefaults()
+
+        var checkedList = [];        
 
         this.$elem.append('<div id="object-table-container"></div>')
         var container = $('#object-table-container');
@@ -747,53 +749,58 @@ $.KBWidget({
         */
 
         function initOptButtons() {
-                // select all objects button
-                $('.select-objs').remove()
-                $('.obj-opts').append('<a class="btn select-objs"><div class="ncheck-btn"></div></a>');
-                //<div class="ncheck-btn"></div>
-                // filter types button
-                $('.type-filter').remove()
-                $('.obj-opts').append('<select class="form-control col-lg-2 input-sm type-filter"> \
-                                              <option selected="selected">All Types</option> \
-                                              <option>Genome</option> \
-                                              <option>FBA</option> \
-                                              <option>Model</option> \
-                                              <option>PhenotypeSet</option> \
-                                              <option>Media</option> \
-                                        </select>');
+            if ($('.select-objs').length) {
+                $('.select-objs').remove()                    
+            }
 
-                // select all events
-                $('.select-objs .ncheck-btn').unbind('click')
-                $('.select-objs .ncheck-btn').click(function(){
-                    // if already checked un check
-                    if ($(this).hasClass('ncheck-checked')) {
-                        $('.check-option').removeClass('ncheck-checked');
-                        $(this).removeClass('ncheck-checked');
-                        $('.checked-opts').hide();
-                        checkedList = []
+            var container = $('.obj-opts');
 
-                    // if check box is already checked
-                    } else {
-                        $('.checked-opts').show();
-                        $('.check-option').addClass('ncheck-checked');
-                        $(this).removeClass('ncheck-minus');
-                        $(this).addClass('ncheck-checked');
+            // select all objects button
+            container.append('<button type="button" class="btn btn-default select-objs pull-left">\
+                                <div class="ncheck-btn"></div></button>');
 
-                        checkedList = [];
-                        $('.check-option').each(function(){
-                            var id = $(this).attr('data-id');
-                            var modelID = get_fba_model_id( $(this).attr('data-id') );            
-                            var dataWS = $(this).attr('data-workspace');
-                            var dataType = $(this).attr('data-type');
-                            checkedList.push([id, modelID, dataWS, dataType])                         
-                        })
-                    }
-                    checkBoxObjectClick();
-                })
+            // filter types button
+            $('.type-filter').remove()
+            container.append('<select class="form-control type-filter pull-left"> \
+                                          <option selected="selected">All Types</option> \
+                                          <option>Genome</option> \
+                                          <option>FBA</option> \
+                                          <option>Model</option> \
+                                          <option>PhenotypeSet</option> \
+                                          <option>Media</option> \
+                                    </select>');
 
-                // individual checkbox select events
-                checkBoxObjectClick('.check-option');
-    //        }        
+            // select all events
+            $('.select-objs .ncheck-btn').unbind('click')
+            $('.select-objs .ncheck-btn').click(function(){
+                // if already checked un check
+                if ($(this).hasClass('ncheck-checked')) {
+                    $('.check-option').removeClass('ncheck-checked');
+                    $(this).removeClass('ncheck-checked');
+                    $('.checked-opts').hide();
+                    checkedList = []
+
+                // if check box is already checked
+                } else {
+                    $('.checked-opts').show();
+                    $('.check-option').addClass('ncheck-checked');
+                    $(this).removeClass('ncheck-minus');
+                    $(this).addClass('ncheck-checked');
+
+                    checkedList = [];
+                    $('.check-option').each(function(){
+                        var id = $(this).attr('data-id');
+                        var modelID = get_fba_model_id( $(this).attr('data-id') );            
+                        var dataWS = $(this).attr('data-workspace');
+                        var dataType = $(this).attr('data-type');
+                        checkedList.push([id, modelID, dataWS, dataType]);
+                    })
+                }
+                checkBoxObjectClick();
+            })
+
+            // individual checkbox select events
+            checkBoxObjectClick('.check-option');
         }
 
         function checkBoxObjectClick(ele) {
@@ -833,14 +840,14 @@ $.KBWidget({
                 if ($('.checked-opts').length == 0) {
 
                     // container for options
-                    $('.obj-opts').append('<div class="checked-opts obj-opt"></div>')
+                    var container = $('<div class="checked-opts obj-opt">');
 
                     // delete button
-                    $('.checked-opts').append('<a class="btn btn-danger obj-btn opt-delete ">\
+                    container.append('<a class="btn btn-danger obj-btn opt-delete ">\
                                                <i class="glyphicon glyphicon-trash"></i></a>')
 
                     // move, copy, download button
-                    $('.checked-opts').append('<div class="dropdown obj-opt opt-dropdown"> \
+                    container.append('<div class="dropdown obj-opt opt-dropdown"> \
                                         <a class="btn btn-default obj-btn dropdown-toggle" type="button" data-toggle="dropdown"> \
                                      <i class="glyphicon glyphicon-folder-open"></i> <span class="caret"></span></a>\
                                      <ul class="dropdown-menu"> \
@@ -850,19 +857,15 @@ $.KBWidget({
                                       <li><a>Download</li> \
                                 </ul></div>');
                                     //<i class="icon-download-alt"></i></a>
-
-                    // model viewer button
-                    if ($(this).attr('data-type') == "FBA") {
-                        var url = 'http://mcs.anl.gov/~nconrad/model_viewer/#models?kbids='+id+'&ws='+dataWS+'&tab=core';
-                        $('.checked-opts').append('<div class="btn obj-opt opt-delete" type="button" \
-                            onclick="location.href='+"'" +url+"'"+'" >Model Viewer</div>');
-                    }
      
                 // if no checkboxes are checked, remove buttons and checks
                 } else if (checkedList.length == 0) { 
                     $('.checked-opts').remove();
                     $('.select-objs .ncheck-btn').removeClass('ncheck-minus');
                 }
+
+                $('.obj-opts').append(container);
+
             }
         }
 
@@ -1358,7 +1361,7 @@ $.KBWidget({
 
             /* Set the defaults for DataTables initialisation */
             $.extend( true, $.fn.dataTable.defaults, {
-                "sDom": "<'row'<'col-md-9 obj-opts'f>r>t<'row'<'col-md-4'il><'col-md-5'p>>",
+                "sDom": "<'row'<'col-md-9 obj-opts'>fr>t<'row'<'col-md-4'il><'col-md-5'p>>",
                 "sPaginationType": "bootstrap",
                 "oLanguage": {
                     "sLengthMenu": "_MENU_ records per page"

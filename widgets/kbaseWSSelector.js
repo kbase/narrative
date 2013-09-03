@@ -156,7 +156,11 @@ $.KBWidget({
     });
 
     filterCollapse.find('button').click(function() {
-        filterCollapse.find('.collapse').collapse('toggle');
+        if (filterCollapse.find('.collapse').length) {
+            filterCollapse.find('.collapse').collapse('toggle');
+        } else {
+            filterCollapse.find('#collapseOne').collapse('toggle');            
+        }
     });
 
     var filterOpen = state.get('filter-open');
@@ -647,7 +651,7 @@ $.KBWidget({
             + '<button class="btn btn-link" title="Filter Workspaces">'
             + 'Workspaces <span class="caret"></span>'
             + '</button>'
-            + '<button id="create-workspace" class="btn btn-mini"'
+            + '<button id="create-workspace" class="btn btn-default btn-mini"'
             + ' style="position: absolute; right: 3px; height: 20px; top: 5px; font-size: 15px; padding: 0px 4px 2px 4px;">'
             + '+'
             + '</button>'
@@ -860,7 +864,7 @@ $.KBWidget({
         }
 
         modal.lock();
-        modal.cover('<img src="img/loading.gif" />');
+        modal.cover('<img src="../common/img/loading.gif" />');
 
         $.when.apply($, promises).done(function() {
             modal.coverAlert('<strong>Success</strong><br />Changed workspace permissions', 'success');
@@ -888,7 +892,7 @@ $.KBWidget({
         modal.setContent(
             '<table style="margin-left: auto; margin-right: auto; text-align: right;">'
               + '<tr><td>Workspace Id:</td>'
-              + '<td><input type="text" id="create-id" style="width: 150px" /></td></tr>'
+              + '<td><input type="text" id="create-id" class="form-control" style="width: 150px" /></td></tr>'
               + '<tr><td>Global Permission:</td>'
               + '<td>' + createPermissionSelect('create-permission', 'n')
               + '</td></tr></table>'
@@ -949,7 +953,7 @@ $.KBWidget({
         });
 
         this.setTitle = function(title) {
-            modal.find('.modal-header').find('h3').html(title);
+            modal.find('modal-title').html(title);
         };
 
         this.setContent = function(content) {
@@ -983,19 +987,20 @@ $.KBWidget({
         };
 
         this.show = function(options, width) {
+            /*
             if (!options) {
                 options = {
                     backdrop: 'static'
                 };
-            }
+            }*/
 
             modal.modal(options);
-            this.setWidth(width);
-
+            //this.setWidth(width);
+            /*
             modal.find('.modal-body').css({
                 'padding': '0px 15px',
                 'margin': '15px 0px'
-            });
+            });*/
         };
 
         this.hide = function() {
@@ -1078,6 +1083,10 @@ $.KBWidget({
             modal.focus();
         };
 
+        //
+        // Fixme: Deprecated
+        //
+        /*
         this.setWidth = function(width) {
             modal.css({
                 width: function() {
@@ -1088,6 +1097,7 @@ $.KBWidget({
                 }
             });
         };
+        */
 
         // currently only used to fire event, not for adding events
         this.submit = function() {
@@ -1096,7 +1106,7 @@ $.KBWidget({
     }    
 
     var baseModal = $(
-        '<div class="modal base-modal hide"> \
+        '<div class="modal base-modal"> \
            <div class="modal-dialog">\
              <div class="modal-content">\
                <div class="modal-header"> \
@@ -1126,7 +1136,7 @@ $.KBWidget({
         var sel = ' selected="selected"';
         var idval = ' id="' + id + '"';
 
-        return '<select' + (id ? idval : '') + ' class="input-small"'
+        return '<select' + (id ? idval : '') + ' class="input-small form-control"'
             + ' style="margin: 0px;" data-value="' + value + '">'
             + (noNone ? '' : '<option value="n"' + (value === 'n' ? sel : '') + '>none</option>')
             + '<option value="r"' + (value === 'r' ? sel : '') + '>read</option>'
@@ -1161,7 +1171,7 @@ $.KBWidget({
             modal.lock();
             modal.setContent(
                 '<div style="height: 250px; text-align: center; margin-top: 30px;">'
-                    + '<img src="img/loading.gif" /><br />Loading...'
+                    + '<img src="../common/img/loading.gif" /><br />Loading...'
                     + '</div>'
             );
 
@@ -1238,7 +1248,7 @@ $.KBWidget({
 
                     userTable.append(
                         '<tr class="manage-new-perm"><td>'
-                            + '<input type="text" class="input-medium" style="margin: 0px;" placeholder="username" />'
+                            + '<input type="text" class="form-control input-medium" style="margin: 0px;" placeholder="username" />'
                             + '</td><td>' + createPermissionSelect(null, null, true) + '</td>'
                             + '<td style="vertical-align: middle;">'
                             + '<button type="button" class="close" aria-hidden="true">&times;</button>'
@@ -1310,7 +1320,7 @@ $.KBWidget({
                 });
             }
 
-            modal.setWidth((container.outerWidth()+60) + 'px');
+            //modal.setWidth((container.outerWidth()+60) + 'px');
         }
     }
 
@@ -1343,8 +1353,8 @@ $.KBWidget({
 
         var isNew = true,
             cell = $('#clone-into-cell'),
-            newInput = $('<input type="text" id="clone-id" style="width: 150px" />'),
-            existingInput = $('<select class="hide" style="width: 164px">'),
+            newInput = $('<input type="text" id="clone-id" class="form-control" style="width: 150px" />'),
+            existingInput = $('<select class="form-control hide" style="width: 164px">'),
             permRow = $('#clone-permission-row');
 
         cell.append(newInput).append(existingInput);
@@ -1433,7 +1443,7 @@ $.KBWidget({
 
             modal.alertHide();
             modal.lock();
-            modal.cover('<img src="img/loading.gif" /><br />This may take a while...');
+            modal.cover('<img src="../common/img/loading.gif" /><br />This may take a while...');
 
             workspace.clone(workspaceId, perm).done(function(newWorkspace) {
                 // get the object metadata
@@ -1512,7 +1522,7 @@ $.KBWidget({
         // disable the alert while we try and create the workspace
         modal.alertHide();
         modal.lock();
-        modal.cover('<img src="img/loading.gif" />');
+        modal.cover('<img src="../img/loading.gif" />');
 
         // remove focus and prevent tabbing to input and select
         modal.focus();

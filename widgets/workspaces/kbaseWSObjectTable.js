@@ -771,21 +771,21 @@ $.KBWidget({
                                     </select>');
 
             // select all events
-            $('.select-objs .ncheck-btn').unbind('click')
-            $('.select-objs .ncheck-btn').click(function(){
+            $('.select-objs').unbind('click')
+            $('.select-objs').click(function(){
                 // if already checked un check
-                if ($(this).hasClass('ncheck-checked')) {
+                if ( $(this).children('.ncheck-btn').hasClass('ncheck-checked') ) {
                     $('.check-option').removeClass('ncheck-checked');
-                    $(this).removeClass('ncheck-checked');
+                    $(this).children('.ncheck-btn').removeClass('ncheck-checked');
                     $('.checked-opts').hide();
-                    checkedList = []
+                    checkedList = [];
 
                 // if check box is already checked
                 } else {
                     $('.checked-opts').show();
                     $('.check-option').addClass('ncheck-checked');
-                    $(this).removeClass('ncheck-minus');
-                    $(this).addClass('ncheck-checked');
+                    $(this).children('.ncheck-btn').removeClass('ncheck-minus');
+                    $(this).children('.ncheck-btn').addClass('ncheck-checked');
 
                     checkedList = [];
                     $('.check-option').each(function(){
@@ -1168,7 +1168,7 @@ $.KBWidget({
             });
 
             this.setTitle = function(title) {
-                modal.find('.modal-header').find('h3').html(title);
+                modal.find('modal-title').html(title);
             };
 
             this.setContent = function(content) {
@@ -1202,19 +1202,20 @@ $.KBWidget({
             };
 
             this.show = function(options, width) {
+                /*
                 if (!options) {
                     options = {
                         backdrop: 'static'
                     };
-                }
+                }*/
 
                 modal.modal(options);
-                this.setWidth(width);
-
+                //this.setWidth(width);
+                /*
                 modal.find('.modal-body').css({
                     'padding': '0px 15px',
                     'margin': '15px 0px'
-                });
+                });*/
             };
 
             this.hide = function() {
@@ -1297,6 +1298,10 @@ $.KBWidget({
                 modal.focus();
             };
 
+            //
+            // Fixme: Deprecated
+            //
+            /*
             this.setWidth = function(width) {
                 modal.css({
                     width: function() {
@@ -1307,35 +1312,39 @@ $.KBWidget({
                     }
                 });
             };
+            */
 
             // currently only used to fire event, not for adding events
             this.submit = function() {
                 modal.trigger('submit');
             };
-        }
+        }    
 
         var baseModal = $(
-    '<div class="modal base-modal" style="width: auto;" tabindex="-1" role="dialog"> \
-       <div class="modal-header"> \
-         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> \
-         <h3>Modal</h3> \
-       </div> \
-       <div class="modal-body">\
-           <div class="alert base-modal-alert hide"></div> \
-           <div class="base-modal-cover hide"> \
-             <div class="base-modal-cover-table"> \
-               <div class="base-modal-cover-cell"> \
-                 <span class="base-modal-cover-box"> \
-                 </span> \
-               </div> \
-             </div> \
-           </div> \
-       </div> \
-       <div class="modal-footer"> \
-         <button data-dismiss="modal" class="btn">Cancel</button> \
-         <button class="btn btn-primary">Submit</button> \
-       </div> \
-     </div>'
+            '<div class="modal base-modal"> \
+               <div class="modal-dialog">\
+                 <div class="modal-content">\
+                   <div class="modal-header"> \
+                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> \
+                     <h3 class="modal-title">Modal</h3> \
+                   </div> \
+                   <div class="alert base-modal-alert hide"></div> \
+                   <div class="base-modal-cover hide"> \
+                     <div class="base-modal-cover-table"> \
+                       <div class="base-modal-cover-cell"> \
+                         <span class="base-modal-cover-box"> \
+                         </span> \
+                       </div> \
+                     </div> \
+                   </div> \
+                   <div class="modal-body"></div> \
+                   <div class="modal-footer"> \
+                     <button data-dismiss="modal" class="btn">Cancel</button> \
+                     <button class="btn btn-primary">Submit</button> \
+                   </div> \
+                 </div>\
+               </div>\
+             </div>'
         );
 
         function extendDefaults() {

@@ -87,8 +87,8 @@ function router() {
 
 
     // Analysis Routes
-    Path.map("#/run-fba/:ws_id").to(function(){ 
-        run_fba_view(this.params['ws_id']);
+    Path.map("#/run-fba/:ws_id/:id").to(function(){ 
+        run_fba_view(this.params['ws_id'], this.params['id']);
     }).enter(navEvent);
 
 
@@ -149,7 +149,7 @@ function model_view(ws_id, id) {
 
     $('#model-opts').kbaseModelOpts({id : id, 
                                  workspace : ws_id,
-                                 auth: USER_TOKEN});    
+                                 auth: USER_TOKEN});   
 
     $('#model-tabs').kbaseModelTabs({ids : [id], 
                                      workspaces : [ws_id],
@@ -265,14 +265,18 @@ function help_view() {
 //
 // Analysis Views
 //
-function run_fba_view(ws_id) {
-    var ws_id = ws_id ? ws_id : get_selected_ws();
-    console.log(ws_id)
-
-    $('#app').html(simple_layout2('media-table') )
+function run_fba_view(ws_id, id) {
+    $('#app').html(simple_layout4('media-table', 'formulation-form', 'fba-opts') )
     
     $('#media-table').kbaseWSMediaTable({ws : ws_id,
-                                     auth: USER_TOKEN});
+                                     auth: USER_TOKEN,
+                                    title: "Select a media:"});
+
+    $('#formulation-form').kbaseFormulationForm({ws : ws_id,
+                                 auth: USER_TOKEN,
+                                title: "Formulation"});
+
+    $('#fba-opts').kbaseRunFba({ws : ws_id, id: id, auth: USER_TOKEN});
 }
 
 
@@ -348,15 +352,13 @@ function simple_layout4(id1, id2, id3) {
                             </div>\
                         </div>\
                         <div class="row">\
-                            <div class="col-md-12">\
+                            <div class="col-md-6">\
                                 <div id="'+id2+'"></div>\
                             </div>\
-                        </div>\
-                        <div class="row">\
-                            <div class="col-md-12">\
+                            <div class="col-md-6">\
                                 <div id="'+id3+'"></div>\
                             </div>\
-                        </div>'
+                        </div>'                     
     return simple_layout;
 }
 

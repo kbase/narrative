@@ -8,7 +8,7 @@ $.KBWidget({
     init: function(options) {
         var self = this;
         this._super(options);
-        var model = options.ids;
+        var id = options.id
         var workspace = options.workspace;
         var token = options.auth;
 
@@ -22,13 +22,13 @@ $.KBWidget({
         var container = $('#kbase-model-opts .panel-body');
 
         container.append('<a class="app-icon" href="http://140.221.84.128/#models?tab=model-selection&kbids='+
-                    model+'&ws='+workspace+'" target="_blank">\
+                    id+'&ws='+workspace+'" target="_blank">\
                         <img src="http://www.kbase.us/files/6313/6148/9465/model_icon.png" width=30 >\
                     </a>\
                     <a href="http://140.221.84.128/#models?tab=model-selection&kbids='+
-                    model+'&ws='+workspace+'" target="_blank">Add to Model Viewer</a>');
+                    id+'&ws='+workspace+'" target="_blank">Add to Model Viewer</a>');
         container.append('<br><br>')
-        container.append('<a href="#/run-fba/'+workspace+'">Run FBA</a> <span class="glyphicon glyphicon-arrow-right"></span>')
+        container.append('<a href="#/run-fba/'+workspace+'/'+id+'">Run FBA</a> <span class="glyphicon glyphicon-arrow-right"></span>')
 
 
         return this;

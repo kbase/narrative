@@ -24,6 +24,7 @@ rect:hover {
 /* bootstrap overrides */
 
 .wrapper { width: 95%; margin-left: auto; margin-right: auto; }
+/*.navbar { border-bottom: 2px solid #aaa;}*/
 
 /* end bootstrap overrides */
 

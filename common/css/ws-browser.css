@@ -126,15 +126,16 @@
 .ncheck:hover {
     border: 1px solid #999 ;    
 }
-.ncheck-btn {
+
+
+.ncheck-btn { /* select all button */
     width: 13px;
     height: 13px;
     border: 1px solid #999 ;
-    margin: 4px 0px 4px -1px;
+    margin: 0 0 0 12px;
 }
-.ncheck-btn:hover {
-    border: 1px solid #888 ;    
-}
+
+
 .ncheck-checked {
     background: url(../img/checkmark.png) no-repeat -5px -5px;
     background-image: -webkit-image-set(url(../img/checkmark.png) 1x,url(../img/checkmark_2x.png) 2x);
@@ -143,6 +144,7 @@
     background: url(../img/checkmark-partial.png) no-repeat -5px -5px;
     background-image: -webkit-image-set(url(../img/checkmark-partial.png) 1x,url(../img/checkmark_2x.png) 2x);
 }
+
 
 /* option buttons when object is checked */
 .checked-opts {
@@ -153,8 +155,8 @@
 
 
 .select-objs {
-    height: 20px;
-    width:10px;
+    height: 34px;
+    width: 37px;
     margin: 0 5px 0 0;
 }
 

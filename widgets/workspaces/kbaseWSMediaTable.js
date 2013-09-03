@@ -10,10 +10,11 @@ $.KBWidget({
         var self = this;        
         var token = options.auth;
         var ws = options.ws
+        var title = options.title ? options.title : "Biochemistry Media"
 
         this.$elem.append('<div id="kbase-ws-media-table" class="panel panel-default">\
                                 <div class="panel-heading">\
-                                    <h4 class="panel-title">Biochemistry Media</h4>\
+                                    <h4 class="panel-title">'+title+'</h4>\
                                     <span class="label label-primary pull-right select-ws" \
                                     data-ws="'+ws+'">'+ws+'</span><br>\
                                 </div>\

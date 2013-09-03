@@ -6,8 +6,11 @@ $(function() {
         $('#signin-button').kbaseLogin({style: 'text', 
             login_callback: reload_window, logout_callback: reload_window});
         USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+    
+        // set the currently selected workspace (stored in state via workspace browser)
+        set_selected_workspace();
 
-        router()
+        router();
     })
 })
 
@@ -338,7 +341,12 @@ function simple_layout3(id1, id2) {
 //
 
 function get_selected_ws() {
-    return $('#selected-workspace').text();
+    return state.get('selected')[0];
+}
+
+function set_selected_workspace() {
+    var state = new State();
+    $('#selected-workspace').html(state.get('selected')[0]);
 }
 
 
@@ -353,7 +361,7 @@ var first = true;
 var prevPromises = []; // store previous promises to cancel
 function selectHandler(selected) {
     workspaces = wsSelector.workspaces;
-    $('#selected-workspace').html(selected[0].id)
+    set_selected_workspace()
 
     // tell the previous promise(s) not to fire
     prevPromises.cancel = true;

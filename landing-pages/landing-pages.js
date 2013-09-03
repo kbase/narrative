@@ -9,7 +9,7 @@ $(function() {
     
         // set the currently selected workspace.
         // this stored in state via workspace browser [see selectHandler() below]
-        state = new State();        
+        state = new State();
         set_selected_workspace();
 
         router();
@@ -75,6 +75,10 @@ function router() {
 
     Path.map("#/media").to(function(){ 
         ws_media_view();
+    }).enter(navEvent);
+
+    Path.map("#/media/:ws_id").to(function(){ 
+        ws_media_view(this.params['ws_id']);
     }).enter(navEvent);
 
     Path.map("#/media/:ws_id/:id").to(function(){ 
@@ -220,7 +224,6 @@ function ws_media_view(ws_id) {
 
     $(document).off("mediaClick");
     $(document).on("mediaClick", function(e, data) {
-
         window.location.hash = /media/+ws_id+'/'+data.media;
     });   
 }
@@ -263,7 +266,7 @@ function help_view() {
 // Analysis Views
 //
 function run_fba_view(ws_id) {
-    var ws_id = ws_id ? ws_id : 'KBaseCDMModels';
+    var ws_id = ws_id ? ws_id : get_selected_ws();
     console.log(ws_id)
 
     $('#app').html(simple_layout2('media-table') )
@@ -276,7 +279,6 @@ function run_fba_view(ws_id) {
 //
 // "apps"
 //
-
 function workspace_view() {
     // load template
     $('#app').load('../common/app-templates/ws-browser.html', function() {
@@ -339,6 +341,25 @@ function simple_layout3(id1, id2) {
 }
 
 
+function simple_layout4(id1, id2, id3) {
+    var simple_layout = '<div class="row">\
+                            <div class="col-md-12">\
+                                <div id="'+id1+'"></div>\
+                            </div>\
+                        </div>\
+                        <div class="row">\
+                            <div class="col-md-12">\
+                                <div id="'+id2+'"></div>\
+                            </div>\
+                        </div>\
+                        <div class="row">\
+                            <div class="col-md-12">\
+                                <div id="'+id3+'"></div>\
+                            </div>\
+                        </div>'
+    return simple_layout;
+}
+
 
 //
 // landing page app helper functions
@@ -349,7 +370,9 @@ function get_selected_ws() {
 }
 
 function set_selected_workspace() {
-    $('#selected-workspace').html(state.get('selected')[0]);
+    if (state.get('selected')) {
+        $('#selected-workspace').html(state.get('selected')[0]);
+    }
 }
 
 

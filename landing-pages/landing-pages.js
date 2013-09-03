@@ -7,7 +7,9 @@ $(function() {
             login_callback: reload_window, logout_callback: reload_window});
         USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
     
-        // set the currently selected workspace (stored in state via workspace browser)
+        // set the currently selected workspace.
+        // this stored in state via workspace browser [see selectHandler() below]
+        state = new State();        
         set_selected_workspace();
 
         router();
@@ -284,6 +286,8 @@ function workspace_view() {
 
         wsSelector = $('#ws-selector').kbaseWSSelector({userToken: USER_TOKEN,
                                                 selectHandler: selectHandler});
+
+        //Fixme: Need to add events here.
     })
 }
 
@@ -345,11 +349,8 @@ function get_selected_ws() {
 }
 
 function set_selected_workspace() {
-    var state = new State();
     $('#selected-workspace').html(state.get('selected')[0]);
 }
-
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////

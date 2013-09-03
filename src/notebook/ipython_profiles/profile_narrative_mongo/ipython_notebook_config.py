@@ -497,6 +497,6 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
 # Configure the notebook manager to use MongoDB
 #----------------------------------------------
 c.NotebookApp.notebook_manager_class='biokbase.narrative.mongonbmanager.MongoNotebookManager'
-c.NotebookManager.mongodb_uri="mongodb://mongodb.kbase.us:27017"
+c.NotebookManager.mongodb_uri="mongodb://10.0.16.6:27017"
 c.NotebookManager.mongodb_database="narrative"
 c.NotebookManager.mongodb_collection="notebooks"

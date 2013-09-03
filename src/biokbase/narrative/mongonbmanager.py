@@ -81,7 +81,7 @@ class MongoNotebookManager(NotebookManager):
             self.db = self.mclient[self.mongodb_database]
             self.collection = self.db[self.mongodb_collection]
         except Exception as e:
-            raise web.HTTPError( 500, u"Unable to connect to MongoDB service at %s: %s " % (mongodb_uri, e))
+            raise web.HTTPError( 500, u"Unable to connect to MongoDB service at %s: %s " % (self.mongodb_uri, e))
         # setup a mapping dict for MongoDB/notebook_id <-> Notebook name
         mapping = Dict()
         # Map notebook names to notebook_ids

@@ -108,6 +108,18 @@ ipython $* --NotebookManager.notebook_dir=~/.narrative --profile=${profile_name}
 
 chmod +x $installPath/$venv/bin/run_notebook.sh
 
+printf "Creating start script for KBase narrative running behind reverse proxy server"
+
+printf '#!/bin/bash
+source %s/bin/activate
+export NARRATIVEDIR=%s
+export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
+
+ipython notebook --NotebookManager.notebook_dir=~/.narrative --profile=narrative_mongo --NotebookApp.base_project_url="/narrative/$1" --NotebookApp.base_kernel_url="/narrative/$1" --NotebookApp.password="sha1:89e8b3c3b94f:34c04b4f82d4f5442094cbf73204333176be148a" --NotebookApp.open_browser="False" --ip="*"
+' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" &> $installPath/$venv/bin/run_magellan_narrative.sh
+
+chmod +x $installPath/$venv/bin/run_magellan_narrative.sh
+
 printf "Cleaning up after install.sh script...\n"
 rm -rf ipython
 

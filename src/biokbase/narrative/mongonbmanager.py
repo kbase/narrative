@@ -5,14 +5,16 @@ Based on Travis Harrison's shocknbmanager and the azurenbmanager
 Authors:
 
 * Steve Chan <sychan@lbl.gov>
-"""
 
-#-----------------------------------------------------------------------------
-#  Copyright (C) 2013  The KBase Project
-#
-#  Distributed unspecified open source license as of 8/14/2013
-#  
-#-----------------------------------------------------------------------------
+Copyright (C) 2013 The Regents of the University of California
+Department of  Energy contract-operators of the Lawrence Berkeley National Laboratory
+1 Cyclotron Road, Berkeley,  CA 94720 
+
+Copyright (C) 2013  The KBase Project
+
+Distributed unspecified open source license as of 8/14/2013  
+
+"""
 
 #-----------------------------------------------------------------------------
 # Imports

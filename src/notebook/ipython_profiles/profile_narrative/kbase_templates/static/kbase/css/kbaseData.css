@@ -55,9 +55,6 @@ For data in KBase workspace
 #kb-ws-upload-pulldown .dropdown-menu {
     margin-top: 25px;
 }
-#kb-ws-upload-pulldown .dropdown-menu li {
-    padding-left: 0.5em;
-}
 /* end: upload pulldown */
 
 /* Data table */

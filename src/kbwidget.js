@@ -18,7 +18,7 @@
  *         init: function () {}
  *     });
  */
-(function( $, undefined) {
+(function ($) {
     var KBase;
     var ucfirst = function(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
@@ -333,16 +333,8 @@
         return $(tag);
     }
 
-    $.KBObject = function(def) {
-        if (def.asPlugin == undefined) {
-            def.asPlugin = false;
-        }
-
-        return $.KBWidget(def);
-    }
-
-    $.KBWidget = function(def) {
-
+    $.KBWidget = function (def) {
+        def = (def || {});
         var name    = def.name;
         var parent  = def.parent;
 
@@ -351,49 +343,49 @@
         }
 
         var asPlugin= def.asPlugin;
-        if (asPlugin == undefined) {
+        if (asPlugin === undefined) {
             asPlugin = true;
         }
 
-        //if (widgetRegistry[name] != undefined) {
-        //    //throw "Cannot re-register widget: " + name;
-        //    return;
-        //}
-
-        var Widget = function($elem) {
+        var Widget = function ($elem) {
             this.$elem = $elem;
-            this.options = $.extend(true, {}, def.options, this.constructor.prototype.options);
+            this.options = $.extend(true, {}, def.options, this.constructor.prototype.options);             
             return this;
         }
 
-        var directName = name;
-        directName = directName.replace(/^kbase/, '');
-        directName = directName.charAt(0).toLowerCase() + directName.slice(1);
+        if (name) {
+            var directName = name;
+            directName = directName.replace(/^kbase/, '');
+            directName = directName.charAt(0).toLowerCase() + directName.slice(1);
 
-        KBase[directName] = function (options, $elem) {
-            var $w = new Widget();
-            if ($elem == undefined) {
-                $elem = $.jqElem('div');
+            KBase[directName] = function (options, $elem) {
+                var $w = new Widget();
+                if ($elem == undefined) {
+                    $elem = $.jqElem('div');
+                }
+                $w.$elem = $elem;
+                $w.init(options);
+                $w._init = true;
+                $w.trigger('initialized');
+                return $w;
             }
-            $w.$elem = $elem;
-            $w.init(options);
-            $w._init = true;
-            $w.trigger('initialized');
-            return $w;
-        }
 
-        widgetRegistry[name] = Widget;
+            widgetRegistry[name] = Widget;
 
-        if (def == undefined) {
-            def = parent;
-            parent = 'kbaseWidget';
             if (def == undefined) {
-                def = {};
+                def = parent;
+                parent = 'kbaseWidget';
+                if (def == undefined) {
+                    def = {};
+                }
             }
         }
 
         if (parent) {
-            subclass(Widget, widgetRegistry[parent]);
+            var pWidget = widgetRegistry[parent];
+            if (pWidget === undefined)
+                throw new Error("Parent widget is not registered");
+            subclass(Widget, pWidget);
         }
 
         var defCopy = $.extend(true, {}, def);
@@ -497,13 +489,13 @@
                 Widget.prototype[prop] = defCopy[prop];
             }
         }
-
+        
         if (parent) {
             Widget.prototype.options = $.extend(true, {}, widgetRegistry[parent].prototype.options, Widget.prototype.options);
         }
 
         if (asPlugin) {
-            $.fn[name] = function( method, args ) {
+            var ctor = function (method, args) {
 
                 if (this.length > 1) {
                     var methodArgs = arguments;
@@ -521,13 +513,16 @@
                 }
 
                 // Method calling logic
-                if ( Widget.prototype[method] ) {
-                    return Widget.prototype[method].apply(this.data(name), Array.prototype.slice.call( arguments, 1 ));
+                if (Widget.prototype[method]) {
+                    return Widget.prototype[method].apply(
+                        this.data(name),
+                        Array.prototype.slice.call(arguments, 1)
+                    );
                 } else if ( typeof method === 'object' || ! method ) {
                     //return this.data(name).init( arguments );
                     var args = arguments;
                     $w = this.data(name);
-                    if (! $w._init) {
+                    if ($w._init === undefined) {
                         $w = Widget.prototype.init.apply($w, arguments);
                     }
                     $w._init = true;
@@ -540,13 +535,49 @@
                 return this;
 
             };
+            $.fn[name] = ctor;
+            $[name]    = $.fn[name];
         }
 
-        Widget.prototype[name] = function () {
-            return $.fn[name].apply(this.$elem, arguments);
-        }
+        /**
+         * Registers events on this element.
+         * @param {String} name The event name to register
+         * @param {Function} callback The function to call when an event is
+         *        emitted.
+         */
+        this.on = function (evt, callback) {
+            this.$elem.bind(evt, callback);
+            return this;
+        };
 
-        return $.fn[name];
+        /**
+         * Emits an event.
+         * @param {String} name The event name
+         * @param {Object} data The data to emit with the event
+         */
+        this.emit = function (evt, data) {
+            this.$elem.trigger(evt, data);
+            return this;
+        };
+
+        /**
+         * Unregisters events on this element.
+         * @param {String} name The event name to unregister from
+         */
+        this.off = function (evt) {
+            this.$elem.unbind(evt);
+            return this;
+        };
+
+        if (name !== undefined) {
+            Widget.prototype[name] = function () {
+                return $.fn[name].apply(this.$elem, arguments);
+            }
+
+            return $.fn[name];
+        } else {
+            return this;
+        }
     }
 
     $.KBWidget(
@@ -791,7 +822,4 @@
 
         }
     );
-
-
-
-}( jQuery ));
+})(jQuery);

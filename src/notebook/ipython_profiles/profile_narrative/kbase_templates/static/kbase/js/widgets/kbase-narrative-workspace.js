@@ -14,6 +14,7 @@
             tableElem: null,
             controlsElem: null
 		},
+        //workspaceName: '',
 
 		init: function(options) {
 			this._super(options);
@@ -29,7 +30,6 @@
             });
 			return this;
 		},
-
         /**
          * Initialize controls at top of workspace view.
          *
@@ -43,7 +43,6 @@
             $search.append($('<i>').addClass('icon-search'));
             elem.append($search);
             elem.find('.dropdown-toggle').dropdown();
-            //XXX: add intermediate menu, one option is upload
             var opts = {$anchor: $('#kb-ws-upload-selected')};
             this.uploadWidget = $('#kb-ws-upload-dialog').kbaseUploadWidget(opts);
             return this;

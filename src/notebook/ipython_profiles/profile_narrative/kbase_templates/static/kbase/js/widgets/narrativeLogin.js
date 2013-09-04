@@ -21,7 +21,7 @@
         var set_token = function () {
             // grab the token from the handler, since it isn't passed in with args
             var tok = $("#login-widget").kbaseLogin('session','token');
-            console.log( "Logging in");
+            console.log( "kbase/narrativeLogin: Logging in on back-end");
 
             // set the token in the ipython kernel using special handler
             var cmd = "biokbase.narrative.magics.set_token( '" + tok + "')";

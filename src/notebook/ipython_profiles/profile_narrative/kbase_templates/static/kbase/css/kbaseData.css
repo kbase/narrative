@@ -37,13 +37,13 @@ For data in KBase workspace
 #kb-ws-upload-pulldown {
     position: absolute;
     top: 0;
-    left: 240px;
+    left: 220px;
 }
 #kb-ws-add-data {
     position: absolute;
     top: 5px;
     left: 0px;
-    width: 10em;
+    width: 40px;
     font-size: 90%;
     overflow-x: hidden;
     color: white;
@@ -58,26 +58,30 @@ For data in KBase workspace
 /* end: upload pulldown */
 
 /* Data table */
-#kb-ws table {
-    width: 100%;
+#kb-ws .kb-table table {
+    /*width: 100%;*/
     height: 270px;
 }
 
-#kb-ws table th {
+#kb-ws .kb-table table th {
     background-color: white;
     border: 1px solid gainsboro;
 }
 
-#kb-ws table tr {
-    padding: 5px;
+#kb-ws .kb-table tbody tr {
     border-bottom: 1px solid gainsboro;
 }
 
-#kb-ws table tr:nth-child(odd) {
+#kb-ws .kb-table tbody tr td {
+    max-height: 16px;
+    padding-left: 5px;
+}
+
+#kb-ws .kb-table table tr:nth-child(odd) {
     background-color: #F7F7F7;
 }
 
-#kb-ws table tr td:first-child {
+#kb-ws .kb-table table tr td:first-child {
     max-width: 80%;
     overflow-x: hidden;
 }

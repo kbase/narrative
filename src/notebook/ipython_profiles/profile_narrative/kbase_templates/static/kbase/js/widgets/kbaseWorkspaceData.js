@@ -18,21 +18,26 @@
         $errorMessage: null,
         $loading: null,
         isLoggedIn: false,
+        wsName: null,
+        wsToken: null,
 		options: {
-			workspaceName: "workspace_1",
+			//workspaceName: "workspace_1",
 			workspaceURL: "https://www.kbase.us/services/workspace",
 			loadingImage: "ajax-loader.gif",
 			notLoggedInMsg: "Please log in to view a workspace.",
             container: null
 		},
+        // Constants
+        WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
+        WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
 
-		init: function(options) {
+        init: function(options) {
 			this._super(options);
             this.$tbl = options.container;
             this.createTable()
                 .createMessages()
                 .createLoading()
-                .render(null);
+                .render();
             return this;
         },
 
@@ -88,12 +93,13 @@
                     },
                 ],
                 oSearch: {sSearch: ''},
-                aaSorting: [[1, 'asc'], [7, 'asc']],
+                aaSorting: [[0, 'asc'], [1, 'asc']],
                 //bFilter: false,
                 bInfo: false,
                 bLengthChange: false,
                 bPaginate: false,
-                bAutoWidth: false,
+                bAutoWidth: true,
+                bScrollCollapse: true,
                 sScrollY: '270px'
             });
             /* indices of displayed columns in result array */
@@ -105,11 +111,11 @@
 
         /**
          * Render the widget.
-         * This fetches the list of workspaces.
+         * This fetches the list of data sets for the workspace.
          *
          * @returns this
          */
-		render: function(token) {
+		render: function() {
             this.hideMessages();
             if (!this.isLoggedIn) {
                 this.clearTable();
@@ -117,25 +123,130 @@
             }
             else {
                 this.$loading.show();
+                this.setWs();
                 var that = this;
-                var opts = {workspace: this.options.workspaceName,
-                            auth: token};
+                var opts = {workspace: this.wsName, auth: this.wsToken};
                 this.wsClient.list_workspace_objects(opts,
                     function(results) {
-                        console.log("Results: " + results);
+                        //console.log("Results: " + results);
                         that.updateResults(results);
                         that.createTable();
                     },
                     function(err) {
+                        console.log("error getting workspace objects");
                         that.$loading.hide();
                         that.$errorMessage.show();
+                        // XXX: hack to get something in there
+                        results = [ ];
+                        for (var i=0; i < 5; i++) {
+                            results.push(['luke' + i, 'Genome']);
+                            results.push(['leia' + i, 'Model']);
+                            results.push(['anakin' + i, 'Genome']);
+                            results.push(['amidala' + i, 'Model']);
+                        }
+                        that.updateResults(results);
+                        that.createTable();
                     }
                 );
                 this.$loading.hide();
             }
             return this;
 		},
-
+        /**
+         * Set or create workspace
+         *
+         * Sets this.wsName to name of workspace.
+         * Also puts this into Notebook metadata.
+         *
+         * @returns this
+         */
+        setWs: function() {
+            if (this.wsName === null) {
+                var name = null;
+                this._waitForIpython();
+                // Get workspace name from metadata, or create new
+                var nb = IPython.notebook;
+                var md = nb.metadata;
+                if (md.hasOwnProperty(this.WS_NAME_KEY)) {
+                    // use existing name from notebook metadata
+                    name = md[this.WS_NAME_KEY];
+                }
+                else {
+                    // generate new one, and set into notebook metadata
+                    md[this.WS_NAME_KEY] = name = this._uuidgen();
+                }
+                this.wsName = name;
+                var meta = this._ensureWs(); // ensure workspace exists
+                // create/replace metadata
+                md[this.WS_META_KEY] = meta;
+            }
+            return this;
+        },
+        /**
+         * Ensure workspace this.wsName exists.
+         *
+         * @returns Metadata (mapping) for the workspace
+         * @private
+         */
+        _ensureWs: function() {
+            var wsmeta = null;
+            var that = this;
+            // look for the workspace
+            console.log("look for the workspace: " + this.wsName);
+            this.wsClient.list_workspaces({auth: this.wsToken}).done(function(wslist) {
+                for (var i=0; i < wslist.length; i++) {
+                     var wsid = wslist[i][0];
+                     if (wsid === that.wsName) {
+                        params = {workspace: wsid, auth: that.wsToken};
+                        wsmeta = wsClient.get_workspace_meta(params);
+                        console.log('using existing workspace: ' + that.wsName);
+                        break;
+                     }
+                }
+                // create, if not found
+                if (wsmeta === null) {
+                    console.log("  no existing workspace found");
+                    var params = {
+                        auth: that.wsToken,
+                        workspace: that.wsName,
+                        default_permission: 'w'
+                    };
+                    console.log("create new workspace: " + that.wsName);
+                    that.wsClient.create_workspace(params).done(function(resut) {
+                        wsmeta = result;
+                    });
+                    // XXX: check return value
+                    console.log('created new workspace: ' + that.wsName);
+                }
+            });
+            return wsmeta;
+        },
+        /**
+         * UUID generator.
+         * @returns {string}
+         */
+        _uuidgen: function() {
+            var s = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
+                function(c) {
+                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                    return v.toString(16);
+                });
+            return(s);
+        },
+        /**
+         * Wait for IPython notebook to exist.
+         *
+         * @returns {null}
+         */
+        _waitForIpython: function() {
+            console.log("wait for IPython to fully load");
+            if (typeof IPython == 'undefined' ||
+                typeof IPython.notebook == 'undefined' ||
+                typeof IPython.notebook.metadata == 'undefined') {
+                setTimeout(this._waitForIpython, 100);
+            }
+            console.log("Houston, the IPython has loaded");
+        },
         /**
          * Display new data in the table.
          *
@@ -143,6 +254,11 @@
          * @returns this
          */
         updateResults: function(results) {
+            var mdstring = '';
+            $.each(IPython.notebook.metadata, function(key, val) {
+                mdstring = mdstring + key + "=" + val + "\n";
+            });
+            console.log('notebook metadata = ' + mdstring);
             this.tableData = [ ]; // clear array
             // Extract selected columns from full result set
             var i1 = this.NAME_IDX, i2 = this.TYPE_IDX;
@@ -153,15 +269,21 @@
         },
 
 		loggedIn: function(token) {
-            this.isLoggedIn = true;
+            console.log("creating workspace service on loggedIn");
+            /* with auth
+            var auth = {token: token, user: 'narrative'};
+            this.wsClient = new workspaceService(this.options.workspaceURL, auth);
+            */
             this.wsClient = new workspaceService(this.options.workspaceURL);
-            this.render(token);
+            this.wsToken = token;
+            this.isLoggedIn = true;
+            this.render();
             return this;
 		},
 
 		loggedOut: function(e, args) {
             this.isLoggedIn = false;
-            this.render(null);
+            this.render();
             return this;
         },
 

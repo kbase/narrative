@@ -1,66 +1,12 @@
 
 
-#header-login {
-    float: right;
-    text-align: center;
-    padding-right: 10px;
-    padding-top: 5px;
-}
-
-#container {
-    height: 100%;
-    width: 100%;
-    position: relative;
-}
+/*.dataTables_scrollBody {
+    position: relative !important;
+    overflow: scroll !important;
+    top: 0 !important;    
+}*/
 
 
-
-#loading {
-    margin-top: 80px;
-}
-
-#main {
-    position: absolute;
-    top: 50px;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    padding: 20px;
-}
-
-#main-left {
-    float: left;
-    width: 235px;
-    height: 100%;
-}
-
-#main-right {
-    height: 100%;
-    overflow: hidden;
-}
-
-#main-right-content {
-    height: 100%;
-    position: relative;
-    margin-left: 20px;
-}
-
-.caret-up {
-    display: inline-block;
-    width: 0;
-    height: 0;
-    vertical-align: top;
-    border-bottom: 4px solid #000000;
-    border-top: 0;
-    border-right: 4px solid transparent;
-    border-left: 4px solid transparent;
-    content: "";
-}
-
-.btn .caret-up {
-    margin-top: 8px;
-    margin-left: 0;
-}
 
 
 /* Begin Workspace Selector */
@@ -71,12 +17,8 @@
 }
 
 #ws-table-div {
-    position: absolute;
-    top: 0px;
-    bottom: 0px;
-    left: 0px;
-    right: 0px;
-    overflow: auto;
+    height: 100%;
+    overflow: scroll;
 }
 
 #ws-table {
@@ -106,7 +48,10 @@
 }
 
 .ws-cell-selected {
-    background: #99CCFF;
+    background: #428bca;
+}
+.ws-cell-selected {
+   color: #fff;
 }
 
 .ws-cell-selected:hover {
@@ -118,8 +63,8 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     position: relative;
-    height: 22px;
-    padding: 4px;
+
+    padding: 8px;
 }
 
 .ws-cell-content-hover {
@@ -141,6 +86,7 @@
 }
 
 /* End Workspace Selector */
+
 
 
 /* Begin Object Table */
@@ -166,86 +112,7 @@
 /* End Object Table */
 
 
-/* Begin Base Modal */
 
-.base-modal {
-    text-align: center;
-}
-
-.base-modal-alert {
-    margin: 10px 15px 0px 15px;
-    padding: 8px 15px;
-}
-
-.base-modal-cover {
-    position: absolute;
-    z-index: 10;
-}
-
-.base-modal-cover-table {
-    display: table;
-    position: static;
-    width: 100%;
-    height: 100%;
-}
-
-.base-modal-cover-cell {
-    display: table-cell;
-    vertical-align: middle;
-    position: static;
-}
-
-.base-modal-cover-box {
-    display: inline-block;
-    padding: 5px 15px;
-    margin: 10px;
-    -moz-box-shadow: 7px 7px 5px #888;
-    -webkit-box-shadow: 7px 7px 5px #888;
-    box-shadow: 7px 7px 5px #888;
-}
-
-.base-modal-cover-content {
-    padding: 5px;
-    background: white;
-    border: 1px solid #666;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-    border-radius: 3px;
-}
-
-
-/* End Base Modal */
-
-
-.manage-workspace {
-    margin: 10px 15px 0px 15px;
-}
-
-.manage-modal-attribute {
-    max-width: 50px;
-}
-
-.manage-modal-value {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100px;
-}
-
-div ::-webkit-scrollbar {  
-    width: 10px;
-    height: 10px;
-}
-
-div ::-webkit-scrollbar-track {
-    background-color: #DDD;
-    -webkit-border-radius: 8px;
-}
-
-div ::-webkit-scrollbar-thumb {  
-    background-color: rgba(053, 057, 071, 0.3);
-    -webkit-border-radius: 8px;
-}
 
 
 /* start new functionality styling */
@@ -253,24 +120,25 @@ div ::-webkit-scrollbar-thumb {
 
 /* custom checkboxes (prototyped) */
 .ncheck {
-    width: 11px;
-    height: 11px;
+    width: 13px;
+    height: 13px;
     border: 1px solid #ccc ;
     margin-left: auto;
     margin-right: auto;
 }
 .ncheck:hover {
-    border: 1px solid #444 ;    
+    border: 1px solid #999 ;    
 }
-.ncheck-btn {
-    width: 11px;
-    height: 11px;
-    border: 1px solid #888 ;
-    margin: 4px 0px 4px -1px;
+
+
+.ncheck-btn { /* select all button */
+    width: 13px;
+    height: 13px;
+    border: 1px solid #999 ;
+    margin: 0 0 0 12px;
 }
-.ncheck-btn:hover {
-    border: 1px solid #444 ;    
-}
+
+
 .ncheck-checked {
     background: url(../img/checkmark.png) no-repeat -5px -5px;
     background-image: -webkit-image-set(url(../img/checkmark.png) 1x,url(../img/checkmark_2x.png) 2x);
@@ -279,6 +147,7 @@ div ::-webkit-scrollbar-thumb {
     background: url(../img/checkmark-partial.png) no-repeat -5px -5px;
     background-image: -webkit-image-set(url(../img/checkmark-partial.png) 1x,url(../img/checkmark_2x.png) 2x);
 }
+
 
 /* option buttons when object is checked */
 .checked-opts {
@@ -289,8 +158,8 @@ div ::-webkit-scrollbar-thumb {
 
 
 .select-objs {
-    height: 20px;
-    width:10px;
+    height: 34px;
+    width: 37px;
     margin: 0 5px 0 0;
 }
 
@@ -298,7 +167,12 @@ div ::-webkit-scrollbar-thumb {
     display: inline;
 }
 
+.type-filter {
+    width: 100px;
+}
 
+
+/*
 .dataTables_length,
 .dataTables_info {
     float: left;
@@ -308,6 +182,7 @@ div ::-webkit-scrollbar-thumb {
     padding: 0 3px;
     margin: 7px 0 0 15px;
 }
+*/
 
 .obj-version:hover {
     cursor:hand;
@@ -350,11 +225,13 @@ div ::-webkit-scrollbar-thumb {
 }
 
 
+
+.badge-success {
+    background-color: #5cb85c;
+}
+.search-query {
+    margin: 0 0 10px 0;
+}
+
 /* END new functionality styling */
-
-
-
-
-
-
 

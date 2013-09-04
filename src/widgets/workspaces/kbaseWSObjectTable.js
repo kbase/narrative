@@ -873,7 +873,7 @@ $.KBWidget({
 
             // tooltip for version hover
             $(ele).tooltip({html: true, title:'show history \
-                <i class="icon-list-alt icon-white history-icon"></i>'
+                <span class="glyphicon glyphicon-list-alt history-icon"></span>'
                 , placement: 'right'});
 
 
@@ -888,7 +888,7 @@ $.KBWidget({
                 var tr = $(this).closest('tr')[0];
                 if ( table.fnIsOpen( tr ) ) {
                     table.fnClose( tr );
-                    $(self).attr('data-original-title', 'show history <i class="icon-list-alt icon-white history-icon"></i>')
+                    $(self).attr('data-original-title', 'show history')
                               .tooltip('fixTitle')
 
                 } else {

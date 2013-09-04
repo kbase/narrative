@@ -20,21 +20,23 @@ $.KBWidget({
         var container = $('<div id="kbase-run-fba">')
 
         var body = $('<div class="fba-run-info"><b>Model:</b> '+id+'<br><br></div>')
-        var fba_button = $('<button type="button" class="btn btn-primary run-fba-btn">Run FBA</button>');
+        var fba_button = $('<button type="button" class="btn btn-primary run-fba-btn" disabled="disabled">Run FBA</button>');
         body.append(fba_button)
 
         var panel = container.kbasePanel({title: 'Run FBA', body: body.html()});
 
-
         self.$elem.append(container);
 
-        fba_button.click(function() {
-            console.log('click')
+        $('.run-fba-btn').click(function() {
             var fbaAJAX = fba.queue_runfba({model: id, formulation: formulation, workspace: ws})
-            panel.$elem.append('<p class="muted loader-rxn"> \
-                <img src="../common/img/ajax-loader.gif"> loading...</p>')            
+            self.$elem.append('<p class="muted loader-rxn"> \
+                <img src="../common/img/ajax-loader.gif"> loading...</p>');
+            $.when(fbaAJAX).done(function(data){
+                console.log(data);
+            })
 
         })
+
 
 
 

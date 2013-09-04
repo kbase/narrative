@@ -651,9 +651,8 @@ $.KBWidget({
             + '<button class="btn btn-link" title="Filter Workspaces">'
             + 'Workspaces <span class="caret"></span>'
             + '</button>'
-            + '<button id="create-workspace" class="btn btn-default btn-mini"'
-            + ' style="position: absolute; right: 3px; height: 20px; top: 5px; font-size: 15px; padding: 0px 4px 2px 4px;">'
-            + '+'
+            + '<button type="button" id="create-workspace" class="btn btn-default btn-xs  pull-right">'
+            + '<span title="Create new workspace">+</span>' //class="glyphicon glyphicon-plus"
             + '</button>'
             + '</div>'
             + '<div id="collapseOne" class="accordion-body collapse">'
@@ -696,9 +695,8 @@ $.KBWidget({
         });
 
         // add manage button
-        var manage = $('<a class="ws-cell-manage btn btn-default btn-mini btn-xmini hide" type="button"'
-                       + ' style="margin-right: 2px; padding-bottom: 2px;"'
-                       + ' title="Manage Workspace"><i class="glyphicon glyphicon-cog"></i></a>');
+        var manage = $('<button type="button" class="ws-cell-manage btn btn-default btn-sm hide"'
+                       + ' title="Manage Workspace"><span class="glyphicon glyphicon-cog"></span></button>');
 
         div.append(manage);
 

@@ -3,78 +3,73 @@
 <html>
     <head>
         <title>KBase Data Pages</title>
-        <link rel="icon" href="../common/img/KBase_favicon.ico" type="image/x-icon">
+        <link rel="icon" href="assets/img/KBase_favicon.ico" type="image/x-icon">
 
         <!-- Global KBass css -->
-        <link href="../common/css/bootstrap.css" rel="stylesheet">
+        <link href="../ext/bootstrap/3.0.0/css/bootstrap.css" rel="stylesheet">
         <!--<link href="../common/css/bootstrap2.css" rel="stylesheet">-->
         <!--<link href="../common/css/jquery.dataTables.css" rel="stylesheet">-->
-        <link rel="stylesheet" type="text/css" href="../common/css/dataTables.bootstrap.css">        
-        <link href="../common/css/ws-browser.css" rel="stylesheet">
-        <link href="../common/css/landing-pages.css" rel="stylesheet">
-
+        <link href="assets/css/dataTables.bootstrap.css" rel="stylesheet" type="text/css" >        
+        <link href="assets/css/ws-browser.css" rel="stylesheet">
+        <link href="assets/css/landing-pages.css" rel="stylesheet">
 
         <!-- dependancies for KBase view (if not already included) -->
-        <script src="../common/js/jquery.min.js"></script>
+        <script src="assets/js/jquery.min.js"></script>
         <!--<script src="../kbase_labs/javascript/lib/min/1.0.0/kbase-ui-min.js"></script>-->
-        <script src="../src/kbwidget.js"></script>
-        <script src="../widgets/kbasePrompt.js"></script> 
-        <script src="../widgets/kbaseLogin.js"></script>
 
-        <script src="../common/js/bootstrap.js"></script>
-        <script src="../common/js/jquery.dataTables.js"></script>
-        <script type="text/javascript" language="javascript" src="../common/js/dataTables.bootstrap.js"></script>
+        <script src="../ext/bootstrap/3.0.0/js/bootstrap.js"></script>
+        <script src="../ext/dataTables/1.9.4/js/jquery.dataTables.js"></script>
+        <script src="assets/js/dataTables.bootstrap.js"></script>
 
         <!--<script src="../common/js/bootstrap2.js"></script>-->
-        <script src="../common/js/jquery.scrollTo.min.js"></script>
-        <script src="../common/js/jquery.cookie.min.js"></script>
-        <script src="../common/js/viz/raphael-min.js"></script>
+        <script src="assets/js/jquery.scrollTo.min.js"></script>
+        <script src="assets/js/jquery.cookie.min.js"></script>
+        <script src="assets/js/viz/raphael-min.js"></script>
 
-        <script src="../common/js/path.js"></script>        
+        <script src="assets/js/path.js"></script>        
 
-        <script src="../common/js/kbclient/kbase.js"></script>
+        <script src="assets/js/kbclient/kbase.js"></script>
 
         <!-- these are deps for seq search mockup -->
-        <script src="../common/js/jquery.dataTables.rowGrouping.js"></script>
-        <script src="../common/js/kbclient/seqSearch.js"></script>        
+        <script src="assets/js/jquery.dataTables.rowGrouping.js"></script>
+        <script src="assets/js/kbclient/seqSearch.js"></script>        
 
         <!-- simple widgets --> 
-        <script src="../widgets/kbasePanel.js"></script>
+        <!--<script src="../src/widgets/kbasePanel.js"></script>-->
         <!-- end simple widgets -->
 
-        <!-- widgets -->    
-        <script src="../widgets/models/kbaseModelMeta.js"></script>
-        <script src="../widgets/models/kbaseModelTabs.js"></script>
-        <script src="../widgets/models/kbaseModelCore.js"></script>
-        <script src="../widgets/models/kbaseModelOpts.js"></script>        
+        <!-- widgets -->
+        <script src="../src/kbwidget.js"></script>
 
-        <script src="../widgets/fbas/kbaseFbaTabs.js"></script>
-        <script src="../widgets/fbas/kbaseFormulationForm.js"></script>
-        <script src="../widgets/fbas/kbaseRunFba.js"></script>
+        <script src="../src/widgets/kbasePrompt.js"></script>
+        <script src="../src/widgets/kbaseLogin.js"></script>
 
+        <script src="../src/widgets/models/kbaseModelMeta.js"></script>
+        <script src="../src/widgets/models/kbaseModelTabs.js"></script>
+        <script src="../src/widgets/models/kbaseModelCore.js"></script>
+        <script src="../src/widgets/models/kbaseModelOpts.js"></script>        
 
-        <script src="../widgets/biochemistry/kbaseBioRxnTable.js"></script>
-        <script src="../widgets/biochemistry/kbaseBioCpdTable.js"></script>
+        <script src="../src/widgets/fbas/kbaseFbaTabs.js"></script>
+        <script src="../src/widgets/fbas/kbaseFormulationForm.js"></script>
+        <script src="../src/widgets/fbas/kbaseRunFba.js"></script>
 
-        <script src="../widgets/media/kbaseMediaEditor.js"></script>
+        <script src="../src/widgets/biochemistry/kbaseBioRxnTable.js"></script>
+        <script src="../src/widgets/biochemistry/kbaseBioCpdTable.js"></script>
 
-        <script src="../widgets/biochemistry/kbaseRxnModal.js"></script>
+        <script src="../src/widgets/media/kbaseMediaEditor.js"></script>
 
-        <script src="../widgets/misc/kbaseSeqSearch.js"></script>
+        <script src="../src/widgets/biochemistry/kbaseRxnModal.js"></script>
 
-        <script src="../widgets/workspaces/kbaseWSModelTable.js"></script>
-        <script src="../widgets/workspaces/kbaseWSFbaTable.js"></script>
-        <script src="../widgets/workspaces/kbaseWSMediaTable.js"></script>
-        <script src="../widgets/workspaces/kbaseSimpleWSSelect.js"></script>        
-        <script src="../widgets/workspaces/kbaseWSHandler.js"></script>
-        <script src="../widgets/workspaces/kbaseWSSelector.js"></script>
-        <script src="../widgets/workspaces/kbaseWSObjectTable.js"></script>
+        <script src="../src/widgets/misc/kbaseSeqSearch.js"></script>
 
+        <script src="../src/widgets/workspaces/kbaseWSModelTable.js"></script>
+        <script src="../src/widgets/workspaces/kbaseWSFbaTable.js"></script>
+        <script src="../src/widgets/workspaces/kbaseWSMediaTable.js"></script>
+        <script src="../src/widgets/workspaces/kbaseSimpleWSSelect.js"></script>        
+        <script src="../src/widgets/workspaces/kbaseWSHandler.js"></script>
+        <script src="../src/widgets/workspaces/kbaseWSSelector.js"></script>
+        <script src="../src/widgets/workspaces/kbaseWSObjectTable.js"></script>
 
-
-        <!--<script src="../widgets/wsBrowser.js"></script>-->
-
-        <!--<script data-main="../widgets/wsBrowser.js" src="../common/js/require-jquery.js"></script>-->
         <script src="landing-pages.js"></script>
     </head>
 

@@ -1,7 +1,7 @@
 
 $(function() {
     // add navigation to page
-    $('#navigation').load('../common/templates/nav.html', function(){
+    $('#navigation').load('assets/templates/nav.html', function(){
         //fix me
         $('#signin-button').kbaseLogin({style: 'text', 
             login_callback: reload_window, logout_callback: reload_window});
@@ -250,7 +250,7 @@ function media_view(ws_id, id) {
 }
 
 function help_view() {
-    $('#app').load('../common/templates/data-view-api.html', function() {
+    $('#app').load('assets/templates/data-view-api.html', function() {
         $('.api-url-submit').click(function() {
             var form = $(this).parents('form')
             var url = '/'+form.attr('type')+'/'+form.find('#input1').val();

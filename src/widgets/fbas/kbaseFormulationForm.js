@@ -28,7 +28,7 @@ $.KBWidget({
         //panel_body.append('<p class="muted loader-rxn"> \
         //        <img src="../common/img/ajax-loader.gif"> loading...</p>')
 
-        var test = [{label: "media", tag: 'input', type:'text', placeholder: 'objfraction', id: 'media'},
+        var test = [{label: "media", tag: 'input', type:'text', placeholder: 'optional', id: 'media'},
                     {label: "additionalcpds", tag: 'input', type:'text', placeholder: 'optional', id: 'additionalcpds'},
                     {label: "prommodel", tag: 'input', type:'text', placeholder: 'optional', id: 'prommodel'},
                     {label: "prommodel_workspace", tag: 'input', type:'text', placeholder: 'optional', id: 'prommodel_workspace'},
@@ -36,11 +36,11 @@ $.KBWidget({
                     {label: "objfraction", tag: 'input', type:'text', placeholder: 'optional', id: 'objfraction'},
 
                     {label: "defaultmaxflux", tag: 'input', type:'text', 
-                        placeholder: 'required',value:'100', id: 'defaultmaxflux', required: true},
+                        placeholder: 'required',val:'100', id: 'defaultmaxflux', required: true},
                     {label: "defaultminuptake", tag: 'input', type:'text', 
-                        placeholder: 'required',value:'-100', id: 'defaultminuptake', required: true},
+                        placeholder: 'required',val:'-100', id: 'defaultminuptake', required: true},
                     {label: "defaultmaxuptake", tag: 'input', type:'text', 
-                        placeholder: 'required', value: '0', id: 'defaultmaxuptake', required: true},
+                        placeholder: 'required', val: '0', id: 'defaultmaxuptake', required: true},
 
                     {label: "simplethermoconst", tag: 'checkbox', type:'checkbox', placeholder: 'optional', id: 'simplethermoconst'},
                     {label: "thermoconst", tag: 'checkbox', type:'checkbox', placeholder: 'optional', id: 'thermoconst'},
@@ -93,8 +93,8 @@ $.KBWidget({
 
                     var grid = $('<div class="col-lg-8">');
                     if (obj.required) {
-                        grid.append('<input type="'+obj.type+'" id="'+obj.id+' value="'+obj.value+
-                            '" class="form-control" required>');
+                        grid.append('<input type="'+obj.type+'" id="'+obj.id+
+                            '" class="form-control"  value="'+obj.val+'" required>');
                     } else {
                         grid.append('<input type="'+obj.type+'" id="'+obj.id+'" class="form-control" placeholder="'+obj.placeholder+'">');
                     }

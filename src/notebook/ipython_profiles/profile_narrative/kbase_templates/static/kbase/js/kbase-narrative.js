@@ -3,42 +3,24 @@
     $(function() {
         $(document).on('loggedIn.kbase', function(event, token) {
             narrativeWsWidget.loggedIn(token);
-            narrativeUploadWidget.loggedIn(token);
         });
 
         $(document).on('loggedOut.kbase', function(event, token) {
             narrativeWsWidget.loggedOut(token);
-            narrativeUploadWidget.loggedOut(token);
         });
-
-        var narrativeWsWidget = $("#narrative-workspace-view").kbaseNarrativeWorkspace({
-            tabs: [
-                { 
-                    name: "Narrative",
-                    workspace: "KBaseFBA"
-                },
-                {
-                    name: "Workspace",
-                    workspace: "bill_models"
-                },
-                {
-                    name: "Project",
-                    workspace: "billbootcamp"
-                }
-            ],
-            loadingImage: "/static/kbase/images/ajax-loader.gif"
+        var $ws = $('#kb-ws');
+        var narrativeWsWidget = $ws
+            .kbaseNarrativeWorkspace({
+              loadingImage: "/static/kbase/images/ajax-loader.gif",
+              controlsElem: $ws.find('.kb-controls'),
+              tableElem: $ws.find('.kb-table')
         });
-
-        var narrativeUploadWidget = $("#data-add-btn").kbaseUploadWidget({});
 
         var token = $("#login-widget").kbaseLogin("session", "token");
         if (token) {
             console.log(token);
             narrativeWsWidget.loggedIn(token);
-//            narrativeUploadWidget.loggedIn(token);
         }
-
-
     });
 
 })( jQuery );

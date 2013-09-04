@@ -21,24 +21,24 @@
 	display: none;
 }
 
-.kbws-datatable {
+.kb-datatable {
 	width: 100%;
 }
 
-.kbws-datatable th {
+.kb-datatable th {
 	background-color: #bee;
 }
 
-.kbws-datatable tr {
+.kb-datatable tr {
 	padding: 5px;
 	border-bottom: 1px solid #aaa;
 }
 
-.kbws-datatable tr:nth-child(odd) {
+.kb-datatable tr:nth-child(odd) {
 	background-color: #eee;
 }
 
-.kbws-datatable tr td:first-child {
+.kb-datatable tr td:first-child {
 	max-width: 80%;
 	overflow-x: hidden;
 }

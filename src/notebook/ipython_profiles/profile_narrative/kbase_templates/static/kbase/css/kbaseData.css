@@ -1,0 +1,97 @@
+/*
+For data in KBase workspace
+*/
+#kb-ws {
+    background-color: #fff;
+    width: 100%;
+    height: 345px;
+}
+
+#kb-ws .datatable {
+    width: 100%;
+    height: 300px;
+}
+
+#kb-ws .kb-header {
+    background-color: #008988;
+    width: 100%;
+    color: white;
+    font-family: OxygenRegular;
+    font-size: 16px;
+    text-align: center;
+    padding: 5px 0;
+    height: 15px;
+}
+
+#kb-ws .kb-controls {
+    width: 100%;
+    height: 30px;
+    background-color: #008988;
+}
+#kb-ws .kb-controls input {
+    height: 12px;
+    margin: 3px;
+}
+
+/* Upload pulldown */
+#kb-ws-upload-pulldown {
+    position: absolute;
+    top: 0;
+    left: 240px;
+}
+#kb-ws-add-data {
+    position: absolute;
+    top: 5px;
+    left: 0px;
+    width: 10em;
+    font-size: 90%;
+    overflow-x: hidden;
+    color: white;
+    font-family: OxygenMonoRegular;
+    text-decoration-line: underline;
+    text-decoration-color: #f5f5f5;
+    text-decoration-style: dashed;
+}
+#kb-ws-upload-pulldown .dropdown-menu {
+    margin-top: 25px;
+}
+#kb-ws-upload-pulldown .dropdown-menu li {
+    padding-left: 0.5em;
+}
+/* end: upload pulldown */
+
+/* Data table */
+#kb-ws table {
+    width: 100%;
+    height: 270px;
+}
+
+#kb-ws table th {
+    background-color: white;
+    border: 1px solid gainsboro;
+}
+
+#kb-ws table tr {
+    padding: 5px;
+    border-bottom: 1px solid gainsboro;
+}
+
+#kb-ws table tr:nth-child(odd) {
+    background-color: #F7F7F7;
+}
+
+#kb-ws table tr td:first-child {
+    max-width: 80%;
+    overflow-x: hidden;
+}
+
+#kb-ws .dataTables_filter { display: none; }
+
+.sorting { background: url('../images/sort_both.png') no-repeat center right; }
+.sorting_asc { background: url('../images/sort_asc.png') no-repeat center right; }
+.sorting_desc { background: url('../images/sort_desc.png') no-repeat center right; }
+
+.sorting_asc_disabled { background: url('../images/sort_asc_disabled.png') no-repeat center right; }
+.sorting_desc_disabled { background: url('../images/sort_desc_disabled.png') no-repeat center right; }
+
+/* end: data table */

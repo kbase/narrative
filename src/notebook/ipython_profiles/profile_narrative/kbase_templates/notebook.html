@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbase-workspace-mini.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbase-narrative-workspace.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbase_upload.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseData.css") }}" type="text/css" />
 
     <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
 
@@ -203,45 +204,32 @@ class="notebook_app"
         </div>
     </div>
     <div id="left-column">
-        <div id="data-panel" class="left-pane">
-            <div id="data-header">
-                <div id="data-title">
-                    Data sets<span id="data-add-btn">+ Add</span>
+        <div id="kb-ws">
+            <div class="kb-header">Data sets</div>
+            <div class="kb-controls">
+                <div class="dropdown" id='kb-ws-upload-pulldown'>
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#"
+                            id='kb-ws-add-data'>+ Add</a>
+                    <ul class='dropdown-menu' role='menu' aria-labelledby='dLabel'>
+                        <li  id='kb-ws-upload-selected'>Upload</li>
+                        <li>test2</li>
+                    </ul>
                 </div>
+                <span id='kb-ws-upload-dialog'></span>
             </div>
-
-            <div id="narrative-workspace-view">
+            <div class="kb-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
             </div>
-            <div id="narrative-upload-dialog" style="display: none"/>
-<!--             <div id="data-tab-nav">
-                <ul>
-                    <li class="selected"><a href="#">Narrative</a></li>
-                    <li><a href="#">Workspace</a></li>
-                    <li><a href="#">Project</a></li>
-                </ul>
-            </div>
-            <div id="data-view-panel">
-                test 1<br/>
-                test 2<br/>
-                test 3<br/>
-                test 4<br/>
-                test 5<br/>
-                test 6<br/>
-                test 7<br/>
-                test 8<br/>
-                test 9<br/>
-                test 10<br/>
-                test 11<br/>
-                test 12<br/>
-                test 13<br/>
-                test 14<br/>
-                test 15<br/>
-                test 16<br/>
-                test 17<br/>
-                test 18<br/>
-            </div>
- -->        </div>
-
+        </div>
         <div id="function-panel" class="left-pane">
             <div id="function-header">
                 Functions
@@ -365,6 +353,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/kbase-workspace-mini.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbase-narrative-workspace.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceData.js") }}" type="text/javascript" charset="utf-8"></script>
 
 
 {% endblock %}

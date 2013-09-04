@@ -10,12 +10,7 @@
 
 	$.KBWidget("kbaseUploadWidget", 'kbaseWidget', {
 		version: "0.0.1",
-		$buttonList: null,
-		$viewPort: null,
-		viewPortTabs: {},
-		currentTab: null,
-		workspaceWidgets: [],
-
+        isLoggedIn: false,
 		options: {},
 
         /**
@@ -28,7 +23,8 @@
             this._super(options);
             this.createDialog();
             var that = this;
-            this.$elem.on("click", function(event) {
+            options.$anchor.on("click", function() {
+                //alert("render it");
                 that.render();
             });
             return this;
@@ -45,9 +41,9 @@
                 closeOnEscape: true,
                 title: 'Upload file',
                 autoOpen: false,
-                width: '50em',
+                width: '50em'
             };
-            this.dlg = $('#narrative-upload-dialog').dialog(opts);
+            this.dlg = this.$elem.dialog(opts);
             // Build form programmatically
             var $frm = $('<form>').addClass('form-horizontal');
             var fields = {
@@ -211,6 +207,23 @@
                     console.log("   - " + key + '=' + val);
                 });
             });
+            return this;
+        },
+
+        /**
+         * Respond to login.
+         *
+         * @param token
+         * @returns {*}
+         */
+        loggedIn: function(token) {
+            this.isLoggedIn = true;
+            //this.wsClient = new workspaceService(this.options.workspaceURL);
+            return this;
+        },
+
+        loggedOut: function(token) {
+            this.isLoggedIn = false;
             return this;
         }
 	});

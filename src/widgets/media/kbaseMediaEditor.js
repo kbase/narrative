@@ -100,7 +100,6 @@ $.KBWidget({
                 var newConc = $('#addConc').val();
                 var newMinflux = $('#addMinflux').val();
                 var newMaxflux = $('#addMaxflux').val();
-                $(this).closest('tr').remove()
                 var last = $('[id^=cmpds]').length
                 //alert ();
                 var rowToAdd = '<tr><td><input id="cmpds'+last+'" class="form-control" value="'+newCmpd+'"></input></td>\
@@ -111,11 +110,10 @@ $.KBWidget({
 
                  table.append(rowToAdd)
 
-                 table.append('<tr><td><input id="addCmpds" class="form-control"></input></td>\
-                    <td><input id="addConc" class="form-control"></input></td>\
-                    <td><input id="addMinflux" class="form-control"></input></td>\
-                    <td><input id="addMaxflux" class="form-control"></input></td>\
-                    <td><button id="addRow" class="form-control"><span class="glyphicon glyphicon-plus"></span></button></tr>');
+                var row = $(this).closest('tr');
+                row.next()after(row);
+
+
            });
 
             container.append('<a class="btn btn-primary save-to-ws-btn">Save to a workspace -></a>');

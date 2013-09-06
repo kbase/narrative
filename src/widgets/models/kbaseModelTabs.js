@@ -76,7 +76,7 @@ $.KBWidget({
 
         var models_AJAX = fba.get_models({models: models, workspaces: workspaces});
         $('.tab-pane').not('#overview').append('<p class="muted loader-tables"> \
-                                  <img src="../common/img/ajax-loader.gif"> loading...</p>')
+                                  <img src="assets/img/ajax-loader.gif"> loading...</p>')
         $.when(models_AJAX).done(function(data){
             var model = data[0];
 

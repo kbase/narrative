@@ -36,7 +36,7 @@ $.KBwidget({
         var wsAJAX = kbws.list_workspace_objects({workspace: ws, type: "Model", auth: token})
 
         container.append('<p class="muted loader-table"> \
-                                  <img src="../common/img/ajax-loader.gif"> loading...</p>')
+                                  <img src="assets/img/ajax-loader.gif"> loading...</p>')
 
         $.when(wsAJAX).done(function(data){
             var dataList = formatObjs(data);

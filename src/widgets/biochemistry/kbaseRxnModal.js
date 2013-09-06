@@ -32,7 +32,7 @@ $.KBWidget({
 
             var container = $('#rxn-modal-container');
             container.find('.modal-body').append('<p class="muted loader-rxn"> \
-                    <img src="../common/img/ajax-loader.gif"> loading...</p>')
+                    <img src="assets/img/ajax-loader.gif"> loading...</p>')
 
             container.modal();
 
@@ -116,7 +116,12 @@ $.KBWidget({
                 var table = $('<table class="table table-striped table-bordered">')
                 for (var key in rxn) {
                     if (key == 'id') continue;
-                    table.append('<tr><td>'+key+'</td><td>'+rxn[key]+'</td></tr>');
+                    if (key == 'aliases') {
+                        var value = rxn[key].join('<br>')
+                    } else {
+                        var value = rxn[key];
+                    }
+                    table.append('<tr><td>'+key+'</td><td>'+value+'</td></tr>');
                 }
                 rxn_tab.append(table)
 

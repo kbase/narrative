@@ -30,7 +30,7 @@ $.KBWidget({
             var container = $('#ws-select-modal-container');
             var modal_body = container.find('.modal-body');
             modal_body.append('<p class="muted loader"> \
-                    <img src="../common/img/ajax-loader.gif"> loading...</p>')
+                    <img src="assets/img/ajax-loader.gif"> loading...</p>')
 
             container.modal();
 

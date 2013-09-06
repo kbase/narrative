@@ -29,7 +29,7 @@ $.KBWidget({
         var meta_AJAX = kbws.get_objectmeta({type: 'Model',
                 workspace: workspaces[0], id: models[0]});
         container.append('<p class="muted loader-overview"> \
-                                  <img src="../common/img/ajax-loader.gif"> loading...</p>');
+                                  <img src="assets/img/ajax-loader.gif"> loading...</p>');
 
         $.when(meta_AJAX).done(function(data){
             $('.loader-overview').remove();            

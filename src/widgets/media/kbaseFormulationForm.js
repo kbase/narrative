@@ -27,7 +27,7 @@ $.KBWidget({
 
         var panel_body = container.find('.panel-body');
         panel_body.append('<p class="muted loader-rxn"> \
-                <img src="../common/img/ajax-loader.gif"> loading...</p>')
+                <img src="assets/img/ajax-loader.gif"> loading...</p>')
 
 
         function media_view(container, data) {

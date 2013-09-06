@@ -51,7 +51,7 @@ $.KBWidget({
             if (select_table == undefined) {
 
                 $('.target-genome-tbl').append('<p class="muted s-loader"> \
-                         <img src="img/ajax-loader.gif"></img> loading...</p>')        
+                         <img src="assets/img/ajax-loader.gif"></img> loading...</p>')        
                 var gnome_AJAX = cdmi.all_entities_Genome(0, 10000, ["scientific_name"]);
                 $.when(gnome_AJAX).done(function(data){
                     $('.target-genomes').show();
@@ -164,7 +164,7 @@ $.KBWidget({
             $('.results-container').html('')
             $('.results-container').append('<table class="results-tbl table-striped table-bordered"></table>')
             $('.results-container').append('<p class="muted results-loader"> \
-                     <img src="img/ajax-loader.gif"></img> loading...</p>')
+                     <img src="assets/img/ajax-loader.gif"></img> loading...</p>')
             console.log(genome_ids)
             if (genome_ids.length > 0) {
                 var seq_AJAX = s_search.blast_one_sequence_against_a_genome(seq, genome_ids);

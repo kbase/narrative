@@ -75,7 +75,7 @@ $.KBWidget({
 
         var fbaAJAX = fba.get_fbas({fbas: fbas, workspaces: workspaces});
         $('.tab-pane').append('<p class="muted loader-tables"> \
-                                  <img src="../common/img/ajax-loader.gif"> loading...</p>')
+                                  <img src="assets/img/ajax-loader.gif"> loading...</p>')
         $.when(fbaAJAX).done(function(data){
             console.log(data)
             var fba = data[0];

@@ -500,3 +500,8 @@ c.NotebookApp.notebook_manager_class='biokbase.narrative.mongonbmanager.MongoNot
 c.NotebookManager.mongodb_uri="mongodb://10.0.16.6:27017"
 c.NotebookManager.mongodb_database="narrative"
 c.NotebookManager.mongodb_collection="notebooks"
+
+#-------------
+# Other tweaks for notebook
+#-------------
+c.IPKernelApp.pylab = 'inline'

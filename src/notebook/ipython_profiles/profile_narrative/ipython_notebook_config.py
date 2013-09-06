@@ -491,3 +491,8 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
 
 # The directory to use for notebooks.
 # c.NotebookManager.notebook_dir = u'/Users/sychan/src/kbase/dev_container/modules/narrative/src'
+
+#----------------------
+# Tweaks for running notebook
+#----------------------
+c.IPKernelApp.pylab = 'inline'

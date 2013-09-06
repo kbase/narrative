@@ -62,7 +62,5 @@ RUN cd /kb/dev_container/narrative; /bin/bash install.sh -p /kb/deployment/servi
 # Setup the container to automatically run a script that uses the narrative_mongo profile
 # and configures the notebook server to use /narrative/{CMD} as the prefix for a reverse
 # proxy environment
-CMD ['kbasetest']
-ENTRYPOINT ['/kb/deployment/services/narrative-venv/bin/run_magellan_narrative.sh']
-
-
+CMD ["kbasetest"]
+ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/run_magellan_narrative.sh"]

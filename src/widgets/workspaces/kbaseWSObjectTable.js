@@ -1370,7 +1370,7 @@ $.KBWidget({
 
             /* Set the defaults for DataTables initialisation */
             $.extend( true, $.fn.dataTable.defaults, {
-                "sDom": "<'row'<'col-md-12 obj-opts'>fr>t<'row'<'col-md-6'il><'col-md-6'p>>",
+                "sDom": "<'row'<'col-md-12 obj-opts'f>r>t<'row'<'col-md-6'il><'col-md-6'p>>",
                 "sPaginationType": "bootstrap",
                 "oLanguage": {
                     "sLengthMenu": "_MENU_ records per page"

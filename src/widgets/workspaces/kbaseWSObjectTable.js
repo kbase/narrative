@@ -16,7 +16,7 @@ $.KBWidget({
         var container = $('#object-table-container');
 
         var tableLoading = $('<div id="object-table-loading" style="text-align: center; margin-top: 60px;">'
-                         + '<img src="../common/img/ajax-loader.gif" /><br />Loading...</div>');
+                         + '<img src="assets/img/ajax-loader.gif" /><p class="text-muted">Loading...<p></div>');
         container.append(tableLoading);
 
         var tableDiv = $('<div id="object-table">');
@@ -349,7 +349,7 @@ $.KBWidget({
 
                     modal.alertHide();
                     modal.lock();
-                    modal.cover('<img src="../common/img/ajax-loader.gif" /><br />This may take a while...');
+                    modal.cover('<img src="assets/img/ajax-loader.gif" /><br />This may take a while...');
 
                     var promises = [];
                     var p = workspace.copyObject(type, id, workspaceId, id);
@@ -474,7 +474,7 @@ $.KBWidget({
 
                     modal.alertHide();
                     modal.lock();
-                    modal.cover('<img src="../common/img/ajax-loader.gif" /><br />This may take a while...');
+                    modal.cover('<img src="assets/img/ajax-loader.gif" /><br />This may take a while...');
 
                     var promises = [];
                     var p = workspace.moveObject(type, id, workspaceId, id);
@@ -561,7 +561,7 @@ $.KBWidget({
             modal.on('submit', function() {
                 modal.alertHide();
                 modal.lock();
-                modal.cover('<img src="../common/img/ajax-loader.gif" /><br />This may take a while...');
+                modal.cover('<img src="assets/img/ajax-loader.gif" /><br />This may take a while...');
 
                 workspace.delete().done(function() {
                     modal.coverAlert('<strong>Success</strong><br />' + "Deleted workspace '" + workspace.id + "'", 'success');
@@ -606,7 +606,7 @@ $.KBWidget({
             modal.on('submit', function() {
                 modal.alertHide();
                 modal.lock();
-                modal.cover('<img src="../common/img/ajax-loader.gif" /><br />This may take a while...');
+                modal.cover('<img src="assets/img/ajax-loader.gif" /><br />This may take a while...');
 
                 del_objs = []
                 for (var i in checkedList) {
@@ -1370,7 +1370,7 @@ $.KBWidget({
 
             /* Set the defaults for DataTables initialisation */
             $.extend( true, $.fn.dataTable.defaults, {
-                "sDom": "<'row'<'col-md-9 obj-opts'>fr>t<'row'<'col-md-4'il><'col-md-5'p>>",
+                "sDom": "<'row'<'col-md-12 obj-opts'>fr>t<'row'<'col-md-6'il><'col-md-6'p>>",
                 "sPaginationType": "bootstrap",
                 "oLanguage": {
                     "sLengthMenu": "_MENU_ records per page"

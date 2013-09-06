@@ -285,7 +285,7 @@ function run_fba_view(ws_id, id) {
 //
 function workspace_view() {
     // load template
-    $('#app').load('../common/app-templates/ws-browser.html', function() {
+    $('#app').load('assets/app-templates/ws-browser.html', function() {
         $('#app').html(simple_layout3('ws-selector', 'ws-object-table') );
 
         objectTable = $('#ws-object-table').kbaseWSObjectTable({auth:USER_TOKEN})

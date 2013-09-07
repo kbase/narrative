@@ -41,6 +41,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libzmq-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libreadline6-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-numpy
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-scipy
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-matplotlib
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-setuptools

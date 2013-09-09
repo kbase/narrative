@@ -76,8 +76,8 @@ $.KBWidget({
                     <td><button id="del'+i+'" onclick="$(this).closest(&#39;tr&#39).remove()" class="form-control"><span class="glyphicon glyphicon-trash"></span></button></tr>');
             }
 
-            table.append('<tr><td><input id="addCmpds" class="form-control"></input></td>\
-                    <td><input id="addConc" class="form-control"></input></td>\
+            table.append('<tr><td><input id="addCmpds" class="form-control" placeholder="add Compound"></input></td>\
+                    <td><input id="addConc" class="form-control" ></input></td>\
                     <td><input id="addMinflux" class="form-control"></input></td>\
                     <td><input id="addMaxflux" class="form-control"></input></td>\
                     <td><button id="addRow" class="form-control"><span class="glyphicon glyphicon-plus"></span></button></tr>');

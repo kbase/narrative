@@ -862,7 +862,7 @@ $.KBWidget({
         }
 
         modal.lock();
-        modal.cover('<img src="../common/img/loading.gif" />');
+        modal.cover('<img src="assets/img/loading.gif" />');
 
         $.when.apply($, promises).done(function() {
             modal.coverAlert('<strong>Success</strong><br />Changed workspace permissions', 'success');
@@ -1169,7 +1169,7 @@ $.KBWidget({
             modal.lock();
             modal.setContent(
                 '<div style="height: 250px; text-align: center; margin-top: 30px;">'
-                    + '<img src="../common/img/loading.gif" /><br />Loading...'
+                    + '<img src="assets/img/loading.gif" /><br />Loading...'
                     + '</div>'
             );
 
@@ -1441,7 +1441,7 @@ $.KBWidget({
 
             modal.alertHide();
             modal.lock();
-            modal.cover('<img src="../common/img/loading.gif" /><br />This may take a while...');
+            modal.cover('<img src="assets/img/loading.gif" /><br />This may take a while...');
 
             workspace.clone(workspaceId, perm).done(function(newWorkspace) {
                 // get the object metadata
@@ -1520,7 +1520,7 @@ $.KBWidget({
         // disable the alert while we try and create the workspace
         modal.alertHide();
         modal.lock();
-        modal.cover('<img src="../img/loading.gif" />');
+        modal.cover('<img src="assets/img/loading.gif" />');
 
         // remove focus and prevent tabbing to input and select
         modal.focus();

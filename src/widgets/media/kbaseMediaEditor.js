@@ -15,26 +15,19 @@ $.KBWidget({
         var fba = new fbaModelServices('http://140.221.85.73:4043/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
-        var container = $('<div id="kbase-media-editor" class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <h4 class="panel-title">Media Info</h4>\
-                                    <span class="label label-primary pull-right">'+ws+'</span><br>\
-                                </div>\
-                                <div class="panel-body"></div>\
-                           </div>');
+        var container = $('<div id="kbase-media-editor"></div>')
+        container.kbasePanel({title: '<h3 class="modal-title">Media Info</h3>'+media});
+
+
         self.$elem.append(container);
 
         var panel_body = container.find('.panel-body');
         panel_body.append('<p class="muted loader-rxn"> \
-                <img src="../common/img/ajax-loader.gif"> loading...</p>')
-
-        container.find('.panel-heading')
-            .html('<h3 class="modal-title">Media Info</h3>'+media); 
+                <img src="assets/img/ajax-loader.gif"> loading...</p>')
 
 
         var mediaAJAX = fba.get_media({medias: [media], workspaces: [ws]})
         $.when(mediaAJAX).done(function(data){
-            console.log(data)
             media = data[0]; // only 1 media right now
             container.find('.modal-header').append('\
                 <span><b>Id: </b>'+media.id+'</span>')

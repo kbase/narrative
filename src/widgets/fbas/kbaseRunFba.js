@@ -30,7 +30,7 @@ $.KBWidget({
         $('.run-fba-btn').click(function() {
             var fbaAJAX = fba.queue_runfba({model: id, formulation: formulation, workspace: ws})
             self.$elem.append('<p class="muted loader-rxn"> \
-                <img src="../common/img/ajax-loader.gif"> loading...</p>');
+                <img src="assets/img/ajax-loader.gif"> loading...</p>');
             $.when(fbaAJAX).done(function(data){
                 console.log(data);
             })

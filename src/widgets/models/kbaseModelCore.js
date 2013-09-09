@@ -24,7 +24,7 @@ $.KBWidget({
         var container = $('#kbase-model-core .panel-body');
 
         container.append('<p class="muted loader-overview"> \
-                <img src="../common/img/ajax-loader.gif"> loading...</p>');
+                <img src="assets/img/ajax-loader.gif"> loading...</p>');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
@@ -48,7 +48,7 @@ $.KBWidget({
         }
 
         function draw_core_model(kbids) {
-            var graph_AJAX = $.getJSON('../common/data/core.json');
+            var graph_AJAX = $.getJSON('assets/data/core.json');
             var modelAJAX = fba.get_models({models: models, workspaces: workspaces, auth: token});
             //var fbaAJAX = fba.get_fbas({fbas: fbas_to_retrieve, workspaces: ws, auth: token});  
 

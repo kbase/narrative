@@ -10,20 +10,27 @@ $.KBWidget({
         var self = this;
         var ws = options.ws;   
         var title = options.title ? options.title : "Default Panel Heading";
+        var right_label = options.rightLabel;
         var body = options.body
-
-        var fba = new fbaModelServices('http://140.221.85.73:4043/');
-        var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
         var container = $('<div class="panel panel-default">\
                                 <div class="panel-heading">\
                                     <h4 class="panel-title">'+title+'</h4>\
                                 </div>\
-                                <div class="panel-body">'+body+'</div>\
+                                <div class="panel-body"></div>\
                            </div>');
+        console.log(right_label)
+
+        if (body) {
+
+        }
+        
+        if (right_label) {
+            container.find('.panel-heading').append(
+                '<span class="label label-primary pull-right">'+right+'</span><br>');
+        }
+
         self.$elem.append(container);
-
-
 
         //this._rewireIds(this.$elem, this);
         return this;

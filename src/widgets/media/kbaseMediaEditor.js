@@ -99,12 +99,12 @@ $.KBWidget({
                         <td><input id="conc'+last+'" class="form-control" value="'+newConc+'"></input></td>\
                         <td><input id="minflux'+last+'" class="form-control" value="'+newMinflux+'"></input></td>\
                         <td><input id="maxflux'+last+'" class="form-control" value="'+newMaxflux+'"></input></td>\
-                        <td><button id="del'+i+'" onclick="$(this).closest(&#39;tr&#39).remove()" class="form-control"><span class="glyphicon glyphicon-trash"></span></button></tr>'
+                        <td><button id="del'+last+'" onclick="$(this).closest(&#39;tr&#39).remove()" class="form-control"><span class="glyphicon glyphicon-trash"></span></button></tr>'
 
                  table.append(rowToAdd)
 
                 var row = $(this).closest('tr');
-                row.next()after(row);
+                row.next().after(row);
 
 
            });

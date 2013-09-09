@@ -12,31 +12,24 @@ $.KBWidget({
         var workspaces = options.workspaces;
         var token = options.auth;
 
-        this.$elem.append('<div id="kbase-model-tabs" class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <h4 class="panel-title">Model Details</h4>'
-                                     +models[0]+
-                                    '<span class="label label-primary pull-right">'+workspaces[0]+'</span><br>\
-                                </div>\
-                                <div class="panel-body"></div>\
-                           </div>');
-
-
-        var container = $('#kbase-model-tabs .panel-body');
+        var panel = this.$elem.kbasePanel({title: 'Model Details', 
+                                           rightLabel: workspaces[0],
+                                           subText: models[0]});
+        var container = panel.body();
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
-        var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfilling', 'Gapgen']
-        var tableIds = ['reaction', 'compound', 'compartment', 'biomass', 'gapfilling', 'gapgen']
+        var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfilling', 'Gapgen'];
+        var tableIds = ['reaction', 'compound', 'compartment', 'biomass', 'gapfilling', 'gapgen'];
 
         // build tabs
         var tabs = $('<ul id="table-tabs" class="nav nav-tabs"> \
                         <li class="active" > \
                         <a href="#'+tableIds[0]+'" data-toggle="tab" >'+tables[0]+'</a> \
-                      </li></ul>')
+                      </li></ul>');
         for (var i=1; i<tableIds.length; i++) {
-            tabs.append('<li><a href="#'+tableIds[i]+'" data-toggle="tab">'+tables[i]+'</a></li>')
+            tabs.append('<li><a href="#'+tableIds[i]+'" data-toggle="tab">'+tables[i]+'</a></li>');
         }
 
         // add tabs
@@ -79,6 +72,7 @@ $.KBWidget({
                                   <img src="assets/img/ajax-loader.gif"> loading...</p>')
         $.when(models_AJAX).done(function(data){
             var model = data[0];
+            console.log(model)
 
             // compartment table
             var dataDict = model.compartments;
@@ -90,7 +84,7 @@ $.KBWidget({
             table.fnAddData(dataDict);
 
             // reaction table
-            var dataDict = formatRxnObjs(model.reactions)
+            var dataDict = formatRxnObjs(model.reactions);
 
             var keys = ["reaction", "definition",
                         "features","name"];

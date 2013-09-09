@@ -12,26 +12,21 @@ $.KBWidget({
         var workspaces = options.workspaces;
         var token = options.auth;
 
-        this.$elem.append('<div id="kbase-model-core" class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <h4 class="panel-title">Central Carbon Core Pathway</h4>'
-                                     +models[0]+
-                                    '<span class="label label-primary pull-right">'+workspaces[0]+'</span><br>\
-                                </div>\
-                                <div class="panel-body"><div id="core-model"></div></div>\
-                           </div>');
+        var panel = this.$elem.kbasePanel({title: 'Model Info', 
+                   rightLabel: workspaces[0],
+                   subText: models[0],
+                   body: '<p class="muted loader-overview"> \
+                <img src="assets/img/ajax-loader.gif"> loading...</p> \
+                <div id="core-model"></div>'});
 
-        var container = $('#kbase-model-core .panel-body');
-
-        container.append('<p class="muted loader-overview"> \
-                <img src="assets/img/ajax-loader.gif"> loading...</p>');
+        var container = panel.body();
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
         var flux_threshold = 0.001;
         var heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
-        var neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00' ];
+        var neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00'];
         var gapfill_color = '#f000ff';
         var gene_stroke = '#777';
         var g_present_color = '#8bc7e5';
@@ -40,7 +35,7 @@ $.KBWidget({
         var r_height = grid*(1/5);
         var radius = 5;
 
-        load_core_model(models)
+        load_core_model(models);
 
         function load_core_model(kbids) {
             //draw_legend(kbids, false);

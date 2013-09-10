@@ -40,26 +40,42 @@ function router() {
 
     Path.map("#/workspace-browser").to(function(){
         workspace_view();
-    }).enter(navEvent);    
+    }).enter(navEvent);
 
     // Data routes
-    Path.map("#/genomes").to(function() {
-        genome_view();
-    });
-    Path.map("#/genomes/cs/:genome_id").to(function(){ 
-        genome_view({'genomeID': this.params['genome_id']});
-    });
-    Path.map("#/genomes/:ws_id").to(function() {
-        genome_view({'workspaceID': this.params['ws_id']});
-    });
-    Path.map("#/genomes/:ws_id/:genome_id").to(function() {
-        genome_view(
-            {
-                'workspaceID': this.params['ws_id'],
-                'genomeID': this.params['genome_id']
-            }
-        );
-    });
+    Path.map("#/genomes")
+        .to(function() {
+            genome_view();
+        })
+        .enter(navEvent)
+        .exit(removeCards);
+
+    Path.map("#/genomes/cs/:genome_id")
+        .to(function(){ 
+            genome_view({'genomeID': this.params['genome_id']});
+        })
+        .enter(navEvent)
+        .exit(removeCards);
+
+    Path.map("#/genomes/:ws_id")
+        .to(function() {
+            genome_view({'workspaceID': this.params['ws_id']});
+        })
+        .enter(navEvent)
+        .exit(removeCards);
+
+    Path.map("#/genomes/:ws_id/:genome_id")
+        .to(function() {
+            genome_view(
+                {
+                    'workspaceID': this.params['ws_id'],
+                    'genomeID': this.params['genome_id']
+                }
+            );
+        })
+        .enter(navEvent)
+        .exit(removeCards);
+
     Path.map("#/organisms").to(function(){ empty_page() });
 
     Path.map("#/models").to(function(){
@@ -164,7 +180,9 @@ function navEvent() {
     $(document).trigger("navEvent");
 }
 
-
+function removeCards() {
+    $("#genomes").KBaseGenomeCardManager("removeAllCards");
+}
 
 /*
  *   "Views" which load widgets on page.
@@ -177,7 +195,7 @@ function genome_view(params) {
      */
     $('#app').html(simple_layout2('genomes'));
     if (!params)
-        $("#genomes").append(" - no id given");
+        $("#genomes").append("No id given");
     else {
         $("#genomes").KBaseGenomeCardManager(params);
         // if (params.genomeId)

@@ -72,11 +72,20 @@
                 close: function(event, ui) {
                     console.log("what.");
                     console.log(newCardId);
-                    self.cards[newCardId] = null;
+//                    self.cards[newCardId] = null;
                 }
             });
 
             this.cards[newCardId] = newCard;
+            this.cardIndex++;
+        },
+
+        removeAllCards: function() {
+            for (var cardId in this.cards) {
+                this.cards[cardId].LandingPageCard("close");
+                delete this.cards[cardId];
+            }
+            this.cardIndex = 0;
         }
 
     });

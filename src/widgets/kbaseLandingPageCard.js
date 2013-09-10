@@ -36,6 +36,10 @@
 			this.$elem.dialog(this.options);
 
 			return this;
+		},
+
+		close: function(options) {
+			this.$elem.dialog("close");
 		}
 	});
 

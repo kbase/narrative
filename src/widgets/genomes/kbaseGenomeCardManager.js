@@ -30,9 +30,6 @@
                 );
             });
 
-            $(document).on("showContig", function(event, data) {
-            });
-
             this.addNewCard("KBaseGenomeOverview", 
                 { 
                     genomeID: this.options.genomeID,

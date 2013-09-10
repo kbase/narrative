@@ -1,4 +1,9 @@
 
+/*
+ *   Add nav bar and signin to html.
+ *   Set workspace and starting url router
+ */
+
 $(function() {
     // add navigation to page
     $('#navigation').load('assets/templates/nav.html', function(){
@@ -16,10 +21,10 @@ $(function() {
     })
 })
 
-function navEvent() {
-    console.log('nav event');
-    $(document).trigger("navEvent");
-}
+
+/*
+ *   URL router for maping urls to "views".
+ */
 
 function router() {
     // App routes
@@ -102,13 +107,13 @@ function router() {
     }).enter(navEvent);
 
 
-    // Analysis Routes
+    // analysis Routes
     Path.map("#/run-fba/:ws_id/:id").to(function(){ 
         run_fba_view(this.params['ws_id'], this.params['id']);
     }).enter(navEvent);
 
 
-    // help routes
+    // help page route
     Path.map("#/data-view-api").to(function(){ 
         help_view();
     }).enter(navEvent);
@@ -121,21 +126,44 @@ function router() {
     Path.listen();
 }
 
+
+
+
+/*
+ *   landing page app helper functions
+ */
+
 function empty_page() {
-    $('#app').html('coming soon')
+    $('#app').html('coming soon');
 }
 
 function page_not_found() {
-    $('#app').html('object data not found')
+    $('#app').html('object data not found');
 }
 
 function reload_window() {
     window.location.reload();
 }
 
+function get_selected_ws() {
+    return state.get('selected')[0];
+}
+
+function set_selected_workspace() {
+    if (state.get('selected')) 
+        $('#selected-workspace').html(state.get('selected')[0]);
+    }
+}
+
+function navEvent() {
+    console.log('nav event');
+    $(document).trigger("navEvent");
+}
+
+
 
 /*
- *  "Views" which load widgets on page.
+ *   "Views" which load widgets on page.
  */
 
 function genome_view(params) {
@@ -264,7 +292,8 @@ function media_view(ws_id, id) {
     var media_view = $('#media-editor').kbaseMediaEditor({auth: USER_TOKEN, 
                                                             ws: ws_id,
                                                             id:id});
-    var save_ws_modal = $('#save-ws-modal').kbaseSimpleWSSelect({auth: USER_TOKEN});   
+    var save_ws_modal = $('#save-ws-modal').kbaseSimpleWSSelect({auth: USER_TOKEN,
+                                                                 defaultWS: get_selected_ws()});
 
     $(document).off("saveToWSClick");
     $(document).on("saveToWSClick", function(e, data) {
@@ -291,9 +320,11 @@ function help_view() {
     });
 }
 
-//
-// Analysis Views
-//
+
+
+/*
+ * Analysis Views
+ */
 function run_fba_view(ws_id, id) {
     $('#app').html(simple_layout4('media-table', 'formulation-form', 'fba-opts') )
     
@@ -309,9 +340,12 @@ function run_fba_view(ws_id, id) {
 }
 
 
-//
-// "apps"
-//
+
+
+/*
+ *  "Apps"
+ */
+
 function workspace_view() {
     // load template
     $('#app').load('assets/app-templates/ws-browser.html', function() {
@@ -327,9 +361,12 @@ function workspace_view() {
 }
 
 
-//
-//  Layouts.  This could be part of a template system or whatever
-//
+
+
+/*
+ *  Layouts.  This could be part of a template system or whatever
+ */
+
 function simple_layout1(id1, id2, id3, id4) {
     var simple_layout = '<div class="row">\
                             <div class="col-md-4">\
@@ -392,26 +429,21 @@ function simple_layout4(id1, id2, id3) {
 }
 
 
-//
-// landing page app helper functions
-//
-
-function get_selected_ws() {
-    return state.get('selected')[0];
-}
-
-function set_selected_workspace() {
-    if (state.get('selected')) {
-        $('#selected-workspace').html(state.get('selected')[0]);
-    }
-}
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-//
-// workspace browser handler
-//
-/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+/***************************  END landing page stuff  ********************************/
+
+
+
+/*
+ *   workspace browser handler
+ */
+
 var first = true;
 var prevPromises = []; // store previous promises to cancel
 function selectHandler(selected) {
@@ -524,16 +556,8 @@ function selectHandler(selected) {
 
 
 
-
-
-
 /*
  *  Function to store state in local storage.
- * 
- *  Better than storing list of selected workspaces
- *  in the URL (e.g. #workspace1&workspace2&workspace3...)
- * 
- *  Not optimized for large quantities of data
  */
 function State() {
     // Adapted from here: http://diveintohtml5.info/storage.html

@@ -140,17 +140,15 @@ function reload_window() {
 
 function genome_view(params) {
     $('#app').html(simple_layout2('genomes'));
-    $("#genomes").append("Genomes");
     if (!params)
         $("#genomes").append(" - no id given");
     else {
-        if (params.genomeId)
-            $("#genomes").append(" - " + params.genomeId);
-        if (params.workspaceId)
-            $("#genomes").append(" - " + params.workspaceId);
+        $("#genomes").KBaseGenomeCardManager();
+        // if (params.genomeId)
+        //     $("#genomes").append(" - " + params.genomeId);
+        // if (params.workspaceId)
+        //     $("#genomes").append(" - " + params.workspaceId);
     }
-    $("#genomes").KBaseCardManager();
-    $("#genomes").append("test").dialog();
 }
 
 function ws_model_view(ws_id) {

@@ -30,7 +30,8 @@
             this.workspaceClient = new workspaceService(this.workspaceURL);
 
             if (this.options.embedInCard) {
-                this.$elem.LandingPageCard({ title: "Genome Overview" });
+                this.$elem.LandingPageCard({ title: "Genome Overview",
+                                             position: this.options.position });
             }
 
             return this.render();

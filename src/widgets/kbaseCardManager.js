@@ -6,6 +6,8 @@
         options: {
         },
 
+        cards: [],
+
         init: function(options) {
             this._super(options);
 
@@ -15,26 +17,6 @@
                 });
             };
     
-            var self = this;
-            $(document).on("featureClick", function(event, data) {
-                self.addNewCard("KBaseGeneInfo", { featureID: data.feature_id, embedInCard: true });
-            });
-
-            this.addNewCard("KBaseGenomeOverview", { genomeID: "kb|g.0", embedInCard: true });
-            this.addNewCard("KBaseContigBrowser", { contig: "kb|g.0.c.1",
-                                               centerFeature: "kb|g.0.peg.2173", 
-                                               showButtons: true,
-                                               embedInCard: true,
-                                               loadingImage: "../../widgets/images/ajax-loader.gif",
-                                             });
-
-            this.addNewCard("KBaseContigBrowser", { contig: "kb|g.0.c.1",
-                                               centerFeature: "kb|g.0.peg.4288", 
-                                               showButtons: true,
-                                               embedInCard: true,
-                                               loadingImage: "../../widgets/images/ajax-loader.gif"
-                                             });
-
             return this;
         },
 
@@ -57,7 +39,24 @@
              * to make it relative to the page.
              */
 
-            this.$elem.append($("<div/>")[cardName](options));
+            var position = {
+                my: "left top",
+                at: "right+5% top",
+                of: this.cards.length > 0 ? ("#kblpc" + (this.cards.length-1)) : null,
+                collision: "fit flip"
+            };
+            
+            if (this.cards.length === 0) {
+                position = {
+                    my: "left top",
+                    at: "left bottom",
+                    of: $("#app")
+                };
+            }
+
+            options.position = position;
+            var newCard = this.$elem.append($("<div id='kblpc" + this.cards.length + "'/>")[cardName](options));
+            this.cards.push(newCard);
         }
 
     });

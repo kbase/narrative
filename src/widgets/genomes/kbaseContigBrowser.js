@@ -92,7 +92,8 @@
 
             if (this.options.embedInCard) {
                 this.$elem.LandingPageCard({ title: "Contig Browser - " + this.options.contig,
-                                             width: 550 });
+                                             width: 550,
+                                             position: this.options.position });
             }
             this.render();
 

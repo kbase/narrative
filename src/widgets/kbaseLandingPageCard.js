@@ -8,10 +8,18 @@
 			draggable: true,
 			autoOpen: true,
 			closeOnEscape: false,
+			position: null
 		},
 
 		init: function(options) {
 			this._super(options);
+
+			if (this.options.position === null) {
+				this.options.position = {
+					my: "center",
+					at: "center"
+				};
+			}
 
 			var self = this;
 			this.options.open = function(event, ui) {
@@ -20,6 +28,7 @@
 			this.options.close = function(event, ui) {
 				self.$elem.remove();
 			};
+			
 			this.$elem.addClass("kblpc");
 			this.$elem.dialog(this.options);
 

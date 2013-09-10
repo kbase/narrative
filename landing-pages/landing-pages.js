@@ -34,7 +34,23 @@ function router() {
     }).enter(navEvent);    
 
     // Data routes
-    Path.map("#/genomes").to(function(){ empty_page() });
+    Path.map("#/genomes").to(function() {
+        genome_view();
+    });
+    Path.map("#/genomes/cs/:genome_id").to(function(){ 
+        genome_view({'genomeId': this.params['genome_id']});
+    });
+    Path.map("#/genomes/:ws_id").to(function() {
+        genome_view({'workspaceId': this.params['ws_id']});
+    });
+    Path.map("#/genomes/:ws_id/:genome_id").to(function() {
+        genome_view(
+            {
+                'workspaceId': this.params['ws_id'],
+                'genomeId': this.params['genome_id']
+            }
+        );
+    });
     Path.map("#/organisms").to(function(){ empty_page() });
 
     Path.map("#/models").to(function(){
@@ -106,11 +122,11 @@ function router() {
 }
 
 function empty_page() {
-    $('#app').html('comming soon')
+    $('#app').html('coming soon')
 }
 
 function page_not_found() {
-    $('#app').html('no object data not found')
+    $('#app').html('object data not found')
 }
 
 function reload_window() {
@@ -122,7 +138,22 @@ function reload_window() {
  *  "Views" which load widgets on page.
  */
 
- function ws_model_view(ws_id) {
+function genome_view(params) {
+    $('#app').html(simple_layout2('genomes'));
+    $("#genomes").append("Genomes");
+    if (!params)
+        $("#genomes").append(" - no id given");
+    else {
+        if (params.genomeId)
+            $("#genomes").append(" - " + params.genomeId);
+        if (params.workspaceId)
+            $("#genomes").append(" - " + params.workspaceId);
+    }
+    $("#genomes").KBaseCardManager();
+    $("#genomes").append("test").dialog();
+}
+
+function ws_model_view(ws_id) {
     var ws_id = ws_id ? ws_id : 'KBaseCDMModels';
 
     $('#app').html(simple_layout2('ws-models') )

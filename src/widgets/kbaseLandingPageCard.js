@@ -20,6 +20,7 @@
 			this.options.close = function(event, ui) {
 				self.$elem.remove();
 			};
+			this.$elem.addClass("kblpc");
 			this.$elem.dialog(this.options);
 
 			return this;

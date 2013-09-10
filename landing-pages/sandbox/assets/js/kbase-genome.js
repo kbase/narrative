@@ -21,7 +21,6 @@
                                            loadingImage: "../../widgets/images/ajax-loader.gif",
                                          });
 
-
         addNewCard("KBaseContigBrowser", { contig: "kb|g.0.c.1",
                                            centerFeature: "kb|g.0.peg.4288", 
                                            showButtons: true,

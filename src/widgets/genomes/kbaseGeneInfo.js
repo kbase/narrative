@@ -14,7 +14,8 @@
 		options: {
 			featureID: null,
 			embedInCard: false,
-			auth: null
+			auth: null,
+			title: "Feature Info"
 		},
 
 		cdmiURL: "https://kbase.us/services/cdmi_api",
@@ -33,9 +34,7 @@
 			this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
 			this.workspaceClient = new workspaceService(this.workspaceURL);
 
-			if (this.options.embedInCard) {
-				this.$elem.LandingPageCard({ title: "Gene Info - " + this.options.featureID });
-			}
+			this.options.title += " - " + this.options.featureID;
 
 			return this.render();
 		},

@@ -1,3 +1,8 @@
+/**
+ * Made to work with the landing page.
+ * This initializes all card positions relative to the #app div.
+ */
+
 (function( $, undefined ) {
     $.KBWidget({
         name: "KBaseGenomeCardManager",
@@ -8,41 +13,59 @@
 
         init: function(options) {
             this._super(options);
-
-            $.ui.dialog.prototype._makeDraggable = function() {
-                this.uiDialog.draggable({
-                    containment: false
-                });
-            };
     
             var self = this;
             $(document).on("featureClick", function(event, data) {
-                self.addNewCard("KBaseGeneInfo", { 
-                    featureID: data.feature_id, 
-                    embedInCard: true 
+                console.log(event);
+                self.addNewCard("KBaseGeneInfo", 
+                    { 
+                        featureID: data.feature.feature_id, 
+                    },
+                    {
+                        my: "left top",
+                        at: "center",
+                        of: data.featureElement
+                    }
+                );
+            });
+
+            this.addNewCard("KBaseGenomeOverview", 
+                { 
+                    genomeID: "kb|g.0",
+                },
+                {
+                    my: "left top",
+                    at: "left bottom",
+                    of: "#app"
+                }
+            );
+
+            this.addNewCard("KBaseContigBrowser", 
+                { 
+                    contig: "kb|g.0.c.1",
+                    centerFeature: "kb|g.0.peg.2173", 
+                    showButtons: true,
+                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                },
+                {
+                    my: "left top",
+                    at: "left+330 bottom",
+                    of: "#app",
+                    collision: "fit"
                 });
-            });
 
-            this.addNewCard("KBaseGenomeOverview", { 
-                genomeID: "kb|g.0", 
-                embedInCard: true 
-            });
-
-            this.addNewCard("KBaseContigBrowser", { 
-                contig: "kb|g.0.c.1",
-                centerFeature: "kb|g.0.peg.2173", 
-                showButtons: true,
-                embedInCard: true,
-                loadingImage: "../../widgets/images/ajax-loader.gif",
-            });
-
-            this.addNewCard("KBaseContigBrowser", { 
-                contig: "kb|g.0.c.1",
-                centerFeature: "kb|g.0.peg.4288", 
-                showButtons: true,
-                embedInCard: true,
-                loadingImage: "../../widgets/images/ajax-loader.gif"
-            });
+            this.addNewCard("KBaseContigBrowser", 
+                { 
+                    contig: "kb|g.0.c.1",
+                    centerFeature: "kb|g.0.peg.4288", 
+                    showButtons: true,
+                    loadingImage: "../../widgets/images/ajax-loader.gif"
+                },
+                {
+                    my: "left top",
+                    at: "left+330 bottom+200",
+                    of: "#app"
+                });
 
             return this;
         },

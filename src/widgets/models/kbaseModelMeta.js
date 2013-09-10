@@ -12,16 +12,11 @@ $.KBWidget({
         var workspaces = options.workspaces;
         var token = options.auth;
 
-        this.$elem.append('<div id="kbase-model-meta" class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <h4 class="panel-title">Model Info</h4>'
-                                     +models[0]+
-                                    '<span class="label label-primary pull-right">'+workspaces[0]+'</span><br>\
-                                </div>\
-                                <div class="panel-body"></div>\
-                           </div>');
+        var panel = this.$elem.kbasePanel({title: 'Model Info', 
+                                           rightLabel: workspaces[0],
+                                           subText: models[0]});
 
-        var container = $('#kbase-model-meta .panel-body');
+        var container = panel.body();
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');

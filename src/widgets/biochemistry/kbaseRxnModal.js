@@ -17,24 +17,12 @@ $.KBWidget({
             var rxns = options.rxns
             var model_id = options.model_id;
 
-            self.$elem.html('')
-            self.$elem.append('<div id="rxn-modal-container" class="modal">\
-                                   <div class="modal-dialog">\
-                                      <div class="modal-content">\
-                                        <div class="modal-header"></div>\
-                                        <div class="modal-body"></div>\
-                                        <div class="modal-footer">\
-                                          <a href="#" class="btn btn-primary" data-dismiss="modal">Close</a>\
-                                        </div>\
-                                      </div>\
-                                   </div>\
-                                </div>');
+            var modal = self.$elem.kbaseModal({title: "Reaction Info", 
+                    subText: "Note: this view is currently under development."})
+            var modal_body = modal.body('<p class="muted loader-rxn"> \
+                    <img src="assets/img/ajax-loader.gif"> loading...</p>');
 
-            var container = $('#rxn-modal-container');
-            container.find('.modal-body').append('<p class="muted loader-rxn"> \
-                    <img src="assets/img/ajax-loader.gif"> loading...</p>')
-
-            container.modal();
+            modal.show();
 
             var selection_list = $('<ul id="rxn-tabs" class="sub-nav nav nav-tabs">');    
             for (var i in rxns) {
@@ -47,23 +35,20 @@ $.KBWidget({
                 selection_list.append(li);
             }
 
-            container.find('.modal-body').append(selection_list);
+            modal_body.append(selection_list);
             
-            container.find('.modal-header')
-                .html('<h3 class="modal-title">Reaction Info</h3>\
-                    <span class="text-error">Note: this view is currently under development.</span>');            
             var fbaAJAX = fba.get_reactions({reactions: rxns, auth: token})
             $.when(fbaAJAX).done(function(data){
                 if (model_id) {
-                    model_rxn_tab(container, data);
+                    model_rxn_tab(modal_body, data);
                 } else {
-                    rxn_tab(container, data)
+                    rxn_tab(modal_body, data)
                 }
             })
         }
 
         function rxn_tab(container, data) {
-            $('.loader-rxn').remove();
+            container.find('.loader-rxn').remove();
 
             for (var i in data) {
                 var rxn = data[i];
@@ -125,12 +110,12 @@ $.KBWidget({
                 }
                 rxn_tab.append(table)
 
-                container.find('.modal-body').append(rxn_tab);
+                container.append(rxn_tab);
             }
 
         }
 
-        function mode_rxn_tab(data) {
+        function model_rxn_tab(data) {
             
         }
 

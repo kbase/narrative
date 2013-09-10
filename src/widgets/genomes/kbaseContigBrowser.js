@@ -61,8 +61,10 @@
             embedInCard: false,
             showButtons: false,
             cardContainer: null,
-            onClickFunction: null
+            onClickFunction: null,
 
+            width: 550,
+            title: "Contig Browser"
         },
 
         cdmiURL: "http://kbase.us/services/cdmi_api",
@@ -90,10 +92,7 @@
             this.proteinInfoClient = new ProteinInfo(this.proteinInfoURL);
             this.workspaceClient = new workspaceService(this.workspaceURL);
 
-            if (this.options.embedInCard) {
-                this.$elem.LandingPageCard({ title: "Contig Browser - " + this.options.contig,
-                                             width: 550 });
-            }
+            this.options.title += " - " + this.options.contig;
             this.render();
 
             var self = this;
@@ -102,11 +101,11 @@
             }
 
             this.options.onClickFunction = function(svgElement, feature) {
-                self.trigger("featureClick", feature);
+                self.trigger("featureClick", { feature: feature, featureElement: svgElement} );
             }
             return this;
-
         },
+
 
         /**
          * 

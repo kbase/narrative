@@ -7,7 +7,8 @@
         options: {
             genomeID: null,
             workspace: null,
-            loadingImage: "../../widgets/images/ajax-loader.gif"
+            loadingImage: "../../widgets/images/ajax-loader.gif",
+            title: "Genome Overview"
         },
 
         cdmiURL: "https://kbase.us/services/cdmi_api",
@@ -29,11 +30,21 @@
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
             this.workspaceClient = new workspaceService(this.workspaceURL);
 
-            if (this.options.embedInCard) {
-                this.$elem.LandingPageCard({ title: "Genome Overview" });
-            }
+            // if (this.options.embedInCard) {
+            //     this.card = this.$elem.LandingPageCard({ 
+            //                     title: "Genome Overview",
+            //                     position: this.options.position
+            //                 });
+            // }
 
             return this.render();
+        },
+
+        getCard: function() {
+            if (this.card)
+                return this.card;
+
+            return null;
         },
 
         render: function(options) {
@@ -67,7 +78,6 @@
                     var $infoTable = $("<div />")  // should probably be styled somehow. Bootstrapish?
                                      .append($("<table/>")
                                              .addClass("kbgo-table")
-//                                             .addClass("table table-bordered table-striped")
                                              .append($("<tr/>")
                                                      .append("<td>ID</td><td>" + genome.id + "</td>")
                                                     )

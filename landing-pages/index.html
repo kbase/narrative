@@ -5,16 +5,28 @@
         <title>KBase Data Pages</title>
         <link rel="icon" href="assets/img/KBase_favicon.ico" type="image/x-icon">
 
-        <!-- Global KBass css -->
+        <!-- Global KBase css -->
         <link href="../ext/bootstrap/3.0.0/css/bootstrap.css" rel="stylesheet">
+
         <!--<link href="../common/css/bootstrap2.css" rel="stylesheet">-->
         <!--<link href="../common/css/jquery.dataTables.css" rel="stylesheet">-->
+        <link href="../ext/jquery-ui/1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" type="text/css">
         <link href="assets/css/dataTables.bootstrap.css" rel="stylesheet" type="text/css" >        
         <link href="assets/css/ws-browser.css" rel="stylesheet">
         <link href="assets/css/landing-pages.css" rel="stylesheet">
 
-        <script src="../ext/jquery/jquery-1.10.2.min.js"></script>
+        <!-- KBase widget css -->
+        <link rel="stylesheet" href="../widgets/css/kbaseGenomeOverview.css" type="text/css" />
+        <link rel="stylesheet" href="../widgets/css/kbaseContigBrowser.css" type="text/css" />
+        <link rel="stylesheet" href="../widgets/css/kbaseWidget.css" type="text/css" />
+        <link rel="stylesheet" href="../widgets/css/kbaseLandingPageCard.css" type="text/css" />
 
+
+
+        <!-- External javascript packages -->
+        <script src="../ext/jquery/jquery-1.10.2.min.js"></script>
+        <script src="../ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min.js"></script>
+        <script src="../ext/d3/d3.v3.min.js"></script>
         <script src="../ext/bootstrap/3.0.0/js/bootstrap.js"></script>
         <script src="../ext/dataTables/1.9.4/js/jquery.dataTables.js"></script>
         <script src="assets/js/dataTables.bootstrap.js"></script>
@@ -25,6 +37,8 @@
 
         <script src="assets/js/path.js"></script>        
 
+
+        <!-- KBase client library javascript -->
         <script src="assets/js/kbclient/kbase.js"></script>
 
         <!-- these are deps for seq search mockup -->
@@ -36,9 +50,10 @@
         <script src="../src/kbwidget.js"></script>
 
 
-        <!-- simple widgets --> 
+        <!-- helper widgets --> 
         <script src="../src/widgets/kbasePanel.js"></script>
-        <!-- end simple widgets -->        
+        <script src="../src/widgets/kbaseModal.js"></script>        
+        <!-- end helper widgets -->        
 
         <script src="../src/widgets/kbasePrompt.js"></script>
         <script src="../src/widgets/kbaseLogin.js"></script>
@@ -68,6 +83,17 @@
         <script src="../src/widgets/workspaces/kbaseWSHandler.js"></script>
         <script src="../src/widgets/workspaces/kbaseWSSelector.js"></script>
         <script src="../src/widgets/workspaces/kbaseWSObjectTable.js"></script>
+
+        <!-- Genome widgets -->
+        <script src = "../src/widgets/kbaseLandingPageCard.js"></script>
+        <script src = "../src/widgets/genomes/kbaseContigBrowserButtons.js"></script>
+        <script src = "../src/widgets/genomes/kbaseContigBrowser.js"></script>
+        <script src = "../src/widgets/genomes/kbaseGenomeOverview.js"></script>
+        <script src = "../src/widgets/genomes/kbaseGeneInfo.js"></script>
+        <script src = "../src/widgets/kbaseCardManager.js"></script>
+        <script src = "../src/widgets/genomes/kbaseGenomeCardManager.js"></script>
+        <!-- End Genome widgets -->
+
 
         <script src="landing-pages.js"></script>
     </head>

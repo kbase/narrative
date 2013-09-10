@@ -285,8 +285,8 @@ $.KBWidget({
             
             //var isNew = true,
             var cell = $('#clone-into-cell'),
-                newInput = $('<input type="text" id="clone-id" style="width: 150px" />'),
-                existingInput = $('<select class="hide" style="width: 164px">'),
+                newInput = $('<input class="form-control" type="text" id="clone-id" style="width: 150px" />'),
+                existingInput = $('<select class="form-control" style="width: 164px">'),
                 permRow = $('#clone-permission-row');
              
             cell.append(newInput).append(existingInput);
@@ -426,8 +426,8 @@ $.KBWidget({
             
             //var isNew = true,
             var cell = $('#clone-into-cell'),
-                newInput = $('<input type="text" id="clone-id" style="width: 150px" />'),
-                existingInput = $('<select class="hide" style="width: 164px">'),
+                newInput = $('<input class="form-control" type="text" id="clone-id" style="width: 150px" />'),
+                existingInput = $('<select class="form-control" style="width: 164px">'),
                 permRow = $('#clone-permission-row');
              
             cell.append(newInput).append(existingInput);
@@ -668,7 +668,7 @@ $.KBWidget({
             var sel = ' selected="selected"';
             var idval = ' id="' + id + '"';
 
-            return '<select' + (id ? idval : '') + ' class="input-small"'
+            return '<select' + (id ? idval : '') + ' class="input-sm form-control"'
                 + ' style="margin: 0px;" data-value="' + value + '">'
                 + (noNone ? '' : '<option value="n"' + (value === 'n' ? sel : '') + '>none</option>')
                 + '<option value="r"' + (value === 'r' ? sel : '') + '>read</option>'

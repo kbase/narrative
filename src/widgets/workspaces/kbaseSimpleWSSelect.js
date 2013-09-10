@@ -9,50 +9,38 @@ $.KBWidget({
         this._super(options);
         var self = this;
         var token = options.auth;
+        var default_ws = options.defaultWS;
 
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');        
 
         this.show = function(options) {
-            self.$elem.html('')
-            self.$elem.append('<div id="ws-select-modal-container" class="modal">\
-                                   <div class="modal-dialog">\
-                                      <div class="modal-content">\
-                                        <div class="modal-header"></div>\
-                                        <div class="modal-body"></div>\
-                                        <div class="modal-footer">\
-                                          <a href="#" class="btn btn-default" data-dismiss="modal">Close</a>\
-                                          <a href="#" class="btn btn-primary select-ws-btn" data-dismiss="modal">Select</a>\
-                                        </div>\
-                                      </div>\
-                                   </div>\
-                                </div>');
+            var modal = self.$elem.kbaseModal({title: "Select a Workspace"})
+            var modal_body = modal.body('<p class="muted loader"> \
+                    <img src="assets/img/ajax-loader.gif"> loading...</p>');
+            modal.buttons([{text: 'Close'}, {text: 'Select', color: 'primary'}]);
 
-            var container = $('#ws-select-modal-container');
-            var modal_body = container.find('.modal-body');
-            modal_body.append('<p class="muted loader"> \
-                    <img src="assets/img/ajax-loader.gif"> loading...</p>')
+            modal.show()
 
-            container.modal();
-
-            container.find('.modal-header')
-                .html('<h3 class="modal-title">Select a Workspace</h3>');   
             var wsAJAX = kbws.list_workspaces({auth: token})
             $.when(wsAJAX).done(function(data){
-                ws_selector_modal(container, data);
+                ws_selector_modal(modal_body, data);
             });
         }
 
         function ws_selector_modal(container, data) {
-            $('.loader').remove();
-            var modal_body = container.find('.modal-body');
+            container.find('.loader').remove();
 
             var form = $('<form>');
             var select = $('<select class="form-control simple-ws-select"></select>');
             for (var i in data) {
-                select.append('<option>'+data[i][0]+'</option>')
+                if (data[i][0] == default_ws) {
+                    select.append('<option selected="selected">'+data[i][0]+'</option>');
+                } else {
+                    select.append('<option>'+data[i][0]+'</option>');
+                }
             }
             form.append(select)
-            modal_body.append(form)
+            container.append(form)
 
             events();
         }
@@ -65,9 +53,6 @@ $.KBWidget({
             });
         }
 
-
-
-        //this._rewireIds(this.$elem, this);
         return this;
     }  //end init
 })

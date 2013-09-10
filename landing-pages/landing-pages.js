@@ -150,7 +150,7 @@ function get_selected_ws() {
 }
 
 function set_selected_workspace() {
-    if (state.get('selected')) 
+    if (state.get('selected')) {
         $('#selected-workspace').html(state.get('selected')[0]);
     }
 }

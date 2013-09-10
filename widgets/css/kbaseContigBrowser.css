@@ -53,3 +53,11 @@
 	fill: #fff;
 }
 
+/**
+ * The below controls styling for the (optional) button panel
+ */
+.kbcb-buttons {
+	margin-left: auto;
+	margin-right: auto;
+	width: 70%;
+}

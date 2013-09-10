@@ -9,6 +9,8 @@
         parent: "KBaseCardManager",
         version: "1.0.0",
         options: {
+            genomeID: null,
+            workspaceID: null
         },
 
         init: function(options) {
@@ -16,7 +18,6 @@
     
             var self = this;
             $(document).on("featureClick", function(event, data) {
-                console.log(event);
                 self.addNewCard("KBaseGeneInfo", 
                     { 
                         featureID: data.feature.feature_id, 
@@ -29,9 +30,12 @@
                 );
             });
 
+            $(document).on("showContig", function(event, data) {
+            });
+
             this.addNewCard("KBaseGenomeOverview", 
                 { 
-                    genomeID: "kb|g.0",
+                    genomeID: this.options.genomeID,
                 },
                 {
                     my: "left top",

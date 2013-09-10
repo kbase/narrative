@@ -8,7 +8,10 @@
 			draggable: true,
 			autoOpen: true,
 			closeOnEscape: false,
-			position: null
+			position: null,
+			close: function(event, ui) {
+				console.log('wut');
+			}
 		},
 
 		init: function(options) {
@@ -28,7 +31,7 @@
 			this.options.close = function(event, ui) {
 				self.$elem.remove();
 			};
-			
+
 			this.$elem.addClass("kblpc");
 			this.$elem.dialog(this.options);
 

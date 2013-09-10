@@ -17,7 +17,7 @@
             }
 
             var self = this;
-            var $buttonSet = $("<div class='kbgb-buttons'/>")
+            var $buttonSet = $("<div class='kbcb-buttons'/>")
                              .append($("<button/>")
                                      .append("First")
                                      .click(function() { self.options.browser.moveLeftEnd(); })

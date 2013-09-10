@@ -6,7 +6,7 @@
         options: {
         },
         cardIndex: 0,
-        cards: [],
+        cards: {},
 
         init: function(options) {
             this._super(options);
@@ -57,36 +57,26 @@
                 }
             }
 
-            // var cardPosition = {
-            //     my: "left top-42",
-            //     at: "right+5% top",
-            //     of: (this.cards.length > 0 ? this.cards[this.cards.length-1].$elem.selector : null), //($("#kblpc" + (this.cards.length-1) + ":parent")) : null),
-            //     collision: "fit flip"
-            // };
-
-            // if (this.cards.length === 0) {
-            //     cardPosition = {
-            //         my: "left top",
-            //         at: "left bottom",
-            //         of: $("#app")
-            //     };
-            // }
-
             this.$elem.append("<div id='" + newCardId + "'/>");
 
             var newWidget = $("#" + newCardId)[cardName](options);
             var cardTitle = newWidget.options.title ? newWidget.options.title : "";
             var cardWidth = newWidget.options.width ? newWidget.options.width : 300;
 
+            var self = this;
             var newCard = $("#" + newCardId).LandingPageCard({
                 position: position,
                 title: cardTitle,
                 width: cardWidth,
+                id: newCardId,
                 close: function(event, ui) {
+                    console.log("what.");
+                    console.log(newCardId);
+                    self.cards[newCardId] = null;
                 }
             });
 
-            this.cards.push(newCard);
+            this.cards[newCardId] = newCard;
         }
 
     });

@@ -43,16 +43,16 @@ function router() {
         genome_view();
     });
     Path.map("#/genomes/cs/:genome_id").to(function(){ 
-        genome_view({'genomeId': this.params['genome_id']});
+        genome_view({'genomeID': this.params['genome_id']});
     });
     Path.map("#/genomes/:ws_id").to(function() {
-        genome_view({'workspaceId': this.params['ws_id']});
+        genome_view({'workspaceID': this.params['ws_id']});
     });
     Path.map("#/genomes/:ws_id/:genome_id").to(function() {
         genome_view(
             {
-                'workspaceId': this.params['ws_id'],
-                'genomeId': this.params['genome_id']
+                'workspaceID': this.params['ws_id'],
+                'genomeID': this.params['genome_id']
             }
         );
     });
@@ -167,11 +167,15 @@ function navEvent() {
  */
 
 function genome_view(params) {
+    /* params has
+     * genomeID = the id for the genome in question
+     * workspaceID = the id for a workspace containing the genome (if it exists)
+     */
     $('#app').html(simple_layout2('genomes'));
     if (!params)
         $("#genomes").append(" - no id given");
     else {
-        $("#genomes").KBaseGenomeCardManager();
+        $("#genomes").KBaseGenomeCardManager(params);
         // if (params.genomeId)
         //     $("#genomes").append(" - " + params.genomeId);
         // if (params.workspaceId)

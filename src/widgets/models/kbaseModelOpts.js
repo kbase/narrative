@@ -16,16 +16,16 @@ $.KBWidget({
                                            rightLabel: ws,
                                            subText: id});
 
-        var container = panel.body();
+        var panel_body = panel.body();
 
-        container.append('<a class="app-icon" href="http://140.221.84.128/#models?tab=model-selection&kbids='+
+        panel_body.append('<a class="app-icon" href="http://140.221.84.128/#models?tab=model-selection&kbids='+
                     id+'&ws='+ws+'" target="_blank">\
                         <img src="http://www.kbase.us/files/6313/6148/9465/model_icon.png" width=30 >\
                     </a>\
                     <a href="http://140.221.84.128/#models?tab=model-selection&kbids='+
                     id+'&ws='+ws+'" target="_blank">Add to Model Viewer</a>');
-        container.append('<br><br>')
-        container.append('<a href="#/run-fba/'+ws+'/'+id+'">Run FBA</a> <span class="glyphicon glyphicon-arrow-right"></span>')
+        panel_body.append('<br><br>')
+        panel_body.append('<a href="#/run-fba/'+ws+'/'+id+'">Run FBA</a> <span class="glyphicon glyphicon-arrow-right"></span>')
 
 
         return this;

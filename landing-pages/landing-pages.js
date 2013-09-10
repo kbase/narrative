@@ -12,10 +12,14 @@ $(function() {
             login_callback: reload_window, logout_callback: reload_window});
         USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
     
-        // set the currently selected workspace.
-        // this stored in state via workspace browser [see selectHandler() below]
+        // global state object to store state
         state = new State();
+
+        // set the currently selected workspace.
         set_selected_workspace();
+
+        //simple caching mechanism
+        //objectspace = new ObjectSpace();
 
         router();
     })

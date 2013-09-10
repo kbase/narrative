@@ -19,12 +19,12 @@ describe("KBWidget", function () {
         done();
     });
 
-    it("should expose 'name' as a plugin",
+    it("should expose the 'name' as a plugin",
     function (done) {
         var widget = $.KBWidget({
             name: "NewKBWidget"
         });
-        $.NewKBWidget.should.be.a.function;
+        $.fn.NewKBWidget.should.be.a.function;
         done();
     });
 
@@ -41,15 +41,16 @@ describe("KBWidget", function () {
         done();
     });
 
-    it("should allow a child to be extended directly from a parent",
+    it("should allow a widget to extend by specifying a parent",
     function (done) {
         $.KBWidget({
             name: "ParentWidget2"
         });
-        $.ParentWidget2({
-            name: "ChildWidget2"
+        $.KBWidget({
+            name: "ChildWidget2",
+            parent: "ParentWidget2"
         });
-        $.ChildWidget2.should.be.a.function;
+        $.fn.ChildWidget2.should.be.a.function;
         done();
     });
 

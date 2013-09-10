@@ -41,18 +41,6 @@ describe("KBWidget", function () {
         done();
     });
 
-    it("should allow a child to be extended directly from a parent",
-    function (done) {
-        $.KBWidget({
-            name: "ParentWidget2"
-        });
-        $.ParentWidget2({
-            name: "ChildWidget2"
-        });
-        $.ChildWidget2.should.be.a.function;
-        done();
-    });
-
     it("should allow a widget to extend by specifying a parent",
     function (done) {
         $.KBWidget({

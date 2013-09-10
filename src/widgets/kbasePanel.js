@@ -27,33 +27,43 @@ $.KBWidget({
 
         var container = $('<div class="panel panel-default">\
                                 <div class="panel-heading">\
-                                    <h4 class="panel-title">'+title+'</h4>\
+                                    <h4 class="panel-title"></h4>\
                                 </div>\
                                 <div class="panel-body"></div>\
                            </div>');
 
+        var panel_header = container.find('.panel-heading');
+        var panel_title = container.find('.panel-title');
         var panel_body = container.find('.panel-body');
 
-        if (body) {
-            panel_body.append(body);
-        }
-        
-        if (subText) {
-            container.find('.panel-heading').append(subText)
-        }
+        if (title) panel_title.html(title);
+        if (body) panel_body.html(body); 
+        if (subText) panel_header.append(subText)
 
         if (right_label) {
-            container.find('.panel-heading').append(
-                '<span class="label label-primary pull-right">'+right_label+'</span><br>');
+            panel_header.append('<span class="label label-primary pull-right">'
+                                    +right_label+'</span><br>');
         }
+
+        this.header = function(data) {
+            if (data) panel_header.html(data);
+            return panel_header;
+        }
+
+        this.title = function(data) {
+            if (data) panel_title.html(data);
+            return panel_title;
+        }        
+
+        this.body = function(data) {
+            if (data) panel_body.html(data);          
+            return panel_body;
+        }
+
 
         self.$elem.append(container);
 
         //this._rewireIds(this.$elem, this);
-
-        this.body = function() {
-            return panel_body;
-        }
 
         return this;
     }  //end init

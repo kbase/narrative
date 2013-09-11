@@ -8,7 +8,10 @@
 			draggable: true,
 			autoOpen: true,
 			closeOnEscape: false,
-			position: null
+			position: null,
+			close: function(event, ui) {
+				console.log('wut');
+			}
 		},
 
 		init: function(options) {
@@ -26,13 +29,23 @@
 				self.$elem.css('overflow', 'hidden');
 			};
 			this.options.close = function(event, ui) {
+				self.$elem.dialog("destroy");
 				self.$elem.remove();
 			};
-			
+
 			this.$elem.addClass("kblpc");
 			this.$elem.dialog(this.options);
 
 			return this;
+		},
+
+		close: function(options) {
+			this.$elem.dialog("close");
+		},
+
+		destroy: function(options) {
+			this.$elem.dialog("destroy");
+			this.$elem.remove();
 		}
 	});
 

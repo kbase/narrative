@@ -9,6 +9,8 @@
         parent: "KBaseCardManager",
         version: "1.0.0",
         options: {
+            genomeID: null,
+            workspaceID: null
         },
 
         init: function(options) {
@@ -16,7 +18,6 @@
     
             var self = this;
             $(document).on("featureClick", function(event, data) {
-                console.log(event);
                 self.addNewCard("KBaseGeneInfo", 
                     { 
                         featureID: data.feature.feature_id, 
@@ -29,9 +30,24 @@
                 );
             });
 
+            $(document).on("contigSelected", function(event, data) {
+                self.addNewCard("KBaseContigBrowser",
+                    {
+                        contig: data.contig,
+                        showButtons: true,
+                        loadingImage: "../../widgets/images/ajax-loader.gif"
+                    },
+                    {
+                        my: "left top",
+                        at: "center",
+                        of: data.event
+                    }
+                );
+            });
+
             this.addNewCard("KBaseGenomeOverview", 
                 { 
-                    genomeID: "kb|g.0",
+                    genomeID: this.options.genomeID,
                 },
                 {
                     my: "left top",
@@ -40,32 +56,32 @@
                 }
             );
 
-            this.addNewCard("KBaseContigBrowser", 
-                { 
-                    contig: "kb|g.0.c.1",
-                    centerFeature: "kb|g.0.peg.2173", 
-                    showButtons: true,
-                    loadingImage: "../../widgets/images/ajax-loader.gif",
-                },
-                {
-                    my: "left top",
-                    at: "left+330 bottom",
-                    of: "#app",
-                    collision: "fit"
-                });
+            // this.addNewCard("KBaseContigBrowser", 
+            //     { 
+            //         contig: "kb|g.0.c.1",
+            //         centerFeature: "kb|g.0.peg.2173", 
+            //         showButtons: true,
+            //         loadingImage: "../../widgets/images/ajax-loader.gif",
+            //     },
+            //     {
+            //         my: "left top",
+            //         at: "left+330 bottom",
+            //         of: "#app",
+            //         collision: "fit"
+            //     });
 
-            this.addNewCard("KBaseContigBrowser", 
-                { 
-                    contig: "kb|g.0.c.1",
-                    centerFeature: "kb|g.0.peg.4288", 
-                    showButtons: true,
-                    loadingImage: "../../widgets/images/ajax-loader.gif"
-                },
-                {
-                    my: "left top",
-                    at: "left+330 bottom+200",
-                    of: "#app"
-                });
+            // this.addNewCard("KBaseContigBrowser", 
+            //     { 
+            //         contig: "kb|g.0.c.1",
+            //         centerFeature: "kb|g.0.peg.4288", 
+            //         showButtons: true,
+            //         loadingImage: "../../widgets/images/ajax-loader.gif"
+            //     },
+            //     {
+            //         my: "left top",
+            //         at: "left+330 bottom+200",
+            //         of: "#app"
+            //     });
 
             return this;
         },

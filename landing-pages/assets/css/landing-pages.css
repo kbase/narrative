@@ -17,9 +17,16 @@ rect:hover {
     width: 300px;
 }
 
+
+#signin-button {
+    /* Note: don't put styling in javascript */
+    padding: 13px 15px 7px 10px !important; 
+}
+
 #signin-button a {
     color: #fff;
 }
+
 
 /* bootstrap overrides */
 

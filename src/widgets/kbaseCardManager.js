@@ -6,7 +6,7 @@
         options: {
         },
         cardIndex: 0,
-        cards: [],
+        cards: {},
 
         init: function(options) {
             this._super(options);
@@ -16,7 +16,7 @@
                     containment: false
                 });
             };
-    
+
             return this;
         },
 
@@ -41,12 +41,6 @@
              * to make it relative to the page.
              */
 
-            /*
-             * 1. make the widget.
-             * 2. make the card from the widget.
-             * 3. manipulate its position.
-             */
-
             var newCardId = "kblpc" + this.cardIndex;
 
             if (position === null) {
@@ -57,37 +51,40 @@
                 }
             }
 
-            // var cardPosition = {
-            //     my: "left top-42",
-            //     at: "right+5% top",
-            //     of: (this.cards.length > 0 ? this.cards[this.cards.length-1].$elem.selector : null), //($("#kblpc" + (this.cards.length-1) + ":parent")) : null),
-            //     collision: "fit flip"
-            // };
-
-            // if (this.cards.length === 0) {
-            //     cardPosition = {
-            //         my: "left top",
-            //         at: "left bottom",
-            //         of: $("#app")
-            //     };
-            // }
-
             this.$elem.append("<div id='" + newCardId + "'/>");
 
             var newWidget = $("#" + newCardId)[cardName](options);
+
             var cardTitle = newWidget.options.title ? newWidget.options.title : "";
             var cardWidth = newWidget.options.width ? newWidget.options.width : 300;
 
+            var self = this;
             var newCard = $("#" + newCardId).LandingPageCard({
                 position: position,
                 title: cardTitle,
                 width: cardWidth,
-                close: function(event, ui) {
-                }
+                id: newCardId,
             });
 
-            this.cards.push(newCard);
-        }
+            this.cards[newCardId] = newCard;
+            this.cardIndex++;
+        },
+
+        removeAllCards: function() {
+            for (var cardId in this.cards) {
+                this.cards[cardId].LandingPageCard("destroy");
+                $("#" + cardId).remove();
+                delete this.cards[cardId];
+            }
+            this.$elem.empty();
+//            this.cardIndex = 0;
+            this.cards = {};
+            this.$elem.remove();
+        },
+
+        poke: function() {
+            console.log("Poked!");
+        },
 
     });
 })( jQuery );

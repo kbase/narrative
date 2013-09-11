@@ -12,10 +12,14 @@ $(function() {
             login_callback: reload_window, logout_callback: reload_window});
         USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
     
-        // set the currently selected workspace.
-        // this stored in state via workspace browser [see selectHandler() below]
+        // global state object to store state
         state = new State();
+
+        // set the currently selected workspace.
         set_selected_workspace();
+
+        //simple caching mechanism
+        //objectspace = new ObjectSpace();
 
         router();
     })
@@ -36,26 +40,42 @@ function router() {
 
     Path.map("#/workspace-browser").to(function(){
         workspace_view();
-    }).enter(navEvent);    
+    }).enter(navEvent);
 
     // Data routes
-    Path.map("#/genomes").to(function() {
-        genome_view();
-    });
-    Path.map("#/genomes/cs/:genome_id").to(function(){ 
-        genome_view({'genomeId': this.params['genome_id']});
-    });
-    Path.map("#/genomes/:ws_id").to(function() {
-        genome_view({'workspaceId': this.params['ws_id']});
-    });
-    Path.map("#/genomes/:ws_id/:genome_id").to(function() {
-        genome_view(
-            {
-                'workspaceId': this.params['ws_id'],
-                'genomeId': this.params['genome_id']
-            }
-        );
-    });
+    Path.map("#/genomes")
+        .to(function() {
+            genome_view();
+        })
+        .enter(navEvent)
+        .exit(removeCards);
+
+    Path.map("#/genomes/cs/:genome_id")
+        .to(function(){ 
+            genome_view({'genomeID': this.params['genome_id']});
+        })
+        .enter(navEvent)
+        .exit(removeCards);
+
+    Path.map("#/genomes/:ws_id")
+        .to(function() {
+            genome_view({'workspaceID': this.params['ws_id']});
+        })
+        .enter(navEvent)
+        .exit(removeCards);
+
+    Path.map("#/genomes/:ws_id/:genome_id")
+        .to(function() {
+            genome_view(
+                {
+                    'workspaceID': this.params['ws_id'],
+                    'genomeID': this.params['genome_id']
+                }
+            );
+        })
+        .enter(navEvent)
+        .exit(removeCards);
+
     Path.map("#/organisms").to(function(){ empty_page() });
 
     Path.map("#/models").to(function(){
@@ -160,18 +180,27 @@ function navEvent() {
     $(document).trigger("navEvent");
 }
 
-
+function removeCards() {
+    $("#genomes").KBaseGenomeCardManager("removeAllCards");
+    $("#genomes").KBaseGenomeCardManager("poke");
+    $("#genomes").remove();
+}
 
 /*
  *   "Views" which load widgets on page.
  */
 
 function genome_view(params) {
+    /* params has
+     * genomeID = the id for the genome in question
+     * workspaceID = the id for a workspace containing the genome (if it exists)
+     */
     $('#app').html(simple_layout2('genomes'));
+
     if (!params)
-        $("#genomes").append(" - no id given");
+        $("#genomes").append("No id given");
     else {
-        $("#genomes").KBaseGenomeCardManager();
+        $("#genomes").KBaseGenomeCardManager(params);
         // if (params.genomeId)
         //     $("#genomes").append(" - " + params.genomeId);
         // if (params.workspaceId)

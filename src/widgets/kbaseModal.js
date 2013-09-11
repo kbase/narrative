@@ -1,5 +1,5 @@
 /* 
-    kbaseMdale
+    kbaseModal
 
     This is a helper widget for rendering modals using bootstrap v3.0.0
 

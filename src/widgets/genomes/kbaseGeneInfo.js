@@ -59,7 +59,9 @@
 				function(feature) {
 					feature = feature[self.options.featureID];
 					self.$table.append("<tr><td>ID</td><td>" + feature.id + "</td></tr>");
-					self.$table.append("<tr><td>Function</td><td>" + (feature.function ? feature.function : "Unknown function") + "</td></tr>");
+					self.$table.append("<tr><td>Function</td><td>" + 
+										(feature.function ? feature.function : "Unknown function") + 
+										"</td></tr>");
 
 					if (feature.alias) {
 						self.$table.append("<tr><td>Alias</td><td>" + feature.alias + "</td></tr>");
@@ -70,7 +72,7 @@
 
 						function(featureData) {
 							featureData = featureData[self.options.featureID];
-							console.log(featureData);
+
 							if (featureData.feature_publications && featureData.feature_publications.length > 0) {
 								var pubStr;
 								if (featureData.feature_publications.length === 1)
@@ -107,9 +109,5 @@
 		clientError: function(error) {
 
 		},
-
-
-
-
 	})
 })( jQuery );

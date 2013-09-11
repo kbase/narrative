@@ -15,13 +15,14 @@ $.KBWidget({
         var panel = this.$elem.kbasePanel({title: 'Model Details', 
                                            rightLabel: workspaces[0],
                                            subText: models[0]});
-        var container = panel.body();
+        var panel_body = panel.body();
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+        var model;
 
-        var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfilling', 'Gapgen'];
-        var tableIds = ['reaction', 'compound', 'compartment', 'biomass', 'gapfilling', 'gapgen'];
+        var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfill', 'Gapgen'];
+        var tableIds = ['reaction', 'compound', 'compartment', 'biomass', 'gapfill', 'gapgen'];
 
         // build tabs
         var tabs = $('<ul id="table-tabs" class="nav nav-tabs"> \
@@ -33,7 +34,7 @@ $.KBWidget({
         }
 
         // add tabs
-        container.append(tabs);
+        panel_body.append(tabs);
 
         var tab_pane = $('<div id="tab-content" class="tab-content">')
         // add table views (don't hide first one)
@@ -50,7 +51,7 @@ $.KBWidget({
             tab_pane.append(tableDiv);
         }
 
-        container.append(tab_pane)
+        panel_body.append(tab_pane)
 
         // event for showing tabs
         $('#table-tabs a').click(function (e) {
@@ -71,7 +72,7 @@ $.KBWidget({
         $('.tab-pane').not('#overview').append('<p class="muted loader-tables"> \
                                   <img src="assets/img/ajax-loader.gif"> loading...</p>')
         $.when(models_AJAX).done(function(data){
-            var model = data[0];
+            model = data[0];
             console.log(model)
 
             // compartment table
@@ -115,12 +116,16 @@ $.KBWidget({
             table.fnAddData(dataDict);
 
             // gapfilling table
-            var dataDict = model.compounds;
+            /*
+            var dataDict = model.integrated_gapfillings;
+            console.log(dataDict)
             var keys = ["id", "index", "name", "pH","potential"];
             var labels = ["id", "index", "name", "pH","potential"];
             var cols = getColumns(keys, labels);
             tableSettings.aoColumns = cols;
             var table = $('#gapfill-table').dataTable(tableSettings);
+            */
+            gapFillTable(data);
 
             // gapgen table
             var model_gapgen = model.gapgen;
@@ -132,6 +137,8 @@ $.KBWidget({
     
             $('.loader-tables').remove();
         })
+
+
 
 
         function formatRxnObjs(rxnObjs) {
@@ -162,8 +169,7 @@ $.KBWidget({
         }
 
 
-        function gapFillTable() {
-
+        function gapFillTable(models) {
             var gapTable = undefined;
             var active = false;
 
@@ -172,7 +178,7 @@ $.KBWidget({
               "fnDrawCallback": events,      
               "iDisplayLength": 20,
               "aoColumns": [
-                  { "sTitle": "Integrated", "sWidth": "10%"},      
+                  { "sTitle": "Integrated", "sWidth": "10%"},
                   {"bVisible":    false},
                   { "sTitle": "Ref", "sWidth": "40%"},
                   { "sTitle": "Media"},
@@ -187,9 +193,6 @@ $.KBWidget({
             }
 
             var initTable = function(settings){
-                $('.gapfills-view').html('<table class="table table-striped table-bordered" \
-                                                id="gapfill-table" width="100%"></table>');
-
                 if (settings) {
                     gapTable = $('#gapfill-table').dataTable(settings);
                 } else { 
@@ -215,10 +218,8 @@ $.KBWidget({
                 active = true;
             }
 
-            this.load_table = function(kbids) {
+            this.load_table = function(models) {
                 var gaps = [];
-
-                var models = modelspace.get_model_objs(kbids);
 
                 var intGapfills = models[0].integrated_gapfillings;
 
@@ -241,7 +242,11 @@ $.KBWidget({
                     }
                 }
 
-                var gapfills = unIntGapfills.concat(intGapfills)
+                if (unIntGapfills ) {
+                    var gapfills = unIntGapfills.concat(intGapfills)                    
+                }
+                var gapfills = intGapfills;
+                console.log(gapfills)
 
                 init_data.aaData = gapfills;
                 initTable();
@@ -249,6 +254,8 @@ $.KBWidget({
                 //gapTable.fnAddData(gapfills);
                 //gapTable.fnAdjustColumnSizing()
             }
+
+            this.load_table(models);
 
             function events() {
                 // tooltip for version hover
@@ -266,7 +273,7 @@ $.KBWidget({
                     } else {
                         gapTable.fnOpen( tr, '', "info_row" );
                         $(this).closest('tr').next('tr').children('.info_row').append('<p class="muted loader-gap-sol"> \
-                            <img src="img/ajax-loader.gif"> loading possible solutions...</p>')                
+                            <img src="assets/img/ajax-loader.gif"> loading possible solutions...</p>')                
                         showGapfillSolutions(tr, gapRef)   
                     }
                 });
@@ -358,15 +365,15 @@ $.KBWidget({
                     $('.integrate-btn').unbind('click');
                     $('.integrate-btn').click(function() {
                         $(this).after('<span class="muted loader-integrating" > \
-                              <img src="img/ajax-loader.gif"> loading...</span>')
+                              <img src="assets/img/ajax-loader.gif"> loading...</span>')
                         var gapfill_id = $(this).data('gapfill');
                         var model = modelspace.active_kbids()[0]
                         var fbaAJAX = fba.integrate_reconciliation_solutions({model: model,
-                            model_workspace: SELECTED_WS,
+                            model_workspace: ws,
                             gapfillSolutions: [gapfill_id],
                             gapgenSolutions: [''],
                             auth: USER_TOKEN, 
-                            workspace: SELECTED_WS})
+                            workspace: ws})
 
                         $.when(fbaAJAX).done(function(data){
                             alert('NOTE: This functionality is still under development\n', data)

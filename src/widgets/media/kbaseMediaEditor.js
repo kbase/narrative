@@ -12,26 +12,20 @@ $.KBWidget({
         var media = options.id;
         var ws = options.ws;        
 
-        var fba = new fbaModelServices('http://140.221.85.73:4043/');
+        var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
-        var container = $('<div id="kbase-media-editor"></div>')
-        container.kbasePanel({title: '<h3 class="modal-title">Media Info</h3>'+media});
+        var panel = self.$elem.kbasePanel({title: 'Media Editor', subText: media})
 
-
-        self.$elem.append(container);
-
-        var panel_body = container.find('.panel-body');
-        panel_body.append('<p class="muted loader-rxn"> \
+        var container = panel.body();
+        container.append('<p class="muted loader-rxn"> \
                 <img src="assets/img/ajax-loader.gif"> loading...</p>')
 
 
         var mediaAJAX = fba.get_media({medias: [media], workspaces: [ws]})
         $.when(mediaAJAX).done(function(data){
             media = data[0]; // only 1 media right now
-            container.find('.modal-header').append('\
-                <span><b>Id: </b>'+media.id+'</span>')
-            media_view(panel_body, media);
+            media_view(container, media);
         })
 
 
@@ -109,6 +103,8 @@ $.KBWidget({
 
            });
 
+
+
             container.append('<a class="btn btn-primary save-to-ws-btn">Save to a workspace -></a>');
             events();
 
@@ -121,11 +117,32 @@ $.KBWidget({
         function events() {
             $('.save-to-ws-btn').unbind('click');
             $('.save-to-ws-btn').click(function() {
-                self.trigger('saveToWSClick');
+                //var media_id=data.id;
+                //var name=data.id;
+                var cmpds = $('[id^=cmpds]');
+                var conc = $('[id^=conc]');
+                var minflux = $('[id^=minflux]');
+                var maxflux = $('[id^=maxflux]');
+                var newmedia = {
+                    media: 'testSave',
+                    workspace: 'jko',
+                    name: 'testSave',
+                    isDefined: 0,
+                    isMinimal: 0,
+                    type: 'unknown',
+                    compounds: [cmpds],
+                    concentrations: [conc],
+                    maxflux: [minflux],
+                    minflux: [maxflux]
+
+                };
+               //  console.log('newmedia test')
+                self.trigger('saveToWSClick',newmedia);
             });
         }
-
+/*
         function saveEditedMedia(workspace) {
+            console.log('saving?')
             var media_id=data.id;
             var name=data.id;
             var cmpds = $('[id^=cmpds]');
@@ -147,7 +164,7 @@ $.KBWidget({
                 minflux: [maxflux]
             });
         }
-/*
+
         function saveMedia(workspace, data) {
             var media_id=data.id;
             var name=data.id;
@@ -179,7 +196,7 @@ $.KBWidget({
 */
 
 
-        function saveMedia(workspace, data) {
+        /*function saveMedia(workspace, data) {
             var media_id=data.id;
             var name=data.id;
 
@@ -206,7 +223,7 @@ $.KBWidget({
                 maxflux: [minflux],
                 minflux: [maxflux]
             });
-        }
+        }*/
   
         function get_genome_id(ws_id) {
             var pos = ws_id.indexOf('.');

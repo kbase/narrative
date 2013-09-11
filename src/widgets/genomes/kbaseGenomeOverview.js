@@ -30,21 +30,7 @@
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
             this.workspaceClient = new workspaceService(this.workspaceURL);
 
-            // if (this.options.embedInCard) {
-            //     this.card = this.$elem.LandingPageCard({ 
-            //                     title: "Genome Overview",
-            //                     position: this.options.position
-            //                 });
-            // }
-
             return this.render();
-        },
-
-        getCard: function() {
-            if (this.card)
-                return this.card;
-
-            return null;
         },
 
         render: function(options) {
@@ -110,6 +96,40 @@
                                                     )
                                      );
                     self.$elem.append($infoTable);
+
+                    /*
+                     * Here we go. Chain of callbacks.
+                     * Get list of contigs, then get their lengths.
+                     * Sort them by length and make a dropdown menu.
+                     * Add a button that will open a new card with that contig's browser.
+                     */
+                    self.cdmiClient.genomes_to_contigs([self.options.genomeID],
+                        function(contigs) {
+                            self.cdmiClient.contigs_to_lengths(contigs[self.options.genomeID],
+                                function(contigsToLengths) {
+                                    var $dropdown = $("<select />");
+                                    for (var contig in contigsToLengths) {
+                                        $dropdown.append("<option id='" + contig + "'>" + contig + " - " + contigsToLengths[contig] + " bp</option>");
+                                    }
+
+                                    self.$elem.append($dropdown);
+                                    self.$elem.append($("<button>Show Contig</button>")
+                                                      .on("click", 
+                                                          function(event) {
+                                                              $(self.$elem.selector + " > select option:selected").each(function() {
+//                                                                  console.log(event);
+                                                                  self.trigger("contigSelected", { contig: $(this).attr("id"), event: event });
+                                                              })
+                                                          })
+                                    );
+                                },
+
+                                self.rpcError
+                            );
+                        },
+
+                        self.rpcError
+                    );
                 },
 
                 self.rpcError

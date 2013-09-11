@@ -182,6 +182,8 @@ function navEvent() {
 
 function removeCards() {
     $("#genomes").KBaseGenomeCardManager("removeAllCards");
+    $("#genomes").KBaseGenomeCardManager("poke");
+    $("#genomes").remove();
 }
 
 /*
@@ -194,6 +196,7 @@ function genome_view(params) {
      * workspaceID = the id for a workspace containing the genome (if it exists)
      */
     $('#app').html(simple_layout2('genomes'));
+
     if (!params)
         $("#genomes").append("No id given");
     else {

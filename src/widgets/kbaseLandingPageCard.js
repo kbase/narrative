@@ -29,6 +29,7 @@
 				self.$elem.css('overflow', 'hidden');
 			};
 			this.options.close = function(event, ui) {
+				self.$elem.dialog("destroy");
 				self.$elem.remove();
 			};
 
@@ -40,6 +41,11 @@
 
 		close: function(options) {
 			this.$elem.dialog("close");
+		},
+
+		destroy: function(options) {
+			this.$elem.dialog("destroy");
+			this.$elem.remove();
 		}
 	});
 

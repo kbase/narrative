@@ -16,7 +16,7 @@
                     containment: false
                 });
             };
-    
+
             return this;
         },
 
@@ -41,12 +41,6 @@
              * to make it relative to the page.
              */
 
-            /*
-             * 1. make the widget.
-             * 2. make the card from the widget.
-             * 3. manipulate its position.
-             */
-
             var newCardId = "kblpc" + this.cardIndex;
 
             if (position === null) {
@@ -60,6 +54,7 @@
             this.$elem.append("<div id='" + newCardId + "'/>");
 
             var newWidget = $("#" + newCardId)[cardName](options);
+
             var cardTitle = newWidget.options.title ? newWidget.options.title : "";
             var cardWidth = newWidget.options.width ? newWidget.options.width : 300;
 
@@ -69,11 +64,6 @@
                 title: cardTitle,
                 width: cardWidth,
                 id: newCardId,
-                close: function(event, ui) {
-                    console.log("what.");
-                    console.log(newCardId);
-//                    self.cards[newCardId] = null;
-                }
             });
 
             this.cards[newCardId] = newCard;
@@ -82,11 +72,19 @@
 
         removeAllCards: function() {
             for (var cardId in this.cards) {
-                this.cards[cardId].LandingPageCard("close");
+                this.cards[cardId].LandingPageCard("destroy");
+                $("#" + cardId).remove();
                 delete this.cards[cardId];
             }
-            this.cardIndex = 0;
-        }
+            this.$elem.empty();
+//            this.cardIndex = 0;
+            this.cards = {};
+            this.$elem.remove();
+        },
+
+        poke: function() {
+            console.log("Poked!");
+        },
 
     });
 })( jQuery );

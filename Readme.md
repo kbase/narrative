@@ -9,6 +9,8 @@ and standard KBase makefile targets are in the works.
 
 The ipython narrative is a "profile" of the ipython notebook. The setup and instructions are run using the Python [virtualenv](https://pypi.python.org/pypi/virtualenv) module. If you haven't ever used this module, you should take some time to go familiarize yourself with it now.
 
+All the python dependencies for the notebook are in the bootstrap module under bootstrap/kb_python_runtime/python-pip-list-narrative. If you get that file and run "pip install -r python-pip-list-narrative" it should install all the necessary python module dependencies to run the notebook.
+
 ## Current instructions
 
 For the impatient, the following commands should work to start the KBase notebook.

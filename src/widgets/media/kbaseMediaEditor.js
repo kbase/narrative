@@ -12,10 +12,11 @@ $.KBWidget({
         var media = options.id;
         var ws = options.ws;        
 
-        var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
+        var fba = new fbaModelServices('http://140.221.85.73:4043');
+
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
-        var panel = self.$elem.kbasePanel({title: 'Media Editor', subText: media})
+        var panel = self.$elem.kbasePanel({title: 'Media Info', subText: media})
 
         var container = panel.body();
         container.append('<p class="muted loader-rxn"> \
@@ -71,9 +72,9 @@ $.KBWidget({
             }
 
             table.append('<tr><td><input id="addCmpds" class="form-control" placeholder="add Compound"></input></td>\
-                    <td><input id="addConc" class="form-control" ></input></td>\
-                    <td><input id="addMinflux" class="form-control"></input></td>\
-                    <td><input id="addMaxflux" class="form-control"></input></td>\
+                    <td><input id="addConc" class="form-control" placeholder="add Concentration"></input></td>\
+                    <td><input id="addMinflux" class="form-control" placeholder="add Minflux"></input></td>\
+                    <td><input id="addMaxflux" class="form-control" placeholder="add Maxflux"></input></td>\
                     <td><button id="addRow" class="form-control"><span class="glyphicon glyphicon-plus"></span></button></tr>');
 
 
@@ -136,8 +137,8 @@ $.KBWidget({
                     minflux: [maxflux]
 
                 };
-               //  console.log('newmedia test')
-                self.trigger('saveToWSClick',newmedia);
+
+                self.trigger('saveToWSClick', newmedia);
             });
         }
 /*

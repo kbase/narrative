@@ -14,10 +14,10 @@ $.KBWidget({
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');        
 
         this.show = function(options) {
-            var modal = self.$elem.kbaseModal({title: "Select a Workspace"})
+            var modal = self.$elem.kbaseModal({title: "Save to a Workspace"})
             var modal_body = modal.body('<p class="muted loader"> \
                     <img src="assets/img/ajax-loader.gif"> loading...</p>');
-            modal.buttons([{text: 'Close'}, {text: 'Select', color: 'primary'}]);
+            modal.buttons([{text: 'Close'}, {text: 'Save', color: 'primary'}]);
 
             modal.show()
 
@@ -31,6 +31,11 @@ $.KBWidget({
             container.find('.loader').remove();
 
             var form = $('<form>');
+            var newMediaName = $('<div class="col-xs-6 col-md-4">\
+                <p>Enter new name:</p>\
+                <p><input class="form-control" placeholder="new name"></input>\
+                <p>Enter new pH:</p><p><input class="form-control" placeholder="pH"></input></p>\
+                <p>Save to Workspace:</p></div><br/>');
             var select = $('<select class="form-control simple-ws-select"></select>');
             for (var i in data) {
                 if (data[i][0] == default_ws) {
@@ -39,8 +44,9 @@ $.KBWidget({
                     select.append('<option>'+data[i][0]+'</option>');
                 }
             }
-            form.append(select)
-            container.append(form)
+            form.append(newMediaName);
+            form.append(select);
+            container.append(form);
 
             events();
         }
@@ -48,8 +54,11 @@ $.KBWidget({
         function events(container) {
             $('.select-ws-btn').unbind('click');
             $('.select-ws-btn').click(function() {
+                alert('yo');
+                //console.log('why?');
                 var ws = $('.simple-ws-select').val();
-                self.trigger('selectedWS', {ws: ws});
+                var newMediaInfo = {ws: ws, name: newMediaName};
+                self.trigger('selectedWS', newMediaInfo);
             });
         }
 

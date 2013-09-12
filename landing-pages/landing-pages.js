@@ -325,14 +325,17 @@ function media_view(ws_id, id) {
                                                                  defaultWS: get_selected_ws()});
 
     $(document).off("saveToWSClick");
-    $(document).on("saveToWSClick", function(e, data) {
-        console.log('save to ws click event');
+    $(document).on("saveToWSClick", function(e, newmedia) {
+        console.log(newmedia);
+        //fba.addmedia(newmedia);
         save_ws_modal.show();
     });
 
     $(document).off("selectedWS");
-    $(document).on("selectedWS", function(e, data) {
-        console.log(data.ws);
+    $(document).on("selectedWS", function(e, newMediaInfo) {
+        console.log(newMediaInfo);
+        //fba.addmedia(newMediaInfo);
+        media_view.show();
     });
 }
 

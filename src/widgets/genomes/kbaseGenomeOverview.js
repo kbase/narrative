@@ -139,6 +139,14 @@
             return this;
         },
 
+        getData: function() {
+            return {
+                type: "Genome",
+                id: this.options.genomeID,
+                workspace: this.options.workspaceID
+            };
+        },
+
         showMessage: function(message) {
             var span = $("<span/>").append(message);
 

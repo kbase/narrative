@@ -99,6 +99,14 @@
 			return this;
 		},
 
+        getData: function() {
+            return {
+                type: "Feature",
+                id: this.options.featureID,
+                workspace: this.options.workspaceID
+            };
+        },
+
 		buildPublicationString: function(pub) {
 			if (pub.length < 3)
 				return "";

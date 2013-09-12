@@ -701,6 +701,15 @@
             this.$messagePane.addClass("kbwidget-hide-message");
             this.$messagePane.empty();
         },
+
+        getData: function() {
+            return {
+                type: "Contig",
+                id: this.options.contig,
+                workspace: this.options.workspaceID
+            };
+        },
+
     });
 
 })( jQuery );

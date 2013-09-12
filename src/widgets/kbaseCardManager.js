@@ -17,7 +17,16 @@
                 });
             };
 
+            var self = this;
+            $(document).on("kbaseCardClosed", function(event, id) {
+                self.cardClosed(id);
+            });
+
             return this;
+        },
+
+        cardClosed: function(id) {
+            delete this.cards[id];
         },
 
         addNewCard: function(cardName, options, position) {
@@ -39,6 +48,26 @@
              * Would need to pass in whatever's the initializer, i.e. the
              * card that wants to spawn a new one. Or null (or maybe $(window)?)
              * to make it relative to the page.
+             */
+
+            /*
+             * When we make a new card, we store it in the manager like this:
+             * cards[cardId] = {
+             *     card: <the kbaseLandingCard>
+             *     data: <the widget embedded in the card>
+             * }
+             *
+             * This implies that each widget to be used in a card needs to expose
+             * what its data type is and what the data component is.
+             *
+             * The data component should be a simple object like this:
+             * {
+             *     id: object ID,
+             *     type: typed object name (Genome, FBAModel, etc. Whatever's registered as the typed object name)
+             *     workspace: <optional> the workspace name it's located in.
+             * }
+             *
+             * It should be available as widget.getData()
              */
 
             var newCardId = "kblpc" + this.cardIndex;
@@ -66,24 +95,32 @@
                 id: newCardId,
             });
 
-            this.cards[newCardId] = newCard;
+            this.cards[newCardId] = {
+                card: newCard,
+                data: newWidget
+            };
+
             this.cardIndex++;
         },
 
-        removeAllCards: function() {
+        destroy: function() {
+            this.listDataObjects();
+
             for (var cardId in this.cards) {
-                this.cards[cardId].LandingPageCard("destroy");
-                $("#" + cardId).remove();
-                delete this.cards[cardId];
+                this.cards[cardId].card.LandingPageCard("close");
             }
+
+            $(document).off("kbaseCardClosed");
             this.$elem.empty();
-//            this.cardIndex = 0;
             this.cards = {};
             this.$elem.remove();
         },
 
-        poke: function() {
-            console.log("Poked!");
+        listDataObjects: function() {
+            for (var cardId in this.cards) {
+                console.log(this.cards[cardId].data.getData());
+            }
+
         },
 
     });

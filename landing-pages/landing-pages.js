@@ -48,21 +48,21 @@ function router() {
             genome_view();
         })
         .enter(navEvent)
-        .exit(removeCards);
+        .exit(function() { $("#genomes").KBaseGenomeCardManager("destroy"); });
 
     Path.map("#/genomes/cs/:genome_id")
         .to(function(){ 
             genome_view({'genomeID': this.params['genome_id']});
         })
         .enter(navEvent)
-        .exit(removeCards);
+        .exit(function() { $("#genomes").KBaseGenomeCardManager("destroy"); });
 
     Path.map("#/genomes/:ws_id")
         .to(function() {
             genome_view({'workspaceID': this.params['ws_id']});
         })
         .enter(navEvent)
-        .exit(removeCards);
+        .exit(function() { $("#genomes").KBaseGenomeCardManager("destroy"); });
 
     Path.map("#/genomes/:ws_id/:genome_id")
         .to(function() {
@@ -74,7 +74,7 @@ function router() {
             );
         })
         .enter(navEvent)
-        .exit(removeCards);
+        .exit(function() { $("#genomes").KBaseGenomeCardManager("destroy"); });
 
     Path.map("#/organisms").to(function(){ empty_page() });
 
@@ -178,12 +178,6 @@ function set_selected_workspace() {
 function navEvent() {
     console.log('nav event');
     $(document).trigger("navEvent");
-}
-
-function removeCards() {
-    $("#genomes").KBaseGenomeCardManager("removeAllCards");
-    $("#genomes").KBaseGenomeCardManager("poke");
-    $("#genomes").remove();
 }
 
 /*

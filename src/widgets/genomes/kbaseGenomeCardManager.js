@@ -56,34 +56,41 @@
                 }
             );
 
-            // this.addNewCard("KBaseContigBrowser", 
-            //     { 
-            //         contig: "kb|g.0.c.1",
-            //         centerFeature: "kb|g.0.peg.2173", 
-            //         showButtons: true,
-            //         loadingImage: "../../widgets/images/ajax-loader.gif",
-            //     },
-            //     {
-            //         my: "left top",
-            //         at: "left+330 bottom",
-            //         of: "#app",
-            //         collision: "fit"
-            //     });
 
-            // this.addNewCard("KBaseContigBrowser", 
-            //     { 
-            //         contig: "kb|g.0.c.1",
-            //         centerFeature: "kb|g.0.peg.4288", 
-            //         showButtons: true,
-            //         loadingImage: "../../widgets/images/ajax-loader.gif"
-            //     },
-            //     {
-            //         my: "left top",
-            //         at: "left+330 bottom+200",
-            //         of: "#app"
-            //     });
+            this.addNewCard("KBaseContigBrowser", 
+                { 
+                    contig: "kb|g.0.c.1",
+                    centerFeature: "kb|g.0.peg.2173", 
+                    showButtons: true,
+                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                },
+                {
+                    my: "left top",
+                    at: "left+330 bottom",
+                    of: "#app",
+                    collision: "fit"
+                });
+
+            this.addNewCard("KBaseContigBrowser", 
+                { 
+                    contig: "kb|g.0.c.1",
+                    centerFeature: "kb|g.0.peg.4288", 
+                    showButtons: true,
+                    loadingImage: "../../widgets/images/ajax-loader.gif"
+                },
+                {
+                    my: "left top",
+                    at: "left+330 bottom+200",
+                    of: "#app"
+                });
 
             return this;
         },
+
+        destroy: function() {
+            this._super();
+            $(document).off("featureClick");
+            $(document).off("contigSelected");
+        }
     });
 })( jQuery );

@@ -449,7 +449,7 @@
                         $container.append($field);
 
                         var $button = $('<button></button>')
-                                        .addClass('btn')
+                                        .addClass('btn btn-default')
                                         .attr('title', 'Add more')
                                         .append($('<i></i>').addClass('icon-plus'))
                                         .bind(

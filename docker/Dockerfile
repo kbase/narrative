@@ -41,6 +41,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libzmq-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libreadline6-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-numpy
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-scipy
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-matplotlib
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-setuptools
@@ -49,6 +50,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libreadline-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libxml2-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libxslt1-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended
 
 # Clone in the python bootstrap and run it
 ADD ./bootstrap/kb_python_runtime /mini-bootstrap/kb_python_runtime
@@ -57,5 +59,9 @@ RUN cd /mini-bootstrap/kb_python_runtime/; TARGET=/kb/deployment /bin/bash insta
 # Copy in the narrative repo
 ADD ./narrative /kb/dev_container/narrative
 RUN cd /kb/dev_container/narrative; /bin/bash install.sh -p /kb/deployment/services narrative
-CMD /bin/bash /kb/deployment/services/narrative-venv/bin/run_notebook.sh notebook --ip='*' --NotebookApp.password='sha1:89e8b3c3b94f:34c04b4f82d4f5442094cbf73204333176be148a' --NotebookApp.open_browser='False'
 
+# Setup the container to automatically run a script that uses the narrative_mongo profile
+# and configures the notebook server to use /narrative/{CMD} as the prefix for a reverse
+# proxy environment
+CMD ["kbasetest"]
+ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/run_magellan_narrative.sh"]

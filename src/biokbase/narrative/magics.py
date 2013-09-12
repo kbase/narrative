@@ -342,7 +342,7 @@ if ip is not None:
     # Try to bring in a token to the environment
     t = biokbase.auth.Token()
     if t.token is not None:
-        user_id = t.tuser_id
+        user_id = t.user_id
         token = t.token
         user_profile = biokbase.auth.User( token = token)
         print "Logged in automatically as %s from environment defaults" % user_id

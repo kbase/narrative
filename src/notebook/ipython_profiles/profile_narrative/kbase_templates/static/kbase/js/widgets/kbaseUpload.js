@@ -11,7 +11,12 @@
 	$.KBWidget("kbaseUploadWidget", 'kbaseWidget', {
 		version: "0.0.1",
         isLoggedIn: false,
-		options: {},
+		options: {
+            workspace_client: null,
+            workspace_id: null,
+            workspace_auth: null,
+            narr_meta: {} // metadata from narrative 
+        },
 
         /**
          * Initialize the widget.
@@ -21,6 +26,11 @@
          */
 		init: function(options) {
             this._super(options);
+            this.narr_meta = options.narr_meta;
+            this.ws_id = options.workspace_id;
+            this.ws_auth = options.workspace_auth;
+            this.ws_client = options.worksapce_client;
+            this.file_desc = "";
             this.createDialog();
             var that = this;
             options.$anchor.on("click", function() {
@@ -49,8 +59,9 @@
             var fields = {
                 'filename': {
                     type:'file',
-                    id:'filename',
-                    label: 'Filename:'
+                    id:'kb-up-filename',
+                    label: 'Filename:',
+                    desc_id: 'kb-up-desc'
                 },
                 'datatype': {
                     type:'select',
@@ -90,25 +101,24 @@
                 switch (value.type) {
                     case "file":
                         // This uses Bootstrap file-upload, see: http://jasny.github.io/bootstrap/javascript.html#fileupload
+                        // Input and buttons
                         var $buttons = $('<span>').addClass('btn btn-file')
-                        $.each({'Select file': 'fileupload-new',
-                                'Change': 'fileupload-exists'}, function(bname, bclass) {
-                            var $btn = $('<span>').addClass(bclass).text(bname);
-                            $buttons.append($btn);
-                        });
-                        var $input = $('<input>').attr({type: value.type, name: value.id, id: value.id});
+                        var $input = $('<input type="file" id="upload_files" multiple>')
                         $buttons.append($input);
                         $control = $('<div>')
                             .addClass('fileupload fileupload-new').attr('data-provides','fileupload');
                         var $preview = $('<div>').addClass('uneditable-input span3">');
                         $preview.append($('<i>').addClass('icon-file fileupload-exists'));
                         $preview.append($('<span>').addClass('fileupload-preview'));
+                        $.each({'Select file': 'fileupload-new',
+                                'Change': 'fileupload-exists'}, function(bname, bclass) {
+                            var $btn = $('<span>').addClass(bclass).text(bname);
+                            $buttons.append($btn);
+                        });
                         var $ia = $('<div>').addClass('input-append')
                         $ia.append($preview);
                         $ia.append($buttons);
                         $control.append($ia);
-                        // register file upload widget
-                        $('.fileupload').fileupload({'name': value.id});
                         break;
                     case "text":
                         $control = $('<input>').attr({type:'text', name: value.id,
@@ -118,6 +128,7 @@
                             // count as modified if non-empty
                             var modded = this.value === "" ? false : true;
                             fields.dataset.modified = modded;
+                            that.file_desc = this.value; // record value
                         });
                         break;
                     case "select":
@@ -159,13 +170,23 @@
                 $txt.val(s);
             });
             // Set up response
-            $frm.on( "submit", function(event) {
+            $frm.on("submit", function(event) {
                 event.preventDefault();
-                var frm_arr = $(this).serializeArray();
-                var $file_input = $('#' + fields.filename.id);
-                var formData = new FormData($file_input[0]);
-                frm_arr.push({name: that._getFileName($file_input.val()), data: formData});
-                that.uploadFile(frm_arr);
+                var target = $('#upload_files')[0];
+                var files = target.files;
+                for (var i=0; i < files.length; i++) {
+                    var f = files[i];
+                    f.desc = that.file_desc; // copy description
+                    var reader = new FileReader();
+                    // closure to capture file metadata
+                    reader.onload = (function(file_info) {
+                        return function(e) {
+                            that.uploadFile(file_info, e.target.result); 
+                        }
+                    })(f);
+                    reader.onerror = function(e) { console.log('FileReader onerror'); }
+                    reader.readAsBinaryString(f);
+                }
             });
             // Cancel
             $cancel_btn.click(function() {
@@ -199,14 +220,42 @@
          * @param values File path and metadata
          * @returns {*}
          */
-        uploadFile: function(values) {
-            console.log("upload called with:");
-            $.each(values, function(index, value) {
-                console.log("(" + index + ")");
-                $.each(value, function(key, val) {
-                    console.log("   - " + key + '=' + val);
-                });
-            });
+        uploadFile: function(file, data) {
+            console.log("upload '" + file.name + "' desc: " + file.desc);
+            /*
+            id has a value which is an object_id
+            type has a value which is an object_type
+            data has a value which is an ObjectData
+            workspace has a value which is a workspace_id
+            command has a value which is a string
+            metadata has a value which is a reference to a hash where the key is a string and the value is a string
+            auth has a value which is a string
+            json has a value which is a bool
+            compressed has a value which is a bool
+            retrieveFromURL has a value which is a bool
+            asHash has a value which is a bool                
+
+            this.save_object = function (params, _callback, _errorCallback) {
+                    return json_call_ajax("workspaceService.save_object",
+                        [params], 1, _callback, _errorCallback);
+                };
+
+            */
+            params = {
+                id: 'whatever', // XXX: object id
+                type: 'OBJTYPE', // XXX: object type
+                data: data, // ObjectData (?)
+                workspace: this.ws_id, // workspace_id
+                command: 'upload', // string
+                metadata: this.narr_meta, // from narrative -- augment?
+                auth: this.ws_auth,
+                json: false,
+                compressed: false,
+                retrieveFromURL: false,
+                asHash: false
+            };
+            //this.ws_client.save_object(params, 
+            //    function())
             return this;
         },
 

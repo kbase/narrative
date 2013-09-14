@@ -14,12 +14,15 @@
             tableElem: null,
             controlsElem: null
 		},
-        //workspaceName: '',
+        ws_client: null,
+        ws_id: 'workspace_1',
 
 		init: function(options) {
 			this._super(options);
-            this.initControls(options.controlsElem);
             this.initDataTable(options.tableElem);
+            this.ws_client = this.dataTableWidget.ws_client;
+            this.ws_auth = this.dataTableWidget.ws_auth;
+            this.initControls(options.controlsElem);
             // bind search to data table
             $search_inp = options.controlsElem.find(':input');
             var that = this;
@@ -42,9 +45,32 @@
             $search.append($search_inp);
             $search.append($('<i>').addClass('icon-search'));
             elem.append($search);
-            elem.find('.dropdown-toggle').dropdown();
-            var opts = {$anchor: $('#kb-ws-upload-selected')};
-            this.uploadWidget = $('#kb-ws-upload-dialog').kbaseUploadWidget(opts);
+            // populate the dropdown
+            var $dd_menu = $('<div>').addClass('dropdown').attr({id:'kb-ws-upload-pulldown'});
+            var $dd_toggle = $('<a>').addClass("dropdown-toggle").attr({'data-toggle':'dropdown',
+                            href: '#', id: 'kb-ws-add-data'}).text('+ Add');
+            $dd_menu.append($dd_toggle);
+            var ul = $('<ul>').addClass('dropdown-menu').attr({role: 'menu', 'aria-labelledby': 'dLabel'});
+            ul.append($('<li>').addClass('nav-header').text('Add data from..'));
+            ul.append($('<li>').addClass('divider'));
+            var dd_items = { // key: [label, element_id]
+                'upload': {label:'Local file', id: 'kb-ws-upload-local'},
+                'cds': {label:'Central Data Store', id:'kb-ws-upload-cds'}
+            }
+            $.each(dd_items, function(key, info) {
+                var item = $('<li>');
+                item.append($('<a>').attr({'href': '#', 'id': info.id}).text(info.label));
+                ul.append(item);
+            })
+            $dd_menu.append(ul);
+            // add to element
+            elem.append($dd_menu);
+            // activate the dropdown
+            $dd_toggle.dropdown();
+            // bind the upload action
+            var $dlg = $('#kb-ws-upload-dialog');
+            var opts = {$anchor: $('#' + dd_items.upload.id)};
+            this.uploadWidget = $dlg.kbaseUploadWidget(opts);
             return this;
         },
 
@@ -57,7 +83,8 @@
         initDataTable: function(elem) {
             this.dataTableWidget = elem.kbaseWorkspaceDataWidget({
                 loadingImage: this.options.loadingImage,
-                container: elem
+                container: elem,
+                ws_id: this.ws_id
             });
             return this;
         },

@@ -1,5 +1,12 @@
 /**
- *  File upload widget.
+ * File upload widget.
+ * Upload objects to the workspace service.
+ *
+ * Options:
+ *   workspace_client - a workspaceService 'object'
+ *   workspace_id - identifier of the current workspace
+ *   workspace_auth - current auth token for WS service invocation
+ *   narr_meta - narrative metadata to be added to new objects in the workspace.
  *
  * Author: Dan Gunter <dkgunter@lbl.gov>
  * Created: 27 Aug 2013
@@ -12,9 +19,9 @@
 		version: "0.0.1",
         isLoggedIn: false,
 		options: {
-            workspace_client: null,
-            workspace_id: null,
-            workspace_auth: null,
+            ws_client: null,
+            ws_id: null,
+            ws_auth: null,
             narr_meta: {} // metadata from narrative 
         },
 
@@ -27,9 +34,9 @@
 		init: function(options) {
             this._super(options);
             this.narr_meta = options.narr_meta;
-            this.ws_id = options.workspace_id;
-            this.ws_auth = options.workspace_auth;
-            this.ws_client = options.worksapce_client;
+            this.ws_id = options.ws_id;
+            this.ws_auth = options.ws_auth;
+            this.ws_client = options.ws_client;
             this.file_desc = "";
             this.createDialog();
             var that = this;

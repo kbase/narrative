@@ -1,7 +1,14 @@
 /**
- * Options:
+ * Top-level 'widget' for the workspace interaction with the KBase narrative.
  *
- * loadingImage - an image to show in the middle of the widget while loading data
+ * The widget lists the objects in the workspace and include a search field
+ * to filter the list, as well as a button to 'Add' new items from sources 
+ * like the CDS and local files.
+ *
+ * Options:
+ *    loadingImage - an image to show in the middle of the widget while loading data
+ *    tableElem - HTML element container for the data table
+ *    controlsElem - HTML element container for the controls (search/add)
  */
 
 (function( $, undefined ) {
@@ -20,8 +27,6 @@
 		init: function(options) {
 			this._super(options);
             this.initDataTable(options.tableElem);
-            this.ws_client = this.dataTableWidget.ws_client;
-            this.ws_auth = this.dataTableWidget.ws_auth;
             this.initControls(options.controlsElem);
             // bind search to data table
             $search_inp = options.controlsElem.find(':input');
@@ -40,6 +45,7 @@
          * @returns this
          */
         initControls: function(elem) {
+            console.debug('initControls.begin');
             var $search = $('<div>').addClass('kb-search')
             var $search_inp = $('<input>').attr('type', 'text');
             $search.append($search_inp);
@@ -69,8 +75,10 @@
             $dd_toggle.dropdown();
             // bind the upload action
             var $dlg = $('#kb-ws-upload-dialog');
-            var opts = {$anchor: $('#' + dd_items.upload.id)};
+            var opts = {$anchor: $('#' + dd_items.upload.id),
+                        ws_parent: this};
             this.uploadWidget = $dlg.kbaseUploadWidget(opts);
+            console.debug('initControls.end');
             return this;
         },
 
@@ -106,8 +114,9 @@
          */
 		loggedIn: function(token) {
             this.dataTableWidget.loggedIn(token);
-            //this.uploadWidget.loggedIn(token);
-            //return this._widgetApply(token, 1);
+            // copy client/auth
+            this.ws_client = this.dataTableWidget.ws_client;
+            this.ws_auth = this.dataTableWidget.ws_auth;
 		},
 
         /**
@@ -118,9 +127,16 @@
          */
 		loggedOut: function(token) {
             this.dataTableWidget.loggedOut(token);
-            //this.uploadWidget.loggedOut(token);
-            //return this._widgetApply(token, 0);
+            this.ws_client = null, this.ws_auth = null;
 		},
+
+        /**
+         * Initialize the logger
+         */
+        initLogging: function(level) {
+            Logger.useDefaults();
+            Logger.setLevel(level);
+        }
 
 	});
 

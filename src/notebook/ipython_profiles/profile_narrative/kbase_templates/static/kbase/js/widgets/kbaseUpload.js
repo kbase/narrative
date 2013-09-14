@@ -3,10 +3,8 @@
  * Upload objects to the workspace service.
  *
  * Options:
- *   workspace_client - a workspaceService 'object'
- *   workspace_id - identifier of the current workspace
- *   workspace_auth - current auth token for WS service invocation
- *   narr_meta - narrative metadata to be added to new objects in the workspace.
+ *   $anchor - HTML anchor: click on this element to create dialog
+ *   ws_parent - parent object
  *
  * Author: Dan Gunter <dkgunter@lbl.gov>
  * Created: 27 Aug 2013
@@ -15,16 +13,22 @@
 // Jquery UI widget style
 (function($, undefined) {
 
+    var MissingOptionError = function(argname) {
+        var e = new Error("missing option: '" + argname + "'");
+        e.name = "MissingOptionError";
+        return e;
+    }
+
+    var FileReaderError = function(filename) {
+        var e = new Error("reading file: '" + filename + "'");
+        e.name = "FileReaderError";
+        return e;
+    }
+
 	$.KBWidget("kbaseUploadWidget", 'kbaseWidget', {
 		version: "0.0.1",
         isLoggedIn: false,
-		options: {
-            ws_client: null,
-            ws_id: null,
-            ws_auth: null,
-            narr_meta: {} // metadata from narrative 
-        },
-
+		options: { },
         /**
          * Initialize the widget.
          *
@@ -33,15 +37,16 @@
          */
 		init: function(options) {
             this._super(options);
-            this.narr_meta = options.narr_meta;
-            this.ws_id = options.ws_id;
-            this.ws_auth = options.ws_auth;
-            this.ws_client = options.ws_client;
-            this.file_desc = "";
+            // process options
+            if (options.ws_parent === undefined)
+                throw MissingOptionError('ws_parent');
+            this.ws_p = options.ws_parent;            
+            // defaults for instance vars
+            this.desc_elem = this.type_elem = null;
+            // create the dialog
             this.createDialog();
             var that = this;
             options.$anchor.on("click", function() {
-                //alert("render it");
                 that.render();
             });
             return this;
@@ -97,6 +102,7 @@
                 BiomFile: "BIOM",
                 PdbFile: "PDB" };
             // Add each field
+            var that = this;
             $.each(fields, function(key, value) {
                 var $frm_grp = $('<div>').addClass('control-group');
                 var $frm_controls = $('<div>').addClass('controls');
@@ -135,18 +141,20 @@
                             // count as modified if non-empty
                             var modded = this.value === "" ? false : true;
                             fields.dataset.modified = modded;
-                            that.file_desc = this.value; // record value
                         });
+                        that.desc_elem = $control;
                         break;
                     case "select":
                         $control = $('<select>').attr('name', value.id);
                         var keys = [];
                         $.each(value.options, function(k,v){keys.push(v);})
                         keys.sort();
+                        that.file_type = keys[0];
                         $.each(keys, function(index, value) {
                            var $opt = $('<option>').text(value);
                            $control.append($opt);
                         });
+                        that.type_elem = $control;
                         break;
                     default:
                         break; // XXX: raise an exception
@@ -165,7 +173,6 @@
             $frm.append($actions);
             // Populate dialog with form
             this.dlg.append($frm);
-            var that = this;   // stash one-up this
             // Put filename in description, unless user entered something
             $frm.find(':file').change(function(e) {
                 if (fields.dataset.modified) {
@@ -173,7 +180,6 @@
                 }
                 var s = that._getFileName(this.value);
                 var $txt = $frm.find(':text');
-                //alert("val to '" + s + "'");
                 $txt.val(s);
             });
             // Set up response
@@ -183,17 +189,24 @@
                 var files = target.files;
                 for (var i=0; i < files.length; i++) {
                     var f = files[i];
-                    f.desc = that.file_desc; // copy description
+                    $.extend(f, {
+                        desc: that.desc_elem[0].value, // description
+                        dtype: that.type_elem[0].value // data type name
+                    });
                     var reader = new FileReader();
-                    // closure to capture file metadata
                     reader.onload = (function(file_info) {
                         return function(e) {
                             that.uploadFile(file_info, e.target.result); 
                         }
                     })(f);
-                    reader.onerror = function(e) { console.log('FileReader onerror'); }
+                    reader.onerror = (function(file_info) {
+                        return function(e) { 
+                            throw FileReaderError(file_info); 
+                        }
+                    })(f);
                     reader.readAsBinaryString(f);
                 }
+                that.dlg.dialog('close');
             });
             // Cancel
             $cancel_btn.click(function() {
@@ -228,7 +241,7 @@
          * @returns {*}
          */
         uploadFile: function(file, data) {
-            console.log("upload '" + file.name + "' desc: " + file.desc);
+            console.debug("upload file '" + file.name + "' desc: " + file.desc);
             /*
             id has a value which is an object_id
             type has a value which is an object_type
@@ -248,22 +261,44 @@
                 };
 
             */
+            var meta = {
+                'narrative': IPython.notebook.metadata,
+                'description': file.desc,
+            };
+            var _p = this.ws_p; // parent obj
             params = {
                 id: 'whatever', // XXX: object id
-                type: 'OBJTYPE', // XXX: object type
-                data: data, // ObjectData (?)
-                workspace: this.ws_id, // workspace_id
+                type: file.dtype, 
+                workspace: _p.ws_id, // workspace_id
                 command: 'upload', // string
-                metadata: this.narr_meta, // from narrative -- augment?
-                auth: this.ws_auth,
+                metadata: meta,
+                auth: _p.ws_auth,
                 json: false,
                 compressed: false,
                 retrieveFromURL: false,
                 asHash: false
             };
+            console.debug('upload file params', params)
+            params.data = data; // put here, so not in logging
+            _p.ws_client.save_object(params, this.handleUploadSuccess, 
+                                     this.handleUploadFailure);
             //this.ws_client.save_object(params, 
             //    function())
             return this;
+        },
+
+        /**
+         * Called when an upload succeeds.
+         */
+        handleUploadSuccess: function(result) {
+            console.debug("upload success", result);
+        },
+
+        /**
+         * Called when an upload fails
+         */
+        handleUploadFailure: function(error) {
+            console.debug("upload error", error);
         },
 
         /**

@@ -2,7 +2,7 @@
  * Widget to display a table of data objects from a kbase workspace.
  *
  * Options:
- *    workspaceName - the name of the workspace to show in this widget
+ *    ws_id - the name of the workspace to show in this widget
  *    workspaceURL - the location of the workspace service (default points to existing deployed service)
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    notLoggedInMsg - a string to put in the middle of the widget when not logged in.
@@ -166,7 +166,6 @@
                 set_cb();
             }
             var name = null;
-            this._waitForIpython();
             // Get workspace name from metadata, or create new
             var nb = IPython.notebook;
             var md = nb.metadata;
@@ -255,20 +254,6 @@
             return(s);
         },
         /**
-         * Wait for IPython notebook to exist.
-         *
-         * @returns {null}
-         */
-        _waitForIpython: function() {
-            console.log("wait for IPython to fully load");
-            if (typeof IPython == 'undefined' ||
-                typeof IPython.notebook == 'undefined' ||
-                typeof IPython.notebook.metadata == 'undefined') {
-                setTimeout(this._waitForIpython, 100);
-            }
-            console.log("Houston, the IPython has loaded");
-        },
-        /**
          * Display new data in the table.
          *
          * @param results The new data
@@ -290,7 +275,7 @@
         },
 
 		loggedIn: function(token) {
-            console.log("creating workspace service on loggedIn");
+            console.debug("creating workspace service on loggedIn");
             /* with auth
             var auth = {token: token, user: 'narrative'};
             this.ws_client = new workspaceService(this.options.workspaceURL, auth);

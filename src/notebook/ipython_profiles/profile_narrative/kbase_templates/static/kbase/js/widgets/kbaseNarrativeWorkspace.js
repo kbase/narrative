@@ -6,6 +6,7 @@
  * like the CDS and local files.
  *
  * Options:
+*    workspaceURL - the location of the workspace service (default points to existing deployed service)
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    tableElem - HTML element container for the data table
  *    controlsElem - HTML element container for the controls (search/add)
@@ -17,6 +18,7 @@
 		uploadWidget: 'x',
         dataTableWidget: 'y',
 		options: {
+            workspaceURL: "https://www.kbase.us/services/workspace",            
 			loadingImage: "",
             tableElem: null,
             controlsElem: null
@@ -113,10 +115,10 @@
          * @returns this
          */
 		loggedIn: function(token) {
-            this.dataTableWidget.loggedIn(token);
-            // copy client/auth
-            this.ws_client = this.dataTableWidget.ws_client;
-            this.ws_auth = this.dataTableWidget.ws_auth;
+            console.debug("NarrativeWorkspace.loggedIn");
+            this.ws_client = new workspaceService(this.options.workspaceURL);
+            this.ws_auth = token;            
+            this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth);
 		},
 
         /**

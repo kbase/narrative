@@ -3,7 +3,6 @@
  *
  * Options:
  *    ws_id - the name of the workspace to show in this widget
- *    workspaceURL - the location of the workspace service (default points to existing deployed service)
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    notLoggedInMsg - a string to put in the middle of the widget when not logged in.
  */
@@ -20,7 +19,6 @@
         isLoggedIn: false,
         ws_auth: null,
 		options: {
-			workspaceURL: "https://www.kbase.us/services/workspace",
 			loadingImage: "ajax-loader.gif",
 			notLoggedInMsg: "Please log in to view a workspace.",
             container: null,
@@ -274,14 +272,9 @@
             return this;
         },
 
-		loggedIn: function(token) {
-            console.debug("creating workspace service on loggedIn");
-            /* with auth
-            var auth = {token: token, user: 'narrative'};
-            this.ws_client = new workspaceService(this.options.workspaceURL, auth);
-            */
-            this.ws_client = new workspaceService(this.options.workspaceURL);
-            this.ws_auth = token;
+		loggedIn: function(client, token) {
+            console.debug("WorkspaceData.loggedIn");
+            this.ws_client = client, this.ws_auth = token;
             this.isLoggedIn = true;
             this.render();
             return this;

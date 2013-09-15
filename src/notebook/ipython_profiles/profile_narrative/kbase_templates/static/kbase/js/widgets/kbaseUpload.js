@@ -92,6 +92,7 @@
             // Populate data types
             // XXX: fetch these from somewhere!
             fields.datatype.options = {
+                GenomeFile: "Genome", //XXX: for testing
                 FastaFile: "FASTA",
                 FastqFile: "FASTQ",
                 BedFile: "BED",
@@ -279,7 +280,11 @@
                 asHash: false
             };
             console.debug('upload file params', params)
-            params.data = data; // put here, so not in logging
+            // put here, so not in logging
+            params.data = {
+                'version': 0.1,
+                'bytes': data
+            };
             _p.ws_client.save_object(params, this.handleUploadSuccess, 
                                      this.handleUploadFailure);
             //this.ws_client.save_object(params, 

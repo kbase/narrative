@@ -60,6 +60,14 @@ $.KBWidget({
             return panel_body;
         }
 
+        this.loading = function() {
+            panel_body.append('<p class="muted ajax-loader"> \
+                <img src="assets/img/ajax-loader.gif"> loading...</p>');
+        }
+
+        this.rmLoading = function() {
+            panel_body.find('.ajax-loader').remove();
+        }
 
         self.$elem.append(container);
 

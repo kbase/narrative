@@ -424,15 +424,15 @@ $.KBWidget({
                     if (getRowPosition(lastShiftSelect.last) <= getRowPosition(lastSelectedRow)) {
                         if ($.inArray(prev, newSelected) < 0) {
                             newSelected.push(prev);
-                            scrollIntoView('up', prev);
+                            //scrollIntoView('up', prev);
                         }
                     } else if (prev === lastSelectedRow) {
                         prev = getPrevious(prev);
                         newSelected.push(prev);
-                        scrollIntoView('up', prev);
+                        //scrollIntoView('up', prev);
                     } else {
                         newSelected.splice($.inArray(prev, newSelected), 1);
-                        scrollIntoView('up', getPrevious(prev));
+                        //scrollIntoView('up', getPrevious(prev));
                     }
 
                     lastShiftSelect = {
@@ -457,7 +457,7 @@ $.KBWidget({
                     lastSelectedRow = prev;
                     lastShiftSelect = null;
                     select([prev]);
-                    scrollIntoView('up', prev);
+                    //scrollIntoView('up', prev);
                     return false;
                 }
             }
@@ -494,15 +494,15 @@ $.KBWidget({
                     if (getRowPosition(lastShiftSelect.last) >= getRowPosition(lastSelectedRow)) {
                         if ($.inArray(next, newSelected) < 0) {
                             newSelected.push(next);
-                            scrollIntoView('down', next);
+                            //scrollIntoView('down', next);
                         }
                     } else if (next === lastSelectedRow) {
                         next = getNext(next);
                         newSelected.push(next);
-                        scrollIntoView('down', next);
+                        //scrollIntoView('down', next);
                     } else {
                         newSelected.splice($.inArray(next, newSelected), 1);
-                        scrollIntoView('down', getNext(next));
+                        //scrollIntoView('down', getNext(next));
                     }
 
                     lastShiftSelect = {
@@ -527,7 +527,7 @@ $.KBWidget({
                     lastSelectedRow = next;
                     lastShiftSelect = null;
                     select([next]);
-                    scrollIntoView('down', next);
+                    //scrollIntoView('down', next);
                     return false;
                 }
             }
@@ -536,6 +536,7 @@ $.KBWidget({
         return true;
     }
 
+    //Fixme: add this functionality back in
     function scrollIntoView(dir, wsRow) {
         // first find out the position of the row
         var ind = $.inArray(wsRow, wsFiltRows);

@@ -12,14 +12,9 @@ $.KBWidget({
 
         self.reaction_data = [];
 
-        this.$elem.append('<div id="kbase-bio-rxn-table" class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <h4 class="panel-title">Biochemistry Reactions</h4>\
-                                </div>\
-                                <div class="panel-body"></div>\
-                           </div>');
+        var panel = this.$elem.kbasePanel({title: 'Biochemistry Reactions'});
+        var panel_body = panel.body();
 
-        var container = $('#kbase-bio-rxn-table .panel-body');
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
@@ -37,7 +32,7 @@ $.KBWidget({
         var chunk = 500;
 
         var bioAJAX = fba.get_biochemistry({});
-        container.append('<div class="progress">\
+        panel_body.append('<div class="progress">\
               <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 3%;">\
               </div>\
             </div>');
@@ -79,7 +74,7 @@ $.KBWidget({
             var labels = ["id", "abbrev", "definition", "deltaG", "deltaGErr", "enzymes", "name"];
             var cols = getColumns(keys, labels);
             tableSettings.aoColumns = cols;
-            container.append('<table id="rxn-table" class="table table-striped table-bordered"></table>')
+            panel_body.append('<table id="rxn-table" class="table table-striped table-bordered"></table>')
             var table = $('#rxn-table').dataTable(tableSettings);
             table.fnAddData(dataDict);
         }

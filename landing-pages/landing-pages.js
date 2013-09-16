@@ -48,21 +48,21 @@ function router() {
             genome_view();
         })
         .enter(navEvent)
-        .exit(function() { $("#genomes").KBaseGenomeCardManager("destroy"); });
+        .exit(removeCards);
 
     Path.map("#/genomes/cs/:genome_id")
         .to(function(){ 
             genome_view({'genomeID': this.params['genome_id']});
         })
         .enter(navEvent)
-        .exit(function() { $("#genomes").KBaseGenomeCardManager("destroy"); });
+        .exit(removeCards);
 
     Path.map("#/genomes/:ws_id")
         .to(function() {
             genome_view({'workspaceID': this.params['ws_id']});
         })
         .enter(navEvent)
-        .exit(function() { $("#genomes").KBaseGenomeCardManager("destroy"); });
+        .exit(removeCards);
 
     Path.map("#/genomes/:ws_id/:genome_id")
         .to(function() {
@@ -74,7 +74,7 @@ function router() {
             );
         })
         .enter(navEvent)
-        .exit(function() { $("#genomes").KBaseGenomeCardManager("destroy"); });
+        .exit(removeCards);
 
     Path.map("#/organisms").to(function(){ empty_page() });
 
@@ -180,6 +180,12 @@ function navEvent() {
     $(document).trigger("navEvent");
 }
 
+function removeCards() {
+    $("#genomes").KBaseGenomeCardManager("removeAllCards");
+    $("#genomes").KBaseGenomeCardManager("poke");
+    $("#genomes").remove();
+}
+
 /*
  *   "Views" which load widgets on page.
  */
@@ -239,7 +245,7 @@ function model_view(ws_id, id) {
                                    workspaces : [ws_id],
                                    auth: USER_TOKEN});
     
-    var rxn_modal = $('#rxn-modal').kbaseRxnModal({auth: USER_TOKEN});
+    var rxn_modal = $('#modals').kbaseRxnModal({auth: USER_TOKEN});
     
     $(document).off("rxnClick");
     $(document).on("rxnClick", function(e, data) {
@@ -265,7 +271,7 @@ function fba_view(ws_id, id) {
     $('#app').html(simple_layout2('fba-table'))
     $('#fba-table').kbaseFbaTabs({ids: [id], 
                                   workspaces: [ws_id]});
-    var rxn_modal = $('#rxn-modal').kbaseRxnModal({auth: USER_TOKEN});
+    var rxn_modal = $('#modals').kbaseRxnModal({auth: USER_TOKEN});
 
     $(document).off("rxnClick");
     $(document).on("rxnClick", function(e, data) {
@@ -280,7 +286,8 @@ function rxn_view(ws_id, id) {
     $('#app').html(simple_layout2('bio-rxn-table'))
 
     $('#bio-rxn-table').kbaseBioRxnTable({});
-    var rxn_modal = $('#rxn-modal').kbaseRxnModal({auth: USER_TOKEN});
+
+    var rxn_modal = $('#modals').kbaseRxnModal({auth: USER_TOKEN});
 
     $(document).off("rxnClick");
     $(document).on("rxnClick", function(e, data) {
@@ -319,17 +326,14 @@ function media_view(ws_id, id) {
                                                                  defaultWS: get_selected_ws()});
 
     $(document).off("saveToWSClick");
-    $(document).on("saveToWSClick", function(e, newmedia) {
-        console.log(newmedia);
-        //fba.addmedia(newmedia);
+    $(document).on("saveToWSClick", function(e, data) {
+        console.log('save to ws click event');
         save_ws_modal.show();
     });
 
     $(document).off("selectedWS");
-    $(document).on("selectedWS", function(e, newMediaInfo) {
-        console.log(newMediaInfo);
-        //fba.addmedia(newMediaInfo);
-        media_view.show();
+    $(document).on("selectedWS", function(e, data) {
+        console.log(data.ws);
     });
 }
 
@@ -527,12 +531,13 @@ function selectHandler(selected) {
             }
 
             if (first) {
-                firstSelect();
+                //firstSelect(); //fixme
                 first = false;
             }
         });
     });
 
+    // DEPRECATED
     // this function is called upon the first selection event
     //  it sets absolute position for the data table so that it scrolls nicely
     function firstSelect() {

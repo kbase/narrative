@@ -356,7 +356,7 @@
                         .attr('id', 'entrance')
                             .append(
                                 $('<span></span>')
-                                    .addClass('input-group input-group')
+                                    .addClass('input-group')
                                     .append(
                                         $('<span></span>')
                                             .addClass('input-group-addon')

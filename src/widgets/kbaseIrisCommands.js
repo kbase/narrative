@@ -126,14 +126,14 @@
             this.client.valid_commands(
                 $.proxy(
                     function (res) {
-
+var num = 0;
                         var commands = [];
                         $.each(
                             res,
                             $.proxy(
                                 function (idx, group) {
-
-                                group.title;
+num += group.items.length;
+                                    group.title;
 
                                     var $ul = $('<ul></ul>')
                                         .addClass('unstyled')
@@ -180,7 +180,7 @@
                                 this
                             )
                         );
-
+console.log("NUM " + num);
                         this.loadedCallback($elem, commands);
                     },
                     this
@@ -247,7 +247,6 @@
             this.data('focused', $(':focus'));
 
             var $form = $.jqElem('form')
-                .addClass('form-search')
                 .css('margin-bottom', '2px')
                 .append(
                     $('<div></div>')
@@ -255,18 +254,20 @@
                         .css('overflow', this.options.overflow ? 'auto' : 'visible')
                         .append(
                             $('<div></div>')
-                                .addClass('input-append')
+                                .addClass('input-group')
                                 .addClass('pull-right')
-                                .css('margin-top', '5px')
+                                .addClass('input-group-sm')
+//                                .css('margin-top', '5px')
                                 .attr('id', 'searchFieldBox')
                                 .append(
                                     $('<input></input>')
                                         .attr('type', 'text')
-                                        .addClass('input-small search-query')
                                         .attr('name', 'search')
-                                        .css('padding-top', '1px')
-                                        .css('padding-bottom', '1px')
+                                        .addClass('form-control')
+//                                        .css('padding-top', '1px')
+//                                        .css('padding-bottom', '1px')
                                         .attr('id', 'searchField')
+//                                        .css('width', '50%')
                                         .attr('size', '50')
                                         .keyup($.proxy(function (e) {
                                             e.preventDefault(); e.stopPropagation();
@@ -328,7 +329,7 @@
                                                     .css('left', '90%')
                                                     .append(
                                                         $.jqElem('button')
-                                                            .addClass('btn btn-mini')
+                                                            .addClass('btn btn-default btn-xs')
                                                             .append($.jqElem('i').addClass('icon-remove'))
                                                             .on('click',
                                                                 $.proxy(function(e) {
@@ -342,18 +343,25 @@
                                         }, this))
                                 )
                                 .append(
-                                    $.jqElem('button')
-                                        .addClass('btn btn-small')
-                                        .css('padding-top', '1px')
-                                        .css('padding-bottom', '1px')
-                                        .attr('id', 'search-button')
-                                        .append($.jqElem('i').attr('id', 'search-button-icon').addClass('icon-search'))
-                                        .on(
-                                            'click',
-                                            $.proxy(function(e) {
-                                                e.preventDefault(); e.stopPropagation();
-                                                this.data('searchField').trigger('keyup');
-                                            }, this)
+                                    $.jqElem('span')
+                                        .addClass('input-group-btn')
+//                                        .css('padding-top', '1px')
+//                                        .css('padding-bottom', '1px')
+                                        .css('height', '30px')
+                                        .append(
+                                            $.jqElem('button')
+                                                .addClass('btn btn-default')
+//                                                .css('padding-top', '1px')
+//                                                .css('padding-bottom', '1px')
+                                                .attr('id', 'search-button')
+                                                .append($.jqElem('i').attr('id', 'search-button-icon').addClass('icon-search'))
+                                                .on(
+                                                    'click',
+                                                    $.proxy(function(e) {
+                                                        e.preventDefault(); e.stopPropagation();
+                                                        this.data('searchField').trigger('keyup');
+                                                    }, this)
+                                                )
                                         )
                                 )
                             )

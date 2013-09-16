@@ -138,7 +138,7 @@
                                 var $buttonIcon = $('<i></i>')
                                     .addClass('icon-sort');
                                 var $button = $('<button></button>')
-                                    .addClass('btn btn-mini')
+                                    .addClass('btn btn-default btn-xs')
                                     .attr('id', buttonId)
                                     .css('display', 'none')
                                     .css('float', 'right')

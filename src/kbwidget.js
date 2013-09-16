@@ -349,7 +349,7 @@
 
         var Widget = function ($elem) {
             this.$elem = $elem;
-            this.options = $.extend(true, {}, def.options, this.constructor.prototype.options);             
+            this.options = $.extend(true, {}, def.options, this.constructor.prototype.options);
             return this;
         }
 
@@ -489,7 +489,7 @@
                 Widget.prototype[prop] = defCopy[prop];
             }
         }
-        
+
         if (parent) {
             Widget.prototype.options = $.extend(true, {}, widgetRegistry[parent].prototype.options, Widget.prototype.options);
         }
@@ -535,6 +535,7 @@
                 return this;
 
             };
+            ctor.name = name;
             $.fn[name] = ctor;
             $[name]    = $.fn[name];
         }

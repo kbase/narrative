@@ -31,7 +31,7 @@
             'height' : '200px',
             'types' : {
                 'file' : {
-                    'icon' : 'icon-file',
+                    'icon' : 'icon-file-alt',
                 },
                 'folder' : {
                     'icon' : 'icon-folder-close-alt',
@@ -90,6 +90,7 @@
                         .attr('id', val.id)
                         .append(
                             $('<a></a>')
+                                .css('padding', '3px 5px 3px 5px')
                                 .append($button)
                                 .append(' ')
                                 .append(val.label)
@@ -109,7 +110,8 @@
                     if (val.expandable) {
                         var $ul =
                             $('<ul></ul>')
-                                .addClass('nav nav-list')
+                                .addClass('databrowser-nav list-group')
+                                .css('margin-bottom', '0px')
                         ;
 
                         if (! val.open) {
@@ -175,7 +177,7 @@
                             {
                                 controls : controls,
                                 id : val.id,
-                                context : this
+                                context : this,
                             }
                         );
                     }
@@ -192,7 +194,8 @@
 
         prepareRootContent : function() {
             return $('<ul></ul>')
-                .addClass('nav nav-list')
+                .addClass('databrowser-nav list-group')
+                .css('margin-bottom', '0px')
                 .css('height', this.options.height)
                 .css('overflow', 'auto')
                 .attr('id', 'ul-nav')
@@ -219,139 +222,6 @@
             return $elem;
         },
 
-/*        selected : function( path ) {
-
-        },
-
-        displayPath : function(path, $ul, filelist) {
-
-            var $fb = this;
-
-            $ul.empty();
-
-
-        },
-
-        fileBrowserContainer : function() {
-            var navHeight = this.options.height;
-
-            var $ul = $('<ul></ul>')
-                .addClass('nav nav-list')
-                .css('height', navHeight)
-                .css('overflow', 'auto')
-                .attr('id', 'ul-nav')
-            ;
-
-            var $container =
-                $('<div></div>')
-                    .append($ul);
-
-            this.data('file-ul', $ul);
-
-            return $container;
-        },
-
-        fileBrowserControls : function() {
-            var $div =
-                $('<div></div>')
-                    .addClass('btn-toolbar')
-                    .addClass('text-right')
-                    .append(
-                        $('<div></div>')
-                            .addClass('btn-group')
-                            .attr('id', 'control-buttons')
-                            .append(
-                                $('<input></input>')
-                                    .attr('type', 'file')
-                                    .attr('id', 'fileInput')
-                                    .css('display', 'none')
-                                    .bind( 'change', jQuery.proxy(this.handleFileSelect, this) )
-                            )
-                    )
-            ;
-            return $div;
-        },
-
-        appendUI : function($elem) {
-
-            var $container = this.fileBrowserContainer();
-
-            var $box = $('<div></div>').kbaseBox(
-                {
-                    title : this.options.name,
-                    canCollapse: true,  //boolean. Whether or not clicking the title bar collapses the box
-                    content: $container,//'Moo. We are a box. Take us to China.',  //The content within the box. Any HTML string or jquery element
-                    //optional list of controls to populate buttons on the right end of the title bar. Give it an icon
-                    //and a callback function.
-                }
-            );
-
-            $elem.append($box.$elem);
-
-            if (this.options.controls) {
-                if (this.options.externalControls) {
-                    $container.parent().parent().append(this.fileBrowserControls());
-                }
-                else {
-                    $container.append(this.fileBrowserControls());
-                }
-            }
-
-            this._rewireIds($box.$elem, this);
-
-            $.each(
-                this.options.controlButtons,
-                $.proxy( function (idx, val) {
-                    this.data('control-buttons').append(
-                        this[val]()
-                    );
-                }, this)
-            );
-
-            this._rewireIds($box.$elem, this);
-
-            this.listDirectory(this.options.root, this.data('file-ul'));
-            this.disableButtons();
-
-            return this;
-
-        },
-
-        disableButtons : function() {
-            this.toggleButtons('N');
-        },
-
-        enableButtons : function(flag) {
-            this.toggleButtons(flag);
-        },
-
-        toggleButtons : function(flag) {
-
-            $.each(
-                this.options.controlButtons,
-                $.proxy(function (idx, val) {
-                    var $button = this[val]();
-                    if ($button == undefined) {
-                        return;
-                    }
-                    var require = $button.data('require');
-                    if (require != undefined) {
-                        if ((require == 'a' && flag != 'N') || require == flag) {
-                            $button.removeClass('disabled');
-                        }
-                        else {
-                            $button.addClass('disabled');
-                        }
-                    }
-                }, this)
-            );
-        },
-
-
-        listDirectory : function (path, $ul) {
-             throw "Cannot call listDirectory directly - please subclass";
-        },
-*/
 
     });
 

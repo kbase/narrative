@@ -391,7 +391,7 @@
                         .css('width', '100%')
                         .append(
                             $('<div></div>')
-                                .addClass('input-append')
+                                .addClass('input-group')
                                 .attr('id', 'workspace-controls')
                                 .append(
                                     $('<select></select>')
@@ -420,7 +420,7 @@
                                 )
                                 .append(
                                     $('<button></button>')
-                                        .addClass('btn btn-mini')
+                                        .addClass('btn btn-default btn-xs')
                                         .attr('id', 'deleteWorkspace-button')
                                         .append( $('<i></i>').addClass('icon-minus') )
                                         .bind('click', $.proxy( function(e) {
@@ -433,7 +433,7 @@
                                 )
                                 .append(
                                     $('<button></button>')
-                                        .addClass('btn btn-mini')
+                                        .addClass('btn btn-default btn-xs')
                                         .attr('id', 'createWorkspace-button')
                                         .append( $('<i></i>').addClass('icon-plus') )
                                         .bind('click', $.proxy( function(e) {

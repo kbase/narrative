@@ -14,6 +14,8 @@ import string
 import os
 import time
 from IPython.core.display import display, Javascript
+from .widgets import widgetdef as widgetdef
+from IPython.display import HTML
 
 # Module variables for maintaining KBase Notebook state
 user_id = None
@@ -185,6 +187,26 @@ class kbasemagics(Magics):
         return
         
 
+
+    @line_magic
+    def widget(self,line):
+        "Insert the HTML/JS for the name of the widget passed in as the first arg"
+        # for now the defs are a dict in biokbase.narrative.widgets.widgetdef
+        if len(line) > 0:
+            try:
+                (widget_name,params) = line.split()
+                params = params.split()
+            except:
+                widget_name = line
+                params = []
+        else:
+            raise Exception( "Must specify widget name")
+        try:
+            html = widgetdef[widget_name]
+        except:
+            raise Exception( "Widget %s not found" % widget_name)
+        return HTML(html)
+        
     def invoke_session(self):
         "Return the current invocation session id, create one if necessary"
         global user_id, token, user_profile, inv_client, inv_session, endpoint

@@ -94,6 +94,14 @@ var IPython = (function (IPython) {
                     callback : function () {
                         IPython.notebook.insert_cell_below('code');
                         }
+                },
+                {
+                    id : 'insert_markdown_below_b',
+                    label : 'Insert Markdown Cell Below',
+                    icon : 'icon-circle-arrow-down',
+                    callback : function () {
+                        IPython.notebook.insert_cell_below('markdown');
+                        }
                 }
             ],'insert_above_below');
 

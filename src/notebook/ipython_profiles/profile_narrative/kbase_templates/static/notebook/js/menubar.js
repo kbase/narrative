@@ -147,9 +147,12 @@ var IPython = (function (IPython) {
         // Insert
         this.element.find('#insert_cell_above').click(function () {
             IPython.notebook.insert_cell_above('code');
-        });
+        });  
         this.element.find('#insert_cell_below').click(function () {
             IPython.notebook.insert_cell_below('code');
+        });
+        this.element.find('#insert_markdown_cell_below').click(function () {
+            IPython.notebook.insert_cell_below('markdown');
         });
         // Cell
         this.element.find('#run_cell').click(function () {

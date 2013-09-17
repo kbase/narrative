@@ -100,7 +100,8 @@ var IPython = (function (IPython) {
                     label : 'Insert Markdown Cell Below',
                     icon : 'icon-circle-arrow-down',
                     callback : function () {
-                        IPython.notebook.insert_cell_below('markdown');
+                        var cell = IPython.notebook.insert_cell_below('markdown');
+			cell.set_text( "Your widget here");
                         }
                 }
             ],'insert_above_below');

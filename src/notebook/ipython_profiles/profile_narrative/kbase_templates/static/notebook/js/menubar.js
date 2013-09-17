@@ -152,7 +152,8 @@ var IPython = (function (IPython) {
             IPython.notebook.insert_cell_below('code');
         });
         this.element.find('#insert_markdown_cell_below').click(function () {
-            IPython.notebook.insert_cell_below('markdown');
+            var cell = IPython.notebook.insert_cell_below('markdown');
+	    cell.set_text( "Your widget here");
         });
         // Cell
         this.element.find('#run_cell').click(function () {

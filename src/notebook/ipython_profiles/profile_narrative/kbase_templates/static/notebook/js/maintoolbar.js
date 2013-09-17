@@ -95,15 +95,6 @@ var IPython = (function (IPython) {
                         IPython.notebook.insert_cell_below('code');
                         }
                 },
-                {
-                    id : 'insert_markdown_below_b',
-                    label : 'Insert Markdown Cell Below',
-                    icon : 'icon-circle-arrow-down',
-                    callback : function () {
-                        var cell = IPython.notebook.insert_cell_below('markdown');
-			cell.set_text( "Your widget here");
-                        }
-                }
             ],'insert_above_below');
 
         this.add_buttons_group([

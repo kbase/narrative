@@ -21,3 +21,22 @@ allowscriptaccess="always" allowfullscreen="true">
     </object>
 """
 
+def new_widget( widget_name, **kwargs):
+    """
+    This method takes a cell index in the notebook and a widget name and populates that cell with the contents of the
+    widgetdef that matches the name.
+
+    Eventually the kwargs will be used to populate things that matter like initializing the widget with data and callbacks 
+    """
+    try:
+        html = widgetdef[widgetname]
+    except KeyError, e:
+        raise Exception("%s not a recognized widget" % widgetname)
+    # Use a dict to return a response object
+    res = { 'html' : html,
+            '_' : _,
+            'finish_callback' : None
+            }
+    return res
+
+

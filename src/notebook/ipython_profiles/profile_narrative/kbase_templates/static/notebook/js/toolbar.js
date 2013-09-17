@@ -69,7 +69,7 @@ var IPython = (function (IPython) {
         }
         for(var el in list) {
             var button  = $('<button/>')
-                .addClass('btn')
+                .addClass('btn btn-default')
                 .attr("title", list[el].label)
                 .append(
                     $("<i/>").addClass(list[el].icon)

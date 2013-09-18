@@ -1,0 +1,25 @@
+{
+    "urls": {
+        "main": "http://140.221.84.236:8000/node",
+        "shock": "http://140.221.84.236:8000",
+        "awe": "http://140.221.84.236:8001/"
+    },
+    "files": {
+        "expression": "Expression_Table.csv",
+        "sample_id": "Sample_id.csv",
+        "annotation": "Gene_Annotation.csv"
+    },
+    "files_desc": {
+        "expression": "Expression data",
+        "sample_id": "Sample file",
+        "annotation": "Annotation file"
+    },
+    "args": {
+        "coex_filter": "-m anova -p 0.05 -u n -r y -d y",
+        "coex_net": "-m simple -t edge -c 0.75 -r 0.8 -k 40 -p 50",
+        "coex_cluster2": "-s 20 -c hclust -n simple -r 0.8 -k 40 -p 50 -d 0.99"
+    }
+}
+
+
+

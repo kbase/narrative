@@ -185,8 +185,6 @@ class kbasemagics(Magics):
         # Call the clear_token method
         clear_token()
         return
-        
-
 
     @line_magic
     def widget(self,line):

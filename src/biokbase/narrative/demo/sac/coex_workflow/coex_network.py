@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This a conversion of Ranjan Priya's coex_network script into Python 2.7+
 
@@ -39,6 +40,53 @@ class UploadException(Exception):
 class SubmitException(Exception):
     pass
 
+## Classes
+
+
+class Awe(object):
+    """
+    Job	submit	curl -X POST http://awe-server/job
+    show	curl -X GET http://awe-server/job/id
+    query	curl -X GET http://awe-server/job?queue&key=val
+    delete	curl -X DELETE http://awe-server/job/id
+    Workunit	checkout	curl -X GET http://awe-server/work?client=id
+    show	curl -X GET http://awe-server/work/id
+    status update	curl -X PUT http://awe-server/work/id?status=xx
+    Client	register	curl -X POST http://awe-server/client
+    show all	curl -X GET http://awe-server/client
+    show one	curl -X GET http://awe-server/client/id
+    status update	curl -X PUT http://awe-server/client/id
+    Queue	show status	curl –X GET http://awe-server/queue
+    """
+    def __init__(self, url):
+        self.url = url
+
+    def _get(self, suffix=None, params=None, as_json=True):
+        if suffix:
+            uri = self.url + '/' + suffix
+        else:
+            uri = self.url
+        pp = {} if params is None else params
+        result = requests.get(uri, params=pp)
+        if as_json:
+            result = result.json()
+            return result, result.get('data', {})
+        else:
+            return result.text, {}
+
+    def job_status(self, id_):
+        r, data = self._get('job/{}'.format(id_))
+        status = JobStatus(data)
+        return status
+
+    def queue_status(self):
+        r, data = self._get('queue')
+        return data
+
+
+class JobStatus(object):
+    def __init__(self, data):
+        self.count = data.get("remaintasks", -1)
 
 ## Functions
 
@@ -66,7 +114,7 @@ def check_job_status(uri, id_):
     url = "%s/job/%s" % (uri, id_)
     r = requests.get(url)
     response = json.loads(r.text)
-    remain_tasks = response.get("data",dict()).get("remaintasks")
+    remain_tasks = response.get("data", dict()).get("remaintasks")
     return remain_tasks
 
 
@@ -129,7 +177,16 @@ def parse_args():
     op.add_argument("-j", "--job", dest="job_file", default=d["job_file"],
                   help="AWE job JSON configuration file "
                        "(default={})".format(d["job_file"]))
+    op.add_argument("-v", "--verbose", dest="vb", action="count", default=0,
+                    help="More verbose messages")
     options = op.parse_args()
+    # Log verbosity
+    if options.vb > 1:
+        _log.setLevel(logging.DEBUG)
+    elif options.vb > 0:
+        _log.setLevel(logging.INFO)
+    else:
+        _log.setLevel(logging.WARN)
     # check that input files exist
     for key in 'config_file', 'job_file':
         f = getattr(options, key)
@@ -188,25 +245,29 @@ def main(options):
 
     # Wait for job to complete
     _log.info("job.begin")
+    awe = Awe(urls['awe'])
     while 1:
         time.sleep(5)
-        count = check_job_status(urls['awe'], job_id)
+        count = awe.job_status(job_id).count
         if count == 0:
             break
-        _log.debug("job.run tasks_remaining={:d}".format(count))
+        _log.info("job.run tasks_remaining={:d}".format(count))
+        if _log.isEnabledFor(logging.DEBUG):
+            qstat = str(awe.queue_status())
+            _log.debug("job.run.details queue_status={}".format(qstat))
     _log.info("job.end")
 
     #XXX: Never get past this point
 
     sep = '#' * 40
-    print(sep + "Download and visualize network output\n" + sep)
+    print(sep + "\nDownload and visualize network output\n" + sep)
 
-    print("\nURLs to download output files")
+    print("\nOutput files:")
     download_urls = get_output_files(urls['awe'], job_id)
     print('\n'.join(['\t\t' + s for s in download_urls]))
 
     print("\nURL to visualize the network")
-    viz_urls = get_url_visualization(urls['awe'], job_id)
+    viz_urls = [get_url_visualization(urls['awe'], job_id)]
     print('\n'.join(['\t\t' + s for s in viz_urls]))
 
     return 0

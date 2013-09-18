@@ -207,7 +207,7 @@ def main(options):
 
     print("\nURL to visualize the network")
     viz_urls = get_url_visualization(urls['awe'], job_id)
-    print('\n'.join(['\t\t' + s for s in viz_urls]))
+    print '\n',viz_urls
 
     return 0
 

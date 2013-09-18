@@ -28,6 +28,17 @@
                         of: data.featureElement
                     }
                 );
+
+                self.addNewCard("KBaseGeneInstanceInfo",
+                    {
+                        featureID: data.feature.feature_id,
+                    },
+                    {
+                        my: "left top",
+                        at: "center",
+                        of: data.featureElement
+                    }
+                );
             });
 
             $(document).on("contigSelected", function(event, data) {
@@ -35,7 +46,8 @@
                     {
                         contig: data.contig,
                         showButtons: true,
-                        loadingImage: "../../widgets/images/ajax-loader.gif"
+                        loadingImage: "../../widgets/images/ajax-loader.gif",
+                        centerFeature: data.centerFeature
                     },
                     {
                         my: "left top",
@@ -48,17 +60,7 @@
             this.addNewCard("KBaseWikiDescription",
                 {
                     genomeID: this.options.genomeID,
-                },
-                {
-                    my: "left top",
-                    at: "left bottom",
-                    of: "#app"
-                }
-            );
-
-            this.addNewCard("KBaseWikiDescription",
-                {
-                    genomeID: "kb|g.20848"
+                    loadingImage: "../../widgets/images/ajax-loader.gif",
                 },
                 {
                     my: "left top",
@@ -70,6 +72,7 @@
             this.addNewCard("KBaseGenomeOverview", 
                 { 
                     genomeID: this.options.genomeID,
+                    loadingImage: "../../widgets/images/ajax-loader.gif",
                 },
                 {
                     my: "left top",

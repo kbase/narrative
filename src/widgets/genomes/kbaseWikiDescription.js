@@ -13,7 +13,8 @@
 			workspaceID: null,
 			title: "Description",
 			maxNumChars: 500,
-			width: 500
+			width: 500,
+			loadingImage: null
 		},
 
 		wikiScraperURL: "http://140.221.85.80:7051",
@@ -27,16 +28,25 @@
 				//throw an error.
 				return this;
 			}
+            this.$messagePane = $("<div/>")
+                                .addClass("kbwidget-message-pane")
+                                .addClass("kbwidget-hide-message");
+            this.$elem.append(this.$messagePane);
 
 			this.cdmiClient = new CDMI_API(this.cdmiURL);
 			this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
 			this.workspaceClient = new workspaceService(this.workspaceURL);
 			this.wikiClient = new WikiScraper(this.wikiScraperURL);
 
+			this.options.title += " - " + this.options.genomeID;
+
 			return this.render();
 		},
 
 		render: function(options) {
+            this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+
+
 			var self = this;
 
 			/*
@@ -92,20 +102,34 @@
 								var descId = self.uid();
 								var imageId = self.uid();
 
-								var $contentDiv = $("<div class='tab-content' />")
-												  .append($("<div id='" + descId + "' class='tab-pane fade active in' />")
+
+								var $contentDiv = $("<div />")
+												  .addClass("tab-content")
+												  .append($("<div />")
+												  		  .attr("id", descId)
+												  		  .addClass("tab-pane fade active in")
 												  		  .append(descHtml)
 												  )
-												  .append($("<div id='" + imageId + "' class='tab-pane fade' />")
+												  .append($("<div />")
+												  		  .attr("id", imageId)
+												  		  .addClass("tab-pane fade")
 												  		  .append(imageHtml)
 												  );
 
-								var $descTab = $("<a href='#" + descId + "' data-toggle='tab'>Description</a>");
+								var $descTab = $("<a />")
+												 .attr("href", "#" + descId)
+												 .attr("data-toggle", "tab")
+												 .append("Description");
 
-								var $imageTab = $("<a href='#" + imageId + "' data-toggle='tab'>Image</a>");
+								var $imageTab = $("<a />")
+												 .attr("href", "#" + imageId)
+												 .attr("data-toggle", "tab")
+												 .append("Image");
 
-								var $tabSet = $("<ul class='nav nav-tabs' />")
-											  .append($("<li class='active' />")
+								var $tabSet = $("<ul />")
+											  .addClass("nav nav-tabs")
+											  .append($("<li />")
+											  	      .addClass("active")
 											  		  .append($descTab)
 											  		 )
 											  .append($("<li />")
@@ -115,20 +139,9 @@
 
 
 								self.$elem.append($tabSet).append($contentDiv);
+					            self.hideMessage();
 
 
-								// self.$elem.html("<ul class='nav nav-tabs'>" +
-								// 				"<li class='active'><a href='#desc' data-toggle='tab'>Description</a></li>" +
-								// 				"<li><a href='#pict' data-toggle='tab'>Image</a></li>" +
-								// 				"</ul>" +
-								// 				"<div class='tab-content'>" +
-								// 				"<div class='tab-pane fade active in' id='desc'>" +
-								// 				descHtml +
-								// 				"</div>" +
-								// 				"<div class='tab-pane fade' id='pict'>" + 
-								// 				imageHtml +
-								// 				"</div>" +
-								// 				"</div>");
 							}
 
 						},
@@ -170,9 +183,17 @@
 			return str;
 		},
 
-		printDescription: function(str) {
-			$('#wiki_desc').html(str)
-		},
+        showMessage: function(message) {
+            var span = $("<span/>").append(message);
+
+            this.$messagePane.append(span);
+            this.$messagePane.removeClass("kbwidget-hide-message");
+        },
+
+        hideMessage: function() {
+            this.$messagePane.addClass("kbwidget-hide-message");
+            this.$messagePane.empty();
+        },
         
         getData: function() {
             return {

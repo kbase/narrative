@@ -113,7 +113,7 @@
                                     }
 
                                     self.$elem.append($dropdown);
-                                    self.$elem.append($("<button>Show Contig</button>")
+                                    self.$elem.append($("<button class='btn btn-default'>Show Contig</button>")
                                                       .on("click", 
                                                           function(event) {
                                                               $(self.$elem.selector + " > select option:selected").each(function() {

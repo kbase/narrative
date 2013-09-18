@@ -257,8 +257,7 @@ def main(options):
             _log.debug("job.run.details queue_status={}".format(qstat))
     _log.info("job.end")
 
-    #XXX: Never get past this point
-
+    # Report results
     sep = '#' * 40
     print(sep + "\nDownload and visualize network output\n" + sep)
 

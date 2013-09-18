@@ -27,7 +27,6 @@ $.KBWidget({
         panel_body.append('<br><br>')
         panel_body.append('<a href="#/run-fba/'+ws+'/'+id+'">Run FBA</a> <span class="glyphicon glyphicon-arrow-right"></span>')
 
-
         return this;
 
     }  //end init

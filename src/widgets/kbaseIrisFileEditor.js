@@ -106,7 +106,7 @@
                     },
                     this
                 ),
-                function (err) { this.dbg("FILE FAILURE"); this.dbg(err) }
+                $.proxy(function (err) { this.dbg("FILE FAILURE"); this.dbg(err); this.dbg(this);}, this)
             );
 
         },

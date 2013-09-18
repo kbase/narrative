@@ -3,25 +3,23 @@
 <html>
     <head>
         <title>KBase Data Pages</title>
-        <link rel="icon" href="assets/img/KBase_favicon.ico" type="image/x-icon">
+        <link rel="icon" type="image/x-icon" href="assets/img/KBase_favicon.ico">
 
         <!-- Global KBase css -->
-        <link href="../ext/bootstrap/3.0.0/css/bootstrap.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="../ext/bootstrap/3.0.0/css/bootstrap.css" />
 
         <!--<link href="../common/css/bootstrap2.css" rel="stylesheet">-->
         <!--<link href="../common/css/jquery.dataTables.css" rel="stylesheet">-->
-        <link href="../ext/jquery-ui/1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" type="text/css">
-        <link href="assets/css/dataTables.bootstrap.css" rel="stylesheet" type="text/css" >        
-        <link href="assets/css/ws-browser.css" rel="stylesheet">
-        <link href="assets/css/landing-pages.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="../ext/jquery-ui/1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.min.css" />
+        <link rel="stylesheet" type="text/css" href="assets/css/dataTables.bootstrap.css" />
+        <link rel="stylesheet" type="text/css" href="assets/css/ws-browser.css" />
+        <link rel="stylesheet" type="text/css" href="assets/css/landing-pages.css" />
 
         <!-- KBase widget css -->
-        <link rel="stylesheet" href="../widgets/css/kbaseGenomeOverview.css" type="text/css" />
-        <link rel="stylesheet" href="../widgets/css/kbaseContigBrowser.css" type="text/css" />
-        <link rel="stylesheet" href="../widgets/css/kbaseWidget.css" type="text/css" />
-        <link rel="stylesheet" href="../widgets/css/kbaseLandingPageCard.css" type="text/css" />
-
-
+        <link rel="stylesheet" type="text/css" href="../widgets/css/kbaseGenomeOverview.css" />
+        <link rel="stylesheet" type="text/css"  href="../widgets/css/kbaseContigBrowser.css" />
+        <link rel="stylesheet" type="text/css" href="../widgets/css/kbaseWidget.css" />
+        <link rel="stylesheet" type="text/css" href="../widgets/css/kbaseLandingPageCard.css" type="text/css" />
 
         <!-- External javascript packages -->
         <script src="../ext/jquery/jquery-1.10.2.min.js"></script>
@@ -34,7 +32,6 @@
         <script src="assets/js/jquery.scrollTo.min.js"></script>
         <script src="assets/js/jquery.cookie.min.js"></script>
         <script src="assets/js/viz/raphael-min.js"></script>
-
         <script src="assets/js/path.js"></script>        
 
 
@@ -43,17 +40,12 @@
 
         <!-- these are deps for seq search mockup -->
         <script src="assets/js/jquery.dataTables.rowGrouping.js"></script>
-        <script src="assets/js/kbclient/seqSearch.js"></script>        
-
+        <script src="assets/js/kbclient/seqSearch.js"></script>
 
         <!-- widgets -->
         <script src="../src/kbwidget.js"></script>
-
-
-        <!-- helper widgets --> 
         <script src="../src/widgets/kbasePanel.js"></script>
-        <script src="../src/widgets/kbaseModal.js"></script>        
-        <!-- end helper widgets -->        
+        <script src="../src/widgets/kbaseModal.js"></script>
 
         <script src="../src/widgets/kbasePrompt.js"></script>
         <script src="../src/widgets/kbaseLogin.js"></script>
@@ -71,7 +63,6 @@
         <script src="../src/widgets/biochemistry/kbaseBioCpdTable.js"></script>
 
         <script src="../src/widgets/media/kbaseMediaEditor.js"></script>
-
         <script src="../src/widgets/biochemistry/kbaseRxnModal.js"></script>
 
         <script src="../src/widgets/misc/kbaseSeqSearch.js"></script>
@@ -94,21 +85,16 @@
         <script src = "../src/widgets/genomes/kbaseGenomeCardManager.js"></script>
         <!-- End Genome widgets -->
 
-
         <script src="landing-pages.js"></script>
     </head>
 
     <body>
         <div id="navigation"></div>
 
-        <!-- start app -->
+        <!-- app -->
         <div id ="app" class="wrapper"></div>
-        <!-- end app -->
-
-        <!-- modals -->
-        <div id="rxn-modal"></div>
-        <div id="media-modal"></div>
-        <div id="save-ws-modal"></div>
+        <div id="modals"></div>
+        <!-- End app -->
 
     </body>
 

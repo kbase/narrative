@@ -45,6 +45,28 @@
                 );
             });
 
+            this.addNewCard("KBaseWikiDescription",
+                {
+                    genomeID: this.options.genomeID,
+                },
+                {
+                    my: "left top",
+                    at: "left bottom",
+                    of: "#app"
+                }
+            );
+
+            this.addNewCard("KBaseWikiDescription",
+                {
+                    genomeID: "kb|g.20848"
+                },
+                {
+                    my: "left top",
+                    at: "left bottom",
+                    of: "#app"
+                }
+            );
+
             this.addNewCard("KBaseGenomeOverview", 
                 { 
                     genomeID: this.options.genomeID,

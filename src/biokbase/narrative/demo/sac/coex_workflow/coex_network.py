@@ -43,14 +43,14 @@ class SubmitException(Exception):
 ## Functions
 
 def join_stripped(iterable):
-    return ''.join((s.strip() for s in iterable))
+    return '\n'.join((s.strip() for s in iterable))
 
 
 def upload_file(uri, filename, att_content):
     file_contents = join_stripped(open(filename))
     data = {'upload': (filename, file_contents),
             'attributes': ('', att_content)}
-    #_log.debug("upload.request data={}".format(data))
+    _log.debug("upload.request data={}".format(data))
     r = requests.post("%s/node" % uri, files=data)
     response = json.loads(r.text)
     if response['data'] is None:

@@ -2,8 +2,7 @@
  * Widget to display a table of data objects from a kbase workspace.
  *
  * Options:
- *    workspaceName - the name of the workspace to show in this widget
- *    workspaceURL - the location of the workspace service (default points to existing deployed service)
+ *    ws_id - the name of the workspace to show in this widget
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    notLoggedInMsg - a string to put in the middle of the widget when not logged in.
  */
@@ -11,21 +10,19 @@
 
 	$.KBWidget("kbaseWorkspaceDataWidget", 'kbaseWidget', {
 		version: "1.0.0",
-		wsClient: null,
+		ws_client: null,
 		table: null,
         tableData: [],
         $loginMessage: null,
         $errorMessage: null,
         $loading: null,
         isLoggedIn: false,
-        wsName: null,
-        wsToken: null,
+        ws_auth: null,
 		options: {
-			//workspaceName: "workspace_1",
-			workspaceURL: "https://www.kbase.us/services/workspace",
 			loadingImage: "ajax-loader.gif",
 			notLoggedInMsg: "Please log in to view a workspace.",
-            container: null
+            container: null,
+            ws_id: null
 		},
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
@@ -33,6 +30,7 @@
 
         init: function(options) {
 			this._super(options);
+            this.ws_id = options.ws_id;
             this.$tbl = options.container;
             this.createTable()
                 .createMessages()
@@ -123,103 +121,123 @@
             }
             else {
                 this.$loading.show();
-                this.setWs();
                 var that = this;
-                var opts = {workspace: this.wsName, auth: this.wsToken};
-                this.wsClient.list_workspace_objects(opts,
-                    function(results) {
-                        //console.log("Results: " + results);
-                        that.updateResults(results);
-                        that.createTable();
-                    },
-                    function(err) {
-                        console.log("error getting workspace objects");
-                        that.$loading.hide();
-                        that.$errorMessage.show();
-                        // XXX: hack to get something in there
-                        results = [ ];
-                        for (var i=0; i < 5; i++) {
-                            results.push(['luke' + i, 'Genome']);
-                            results.push(['leia' + i, 'Model']);
-                            results.push(['anakin' + i, 'Genome']);
-                            results.push(['amidala' + i, 'Model']);
+                this.setWs(function() {
+                    var opts = {workspace: that.ws_id, auth: that.ws_auth};
+                    that.ws_client.list_workspace_objects(opts,
+                        function(results) {
+                            //console.log("Results: " + results);
+                            that.updateResults(results);
+                            that.createTable();
+                        },
+                        function(err) {
+                            console.log("ERROR: getting workspace objects: " + JSON.stringify(err.error));
+                            that.$loading.hide();
+                            that.$errorMessage.show();
+                            // XXX: hack to get something in there
+                            results = [ ];
+                            for (var i=0; i < 5; i++) {
+                                results.push(['luke' + i, 'Genome']);
+                                results.push(['leia' + i, 'Model']);
+                                results.push(['anakin' + i, 'Genome']);
+                                results.push(['amidala' + i, 'Model']);
+                            }
+                            that.updateResults(results);
+                            that.createTable();
                         }
-                        that.updateResults(results);
-                        that.createTable();
-                    }
-                );
-                this.$loading.hide();
+                    )
+                    that.$loading.hide();
+                });
             }
             return this;
 		},
         /**
          * Set or create workspace
          *
-         * Sets this.wsName to name of workspace.
+         * Sets this.ws_id to name of workspace.
          * Also puts this into Notebook metadata.
          *
          * @returns this
          */
-        setWs: function() {
-            if (this.wsName === null) {
-                var name = null;
-                this._waitForIpython();
-                // Get workspace name from metadata, or create new
-                var nb = IPython.notebook;
-                var md = nb.metadata;
-                if (md.hasOwnProperty(this.WS_NAME_KEY)) {
-                    // use existing name from notebook metadata
-                    name = md[this.WS_NAME_KEY];
-                }
-                else {
-                    // generate new one, and set into notebook metadata
-                    md[this.WS_NAME_KEY] = name = this._uuidgen();
-                }
-                this.wsName = name;
-                var meta = this._ensureWs(); // ensure workspace exists
-                // create/replace metadata
-                md[this.WS_META_KEY] = meta;
+        setWs: function(set_cb) {
+            if (this.ws_id !== null) {
+                set_cb();
             }
+            var name = null;
+            // Get workspace name from metadata, or create new
+            var nb = IPython.notebook;
+            var md = nb.metadata;
+            if (md.hasOwnProperty(this.WS_NAME_KEY)) {
+                // use existing name from notebook metadata
+                name = md[this.WS_NAME_KEY];
+            }
+            else {
+                // generate new one, and set into notebook metadata
+                //md[this.WS_NAME_KEY] = name = this._uuidgen();
+                // XXX: use one we know exists
+                name = md[this.WS_NAME_KEY] = this.ws_id;
+            }
+
+            console.log("Ensure WS");
+            var that = this;
+            this._ensureWs(name,
+                // callback with value
+                function(meta) { 
+                    that.ws_id = name;
+                    // create/replace metadata
+                    md[this.WS_META_KEY] = meta;
+                    set_cb();
+                }, 
+                // error callback
+                function(err) {
+                    console.log("ERROR: getting workspace meta: " + JSON.stringify(err.error));
+                }
+            );
             return this;
         },
         /**
-         * Ensure workspace this.wsName exists.
+         * Ensure workspace this.ws_id exists.
          *
          * @returns Metadata (mapping) for the workspace
          * @private
          */
-        _ensureWs: function() {
+        _ensureWs: function(name, callback, errorCallback) {
             var wsmeta = null;
             var that = this;
             // look for the workspace
-            console.log("look for the workspace: " + this.wsName);
-            this.wsClient.list_workspaces({auth: this.wsToken}).done(function(wslist) {
-                for (var i=0; i < wslist.length; i++) {
-                     var wsid = wslist[i][0];
-                     if (wsid === that.wsName) {
-                        params = {workspace: wsid, auth: that.wsToken};
-                        wsmeta = wsClient.get_workspace_meta(params);
-                        console.log('using existing workspace: ' + that.wsName);
-                        break;
-                     }
+            console.log("look for the workspace: " + name);
+            this.ws_client.list_workspaces({auth: this.ws_auth}, 
+                function(wslist) {
+                    for (var i=0; i < wslist.length; i++) {
+                         var name_i = wslist[i][0];
+                         if (name_i === name) {
+                            params = {workspace: name_i, auth: that.ws_auth};
+                            wsmeta = that.ws_client.get_workspacemeta(params);
+                            console.log('using existing workspace: ' + name);
+                            break;
+                         }
+                    }
+                    // create, if not found
+                    if (wsmeta === null) {
+                        console.log("  no existing workspace found for " + name);
+                        var params = {
+                            auth: that.ws_auth,
+                            workspace: name,
+                            default_permission: 'w'
+                        };
+                        console.log("create new workspace: " + name);
+                        that.ws_client.create_workspace(params).done(function(result) {
+                            wsmeta = result;
+                        });
+                        // XXX: check return value
+                        console.log('created new workspace: ' + name);
+                    }
+                    callback(wsmeta);
+                }, 
+                function(err) {
+                    errorCallback(err);
                 }
-                // create, if not found
-                if (wsmeta === null) {
-                    console.log("  no existing workspace found");
-                    var params = {
-                        auth: that.wsToken,
-                        workspace: that.wsName,
-                        default_permission: 'w'
-                    };
-                    console.log("create new workspace: " + that.wsName);
-                    that.wsClient.create_workspace(params).done(function(resut) {
-                        wsmeta = result;
-                    });
-                    // XXX: check return value
-                    console.log('created new workspace: ' + that.wsName);
-                }
-            });
-            return wsmeta;
+            );
         },
         /**
          * UUID generator.
@@ -232,20 +250,6 @@
                     return v.toString(16);
                 });
             return(s);
-        },
-        /**
-         * Wait for IPython notebook to exist.
-         *
-         * @returns {null}
-         */
-        _waitForIpython: function() {
-            console.log("wait for IPython to fully load");
-            if (typeof IPython == 'undefined' ||
-                typeof IPython.notebook == 'undefined' ||
-                typeof IPython.notebook.metadata == 'undefined') {
-                setTimeout(this._waitForIpython, 100);
-            }
-            console.log("Houston, the IPython has loaded");
         },
         /**
          * Display new data in the table.
@@ -268,14 +272,9 @@
             return this;
         },
 
-		loggedIn: function(token) {
-            console.log("creating workspace service on loggedIn");
-            /* with auth
-            var auth = {token: token, user: 'narrative'};
-            this.wsClient = new workspaceService(this.options.workspaceURL, auth);
-            */
-            this.wsClient = new workspaceService(this.options.workspaceURL);
-            this.wsToken = token;
+		loggedIn: function(client, token) {
+            console.debug("WorkspaceData.loggedIn");
+            this.ws_client = client, this.ws_auth = token;
             this.isLoggedIn = true;
             this.render();
             return this;

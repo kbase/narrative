@@ -1,0 +1,117 @@
+{ "info": {
+    "pipeline": "coex-example",
+    "name": "testcoex",
+    "project": "default",
+    "user": "default",
+    "clientgroups": "",
+    "sessionId": "$session_id"
+    },
+    "tasks": [
+        {
+            "cmd": {
+                "args": "-i @data_csv --output=data_filtered_csv  --sample_index=@sample_id_csv  $coex_filter",
+                "description": "filtering",
+                "name": "coex_filter"
+            },
+            "dependsOn": [],
+            "inputs": {
+                "data_csv": {
+                    "host": "$shock_uri",
+                    "node": "$expression"
+                },
+                "sample_id_csv": {
+                    "host": "$shock_uri",
+                    "node": "$sample_id"
+                }
+            },
+            "outputs": {
+                "data_filtered_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "0",
+            "skip": 0,
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "args": "-i @data_filtered_csv -o net_edge_csv -m simple -t edge $coex_net",
+                "description": "coex network",
+                "name": "coex_net"
+            },
+            "dependsOn": ["0"],
+            "inputs": {
+                "data_filtered_csv": {
+                    "host": "$shock_uri",
+                    "origin": "0"
+                }
+            },
+            "outputs": {
+                "net_edge_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "1",
+            "skip": 0,
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "args": "-i @data_filtered_csv -o module_csv  -c hclust -n simple $coex_cluster2",
+                "description": "clustering",
+                "name": "coex_cluster2"
+            },
+            "dependsOn": ["1"],
+            "inputs": {
+                "data_filtered_csv": {
+                    "host": "$shock_uri",
+                    "origin": "0"
+                }
+            },
+            "outputs": {
+                "hclust_tree_method=hclust.txt": {
+                    "host": "$shock_uri"
+                },
+                "module_network_edgelist_method=hclust.csv": {
+                    "host": "$shock_uri"
+                },
+                "module_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "2",
+            "skip": 0,
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "args": "-m @module_csv -e @net_edge_csv -a @annotation_csv -o merged_list_json -u $shock_uri/node -s $session_id",
+                "description": "clustering",
+                "name": "merge_csv"
+            },
+            "dependsOn": ["2"],
+            "inputs": {
+                "module_csv": {
+                    "host": "$shock_uri",
+                    "origin": "2"
+                },
+                "net_edge_csv": {
+                    "host": "$shock_uri",
+                    "origin": "1"
+                },
+                "annotation_csv": {
+                    "host": "$shock_uri",
+                    "node": "$annotation"
+                }
+            },
+            "outputs": {
+                "merged_list_json": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "3",
+            "skip": 0,
+            "totalwork": 1
+        }
+    ]
+}

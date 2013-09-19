@@ -9,13 +9,17 @@ and standard KBase makefile targets are in the works.
 
 The ipython narrative is a "profile" of the ipython notebook. The setup and instructions are run using the Python [virtualenv](https://pypi.python.org/pypi/virtualenv) module. If you haven't ever used this module, you should take some time to go familiarize yourself with it now.
 
+All the python dependencies for the notebook are in the bootstrap module under bootstrap/kb_python_runtime/python-pip-list-narrative. If you get that file and run "pip install -r python-pip-list-narrative" it should install all the necessary python module dependencies to run the notebook.
+
 ## Current instructions
 
 For the impatient, the following commands should work to start the KBase notebook.
 
     ./install.sh
     source narrative-venv/bin/activate
-    run_notebook.sh notebook
+    profile_name=narrative run_notebook.sh notebook
+
+That will run the KBase narrative version of the notebook (via the profile_name variable). If you do not set profile_name, then a base IPython Notebook will be started up with no KBase specific code - all KBase code is contained in the narrative profile so that we do not need to fork/branch the base IPython.
 
 Now we will describe these commands step-by-step, and show how you can integrate with an existing set of Python virtual environments.
 
@@ -35,23 +39,11 @@ This line activates the virtual environment. If you use the [virtualenvwrapper](
 
 **Step 3**
 
-    run_notebook.sh notebook
+    profile_name=narrative run_notebook.sh notebook
 
-Finally, `run_notebook.sh` sets up some environment variables and runs ipython in "notebook" mode with the "narrative" profile. The notebooks themselves (i.e. files ending in `.ipynb`) are stored in `~/.narrative`. 
+Finally, `run_notebook.sh` sets up some environment variables and runs ipython in "notebook" mode with the profile specified in profile_name ("narrative"). The notebooks themselves (i.e. files ending in `.ipynb`) are stored in `~/.narrative`. 
 
+Last updated: Steve Chan (sychan) 9/2/2013
 Last updated: Dan Gunter (dang) 8/19/2013
-
-## Old instructions
-
-Run the notebook within this repo by
-
-    cd src
-   ./ipython.sh
-
-This will set the PYTHONPATH to include the src directory, where the biokbase.* modules reside, as well as setting the IPYTHONPATH to include the directory containing a KBase narrative profile that loads a kbase specific environment
-
-Last updated: Steven Chan (sychan) 6/27/2013
-
-
 
 

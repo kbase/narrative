@@ -33,10 +33,27 @@
                 }, this)
             );
 
+            $(document).on(
+                'clearIrisProcesses.kbaseIris',
+                $.proxy(function (e) {
+                    this.clearProcesses(e);
+                }, this)
+            );
+
             this.appendUI(this.$elem);
 
             return this;
 
+        },
+
+        clearProcesses : function (e) {
+            var pids = Object.keys(this.processList());
+            $.each(
+                pids,
+                $.proxy(function (idx, pid) {
+                    this.removeProcess(e, pid);
+                }, this)
+            );
         },
 
         updateProcess : function (e, params) {

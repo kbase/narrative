@@ -113,6 +113,18 @@
                 )
             };
 
+            $(document).on(
+                'loggedInQuery.kbase',
+                $.proxy(function (e, callback) {
+
+                var auth = this.auth();
+                console.log("TRIG AUTH");console.log(auth);
+                    if (callback && auth != undefined && auth.unauthenticated == true) {
+                        callback(auth);
+                    }
+                }, this)
+            );
+
             return this;
 
         },
@@ -152,10 +164,10 @@
         },
 
         loggedOutCallback : function(e) {
-
             this.cwd = '/';
             this.commandHistory = undefined;
             this.terminal.empty();
+            this.trigger('clearIrisProcesses');
         },
 
         addFileBrowser : function ($fb) {
@@ -708,10 +720,11 @@
                     sid,
                     jQuery.proxy(
                         function (newsid) {
-                            var auth = {'kbase_sessionid' : sid, success : true};
+                            var auth = {'kbase_sessionid' : sid, success : true, unauthenticated : true};
 
                             this.terminal.empty();
-                            this.trigger(  'logout', false);
+                            this.trigger('logout', false);
+                            this.trigger('loggedOut');
                             this.trigger('loggedIn', auth );
 
                         },
@@ -737,6 +750,7 @@
                 }
                 sid = args[0];
 
+                this.trigger('loggedOut');
                 this.trigger('promptForLogin', {user_id : sid});
 
                 return;
@@ -752,6 +766,7 @@
             if (m = command.match(/^logout/)) {
 
                 this.trigger('logout', false);
+                this.trigger('loggedOut', false);
                 this.scroll();
                 return;
             }
@@ -1583,13 +1598,14 @@
                     },
                     this
                 ),
-                $.proxy( function(res) { console.log("RIP");this.trigger( 'removeIrisProcess', pid ); }, this)
+                $.proxy( function(res) { this.trigger( 'removeIrisProcess', pid ); }, this)
             );
-            console.log("XHR");
+/*            console.log("XHR");
             console.log(promise.xhr);
             console.log("URL");
             console.log(this.client().url);
             promise.xhr.abort();
+*/
         }
 
     });

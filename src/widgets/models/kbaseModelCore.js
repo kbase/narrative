@@ -13,13 +13,11 @@ $.KBWidget({
         var token = options.auth;
 
         var panel = this.$elem.kbasePanel({title: 'Model Info', 
-                   rightLabel: workspaces[0],
-                   subText: models[0],
-                   body: '<p class="muted loader-overview"> \
-                <img src="assets/img/ajax-loader.gif"> loading...</p> \
-                <div id="core-model"></div>'});
-
-        var container = panel.body();
+                                           rightLabel: workspaces[0],
+                                           subText: models[0],
+                                           body: '<div id="core-model"></div>'});
+        panel.loading();
+        var panel_body = panel.body();
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
@@ -50,6 +48,7 @@ $.KBWidget({
             $.when(graph_AJAX, modelAJAX).done(function(core_data, models_data){
                 var core = join_model_to_core(core_data[0], models_data, kbids);
                 var stage = core_model(core, true);
+                panel.rmLoading();
             });
         }
 

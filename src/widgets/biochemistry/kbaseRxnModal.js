@@ -9,18 +9,18 @@ $.KBWidget({
         this._super(options);
         var self = this;
         var token = options.auth;
-
+       
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');        
 
-        this.show = function(options) {
-            var rxns = options.rxns
-            var model_id = options.model_id;
+        var modal = self.$elem.kbaseModal({title: "Reaction Info", 
+                subText: "Note: this view is currently under development."})
+        modal.loading();
+        var modal_body = modal.body();
 
-            var modal = self.$elem.kbaseModal({title: "Reaction Info", 
-                    subText: "Note: this view is currently under development."})
-            var modal_body = modal.body('<p class="muted loader-rxn"> \
-                    <img src="assets/img/ajax-loader.gif"> loading...</p>');
+        this.show = function(options)  {
+            var rxns = options.rxns
+            var model_id = options.model_id; 
 
             modal.show();
 
@@ -46,9 +46,10 @@ $.KBWidget({
                 }
             })
         }
+      
 
         function rxn_tab(container, data) {
-            container.find('.loader-rxn').remove();
+            container.find('.ajax-loader').remove(); //fixme: fix logic
 
             for (var i in data) {
                 var rxn = data[i];
@@ -125,12 +126,6 @@ $.KBWidget({
             cpds.left = sides[0].match(/cpd\d*/g);
             cpds.right = sides[1].match(/cpd\d*/g);
             return cpds;
-        }
-
-        function get_genome_id(ws_id) {
-            var pos = ws_id.indexOf('.');
-            var ws_id = ws_id.slice(0, ws_id.indexOf('.', pos+1));
-            return ws_id;
         }
 
         $('#rxn-tabs a').click(function (e) {

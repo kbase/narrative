@@ -65,26 +65,16 @@
 
         get_kbase_cookie : function (field) {
 
-            var chips = {};
-
-            var cookieString = $.cookie('kbase_session');
-
-            if (cookieString == undefined) {
-                return field == undefined
-                    ? chips
-                    : undefined;
+            var chips = sessionStorage.getItem('kbase_session');
+            console.log(sessionStorage);
+            if (chips != undefined) {
+            console.log(chips);
+                chips = JSON.parse(chips);
             }
-
-            var pairs = cookieString.split('\|');
-
-            for (var i = 0; i < pairs.length; i++) {
-                var set = pairs[i].split('=');
-                set[1] = set[1].replace(/PIPESIGN/g, '|');
-                set[1] = set[1].replace(/EQUALSSIGN/g, '=');
-                chips[set[0]] = set[1];
+            else {
+                chips = {};
             }
-
-            chips.success = 1;
+            console.log(chips);
 
             return field == undefined
                 ? chips
@@ -249,8 +239,8 @@
                         .css('display', 'none')
                         .append(
                             $('<button></button>')
-                                .addClass('btn')
-                                .addClass('btn-mini')
+                                .addClass('btn btn-default')
+                                .addClass('btn-xs')
                                 .addClass('dropdown-toggle')
                                 .append($('<i></i>').addClass('icon-user'))
                                 .append($('<i></i>').addClass('icon-caret-down'))
@@ -366,10 +356,10 @@
                         .attr('id', 'entrance')
                             .append(
                                 $('<span></span>')
-                                    .addClass('input-prepend input-append')
+                                    .addClass('input-group')
                                     .append(
                                         $('<span></span>')
-                                            .addClass('add-on')
+                                            .addClass('input-group-addon')
                                             .append('username: ')
                                             .bind('click',
                                                 function(e) {
@@ -387,7 +377,7 @@
                                     )
                                     .append(
                                         $('<span></span>')
-                                            .addClass('add-on')
+                                            .addClass('input-group-addon')
                                             .append(' password: ')
                                             .bind('click',
                                                 function(e) {
@@ -419,10 +409,10 @@
                     $('<span></span>')
                         .attr('id', 'userdisplay')
                         .attr('style', 'display : none;')
-                        .addClass('input-prepend')
+                        .addClass('input-group')
                         .append(
                             $('<span></span>')
-                                .addClass('add-on')
+                                .addClass('input-group-addon')
                                 //.attr('style', 'text-align : center')
                                 .append('Logged in as ')
                                 .append(
@@ -434,7 +424,7 @@
                             )
                         .append(
                             $('<button></button>')
-                                .addClass('btn')
+                                .addClass('btn btn-default')
                                 .attr('id', 'logoutbutton')
                                 .append(
                                     $('<i></i>')
@@ -659,7 +649,7 @@
                                     $('<button></button>')
                                         .attr('id', 'logoutbutton')
                                         .append('Logout\n')
-                                        .addClass('btn')
+                                        .addClass('btn btn-default')
                                 )
                         )
                 );
@@ -804,7 +794,8 @@
                                             )
                                             .append(
                                                 $('<div></div>')
-                                                    .attr('class', 'control-group')
+                                                    .attr('class', 'form-group')
+                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
@@ -822,7 +813,8 @@
                                             )
                                             .append(
                                                 $('<div></div>')
-                                                    .attr('class', 'control-group')
+                                                    .attr('class', 'form-group')
+                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
@@ -886,8 +878,10 @@
                 }
             );
 
-            $ld.dialogModal().on('shown',
+            $ld.dialogModal().on('shown.bs.modal',
                 function (e) {
+                console.log("IS SHOWNz!");
+                console.log(                        $(this).data('user_id'));
                     if ($(this).data('user_id').val().length == 0) {
                         $(this).data('user_id').focus();
                     }
@@ -948,24 +942,23 @@
                                     var fields = this.options.fields;
 
                                     for (var i = 0; i < fields.length; i++) {
-                                        //quick 'n dirty escaping 'til I put in something better
                                         var value = data[fields[i]];
                                         args[fields[i]] = value;
-                                        value = value.replace(/=/g, 'EQUALSSIGN');
-                                        value = value.replace(/\|/g, 'PIPESIGN');
-                                        cookieArray.push(fields[i] + '=' + value);
                                     }
+                                    var jsonARGS = JSON.stringify(args);
 
-                                    $.cookie('kbase_session', cookieArray.join('|'));
+                                    sessionStorage.setItem('kbase_session', jsonARGS);
+                                    console.log(sessionStorage);
 
                                     this.populateLoginInfo(args);
+                                    console.log("ARGS");console.log(args);console.log(jsonARGS);
 
                                     this.trigger('loggedIn', this.get_kbase_cookie());
 
                                     callback.call(this,args);
                                 }
                                 else {
-                                    $.removeCookie('kbase_session');
+                                    sessionStorage.removeItem('kbase_session');
                                     this.populateLoginInfo({});
                                     callback.call(this, {status : 0, message : data.error_msg});
 
@@ -1013,7 +1006,7 @@
                 return;
             }
 
-            $.removeCookie('kbase_session');
+            sessionStorage.removeItem('kbase_session');
 
             // the rest of this is just housekeeping.
 

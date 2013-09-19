@@ -71,10 +71,12 @@ Widget to create an accordion control. Easy to use!
 
                         $block.append(
                             $('<div></div>')
-                                .addClass('accordion-group')
+                                .addClass('panel panel-default')
+                                .css('margin-bottom', '2px')
                                 .append(
                                     $('<div></div>')
-                                        .addClass('accordion-heading')
+                                        .addClass('panel-heading')
+                                        .css('padding', '0px')
                                         .append(
                                             $('<i></i>')
                                                 .css('margin-right', '5px')
@@ -87,7 +89,6 @@ Widget to create an accordion control. Easy to use!
                                         )
                                         .append(
                                             $('<a></a>')
-                                                .addClass('accordion-toggle')
                                                 .css('padding', '0px')
                                                 .attr('href', '#')
                                                 .attr('title', val.title)
@@ -96,39 +97,37 @@ Widget to create an accordion control. Easy to use!
 
                                                 .append(val.title)
                                                 //.text(val.title)
-                                                .bind(
-                                                    'click',
-                                                        function(e) {
-                                                            e.preventDefault();
-                                                            var $opened = $(this).closest('.accordion').find('.in');
-                                                            var $target = $(this).parent().next();
+                                        )
+                                        .bind(
+                                            'click',
+                                                function(e) {
+                                                    e.preventDefault();
+                                                    var $opened = $(this).closest('.panel').find('.in');
+                                                    var $target = $(this).next();
 
-                                                            if ($opened != undefined) {
-                                                                $opened.collapse('hide');
-                                                                var $i = $opened.parent().first().find('i');
-                                                                $i.removeClass('icon-chevron-down');
-                                                                $i.addClass('icon-chevron-right');
-                                                            }
+                                                    if ($opened != undefined) {
+                                                        $opened.collapse('hide');
+                                                        var $i = $opened.parent().first().find('i');
+                                                        $i.removeClass('icon-chevron-down');
+                                                        $i.addClass('icon-chevron-right');
+                                                    }
 
-                                                            if ($target.get(0) != $opened.get(0)) {
-                                                                $target.collapse('show');
-                                                                var $i = $(this).parent().find('i');
-                                                                $i.removeClass('icon-chevron-right');
-                                                                $i.addClass('icon-chevron-down');
-                                                            }
+                                                    if ($target.get(0) != $opened.get(0)) {
+                                                        $target.collapse('show');
+                                                        var $i = $(this).parent().find('i');
+                                                        $i.removeClass('icon-chevron-right');
+                                                        $i.addClass('icon-chevron-down');
+                                                    }
 
-                                                        }
-                                                    )
+                                                }
                                             )
                                 )
                                 .append(
                                     $('<div></div>')
-                                        .addClass('accordion-body')
-                                        .append(
-                                            $('<div></div>')
-                                                .addClass('accordion-inner')
-                                                .append(val.body)
-                                            )
+                                        .addClass('panel-body collapse')
+                                        .css('padding-top', '9px')
+                                        .css('padding-bottom', '9px')
+                                        .append(val.body)
                                     )
                             )
                         ;
@@ -140,7 +139,7 @@ Widget to create an accordion control. Easy to use!
             this._rewireIds($block, this);
 
             $elem.append($block);
-            $block.find('.accordion-body').collapse('hide');
+//            $block.find('.panel-body').collapse('hide');
 
         },
 

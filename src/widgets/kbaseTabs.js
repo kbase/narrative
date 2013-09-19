@@ -82,8 +82,8 @@
                 .addClass('nav nav-tabs')
                 .attr('id', 'tabs-nav')
             ;
-
-            if (this.options.tabPosition == 'top') {
+            $block.append($nav).append($tabs);
+            /*if (this.options.tabPosition == 'top') {
                 $block.addClass('tabs-above');
                 $block.append($nav).append($tabs);
             }
@@ -98,7 +98,7 @@
             else if (this.options.tabPosition == 'right') {
                 $block.addClass('tabs-right');
                 $block.append($tabs).append($nav);
-            }
+            }*/
 
             this._rewireIds($block, this);
 
@@ -176,7 +176,7 @@
                         )
                     .append(
                         $('<button></button>')
-                            .addClass('btn btn-mini')
+                            .addClass('btn btn-default btn-xs')
                             .append($('<i></i>').addClass(this.closeIcon()))
                             .css('padding', '0px')
                             .css('width', '22px')

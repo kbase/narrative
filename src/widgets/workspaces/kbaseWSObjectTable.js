@@ -8,7 +8,7 @@ $.KBWidget({
     init: function(options) {
         var self = this;
         this._super(options);
-        extendDefaults()
+        //extendDefaults()
 
         var checkedList = [];        
 

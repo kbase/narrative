@@ -19,7 +19,6 @@ $.KBWidget({
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-        var model;
 
         var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfill', 'Gapgen'];
         var tableIds = ['reaction', 'compound', 'compartment', 'biomass', 'gapfill', 'gapgen'];
@@ -199,7 +198,10 @@ $.KBWidget({
                     gapTable = $('#gapfill-table').dataTable(init_data);
                 }
 
-                // Add search boxes
+                //add_search_boxes()
+            }
+
+            function add_search_boxes() {
                 var single_search = '<th rowspan="1" colspan="1"><input type="text" \
                                           name="search_reactions" placeholder="Search" \
                                           class="search_init input-mini"> \
@@ -215,7 +217,7 @@ $.KBWidget({
                     gapTable.fnFilter( this.value, $("thead input").index(this) );
                 });
 
-                active = true;
+                active = true;                
             }
 
             this.load_table = function(models) {

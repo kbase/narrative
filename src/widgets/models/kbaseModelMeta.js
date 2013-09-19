@@ -15,8 +15,8 @@ $.KBWidget({
         var panel = this.$elem.kbasePanel({title: 'Model Info', 
                                            rightLabel: workspaces[0],
                                            subText: models[0]});
-        var panel_body = panel.body('<p class="muted loader"> \
-                            <img src="assets/img/ajax-loader.gif"> loading...</p>');
+        panel.loading();
+        var panel_body = panel.body();
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
@@ -24,7 +24,7 @@ $.KBWidget({
         var meta_AJAX = kbws.get_objectmeta({type: 'Model',
                             workspace: workspaces[0], id: models[0]});
         $.when(meta_AJAX).done(function(data){
-            panel_body.find('.loader').remove();            
+            console.log(data)
             var labels = ['ID','Type','Moddate','Instance',
                           'Command','Last Modifier','Owner','Workspace','Ref']
 
@@ -34,6 +34,7 @@ $.KBWidget({
                 table.append('<tr><td>'+labels[i]+'</td> \
                               <td>'+data[i]+'</td></tr>');
             }
+            panel.rmLoading();
             panel_body.append(table);
         })
 

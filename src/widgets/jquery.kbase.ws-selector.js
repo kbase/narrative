@@ -533,7 +533,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             + '<button class="btn btn-link" title="Filter Workspaces" style="width: 100%; height: 100%;">'
             + 'Workspaces <span class="caret"></span>'
             + '</button>'
-            + '<button id="create-workspace" class="btn btn-mini"'
+            + '<button id="create-workspace" class="btn btn-xs"'
             + ' style="position: absolute; right: 3px; height: 20px; top: 5px; font-size: 15px; padding: 0px 4px 2px 4px;">'
             + '+'
             + '</button>'
@@ -578,7 +578,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
         });
 
         // add manage button
-        var manage = $('<a class="ws-cell-manage btn btn-mini btn-xmini hide"'
+        var manage = $('<a class="ws-cell-manage btn btn-xs btn-xmini hide"'
                        + ' style="margin-right: 2px; padding-bottom: 2px;"'
                        + ' title="Manage Workspace"><i class="icon-cog"></i></a>');
 
@@ -888,7 +888,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
         var sel = ' selected="selected"';
         var idval = ' id="' + id + '"';
 
-        return '<select' + (id ? idval : '') + ' class="input-small"'
+        return '<select' + (id ? idval : '') + ' class="input-sm"'
             + ' style="margin: 0px;" data-value="' + value + '">'
             + (noNone ? '' : '<option value="n"' + (value === 'n' ? sel : '') + '>none</option>')
             + '<option value="r"' + (value === 'r' ? sel : '') + '>read</option>'

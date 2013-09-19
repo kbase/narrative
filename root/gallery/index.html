@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <meta charset="charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Gallery</title>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" media="screen" charset="utf-8">
+    <style type="text/css" media="screen">
+    body { padding-top: 20px;}    
+    .widget {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 5px;
+        margin-bottom: 30px;
+    }
+    </style>
+</head>
+<body>
+    <script type="text/x-handlebars">
+    <div class="container">
+        <div class="masthead">
+            <h1>Widget Gallery</h1>
+            <p class="lead">Various widgets available at KBase.</p>
+        </div>
+        <div class="row">
+            {{outlet}}
+        </div>
+    </div>
+    </script>
+    
+    <script type="text/x-handlebars" data-template-name="index">
+    {{#each widget in model}}
+    <div class="col-md-4">
+        <div class="widget">
+            <h5>{{widget}}</h5>
+            <p>This is a placeholder for a widget. The widget would appear right in this box.</p>
+        </div>
+    </div>
+    {{/each}}
+    </script>
+    
+    <script src="../js/jquery.js"></script>
+    <script src="../js/handlebars.js"></script>
+    <script src="../js/ember.js"></script>
+    <script src="../js/gallery.js"></script>
+</body>
+</html>

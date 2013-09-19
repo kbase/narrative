@@ -11,14 +11,11 @@ $.KBWidget({
         var token = options.auth;
         var ws = options.ws
 
-        this.$elem.append('<div id="kbase-model-table" class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <h4 class="panel-title">Models</h4>\
-                                    <span class="label label-primary pull-right">'+ws+'</span><br>\
-                                </div>\
-                                <div class="panel-body"></div>\
-                           </div>');
-        var container = $('#kbase-model-table .panel-body');
+
+        var panel = this.$elem.kbasePanel({title: 'Model Info', 
+                                           rightLabel: ws});
+        panel.loading();
+        var panel_body = panel.body();
 
         var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
@@ -34,20 +31,16 @@ $.KBWidget({
         }
 
         var wsAJAX = kbws.list_workspace_objects({workspace: ws, type: "Model", auth: token})
-
-        container.append('<p class="muted loader-table"> \
-                                  <img src="assets/img/ajax-loader.gif"> loading...</p>')
-
         $.when(wsAJAX).done(function(data){
             var dataList = formatObjs(data);
             var labels = ["id", "Type", "Modified", "Command", "Something?", "Owner"];
             var cols = getColumnsByLabel(labels);
             tableSettings.aoColumns = cols;
-            container.append('<table id="rxn-table" class="table table-striped table-bordered"></table>')
+            panel_body.append('<table id="rxn-table" class="table table-striped table-bordered"></table>');
             var table = $('#rxn-table').dataTable(tableSettings);
             table.fnAddData(dataList);
 
-            $('.loader-table').remove()
+            panel.rmLoading();
         });
 
         function formatObjs(models) {

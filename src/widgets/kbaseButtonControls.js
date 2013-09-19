@@ -117,7 +117,7 @@
                         }
                     }
 
-                    var btnClass = 'btn btn-mini';
+                    var btnClass = 'btn btn-default btn-xs';
                     if (val.type) {
                         btnClass = btnClass + ' btn-' + val.type;
                     }

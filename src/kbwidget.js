@@ -580,6 +580,24 @@
             return this;
         }
     }
+    
+    $.KBWidget.registry = function () {
+        var registry = {};
+        for (var widget in widgetRegistry) {
+            if (widget !== 'kbaseWidget') {
+                registry[widget] = widgetRegistry[widget];
+            }
+        }
+        return registry;
+    }
+    
+    $.KBWidget.resetRegistry = function () {
+        for (var widget in widgetRegistry) {
+            if (widget !== 'kbaseWidget') {
+                delete widgetRegistry[widget];
+            }
+        }
+    }
 
     $.KBWidget(
         {

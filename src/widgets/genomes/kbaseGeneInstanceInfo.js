@@ -53,28 +53,71 @@
 
             var self = this;
 
-            var $table = $("<table />")
+            this.$table = $("<table />")
                          .addClass("kbgo-table");
             
+            // Data fetching!
+            // First, get feature data
             this.cdmiClient.fids_to_feature_data(
                 [this.options.featureID],
 
                 function(featureData) {
                     featureData = featureData[self.options.featureID];
 
-                    $table.append(self.makeRow("Function", featureData.feature_function));
-                    $table.append(self.makeRow("Length", featureData.feature_length + " bp"));
-                    $table.append(self.makeRow("Location", $("<div/>")
+                    // Add this data to the table before moving on.
+                    self.$table.append(self.makeRow("Function", featureData.feature_function));
+                    self.$table.append(self.makeRow("Length", featureData.feature_length + " bp"));
+                    self.$table.append(self.makeRow("Location", $("<div/>")
                                                            .append(self.parseLocation(featureData.feature_location))
                                                            .append(self.makeContigButton(featureData.feature_location))));
+
+                    self.cdmiClient.fids_to_dna_sequences([self.options.featureID],
+                        function(dnaSeq) {
+                            self.$table.append(self.makeRow("GC Content", 
+                                    self.calculateGCContent(dnaSeq[self.options.featureID]).toFixed(2) + "%"));
+
+                            self.cdmiClient.fids_to_protein_families([self.options.featureID], self.populateFamilies, self.clientError);
+                        },
+
+                        self.clientError
+                    );
                 },
 
                 this.clientError
             );
 
-            this.$elem.append($table);
+            this.$elem.append(this.$table);
 
             return this;
+        },
+
+        populateFamilies: function(families) {
+            console.log(this);
+
+            families = families[this.options.featureID];
+
+            if (families) {
+                var self = this;
+                this.cdmiClient.protein_families_to_functions(families, 
+                    // on success
+                    function(families) {
+                        var familyStr = '';
+
+                        if (families && families.length != 0) {
+                            for (var fam in families) {
+                                if (families.hasOwnProperty(fam))
+                                    familyStr += fam + ": " + families[fam] + "<br/>";
+                            }
+                        }
+
+                        self.$table.append(self.makeRow("Protein Families", familyStr));
+                    
+                    },
+                    self.clientError
+                );
+            } else {
+                this.makeRow("Protein Families", "None found");
+            }
         },
 
         makeRow: function(name, value) {
@@ -105,6 +148,17 @@
                              );
 
             return $contigBtn;
+        },
+
+        calculateGCContent: function(s) {
+            var gc = 0;
+            s = s.toLowerCase();
+            for (var i=0; i<s.length; i++) {
+                var c = s[i];
+                if (c === 'g' || c === 'c') 
+                    gc++;
+            }
+            return gc / s.length * 100;            
         },
 
         /**

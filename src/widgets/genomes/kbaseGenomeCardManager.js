@@ -57,6 +57,19 @@
                 );
             });
 
+            this.addNewCard("KBaseGenomeOverview", 
+                { 
+                    genomeID: this.options.genomeID,
+                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                    isInCard: true
+                },
+                {
+                    my: "left top",
+                    at: "left bottom",
+                    of: "#app"
+                }
+            );
+
             this.addNewCard("KBaseWikiDescription",
                 {
                     genomeID: this.options.genomeID,
@@ -64,50 +77,10 @@
                 },
                 {
                     my: "left top",
-                    at: "left bottom",
-                    of: "#app"
-                }
-            );
-
-            this.addNewCard("KBaseGenomeOverview", 
-                { 
-                    genomeID: this.options.genomeID,
-                    loadingImage: "../../widgets/images/ajax-loader.gif",
-                },
-                {
-                    my: "left top",
-                    at: "left bottom",
-                    of: "#app"
-                }
-            );
-
-
-            this.addNewCard("KBaseContigBrowser", 
-                { 
-                    contig: "kb|g.0.c.1",
-                    centerFeature: "kb|g.0.peg.2173", 
-                    showButtons: true,
-                    loadingImage: "../../widgets/images/ajax-loader.gif",
-                },
-                {
-                    my: "left top",
                     at: "left+330 bottom",
-                    of: "#app",
-                    collision: "fit"
-                });
-
-            this.addNewCard("KBaseContigBrowser", 
-                { 
-                    contig: "kb|g.0.c.1",
-                    centerFeature: "kb|g.0.peg.4288", 
-                    showButtons: true,
-                    loadingImage: "../../widgets/images/ajax-loader.gif"
-                },
-                {
-                    my: "left top",
-                    at: "left+330 bottom+200",
                     of: "#app"
-                });
+                }
+            );
 
             return this;
         },

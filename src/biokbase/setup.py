@@ -3,7 +3,7 @@ import ez_setup
 ez_setup.use_setuptools()
 from setuptools import setup, find_packages
 
-with open("README.rst") as f:
+with open("README.md") as f:
     long_desc_lines = []
     for line in f:
         if line.strip().startswith('#'):

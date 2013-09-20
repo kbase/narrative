@@ -14,6 +14,9 @@ import string
 import os
 import time
 from IPython.core.display import display, Javascript
+from .widgets import new_widget
+from ast import literal_eval
+from IPython.display import HTML
 
 # Module variables for maintaining KBase Notebook state
 user_id = None
@@ -183,8 +186,33 @@ class kbasemagics(Magics):
         # Call the clear_token method
         clear_token()
         return
-        
 
+    @line_magic
+    def widget(self,line):
+        "Insert the HTML/JS for the name of the widget passed in as the first arg"
+        # for now the defs are a dict in biokbase.narrative.widgets.widgetdef
+        if len(line) > 0:
+            try:
+                (widget_name,params) = line.split(None, 1)
+            except ValueError, v:
+                widget_name = line
+                params = None
+            except:
+                raise
+        else:
+            raise Exception( "Must specify widget name")
+        try:
+            if params is not None:
+                params = eval(params, get_ipython().user_ns)
+                if not isinstance(params,dict):
+                    raise Exception("Widgetname must be followed with dictionary of values to be passed to template")
+                html = new_widget(widget_name, **params)
+            else:
+                html = new_widget(widget_name)
+        except:
+            raise
+        return HTML(html)
+        
     def invoke_session(self):
         "Return the current invocation session id, create one if necessary"
         global user_id, token, user_profile, inv_client, inv_session, endpoint

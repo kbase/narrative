@@ -94,7 +94,7 @@ var IPython = (function (IPython) {
                     callback : function () {
                         IPython.notebook.insert_cell_below('code');
                         }
-                }
+                },
             ],'insert_above_below');
 
         this.add_buttons_group([

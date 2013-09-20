@@ -16,9 +16,10 @@ with open("README.md") as f:
 
 setup(
     name="biokbase",
-    packages=find_packages(exclude=["biokbase.*Service", "biokbase.Genotype_PhenotypeAPI"]),
+    packages=find_packages(),
     version="0.0.1",
-    install_requires=["requests>=1.0"],
+    install_requires=["requests>=1.0", "pyyaml>=3.1",
+                      "rsa", "pyasn1", "paramiko", "pycrypto"],
     extras_require={},
     package_data={"": ["*.json"]},
     author="Steve Chan, Dan Gunter",

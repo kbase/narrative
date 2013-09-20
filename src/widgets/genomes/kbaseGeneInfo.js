@@ -52,6 +52,9 @@
 
 			this.$table = $("<table />")
 						  .addClass("kbgo-table");
+
+			// chain of callbacks.
+			// first, get the Feature entity from CDS
 			this.entityClient.get_entity_Feature(
 				[this.options.featureID], 
 				['feature_type', 'function', 'alias'],
@@ -67,6 +70,7 @@
 						self.$table.append("<tr><td>Alias</td><td>" + feature.alias + "</td></tr>");
 					}
 
+					// Next, get feature data for the publications.
 					self.cdmiClient.fids_to_feature_data(
 						[feature.id],
 

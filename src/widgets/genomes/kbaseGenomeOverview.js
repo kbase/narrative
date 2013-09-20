@@ -8,7 +8,8 @@
             genomeID: null,
             workspace: null,
             loadingImage: "../../widgets/images/ajax-loader.gif",
-            title: "Genome Overview"
+            title: "Genome Overview",
+            isInCard: false
         },
 
         cdmiURL: "https://kbase.us/services/cdmi_api",
@@ -103,33 +104,36 @@
                      * Sort them by length and make a dropdown menu.
                      * Add a button that will open a new card with that contig's browser.
                      */
-                    self.cdmiClient.genomes_to_contigs([self.options.genomeID],
-                        function(contigs) {
-                            self.cdmiClient.contigs_to_lengths(contigs[self.options.genomeID],
-                                function(contigsToLengths) {
-                                    var $dropdown = $("<select />");
-                                    for (var contig in contigsToLengths) {
-                                        $dropdown.append("<option id='" + contig + "'>" + contig + " - " + contigsToLengths[contig] + " bp</option>");
-                                    }
+                    if (self.options.isInCard) {
+                        self.cdmiClient.genomes_to_contigs([self.options.genomeID],
+                            function(contigs) {
+                                self.cdmiClient.contigs_to_lengths(contigs[self.options.genomeID],
+                                    function(contigsToLengths) {
+                                        var $dropdown = $("<select />");
+                                        for (var contig in contigsToLengths) {
+                                            $dropdown.append("<option id='" + contig + "'>" + contig + " - " + contigsToLengths[contig] + " bp</option>");
+                                        }
 
-                                    self.$elem.append($dropdown);
-                                    self.$elem.append($("<button>Show Contig</button>")
-                                                      .on("click", 
-                                                          function(event) {
-                                                              $(self.$elem.selector + " > select option:selected").each(function() {
-//                                                                  console.log(event);
-                                                                  self.trigger("contigSelected", { contig: $(this).attr("id"), event: event });
+                                        self.$elem.append($dropdown);
+                                        self.$elem.append($("<button class='btn btn-default'>Show Contig</button>")
+                                                          .on("click", 
+                                                              function(event) {
+                                                                  $(self.$elem.selector + " > select option:selected").each(function() {
+    //                                                                  console.log(event);
+                                                                      self.trigger("contigSelected", { contig: $(this).attr("id"), event: event });
+                                                                  })
                                                               })
-                                                          })
-                                    );
-                                },
+                                        );
+                                    },
 
-                                self.rpcError
-                            );
-                        },
+                                    self.rpcError
+                                );
+                            },
 
-                        self.rpcError
-                    );
+                            self.rpcError
+                        );
+                    }
+
                 },
 
                 self.rpcError

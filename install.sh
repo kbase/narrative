@@ -100,7 +100,7 @@ cd ..
 
 printf "Installing 'biokbase' package into the virtual environment $venv... \n"
 cd src/biokbase
-python setup.py install
+$PYTHON setup.py install
 cd ../..
 
 

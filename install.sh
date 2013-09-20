@@ -12,20 +12,19 @@ while :
 do
     case $1 in
         -h | --help | -\?)
-            printf "usage: $0 [{-p | --install_path} root_install_path] [{-v | --virtual_env} environment_name] [{-c | commit_id} git_commit_id] [{-n | --name} profile_name]\n"
-            printf "   p : this is an existing absolute path where you would like the virtualenv directory created inside, \n"
-            printf "       e.g. /home/user/my_virtualenv_area\n"
-            printf "       defaults to the current working directory\n"
-            printf "   v : the name of the virtualenv\n"
-            printf "       e.g. /home/user/my_virtualenv_area/my_venv\n"
-            printf "       defaults to 'narrative-venv'\n"
-            printf "   b : the name of the branch of ipython to use\n"
-            printf "       e.g. master\n"
-            printf "       defaults to '1.x'\n"
-            printf "   c : use this git commit id to checkout code\n"
-            printf "       only used if defined, defaults to empty string\n"
-            printf "   n : the name of the profile, e.g. narrative_mongo\n"
-            printf "       the default is ${profile_name}\n"
+            printf "usage: $0 [options]\n"
+            printf "Options:\n"
+            printf "  -p PATH     Parent/root dir for virtualenv directory,\n"
+            printf "              e.g. /home/user/my_virtualenv_area.\n"
+            printf "              (default=current working directory)\n"
+            printf "  -v ENV      The name of the virtualenv, e.g. my_venv\n"
+            printf "              (default=narrative-venv)\n"
+            printf "  -b BRANCH   The name of the branch of ipython to use,\n"
+            printf "              e.g. master (default='1.x')\n"
+            printf "  -c ID       Git commit id to checkout code\n"
+            printf "              only used if defined, defaults to empty string\n"
+            printf "  -n PROFILE  Name of the IPython profile, e.g. narrative_mongo\n"
+            printf "              (default=${profile_name})\n"
             exit 0
             exit 0
             ;;
@@ -97,7 +96,13 @@ source $installPath/$venv/bin/activate
 $PYTHON setup.py install
 cd ..
 
-cp -R "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/biokbase" $installPath/$venv/lib/${PYTHON}/site-packages/
+#cp -R "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/biokbase" $installPath/$venv/lib/${PYTHON}/site-packages/
+
+printf "Installing 'biokbase' package into the virtual environment $venv... \n"
+cd src/biokbase
+$PYTHON setup.py install
+cd ../..
+
 
 printf "Creating start script for ipython notebook...\n"
 

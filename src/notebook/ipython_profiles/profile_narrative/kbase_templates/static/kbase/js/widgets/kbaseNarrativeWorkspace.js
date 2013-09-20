@@ -13,7 +13,9 @@
  */
 
 (function( $, undefined ) {
-	$.KBWidget("kbaseNarrativeWorkspace", 'kbaseWidget', {
+	$.KBWidget({
+        name: "kbaseNarrativeWorkspace", 
+        parent: "kbaseWidget",
 		version: "1.0.0",
 		uploadWidget: 'x',
         dataTableWidget: 'y',

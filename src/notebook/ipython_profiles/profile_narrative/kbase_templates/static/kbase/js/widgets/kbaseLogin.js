@@ -540,6 +540,85 @@
 
         },
 
+        _narrativeStyle: function() {
+             this._createLoginDialog();
+ 
+             var $prompt = $('<span></span>')
+                 .append(
+                     $('<a></a>')
+                         .attr('id', 'loginlink')
+                         .attr('href', '#')
+                         .text('Sign In')
+                         .bind('click',
+                             $.proxy( function(e) {
+                                 e.preventDefault();
+                                 e.stopPropagation();
+                                 this.openDialog();
+                             }, this)
+                         )
+                 )
+                 .append(
+                     $('<span></span>')
+                         .attr('id', 'userdisplay')
+                         .attr('style', 'display : none;')
+                         .addClass('input-prepend')
+                         .append(
+                             $('<span></span>')
+                                 .addClass('add-on')
+                                 //.attr('style', 'text-align : center')
+                                 .append(
+                                     $('<span></span>')
+                                         .attr('id', 'loggedinuser_id')
+                                         .attr('style', 'font-weight : bold')
+                                         .append('user_id\n')
+                                 )
+                             )
+                         .append(
+                             $('<button></button>')
+                                 .addClass('btn btn-default')
+                                 .attr('id', 'logoutbutton')
+                                 .append(
+                                     $('<i></i>')
+                                         .attr('id', 'logouticon')
+                                         .addClass('icon-signout')
+                                 )
+                         )
+                 );
+ 
+             this._rewireIds($prompt, this);
+ 
+             this.registerLogin =
+                 function(args) {
+ 
+                     if ( args.success ) {
+                         this.data("loginlink").hide();
+                         this.data('loggedinuser_id').text(args.name);
+                         this.data("userdisplay").show();
+                         this.data('loginDialog').closePrompt();
+                     }
+                     else {
+                         this.data('loginDialog').dialogModal().trigger('error', args.message);
+                     }
+                 };
+ 
+             this.specificLogout = function(args) {
+                 this.data("userdisplay").hide();
+                 this.data("loginlink").show();
+             };
+ 
+             this.data('logoutbutton').bind('click',
+                 $.proxy(
+                     function(e) {
+                         this.logout();
+                         this.data('user_id').focus();
+                     },
+                     this
+                 )
+             );
+ 
+             return $prompt;
+         },
+
         _microStyle : function() {
             var $prompt = $('<span></span>')
                 .append(
@@ -610,7 +689,7 @@
 
         _buttonStyle : function () {
             var $prompt = $('<div></div>')
-                .attr('style', 'width : 250px; border : 1px solid gray')
+                .attr('style', 'width :px; border : 1px solid gray')
                 .append(
                     $('<h4></h4>')
                         .attr('style', 'padding : 5px; margin-top : 0px; background-color : lightgray ')

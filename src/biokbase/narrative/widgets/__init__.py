@@ -49,6 +49,9 @@ $newDiv.KBaseGenomeOverview({ genomeID: "{{object_id}}" });
 </script>
 """ % get_widget_js('genomes/kbaseGenomeOverview.js')
 
+widgetdef['network-coex'] = """
+<iframe src=http://140.221.85.95/gvisualize/{{ shock_id }} width=800 height=500></iframe>
+"""
 
 def new_widget( widget_name, **kwargs):
     """

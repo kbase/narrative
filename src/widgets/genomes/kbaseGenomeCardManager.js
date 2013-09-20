@@ -12,11 +12,28 @@
             genomeID: null,
             workspaceID: null
         },
+        registeredEvents: ["featureClick", "showContig", "showDomains", "showOperons", "showBiochemistry"],
 
         init: function(options) {
             this._super(options);
     
             var self = this;
+            $(document).on("showDomains", function(event, data) {
+                console.log("domains!");
+                console.log(data);
+            });
+
+            $(document).on("showOperons", function(event, data) {
+                console.log("operons!");
+                console.log(data);
+
+            });
+
+            $(document).on("showBiochemistry", function(event, data) {
+                console.log("biochem!");
+                console.log(data);
+            });
+
             $(document).on("featureClick", function(event, data) {
                 self.addNewCard("KBaseGeneInfo", 
                     { 
@@ -41,7 +58,7 @@
                 );
             });
 
-            $(document).on("contigSelected", function(event, data) {
+            $(document).on("showContig", function(event, data) {
                 self.addNewCard("KBaseContigBrowser",
                     {
                         contig: data.contig,
@@ -87,8 +104,9 @@
 
         destroy: function() {
             this._super();
-            $(document).off("featureClick");
-            $(document).off("contigSelected");
+            for (var i=0; i<this.registeredEvents.length; i++) {
+                $(document).off(registeredEvents[i]);
+            }
         }
     });
 })( jQuery );

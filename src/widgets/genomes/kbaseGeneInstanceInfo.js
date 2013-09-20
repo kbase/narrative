@@ -53,13 +53,18 @@
 
             var self = this;
 
+
+
             this.$table = $("<table />")
                          .addClass("kbgo-table");
             
             // Data fetching!
             // First, get feature data
-            this.cdmiClient.fids_to_feature_data(
-                [this.options.featureID],
+            this.cdmiClient.fids_to_feature_data (
+                [self.options.featureID],
+
+                // this.populateFeatureData,
+                // this.clientError
 
                 function(featureData) {
                     featureData = featureData[self.options.featureID];
@@ -76,7 +81,38 @@
                             self.$table.append(self.makeRow("GC Content", 
                                     self.calculateGCContent(dnaSeq[self.options.featureID]).toFixed(2) + "%"));
 
-                            self.cdmiClient.fids_to_protein_families([self.options.featureID], self.populateFamilies, self.clientError);
+                            self.cdmiClient.fids_to_protein_families([self.options.featureID], 
+                                function(families) {
+
+                                    families = families[self.options.featureID];
+                                    if (families) {
+                                        self.cdmiClient.protein_families_to_functions(families, 
+                                            // on success
+                                            function(families) {
+                                                var familyStr = '';
+
+                                                if (families && families.length != 0) {
+                                                    for (var fam in families) {
+                                                        if (families.hasOwnProperty(fam))
+                                                            familyStr += fam + ": " + families[fam] + "<br/>";
+                                                    }
+                                                }
+
+                                                self.$table.append(self.makeRow("Protein Families", familyStr));
+                                            
+                                            },
+
+                                            self.clientError
+                                        );
+                                    }
+                                    else {
+                                        self.$table.append(self.makeRow("Protein Families", "None found"));
+                                    }
+
+                                },
+
+                                self.clientError
+                            );
                         },
 
                         self.clientError
@@ -88,37 +124,52 @@
 
             this.$elem.append(this.$table);
 
+            var $domainButton = $("<button/>")
+                               .attr("type", "button")
+                               .addClass("btn btn-default")
+                               .append("Domains")
+                               .on("click", function(event) {
+                                   self.trigger("showDomains", {
+                                       event: event,
+                                       featureID: self.options.featureID
+                                   })
+                               });
+
+            var $operonButton = $("<button/>")
+                               .attr("type", "button")
+                               .addClass("btn btn-default")
+                               .append("Operons")
+                               .on("click", function(event) {
+                                   self.trigger("showOperons", {
+                                       event: event,
+                                       featureID: self.options.featureID
+                                   })
+                               });
+
+            var $biochemButton = $("<button/>")
+                               .attr("type", "button")
+                               .addClass("btn btn-default")
+                               .append("Biochemistry")
+                               .on("click", function(event) {
+                                   self.trigger("showBiochemistry", {
+                                       event: event,
+                                       featureID: self.options.featureID
+                                   })
+                               });
+
+
+            var $buttonGroup = $("<div/>")
+                               .attr("align", "center")
+                               .append($("<div/>")
+                                       .addClass("btn-group")
+                                       .append($domainButton)
+                                       .append($operonButton)
+                                       .append($biochemButton));
+            this.$elem.append($buttonGroup);
+
             return this;
         },
 
-        populateFamilies: function(families) {
-            console.log(this);
-
-            families = families[this.options.featureID];
-
-            if (families) {
-                var self = this;
-                this.cdmiClient.protein_families_to_functions(families, 
-                    // on success
-                    function(families) {
-                        var familyStr = '';
-
-                        if (families && families.length != 0) {
-                            for (var fam in families) {
-                                if (families.hasOwnProperty(fam))
-                                    familyStr += fam + ": " + families[fam] + "<br/>";
-                            }
-                        }
-
-                        self.$table.append(self.makeRow("Protein Families", familyStr));
-                    
-                    },
-                    self.clientError
-                );
-            } else {
-                this.makeRow("Protein Families", "None found");
-            }
-        },
 
         makeRow: function(name, value) {
             var $row = $("<tr/>")
@@ -139,7 +190,7 @@
                              .append("Show Contig")
                              .on("click", 
                                  function(event) {
-                                    self.trigger("contigSelected", { 
+                                    self.trigger("showContig", { 
                                         contig: contigID, 
                                         centerFeature: self.options.featureID,
                                         event: event

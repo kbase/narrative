@@ -50,7 +50,10 @@
 
 (function( $, undefined ) {
 
-    $.KBWidget("kbaseLogin", 'kbaseWidget', {
+    $.KBWidget({
+
+		  name: "kbaseLogin",
+
         version: "1.0.0",
         options: {
             style : 'text',
@@ -62,26 +65,16 @@
 
         get_kbase_cookie : function (field) {
 
-            var chips = {};
-
-            var cookieString = $.cookie('kbase_session');
-
-            if (cookieString == undefined) {
-                return field == undefined
-                    ? chips
-                    : undefined;
+            var chips = sessionStorage.getItem('kbase_session');
+            console.log(sessionStorage);
+            if (chips != undefined) {
+            console.log(chips);
+                chips = JSON.parse(chips);
             }
-
-            var pairs = cookieString.split('\|');
-
-            for (var i = 0; i < pairs.length; i++) {
-                var set = pairs[i].split('=');
-                set[1] = set[1].replace(/PIPESIGN/g, '|');
-                set[1] = set[1].replace(/EQUALSSIGN/g, '=');
-                chips[set[0]] = set[1];
+            else {
+                chips = {};
             }
-
-            chips.success = 1;
+            console.log(chips);
 
             return field == undefined
                 ? chips
@@ -220,86 +213,6 @@
         	}
         },
 
-        _narrativeStyle: function() {
-            this._createLoginDialog();
-
-            var $prompt = $('<span></span>')
-                .append(
-                    $('<a></a>')
-                        .attr('id', 'loginlink')
-                        .attr('href', '#')
-                        .text('Sign In')
-                        .bind('click',
-                            $.proxy( function(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                this.openDialog();
-                            }, this)
-                        )
-                )
-                .append(
-                    $('<span></span>')
-                        .attr('id', 'userdisplay')
-                        .attr('style', 'display : none;')
-                        .addClass('input-prepend')
-                        .append(
-                            $('<span></span>')
-                                .addClass('add-on')
-                                //.attr('style', 'text-align : center')
-                                .append('Logged in as ')
-                                .append(
-                                    $('<span></span>')
-                                        .attr('id', 'loggedinuser_id')
-                                        .attr('style', 'font-weight : bold')
-                                        .append('user_id\n')
-                                )
-                            )
-                        .append(
-                            $('<button></button>')
-                                .addClass('btn')
-                                .attr('id', 'logoutbutton')
-                                .append(
-                                    $('<i></i>')
-                                        .attr('id', 'logouticon')
-                                        .addClass('icon-signout')
-                                )
-                        )
-                );
-
-            this._rewireIds($prompt, this);
-
-            this.registerLogin =
-                function(args) {
-
-                    if ( args.success ) {
-                        this.data("loginlink").hide();
-                        this.data('loggedinuser_id').text(args.name);
-                        this.data("userdisplay").show();
-                        this.data('loginDialog').closePrompt();
-                    }
-                    else {
-                        this.data('loginDialog').dialogModal().trigger('error', args.message);
-                    }
-                };
-
-            this.specificLogout = function(args) {
-                this.data("userdisplay").hide();
-                this.data("loginlink").show();
-            };
-
-            this.data('logoutbutton').bind('click',
-                $.proxy(
-                    function(e) {
-                        this.logout();
-                        this.data('user_id').focus();
-                    },
-                    this
-                )
-            );
-
-            return $prompt;
-        },
-
         _textStyle : function() {
             this._createLoginDialog();
 
@@ -326,8 +239,8 @@
                         .css('display', 'none')
                         .append(
                             $('<button></button>')
-                                .addClass('btn')
-                                .addClass('btn-mini')
+                                .addClass('btn btn-default')
+                                .addClass('btn-xs')
                                 .addClass('dropdown-toggle')
                                 .append($('<i></i>').addClass('icon-user'))
                                 .append($('<i></i>').addClass('icon-caret-down'))
@@ -443,10 +356,10 @@
                         .attr('id', 'entrance')
                             .append(
                                 $('<span></span>')
-                                    .addClass('input-prepend input-append')
+                                    .addClass('input-group')
                                     .append(
                                         $('<span></span>')
-                                            .addClass('add-on')
+                                            .addClass('input-group-addon')
                                             .append('username: ')
                                             .bind('click',
                                                 function(e) {
@@ -464,7 +377,7 @@
                                     )
                                     .append(
                                         $('<span></span>')
-                                            .addClass('add-on')
+                                            .addClass('input-group-addon')
                                             .append(' password: ')
                                             .bind('click',
                                                 function(e) {
@@ -496,10 +409,10 @@
                     $('<span></span>')
                         .attr('id', 'userdisplay')
                         .attr('style', 'display : none;')
-                        .addClass('input-prepend')
+                        .addClass('input-group')
                         .append(
                             $('<span></span>')
-                                .addClass('add-on')
+                                .addClass('input-group-addon')
                                 //.attr('style', 'text-align : center')
                                 .append('Logged in as ')
                                 .append(
@@ -511,7 +424,7 @@
                             )
                         .append(
                             $('<button></button>')
-                                .addClass('btn')
+                                .addClass('btn btn-default')
                                 .attr('id', 'logoutbutton')
                                 .append(
                                     $('<i></i>')
@@ -736,7 +649,7 @@
                                     $('<button></button>')
                                         .attr('id', 'logoutbutton')
                                         .append('Logout\n')
-                                        .addClass('btn')
+                                        .addClass('btn btn-default')
                                 )
                         )
                 );
@@ -881,7 +794,8 @@
                                             )
                                             .append(
                                                 $('<div></div>')
-                                                    .attr('class', 'control-group')
+                                                    .attr('class', 'form-group')
+                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
@@ -899,7 +813,8 @@
                                             )
                                             .append(
                                                 $('<div></div>')
-                                                    .attr('class', 'control-group')
+                                                    .attr('class', 'form-group')
+                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
@@ -963,8 +878,10 @@
                 }
             );
 
-            $ld.dialogModal().on('shown',
+            $ld.dialogModal().on('shown.bs.modal',
                 function (e) {
+                console.log("IS SHOWNz!");
+                console.log(                        $(this).data('user_id'));
                     if ($(this).data('user_id').val().length == 0) {
                         $(this).data('user_id').focus();
                     }
@@ -1025,24 +942,23 @@
                                     var fields = this.options.fields;
 
                                     for (var i = 0; i < fields.length; i++) {
-                                        //quick 'n dirty escaping 'til I put in something better
                                         var value = data[fields[i]];
                                         args[fields[i]] = value;
-                                        value = value.replace(/=/g, 'EQUALSSIGN');
-                                        value = value.replace(/\|/g, 'PIPESIGN');
-                                        cookieArray.push(fields[i] + '=' + value);
                                     }
+                                    var jsonARGS = JSON.stringify(args);
 
-                                    $.cookie('kbase_session', cookieArray.join('|'));
+                                    sessionStorage.setItem('kbase_session', jsonARGS);
+                                    console.log(sessionStorage);
 
                                     this.populateLoginInfo(args);
+                                    console.log("ARGS");console.log(args);console.log(jsonARGS);
 
                                     this.trigger('loggedIn', this.get_kbase_cookie());
 
                                     callback.call(this,args);
                                 }
                                 else {
-                                    $.removeCookie('kbase_session');
+                                    sessionStorage.removeItem('kbase_session');
                                     this.populateLoginInfo({});
                                     callback.call(this, {status : 0, message : data.error_msg});
 
@@ -1081,7 +997,7 @@
         logout : function(rePrompt) {
 
             if (rePrompt == undefined) {
-                rePrompt = false;
+                rePrompt = true;
             }
 
             var session_id = this.get_kbase_cookie('kbase_sessionid');
@@ -1090,7 +1006,7 @@
                 return;
             }
 
-            $.removeCookie('kbase_session');
+            sessionStorage.removeItem('kbase_session');
 
             // the rest of this is just housekeeping.
 

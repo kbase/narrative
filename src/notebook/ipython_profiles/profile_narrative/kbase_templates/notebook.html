@@ -16,9 +16,9 @@
 
     {{super()}}
     <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrap-fileupload.min.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/kbase-workspace-mini.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/kbase-narrative-workspace.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/kbase_upload.css") }}" type="text/css" />
+    <!--<link rel="stylesheet" href="{{ static_url("kbase/css/kbase-workspace-mini.css") }}" type="text/css" />-->
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrativeWorkspace.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseUpload.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseData.css") }}" type="text/css" />
 
     <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
@@ -206,21 +206,7 @@ class="notebook_app"
     <div id="left-column">
         <div id="kb-ws">
             <div class="kb-header">Data sets</div>
-            <div class="kb-controls">
-                <div class="dropdown" id='kb-ws-upload-pulldown'>
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#"
-                            id='kb-ws-add-data'>+ Add</a>
-                    <ul class='dropdown-menu' role='menu' aria-labelledby='dLabel'>
-                        <li class='dropdown-header'>Dataset source</li>
-                        <li class='divider'></li>
-                        <li><a href='#'>Central Data Store</a></li>
-                        <li><a href='#'>This project</a></li>
-                        <li><a href='#'>My home</a></li>
-                        <li ><a id='kb-ws-upload-selected' href='#'>Upload</a></li>
-                    </ul>
-                </div>
-                <span id='kb-ws-upload-dialog'></span>
-            </div>
+            <div class="kb-controls"><span id='kb-ws-upload-dialog'></span></div>
             <div class="kb-table">
                 <table>
                     <thead>
@@ -345,17 +331,15 @@ class="notebook_app"
 
 <!-- inserted KBase Javascript below -->
 <script src="{{ static_url("kbase/js/jquery.cookie.min.js") }}" type="text/javascript" charset="utf-8"></script>
-<!-- <script src="{{ static_url("kbase/js/kbase.min.js") }}"  type="text/javascript" charset="utf-8"></script> -->
 <script src="{{ static_url("kbase/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- <script src="{{ static_url("kbase/js/kbase.min.js") }}"  type="text/javascript" charset="utf-8"></script> -->
 <script src="{{ static_url("kbase/js/widgets/kbwidget.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/kbaseLogging.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/workspaceService.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseLogin.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/kbase-narrative.js") }}" type="text/javascript" charset="utf-8"></script>
-
-<script src="{{ static_url("kbase/js/workspaceService.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbase-workspace-mini.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbase-narrative-workspace.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceData.js") }}" type="text/javascript" charset="utf-8"></script>
 

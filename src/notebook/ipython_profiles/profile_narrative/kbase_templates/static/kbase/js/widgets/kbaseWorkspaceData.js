@@ -2,8 +2,7 @@
  * Widget to display a table of data objects from a kbase workspace.
  *
  * Options:
- *    workspaceName - the name of the workspace to show in this widget
- *    workspaceURL - the location of the workspace service (default points to existing deployed service)
+ *    ws_id - the name of the workspace to show in this widget
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    notLoggedInMsg - a string to put in the middle of the widget when not logged in.
  */
@@ -11,21 +10,19 @@
 
 	$.KBWidget("kbaseWorkspaceDataWidget", 'kbaseWidget', {
 		version: "1.0.0",
-		wsClient: null,
+		ws_client: null,
 		table: null,
         tableData: [],
         $loginMessage: null,
         $errorMessage: null,
         $loading: null,
         isLoggedIn: false,
-        wsName: null,
-        wsToken: null,
+        ws_auth: null,
 		options: {
-			//workspaceName: "workspace_1",
-			workspaceURL: "https://www.kbase.us/services/workspace",
 			loadingImage: "ajax-loader.gif",
 			notLoggedInMsg: "Please log in to view a workspace.",
-            container: null
+            container: null,
+            ws_id: null
 		},
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
@@ -33,6 +30,7 @@
 
         init: function(options) {
 			this._super(options);
+            this.ws_id = options.ws_id;
             this.$tbl = options.container;
             this.createTable()
                 .createMessages()
@@ -125,8 +123,8 @@
                 this.$loading.show();
                 var that = this;
                 this.setWs(function() {
-                    var opts = {workspace: that.wsName, auth: that.wsToken};
-                    that.wsClient.list_workspace_objects(opts,
+                    var opts = {workspace: that.ws_id, auth: that.ws_auth};
+                    that.ws_client.list_workspace_objects(opts,
                         function(results) {
                             //console.log("Results: " + results);
                             that.updateResults(results);
@@ -156,17 +154,16 @@
         /**
          * Set or create workspace
          *
-         * Sets this.wsName to name of workspace.
+         * Sets this.ws_id to name of workspace.
          * Also puts this into Notebook metadata.
          *
          * @returns this
          */
         setWs: function(set_cb) {
-            if (this.wsName !== null) {
+            if (this.ws_id !== null) {
                 set_cb();
             }
             var name = null;
-            this._waitForIpython();
             // Get workspace name from metadata, or create new
             var nb = IPython.notebook;
             var md = nb.metadata;
@@ -178,7 +175,7 @@
                 // generate new one, and set into notebook metadata
                 //md[this.WS_NAME_KEY] = name = this._uuidgen();
                 // XXX: use one we know exists
-                name = md[this.WS_NAME_KEY] = 'workspace_1';
+                name = md[this.WS_NAME_KEY] = this.ws_id;
             }
 
             console.log("Ensure WS");
@@ -186,7 +183,7 @@
             this._ensureWs(name,
                 // callback with value
                 function(meta) { 
-                    that.wsName = name;
+                    that.ws_id = name;
                     // create/replace metadata
                     md[this.WS_META_KEY] = meta;
                     set_cb();
@@ -199,7 +196,7 @@
             return this;
         },
         /**
-         * Ensure workspace this.wsName exists.
+         * Ensure workspace this.ws_id exists.
          *
          * @returns Metadata (mapping) for the workspace
          * @private
@@ -209,13 +206,13 @@
             var that = this;
             // look for the workspace
             console.log("look for the workspace: " + name);
-            this.wsClient.list_workspaces({auth: this.wsToken}, 
+            this.ws_client.list_workspaces({auth: this.ws_auth}, 
                 function(wslist) {
                     for (var i=0; i < wslist.length; i++) {
                          var name_i = wslist[i][0];
                          if (name_i === name) {
-                            params = {workspace: name_i, auth: that.wsToken};
-                            wsmeta = that.wsClient.get_workspacemeta(params);
+                            params = {workspace: name_i, auth: that.ws_auth};
+                            wsmeta = that.ws_client.get_workspacemeta(params);
                             console.log('using existing workspace: ' + name);
                             break;
                          }
@@ -224,12 +221,12 @@
                     if (wsmeta === null) {
                         console.log("  no existing workspace found for " + name);
                         var params = {
-                            auth: that.wsToken,
+                            auth: that.ws_auth,
                             workspace: name,
                             default_permission: 'w'
                         };
                         console.log("create new workspace: " + name);
-                        that.wsClient.create_workspace(params).done(function(result) {
+                        that.ws_client.create_workspace(params).done(function(result) {
                             wsmeta = result;
                         });
                         // XXX: check return value
@@ -255,20 +252,6 @@
             return(s);
         },
         /**
-         * Wait for IPython notebook to exist.
-         *
-         * @returns {null}
-         */
-        _waitForIpython: function() {
-            console.log("wait for IPython to fully load");
-            if (typeof IPython == 'undefined' ||
-                typeof IPython.notebook == 'undefined' ||
-                typeof IPython.notebook.metadata == 'undefined') {
-                setTimeout(this._waitForIpython, 100);
-            }
-            console.log("Houston, the IPython has loaded");
-        },
-        /**
          * Display new data in the table.
          *
          * @param results The new data
@@ -289,14 +272,9 @@
             return this;
         },
 
-		loggedIn: function(token) {
-            console.log("creating workspace service on loggedIn");
-            /* with auth
-            var auth = {token: token, user: 'narrative'};
-            this.wsClient = new workspaceService(this.options.workspaceURL, auth);
-            */
-            this.wsClient = new workspaceService(this.options.workspaceURL);
-            this.wsToken = token;
+		loggedIn: function(client, token) {
+            console.debug("WorkspaceData.loggedIn");
+            this.ws_client = client, this.ws_auth = token;
             this.isLoggedIn = true;
             this.render();
             return this;

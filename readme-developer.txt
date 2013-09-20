@@ -8,3 +8,8 @@ Metadata for notebook
 {
    narrative_id: 'string' #identifier (MongoDB '_id') for associated narrative object
 }
+
+SAC demo
+---------
+
+see: ./src/biokbase/narrative/demo

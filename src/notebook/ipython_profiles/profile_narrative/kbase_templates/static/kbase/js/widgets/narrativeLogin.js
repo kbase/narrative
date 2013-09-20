@@ -39,7 +39,7 @@
 
 
         var loginWidget = $("#login-widget").kbaseLogin({ 
-            style: "narrative",
+            style: "text",
             rePrompt: false,
 
             login_callback: function(args) {

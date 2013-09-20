@@ -97,7 +97,7 @@
 
             this.cards[newCardId] = {
                 card: newCard,
-                data: newWidget
+                widget: newWidget
             };
 
             this.cardIndex++;
@@ -118,10 +118,18 @@
 
         listDataObjects: function() {
             for (var cardId in this.cards) {
-                console.log(this.cards[cardId].data.getData());
+                console.log(this.cards[cardId].widget.getData());
             }
-
         },
 
+        exportAllCardsToWorkspace: function(workspace) {
+            for (var cardId in this.cards) {
+                sendCardToWorkspace(cardId, workspace);
+            }
+        },
+
+        exportCardToWorkspace: function(cardId, workspace) {
+            this.cards[cardId].widget.exportToWorkspace(workspace);
+        }
     });
 })( jQuery );

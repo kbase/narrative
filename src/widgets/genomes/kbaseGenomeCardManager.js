@@ -28,6 +28,17 @@
                         of: data.featureElement
                     }
                 );
+
+                self.addNewCard("KBaseGeneInstanceInfo",
+                    {
+                        featureID: data.feature.feature_id,
+                    },
+                    {
+                        my: "left top",
+                        at: "center",
+                        of: data.featureElement
+                    }
+                );
             });
 
             $(document).on("contigSelected", function(event, data) {
@@ -35,7 +46,8 @@
                     {
                         contig: data.contig,
                         showButtons: true,
-                        loadingImage: "../../widgets/images/ajax-loader.gif"
+                        loadingImage: "../../widgets/images/ajax-loader.gif",
+                        centerFeature: data.centerFeature
                     },
                     {
                         my: "left top",
@@ -48,6 +60,8 @@
             this.addNewCard("KBaseGenomeOverview", 
                 { 
                     genomeID: this.options.genomeID,
+                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                    isInCard: true
                 },
                 {
                     my: "left top",
@@ -56,33 +70,17 @@
                 }
             );
 
-
-            this.addNewCard("KBaseContigBrowser", 
-                { 
-                    contig: "kb|g.0.c.1",
-                    centerFeature: "kb|g.0.peg.2173", 
-                    showButtons: true,
+            this.addNewCard("KBaseWikiDescription",
+                {
+                    genomeID: this.options.genomeID,
                     loadingImage: "../../widgets/images/ajax-loader.gif",
                 },
                 {
                     my: "left top",
                     at: "left+330 bottom",
-                    of: "#app",
-                    collision: "fit"
-                });
-
-            this.addNewCard("KBaseContigBrowser", 
-                { 
-                    contig: "kb|g.0.c.1",
-                    centerFeature: "kb|g.0.peg.4288", 
-                    showButtons: true,
-                    loadingImage: "../../widgets/images/ajax-loader.gif"
-                },
-                {
-                    my: "left top",
-                    at: "left+330 bottom+200",
                     of: "#app"
-                });
+                }
+            );
 
             return this;
         },

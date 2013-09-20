@@ -28,11 +28,12 @@ For data in KBase workspace
     height: 30px;
     background-color: #008988;
 }
-#kb-ws .kb-controls input {
-    height: 12px;
-    margin: 3px;
-}
 
+/*#kb-ws .input-group {
+    height: 12px; 
+    padding: 3px;
+}
+*/
 /* Upload pulldown */
 #kb-ws-upload-pulldown {
     position: absolute;

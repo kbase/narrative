@@ -136,7 +136,7 @@ var IPython = (function (IPython) {
 
 
     MainToolBar.prototype.add_celltoolbar_list = function () {
-        var label = $('<span/>').addClass("navbar-text").text('Cell Toolbar:');
+        var label = "Cell Toolbar:"; //$('<span/>').addClass("navbar-text").text('Cell Toolbar:');
         var select = $('<select/>')
             // .addClass('ui-widget-content')
             .attr('id', 'ctb_select')

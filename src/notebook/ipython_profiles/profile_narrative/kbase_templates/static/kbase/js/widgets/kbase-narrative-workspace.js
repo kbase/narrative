@@ -37,10 +37,15 @@
          * @returns this
          */
         initControls: function(elem) {
-            var $search = $('<div>').addClass('kb-search')
-            var $search_inp = $('<input>').attr('type', 'text');
-            $search.append($search_inp);
-            $search.append($('<i>').addClass('icon-search'));
+            var $search = $('<div>').addClass('kb-search');
+
+            var $search_inp_group = $('<div>').addClass('input-group');
+            var $search_inp = $('<input>').attr('type', 'text').addClass('form-control');
+            $search_inp_group.append($search_inp);
+            $search_inp_group.append($('<span>').addClass('input-group-addon').append($('<i>').addClass('icon-search')));
+
+            $search.append($search_inp_group);
+//            $search.append($('<i>').addClass('icon-search'));
             elem.append($search);
             elem.find('.dropdown-toggle').dropdown();
             var opts = {$anchor: $('#kb-ws-upload-selected')};

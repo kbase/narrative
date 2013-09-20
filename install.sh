@@ -5,6 +5,8 @@ venv="narrative-venv"
 branch="1.x"
 commit="" 
 profile_name="narrative"
+# set to your python
+PYTHON=python2.7
 
 while :
 do
@@ -75,7 +77,7 @@ done
 
 
 printf "Creating virtual environment $venv...\n"
-virtualenv --system-site-packages $installPath/$venv
+virtualenv --python=$PYTHON --system-site-packages $installPath/$venv
 
 printf "Pulling ipython branch $branch from github...\n"
 git clone https://github.com/ipython/ipython.git -b $branch
@@ -92,10 +94,10 @@ fi
 
 printf "Installing ipython into the virtual environment $venv...\n"
 source $installPath/$venv/bin/activate
-python setup.py install
+$PYTHON setup.py install
 cd ..
 
-cp -R "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/biokbase" $installPath/$venv/lib/python2.7/site-packages/
+cp -R "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/biokbase" $installPath/$venv/lib/${PYTHON}/site-packages/
 
 printf "Creating start script for ipython notebook...\n"
 

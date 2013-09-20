@@ -147,9 +147,41 @@ var IPython = (function (IPython) {
         // Insert
         this.element.find('#insert_cell_above').click(function () {
             IPython.notebook.insert_cell_above('code');
-        });
+        });  
         this.element.find('#insert_cell_below').click(function () {
             IPython.notebook.insert_cell_below('code');
+        });
+        this.element.find('#insert_rickroll_cell_below').click(function () {
+	    // Function that will handles output from kernel.execute() and
+            // populates a new markdown cell with the contents
+	    var out_handler = function (out_type, out) {
+		console.log(out_type);
+		console.log(out);
+		var res = null;
+		// if output is a print statement
+		if(out_type == "stream"){
+		    res = out.data;
+		}
+		// if output is a python object
+		else if(out_type === "pyout"){
+		    res = out.data["text/plain"];
+		}
+		// if output is a python error
+		else if(out_type == "pyerr"){
+		    res = out.ename + ": " + out.evalue;
+		}
+		// if output is something we haven't thought of
+		else{
+		    res = "[out type not implemented]";   
+		}
+		var cell = IPython.notebook.insert_cell_below('code');
+		cell.set_text( res);
+		IPython.notebook.to_markdown( IPython.notebook.index_or_selected());
+		IPython.notebook.execute_selected_cell();
+	    };
+	    var cmd = 'print biokbase.narrative.widgets.widgetdef["rickroll"]';
+	    console.log( "Calling kernel with ", cmd)
+            IPython.notebook.kernel.execute( cmd, { 'output' : out_handler} );
         });
         // Cell
         this.element.find('#run_cell').click(function () {

@@ -267,8 +267,9 @@
                 'description': file.desc,
             };
             var _p = this.ws_p; // parent obj
+            var objid = this.sanitizeObjectId(file.desc);
             params = {
-                id: 'whatever', // XXX: object id
+                id: objid,
                 type: file.dtype, 
                 workspace: _p.ws_id, // workspace_id
                 command: 'upload', // string
@@ -291,6 +292,17 @@
             //    function())
             return this;
         },
+
+        /**
+         * Takes an arbitrary string and return a version of it that
+         * can be used as a workspace object id.
+         * Illegal chars are replaced by '_'.
+         */
+         sanitizeObjectId: function(oid) {
+            return oid
+                .replace(/[^\w\|.-]/g,"_") // illegal chars -> "_"
+                .replace(/_+/g,"_");       // multiple "___" -> one "_"
+         },
 
         /**
          * Called when an upload succeeds.

@@ -131,10 +131,10 @@
                             that.createTable();
                         },
                         function(err) {
-                            console.log("ERROR: getting workspace objects: " + JSON.stringify(err.error));
+                            console.error("getting objects for workspace " + that.ws_id, err);
                             that.$loading.hide();
                             that.$errorMessage.show();
-                            // XXX: hack to get something in there
+                            /* XXX: put junk in there
                             results = [ ];
                             for (var i=0; i < 5; i++) {
                                 results.push(['luke' + i, 'Genome']);
@@ -144,6 +144,7 @@
                             }
                             that.updateResults(results);
                             that.createTable();
+                            */
                         }
                     )
                     that.$loading.hide();
@@ -160,8 +161,11 @@
          * @returns this
          */
         setWs: function(set_cb) {
-            if (this.ws_id !== null) {
+            console.debug("setWs.begin");
+            if (this.ws_id != null) {
+                console.debug("setWs.end already-set ws_id=" + this.ws_id);
                 set_cb();
+                return;
             }
             var name = null;
             // Get workspace name from metadata, or create new
@@ -172,85 +176,60 @@
                 name = md[this.WS_NAME_KEY];
             }
             else {
-                // generate new one, and set into notebook metadata
-                //md[this.WS_NAME_KEY] = name = this._uuidgen();
-                // XXX: use one we know exists
-                name = md[this.WS_NAME_KEY] = this.ws_id;
+                // use "home" workspace
+                name = md[this.WS_NAME_KEY] = this.getHomeWorkspace();
             }
-
-            console.log("Ensure WS");
-            var that = this;
-            this._ensureWs(name,
-                // callback with value
-                function(meta) { 
-                    that.ws_id = name;
-                    // create/replace metadata
-                    md[this.WS_META_KEY] = meta;
-                    set_cb();
-                }, 
-                // error callback
+            console.debug("Ensuring workspace", name);
+            this.ensureWorkspace(name,
+                function() { set_cb(); },
                 function(err) {
-                    console.log("ERROR: getting workspace meta: " + JSON.stringify(err.error));
-                }
-            );
+                    console.error("Cannot get/create workspace: " + name, err);
+                });
+            this.ws_id = name;
             return this;
         },
+
+        getHomeWorkspace: function() {
+            var _fn = "getHomeWorkspace."
+            var user = "hdresden";
+            if (this.ws_auth != null) {
+                var un = this.ws_auth.match(/un=[\w_]+|/);
+                user = un[0].substr(3, un[0].length - 3);
+                console.debug(_fn + "extract user_name=" + user);
+            }
+            else {
+                console.warn(_fn + "auth-not-set user_name=" + user);
+            }
+            return user + "_home";
+        },
+
         /**
-         * Ensure workspace this.ws_id exists.
-         *
-         * @returns Metadata (mapping) for the workspace
-         * @private
+         * Ensure that workspace `name` exists, by trying to
+         * create it. The provided errorCallback will only be called
+         * if the call to create the workspace failed for some reason
+         * _other_ than the prior existence of the workspace.
          */
-        _ensureWs: function(name, callback, errorCallback) {
-            var wsmeta = null;
-            var that = this;
-            // look for the workspace
-            console.log("look for the workspace: " + name);
-            this.ws_client.list_workspaces({auth: this.ws_auth}, 
-                function(wslist) {
-                    for (var i=0; i < wslist.length; i++) {
-                         var name_i = wslist[i][0];
-                         if (name_i === name) {
-                            params = {workspace: name_i, auth: that.ws_auth};
-                            wsmeta = that.ws_client.get_workspacemeta(params);
-                            console.log('using existing workspace: ' + name);
-                            break;
-                         }
-                    }
-                    // create, if not found
-                    if (wsmeta === null) {
-                        console.log("  no existing workspace found for " + name);
-                        var params = {
-                            auth: that.ws_auth,
-                            workspace: name,
-                            default_permission: 'w'
-                        };
-                        console.log("create new workspace: " + name);
-                        that.ws_client.create_workspace(params).done(function(result) {
-                            wsmeta = result;
-                        });
-                        // XXX: check return value
-                        console.log('created new workspace: ' + name);
-                    }
-                    callback(wsmeta);
-                }, 
-                function(err) {
-                    errorCallback(err);
+        ensureWorkspace: function(name, _callback, _errorCallback) {
+            var _fn = "ensureWorkspace.";
+            var params = {auth: this.ws_auth, workspace: name};
+            console.debug(_fn + "create name=" + name);
+            return this.ws_client.create_workspace(params, _callback, function(result) {
+                var error_text = result.error.message;
+                if (error_text.indexOf("exists") >= 0) {
+                    // The error message will have 'exists' if the workspace already exists.
+                    // XXX: String checks are fragile, but we have no error type codes.
+                    return _callback(result); // stay calm and carry on
                 }
-            );
+                else {
+                    // Something other than workspace already existing;
+                    // pass to user-provided error handler.
+                    console.warn(_fn + "failed");
+                    return _errorCallback(result);
+                }
+            });
         },
-        /**
-         * UUID generator.
-         * @returns {string}
-         */
-        _uuidgen: function() {
-            var s = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-            return(s);
-        },
+
+
         /**
          * Display new data in the table.
          *

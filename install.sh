@@ -110,8 +110,8 @@ printf 'source %s/bin/activate
 export NARRATIVEDIR=%s
 export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
 
-ipython $* --NotebookManager.notebook_dir=~/.narrative --profile=${profile_name}
-' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" &> $installPath/$venv/bin/run_notebook.sh
+ipython $* --NotebookManager.notebook_dir=~/.narrative --profile=%s
+' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" "$profile_name" &> $installPath/$venv/bin/run_notebook.sh
 
 chmod +x $installPath/$venv/bin/run_notebook.sh
 

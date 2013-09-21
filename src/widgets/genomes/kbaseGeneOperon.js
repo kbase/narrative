@@ -13,9 +13,8 @@
 
 		options: {
 			featureID: null,
-			embedInCard: false,
 			auth: null,
-			title: ""
+			title: "Operon"
 		},
 
 		cdmiURL: "https://kbase.us/services/cdmi_api",
@@ -33,9 +32,7 @@
 			this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
 			this.workspaceClient = new workspaceService(this.workspaceURL);
 
-			this.options.title += " - " + this.options.featureID;
-
-			return this.render();
+			return this;
 		},
 
 		render: function(options) {

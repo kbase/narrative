@@ -13,13 +13,13 @@
 
 		options: {
 			featureID: null,
-			embedInCard: false,
 			auth: null,
-			title: ""
+			title: "Domains"
 		},
 
 		cdmiURL: "https://kbase.us/services/cdmi_api",
 		workspaceURL: "https://kbase.us/services/workspace",
+		proteinInfoURL: "https://kbase.us/services/protein_info_service",
 
 		init: function(options) {
 			this._super(options);
@@ -32,6 +32,7 @@
 			this.cdmiClient = new CDMI_API(this.cdmiURL);
 			this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
 			this.workspaceClient = new workspaceService(this.workspaceURL);
+			this.proteinInfoClient = new ProteinInfo(this.proteinInfoURL);
 
 			this.options.title += " - " + this.options.featureID;
 
@@ -39,6 +40,45 @@
 		},
 
 		render: function(options) {
+			var self = this;
+			this.proteinInfoClient.fids_to_domains([this.options.featureID],
+				function(domains) {
+					domains = domains[self.options.featureID];
+
+					var domList = [];
+					for (var i=0; i<domains.length; i++) {
+						domList.push(domains[i]);
+					}
+
+					self.proteinInfoClient.domains_to_domain_annotations(domList,
+						function(domainAnnotations) {
+
+							var $domainTable = $("<table/>")
+											   .addClass("table table-bordered table-striped");
+							if (Object.getOwnPropertyNames(domainAnnotations).length > 0) {
+								for (var i=0; i<domains.length; i++) {
+									$domainTable.append($("<tr>")
+														.append($("<td>")
+																.append(domains[i]))
+														.append($("<td>")
+																.append(domainAnnotations[domains[i]])));
+//									domainStr += domains[i] + ": " + domainAnnotations[domains[i]] + "<br/>";
+								}
+								self.$elem.append($domainTable);
+							}
+							else
+								self.$elem.append("None found");
+
+						},
+
+						self.clientError
+					);
+				},
+
+				this.clientError
+			);
+
+			return this;
 		},
 
         getData: function() {

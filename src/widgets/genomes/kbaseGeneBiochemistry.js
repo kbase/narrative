@@ -39,6 +39,47 @@
 		},
 
 		render: function(options) {
+			var $table = $("<table/>")
+						 .addClass("kbgo-table");
+
+			var self = this;
+			this.cdmiClient.fids_to_roles([this.options.featureID],
+				function(roles) {
+					roles = roles[self.options.featureID];
+					var rolesStr = "None found";
+					if (roles) {
+						rolesStr = roles.join("<br/>");
+					}
+					$table.append($("<tr>")
+								  .append($("<td>")
+								  	      .append("Roles"))
+								  .append($("<td>")
+								  	      .append(rolesStr)));
+
+
+					self.cdmiClient.fids_to_subsystems([self.options.featureID],
+						function(subsystems) {
+							subsystems = subsystems[self.options.featureID];
+							var subsysStr = "None found";
+							if (subsystems) {
+								subsysStr = subsystems.join("<br/>");
+							}
+							$table.append($("<tr>")
+										  .append($("<td>")
+										  	      .append("Subsystems"))
+										  .append($("<td>")
+										  	      .append(subsysStr)));
+						},
+
+						self.clientError
+					)
+				},
+
+				this.clientError
+			)
+
+			this.$elem.append($table);
+			return this;
 		},
 
         getData: function() {

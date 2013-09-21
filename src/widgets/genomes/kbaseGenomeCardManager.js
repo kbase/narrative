@@ -19,19 +19,39 @@
     
             var self = this;
             $(document).on("showDomains", function(event, data) {
-                console.log("domains!");
-                console.log(data);
+                self.addNewCard("KBaseGeneDomains",
+                {
+                    featureID: data.featureID
+                },
+                {
+                    my: "left top",
+                    at: "center",
+                    of: data.event
+                });
             });
 
             $(document).on("showOperons", function(event, data) {
-                console.log("operons!");
-                console.log(data);
-
+                self.addNewCard("KBaseGeneOperon",
+                {
+                    featureID: data.featureID
+                },
+                {
+                    my: "left top",
+                    at: "center",
+                    of: data.event
+                });
             });
 
             $(document).on("showBiochemistry", function(event, data) {
-                console.log("biochem!");
-                console.log(data);
+                self.addNewCard("KBaseGeneBiochemistry",
+                {
+                    featureID: data.featureID
+                },
+                {
+                    my: "left top",
+                    at: "center",
+                    of: data.event
+                });
             });
 
             $(document).on("featureClick", function(event, data) {

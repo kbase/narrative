@@ -120,6 +120,9 @@
             this.ws_auth = token;            
             // grab ws_id to give to, e.g., upload widget
             this.ws_id = this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
+            // refresh the upload dialog, which needs login to populate types
+            console.debug("refresh upload widget");
+            this.uploadWidget.createDialog();
 		},
 
         /**

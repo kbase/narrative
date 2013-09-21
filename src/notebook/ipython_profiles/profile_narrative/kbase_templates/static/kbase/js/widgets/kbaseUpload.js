@@ -44,6 +44,7 @@
             // defaults for instance vars
             this.desc_elem = this.type_elem = null;
             // create the dialog
+            this.data_types = [];
             this.createDialog();
             var that = this;
             options.$anchor.on("click", function() {
@@ -53,11 +54,54 @@
 		},
 
         /**
+         * Create the dialog if data types are accessible.
+         */
+        createDialog: function() {
+            var r  = this._getDataTypes(), self = this;
+            console.debug("got from _getDataTypes: ", r);
+            if (r !== undefined) {
+                // jfc, there has to be an easier way to do this!
+                r.done(function() { self._createDialog(self); });
+            }
+        },
+
+        /**
+         * Populate data types
+         *
+         * @return jQuery Promise object
+         */
+        _getDataTypes: function() {
+            var _fn = "_getDataTypes.";
+            if (this.data_types.length > 0) {
+                return $.Deferred();
+            }
+            var _p = this.ws_p; // alias
+            if (_p.ws_client == null) {
+                console.error("Cannot get data types because no client");
+                return undefined;
+            }
+            console.debug(_fn + "get_types.begin");
+            var _this = this;
+            var r = _p.ws_client.get_types(
+                function(result) { 
+                    $.each(result, function(key, value) { _this.data_types.push(value);});
+                },
+                function(result) { 
+                    console.error(_fn + "get_types.failed msg=", result.error.message); 
+                }                        
+            );
+            return r;
+        },
+
+        /**
          * Create the dialog widget
          *
          * @returns {*}
          */
-        createDialog: function() {
+        _createDialog: function(self) {
+            var _fn = "createDialog.";
+            console.debug(_fn + "begin", "self=", self);
+            var _p = self.ws_p; // alias
             var opts = {
                 modal: true,
                 closeOnEscape: true,
@@ -65,7 +109,8 @@
                 autoOpen: false,
                 width: '50em'
             };
-            this.dlg = this.$elem.dialog(opts);
+            self.dlg = self.$elem.dialog(opts);
+            self.dlg.empty(); // make idempotent
             // Build form programmatically
             var $frm = $('<form>').addClass('form-horizontal');
             var fields = {
@@ -79,7 +124,7 @@
                     type:'select',
                     id:'dataset_type',
                     label:'Dataset Type:',
-                    options: []
+                    options: self.data_types
                 },
                 'dataset': {
                     type:'text',
@@ -89,21 +134,8 @@
                     modified: false
                 }
             };
-            // Populate data types
-            // XXX: fetch these from somewhere!
-            fields.datatype.options = {
-                GenomeFile: "Genome", //XXX: for testing
-                FastaFile: "FASTA",
-                FastqFile: "FASTQ",
-                BedFile: "BED",
-                Gff3File: "GFF3",
-                SamFile: "SAM",
-                BamFile: "BAM",
-                SbmlFile: "SBML",
-                BiomFile: "BIOM",
-                PdbFile: "PDB" };
             // Add each field
-            var that = this;
+            var that = self;
             $.each(fields, function(key, value) {
                 var $frm_grp = $('<div>').addClass('control-group');
                 var $frm_controls = $('<div>').addClass('controls');
@@ -140,7 +172,7 @@
                         // remember whether this value was modified by the user
                         $control.change(function() {
                             // count as modified if non-empty
-                            var modded = this.value === "" ? false : true;
+                            var modded = self.value === "" ? false : true;
                             fields.dataset.modified = modded;
                         });
                         that.desc_elem = $control;
@@ -173,7 +205,7 @@
             $actions.append($cancel_btn);
             $frm.append($actions);
             // Populate dialog with form
-            this.dlg.append($frm);
+            self.dlg.append($frm);
             // Put filename in description, unless user entered something
             $frm.find(':file').change(function(e) {
                 if (fields.dataset.modified) {

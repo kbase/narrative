@@ -180,6 +180,31 @@ def parse_args():
     op.add_argument("-v", "--verbose", dest="vb", action="count", default=0,
                     help="More verbose messages")
     options = op.parse_args()
+    return options
+
+def run(vb=0, **opts):
+    "Run main() with options given as key=value pairs."
+    opts['vb'] = vb
+    optobj = Options(opts)
+    return main(optobj)
+
+class Options:
+    def __init__(self, opts):
+        for key, value in DEFAULTS.iteritems():
+            setattr(self, key, value)
+        for key, value in opts.iteritems():
+            setattr(self, key, value)
+
+def main(options):
+    """Create a narrative for co-expression network workflow
+
+    1. User uploads multiple files to shock and remembers shock node IDs
+    2. An AWE job script is created
+    3. Job is submitted to awe service
+    4. Node ids of output files are provided
+    """
+    sessionID = str(uuid.uuid4())
+
     # Log verbosity
     if options.vb > 1:
         _log.setLevel(logging.DEBUG)
@@ -192,19 +217,7 @@ def parse_args():
         f = getattr(options, key)
         if not os.path.exists(f):
             flag = '--' + key.split('_')[0]
-            op.error("File for {} not found: {}".format(flag, f))
-    return options
-
-def main(options):
-    """Create a narrative for co-expression network workflow
-
-    1. User uploads multiple files to shock and remembers shock node IDs
-    2. An AWE job script is created
-    3. Job is submitted to awe service
-    4. Node ids of output files are provided
-    """
-    sessionID = str(uuid.uuid4())
-
+            raise IOError("File for {} not found: {}".format(flag, f))
     # Configure from JSON
     _log.info("config.read.begin")
     cfg = json.load(open(options.config_file))
@@ -258,18 +271,13 @@ def main(options):
     _log.info("job.end")
 
     # Report results
-    sep = '#' * 40
-    print(sep + "\nDownload and visualize network output\n" + sep)
-
-    print("\nOutput files:")
     download_urls = get_output_files(urls['awe'], job_id)
-    print('\n'.join(['\t\t' + s for s in download_urls]))
+    _log.info("Output files: {}".format('\n'.join(download_urls)))
 
-    print("\nURL to visualize the network")
     viz_urls = [get_url_visualization(urls['awe'], job_id)]
-    print('\n'.join(['\t\t' + s for s in viz_urls]))
+    _log.info("URL to visualize the network: {}", '\n'.join(viz_urls))
 
-    return 0
+    return viz_urls[0]
 
 if __name__ == '__main__':
     options = parse_args()

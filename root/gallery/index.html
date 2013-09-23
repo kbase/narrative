@@ -24,8 +24,13 @@
         </div>
         <div class="row">
             {{outlet}}
+            <div class="col-md-4"><div id="my-widget" class="widget"></div></div>
         </div>
     </div>
+    <script type="text/javascript" charset="utf-8">
+    console.log("Hey", $("#my-widget"))
+    $("#my-widget").KBaseGenomeOverview({});
+    </script>
     </script>
     
     <script type="text/x-handlebars" data-template-name="index">
@@ -40,9 +45,11 @@
     </script>
     
     <script src="../js/jquery.js"></script>
+    <script src="../js/jquery-ui.js"></script>
     <script src="../js/handlebars.js"></script>
     <script src="../js/ember.js"></script>
     <script src="../js/kbase.js"></script>
     <script src="../js/gallery.js"></script>
+    
 </body>
 </html>

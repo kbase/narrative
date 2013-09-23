@@ -87,11 +87,16 @@ var IPython = (function (IPython) {
 
     NotebookList.prototype.load_list = function () {
         var that = this;
+	var token = $("#login-widget").kbaseLogin("session", "token");
+	console.log( "Token = ", token)
         var settings = {
             processData : false,
             cache : false,
             type : "GET",
             dataType : "json",
+	    headers : {
+		'authorization' : 'OAuth ' + token
+	    },
             success : $.proxy(this.list_loaded, this),
             error : $.proxy( function(){
                 that.list_loaded([], null, null, {msg:"Error connecting to server."});
@@ -186,12 +191,16 @@ var IPython = (function (IPython) {
 
     NotebookList.prototype.add_shutdown_button = function (item, kernel) {
         var that = this;
+	var token = $("#login-widget").kbaseLogin("session", "token");
         var shutdown_button = $("<button/>").text("Shutdown").addClass("btn btn-mini").
             click(function (e) {
                 var settings = {
                     processData : false,
                     cache : false,
                     type : "DELETE",
+		    headers : {
+			'authorization' : 'OAuth ' + token
+		    },
                     dataType : "json",
                     success : function (data, status, xhr) {
                         that.load_list();
@@ -229,6 +238,9 @@ var IPython = (function (IPython) {
                                     processData : false,
                                     cache : false,
                                     type : "DELETE",
+				    headers : {
+					'authorization' : 'OAuth ' + token
+				    },
                                     dataType : "json",
                                     success : function (data, status, xhr) {
                                         parent_item.remove();
@@ -261,13 +273,15 @@ var IPython = (function (IPython) {
                 } else if (nbformat === 'py') {
                     content_type = 'application/x-python';
                 };
+		var token = $("#login-widget").kbaseLogin("session", "token");
                 var settings = {
                     processData : false,
                     cache : false,
                     type : 'POST',
                     dataType : 'json',
                     data : nbdata,
-                    headers : {'Content-Type': content_type},
+                    headers : {'Content-Type': content_type,	
+		       'authorization' : 'OAuth ' + token },
                     success : function (data, status, xhr) {
                         that.add_link(data, nbname, item);
                         that.add_delete_button(item);

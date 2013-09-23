@@ -275,7 +275,7 @@ def main(options):
     _log.info("Output files: {}".format('\n'.join(download_urls)))
 
     viz_urls = [get_url_visualization(urls['awe'], job_id)]
-    _log.info("URL to visualize the network: {}", '\n'.join(viz_urls))
+    _log.info("URL to visualize the network: {}".format('\n'.join(viz_urls)))
 
     return viz_urls[0]
 

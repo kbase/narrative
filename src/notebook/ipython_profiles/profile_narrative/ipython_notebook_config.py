@@ -1,5 +1,6 @@
 import os
 import inspect
+import biokbase.narrative.monkeypatch
 
 # Configuration file for ipython-notebook.
 
@@ -158,7 +159,7 @@ c.NotebookApp.webapp_settings = { 'template_path': os.path.join(myfile,"kbase_te
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
+c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics']
 
 # The importstring for the OutStream factory
 # c.IPKernelApp.outstream_class = 'IPython.zmq.iostream.OutStream'

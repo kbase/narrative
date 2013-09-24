@@ -7,8 +7,9 @@ JSDUCK   := $(shell which jsduck)
 DISTDIR      ?= ./dist
 DISTLIB      ?= $(DISTDIR)/kbase.js
 DOCSDIR      ?= $(DISTDIR)/docs
-DISTSRCFILES  = ./src/*.js ./src/widgets/*.js
 MINDISTLIB   ?= $(DISTDIR)/kbase.min.js
+
+FILEORDER     = ./src/file-order.txt
 
 all: test
 
@@ -23,7 +24,8 @@ endif
 	@ $(JSDUCK) --builtin-classes --output $(DOCSDIR) -- ./src
 
 dist: init docs
-	@ $(UGLIFY) $(DISTSRCFILES) --beautify --output $(DISTLIB)
+	@ $(UGLIFY) `cat $(FILEORDER) | sed -e "s/\#.*//g" -e "s|^\.|./src|g"` \
+		--beautify --output $(DISTLIB)
 	@ $(UGLIFY) $(DISTLIB) --comments --compress --mangle --output $(MINDISTLIB)
 
 test: init

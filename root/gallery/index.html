@@ -31,17 +31,29 @@
     <script type="text/x-handlebars" data-template-name="index">
     {{#each widget in model}}
     <div class="col-md-4">
-        <div class="widget">
+        <div class="widget" data-widget-name="{{unbound widget}}">
             <h5>{{widget}}</h5>
-            <p>This is a placeholder for a widget. The widget would appear right in this box.</p>
+            <p>Widget placholder</p>
         </div>
     </div>
     {{/each}}
     </script>
     
     <script src="../js/jquery.js"></script>
+    <script src="../js/jquery-ui.js"></script>
     <script src="../js/handlebars.js"></script>
     <script src="../js/ember.js"></script>
+    <script src="../js/kbase.js"></script>
     <script src="../js/gallery.js"></script>
+
+    <script type="text/javascript" charset="utf-8">
+    $(function () {
+        $(".widget").each(function () {
+            // TODO: Default parameter for all widgets
+            var parameters = {};
+            $.fn[$(this).data("widget-name")].call($(this), parameters);
+        })
+    });
+    </script>
 </body>
 </html>

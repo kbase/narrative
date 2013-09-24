@@ -414,14 +414,17 @@ fieldset {
 }
 
 fieldset label {
-	display: block;
-	margin: 0 0 3px 0;
+/*	display: block;
+*/	margin: 0 0 3px 0;
 	font-weight: bold;
 	font-size: 1em;
 	
 }
 
 fieldset input[type="text"], fieldset select {
+	width: 200px;
+}
+fieldset input[type="password"], fieldset select {
 	width: 200px;
 }
 

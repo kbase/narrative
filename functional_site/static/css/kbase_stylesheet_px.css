@@ -1,0 +1,127 @@
+
+@font-face {
+    font-family: 'OxygenRegular';
+    src: url('Oxygen-webfont.eot');
+    src: url('Oxygen-webfont.eot?#iefix') format('embedded-opentype'),
+         url('Oxygen-webfont.woff') format('woff'),
+         url('Oxygen-webfont.ttf') format('truetype'),
+         url('Oxygen-webfont.svg#OxygenRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'OxygenItalic';
+    src: url('Oxygen-Italic-webfont.eot');
+    src: url('Oxygen-Italic-webfont.eot?#iefix') format('embedded-opentype'),
+         url('Oxygen-Italic-webfont.woff') format('woff'),
+         url('Oxygen-Italic-webfont.ttf') format('truetype'),
+         url('Oxygen-Italic-webfont.svg#OxygenItalic') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'OxygenBold';
+    src: url('Oxygen-Bold-webfont.eot');
+    src: url('Oxygen-Bold-webfont.eot?#iefix') format('embedded-opentype'),
+         url('Oxygen-Bold-webfont.woff') format('woff'),
+         url('Oxygen-Bold-webfont.ttf') format('truetype'),
+         url('Oxygen-Bold-webfont.svg#OxygenBold') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'OxygenBoldItalic';
+    src: url('Oxygen-BoldItalic-webfont.eot');
+    src: url('Oxygen-BoldItalic-webfont.eot?#iefix') format('embedded-opentype'),
+         url('Oxygen-BoldItalic-webfont.woff') format('woff'),
+         url('Oxygen-BoldItalic-webfont.ttf') format('truetype'),
+         url('Oxygen-BoldItalic-webfont.svg#OxygenBoldItalic') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+@font-face {
+    font-family: 'OxygenMonoRegular';
+    src: url('OxygenMono-Regular-webfont.eot');
+    src: url('OxygenMono-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('OxygenMono-Regular-webfont.woff') format('woff'),
+         url('OxygenMono-Regular-webfont.ttf') format('truetype'),
+         url('OxygenMono-Regular-webfont.svg#OxygenMonoRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+@font-face {
+    font-family: 'RobotoBlack';
+    src: url('Roboto-Black-webfont.eot');
+    src: url('Roboto-Black-webfont.eot?#iefix') format('embedded-opentype'),
+         url('Roboto-Black-webfont.woff') format('woff'),
+         url('Roboto-Black-webfont.ttf') format('truetype'),
+         url('Roboto-Black-webfont.svg#RobotoBlack') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+ 
+h1 {
+	font: 24px/28px 'RobotoBlack', Arial, sans-serif;
+	letter-spacing: 0; 
+	color: #232323;
+	font-weight: normal;
+	}
+h2 {
+	font: 20px/24px 'RobotoBlack', Arial, sans-serif; 
+	font-weight: normal; 
+	color: #898989; 
+	letter-spacing: 0;
+	}
+h3 {
+	font: 16px/18px 'RobotoBlack', Arial, sans-serif; 
+	letter-spacing: 0;
+	font-weight: normal;
+	}
+h4 {
+	font: 16px/18px 'OxygenItalic', Arial, sans-serif;
+	letter-spacing: 1px;
+	}
+body {
+	font: 14px/22px 'OxygenRegular', Arial, sans-serif; 
+	color: #333333; 
+	background-color: #fff;
+	}
+strong, b {
+	font-family: 'OxygenBold';
+	font-weight: normal;
+	}
+em, i {
+	font-family: 'OxygenItalic';
+	font-style: normal;
+	}
+strong em, em strong, b i, i b{
+	font-family: 'OxygenBoldItalic';
+	font-style: normal;
+	font-weight: normal;
+	}
+a {
+	color: #0088cc; 
+	text-decoration: none;
+	}
+a:visited {
+	color: #018841;
+	}
+a:hover    {
+	text-decoration: underline;
+	color: #018841;
+	}
+pre, code {
+	font-family: 'OxygenMonoRegular', "Lucida Console", "Lucida Sans Typewriter", monospace;
+	font-style: normal;
+	}
+
+

@@ -49,38 +49,31 @@
   </div>
 </noscript>
 
-<div id="header">
-    <p id="site-title">
-        <a href="kbase.us">KBase</a>
-    </p>
-    <nav>
+<header role="banner">      
+    <div id="logo">
+        <a href="http://www.kbase.us"><img src="{{static_url("kbase/images/kbase_logo.png")}}" alt="KBase User Home" /></a>
+    </div>
+    <nav role="navigation">
         <ul>
-            <li class="selected">
-                Narratives
-            </li>
-            <li>
-                <a href="#">Newsfeed</a>
-            </li>
-            <li>
-                <div class="search-box">
-                    <span id="search-box-name">
-                        <a href="#">Search</a>
-                    </span>
-                    <input type="text" id="search-input" class="search-box-input"/>
-                </div>
-                <select id="search-select">
-                    <option value="cds">Central Data Store</option>
-                </select>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Personal Data Store</a></li>
+            <li id="search_nav">
+                    <a href="#">Search</a>
+                    <input type="text" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input>
+                    
+                
             </li>
         </ul>
     </nav>
 
     {% block login_widget %}
-
-    <div id="login-info">
+        
+    <div id="login-info" class="pull-right">
         <div id="login-widget">
         </div>
-    </div>
+<!--         <span></span>
+        <a href="#" onclick="logout();">log out</a>
+ -->    </div>
 
     <div id="login_widget">
         {% if logged_in %}
@@ -91,7 +84,8 @@
     </div>
 
     {% endblock %}
-</div>
+
+</header>
 
 
 

@@ -1,3 +1,5 @@
+@import url("http://fonts.googleapis.com/css?family=Roboto");
+
 .whiteout-pane {
 	height: 100%;
 	width: 100%;
@@ -26,6 +28,90 @@ body{
 }
 
 /* header styling */
+
+/*body {
+	padding: 0;
+	margin: 0;
+}
+*/
+header[role="banner"] {
+	position: fixed;
+	top: 0;
+	width: 100%;
+
+	border-bottom: 1px solid #E0E0E0;
+	-webkit-box-shadow: 0 1px 10px rgba(0,0,0,.1);
+	-moz-box-shadow: 0 1px 10px rgba(0,0,0,.1);
+	box-shadow: 0 1px 10px rgba(0,0,0,.1);
+}
+
+#logo {
+	float: left;
+	padding-left: 10px;
+} 
+
+nav[role="navigation"] {
+	float: left;
+	margin-left: 10px;
+}
+
+nav[role="navigation"] ul {
+	margin: 0 10px 0 0;
+	display: block;
+	padding: 9px;
+}
+
+
+nav[role="navigation"] ul li {
+	display: inline;
+	margin: 0 10px;
+}
+
+nav[role="navigation"] ul li a {
+	text-decoration: none;
+	font-size: 18px;
+	font-family: 'Roboto';
+	color: #777777;
+	padding: 15px;
+}
+
+nav[role="navigation"] ul li.active a {
+	background-color: #5c9531;
+	color: #fff;
+	-webkit-box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
+	-moz-box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
+	box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
+}
+
+nav[role="navigation"] input[type="text"] {
+	-webkit-border-radius: 4px 4px 4px 4px;
+	-moz-border-radius: 4px 4px 4px 4px;
+	border-radius: 4px 4px 4px 4px;
+	background-color: #ffffff;
+	border: 1px solid #cccccc;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	-webkit-transition: border linear .2s, box-shadow linear .2s;
+	-moz-transition: border linear .2s, box-shadow linear .2s;
+	-o-transition: border linear .2s, box-shadow linear .2s;
+	transition: border linear .2s, box-shadow linear .2s;
+
+	padding: 4px 6px; 
+	font-size: 16px;
+	color: #555555;
+}
+
+#search_terms {
+	width: 350px;
+	background-image: url(search.png);
+	background-size: 22px; 
+	background-repeat:no-repeat;
+	background-position:right center; 
+}
+
+
+
 #narrative-name {
 	font-weight: bold;
 	font-size: 1.4em;
@@ -79,7 +165,7 @@ p#site-title {
 	margin: 5px;
 	font-size: 1.2em;
 }
-
+/*
 nav {
 	padding: 26px 0 0 0;  
 }
@@ -101,7 +187,7 @@ nav ul li.selected {
 	background-color: #F78F1E;	
 	color: #fff;
 }
-
+*/
 .search-box {
 	position: relative;
 	display: inline;

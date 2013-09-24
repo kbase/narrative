@@ -26,9 +26,10 @@
             controlsElem: null
 		},
         ws_client: null,
-        ws_id: 'workspace_1',
+        ws_id: null,
 
 		init: function(options) {
+            console.debug("kbaseNarrativeWorkspace options:", options);
 			this._super(options);
             this.initDataTable(options.tableElem);
             this.initControls(options.controlsElem);
@@ -95,9 +96,8 @@
         initDataTable: function(elem) {
             this.dataTableWidget = elem.kbaseWorkspaceDataWidget({
                 loadingImage: this.options.loadingImage,
-                container: elem,
-                ws_id: this.ws_id
-            });
+                container: elem
+             });
             return this;
         },
 
@@ -120,7 +120,11 @@
             console.debug("NarrativeWorkspace.loggedIn");
             this.ws_client = new workspaceService(this.options.workspaceURL);
             this.ws_auth = token;            
-            this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth);
+            // grab ws_id to give to, e.g., upload widget
+            this.ws_id = this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
+            // refresh the upload dialog, which needs login to populate types
+            console.debug("refresh upload widget");
+            this.uploadWidget.createDialog();
 		},
 
         /**

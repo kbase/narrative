@@ -8,6 +8,13 @@ function workspaceService(url, auth, auth_cb) {
     var _auth_cb = auth_cb;
 
 
+    /*********************  
+     * Base functions 
+     *********************
+     */
+
+    // XXX: this all seems unnec. repetitive --dang
+    
     this.save_object = function (params, _callback, _errorCallback) {
         return json_call_ajax("workspaceService.save_object",
             [params], 1, _callback, _errorCallback);
@@ -158,8 +165,9 @@ function workspaceService(url, auth, auth_cb) {
             [params], 1, _callback, _errorCallback);
     };
 
-    /*
-     * JSON call using jQuery method.
+
+    /**
+     * Low-level JSON call using jQuery method.
      */
     function json_call_ajax(method, params, numRets, callback, errorCallback) {
         var deferred = $.Deferred();
@@ -230,7 +238,8 @@ function workspaceService(url, auth, auth_cb) {
             }
         });
         return deferred.promise();
-    }
+    };
+
 }
 
 

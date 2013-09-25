@@ -29,10 +29,118 @@
     });
 
     function loadFeed() {
-        var token = $("#login-widget").kbaseLogin("session", "token");
-        console.log("loading feed");
-        console.log(token);
-    }
+        var token = $("#login-widget").kbaseLogin("token");
+        var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+        var userName = $("#login-widget").kbaseLogin("get_kbase_cookie", "name");
+
+        if (!userName)
+            userName = "KBase User";
+        $("#kb_name").html(userName);
+
+        loadNarratives();
+        loadDatasets(token, userId, true);
+        loadProjects();
+    };
+
+    function loadNarratives() {
+        // stub for now.
+    };
+
+    function loadDatasets(token, userId, onlyOwned) {
+
+        /**
+         * Flow:
+         * 1. Get all workspaces the user has access to.
+         * 1a. Filter for ws that the user owns. (optional?)
+         * 2. Do a list objects on all of them to get metadata.
+         * 3. Munge that into a table.
+         * 4. Go home and sleep.
+         */
+
+        $("#datasets_loading").css({ 'display' : '' });
+        workspaceClient.list_workspaces({ auth: token },
+            function(wsMetaList) {
+                if (onlyOwned) {
+                    var ownedList = [];
+                    for (var i=0; i<wsMetaList.length; i++) {
+                        if (wsMetaList[i][1] === userId)
+                        ownedList.push(wsMetaList[i]);
+                    }
+                    wsMetaList = ownedList;
+                }
+
+                var allObjectsList = [];
+
+                var getWorkspaceObjects = [], i, len;
+                for (var i=0; i<wsMetaList.length; i++) {
+                    getWorkspaceObjects.push(workspaceClient.list_workspace_objects(
+                        {
+                            workspace: wsMetaList[i][0],
+                            auth: token
+                        },
+                        function(objectList) {
+                            allObjectsList = allObjectsList.concat(objectList);
+                        },
+                        clientError
+                    ));
+                }
+
+                $.when.apply($, getWorkspaceObjects).done(function() {
+                    var objectMetaTable = [];
+                    for (var i=0; i<allObjectsList.length; i++) {
+                        objectMetaTable.push([
+                            "<input type='checkbox' />",
+                            allObjectsList[i][0], // id
+                            allObjectsList[i][1], // type
+                            allObjectsList[i][6], // owner
+                                                  // shared with
+                                                  // source
+                                                  // created
+                            allObjectsList[i][7], // (workspace)
+                            allObjectsList[i][2]  // modified
+                        ]);
+                    }
+
+                    $("#datasets_table").dataTable({
+                        "bLengthChange" : false,
+                        "iDisplayLength": 5,
+                        "aaData" : objectMetaTable,
+                        "aoColumns" : [
+                            { "sTitle" : "&nbsp;" },
+                            { "sTitle" : "ID" },
+                            { "sTitle" : "Type" },
+                            { "sTitle" : "Owner" },
+                            { "sTitle" : "Location" },
+                            { "sTitle" : "Last modified" },
+                        ],
+                        "sPaginationType" : "full_numbers",
+                        "aaSorting" : [[1, "asc"]],
+                        "aoColumnDefs" : [
+                        ]
+                    });
+                    $("#datasets_loading").css({ 'display' : 'none' });
+
+                });
+            },
+
+            clientError
+        );
+    };
+
+    function loadProjects() {
+
+    };
+
+    function clientError(error) {
+        console.debug(error);
+    };
+
+    /* Should get all workspace metadata as a big list and pass it to _callback */
+    function getAllObjectMetadata(token, wsMetaList, _callback, _errorCallback) {
+
+    };
+
+
 
 })( jQuery );
 

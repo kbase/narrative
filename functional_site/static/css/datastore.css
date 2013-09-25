@@ -1,3 +1,5 @@
+@import url("http://fonts.googleapis.com/css?family=Roboto");
+
 body {
 	padding-top: 75px;
 }
@@ -68,6 +70,19 @@ nav[role="navigation"] input[type="text"] {
 	padding: 4px 6px; 
 	font-size: 16px;
 	color: #555555;
+}
+
+.table_section {
+	margin-top: 20px;
+}
+.section_title {
+	background-color: #f2f2f2;
+	border: 1px solid #d3d3d3;
+	color: black;
+	padding: 5px 10px;
+	margin-top: 30px;
+	margin-bottom: 10px;
+	font-size: 16px;
 }
 
 #search_terms {

@@ -22,6 +22,7 @@ import urlparse
 import uuid
 # third-party
 import requests
+from IPython.display import HTML
 # Local
 from biokbase.workspaceService import Client as WsClient
 
@@ -137,7 +138,7 @@ class DataSource(object):
         :return: Two items: metadata (dict) and data (string)
         :rtype: tuple
         """
-        _log.info("{}.read.begin".format(self._type))
+        _log.info("{}.read.begin url={}".format(self._type, self._url))
         try:
             mdata, data = getattr(self, self._type + '_read')()
         except Exception as err:
@@ -372,7 +373,9 @@ def main(options):
     viz_urls = [get_url_visualization(urls['awe'], job_id)]
     _log.info("URL to visualize the network: {}".format('\n'.join(viz_urls)))
 
-    return viz_urls[0]
+    final_url = viz_urls[0]
+    html = '<a href="{}" target="_blank">Click here to visualize the network</a>'.format(final_url)
+    return HTML(html)
 
 if __name__ == '__main__':
     options = parse_args()

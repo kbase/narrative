@@ -161,8 +161,8 @@ p#site-title {
 #login-info {
 	position: absolute;
 	right: 0px;
-	top: 17px;
-	margin: 5px;
+/*	top: 17px;
+*/	margin: 5px;
 	font-size: 1.2em;
 }
 /*

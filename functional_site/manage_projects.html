@@ -6,7 +6,7 @@
      Stylesheets
 -->
 <link href="static/bootstrap-3.0.0/css/bootstrap.min.css" rel="stylesheet" />
-<link href="static/css/kbase_stylesheet_px.css" rel="stylesheet" />
+<link href="static/css/kbase_stylesheet.css" rel="stylesheet" />
 
 
 
@@ -25,7 +25,23 @@
                 <div id="login_info">joescientist@cnl.gov <a href="#">log out</a></div>
         </header>
    	<div id="maincontainer">
-		
+   		<div id="subnav">
+   			<ul>
+   				<li>Profile</li>
+   				<li>Manage Subscriptions</li>
+				<li>Manage Projects</li>
+				<li>Manage Teams</li>
+			</ul>
+		</div>
+		<div id="maincontent">
+			<h1>Manage Projects</h1>
+			<p>A project holds assets that can be shared by members. Project members can be individuals or teams. You also set permissions for all assets shared in the project, but you can set additional permissions on any individual asset. <a href="help_projects.html">Learn more</a>.</p>
+			<h2>Create a New Project</h2>
+			<label for="projectname">Project Name</label>
+			<input type="text" id="projectname" /> <button>Add</button>
+			<h2>Thermophile Habits in the Southern Ocean</h2><button>View Project Assets</button><button>Archive</button>
+			<p>Project Permissions</p>
+			<p>undergrads (team) <select><option>Read and comment only</option></select><button>Update</button></p>
     </div>
 
     <br clear = 'all'/>

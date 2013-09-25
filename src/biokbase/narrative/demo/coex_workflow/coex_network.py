@@ -18,9 +18,12 @@ import os
 from string import Template
 import sys
 import time
+import urlparse
 import uuid
 # third-party
 import requests
+# Local
+from biokbase.workspaceService import Client as WsClient
 
 ## Configure logging
 
@@ -39,6 +42,21 @@ class UploadException(Exception):
 
 class SubmitException(Exception):
     pass
+
+
+class ServerError(Exception):
+    pass
+
+
+## Global vars, constants
+
+# Run options
+DEFAULTS = dict(
+    config_file="config.json",
+    job_file="awe_job.json",
+    ws_url="https://www.kbase.us/services/workspace")
+
+g_ws_url = DEFAULTS['ws_url']
 
 ## Classes
 
@@ -88,6 +106,70 @@ class JobStatus(object):
     def __init__(self, data):
         self.count = data.get("remaintasks", -1)
 
+
+class DataSource(object):
+    """Generalize the data source to include files and workspaces.
+    """
+    SCHEME = dict(file_='file', ws_='workspace')
+
+    def __init__(self, url):
+        _log.debug("DataSource.open url={}".format(url))
+        u = urlparse.urlsplit(url)
+        if u.scheme:
+            self._type = self.SCHEME[u.scheme + '_']
+            if u.scheme == 'file':
+                self._url = u.path
+            elif u.scheme == 'ws':
+                if u.netloc:
+                    self._ws_name = u.netloc
+                    self._url = u.path[1:]
+                else:
+                    raise ValueError("Missing workspace name")   #XXX: figure it out
+            else:
+                assert (False)
+        else:
+            self._url = url
+            self._type = self.SCHEME['file_']
+
+    def read(self):
+        """Read from the data source.
+
+        :return: Two items: metadata (dict) and data (string)
+        :rtype: tuple
+        """
+        _log.info("{}.read.begin".format(self._type))
+        try:
+            mdata, data = getattr(self, self._type + '_read')()
+        except Exception as err:
+            _log.error("{}.read.failed msg={}".format(self._type, err))
+            raise
+        _log.info("{}.read.end".format(self._type))
+        return mdata, data
+
+    def file_read(self):
+        f = open(self._url)
+        return {}, f.read()
+
+    def workspace_read(self):
+        ws = WsClient.workspaceService(g_ws_url)
+        #_log.debug("WsClient.create.end headers={}".format(ws._headers))
+        datatype = 'Media'
+        params = {
+            'id': self._url,
+            'workspace': self._ws_name,
+            'type': datatype,
+            'auth': ws._headers.get('AUTHORIZATION', '')
+        }
+        _log.debug("{}.get_object url={} params={}".format(self._type, g_ws_url, params))
+        try:
+            result = ws.get_object(params)
+        except WsClient.ServerError as err:
+            err_msg = str(err)
+            err_msg = err_msg[:err_msg.find('Trace')]  # cut out ugly Perl stack trace
+            _log.debug("{}.get_object.failed msg={}".format(self._type, err_msg))
+            raise ServerError(err_msg)
+        return result['metadata'], result['data']['bytes']
+
 ## Functions
 
 def join_stripped(iterable):
@@ -95,7 +177,7 @@ def join_stripped(iterable):
 
 
 def upload_file(uri, filename, att_content):
-    file_contents = join_stripped(open(filename))
+    _, file_contents = DataSource(filename).read() # join_stripped(open(filename))
     data = {'upload': (filename, file_contents),
             'attributes': ('', att_content)}
     _log.debug("upload.request data={}".format(data))
@@ -162,12 +244,6 @@ def submit_awe_job(uri, awe_job_document):
 ## MAIN ##
 
 
-# Run options
-DEFAULTS = dict(
-    config_file="config.json",
-    job_file="awe_job.json")
-
-
 def parse_args():
     d = DEFAULTS    # alias
     op = argparse.ArgumentParser()
@@ -182,18 +258,39 @@ def parse_args():
     options = op.parse_args()
     return options
 
-def run(vb=0, **opts):
-    "Run main() with options given as key=value pairs."
-    opts['vb'] = vb
+
+def run(vb=0, config_file=None, job_file=None):
+    """Run main() with options given.
+
+    For the 'file' inputs, either a filename or
+    a URL with an optional scheme is accepted.
+    For scheme "ws:" the URL is parsed as "ws://<workspace>/<object-id>"
+    and the object is looked up in the given workspace.
+
+    :param vb: Verbosity, 0=least 3=greatest
+    :type vb: int
+    :param config_file: Configuration data source name
+    :type config_file: str
+    :param job_file: AWE job data source name
+    :type job_file: str
+
+    """
+    opts = {'vb': vb}
+    if config_file is not None:
+        opts['config_file'] = config_file
+    if job_file is not None:
+        opts['job_file'] = job_file
     optobj = Options(opts)
     return main(optobj)
 
-class Options:
+
+class Options(object):
     def __init__(self, opts):
         for key, value in DEFAULTS.iteritems():
             setattr(self, key, value)
         for key, value in opts.iteritems():
             setattr(self, key, value)
+
 
 def main(options):
     """Create a narrative for co-expression network workflow
@@ -212,17 +309,14 @@ def main(options):
         _log.setLevel(logging.INFO)
     else:
         _log.setLevel(logging.WARN)
-    # check that input files exist
-    for key in 'config_file', 'job_file':
-        f = getattr(options, key)
-        if not os.path.exists(f):
-            flag = '--' + key.split('_')[0]
-            raise IOError("File for {} not found: {}".format(flag, f))
+
     # Configure from JSON
     _log.info("config.read.begin")
-    cfg = json.load(open(options.config_file))
+    _, cfg_raw = DataSource(options.config_file).read()
     _log.info("config.read.end")
+    _log.debug("config.read.info value={}".format(cfg_raw))
     # local aliases
+    cfg = json.loads(cfg_raw)
     files, descs, urls = cfg['files'], cfg['files_desc'], cfg['urls']
 
     # Create metadata for each file type
@@ -231,7 +325,7 @@ def main(options):
         metadata[file_type] = {
             "pipeline": "coexpression network",
             "file_name": file_name,
-            "file_type": "expression_file",
+            "file_type": "expression_file",  # XXX: or, file_type?
             "description": descs[file_type],
             "sessionID": sessionID
         }
@@ -247,7 +341,8 @@ def main(options):
     _log.debug("upload.shock.end ids={}".format(','.join(shock_ids.values())))
 
     # Read & substitute values into job spec
-    awe_job = json.load(open(options.job_file))
+    _, awe_job_raw = DataSource(options.job_file).read()
+    awe_job = json.loads(awe_job_raw)
     subst = shock_ids.copy()
     subst.update(cfg['args'])
     subst.update(dict(shock_uri=urls['shock'], session_id=sessionID))

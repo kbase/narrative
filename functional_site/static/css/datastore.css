@@ -1,0 +1,179 @@
+body {
+	padding-top: 75px;
+}
+
+header[role="banner"] {
+	position: fixed;
+	top: 0;
+	width: 100%;
+	background-color: #fff;
+	border-bottom: 1px solid #E0E0E0;
+	-webkit-box-shadow: 0 1px 10px rgba(0,0,0,.1);
+	-moz-box-shadow: 0 1px 10px rgba(0,0,0,.1);
+	box-shadow: 0 1px 10px rgba(0,0,0,.1);
+}
+
+#logo {
+	float: left;
+	padding-left: 10px;
+} 
+
+nav[role="navigation"] {
+	float: left;
+	margin-left: 10px;
+}
+
+nav[role="navigation"] ul {
+	margin: 0 10px 0 0;
+	display: block;
+	padding: 9px;
+}
+
+
+nav[role="navigation"] ul li {
+	display: inline;
+	margin: 0 10px;
+}
+
+nav[role="navigation"] ul li a {
+	text-decoration: none;
+	font-size: 18px;
+	font-family: 'Roboto';
+	color: #777777;
+	padding: 15px;
+}
+
+nav[role="navigation"] ul li.active a {
+	background-color: #5c9531;
+	color: #fff;
+	-webkit-box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
+	-moz-box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
+	box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
+}
+
+nav[role="navigation"] input[type="text"] {
+	-webkit-border-radius: 4px 4px 4px 4px;
+	-moz-border-radius: 4px 4px 4px 4px;
+	border-radius: 4px 4px 4px 4px;
+	background-color: #ffffff;
+	border: 1px solid #cccccc;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	-webkit-transition: border linear .2s, box-shadow linear .2s;
+	-moz-transition: border linear .2s, box-shadow linear .2s;
+	-o-transition: border linear .2s, box-shadow linear .2s;
+	transition: border linear .2s, box-shadow linear .2s;
+
+	padding: 4px 6px; 
+	font-size: 16px;
+	color: #555555;
+}
+
+#search_terms {
+	width: 350px;
+	background-image: url(search.png);
+	background-size: 22px; 
+	background-repeat:no-repeat;
+	background-position:right center; 
+}
+
+/** styling for the feed area */
+#feed_section {
+	padding-left:40px;
+	padding-right: 30px;
+}
+
+/** styling for the narrative column */
+#narrative_column{
+    padding: 30px 30px 0 20px;
+	border-right: 1px solid #898989;
+	position: fixed;
+	bottom: 0;
+	top: 75px;
+	background-color: #E6E6E6;
+	
+}
+
+/* this is for the little 'more' tab */
+#narrative_column:after {
+	content: "more\a0\a0\21E7";
+	padding-left: 20px;
+	padding-right: 10px;
+	width: 60px;
+	height: 23px;
+	position: absolute;
+	top: 30px;
+	right: -56px;
+	border-right: 1px solid #898989;
+	border-top: 1px solid #898989;
+	background-color: #E6E6E6;
+	-moz-border-radius-topright: 10px;
+	border-top-right-radius: 10px;
+	font-size: 16px;
+	z-index: 100;
+
+	-webkit-transform:rotate(90deg); 
+	  -moz-transform:rotate(90deg); 
+	  -ms-transform:rotate(90deg); 
+	  -o-transform:rotate(90deg); 
+	  transform:rotate(90deg);
+
+}
+
+/** styling for the metrics section */
+#maincontent #metrics_section, #maincontent #login_section {
+
+	padding: 5px 20px 20px 20px;
+	border: 1px solid #E6E6E6;
+	background-color: #E6E6E6;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+	margin: 10px;
+	
+}
+
+.stats_section {
+	overflow: auto;
+	margin-bottom: 20px;
+}
+
+.stats_section h3 {
+	line-height: 10px;
+}
+
+.colstats {
+	clear: both;
+}
+
+/** styling for the kbase feed section */
+#kbase_feed {
+	margin: 0;
+	padding-top: 30px;
+}
+
+/** H styling */
+h1 {
+	font-family:'Roboto', Arial, sans-serif;
+	letter-spacing: 0; 
+	color: #232323;
+	}
+h2 {
+	font-family: 'Roboto', Arial, sans-serif; 
+	color: #898989; 
+	letter-spacing: 0;
+	}
+h3 {
+	font-family: 'Roboto', Arial, sans-serif; 
+	letter-spacing: 0;
+	}
+h4 {
+	font-family: 'Oxygen', Arial, sans-serif;
+	font-style: italic;
+	letter-spacing: .07em;
+	}
+	
+
+span.aside {
+	font-style: italic;
+}

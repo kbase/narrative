@@ -25,6 +25,7 @@ import requests
 from IPython.display import HTML
 # Local
 from biokbase.workspaceService import Client as WsClient
+from .coex_network_config import CONFIG
 
 ## Configure logging
 
@@ -53,8 +54,6 @@ class ServerError(Exception):
 
 # Run options
 DEFAULTS = dict(
-    config_file="config.json",
-    job_file="awe_job.json",
     ws_url="https://www.kbase.us/services/workspace")
 
 g_ws_url = DEFAULTS['ws_url']
@@ -246,46 +245,41 @@ def submit_awe_job(uri, awe_job_document):
 
 
 def parse_args():
-    d = DEFAULTS    # alias
     op = argparse.ArgumentParser()
-    op.add_argument("-c", "--config", dest="config_file", default=d["config_file"],
-                  help="JSON configuration file with urls, files, etc. "
-                        "(default={})".format(d["config_file"]))
-    op.add_argument("-j", "--job", dest="job_file", default=d["job_file"],
-                  help="AWE job JSON configuration file "
-                       "(default={})".format(d["job_file"]))
     op.add_argument("-v", "--verbose", dest="vb", action="count", default=0,
                     help="More verbose messages")
     options = op.parse_args()
     return options
 
 
-def run(vb=0, config_file=None, job_file=None):
+def run(vb=0, **inputs):
     """Run main() with options given.
 
-    For the 'file' inputs, either a filename or
-    a URL with an optional scheme is accepted.
-    For scheme "ws:" the URL is parsed as "ws://<workspace>/<object-id>"
-    and the object is looked up in the given workspace.
+    Inputs are a dictionary with the following 3 keys:
+    * expression
+    * sample_id
+    * annotation
+
+    The value of each key should be a file or ws:// url.
 
     :param vb: Verbosity, 0=least 3=greatest
     :type vb: int
-    :param config_file: Configuration data source name
-    :type config_file: str
-    :param job_file: AWE job data source name
-    :type job_file: str
-
     """
     opts = {'vb': vb}
-    if config_file is not None:
-        opts['config_file'] = config_file
-    if job_file is not None:
-        opts['job_file'] = job_file
+    # Set inputs
+    req_inputs = CONFIG['config']['files'].keys()
+    for ri in req_inputs:
+        if not ri in inputs:
+            desc = CONFIG['config']['files_desc'][ri]
+            raise ValueError("Required input missing: '{}' - {}".format(ri, desc))
+        CONFIG['config']['files'][ri] = inputs[ri]
+    opts.update(CONFIG)
     optobj = Options(opts)
     return main(optobj)
 
 
 class Options(object):
+    "Make dict keys also accessible as attrs"
     def __init__(self, opts):
         for key, value in DEFAULTS.iteritems():
             setattr(self, key, value)
@@ -311,13 +305,8 @@ def main(options):
     else:
         _log.setLevel(logging.WARN)
 
-    # Configure from JSON
-    _log.info("config.read.begin")
-    _, cfg_raw = DataSource(options.config_file).read()
-    _log.info("config.read.end")
-    _log.debug("config.read.info value={}".format(cfg_raw))
     # local aliases
-    cfg = json.loads(cfg_raw)
+    cfg = options.config
     files, descs, urls = cfg['files'], cfg['files_desc'], cfg['urls']
 
     # Create metadata for each file type
@@ -342,8 +331,7 @@ def main(options):
     _log.debug("upload.shock.end ids={}".format(','.join(shock_ids.values())))
 
     # Read & substitute values into job spec
-    _, awe_job_raw = DataSource(options.job_file).read()
-    awe_job = json.loads(awe_job_raw)
+    awe_job = options.awe_job
     subst = shock_ids.copy()
     subst.update(cfg['args'])
     subst.update(dict(shock_uri=urls['shock'], session_id=sessionID))

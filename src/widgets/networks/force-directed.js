@@ -23,7 +23,7 @@
             return this;
         },
         render: function () {
-            this.$elem.append($("<h1>").text("Hello World"));
+            this.$elem.empty().append($("<h3>").text("Network Widget"));
             return this;
         }
     });

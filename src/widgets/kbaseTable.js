@@ -83,6 +83,7 @@
         },
 
         appendUI : function ($elem, struct) {
+            struct = (struct || {});
 
             $elem.empty();
 

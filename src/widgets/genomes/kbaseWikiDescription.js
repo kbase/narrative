@@ -204,7 +204,7 @@
         },
 
 		clientError: function(error) {
-
+			console.debug(error);
 		},
 
 	})

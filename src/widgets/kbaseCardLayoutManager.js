@@ -5,7 +5,7 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "KBaseGenomeCardManager",
+        name: "KBaseCardLayoutManager",
         parent: "KBaseCardManager",
         version: "1.0.0",
         options: {
@@ -23,8 +23,11 @@
         },
 
         showInitialCards: function() {
-            if (this.options.template === "genome")
+            if (this.options.template.toLowerCase() === "genome")
                 this.showGenomeCards();
+            else {
+                // throw an error. modal dialog, maybe?
+            }
         },
 
         showGenomeCards: function() {

@@ -181,9 +181,7 @@ function navEvent() {
 }
 
 function removeCards() {
-    $("#genomes").KBaseGenomeCardManager("removeAllCards");
-    $("#genomes").KBaseGenomeCardManager("poke");
-    $("#genomes").remove();
+    $("#genomes").destroy();
 }
 
 /*
@@ -200,11 +198,7 @@ function genome_view(params) {
     if (!params)
         $("#genomes").append("No id given");
     else {
-        $("#genomes").KBaseGenomeCardManager(params);
-        // if (params.genomeId)
-        //     $("#genomes").append(" - " + params.genomeId);
-        // if (params.workspaceId)
-        //     $("#genomes").append(" - " + params.workspaceId);
+        $("#genomes").KBaseCardLayoutManager( {template: "genome", data: params} );
     }
 }
 

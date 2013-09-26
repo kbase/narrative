@@ -1,6 +1,6 @@
 import os
 import inspect
-import biokbase.narrative.monkeypatch
+import biokbase.narrative.monkeypatch as monkeypatch
 
 # Configuration file for ipython-notebook.
 
@@ -111,6 +111,7 @@ myfile = os.path.dirname( myfile)
 c.NotebookApp.webapp_settings = { 'template_path': os.path.join(myfile,"kbase_templates"),
                                   'static_path': os.path.join(myfile,"kbase_templates","static") }
 
+c.NotebookApp.kbase_auth = True
 
 # Specify what command to use to invoke a web browser when opening the notebook.
 # If not specified, the default browser will be determined by the `webbrowser`
@@ -497,3 +498,9 @@ c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics']
 # Tweaks for running notebook
 #----------------------
 c.IPKernelApp.pylab = 'inline'
+
+# Do the monkeypatching after we have declared our configs. The monkeypatching code should be
+# checking for config directives that control what to patch. For example if
+# NotebookApp.kbase_auth = True then the monkeypatch code should patch all the notebook app
+# handlers to enforce and pass along kbase auth tokens
+monkeypatch.do_patching(c)

@@ -17,7 +17,6 @@ header[role="banner"] {
 
 #logo {
 	float: left;
-	padding-left: 10px;
 } 
 
 nav[role="navigation"] {
@@ -54,7 +53,7 @@ nav[role="navigation"] ul li.active a {
 }
 
 nav[role="navigation"] input[type="text"] {
-	display: inline;
+	display:inline;
 /*	-webkit-border-radius: 4px 4px 4px 4px;
 	-moz-border-radius: 4px 4px 4px 4px;
 	border-radius: 4px 4px 4px 4px;

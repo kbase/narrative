@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <title>KBase User Page</title>
+        <link rel="icon" href="static/images/KBase_favicon.ico" type="image/x-icon">
+        <link href="static/bootstrap-3.0.0/css/bootstrap.min.css" rel="stylesheet">
+        <link href="static/css/kbase_stylesheet.css" rel="stylesheet">
+        <link href="static/css/datastore.css" rel="stylesheet">
+		<link href="static/css/user.css" rel="stylesheet">
+        <style type="text/css">
+			
+        </style>
+    </head>
+
+    <body>
+        <header role="banner">  
+			<div class="container">    
+			<div id="logo">
+				<a href="kbase.us"><img src="static/images/kbase_logo.png" alt="KBase User Home" /></a>
+			</div>
+			<nav role="navigation">
+				<ul>
+					<li><a href="#">Home</a></li>
+					<li><a href="#">My Stuff</a></li>
+					<li id="search_nav">
+							<a href="#">Search</a>
+							<input type="text" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store" class="form-control"></input>
+							
+						
+					</li>
+				</ul>
+			</nav>
+				
+			<div id="login-widget" class="pull-right" style="display: none"/>
+		</div>
+		</header>
+
+		<div id="main" class="container">
+			<div id="maincontent" class="row">
+				<div id="public_section" class="col-md-6 col-md-offset-1">
+					<div id="welcome_section">
+						<h1>Your science, your way.</h1>
+						<span>Build narratives that capture your analyses, including rich annotations, visualization widgets, reusable workflows, and custom scripts. Share your work and your data with colleagues. Follow the field through the people, organisms, and projects that matter to you. <a href="#">Learn more</a></span>
+					</div>
+					
+				</div>
+				<div id="login_section" class="col-md-3 ">
+					
+					<form id="login_form">
+				    <div>
+				    	<legend>Please sign in</legend>
+						<p id="login_error" class="text-error" style="display:none"></p>
+						<div class="form-group">
+				    		<label for="kbase_username">Username:</label>
+				    		<input type="text" placeholder="username" id="kbase_username" class=" form-control" tabindex="1">
+				    	</div>
+				    	<div class="form-group">
+							<label for="kbase_password">Password:<span class="pull-right"><a target="_blank" href="http://gologin.kbase.us/ResetPassword" tabindex="4">Forgot password?</a></span></label>
+				    		<input type="password" placeholder="password" id="kbase_password" class="form-control" tabindex="2">
+				    	</div>
+					
+				    
+				    	<button type="button" class="btn " onclick="login($('#kbase_username').val(),$('#kbase_password').val());" tabindex="3">Sign In</button> <img src="./img/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
+				
+				    </div>
+				
+				    </form>
+				<span>New to KBase? <a target="_blank" href="http://gologin.kbase.us/Signup">Register now</a></span>
+				</div>
+				
+
+		        <div id="newsfeed_column" class="col-md-11" style="display: none;">
+					<div id="newsfeed_inner" class="row">
+						<div id="feed_section" class="col-md-8 pull-left">
+						<h2 class="small">Newsfeed</h2>
+						<div class="newsfeed_section">
+							<h3>Workspaces Shared With Me <img src="./img/ajax-loader-white.gif" id="loading-indicator-ws"  /></h3>
+							<ol id="people_feed">
+								<!--<li><a href="#">bobtheguy@kbase.us</a> started a new narrative entitled <a href="#">"GWAS of Klebsiella spp."</a></li>
+								<li><a href="#">kristen@uchicago.edu</a> commented on <a href="#">bobtheguy@kbase.us's narrative</a></li>-->
+							</ol>
+						</div>
+						<div class="newsfeed_section">
+				
+							<h3>Organisms I'm following</h3>
+							<h4 class="feed_projects_title">E coli H25</h4>
+							<ol>
+								<li><a href="#">pipsqueak@concordia.gov</a> started a new narrative entitled <a href="#">"GWAS Analysis of a New Strain of E. coli"</a></li>
+								<li><a href="#">qsquirrel@concordia.gov</a> commented on a narrative entitled <a href="#">"E. coli H25 Regulatory Model"</a></li>
+								<li><a href="#">qsquirrel@concordia.gov</a> cloned the narrative entitled <a href="#">"E. coli H25 Regulatory Model"</a> as <a href="#">"E. coli H25 Regulatory Model with Gapfilling"</a></li>
+								<li><a href="#">qsquirrel@concordia.gov</a> added a <a href="#">citation</a> to the narrative entitled <a href="#">"E. coli H25 Metabolic Model"</a></li>
+
+							</ol>			
+						</div>
+				
+						<div class="newsfeed_section">
+				
+							<h3>Projects I'm following</h3>
+							<span class="aside">You are not currently following any projects. <a href="#">Find some projects to follow.</a></span>
+						</div>
+				
+						<div class="newsfeed_section">
+							<a href="#">Manage my subscriptions</a>
+						</div>
+					</div>
+					
+					
+					<div id="metrics_section" class="col-md-3 pull-right ">
+				
+						<div class="stats_section">
+							<h3>You have:</h3>
+							<ul>
+								<li><a href="#">3</a> notifications</li>
+							<ul>
+						</div>
+						<div class="stats_section">
+							<h3>Your narratives have been:</h3>
+							<div id="personal_stats" style="clear:both">
+								<div class="colstats">
+									<div class="pull-left">commented on</div>
+									<div class="pull-right">14 times</div>
+								</div>
+								<div class="colstats">
+									<div class="pull-left">linked to</div>
+									<div class="pull-right">13 times</div>
+								</div> 
+								<div class="colstats">
+									<div class="pull-left">cloned</div>
+									<div class="pull-right">3 times</div>
+								</div> 
+								<div class="colstats">
+									<div class="pull-left">viewed</div>
+									<div class="pull-right">38 times</div>
+								</div>
+							</div>
+						</div>
+						<div class="stats_section">
+							<h3>Your usage:</h3>
+							<ul>
+								<li>23 of 200 GB of storage</li>
+								<li>23  of a possible 500 compute hours this month </li>
+								<li><a href="#">learn how to increase your allocation</a></li>
+							<ul>
+						</div>
+						<div class="stats_section">
+							<h3>You have:</h3>
+							<ul>
+								<li>67 Contribution Points</li>
+							</ul>
+							based on the following:
+							<ul id="contribution_stats">
+								<li>1 published narrative</li>
+								<li>24 comments</li>
+								<li>13 evidence links</li>
+								<li>2 public datasets</li>	
+								<li>0 user-defined functions</li>	
+							<ul>
+						</div>
+					
+					</div>
+					
+					
+					
+					
+					</div>
+				</div>	
+		        
+			</div>
+		</div>
+		
+        <script src="static/js/jquery-1.10.2.min.js"></script>
+        <script src="static/js/jquery.cookie.min.js"></script>
+        <script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+		<script src="static/js/underscore.js"></script>
+		<script src="static/js/ICanHaz.min.js"></script>
+		<script src="static/js/kbase.js"></script>
+        <script src="static/js/users.js"></script>
+
+		<!-- HTML Templates -->
+		<script id="workspaces" type="text/html">
+		{{#rows}}
+		<li><a href="#">{{ username }}</a>&#39;s workspace <a href="#">{{ workspace }}</a> was updated on {{ date }}.</li>
+		{{/rows}}
+		</script>
+		
+		<script id="assertions" type="text/html">
+		{{#rows}}
+		<li><a href="#">{{ username }}</a> asserts: "{{ assertion }}"</li>
+		{{/rows}}
+		</script>
+
+    </body>
+</html>

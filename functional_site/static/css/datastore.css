@@ -54,7 +54,8 @@ nav[role="navigation"] ul li.active a {
 }
 
 nav[role="navigation"] input[type="text"] {
-	-webkit-border-radius: 4px 4px 4px 4px;
+	display: inline;
+/*	-webkit-border-radius: 4px 4px 4px 4px;
 	-moz-border-radius: 4px 4px 4px 4px;
 	border-radius: 4px 4px 4px 4px;
 	background-color: #ffffff;
@@ -70,6 +71,7 @@ nav[role="navigation"] input[type="text"] {
 	padding: 4px 6px; 
 	font-size: 16px;
 	color: #555555;
+	*/
 }
 
 .table_section {

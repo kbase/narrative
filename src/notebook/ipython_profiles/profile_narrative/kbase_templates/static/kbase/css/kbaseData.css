@@ -7,7 +7,7 @@ For data in KBase workspace
     height: 345px;
 }
 
-#kb-ws .datatable {
+#kb-ws .dataTable {
     width: 100%;
     height: 300px;
 }
@@ -20,7 +20,6 @@ For data in KBase workspace
     font-size: 16px;
     text-align: center;
     padding: 5px 0;
-    height: 15px;
 }
 
 #kb-ws .kb-controls {
@@ -28,10 +27,13 @@ For data in KBase workspace
     height: 30px;
     background-color: #008988;
 }
-#kb-ws .kb-controls input {
-    height: 12px;
+
+#kb-ws .form-control {
+    width: 85%;
+    max-height: 25px;
     margin: 3px;
 }
+
 
 /* Upload pulldown */
 #kb-ws-upload-pulldown {
@@ -60,12 +62,17 @@ For data in KBase workspace
 /* Data table */
 #kb-ws .kb-table table {
     /*width: 100%;*/
-    height: 270px;
+    height: 100%;
+/*    height: 270px;*/
 }
 
 #kb-ws .kb-table table th {
     background-color: white;
     border: 1px solid gainsboro;
+}
+
+#kb-ws .kb-table table thead th td:first-child {
+    max-width: 80%;
 }
 
 #kb-ws .kb-table tbody tr {

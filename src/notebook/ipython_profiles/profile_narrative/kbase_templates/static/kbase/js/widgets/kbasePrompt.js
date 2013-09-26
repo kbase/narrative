@@ -54,7 +54,10 @@
 
 (function( $, undefined ) {
 
-    $.KBWidget("kbasePrompt", 'kbaseWidget', {
+    $.KBWidget({
+
+		  name: "kbasePrompt",
+
         version: "1.0.0",
         options: {
             controls : ['cancelButton', 'okayButton'],
@@ -102,50 +105,59 @@
 
             var $dialogModal =
                 $('<div></div>')
-                    .attr('class', 'modal hide ' + this.options.modalClass)
+                    .attr('class', 'modal ' + this.options.modalClass)
                     .attr('tabindex', '-1')
                     .append(
-                        $('<div></div>')
-                            .attr('class', 'modal-header')
+                        $.jqElem('div')
+                            .addClass('modal-dialog')
                             .append(
-                                $('<button></button>')
-                                    .attr('type', 'button')
-                                    .attr('class', 'close')
-                                    .attr('data-dismiss', 'modal')
-                                    .attr('aria-hidden', 'true')
-                                    .append('x\n')
-                            )
-                            .append(
-                                $('<h3></h3>')
-                                    .attr('id', 'title')
+                                $.jqElem('div')
+                                    .addClass('modal-content')
+                                    .append(
+                                        $('<div></div>')
+                                            .attr('class', 'modal-header')
+                                            .append(
+                                                $('<button></button>')
+                                                    .attr('type', 'button')
+                                                    .attr('class', 'close')
+                                                    .attr('data-dismiss', 'modal')
+                                                    .attr('aria-hidden', 'true')
+                                                    .append('x\n')
+                                            )
+                                            .append(
+                                                $('<h3></h3>')
+                                                    .addClass('modal-title')
+                                                    .attr('id', 'title')
+                                            )
+                                    )
+                                    .append(
+                                        $('<div></div>')
+                                            .attr('class', 'modal-body')
+                                            .attr('id', 'body')
+                                    )
+                                    .append(
+                                        $('<div></div>')
+                                            .attr('class', 'modal-footer')
+                                            .append(
+                                                $('<div></div>')
+                                                    .addClass('row')
+                                                    .addClass('form-horizontal')
+                                                    .append(
+                                                        $('<div></div>')
+                                                        .addClass('col-md-6')
+                                                        .addClass('text-left')
+                                                        .attr('id', 'footer')
+                                                    )
+                                                    .append(
+                                                        $('<div></div>')
+                                                            .addClass('col-md-6')
+                                                            .attr('id', 'controls')
+                                                            .css('white-space', 'nowrap')
+                                                    )
+                                            )
+                                    )
                             )
                     )
-                    .append(
-                        $('<div></div>')
-                            .attr('class', 'modal-body')
-                            .attr('id', 'body')
-                    )
-                .append(
-                    $('<div></div>')
-                        .attr('class', 'modal-footer')
-                        .append(
-                            $('<div></div>')
-                                .addClass('row-fluid')
-                                .addClass('form-horizontal')
-                                .append(
-                                    $('<div></div>')
-                                    .addClass('span6')
-                                    .addClass('text-left')
-                                    .attr('id', 'footer')
-                                )
-                                .append(
-                                    $('<div></div>')
-                                        .addClass('span6')
-                                        .attr('id', 'controls')
-                                        .css('white-space', 'nowrap')
-                                )
-                        )
-                )
             ;
 
             $dialogModal.unbind('keypress');
@@ -181,7 +193,7 @@
                     if (typeof val == 'string') {
                         val = $prompt[val]();
                     }
-                    var btnClass = 'btn';
+                    var btnClass = 'btn btn-default';
                     if (val.type) {
                         btnClass = btnClass + ' btn-' + val.type;
                     }
@@ -215,7 +227,7 @@
             var $firstField = undefined;
             var selection = false;
 
-            $dialogModal.on('shown',
+            $dialogModal.on('shown.bs.modal',
                 $.proxy(
                     function () {
                         $.each(

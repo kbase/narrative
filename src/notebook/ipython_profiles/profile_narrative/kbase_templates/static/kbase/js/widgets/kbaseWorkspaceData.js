@@ -8,7 +8,9 @@
  */
 (function( $, undefined ) {
 
-	$.KBWidget("kbaseWorkspaceDataWidget", 'kbaseWidget', {
+	$.KBWidget({
+        name: "kbaseWorkspaceDataWidget", 
+        parent: "kbaseWidget",
 		version: "1.0.0",
 		ws_client: null,
 		table: null,

@@ -25,7 +25,9 @@
         return e;
     }
 
-	$.KBWidget("kbaseUploadWidget", 'kbaseWidget', {
+	$.KBWidget({
+        name: "kbaseUploadWidget", 
+        parent: 'kbaseWidget',
 		version: "0.0.1",
         isLoggedIn: false,
 		options: { },

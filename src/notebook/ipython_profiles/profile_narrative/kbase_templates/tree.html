@@ -38,13 +38,13 @@ data-base-kernel-url={{base_kernel_url}}
                         <input type="file" name="datafile" class="fileinput" multiple='multiple'>
                     </form>
                     <span id="notebook_buttons">
-                        <button id="refresh_notebook_list" title="Refresh notebook list" class="btn btn-small">Refresh</button>
-                        <button id="new_notebook" title="Create new notebook" class="btn btn-small">New Notebook</button>
+                        <button id="refresh_notebook_list" title="Refresh notebook list" class="btn btn-default btn-sm">Refresh</button>
+                        <button id="new_notebook" title="Create new notebook" class="btn btn-default btn-sm">New Notebook</button>
                     </span>
                 </div>
 
                 <div id="notebook_list">
-                  <div id="notebook_list_header" class="row-fluid list_header">
+                  <div id="notebook_list_header" class="row list_header">
                       <div id="project_name">
                         <ul class="breadcrumb">
                             {% for component in project_component %}
@@ -55,23 +55,23 @@ data-base-kernel-url={{base_kernel_url}}
                   </div>
                 </div>
             </div>
-            
+
             <div id="clusters" class="tab-pane">
 
                 <div id="cluster_toolbar">
                     <span id="cluster_list_info">IPython parallel computing clusters</span>
 
                     <span id="cluster_buttons">
-                        <button id="refresh_cluster_list" title="Refresh cluster list" class="btn btn-small">Refresh</button>
+                        <button id="refresh_cluster_list" title="Refresh cluster list" class="btn btn-default btn-sm">Refresh</button>
                     </span>
                 </div>
 
                 <div id="cluster_list">
-                    <div id="cluster_list_header" class="row-fluid list_header">
-                        <span class="profile_col span4">profile</span>
-                        <span class="status_col span3">status</span>
-                        <span class="engines_col span3" title="Enter the number of engines to start or empty for default"># of engines</span>
-                        <span class="action_col span2">action</span>
+                    <div id="cluster_list_header" class="row list_header">
+                        <span class="profile_col col-md-4">profile</span>
+                        <span class="status_col col-md-3">status</span>
+                        <span class="engines_col col-md-3" title="Enter the number of engines to start or empty for default"># of engines</span>
+                        <span class="action_col col-md-2">action</span>
                     </div>
                 </div>
             </div>

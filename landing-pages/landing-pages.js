@@ -146,9 +146,6 @@ function router() {
     Path.listen();
 }
 
-
-
-
 /*
  *   landing page app helper functions
  */
@@ -181,7 +178,7 @@ function navEvent() {
 }
 
 function removeCards() {
-    $("#genomes").destroy();
+    $("#genomes").KBaseCardLayoutManager("destroy");
 }
 
 /*

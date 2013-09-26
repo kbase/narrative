@@ -25,9 +25,28 @@
         showInitialCards: function() {
             if (this.options.template.toLowerCase() === "genome")
                 this.showGenomeCards();
+            // else if (this.options.template.toLowerCase() === "hello")
+            //     this.showHelloCards();
             else {
                 // throw an error. modal dialog, maybe?
             }
+        },
+
+        /**
+         * This is just left in here as an example stub. Not actually used.
+         */
+        showHelloCards: function() {
+            this.addNewCard("HelloWidget",
+                {
+                    color: this.options.data.color,
+                },
+                {
+                    my: "left top",
+                    at: "left bottom",
+                    of: "#app"
+                }
+            );
+
         },
 
         showGenomeCards: function() {
@@ -55,7 +74,6 @@
                     of: "#app"
                 }
             );
-
             return this;
         },
 
@@ -169,13 +187,17 @@
                         of: data.event
                     }
                 );
-            });            
+            });
+
+            $(document).on("helloClick", function(event, data) {
+                window.alert(data.message);
+            })
         },
 
         destroy: function() {
             this._super();
             for (var i=0; i<this.registeredEvents.length; i++) {
-                $(document).off(registeredEvents[i]);
+                $(document).off(this.registeredEvents[i]);
             }
         }
     });

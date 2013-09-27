@@ -15,18 +15,16 @@
 
     {% if login_available %}
     <div class="row">
-    <div class="navbar span8 offset2">
-      <div class="navbar-inner">
+    <div class="navbar col-md-8 offset2">
         <div class="container">
           <div class="center-nav">
-            <p class="navbar-text nav">Password:</p>
+            <p class="navbar-text nav navbar-nav">Password:</p>
             <form action="{{base_project_url}}login?next={{next}}" method="post" class="navbar-form pull-left">
               <input type="password" name="password" id="password_input">
               <button type="submit" id="login_submit">Log in</button>
             </form>
           </div>
         </div>
-      </div>
     </div>
     </div>
     {% endif %}

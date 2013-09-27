@@ -1,4 +1,24 @@
-(function( $, undefined) {
+/**
+ * @class KBWidget
+ *
+ * A KBase widget. Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+ * sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+ * ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+ * ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+ * velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+ * cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
+ * est laborum.
+ *
+ * And here's an example:
+ *
+ *     @example
+ *     var widget = $.KBWidget({
+ *         name: "MyFancyWidget",
+ *         parent: "MommyWidget",
+ *         init: function () {}
+ *     });
+ */
+(function ($) {
     var KBase;
     var ucfirst = function(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
@@ -313,59 +333,59 @@
         return $(tag);
     }
 
-    $.kbObject = function(name, parent, def, asPlugin) {
-        if (asPlugin == undefined) {
-            asPlugin = false;
+    $.KBWidget = function (def) {
+        def = (def || {});
+        var name    = def.name;
+        var parent  = def.parent;
+
+        if (parent == undefined) {
+            parent = 'kbaseWidget';
         }
 
-        return $.KBWidget(name, parent, def, asPlugin);
-    }
-
-    $.KBWidget = function(name, parent, def, asPlugin) {
-
-        if (asPlugin == undefined) {
+        var asPlugin= def.asPlugin;
+        if (asPlugin === undefined) {
             asPlugin = true;
         }
 
-        //if (widgetRegistry[name] != undefined) {
-        //    //throw "Cannot re-register widget: " + name;
-        //    return;
-        //}
-
-        var Widget = function($elem) {
+        var Widget = function ($elem) {
             this.$elem = $elem;
             this.options = $.extend(true, {}, def.options, this.constructor.prototype.options);
             return this;
         }
 
-        var directName = name;
-        directName = directName.replace(/^kbase/, '');
-        directName = directName.charAt(0).toLowerCase() + directName.slice(1);
+        if (name) {
+            var directName = name;
+            directName = directName.replace(/^kbase/, '');
+            directName = directName.charAt(0).toLowerCase() + directName.slice(1);
 
-        KBase[directName] = function (options, $elem) {
-            var $w = new Widget();
-            if ($elem == undefined) {
-                $elem = $.jqElem('div');
+            KBase[directName] = function (options, $elem) {
+                var $w = new Widget();
+                if ($elem == undefined) {
+                    $elem = $.jqElem('div');
+                }
+                $w.$elem = $elem;
+                $w.init(options);
+                $w._init = true;
+                $w.trigger('initialized');
+                return $w;
             }
-            $w.$elem = $elem;
-            $w.init(options);
-            $w._init = true;
-            $w.trigger('initialized');
-            return $w;
-        }
 
-        widgetRegistry[name] = Widget;
+            widgetRegistry[name] = Widget;
 
-        if (def == undefined) {
-            def = parent;
-            parent = 'kbaseWidget';
             if (def == undefined) {
-                def = {};
+                def = parent;
+                parent = 'kbaseWidget';
+                if (def == undefined) {
+                    def = {};
+                }
             }
         }
 
         if (parent) {
-            subclass(Widget, widgetRegistry[parent]);
+            var pWidget = widgetRegistry[parent];
+            if (pWidget === undefined)
+                throw new Error("Parent widget is not registered");
+            subclass(Widget, pWidget);
         }
 
         var defCopy = $.extend(true, {}, def);
@@ -475,7 +495,7 @@
         }
 
         if (asPlugin) {
-            $.fn[name] = function( method, args ) {
+            var ctor = function (method, args) {
 
                 if (this.length > 1) {
                     var methodArgs = arguments;
@@ -493,13 +513,16 @@
                 }
 
                 // Method calling logic
-                if ( Widget.prototype[method] ) {
-                    return Widget.prototype[method].apply(this.data(name), Array.prototype.slice.call( arguments, 1 ));
+                if (Widget.prototype[method]) {
+                    return Widget.prototype[method].apply(
+                        this.data(name),
+                        Array.prototype.slice.call(arguments, 1)
+                    );
                 } else if ( typeof method === 'object' || ! method ) {
                     //return this.data(name).init( arguments );
                     var args = arguments;
                     $w = this.data(name);
-                    if (! $w._init) {
+                    if ($w._init === undefined) {
                         $w = Widget.prototype.init.apply($w, arguments);
                     }
                     $w._init = true;
@@ -512,25 +535,62 @@
                 return this;
 
             };
+            ctor.name = name;
+            $.fn[name] = ctor;
+            $[name]    = $.fn[name];
         }
 
-        Widget.prototype[name] = function () {
-            return $.fn[name].apply(this.$elem, arguments);
-        }
+        /**
+         * Registers events on this element.
+         * @param {String} name The event name to register
+         * @param {Function} callback The function to call when an event is
+         *        emitted.
+         */
+        this.on = function (evt, callback) {
+            this.$elem.bind(evt, callback);
+            return this;
+        };
 
-        return $.fn[name];
+        /**
+         * Emits an event.
+         * @param {String} name The event name
+         * @param {Object} data The data to emit with the event
+         */
+        this.emit = function (evt, data) {
+            this.$elem.trigger(evt, data);
+            return this;
+        };
+
+        /**
+         * Unregisters events on this element.
+         * @param {String} name The event name to unregister from
+         */
+        this.off = function (evt) {
+            this.$elem.unbind(evt);
+            return this;
+        };
+
+        if (name !== undefined) {
+            Widget.prototype[name] = function () {
+                return $.fn[name].apply(this.$elem, arguments);
+            }
+
+            return $.fn[name];
+        } else {
+            return this;
+        }
     }
 
-    $.KBWidget('kbaseWidget',
-
+    $.KBWidget(
         {
-            _accessors : ['wing', 'wong'],
+            name : 'kbaseWidget',
 
-            element : function() {
-                return this;
-            },
-
+            /**
+             * Writes text to console.
+             * @param {String} txt The text to write.
+             */
             dbg : function (txt) { if (window.console) console.log(txt); },
+
 
             callAfterInit : function (func) {
                 var $me = this;
@@ -550,6 +610,10 @@
                 return delayer;
             },
 
+            /**
+             * Initializes the widget.
+             * @param {Object} args Initialization arguments
+             */
             init : function(args) {
 
                 this._attributes = {};
@@ -567,6 +631,10 @@
                 return this;
             },
 
+            /**
+             * Sets an alert to display
+             * @param {String} msg The message to display
+             */
             alert : function(msg) {
                 if (msg == undefined ) {
                     msg = this.data('msg');
@@ -611,6 +679,11 @@
                     return this.valueForKey(attribute);
                 },
 
+            /**
+             * Sets data.
+             * @param {Object} key The key for the data
+             * @param {Object} value The data itself
+             */
             data : function (key, val) {
 
                 if (this.options._storage == undefined) {
@@ -750,7 +823,4 @@
 
         }
     );
-
-
-
-}( jQuery ));
+})(jQuery);

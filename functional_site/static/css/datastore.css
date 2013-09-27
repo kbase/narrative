@@ -1,76 +1,3 @@
-@import url("http://fonts.googleapis.com/css?family=Roboto");
-
-body {
-	padding-top: 75px;
-}
-
-header[role="banner"] {
-	position: fixed;
-	top: 0;
-	width: 100%;
-	background-color: #fff;
-	border-bottom: 1px solid #E0E0E0;
-	-webkit-box-shadow: 0 1px 10px rgba(0,0,0,.1);
-	-moz-box-shadow: 0 1px 10px rgba(0,0,0,.1);
-	box-shadow: 0 1px 10px rgba(0,0,0,.1);
-}
-
-#logo {
-	float: left;
-	padding-left: 10px;
-} 
-
-nav[role="navigation"] {
-	float: left;
-	margin-left: 10px;
-}
-
-nav[role="navigation"] ul {
-	margin: 0 10px 0 0;
-	display: block;
-	padding: 9px;
-}
-
-
-nav[role="navigation"] ul li {
-	display: inline;
-	margin: 0 10px;
-}
-
-nav[role="navigation"] ul li a {
-	text-decoration: none;
-	font-size: 18px;
-	font-family: 'Roboto';
-	color: #777777;
-	padding: 15px;
-}
-
-nav[role="navigation"] ul li.active a {
-	background-color: #5c9531;
-	color: #fff;
-	-webkit-box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
-	-moz-box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
-	box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
-}
-
-nav[role="navigation"] input[type="text"] {
-	-webkit-border-radius: 4px 4px 4px 4px;
-	-moz-border-radius: 4px 4px 4px 4px;
-	border-radius: 4px 4px 4px 4px;
-	background-color: #ffffff;
-	border: 1px solid #cccccc;
-	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-	-webkit-transition: border linear .2s, box-shadow linear .2s;
-	-moz-transition: border linear .2s, box-shadow linear .2s;
-	-o-transition: border linear .2s, box-shadow linear .2s;
-	transition: border linear .2s, box-shadow linear .2s;
-
-	padding: 4px 6px; 
-	font-size: 16px;
-	color: #555555;
-}
 
 .table_section {
 	margin-top: 20px;
@@ -167,7 +94,11 @@ nav[role="navigation"] input[type="text"] {
 	padding-top: 30px;
 }
 
-/** H styling */
+/** redundant styles
+@import url("http://fonts.googleapis.com/css?family=Roboto");
+
+
+** H styling *
 h1 {
 	font-family:'Roboto', Arial, sans-serif;
 	letter-spacing: 0; 
@@ -188,6 +119,7 @@ h4 {
 	letter-spacing: .07em;
 	}
 	
+*/
 
 span.aside {
 	font-style: italic;

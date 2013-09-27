@@ -1,57 +1,162 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <html>
-    <head>
-<!--
-     Stylesheets
--->
-<link href="static/bootstrap-3.0.0/css/bootstrap.min.css" rel="stylesheet" />
-<link href="static/css/kbase_stylesheet.css" rel="stylesheet" />
+	<head>
+        <title>KBase User Page</title>
+        <link rel="icon" href="static/images/KBase_favicon.ico" type="image/x-icon">
+        <link href="static/bootstrap-3.0.0/css/bootstrap.min.css" rel="stylesheet">
+        <link href="static/css/kbase_stylesheet.css" rel="stylesheet">
+        <style type="text/css">
+        #project_stuff{
+          max-width: 800px;
+        }
+         ul.subnav{
+          padding: 1.5em 0 0 0;
+         }
+        ul.subnav li{
+          list-style-type: none;
+          margin: 10px;
+          width: 80%;
+        }
+        ul.subnav li a{
+          display: block;
+          background-color: #BBE8F9;
+          /*#61C9F2;*/
+          width: 100%;
+          color: #065ABF;
+          padding: 10px;
+          border-radius: 8px;
+        }
+        #username_group{
+          width: 30%;
+        }
+        #permlevel_group{
+          width: 50%;
+        }
+        #add_group{
+          width: 15%;
+        }
+        h4{
+          padding-top: 1.5em;
+        }
+        </style>
+    </head>
 
+    <body>
+		<header role="banner">      
+			<div id="logo">
+				<a href="kbase.us"><img src="static/images/kbase_logo.png" alt="KBase User Home" /></a>
+			</div>
+			<nav role="navigation">
+				<ul>
+					<li><a href="#">Home</a></li>
+					<li><a href="#">My Stuff</a></li>
+					<li id="search_nav">
+							<a href="#">Search</a>
+							<input type="text" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input>
+							
+						
+					</li>
+				</ul>
+			</nav>
+				
+			<div id="login-widget" class="pull-right" />
+		</header>
 
+		<div id="main" class="container">
+    <div class="row">
+   		<div id="subnav" class="col-sm-3" role="navigation">
+   			<ul class="subnav">
+   				<li><a href="profile.html">Profile</a></li>
+   				<li><a href="manage_subs.html">Manage Subscriptions</a></li>
+  				<li><a href="manage_projects.html">Manage Projects</a></li>
+  				<li><a href="manage_teams.html">Manage Teams</a></li>
+  			</ul>
+		  </div>
 
-</head>
-<body>
-        <header>
-                <p id="site-title">
-                        <a href="kbase.us">KBase</a>
-                </p>
-                <nav>
-                        <ul>
-                                <li>My Stuff</li>
-								<li>Search</li>
-                        </ul>
-                </nav>
-                <div id="login_info">joescientist@cnl.gov <a href="#">log out</a></div>
-        </header>
-   	<div id="maincontainer">
-   		<div id="subnav">
-   			<ul>
-   				<li>Profile</li>
-   				<li>Manage Subscriptions</li>
-				<li>Manage Projects</li>
-				<li>Manage Teams</li>
-			</ul>
-		</div>
-		<div id="maincontent">
-			<h1>Manage Projects</h1>
-			<p>A project holds assets that can be shared by members. Project members can be individuals or teams. You also set permissions for all assets shared in the project, but you can set additional permissions on any individual asset. <a href="help_projects.html">Learn more</a>.</p>
-			<h2>Create a New Project</h2>
-			<label for="projectname">Project Name</label>
-			<input type="text" id="projectname" /> <button>Add</button>
-			<h2>Thermophile Habits in the Southern Ocean</h2><button>View Project Assets</button><button>Archive</button>
-			<p>Project Permissions</p>
-			<p>undergrads (team) <select><option>Read and comment only</option></select><button>Update</button></p>
-    </div>
+      <div id="project_stuff" class="col-sm-8">
+  			<h1>Manage Projects</h1>
+  			<p>A project holds assets that can be shared by members. Project members&mdash;the people who have permission to use the project's assets&mdash;can be individuals or teams. You set permissions for all assets shared in the project, but you can set additional permissions on any individual asset. <a href="help_projects.html">Learn more</a>.</p>
+        <div>
+    			<h2><span class="glyphicon glyphicon-plus"></span> Create a New Project</h2>
+    			<p><label for="projectname">Project Name</label> <input type="text" id="projectname" /> <button class="btn btn-default">Add</button></p>
+        </div>
+        <div class="accordion" id="project_accordion">
+          <div class="accordion-group">
+            <div class="accordion-heading">
+        			<h2 class="projectname"><a class="accordion-toggle" data-toggle="collapse" data-parent="project_accordion" href="#collapse1"><span class="glyphicon glyphicon-play"></span> Thermophile Habits in the Southern Ocean</a></h2> 
+              <button class="btn btn-default">View Project Assets</button> <button class="btn btn-default">Archive</button>
+            </div>
+            <div id="collapse1" class="accordion-body collapse">
+        			<h3>Project Permissions</h3>
+              <table class="perms">
+                <tr>
+                  <td>undergrads (team)</td> 
+                  <td>
+                    <select class="form-control">
+                    <option>Read (read and comment only)</option>
+                    <option>Clone (Read + clone narratives and data)</option>
+                    <option>Edit (Clone + link, edit narratives, update datasets)</option>
+                    <option>Admin (Edit + manage assets and permissions)</option>
+                    <option>Remove</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-default">Update</button></td>
+                </tr>
+                <tr>
+                  <td>Jeff Smith</td> 
+                  <td>
+                    <select class="form-control">
+                    <option>Read (read and comment only)</option>
+                    <option>Clone (Read + clone narratives and data)</option>
+                    <option>Edit (Clone + link, edit narratives, update datasets)</option>
+                    <option>Admin (Edit + manage assets and permissions)</option>
+                    <option>Remove</option>
+                    </select>
+                  </td>
+                  <td><button class="btn btn-default">Update</button></td>
+                </tr>
+              </table>
+              <h4>Add permissions for a new person or team</h4>
+              <form class="form-inline" role="form">
+                <div class="form-group" id="username_group">
+                  <label for="username">User or Team</label>
+                  <input type="text" class="form-control" id="username" placeholder="User email or team name">
+                </div>
+                <div class="form-group" id="permlevel_group">
+                  <label for="permlevel">Permission Level</label>
+                  <select class="form-control" id="permlevel">
+                    <option>Read (read and comment only)</option>
+                    <option>Clone (Read + clone narratives and data)</option>
+                    <option>Edit (Clone + link, edit narratives, update datasets)</option>
+                    <option>Admin (Edit + manage assets and permissions)</option>
+                    <option>Remove</option></select>
+                </div>
+                <div class="form-group" id="add_group"><br />
+                <button type="submit" class="btn btn-default">Add</button></div>
+              </form>
+            </div><!-- end accordion body -->
+          </div><!--end accordion group (one project) -->
+        </div><!-- end accordion -->
 
-    <br clear = 'all'/>
+        <div class="archives">
+            <h2><a href="#archive_list" data-toggle="collapse" data-target="#archive_list"><span class="glyphicon glyphicon-play"></span> Archived Projects</a></h2>
+          <div id="archive_list" class="collapse">
+            <p>Celery Root Geometry <button class="btn btn-default">Unarchive</button></p>
+          </div>
+        </div>
+      </div><!-- end project stuff -->
 
+		</div><!-- end row -->
+    </div><!-- end main container -->
+		<script src="static/js/jquery-1.10.2.min.js"></script>
+		<script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+        <script src="static/js/jquery.cookie.min.js"></script>
+        <script src="static/js/kbwidget.js"></script>
+        <script src="static/js/kbasePrompt.js"></script>
+        <script src="static/js/kbaseLogin.js"></script>
+		<script src="static/js/kbase.js"></script>
+    <script src="static/js/datastore.js"></script>
 
-<script src="static/js/jquery-1.10.2.min.js/"></script>
-<script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
-
-
-</body>
+    </body>
 </html>
-
-

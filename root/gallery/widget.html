@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Widget Viewer</title>
-
-    <!-- Bootstrap core CSS -->
+    
     <link href="../css/bootstrap.css" rel="stylesheet">
     <style type="text/css" media="screen">
     body {
@@ -34,7 +33,11 @@
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                   Widget <span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu" id="widget-menu" role="menu"></ul>
+                <ul class="dropdown-menu" ng-controller="WidgetCtrl">
+                    <li ng-repeat="widget in widgets">
+                        <a href="#{{widget}}">{{widget}}</a>
+                    </li>
+                </ul>
               </li>
           </ul>
         </div><!--/.nav-collapse -->
@@ -52,26 +55,9 @@
     <script src="../js/jquery.js"></script>
     <script src="../js/jquery-ui.js"></script>
     <script src="../js/bootstrap.js"></script>
-    <script src="../js/handlebars.js"></script>
-    <script src="../js/ember.js"></script>
     <script src="../js/kbase.js"></script>
-    <script src="../js/gallery.js"></script>
-    <script type="text/javascript" charset="utf-8">
-    $(function () {
-        if ($.KBWidget === undefined) {
-            $("#main-container").empty()
-                .append($("<div/>", { class: "alert alert-danger"})
-                    .text("KBWidget plugin has not been loaded")
-                );
-        }
-        var registry = $.KBWidget.registry();
-        var $menu = $("#widget-menu");
-        for (var widget in registry) {
-            $menu.append($("<li/>").append(
-                $("<a></a>", { href: "#" + widget }).text(widget))
-            );
-        }
-    });
-    </script>
+    <script src="../js/angular.js"></script>
+    <script src="../js/angular-resource.js"></script>
+    <script src="../js/show-widget.js"></script>
 </body>
 </html>

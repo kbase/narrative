@@ -73,7 +73,7 @@ def do_patching( c ):
             sess = { k : v.replace('EQUALSSIGN','=').replace('PIPESIGN','|')
                      for k,v in cookierx.findall(urllib.unquote(cookie)) }
             IPython.html.base.handlers.app_log.error("token = " + sess.get('token'))
-            setattr(handler,'kbase_token', sess)
+            setattr(handler,'kbase_session', sess)
 
 
         old_get = IPython.html.notebook.handlers.NamedNotebookHandler.get
@@ -88,8 +88,9 @@ def do_patching( c ):
         @monkeypatch_method(IPython.html.services.notebooks.handlers.NotebookRootHandler)
         def get(self):
             if 'kbase_session' in self.cookies:
-                kb_sess = parsecookie( self.cookies['kbase_session'].value)
-                IPython.html.base.handlers.app_log.debug("token = " + kb_sess.get('token'))
-                if hasattr(self,'notebook_manager'):
-                    setattr(self.notebook_manager,'kbase_token', kb_sess.get('token'))
+                #kb_sess = parsecookie( self.cookies['kbase_session'].value)
+                #IPython.html.base.handlers.app_log.debug("token = " + kb_sess.get('token'))
+                #if hasattr(self,'notebook_manager'):
+                #    setattr(self.notebook_manager,'kbase_token', kb_sess.get('token'))
+                cookie_pusher( self.cookies['kbase_session'].value,getattr(self,'notebook_manager')
             return old_get1(self)

@@ -176,8 +176,8 @@
 
                     var start = Number(feature_location[i][1]);
                     var length = Number(feature_location[i][3]);
-                    var end = start + length;
-
+                    var end = (feature_location[i][2] === "+" ? start + length - 1
+                                                              : start - length + 1);
                     if (start > end) {
                         var x = end;
                         end = start;
@@ -217,11 +217,15 @@
                     for (var ii=0; ii<this.regions.length; ii++) {
                         var region = this.regions[ii];
                         // region = [start,end] pair
-                        if ((start >= region[0] && start <= region[1]) ||
-                            (end >= region[0] && end <= region[1]) ||
-                            (start <= region[0] && end >= region[1])) {
+                        if (! ( (start <= region[0] && end <= region[0]) ||
+                                 start >= region[1] && end >= region[1]))
                             return true;
-                        }
+
+                        // if ((start >= region[0] && start <= region[1]) ||
+                        //     (end >= region[0] && end <= region[1]) ||
+                        //     (start <= region[0] && end >= region[1])) {
+                        //     return true;
+                        // }
                     }
                     
                 }
@@ -316,33 +320,15 @@
                 return a.feature_location[0][1] - b.feature_location[0][1];
             });
 
-            // var self = this;
-            // if (this.options.centerFeature) {
-            //     operonGenes = this.proteinInfoClient.fids_to_operons([this.options.centerFeature], 
-            //         //on success
-            //         function(operonGenes) {
-            //             operonGenes = operonGenes[self.options.centerFeature];
-
-            //         }
-            //     );
-            // }
 
             // Foreach feature...
             for (var j=0; j<features.length; j++) {
                 var feature = features[j];
 
                 // Look for an open spot in each track, fill it in the first one we get to, and label that feature with the track.
-                var start = Number(feature.feature_location[0][1]);
-                var length = Number(feature.feature_location[0][3]);
-                var end;
-
-                if (feature.feature_location[0][2] === "+") {
-                    end = start + length - 1;
-                }
-                else {
-                    start = start - length + 1;
-                    end = start + length;
-                }
+                // var start = Number(feature.feature_location[0][1]);
+                // var length = Number(feature.feature_location[0][3]);
+                // var end;
 
                 for (var i=0; i<tracks.length; i++) {
                     if (!(tracks[i].hasOverlap(feature.feature_location))) {
@@ -359,6 +345,7 @@
                     tracks[next].addRegion(feature.feature_location);
                     feature.track = next;
                 }
+
             }
 
             this.numTracks = tracks.length;
@@ -574,9 +561,9 @@
         calcXCoord : function(location) {
             var x = location[1];
             if (location[2] === "-")
-                x = location[1] - location[3];
+                x = location[1] - location[3] + 1;
 
-            return (x - this.options.start) / this.options.length * this.options.svgWidth + this.options.leftMargin;    
+            return (x - this.options.start) / this.options.length * this.options.svgWidth; // + this.options.leftMargin;    
         },
 
         calcYCoord : function(location, track) {
@@ -584,7 +571,7 @@
         },
 
         calcWidth : function(location) {
-            return location[3] / this.options.length * this.options.svgWidth;
+            return Math.floor((location[3]-1) / this.options.length * this.options.svgWidth);
         },
 
         calcHeight : function(location) {

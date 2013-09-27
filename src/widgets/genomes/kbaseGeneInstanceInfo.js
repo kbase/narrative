@@ -225,7 +225,17 @@
 
             var locStr = "";
             for (var i=0; i<loc.length; i++) {
-                locStr += loc[i][1] + " - " + loc[i][3] + " (" + loc[i][2] + ")<br/>";
+                var start = Number(loc[i][1]);
+                var length = Number(loc[i][3]);
+
+                var end = 0;
+                if (loc[i][2] === '+')
+                    end = start + length - 1;
+                else
+                    end = start - length + 1;
+
+                locStr += start + " to " + end + " (" + loc[i][2] + ")<br/>";
+//                locStr += loc[i][1] + " - " + loc[i][3] + " (" + loc[i][2] + ")<br/>";
             }
             return locStr;
         },

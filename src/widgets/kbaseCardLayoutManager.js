@@ -112,7 +112,8 @@
             $(document).on("showOperons", function(event, data) {
                 self.addNewCard("KBaseGeneOperon",
                 {
-                    featureID: data.featureID
+                    featureID: data.featureID,
+                    loadingImage: "../../widgets/images/ajax-loader.gif",
                 },
                 {
                     my: "left top",

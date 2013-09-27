@@ -1,7 +1,7 @@
 (function( $, undefined ) { 
-    $.KBWidget("KBaseGenomeOverview", "kbaseWidget", { 
+    $.KBWidget( { 
         name: "KBaseGenomeOverview", 
-        parent: "KBaseWidget", 
+        parent: "kbaseWidget", 
         version: "1.0.0",
 
         options: {

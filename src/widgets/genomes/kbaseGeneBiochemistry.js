@@ -15,7 +15,7 @@
 			featureID: null,
 			embedInCard: false,
 			auth: null,
-			title: ""
+			title: "Biochem. Fn."
 		},
 
 		cdmiURL: "https://kbase.us/services/cdmi_api",

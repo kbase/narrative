@@ -14,8 +14,17 @@ IPython.namespace('IPython.dialog');
 IPython.dialog = (function (IPython) {
     
     var modal = function (options) {
-        var dialog = $("<div/>").addClass("modal").attr("role", "dialog");
+
+        var footer = $("<div/>").addClass("modal-footer");
+
+        var dialog = $("<div/>").addClass("modal");
         dialog.append(
+            $("<div/>")
+                .addClass("modal-dialog")
+        .append(
+            $("<div/>")
+                .addClass("modal-content")
+        .append(
             $("<div/>")
                 .addClass("modal-header")
                 .append($("<button>")
@@ -29,9 +38,10 @@ IPython.dialog = (function (IPython) {
             $("<div/>").addClass("modal-body").append(
                 options.body || $("<p/>")
             )
-        );
-        
-        var footer = $("<div/>").addClass("modal-footer");
+        ).append(footer)
+
+
+        ));
         
         for (var label in options.buttons) {
             var btn_opts = options.buttons[label];
@@ -47,7 +57,8 @@ IPython.dialog = (function (IPython) {
             }
             footer.append(button);
         }
-        dialog.append(footer);
+        
+        
         // hook up on-open event
         dialog.on("shown", function() {
             setTimeout(function() {

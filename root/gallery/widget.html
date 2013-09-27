@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Widget Viewer</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../css/bootstrap.css" rel="stylesheet">
+    <style type="text/css" media="screen">
+    body {
+        padding-top: 50px;
+    }
+    #main-container {
+        padding: 40px 15px;
+        text-align: center;
+    }
+    .dropdown-menu {
+        max-height: 500px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  Widget <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu" id="widget-menu" role="menu"></ul>
+              </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="container" id="main-container">
+        <div class="widget" id="datavis">
+            <h1>Widget</h1>
+        </div>
+
+    </div><!-- /.container -->
+
+
+    <script src="../js/jquery.js"></script>
+    <script src="../js/jquery-ui.js"></script>
+    <script src="../js/bootstrap.js"></script>
+    <script src="../js/handlebars.js"></script>
+    <script src="../js/ember.js"></script>
+    <script src="../js/kbase.js"></script>
+    <script src="../js/gallery.js"></script>
+    <script type="text/javascript" charset="utf-8">
+    $(function () {
+        if ($.KBWidget === undefined) {
+            $("#main-container").empty()
+                .append($("<div/>", { class: "alert alert-danger"})
+                    .text("KBWidget plugin has not been loaded")
+                );
+        }
+        var registry = $.KBWidget.registry();
+        var $menu = $("#widget-menu");
+        for (var widget in registry) {
+            $menu.append($("<li/>").append(
+                $("<a></a>", { href: "#" + widget }).text(widget))
+            );
+        }
+    });
+    </script>
+</body>
+</html>

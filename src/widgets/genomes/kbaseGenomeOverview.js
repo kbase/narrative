@@ -120,7 +120,7 @@
                                                               function(event) {
                                                                   $(self.$elem.selector + " > select option:selected").each(function() {
     //                                                                  console.log(event);
-                                                                      self.trigger("contigSelected", { contig: $(this).attr("id"), event: event });
+                                                                      self.trigger("showContig", { contig: $(this).attr("id"), event: event });
                                                                   })
                                                               })
                                         );

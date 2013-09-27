@@ -75,7 +75,7 @@
 					searchTerms.concat(taxonomy.reverse());
 
 					// step 2: do the wiki scraping
-					self.wikiClient.scrape_first_hit(searchTerms, {}, 
+					self.wikiClient.scrape_first_hit(searchTerms, {endpoint: "dbpedia.org"}, 
 						function(desc) {
 							if (desc.hasOwnProperty('description') && desc.description != null) {
 								if (desc.description.length > self.options.maxNumChars) {
@@ -94,7 +94,7 @@
 									descHtml = self.notFoundHeader(strainName, desc.term) + descStr + self.descFooter(desc.wiki_uri);
 								}
 
-								var imageHtml = "Unable to find an image. If you have one, you might consider <a href='" + desc.wiki_uri + "'>adding it to Wikipedia</a>.";
+								var imageHtml = "Unable to find an image. If you have one, you might consider <a href='" + desc.wiki_uri + "' target='_new'>adding it to Wikipedia</a>.";
 								if (desc.image_uri != null)
 									imageHtml = "<img src='" + desc.image_uri + "' />";
 
@@ -165,16 +165,16 @@
 		},
 
 		descFooter: function(wikiUri) {
-			return "<p>[<a href=\"" + wikiUri + "\" target=\"_new\">more at Wikipedia</a>]</p>";
+			return "<p>[<a href='" + wikiUri + "'' target='_new'>more at Wikipedia</a>]</p>";
 		},
 
 		notFoundHeader: function(strainName, term) {
 			var underscoredName = strainName.replace(/\s+/g, "_");
 			var str = "<p><b><i>" +
 					  strainName + 
-					  "</i> not found. You can start a new page for this genome on <a href=\"http://en.wikipedia.org/wiki/" + 
+					  "</i> not found. You can start a new page for this genome on <a href='http://en.wikipedia.org/wiki/" + 
 					  underscoredName + 
-					  "\" target=\"_new\">Wikipedia</a>.</b></p>";
+					  "' target='_new'>Wikipedia</a>.</b></p>";
 			if (term) {
 				str += "<p><b>Showing description for <i>" +
 					   term +
@@ -204,7 +204,7 @@
         },
 
 		clientError: function(error) {
-
+			console.debug(error);
 		},
 
 	})

@@ -242,8 +242,8 @@
                                 .addClass('btn btn-default')
                                 .addClass('btn-xs')
                                 .addClass('dropdown-toggle')
-                                .append($('<i></i>').addClass('icon-user'))
-                                .append($('<i></i>').addClass('icon-caret-down'))
+                                .append($('<span></span>').addClass('glyphicon glyphicon-user'))
+                                .append($('<span></span>').addClass('caret'))
                                 .bind('click',
                                 //$.proxy(
                                 function(e) {

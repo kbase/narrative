@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app>
+<html lang="en" ng-app="App">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,9 +33,9 @@
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                   Widget <span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu" ng-controller="WidgetCtrl">
+                <ul class="dropdown-menu" ng-controller="WidgetListCtrl">
                     <li ng-repeat="widget in widgets">
-                        <a href="#{{widget}}">{{widget}}</a>
+                        <a href="Widget/{{widget}}">{{widget}}</a>
                     </li>
                 </ul>
               </li>
@@ -44,8 +44,8 @@
       </div>
     </div>
 
-    <div class="container" id="main-container">
-        <div class="widget" id="datavis">
+    <div class="container" id="main-container" ng-controller="MainCtrl">
+        <div class="widget" ng-view>
             <h1>Widget</h1>
         </div>
 
@@ -57,9 +57,27 @@
     <script src="../js/bootstrap.js"></script>
     <script src="../js/kbase.js"></script>
     <script src="../js/angular.js"></script>
+    <script src="../js/angular-route.js"></script>
     <script type="text/javascript">
-    function WidgetCtrl($scope) {
+    angular.module("App", ["ngRoute"])
+        .config(function ($routeProvider, $locationProvider) {
+            $routeProvider
+                .when("/Widget/:id", {
+                    template: "<div></div>",
+                    controller: WidgetDetailCtrl
+                });
+            // $locationProvider.html5Mode(true);
+        });
+    function WidgetListCtrl($scope) {
         $scope.widgets = Object.keys($.KBWidget.registry());
+    }
+    function WidgetDetailCtrl($scope, $params) {
+        console.log("Params", $params);
+    }
+    function MainCtrl($scope, $route, $routeParams, $location) {
+        $scope.$route = $route;
+        $scope.$location = $location;
+        $scope.$routeParams = $routeParams;
     }
     </script>
 </body>

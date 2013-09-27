@@ -57,7 +57,10 @@
     <script src="../js/bootstrap.js"></script>
     <script src="../js/kbase.js"></script>
     <script src="../js/angular.js"></script>
-    <script src="../js/angular-resource.js"></script>
-    <script src="../js/show-widget.js"></script>
+    <script type="text/javascript">
+    function WidgetCtrl($scope) {
+        $scope.widgets = Object.keys($.KBWidget.registry());
+    }
+    </script>
 </body>
 </html>

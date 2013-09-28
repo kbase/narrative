@@ -106,11 +106,12 @@
             var self = this;
             var newCard = $("#" + newCardId).LandingPageCard({
                 position: position,
-                title: "<div style='width:100%'><div>" + 
+                title: "<div>" + 
                        cardTitle + 
-                       "</div><span style='font-size: 14px; font-weight: normal'>" + 
+                       "</div>" +
+                       "<div style='font-size: 14px; font-weight: normal'>" + 
                        cardSubtitle + 
-                       "</span><span class='label label-primary pull-right'>" +
+                       "<span class='label label-primary pull-right'>" +
                        cardWorkspace + 
                        "</span></div>",
                 width: cardWidth,

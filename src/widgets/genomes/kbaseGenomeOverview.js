@@ -9,7 +9,8 @@
             workspace: null,
             loadingImage: "../../widgets/images/ajax-loader.gif",
             title: "Genome Overview",
-            isInCard: false
+            isInCard: false,
+            subtitle: "",
         },
 
         cdmiURL: "https://kbase.us/services/cdmi_api",
@@ -26,6 +27,7 @@
                                 .addClass("kbwidget-message-pane")
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
+            this.options.subtitle = this.options.genomeID;
 
             this.cdmiClient = new CDMI_API(this.cdmiURL);
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);

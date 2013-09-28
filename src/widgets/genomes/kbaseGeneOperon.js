@@ -7,7 +7,7 @@
  */
 (function( $, undefined ) {
     $.KBWidget({
-        name: "KBaseGeneOperonImage",
+        name: "KBaseGeneOperon",
         parent: "kbaseWidget",
         version: "1.0.0",
 
@@ -15,6 +15,7 @@
             featureID: null,
             auth: null,
             title: "Operon",
+            subtitle: "",
             loadingImage: null,
 
             svgWidth: 500,              // all numbers = pixels.
@@ -43,7 +44,7 @@
                 return this;
             }
 
-            this.options.title += " - " + this.options.featureID;
+            this.options.subtitle = this.options.featureID;
             this.$messagePane = $("<div/>")
                                 .addClass("kbwidget-message-pane")
                                 .addClass("kbwidget-hide-message");
@@ -435,7 +436,7 @@
                             )
                          .on("click", 
                                 function(d) { 
-                                    self.trigger("featureClick", { feature: d, featureElement: this})
+                                    self.trigger("featureClick", { feature: d, featureElement: this} )
                                     // this.options.onClickFunction = function(svgElement, feature) {
                                     //     self.trigger("featureClick", { feature: feature, featureElement: svgElement} );
                                     // }

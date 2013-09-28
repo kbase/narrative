@@ -64,8 +64,6 @@
             onClickFunction: null,
 
             width: 550,
-            title: "Contig Browser",
-            subtitle: "",
         },
 
         cdmiURL: "http://kbase.us/services/cdmi_api",
@@ -93,7 +91,6 @@
             this.proteinInfoClient = new ProteinInfo(this.proteinInfoURL);
             this.workspaceClient = new workspaceService(this.workspaceURL);
 
-            this.options.subtitle = this.options.contig;
             this.render();
 
             var self = this;
@@ -694,7 +691,8 @@
             return {
                 type: "Contig",
                 id: this.options.contig,
-                workspace: this.options.workspaceID
+                workspace: this.options.workspaceID,
+                title: "Contig Browser"
             };
         },
 

@@ -12,7 +12,6 @@
 			genomeID: null,
 			workspaceID: null,
 			title: "Description",
-			subtitle: "",
 			maxNumChars: 500,
 			width: 500,
 			loadingImage: null
@@ -38,8 +37,6 @@
 			this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
 			this.workspaceClient = new workspaceService(this.workspaceURL);
 			this.wikiClient = new WikiScraper(this.wikiScraperURL);
-
-			this.options.subtitle = this.options.genomeID;
 
 			return this.render();
 		},
@@ -201,6 +198,7 @@
                 type: "Description",
                 id: this.options.genomeID,
                 workspace: this.options.workspaceID
+                title: "Description"
             };
         },
 

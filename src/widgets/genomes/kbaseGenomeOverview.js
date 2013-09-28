@@ -8,9 +8,7 @@
             genomeID: null,
             workspace: null,
             loadingImage: "../../widgets/images/ajax-loader.gif",
-            title: "Genome Overview",
             isInCard: false,
-            subtitle: "",
         },
 
         cdmiURL: "https://kbase.us/services/cdmi_api",
@@ -27,7 +25,6 @@
                                 .addClass("kbwidget-message-pane")
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
-            this.options.subtitle = this.options.genomeID;
 
             this.cdmiClient = new CDMI_API(this.cdmiURL);
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
@@ -149,7 +146,8 @@
             return {
                 type: "Genome",
                 id: this.options.genomeID,
-                workspace: this.options.workspaceID
+                workspace: this.options.workspaceID,
+                title: "Genome Overview"
             };
         },
 

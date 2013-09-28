@@ -14,8 +14,6 @@
         options: {
             featureID: null,
             auth: null,
-            title: "Operon",
-            subtitle: "",
             loadingImage: null,
 
             svgWidth: 500,              // all numbers = pixels.
@@ -27,7 +25,9 @@
             arrowSize: 10,
 
             start: 0,
-            length: 0
+            length: 0,
+            width: 550,
+            
         },
 
         cdmiURL: "https://kbase.us/services/cdmi_api",
@@ -44,7 +44,6 @@
                 return this;
             }
 
-            this.options.subtitle = this.options.featureID;
             this.$messagePane = $("<div/>")
                                 .addClass("kbwidget-message-pane")
                                 .addClass("kbwidget-hide-message");
@@ -589,7 +588,8 @@
             return {
                 type: "Operon",
                 id: this.options.featureID,
-                workspace: this.options.workspaceID
+                workspace: this.options.workspaceID,
+                title: "Operon"
             };
         },
 

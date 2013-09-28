@@ -97,14 +97,22 @@
 
             var newWidget = $("#" + newCardId)[cardName](options);
 
-            var cardTitle = newWidget.options.title ? newWidget.options.title : "";
-            var cardSubtitle = newWidget.options.subtitle ? newWidget.options.subtitle : "";
+            var data = newWidget.getData();
+            var cardTitle = data.title ? data.title : "";
+            var cardSubtitle = data.id ? data.id : "";
             var cardWidth = newWidget.options.width ? newWidget.options.width : 300;
+            var cardWorkspace = data.workspace ? data.workspace : "KBase Central Store";
 
             var self = this;
             var newCard = $("#" + newCardId).LandingPageCard({
                 position: position,
-                title: "<div style='width:100%'><div>" + cardTitle + "</div><span style='font-size: 14px; font-weight: normal'>" + cardSubtitle + "</span><span class='label label-primary pull-right'>test!</span></div>",
+                title: "<div style='width:100%'><div>" + 
+                       cardTitle + 
+                       "</div><span style='font-size: 14px; font-weight: normal'>" + 
+                       cardSubtitle + 
+                       "</span><span class='label label-primary pull-right'>" +
+                       cardWorkspace + 
+                       "</span></div>",
                 width: cardWidth,
                 id: newCardId,
             });

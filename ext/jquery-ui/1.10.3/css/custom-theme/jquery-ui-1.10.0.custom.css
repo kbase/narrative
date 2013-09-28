@@ -924,7 +924,7 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
   position: fixed;
   /*top: 10%;
   width: 560px;*/
-  z-index: 1050;
+  /*z-index: 1050;*/
 }
 .ui-dialog .ui-dialog-titlebar { /*padding: .4em 1em;*/
   position: relative;

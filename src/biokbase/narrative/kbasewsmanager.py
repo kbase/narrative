@@ -28,6 +28,7 @@ import glob
 import shutil
 import json
 import re
+import biokbase.narrative.ws_util as ws_util
 from biokbase.workspaceService.Client import workspaceService
 
 from bson.json_util import dumps
@@ -132,10 +133,16 @@ class KBaseWSNotebookManager(NotebookManager):
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         # Grab all workspaces, filter it down to the ones the user have privs on
         # and then extract all the Narrative objects from each one
-        all_narratives = get_ws_narratives( self.ws_client, token)
+        all = ws_util.get_wsobj( self.wsclient, token)
 
-        self.mapping = { id : nar[0] for id,nar in all_narratives }
-        self.rev_mapping = { nar[0] : id for id,nar in all_narratives }
+        self.mapping = {
+            ws_id : "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id'])
+            for ws_id in all.keys()
+        }
+        self.rev_mapping = {
+            "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id'])  : ws_id
+            for ws_id in all.keys()
+        }
 
         data = [ dict(notebook_id = it[0], name = it[1]) for it in self.mapping.items()]
         data = sorted(data, key=lambda item: item['name'])
@@ -242,7 +249,7 @@ class KBaseWSNotebookManager(NotebookManager):
                       'retrieveFromURL': 0,
                       'asHash' :  0
                     }
-            res = self.ws_client.save_object( ws_obj)
+            res = self.wsclient.save_object( ws_obj)
         except Exception as e:
             raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
         # use "kb|ws.ws_id.object_id" as the identifier

@@ -133,7 +133,7 @@ class KBaseWSNotebookManager(NotebookManager):
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         # Grab all workspaces, filter it down to the ones the user have privs on
         # and then extract all the Narrative objects from each one
-        all = ws_util.get_wsobj( self.wsclient, token)
+        all = ws_util.get_wsobj_meta( self.wsclient, token)
 
         self.mapping = {
             ws_id : "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id'])

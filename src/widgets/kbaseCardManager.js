@@ -17,6 +17,19 @@
                 });
             };
 
+            // allow html in dialog title bar
+            // safe, since they're not user-generated or modified
+            // http://stackoverflow.com/questions/14488774/using-html-in-a-dialogs-title-in-jquery-ui-1-10
+            $.widget("ui.dialog", $.extend({}, $.ui.dialog.prototype, {
+                _title: function(title) {
+                    if (!this.options.title ) {
+                        title.html("&#160;");
+                    } else {
+                        title.html(this.options.title);
+                    }
+                }
+            }));
+
             var self = this;
             $(document).on("kbaseCardClosed", function(event, id) {
                 self.cardClosed(id);
@@ -85,12 +98,13 @@
             var newWidget = $("#" + newCardId)[cardName](options);
 
             var cardTitle = newWidget.options.title ? newWidget.options.title : "";
+            var cardSubtitle = newWidget.options.subtitle ? newWidget.options.subtitle : "";
             var cardWidth = newWidget.options.width ? newWidget.options.width : 300;
 
             var self = this;
             var newCard = $("#" + newCardId).LandingPageCard({
                 position: position,
-                title: cardTitle,
+                title: "<div style='width:100%'><div>" + cardTitle + "</div><span style='font-size: 14px; font-weight: normal'>" + cardSubtitle + "</span><span class='label label-primary pull-right'>test!</span></div>",
                 width: cardWidth,
                 id: newCardId,
             });

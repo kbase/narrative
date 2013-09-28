@@ -7,6 +7,11 @@ require("../src/kbwidget.js");
 // TODO: Reset jQuery namespaces for each test.
 
 describe("KBWidget", function () {
+    beforeEach(function (done) {
+        $.KBWidget.resetRegistry();
+        done();
+    });
+    
     it("should be a function",
     function (done) {
         $.KBWidget.should.be.a.function;
@@ -73,4 +78,26 @@ describe("KBWidget", function () {
         widget.emit.should.be.a.function;
         done();
     });
+    
+    it("should export a registry of available widgets", function (done) {
+        $.KBWidget.registry.should.be.a.function;
+        $.KBWidget({ name: "RegWidget1" });
+        $.KBWidget({ name: "RegWidget2" });
+        $.KBWidget({ name: "RegWidget3" });
+        var widgets = $.KBWidget.registry();
+        widgets.should.be.an.object;
+        Object.keys(widgets).should.have.length(3);
+        done();
+    });
+    
+    it("should allow the registry to be reset", function (done) {
+        Object.keys($.KBWidget.registry()).should.have.length(0);
+        $.KBWidget({ name: "MyWidget1" });
+        $.KBWidget({ name: "MyWidget2" });
+        $.KBWidget({ name: "MyWidget3" });
+        Object.keys($.KBWidget.registry()).should.have.length(3);
+        $.KBWidget.resetRegistry();
+        Object.keys($.KBWidget.registry()).should.have.length(0);
+        done();
+    })
 });

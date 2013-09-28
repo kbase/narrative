@@ -14,7 +14,8 @@
 		options: {
 			featureID: null,
 			auth: null,
-			title: "Domains"
+			title: "Domains",
+			subtitle: ""
 		},
 
 		cdmiURL: "https://kbase.us/services/cdmi_api",
@@ -34,7 +35,7 @@
 			this.workspaceClient = new workspaceService(this.workspaceURL);
 			this.proteinInfoClient = new ProteinInfo(this.proteinInfoURL);
 
-			this.options.title += " - " + this.options.featureID;
+			this.options.subtitle = this.options.featureID;
 
 			return this.render();
 		},

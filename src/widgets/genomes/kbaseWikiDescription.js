@@ -12,6 +12,7 @@
 			genomeID: null,
 			workspaceID: null,
 			title: "Description",
+			subtitle: "",
 			maxNumChars: 500,
 			width: 500,
 			loadingImage: null
@@ -38,7 +39,7 @@
 			this.workspaceClient = new workspaceService(this.workspaceURL);
 			this.wikiClient = new WikiScraper(this.wikiScraperURL);
 
-			this.options.title += " - " + this.options.genomeID;
+			this.options.subtitle = this.options.genomeID;
 
 			return this.render();
 		},

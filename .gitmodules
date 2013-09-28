@@ -1,0 +1,3 @@
+[submodule "ext/emberjs"]
+	path = ext/emberjs
+	url = https://github.com/emberjs/starter-kit

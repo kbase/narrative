@@ -197,8 +197,8 @@
             return {
                 type: "Description",
                 id: this.options.genomeID,
-                workspace: this.options.workspaceID
-                title: "Description"
+                workspace: this.options.workspaceID,
+                title: "Organism Description"
             };
         },
 

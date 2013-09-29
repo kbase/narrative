@@ -78,7 +78,11 @@ nav[role="navigation"] input[type="text"] {
 }
 
 
-/** H styling */
+/** redundant styles
+@import url("http://fonts.googleapis.com/css?family=Roboto");
+
+
+** H styling *
 h1 {
 	font-family:'Roboto', Arial, sans-serif;
 	letter-spacing: 0; 
@@ -99,6 +103,7 @@ h4 {
 	letter-spacing: .07em;
 	}
 	
+*/
 
 span.aside {
 	font-style: italic;

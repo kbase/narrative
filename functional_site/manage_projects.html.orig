@@ -139,6 +139,7 @@
           </div><!--end accordion group (one project) -->
         </div><!-- end accordion -->
 
+<<<<<<< HEAD
         <div class="archives">
             <h2><a href="#archive_list" data-toggle="collapse" data-target="#archive_list"><span class="glyphicon glyphicon-play"></span> Archived Projects</a></h2>
           <div id="archive_list" class="collapse">
@@ -146,6 +147,17 @@
           </div>
         </div>
       </div><!-- end project stuff -->
+=======
+    <br clear = 'all'/>
+
+
+<script src="static/js/jquery-1.10.2.min.js"></script>
+<script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+
+
+</body>
+</html>
+>>>>>>> 6e967da99ac1bc0a167f829a188c9e9431de22b9
 
 		</div><!-- end row -->
     </div><!-- end main container -->

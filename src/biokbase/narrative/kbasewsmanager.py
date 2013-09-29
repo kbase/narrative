@@ -105,19 +105,6 @@ class KBaseWSNotebookManager(NotebookManager):
     def _clean_id( id):
         return self.wsid_regex.sub( '', id.replace(' ','_'))
             
-    # Return a dictionary of wsids and narrative objects
-    def get_ws_narratives( wsclient, token ):
-        wslist1 = wsclient.list_workspaces( { 'auth' : token })
-        wslist2 = [w[0] for w in wslist1 if w[4] != u'n']
-        my_narratives = {}
-        for w in wslist2:
-            res = wsclient.list_workspace_objects( { 'auth' : token,
-                                                      'type' : 'Narrative',
-                                                      'workspace' : w})
-            for obj in res:
-                my_narratives[ "kb|ws.%s.%s" % (w,obj[0])] = obj
-        return my_narratives
-
     def list_notebooks(self):
         """List all notebooks in WSS
         For the ID field, we use "kb|ws.{ws_id}.{obj_id}"
@@ -193,14 +180,12 @@ class KBaseWSNotebookManager(NotebookManager):
             token = self.kbase_session['token']
         except AttributeError:
             raise web.HTTPError(400, u'Missing token from kbase_session object')
-
-        doc = self.collection.find_one( { '_id' : notebook_id })
-        if doc is None:
-            raise web.HTTPError(500, u'Notebook % not found' % notebook_id)
-        # Convert from MongoDB doc to plain JSON and then conver to notebook format
-        jsonnb = dumps( doc['ipynb'] )
-        nb = current.reads( jsonnb, u'json')
-        last_modified = dateutil.parser.parse(doc['created'])
+        try:
+            wsobj = ws_util.get_wsobj( self.wsclient, token, notebook_id, self.ws_type)
+        except ws_util.BadWorkspaceID, e:
+            raise web.HTTPError(500, u'Notebook % not found: %' % (notebook_id, e))
+        nb = wsobj['data']
+        last_modified = dateutil.parser.parse(wsobj['metadata']['moddate'])
         return last_modified, nb
     
     def write_notebook_object(self, nb, notebook_id=None):
@@ -284,61 +269,26 @@ class KBaseWSNotebookManager(NotebookManager):
         """Create a checkpoint from the current state of a notebook"""
         # only the one checkpoint ID:
         checkpoint_id = u"checkpoint"
-        doc = self.collection.find_one( { '_id' : notebook_id })
-        if doc is None:
-            raise web.HTTPError(500, u'Notebook % not found' % notebook_id)
         chkpt_created = datetime.datetime.utcnow()
-        self.collection.update( { '_id' : notebook_id } ,
-                                { '$set' : { 'ipynb_chkpt' : doc['ipynb'],
-                                             'chkpt_created' : chkpt_created.isoformat() } } );
+        # This is a no-op for now
         # return the checkpoint info
         return { 'checkpoint_id' : checkpoint_id , 'last_modified' : chkpt_created}
 
 
     def list_checkpoints(self, notebook_id):
-        """list the checkpoints for a given notebook
-        
-        This notebook manager currently only supports one checkpoint per notebook.
         """
-        checkpoint_id = u"checkpoint"
-        doc = self.collection.find_one( { '_id' : notebook_id })
-        if 'ipynb_chkpt' in doc:
-            return [{'checkpoint_id' : checkpoint_id, 'last_modified' : dateutil.parser.parse(doc['chkpt_created']) } ]
-        else:
-            return []
+        list the checkpoints for a given notebook
+        this is a no-op for now. eventually use it for rolling back to old revs in ws
+        """
+        return []
     
     def restore_checkpoint(self, notebook_id, checkpoint_id):
         """restore a notebook to a checkpointed state"""
-        doc = self.collection.find_one( { '_id' : notebook_id })
-        if doc:
-            if 'ipynb_chkpt' in doc:
-                doc['ipynb'] = doc['ipynb_chkpt']
-                doc['created'] = doc['chkpt_created']
-                id = self.collection.save( doc, manipulate = True, safe=True)
-                self.log.debug("copying ipynb_chkpt to ipynb for %s", notebook_id)
-            else:
-                 self.log.debug("checkpoint for %s does not exist" % notebook_id)
-                 raise web.HTTPError(404,
-                                     u'Notebook checkpoint does not exist: %s' % notebook_id)
-        else:
-            self.log( "notebook %s does not exist" % notebook_id)
-            raise web.HTTPError(404,
-                                u'Notebook %s does not exist' % notebook_id)
+        pass
 
     def delete_checkpoint(self, notebook_id, checkpoint_id):
         """delete a notebook's checkpoint"""
-        doc = self.collection.find_one( { '_id' : notebook_id })
-        if doc:
-            if 'ipynb_chkpt' in doc:
-                self.collection.update( { '_id' : notebook_id },
-                                        { '$unset' : { 'ipynb_chkpt' : 1,
-                                                       'chkpt_created' : 1}})
-            else:
-                 raise web.HTTPError(404,
-                                     u'Notebook checkpoint does not exist: %s' % notebook_id)
-        else:
-            raise web.HTTPError(404,
-                                u'Notebook %s does not exist' % notebook_id)
+        pass
 
     def log_info(self):
         self.log.info("Serving notebooks from MongoDB URI %s" %self.mongodb_uri)

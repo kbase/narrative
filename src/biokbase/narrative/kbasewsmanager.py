@@ -131,7 +131,7 @@ class KBaseWSNotebookManager(NotebookManager):
             return []
         # Grab all workspaces, filter it down to the ones the user have privs on
         # and then extract all the Narrative objects from each one
-        all = ws_util.get_wsobj_meta( self.wsclient, token)
+        all = ws_util.get_wsobj_meta( self.wsclient, token, ws="%s_home" % user_id)
 
         self.mapping = {
             ws_id : "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id'])
@@ -169,6 +169,7 @@ class KBaseWSNotebookManager(NotebookManager):
     def notebook_exists(self, notebook_id):
         """Does a notebook exist?"""
         exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
+        self.log.error("notebook_exists(%s) = %s"%(notebook_id,exists))
         if not exists:
             return False
         return exists

@@ -92,5 +92,5 @@ def do_patching( c ):
                 #IPython.html.base.handlers.app_log.debug("token = " + kb_sess.get('token'))
                 #if hasattr(self,'notebook_manager'):
                 #    setattr(self.notebook_manager,'kbase_token', kb_sess.get('token'))
-                cookie_pusher( self.cookies['kbase_session'].value,getattr(self,'notebook_manager')
+                cookie_pusher( self.cookies['kbase_session'].value,getattr(self,'notebook_manager'))
             return old_get1(self)

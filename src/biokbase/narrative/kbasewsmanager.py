@@ -50,24 +50,31 @@ from IPython.utils import tz
 #-----------------------------------------------------------------------------
 
 class KBaseWSNotebookManager(NotebookManager):
+    """
+    A notebook manager that uses the KBase workspace for storage.
 
-    # The Workspace backend simply wraps the JSON notebook in a enclosing dict
-    # and pushes it into the workspace. The dict has the following fields
-    # {
-    #     'name' : User specified name for the narrative
-    #     'owner' : {username of the owner of this notebook},
-    #     'doc_type' : (ipynb),
-    #     'ipynb' : { actual ipython notebook dict },
-    #     'created' : { creation/update timestamp },
-    #     'description' : 'description of notebook',
-    #     'data_dependencies' : { list of kbase id strings }
-    # }
+    The Workspace backend simply adds a few metadata fields into the
+    notebook object and pushes it into the workspace as the 'data'
+    part of a workspace object
 
-    # This handler expects that on every request, the session attribute for an
-    # instance will be populated by the front end handlers. That's gross, but
-    # that's what we're running with for now.
-    # Note: you'll probably see "That's gross, but..." a lot in this rev of the
-    # code
+    Additional metadata fields
+    {
+        'id' : User specified title for the narrative alphanumerica + _
+        'creator' : {username of the creator of this notebook},
+        'description' : 'description of notebook',
+        'data_dependencies' : { list of kbase id strings }
+        'format' : self.node_format
+    }
+
+    This handler expects that on every request, the session attribute for an
+    instance will be populated by the front end handlers. That's gross, but
+    that's what we're running with for now.
+    Note: you'll probably see "That's gross, but..." a lot in this rev of the
+    code
+
+    Notebooks are identified with workspace identifiers of the format
+    kb|ws.{workspace_name}.{object_name}
+    """
     kbasews_uri = Unicode('https://kbase.us/services/workspace/', config=True, help='Workspace service endpoint URI')
 
     ipynb_type = Unicode(u'ipynb')
@@ -110,14 +117,18 @@ class KBaseWSNotebookManager(NotebookManager):
         For the ID field, we use "kb|ws.{ws_id}.{obj_id}"
         The obj_id field is sanitized version of document.ipynb.metadata.name
         """
+        self.log.error("listing notebooks.")
+        self.log.error("kbase_session = %s" % str(self.kbase_session))
         try:
             user_id = self.kbase_session['user_id']
-        except AttributeError:
-            raise web.HTTPError(400, u'Missing user_id from kbase_session object')
+        except KeyError:
+            self.log.error("No user_id in session")
+            return []
         try:
             token = self.kbase_session['token']
-        except AttributeError:
-            raise web.HTTPError(400, u'Missing token from kbase_session object')
+        except KeyError:
+            self.log.error("No token in session")
+            return []
         # Grab all workspaces, filter it down to the ones the user have privs on
         # and then extract all the Narrative objects from each one
         all = ws_util.get_wsobj_meta( self.wsclient, token)
@@ -145,11 +156,11 @@ class KBaseWSNotebookManager(NotebookManager):
         """Delete a notebook's id in the mapping."""
         try:
             user_id = self.kbase_session['user_id']
-        except AttributeError:
+        except KeyError:
             raise web.HTTPError(400, u'Missing user_id from kbase_session object')
         try:
             token = self.kbase_session['token']
-        except AttributeError:
+        except KeyError:
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         name = self.mapping[notebook_id]
         super(KBaseWSNotebookManager, self).delete_notebook_id(notebook_id)
@@ -172,13 +183,15 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def read_notebook_object(self, notebook_id):
         """Get the Notebook representation of a notebook by notebook_id."""
+        self.log.error("reading notebook %s." % notebook_id)
+        self.log.error("kbase_session = %s" % str(self.kbase_session))
         try:
             user_id = self.kbase_session['user_id']
-        except AttributeError:
+        except KeyError:
             raise web.HTTPError(400, u'Missing user_id from kbase_session object')
         try:
             token = self.kbase_session['token']
-        except AttributeError:
+        except KeyError:
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         try:
             wsobj = ws_util.get_wsobj( self.wsclient, token, notebook_id, self.ws_type)
@@ -192,11 +205,11 @@ class KBaseWSNotebookManager(NotebookManager):
         """Save an existing notebook object by notebook_id."""
         try:
             user_id = self.kbase_session['user_id']
-        except AttributeError:
+        except KeyError:
             raise web.HTTPError(400, u'Missing user_id from kbase_session object')
         try:
             token = self.kbase_session['token']
-        except AttributeError:
+        except KeyError:
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         try:
             new_name = normalize('NFC', nb.metadata.name)
@@ -207,13 +220,14 @@ class KBaseWSNotebookManager(NotebookManager):
         try:
             if notebook_id is None:
                 notebook_id = self.new_notebook_id(new_name)
-            if not hasattr(nb.metadata, 'owner'):
-                nb.metadata.owner = user_id
+            if not hasattr(nb.metadata, 'creator'):
+                nb.metadata.creator = user_id
             if not hasattr(nb.metadata, 'type'):
                 nb.metadata.type = 'Narrative'
             if not hasattr(nb.metadata, 'description'):
                 nb.metadata.description = ''
-            nb.metadata.created = datetime.datetime.utcnow().isoformat()
+            if not hasattr(nb.metadata, 'data_dependencies'):
+                nb.metadata.data_dependencies = []
             nb.metadata.format = self.node_format
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
@@ -246,11 +260,11 @@ class KBaseWSNotebookManager(NotebookManager):
         """Delete notebook by notebook_id."""
         try:
             user_id = self.kbase_session['user_id']
-        except AttributeError:
+        except KeyError:
             raise web.HTTPError(400, u'Missing user_id from kbase_session object')
         try:
             token = self.kbase_session['token']
-        except AttributeError:
+        except KeyError:
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         if notebook_id is None:
             raise web.HTTPError(400, u'Missing notebookd_id')
@@ -291,10 +305,10 @@ class KBaseWSNotebookManager(NotebookManager):
         pass
 
     def log_info(self):
-        self.log.info("Serving notebooks from MongoDB URI %s" %self.mongodb_uri)
-        self.log.info("Serving notebooks from MongoDB db %s" %self.mongodb_database)
-        self.log.info("Serving notebooks from MongoDB collection %s" %self.mongodb_collection)
+        #self.log.info("Serving notebooks from MongoDB URI %s" %self.mongodb_uri)
+        #self.log.info("Serving notebooks from MongoDB db %s" %self.mongodb_database)
+        #self.log.info("Serving notebooks from MongoDB collection %s" %self.mongodb_collection)
+        pass
 
     def info_string(self):
-        return "Serving notebooks from mongodb database %s and collection %s" % (self.mongodb_database,
-                                                                                 self.mongodb_collection)
+        return "Workspace Notebook Service with workspace endpoint at %s" % self.kbasews_uri

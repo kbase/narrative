@@ -1,8 +1,10 @@
 PACKAGE  = ui-common
-MOCHA    = ./node_modules/.bin/mocha
+TOPDIR   = $(PWD)
+MOCHA    = $(TOPDIR)/node_modules/.bin/mocha
 
-UGLIFY   = ./node_modules/.bin/uglifyjs
+UGLIFY   = $(TOPDIR)/node_modules/.bin/uglifyjs
 JSDUCK   := $(shell which jsduck)
+GRUNT    := $(TOPDIR)/node_modules/.bin/grunt
 
 DISTDIR      ?= ./dist
 DISTLIB      ?= $(DISTDIR)/kbase.js
@@ -16,6 +18,9 @@ all: test
 init:
 	@ npm install
 	@ git submodule update --init
+
+build-angular: init
+	@ cd ./ext/angularjs && $(GRUNT) package
 
 docs: init
 ifndef JSDUCK

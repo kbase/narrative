@@ -4,3 +4,6 @@
 [submodule "ext/kbase-datavis"]
 	path = ext/kbase-datavis
 	url = git://github.com/gingi/kbase-datavis
+[submodule "ext/angularjs"]
+	path = ext/angularjs
+	url = https://github.com/angular/angular.js

@@ -235,9 +235,9 @@ class KBaseWSNotebookManager(NotebookManager):
                 notebook_id = self.new_notebook_id(new_name)
             if not hasattr(nb.metadata, 'creator'):
                 nb.metadata.creator = user_id
-            if not hasattr(nb.metadata, 'id'):
-                m = self.ws_regex.match(notebook_id)
-                nb.metadata.id = m.group('objid')
+            #if not hasattr(nb.metadata, 'id'):
+            #    m = self.ws_regex.match(notebook_id)
+            #    nb.metadata.id = m.group('objid')
             if not hasattr(nb.metadata, 'type'):
                 nb.metadata.type = 'Narrative'
             if not hasattr(nb.metadata, 'description'):
@@ -252,12 +252,12 @@ class KBaseWSNotebookManager(NotebookManager):
 
         self.log.error("writing notebook %s - getting ready to put into workspace." % notebook_id)
         try:
-            wsobj = { 'id' : nb['id'],
+            wsobj = { 'id' : self._clean_id(nb.metadata.name),
                       'type' : self.ws_type,
                       'data' : nb,
                       'workspace' : 'kbasetest_home',
                       'command' : '',
-                      'metadata' : nb['metadata'],
+                      'metadata' : nb.metadata,
                       'auth' : token,
                       'json' : 0,
                       'compressed': 0,

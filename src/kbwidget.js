@@ -580,6 +580,41 @@
             return this;
         }
     }
+    
+    /**
+     * @method registry
+     * The set of globally-registered widgets.
+     * @return {Object} The registry
+     * @return {String} return.key The name of the widget
+     * @return {Object} return.value The widget
+     * @static
+     */
+    $.KBWidget.registry = function () {
+        var registry = {};
+        for (var widget in widgetRegistry) {
+            if (widget !== 'kbaseWidget') {
+                registry[widget] = widgetRegistry[widget];
+            }
+        }
+        return registry;
+    }
+    
+    /**
+     * @method resetRegistry
+     * Unregisters all global widgets.
+     * Note that this does not delete the widgets if another reference to them
+     * is maintained (e.g., by variable assignment).
+     * @static
+     * @chainable
+     */
+    $.KBWidget.resetRegistry = function () {
+        for (var widget in widgetRegistry) {
+            if (widget !== 'kbaseWidget') {
+                delete widgetRegistry[widget];
+            }
+        }
+        return this;
+    }
 
     $.KBWidget(
         {

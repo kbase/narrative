@@ -66,15 +66,13 @@
         get_kbase_cookie : function (field) {
 
             var chips = sessionStorage.getItem('kbase_session');
-            console.log(sessionStorage);
+
             if (chips != undefined) {
-            console.log(chips);
                 chips = JSON.parse(chips);
             }
             else {
                 chips = {};
             }
-            console.log(chips);
 
             return field == undefined
                 ? chips
@@ -889,8 +887,7 @@
 
             $ld.dialogModal().on('shown.bs.modal',
                 function (e) {
-                console.log("IS SHOWNz!");
-                console.log(                        $(this).data('user_id'));
+
                     if ($(this).data('user_id').val().length == 0) {
                         $(this).data('user_id').focus();
                     }
@@ -941,9 +938,11 @@
                                 if (data.kbase_sessionid) {
 
 									$.cookie('kbase_session',
-								    	  'un=' + data.user_id
-										+ '|'
-										+ 'kbase_sessionid=' + data.kbase_sessionid);
+								    	  'unEQUALSSIGN' + data.user_id
+										+ 'PIPESIGN'
+										+ 'kbase_sessionidEQUALSSIGN' + data.kbase_sessionid)
+										+ 'PIPESIGN'
+										+ 'token_idEQUALSSIGN' + data.kbase_sessionid);
 
                                     var cookieArray = [];
 
@@ -957,10 +956,8 @@
                                     var jsonARGS = JSON.stringify(args);
 
                                     sessionStorage.setItem('kbase_session', jsonARGS);
-                                    console.log(sessionStorage);
 
                                     this.populateLoginInfo(args);
-                                    console.log("ARGS");console.log(args);console.log(jsonARGS);
 
                                     this.trigger('loggedIn', this.get_kbase_cookie());
 

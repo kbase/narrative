@@ -78,7 +78,8 @@ def do_patching( c ):
             """ Parser for Jim Thomason's login widget cookies """
             sess = { k : v.replace('EQUALSSIGN','=').replace('PIPESIGN','|')
                      for k,v in cookierx.findall(urllib.unquote(cookie)) }
-            IPython.html.base.handlers.app_log.debug("token = " + sess.get('token'))
+            IPython.html.base.handlers.app_log.debug("user_id = " + sess.get('token','None'))
+            IPython.html.base.handlers.app_log.debug("token = " + sess.get('token','None'))
             setattr(handler,'kbase_session', sess)
 
         IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.notebook.handlers.NamedNotebookHandler.get() in process {}".format(os.getpid()))
@@ -87,6 +88,7 @@ def do_patching( c ):
         @monkeypatch_method(IPython.html.notebook.handlers.NamedNotebookHandler)
         def get(self,notebook_id):
             if 'kbase_session' in self.cookies and hasattr(self,'notebook_manager'):
+                IPython.html.base.handlers.app_log.debug("kbase_session = " + self.cookies['kbase_session'].value)
                 cookie_pusher(self.cookies['kbase_session'].value, getattr(self,'notebook_manager'))
             return old_get(self,notebook_id)
 

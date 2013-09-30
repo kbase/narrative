@@ -89,3 +89,26 @@ def get_wsobj( wsclient, token, ws_id, objtype=None):
     res = wsclient.get_object( dict( auth=token, workspace=ws, id=objid, type=objtype))
     res['metadata'] = dict(zip(list_ws_obj_fields, res['metadata']))
     return res
+
+def check_homews( wsclient, user_id, token):
+    """
+    Helper routine to make sure that the user's home workspace is built. Putting it here
+    so that when/if it changes we only have a single place to change things.
+    Takes a wsclient and token, will check for the existence of the home workspace and
+    create it if necessary. Will pass along any exceptions
+    """
+    try:
+        homews = "%s_home" % user_id
+        ws_meta = wsclient.get_workspacemeta( { 'auth' : token,
+                                                'workspace' : homews})
+        if ws_meta:
+            return homews
+    except biokbase.workspaceService.Client.ServerError, e:
+        # If it is a not found error, create it, otherwise reraise
+        if e.message.find('not found'):
+            ws_meta = wsclient.create_workspace( { 'workspace' : homews,
+                                                   'auth' : token,
+                                                   'default_permission' : 'n'})
+            return homews
+        else:
+            raise e

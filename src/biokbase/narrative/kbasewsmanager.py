@@ -130,9 +130,8 @@ class KBaseWSNotebookManager(NotebookManager):
         except KeyError:
             self.log.debug("No token in session")
             return []
-        # Grab all workspaces, filter it down to the ones the user have privs on
-        # and then extract all the Narrative objects from each one
-        all = ws_util.get_wsobj_meta( self.wsclient, token, ws="%s_home" % user_id)
+        # Check only the home workspace by default
+        all = ws_util.get_wsobj_meta( self.wsclient, token, ws=ws_util.check_homews(self.wsclient, user_id,token))
 
         self.mapping = {
             "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id']) : "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id'])
@@ -145,7 +144,12 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def new_notebook_id(self, name):
         """Generate a new notebook_id for a name and store its mappings."""
-        notebook_id = "%s_home.%s" % ( self.kbase_session['user_id'],name)
+        try:
+            user_id = self.kbase_session['user_id']
+            token = self.kbase_session['token']
+        except KeyError,e:
+            raise web.HTTPError(400, u'Missing field from kbase_session object: %s' % e)
+        notebook_id = "%s.%s" % ( ws_util.check_homews(self.wsclient, user_id, token),name)
         self.mapping[notebook_id] = name
         self.rev_mapping[name] = notebook_id
         return notebook_id
@@ -166,10 +170,31 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def notebook_exists(self, notebook_id):
         """Does a notebook exist?"""
+        try:
+            user_id = self.kbase_session['user_id']
+        except KeyError:
+            raise web.HTTPError(400, u'Missing user_id from kbase_session object')
+        try:
+            token = self.kbase_session['token']
+        except KeyError:
+            raise web.HTTPError(400, u'Missing token from kbase_session object')
         exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
-        self.log.debug("notebook_exists(%s) = %s"%(notebook_id,exists))
+        self.log.error("notebook_exists(%s) = %s"%(notebook_id,exists))
         if not exists:
-            return False
+            # The notebook doesn't exist among the notebooks we've loaded, lets see
+            # if it exists at all in the workspace service
+            self.log.error("Checking other workspace")
+            m = self.ws_regex.match(notebook_id)
+            if not m:
+                return False
+            self.log.error("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
+            objmeta = ws_util.get_wsobj_meta( self.wsclient, token, ws=m.group('wsid'))
+            self.log.error("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
+            if "kb|ws.%s" % notebook_id in objmeta:
+                self.mapping[notebook_id] = notebook_id
+                return True
+            else:
+                return False
         return exists
     
     def get_name(self, notebook_id):
@@ -218,6 +243,9 @@ class KBaseWSNotebookManager(NotebookManager):
         except AttributeError:
             raise web.HTTPError(400, u'Missing notebook name')
         new_name = self._clean_id( new_name)
+        # Verify that our own home workspace exists, note that we aren't doing this
+        # as a general thing for other workspaces
+        homews = ws_util.check_homews( self.wsclient, user_id, token)
         # Carry over some of the metadata stuff from ShockNBManager
         try:
             if notebook_id is None:
@@ -242,7 +270,7 @@ class KBaseWSNotebookManager(NotebookManager):
             wsobj = { 'id' : self._clean_id(nb.metadata.name),
                       'type' : self.ws_type,
                       'data' : nb,
-                      'workspace' : 'kbasetest_home',
+                      'workspace' : homews,
                       'command' : '',
                       'metadata' : nb.metadata,
                       'auth' : token,
@@ -251,6 +279,7 @@ class KBaseWSNotebookManager(NotebookManager):
                       'retrieveFromURL': 0,
                       'asHash' :  0
                     }
+            self.log.debug("calling save_object with %s" % wsobj)
             res = self.wsclient.save_object( wsobj)
             self.log.debug("save_object returned %s" % res)
         except Exception as e:
@@ -328,7 +357,11 @@ class KBaseWSNotebookManager(NotebookManager):
 
 #
 # This is code that patches the regular expressions used in the default routes
-# of tornado handlers. We use these to modify the routes installed by the notebook
+# of tornado handlers. IPython installs handlers that recognize a UUID as the
+# kbase notebook id, but we're using workspace_name.object_id so the routes
+# need to be updated otherwise you can't reach the handlers.
+#
+# We use these to modify the routes installed by the notebook
 # handlers in the main IPython code without having to change the IPython code
 # directly
 #

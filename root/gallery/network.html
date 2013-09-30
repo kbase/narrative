@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <meta charset="charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Widget</title>
+    <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" media="screen" charset="utf-8">
+    <style type="text/css" media="screen">
+    body { padding-top: 20px; }    
+    .widget {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 5px;
+        margin-bottom: 30px;
+        min-height: 600px;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="masthead">
+            <h1>Network Widget</h1>
+        </div>
+        <div class="widget" id="network-widget"></div>
+    </div>
+    </script>
+    
+    <script src="../js/jquery.js"></script>
+    <script src="../js/jquery-ui.js"></script>
+    <script src="../js/handlebars.js"></script>
+    <script src="../js/ember.js"></script>
+    <script src="../js-dev/datavis.js"></script>
+    <script src="../js-dev/kbwidget.js"></script>
+    <script src="../js-dev/widgets/networks/force-directed.js"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        $(function () {
+            $("#network-widget").ForceDirectedNetwork({
+                workspaceID: "PO:0009005.g3899.filtered.edge_net"
+            });
+        });
+    </script>
+</body>
+</html>

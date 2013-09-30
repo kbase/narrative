@@ -109,7 +109,8 @@ except NameError:
 
 myfile = os.path.dirname( myfile)
 c.NotebookApp.webapp_settings = { 'template_path': os.path.join(myfile,"kbase_templates"),
-                                  'static_path': os.path.join(myfile,"kbase_templates","static") }
+                                  'static_path': os.path.join(myfile,"kbase_templates","static"),
+                                  'debug' : True}
 
 
 # Specify what command to use to invoke a web browser when opening the notebook.

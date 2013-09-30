@@ -13,7 +13,7 @@ from biokbase.workspaceService.Client import workspaceService
 
 # regex for parsing out workspace_id and object_id from
 # a "kb|ws.{workspace}.{object}" string
-ws_regex = re.compile( '^kb\|ws\.(\w+)\.(\w+)')
+ws_regex = re.compile( '^kb\|ws\.(?P<wsid>\w+)\.(?P<objid>\w+)')
 
 # Exception for a malformed workspace ID see regex above
 class BadWorkspaceID( Exception ):

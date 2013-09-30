@@ -14,6 +14,7 @@ sychan@lbl.gov
 import os
 import urllib
 import re
+import pprint
 import IPython.html.notebook.handlers
 import IPython.html.services.notebooks.handlers
 import IPython
@@ -48,6 +49,11 @@ def monkeypatch_class(name, bases, namespace):
     <newclass> a local alias for <someclass>.
     """
     assert len(bases) == 1, "Exactly one base class required"
+    base = bases[0]
+    for name, value in namespace.iteritems():
+        if name != "__metaclass__":
+            setattr(base, name, value)
+    return base
 
 # This is all kind of gross, but we will end up re-doing it later. Tentatively planning on
 # submitting class wrapper decorators for the IPython Tornado request handlers, will do
@@ -75,16 +81,34 @@ def do_patching( c ):
             IPython.html.base.handlers.app_log.debug("token = " + sess.get('token'))
             setattr(handler,'kbase_session', sess)
 
+        def handler_route_replace(handlers,oldre,newre):
+            """ Look for a regex in a tornado routing table and replace it with a new one"""
+            if len(handlers) > 0:
+                findre = re.escape(oldre)
+                for i in range(0,len(handlers)):
+                    (route,handler) = handlers[i]
+                    route2 = re.sub(findre,newre,route)
+                    if route2 != route:
+                        handlers[i] = (route2,handler)
+
 
         old_get = IPython.html.notebook.handlers.NamedNotebookHandler.get
 
-        IPython.html.notebook.handlers._notebook_id_regex = r"(?P<notebook_id>kb\|ws\.\w+\w+)"
+        def_handler = IPython.html.notebook.handlers.default_handlers
+        print "IPython.html.notebook.handlers.default_handlers:\n", pprint.pformat(def_handler)
+        handler_route_replace( def_handler, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>\w+\.\w+)')
+        print "new IPython.html.notebook.handlers.default_handlers:\n", pprint.pformat(def_handler)
 
         @monkeypatch_method(IPython.html.notebook.handlers.NamedNotebookHandler)
         def get(self,notebook_id):
             if 'kbase_session' in self.cookies and hasattr(self,'notebook_manager'):
                 cookie_pusher(self.cookies['kbase_session'].value, getattr(self,'notebook_manager'))
             return old_get(self,notebook_id)
+
+        def_handler = IPython.html.services.notebooks.handlers.default_handlers
+        print "IPython.html.services.notebooks.handlers.default_handlers:\n", pprint.pformat(def_handler)
+        handler_route_replace( def_handler, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>\w+\.\w+)')
+        print "new IPython.html.services.notebooks.handlers.default_handlers:\n", pprint.pformat(def_handler)
 
         IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.services.notebooks.handlers.NotebookRootHandler.get() in process {}".format(os.getpid()))
         old_get1 = IPython.html.services.notebooks.handlers.NotebookRootHandler.get

@@ -94,10 +94,9 @@ def do_patching( c ):
 
         old_get = IPython.html.notebook.handlers.NamedNotebookHandler.get
 
+        # Patch the url regex to match our workspace identifiers
         def_handler = IPython.html.notebook.handlers.default_handlers
-        print "IPython.html.notebook.handlers.default_handlers:\n", pprint.pformat(def_handler)
         handler_route_replace( def_handler, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>\w+\.\w+)')
-        print "new IPython.html.notebook.handlers.default_handlers:\n", pprint.pformat(def_handler)
 
         @monkeypatch_method(IPython.html.notebook.handlers.NamedNotebookHandler)
         def get(self,notebook_id):
@@ -105,10 +104,9 @@ def do_patching( c ):
                 cookie_pusher(self.cookies['kbase_session'].value, getattr(self,'notebook_manager'))
             return old_get(self,notebook_id)
 
+        # Patch the url regex to match our workspace identifiers
         def_handler = IPython.html.services.notebooks.handlers.default_handlers
-        print "IPython.html.services.notebooks.handlers.default_handlers:\n", pprint.pformat(def_handler)
         handler_route_replace( def_handler, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>\w+\.\w+)')
-        print "new IPython.html.services.notebooks.handlers.default_handlers:\n", pprint.pformat(def_handler)
 
         IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.services.notebooks.handlers.NotebookRootHandler.get() in process {}".format(os.getpid()))
         old_get1 = IPython.html.services.notebooks.handlers.NotebookRootHandler.get

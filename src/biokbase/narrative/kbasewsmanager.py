@@ -251,7 +251,7 @@ class KBaseWSNotebookManager(NotebookManager):
                       'asHash' :  0
                     }
             res = self.wsclient.save_object( wsobj)
-            self.log.error("save_object returned %s" % res)
+            self.log.debug("save_object returned %s" % res)
         except Exception as e:
             raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
         # use "ws_id.object_id" as the identifier

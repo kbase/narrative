@@ -264,19 +264,18 @@
                                         .css('border-bottom', '1px solid lightgray')
                                         .css('white-space', 'nowrap')
                                         .append(
-                                            $('<span></span>')
-                                        .css('white-space', 'nowrap')
-                                            .append('Signed in as ')
-
-                                        .append(
-                                            $('<a></a>')
-                                                .attr('id', 'loggedinuser_id')
-                                                .css('font-weight', 'bold')
-                                                .attr('href', 'https://gologin.kbase.us/account/UpdateProfile')
-                                                .attr('target', '_blank')
-                                                .css('padding-right', '0px')
-                                                .css('padding-left', '0px')
-                                        ))
+                                            $.jqElem('div')  //so as to style the link in blue.
+                                            .css('text-align', 'right')
+                                            .append(
+                                                $('<a></a>')
+                                                    .attr('id', 'loggedinuser_id')
+                                                    .css('font-weight', 'bold')
+                                                    .attr('href', 'https://gologin.kbase.us/account/UpdateProfile')
+                                                    .attr('target', '_blank')
+                                                    .css('padding-right', '0px')
+                                                    .css('padding-left', '0px')
+                                            )
+                                        )
                                 )
                                 .append(
                                     $('<li></li>')
@@ -368,7 +367,7 @@
                                             )
                                     )
                                     .append(
-                                        $('<input/>')
+                                        $('<input>')
                                             .attr('type', 'text')
                                             .attr('name', 'user_id')
                                             .attr('id', 'user_id')
@@ -386,7 +385,7 @@
                                             )
                                     )
                                     .append(
-                                        $('<input/>')
+                                        $('<input>')
                                             .attr('type', 'password')
                                             .attr('name', 'password')
                                             .attr('id', 'password')
@@ -795,39 +794,49 @@
                                             .append(
                                                 $('<div></div>')
                                                     .attr('class', 'form-group')
-                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
+                                                            .addClass('col-lg-2')
                                                             .attr('for', 'user_id')
                                                             .css('margin-right', '10px')
                                                             .append('Username:\n')
                                                     )
                                                     .append(
-                                                        $('<input/>')
-                                                            .attr('type', 'text')
-                                                            .attr('name', 'user_id')
-                                                            .attr('id', 'user_id')
-                                                            .attr('size', '20')
+                                                        $.jqElem('div')
+                                                        .addClass('col-lg-9')
+                                                        .append(
+                                                            $('<input>')
+                                                                .addClass('form-control')
+                                                                .attr('type', 'text')
+                                                                .attr('name', 'user_id')
+                                                                .attr('id', 'user_id')
+                                                                .attr('size', '20')
+                                                        )
                                                     )
                                             )
                                             .append(
                                                 $('<div></div>')
                                                     .attr('class', 'form-group')
-                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
+                                                            .addClass('col-lg-2')
                                                             .attr('for', 'password')
                                                             .css('margin-right', '10px')
                                                             .append('Password:\n')
                                                     )
                                                     .append(
-                                                        $('<input/>')
-                                                            .attr('type', 'password')
-                                                            .attr('name', 'password')
-                                                            .attr('id', 'password')
-                                                            .attr('size', '20')
+                                                        $.jqElem('div')
+                                                        .addClass('col-lg-9')
+                                                        .append(
+                                                            $('<input>')
+                                                                .addClass('form-control')
+                                                                .attr('type', 'password')
+                                                                .attr('name', 'password')
+                                                                .attr('id', 'password')
+                                                                .attr('size', '20')
+                                                        )
                                                     )
                                             )
                                     )
@@ -931,10 +940,10 @@
 
                                 if (data.kbase_sessionid) {
 
-									//$.cookie('kbase_session',
-								    //	  'un=' + data.user_id
-									//	+ '|'
-									//	+ 'kbase_sessionid=' + data.kbase_sessionid);
+									$.cookie('kbase_session',
+								    	  'un=' + data.user_id
+										+ '|'
+										+ 'kbase_sessionid=' + data.kbase_sessionid);
 
                                     var cookieArray = [];
 

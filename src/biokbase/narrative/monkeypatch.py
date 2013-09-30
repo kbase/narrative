@@ -81,32 +81,14 @@ def do_patching( c ):
             IPython.html.base.handlers.app_log.debug("token = " + sess.get('token'))
             setattr(handler,'kbase_session', sess)
 
-        def handler_route_replace(handlers,oldre,newre):
-            """ Look for a regex in a tornado routing table and replace it with a new one"""
-            if len(handlers) > 0:
-                findre = re.escape(oldre)
-                for i in range(0,len(handlers)):
-                    (route,handler) = handlers[i]
-                    route2 = re.sub(findre,newre,route)
-                    if route2 != route:
-                        handlers[i] = (route2,handler)
-
-
+        IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.notebook.handlers.NamedNotebookHandler.get() in process {}".format(os.getpid()))
         old_get = IPython.html.notebook.handlers.NamedNotebookHandler.get
-
-        # Patch the url regex to match our workspace identifiers
-        def_handler = IPython.html.notebook.handlers.default_handlers
-        handler_route_replace( def_handler, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>\w+\.\w+)')
 
         @monkeypatch_method(IPython.html.notebook.handlers.NamedNotebookHandler)
         def get(self,notebook_id):
             if 'kbase_session' in self.cookies and hasattr(self,'notebook_manager'):
                 cookie_pusher(self.cookies['kbase_session'].value, getattr(self,'notebook_manager'))
             return old_get(self,notebook_id)
-
-        # Patch the url regex to match our workspace identifiers
-        def_handler = IPython.html.services.notebooks.handlers.default_handlers
-        handler_route_replace( def_handler, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>\w+\.\w+)')
 
         IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.services.notebooks.handlers.NotebookRootHandler.get() in process {}".format(os.getpid()))
         old_get1 = IPython.html.services.notebooks.handlers.NotebookRootHandler.get

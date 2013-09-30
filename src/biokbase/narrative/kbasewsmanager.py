@@ -28,6 +28,7 @@ import glob
 import shutil
 import json
 import re
+import importlib
 import biokbase.narrative.ws_util as ws_util
 from biokbase.workspaceService.Client import workspaceService
 
@@ -324,3 +325,29 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def info_string(self):
         return "Workspace Notebook Service with workspace endpoint at %s" % self.kbasews_uri
+
+#
+# This is code that patches the regular expressions used in the default routes
+# of tornado handlers. We use these to modify the routes installed by the notebook
+# handlers in the main IPython code without having to change the IPython code
+# directly
+#
+def handler_route_replace(handlers,oldre,newre):
+    """ Look for a regex in a tornado routing table and replace it with a new one"""
+    if len(handlers) > 0:
+        findre = re.escape(oldre)
+        for i in range(0,len(handlers)):
+            (route,handler) = handlers[i]
+            route2 = re.sub(findre,newre,route)
+            if route2 != route:
+                handlers[i] = (route2,handler)
+
+# Patch the url regex to match our workspace identifiers
+import IPython.html.base.handlers
+
+tgt_handlers = ( 'IPython.html.notebook.handlers',
+                 'IPython.html.services.notebooks.handlers' )
+for handlerstr in tgt_handlers:
+    IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
+    handler = importlib.import_module(handlerstr)
+    handler_route_replace( handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>\w+\.\w+)')

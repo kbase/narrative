@@ -16,5 +16,6 @@
       , "should"     : ">=1.2.2"
       , "uglify-js"  : ">=2.3.6"
       , "underscore" : ">=1.4.4"
+      , "grunt-cli"  : ">=0.1.9"
   }
 }

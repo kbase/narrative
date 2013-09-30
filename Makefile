@@ -22,13 +22,16 @@ init:
 build-angular: init
 	@ cd ./ext/angularjs && $(GRUNT) package
 
+build-datavis: init
+	@ cd ./ext/kbase-datavis && make dist
+
 docs: init
 ifndef JSDUCK
 	$(error JSDuck not found (install with `gem install jsduck`).)
 endif
 	@ $(JSDUCK) --builtin-classes --output $(DOCSDIR) -- ./src
 
-dist: init docs
+dist: init docs build-datavis
 	@ $(UGLIFY) `cat $(FILEORDER) | sed -e "s/\#.*//g" -e "s|^\.|./src|g"` \
 		--beautify --output $(DISTLIB)
 	@ $(UGLIFY) $(DISTLIB) --comments --compress --mangle --output $(MINDISTLIB)

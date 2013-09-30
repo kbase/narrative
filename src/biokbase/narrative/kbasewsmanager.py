@@ -32,8 +32,6 @@ import importlib
 import biokbase.narrative.ws_util as ws_util
 from biokbase.workspaceService.Client import workspaceService
 
-from bson.json_util import dumps
-
 from unicodedata import normalize
 
 from tornado import web

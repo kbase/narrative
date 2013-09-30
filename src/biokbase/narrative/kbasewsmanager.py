@@ -36,8 +36,6 @@ from bson.json_util import dumps
 from unicodedata import normalize
 
 from tornado import web
-from pymongo import MongoClient
-from pymongo.read_preferences import ReadPreference
 
 from IPython.html.services.notebooks.nbmanager import NotebookManager
 from IPython.config.configurable import LoggingConfigurable
@@ -105,7 +103,6 @@ class KBaseWSNotebookManager(NotebookManager):
             self.all_types = self.wsclient.get_types()
         except Exception as e:
             raise web.HTTPError( 500, u"Unable to connect to workspace service at %s: %s " % (self.kbasews_uri, e))
-        # setup a mapping dict for MongoDB/notebook_id <-> Notebook name
         mapping = Dict()
         # Map notebook names to notebook_ids
         rev_mapping = Dict()
@@ -117,7 +114,7 @@ class KBaseWSNotebookManager(NotebookManager):
             
     def list_notebooks(self):
         """List all notebooks in WSS
-        For the ID field, we use "kb|ws.{ws_id}.{obj_id}"
+        For the ID field, we use "{ws_id}.{obj_id}"
         The obj_id field is sanitized version of document.ipynb.metadata.name
         """
         self.log.debug("listing notebooks.")
@@ -125,43 +122,36 @@ class KBaseWSNotebookManager(NotebookManager):
         try:
             user_id = self.kbase_session['user_id']
         except KeyError:
-            self.log.error("No user_id in session")
+            self.log.debug("No user_id in session")
             return []
         try:
             token = self.kbase_session['token']
         except KeyError:
-            self.log.error("No token in session")
+            self.log.debug("No token in session")
             return []
         # Grab all workspaces, filter it down to the ones the user have privs on
         # and then extract all the Narrative objects from each one
         all = ws_util.get_wsobj_meta( self.wsclient, token, ws="%s_home" % user_id)
 
         self.mapping = {
-#            ws_id : "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id'])
             "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id']) : "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id'])
             for ws_id in all.keys()
         }
         self.rev_mapping = self.mapping
-#        self.rev_mapping = {
-#            "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id'])  : ws_id
-#            for ws_id in all.keys()
-#        }
-
         data = [ dict(notebook_id = it[0], name = it[1]) for it in self.mapping.items()]
         data = sorted(data, key=lambda item: item['name'])
-        self.log.error("mapping = %s"%self.mapping)
-
         return data
 
     def new_notebook_id(self, name):
         """Generate a new notebook_id for a name and store its mappings."""
         notebook_id = "%s_home.%s" % ( self.kbase_session['user_id'],name)
-#        notebook_id = super(KBaseWSNotebookManager, self).new_notebook_id(name)
+        self.mapping[notebook_id] = name
         self.rev_mapping[name] = notebook_id
         return notebook_id
 
     def delete_notebook_id(self, notebook_id):
         """Delete a notebook's id in the mapping."""
+        self.log.debug("delete_notebook_id(%s)"%(notebook_id))
         try:
             user_id = self.kbase_session['user_id']
         except KeyError:
@@ -172,19 +162,18 @@ class KBaseWSNotebookManager(NotebookManager):
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         name = self.mapping[notebook_id]
         super(KBaseWSNotebookManager, self).delete_notebook_id(notebook_id)
-        del self.rev_mapping[name]
 
     def notebook_exists(self, notebook_id):
         """Does a notebook exist?"""
         exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
-        self.log.error("notebook_exists(%s) = %s"%(notebook_id,exists))
+        self.log.debug("notebook_exists(%s) = %s"%(notebook_id,exists))
         if not exists:
             return False
         return exists
     
     def get_name(self, notebook_id):
         """get a notebook name, raising 404 if not found"""
-        self.log.error("get_name(%s) = %s"%(notebook_id))
+        self.log.debug("get_name(%s) = %s"%(notebook_id))
         try:
             name = self.mapping[notebook_id]
         except KeyError:
@@ -193,8 +182,7 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def read_notebook_object(self, notebook_id):
         """Get the Notebook representation of a notebook by notebook_id."""
-        self.log.error("reading notebook %s." % notebook_id)
-        self.log.error("kbase_session = %s" % str(self.kbase_session))
+        self.log.debug("reading notebook %s." % notebook_id)
         try:
             user_id = self.kbase_session['user_id']
         except KeyError:
@@ -208,14 +196,14 @@ class KBaseWSNotebookManager(NotebookManager):
         except ws_util.BadWorkspaceID, e:
             raise web.HTTPError(500, u'Notebook % not found: %' % (notebook_id, e))
         jsonnb = json.dumps(wsobj['data'])
-        self.log.error("jsonnb = %s" % jsonnb)
+        self.log.debug("jsonnb = %s" % jsonnb)
         nb = current.reads(jsonnb,u'json')
         last_modified = dateutil.parser.parse(wsobj['metadata']['moddate'])
         return last_modified, nb
     
     def write_notebook_object(self, nb, notebook_id=None):
         """Save an existing notebook object by notebook_id."""
-        self.log.error("writing notebook %s." % notebook_id)
+        self.log.debug("writing notebook %s." % notebook_id)
         try:
             user_id = self.kbase_session['user_id']
         except KeyError:
@@ -249,8 +237,6 @@ class KBaseWSNotebookManager(NotebookManager):
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
         if notebook_id not in self.mapping:
             raise web.HTTPError(404, u'Notebook does not exist: %s' % notebook_id)
-
-        self.log.error("writing notebook %s - getting ready to put into workspace." % notebook_id)
         try:
             wsobj = { 'id' : self._clean_id(nb.metadata.name),
                       'type' : self.ws_type,
@@ -264,18 +250,18 @@ class KBaseWSNotebookManager(NotebookManager):
                       'retrieveFromURL': 0,
                       'asHash' :  0
                     }
-            self.log.error("wsobj %s" % wsobj)
             res = self.wsclient.save_object( wsobj)
             self.log.error("save_object returned %s" % res)
         except Exception as e:
             raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
-        # use "kb|ws.ws_id.object_id" as the identifier
-        id = "kb|ws.%s.%s" % ( res[7], res[0])
+        # use "ws_id.object_id" as the identifier
+        id = "%s.%s" % ( res[7], res[0])
         self.mapping[id] = new_name
         return id
 
     def delete_notebook(self, notebook_id):
         """Delete notebook by notebook_id."""
+        self.log.debug("deleting notebook %s" % notebook_id)
         try:
             user_id = self.kbase_session['user_id']
         except KeyError:
@@ -286,11 +272,19 @@ class KBaseWSNotebookManager(NotebookManager):
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         if notebook_id is None:
             raise web.HTTPError(400, u'Missing notebookd_id')
-        doc = self.collection.find_one( { '_id' : notebook_id });
-        if doc is None:
-            raise web.HTTPError(404, u'Notebook not found')
-        self.log.debug("unlinking notebook %s", notebook_id)
-        self.collection.remove( { '_id' : notebook_id })
+        self.log.debug("deleting notebook %s", notebook_id)
+        m = self.ws_regex.match(notebook_id)
+        if m:
+            param = { 'auth' : token,
+                  'type' : self.ws_type,
+                  'workspace' : m.group('wsid'),
+                  'id' : m.group('objid')
+            }
+            res = self.wsclient.delete_object( param)
+            self.log.debug("delete object result: %s" % res)
+
+        else:
+            raise ws_util.BadWorkspaceID( noteboot_id)
         self.delete_notebook_id(notebook_id)
 
     # public checkpoint API

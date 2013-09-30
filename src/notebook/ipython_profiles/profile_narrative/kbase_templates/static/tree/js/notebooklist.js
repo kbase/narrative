@@ -226,6 +226,7 @@ var IPython = (function (IPython) {
                 var parent_item = that.parents('div.list_item');
                 var nbname = parent_item.data('nbname');
                 var notebook_id = parent_item.data('notebook_id');
+		var token = $("#login-widget").kbaseLogin("session", "token");
                 var message = 'Are you sure you want to permanently delete the notebook: ' + nbname + '?';
                 IPython.dialog.modal({
                     title : "Delete notebook",
@@ -268,6 +269,7 @@ var IPython = (function (IPython) {
                 var nbformat = item.data('nbformat');
                 var nbdata = item.data('nbdata');
                 var content_type = 'text/plain';
+		var token = $("#login-widget").kbaseLogin("session", "token");
                 if (nbformat === 'json') {
                     content_type = 'application/json';
                 } else if (nbformat === 'py') {

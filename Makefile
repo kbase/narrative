@@ -4,7 +4,6 @@ MOCHA    = $(TOPDIR)/node_modules/.bin/mocha
 
 UGLIFY   = $(TOPDIR)/node_modules/.bin/uglifyjs
 JSDUCK   := $(shell which jsduck)
-GRUNT    := $(TOPDIR)/node_modules/.bin/grunt
 
 DISTDIR      ?= ./dist
 DISTLIB      ?= $(DISTDIR)/kbase.js
@@ -20,9 +19,6 @@ init:
 	@ npm install
 	@ git submodule update --init
 	@ mkdir -p $(DISTDIR)
-
-build-angular: init
-	@ cd ./ext/angularjs && $(GRUNT) package
 
 ext/kbase-datavis/dist/datavis.js:
 	@ cd ./ext/kbase-datavis && make build

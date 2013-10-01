@@ -937,12 +937,14 @@
 
                                 if (data.kbase_sessionid) {
 
-									$.cookie('kbase_session',
-								    	  'unEQUALSSIGN' + data.user_id
-										+ 'PIPESIGN'
-										+ 'kbase_sessionidEQUALSSIGN' + data.kbase_sessionid)
-										+ 'PIPESIGN'
-										+ 'token_idEQUALSSIGN' + data.kbase_sessionid);
+									if ($.cookie) {
+                                        $.cookie('kbase_session',
+                                              'unEQUALSSIGN' + data.user_id
+                                            + 'PIPESIGN'
+                                            + 'kbase_sessionidEQUALSSIGN' + data.kbase_sessionid
+                                            + 'PIPESIGN'
+                                            + 'token_idEQUALSSIGN' + data.kbase_sessionid);
+                                    }
 
                                     var cookieArray = [];
 

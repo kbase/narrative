@@ -138,7 +138,7 @@ class URLS:
     main = "http://140.221.84.236:8000/node"
     shock = "http://140.221.84.236:8000"
     awe = "http://140.221.84.236:8001/"
-    expression= "http://localhost:7075"
+    expression= "http://140.221.85.118:7075" #"http://localhost:7075"
     workspace= "http://kbase.us/services/workspace"
     ids = "http://kbase.us/services/idserver"
     cdmi = "http://kbase.us/services/cdmi_api"

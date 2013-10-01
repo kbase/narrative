@@ -12,7 +12,7 @@ __version__ = '0.1'
 
 from biokbase.auth import Token
 from biokbase.workspaceService.Client import workspaceService
-from biokbase.ExpressionServices.Client import ExpressionServices
+from biokbase.ExpressionServices.ExpressionServicesClient import ExpressionServices
 from biokbase.idserver.client import IDServerAPI
 from biokbase.cdmi.client import CDMI_API
 from biokbase.OntologyService.Client import Ontology
@@ -57,36 +57,39 @@ class CoexNetwork(object):
     """Implement all the functions for coex network.
     """
 
+    LARGE_TIMEOUT = 3600
+
+    SAMPLEID_PFX = 'sid_'
+    EXPR_PFX = 'expr_'
+
     def __init__(self, workspace_id=None, auth_token=None):
         self._ws = workspace_id
         self._token = auth_token
-        self._wss = workspaceService(URLS.workspace)
+        self._wss = workspaceService(URLS.workspace, timeout=self.LARGE_TIMEOUT)
 
     def get_expression_data(self, ont_id=None, gn_id=None):
+        """Get sample id's and samples.
+
+        :return: pair (sample-ids, sample-data)
+        :rtype: tuple
+        """
         edge_object_id = self.gene_id(ont_id, gn_id, "filtered.edge_net")
         clust_object_id = self.gene_id(ont_id, gn_id, "filtered.clust_net")
         self.edge_core_id = self.ws_url(edge_object_id)
-        clust_core_id = self.ws_url(clust_object_id)
+        self.clust_core_id = self.ws_url(clust_object_id)
         self.edge_ds_id = "kb|netdataset." + self.edge_core_id
-        clust_ds_id = "kb|netdataset." + clust_core_id
-        networks_id = self.gene_id(ont_id, gn_id, "filtered.network")
-        exprc = ExpressionServices(URLS.expression)
-        sample_ids = exprc.get_expression_sample_ids_by_ontology_ids([ont_id], 'and', "kb|g." + gn_id, 'microarray',
-                                                                     'N');
+        self.clust_ds_id = "kb|netdataset." + self.clust_core_id
+        self.networks_id = self.gene_id(ont_id, gn_id, "filtered.network")
+        _log.debug("expression_service_get_ids.begin url={}".format(URLS.expression))
+        exprc = ExpressionServices(URLS.expression, timeout=self.LARGE_TIMEOUT)
+        sample_ids = exprc.get_expression_sample_ids_by_ontology_ids([ont_id], 'and', "kb|g." + gn_id, 'microarray', 'N');
+        # XXX: hack
+        sample_ids = sample_ids[:2]
+        _log.debug("expression_service_get_ids.end url={} nbytes={:d}".format(URLS.expression, len(sample_ids)))
+        _log.debug("expression_service_get_data.begin url={}".format(URLS.expression))
         sample_data = exprc.get_expression_samples_data(sample_ids)
-        return sample_data
-
-    def save_sample_data(self, ont_id=None, gn_id=None, data=None):
-        """Save data with given ontology / 'gn' id.
-        """
-        obj_id = ont_id + ".g" + gn_id
-        self._wss.save_object({
-            'id': obj_id,
-            'type': 'ExpressionDataSamplesMap',
-            'data': data,
-            'workspace': self._ws,
-            'auth': self._token})
-        return obj_id
+        _log.debug("expression_service_get_data.end url={} nbytes={:d}".format(URLS.expression, len(sample_data)))
+        return sample_ids, sample_data
 
     def build_expression_data(self, samples):
         """
@@ -107,15 +110,15 @@ class CoexNetwork(object):
             d.append([gid] + [samples[sid][_v][gid] for sid in samp_ids])
         return d
 
-    def save_expr_data(self, ont_id=None, gn_id=None, data=None):
-        obj_id = 'exds_' + ont_id + '.g' + gn_id
-        self.save_object(id=obj_id, type=TYPES.expr_dset, data=data)
+    def save_sample_ids(self, ids=None, ont_id=None, gn_id=None):
+        #text = self.vec_to_csv(ids) + '\n'
+        obj_id = self.SAMPLEID_PFX + self.gene_id(ont_id, gn_id)
+        self.save_object(id=obj_id, type=TYPES.expr_map, data={'sample_ids': ids})
         return obj_id
 
-    def save_sample_ids(self, ids=None, ont_id=None, gn_id=None):
-        text = self.vec_to_csv(ids) + '\n'
-        obj_id = 'exds_' + ont_id + '.g' + gn_id
-        self.save_object(id=obj_id, type=TYPES.expr_dset, data=text)
+    def save_expr_data(self, ont_id=None, gn_id=None, data=None):
+        obj_id = self.EXPR_PFX + self.gene_id(ont_id, gn_id)
+        self.save_object(id=obj_id, type=TYPES.expr_dset, data=data)
         return obj_id
 
     def save_net_data(self, ont_id=None, gn_id=None, data=None):
@@ -198,9 +201,12 @@ class CoexNetwork(object):
         "Get workspace id for this network."
         return self._ws
 
-    def gene_id(self, ont_id, gn_id, name):
+    def gene_id(self, ont_id, gn_id, name=''):
         "Format (and return, as str) a gene object identifier"
-        return ont_id + ".g" + gn_id + "." + name
+        if name:
+            return ont_id + ".g" + gn_id + "." + name
+        else:
+            return ont_id + ".g" + gn_id
 
 class Engine(object):
     """Wrapper for interacting with Shock/Awe.
@@ -274,8 +280,17 @@ class Engine(object):
         r, data = self._get('queue')
         return data
 
+    def wait(self, stage, total_stages):
+        """wait for the job to finish
+        """
+        total_count = count = self.status().count
+        while count > 0:
+            report_progress("coexpression", stage, total_stages, total_count - count, total_count)
+            time.sleep(3)
+            count = self.status().count
+        return stage + 1
 
-    def save(self, name=None, data=None, **attributes):
+    def save(self, name=None, content=None, **attributes):
         """Upload data to Shock
 
         :param name: Data "file" name
@@ -283,9 +298,10 @@ class Engine(object):
         :param attributes: Additional metadata dict
         :return: Shock ID of uploaded object
         """
-        data = {'upload': (name, data),
-                'attributes': ('', attributes)}
-        #_log.debug("upload.request data={}".format(data))
+        att_content = str(attributes)
+        data = {'upload': (name, content),
+                'attributes': ('', att_content)}
+        _log.debug("upload.request nbytes={}".format(len(content)))
         r = requests.post("{}/node".format(self._surl), files=data)
         response = json.loads(r.text)
         if response['data'] is None:
@@ -373,7 +389,7 @@ class AweJob(object):
         t['cmd'] = cmd
         t['inputs'] = inputs
         t['outputs'] = outputs
-        t['taskid'] = len(self._tasks)
+        t['taskid'] = str(len(self._tasks))
         self._tasks.append(t)
 
     @property
@@ -386,7 +402,7 @@ class AweJob(object):
         """
         for t in self._tasks:
             for io in 'inputs', 'outputs':
-                for key, val in t['io'].iteritems():
+                for key, val in t[io].iteritems():
                     val['host'] = u
         self._uri = u
 
@@ -406,9 +422,10 @@ class AweJobStatus(object):
 ## Functions
 
 
-def report_progress(name, done, total):
+def report_progress(name, done, ttl, subdone, subttl):
     "Progress output"
-    sys.stderr.write(":progress: {} {:d} {:d}".format(name, done, total))
+    sys.stderr.write('{{task:"{}", main:[{:d},{:d}], sub:[{:d},{:d}]}}\n'.format(
+            name, done, ttl, subdone, subttl))
 
 def get_node_id(node, nt = "GENE"):
     if not node in ugids.keys() :
@@ -545,14 +562,13 @@ class LoggedAction(object):
         self._name = name
     def __enter__(self):
         _log.debug(self._name + '.begin')
+        return self._name
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
             _log.debug(self._name + '.end')
         else:
             _log.debug(self._name + '.error msg="{ev}"'.format(
                 ev=exc_value))
-
-
 def main():
     """Create a narrative for co-expression network workflow
     """
@@ -568,7 +584,7 @@ def main():
                      "bedd72813e58968d495eb1be9f698f0f287ce524a01a88f647dacdbbec03b5"
                      "f32ebf66a12d09ec7fbbb3106dcc040bea0b05d3ed1e85d8c69e0ae53760b5"
                      "7e0e467a68b7c3b2b9f143e93b41f46b61dd4df81006412be6b95ed13c573ab45ea892a1cb"])
-    gn_id, ont_id = '3899', 'PO:0009005'
+    gn_id, ont_id = '3899', ('PO:0009025', 'PO:0009005')[1]
     expr_params = dict(ont_id=ont_id, gn_id=gn_id)
 
     with LoggedAction("init"):
@@ -578,53 +594,59 @@ def main():
         # wrapper for coex network functions + workspace utils
         network = CoexNetwork(workspace_id=wsid, auth_token=token)
 
+    # Base gene identifier string
+    gid = network.gene_id(ont_id=ont_id, gn_id=gn_id)
+
     # keep track of identifiers in these dicts
     shock_ids, ws_ids, awe_ids = {}, {}, {}
 
-    with LoggedAction("create_sample_data"):
-        # load samples from the central scrutinizer
-        sample_data = network.get_expression_data(**expr_params)
-        # save samples to the workspace
-        ws_ids['samp'] = network.save_sample_data(data=sample_data, **expr_params)
-        # save samples to Shock
-        shock_ids['samp'] = eng.save(data=sample_data, name=ws_ids['samp'])
+    # TODO: Download from workspace if it exists
+    #if network.object_exists(gid):
+    #    sample_ids = network.load_sample_ids(gid)
+    with LoggedAction("create_sample_data") as la1:
+        _objid = network.SAMPLEID_PFX + gid
+        with LoggedAction(la1 + ".load") as la2:
+            # load samples from the central scrutinizer
+            sample_ids, sample_data = network.get_expression_data(**expr_params)
+        with LoggedAction(la1 + '.save_shock') as la2:
+            # save sample ids to Shock
+            sampleid_bytes = str(network.vec_to_csv(sample_ids))
+            shock_ids['sampid'] = eng.save(content=sampleid_bytes, name=_objid)
+        with LoggedAction(la1 + ".save_ws") as la2:
+            # save samples to the workspace
+            network.save_sample_ids(ids=sample_ids, **expr_params)
+        ws_ids['sampid'] = _objid
 
-    with LoggedAction("create_expression_data"):
+    # TODO: Download from workspace if it exists
+    with LoggedAction("create_expression_data") as la1:
+        _objid = network.EXPR_PFX + gid
         # build expression data from samples
         expr_data = network.build_expression_data(sample_data)
-        # save expressions to the workspace
-        ws_ids['expr'] = network.save_expr_data(data=expr_data, **expr_params)
-        # save expressions, as CSV, to shock
-        expr_bytes = network.arr_to_csv(expr_data)
-        shock_ids['expr'] = eng.save(data=expr_bytes, name=ws_ids['expr'])
-
-    with LoggedAction("create_sample_id_data"):
-        # create list of sample ids
-        sample_ids = range(len(expr_data[0]))
-        # save sample ids to the workspace
-        ws_ids['sampid'] = network.save_sample_ids(ids=sample_ids, **expr_params)
-        # save sample ids to Shock
-        shock_ids['sampid'] = eng.save(data=sample_ids, name=ws_ids['sampid'])
+        with LoggedAction(la1 + '.save_shock') as la2:
+            # save expressions, as CSV, to shock
+            expr_bytes = network.arr_to_csv(expr_data)
+            shock_ids['expr'] = eng.save(content=expr_bytes, name=_objid)
+        #with LoggedAction(la1 + '.save_ws') as la2:
+        #    # save expressions to the workspace
+        #    network.save_expr_data(data=expr_data, **expr_params)
+        ws_ids['expr'] = _objid
 
     with LoggedAction("coex_filter_run"):
         # run coex_filter in Awe, taking as input the samples, expressions and sample ids in Shock
         job = AweJob({"pipeline": "coex_filter", "name": "coex_filter_1", "sessionId": sessionID})
         shock_ids['filtered'] = 'data_filtered_csv'
         job.add_task(cmd=dict(
-            args="-i @data_csv --output={}  --sample_index=@sample_id_csv coex_filter".format(shock_ids['filtered']),
+            args="-i @{expr} --output={filtered}  -s @s{sampid} coex_filter".format(
+                filtered=shock_ids['filtered'], expr=ws_ids['expr'], sampid=ws_ids['sampid']),
             description="filtering", name="coex_filter"),
-            inputs=dict(data_csv={"node": shock_ids["samp"]},
-                        sample_id_csv={"node": shock_ids["sampid"]}),
+            inputs={ws_ids['expr']: {"node": shock_ids["expr"]},
+                   ws_ids['sampid']: {"node": shock_ids["sampid"]}},
             outputs={shock_ids['filtered']: {}})
         awe_ids['coex_filter'] = eng.run(job)
         # wait for the job to finish
-        while eng.status().count > 0:
-            report_progress(script_name, cur_stage, script_stages)
-            time.sleep(3)
+        cur_stage = eng.wait(cur_stage, script_stages)
         # retrieve (raw) output from coex_filter (into memory, as CSV)
         filtered_data = eng.fetch_output(jobid=awe_ids['coex_filter'], name=shock_ids['filtered'])
-        cur_stage += 1
-        report_progress(script_name, cur_stage, script_stages)
 
     # os.system("coex_filter " + coex_filter_args)
     ##
@@ -638,9 +660,9 @@ def main():
     # sids = filter_underscore(lsamples['data'].keys())
 
     # update (expression) samples from output of filter
-    network.update_samples(filtered_data, sample_data, sample_ids)
+    network.update_samples(filtered_data, expr_data, sample_ids)
     # save new samples in workspace
-    network.save_sample_data(data=sample_data, **expr_params)
+    network.save_sample_data(data=expr_data, **expr_params)
 
 
     # 6.4 save back into workspace
@@ -665,15 +687,9 @@ def main():
                  inputs=dict(data_filtered_csv={"origin": "0"}),
                  outputs={shock_ids['net']: {}})
     awe_ids['coex_net'] = eng.run(job)
-    # wait for the job to finish
-    while eng.status().count > 0:
-        report_progress(script_name, cur_stage, script_stages)
-        time.sleep(3)
+    cur_stage = eng.wait(cur_stage, script_stages)
     # retrieve (raw) output (into memory, as CSV)
     net_data = eng.fetch_output(jobid=awe_ids['coex_net'], name=shock_ids['net'])
-    cur_stage += 1
-    report_progress(script_name, cur_stage, script_stages)
-
 
     #os.system("coex_net " + coex_net_args);
     #$run_output = `coex_clust2 $coex_clust_args`; # on test machine, it's not working due to single core (requires at least two cores)
@@ -690,40 +706,25 @@ def main():
     #               'auth' : token})
     # sids = [ i for i in sorted(lsamples['data'].keys()) if not i.startswith('_')]
 
-    edges = []
-
     # 8.2 generate Networks datasets
-    dtype = 'FUNCTIONAL_ASSOCIATION'
-    datasets = [
-        {
-            'networkType': dtype,
-            'taxons': ['kb|g.' + gn_id],
-            'sourceReference': 'WORKSPACE',
-            'name': network.edge_core_id,
-            'id': network.edge_ds_id,
-        'description': "Coexpression network object " + ont_id + " and kb|g." + gn_id + " filtered by coex_net " + coex_filter_args,
+    dset = {
+        'networkType': 'FUNCTIONAL_ASSOCIATION',
+        'taxons': ['kb|g.' + gn_id],
+        'sourceReference': 'WORKSPACE',
+        'name': network.edge_core_id,
+        'id': network.edge_ds_id,
+        'description': "Coexpression network object {} and kb|g.{} filtered by coex_net {}".format(
+            ont_id, gn_id, coex_filter_args),
         'properties': {
             'original_data_type': 'workspace',
             'original_data_id': URLS.create_ws_url(network.workspace_id, network.gene_id(ont_id, gn_id, "filtered")),
             'coex_filter_args': coex_filter_args,
             'coex_net_args': coex_net_args
         }
-      },
-      {
-        'networkType' : 'FUNCTIONAL_ASSOCIATION',
-        'taxons' : [ "kb|g." + gn_id ],
-        'sourceReference' : 'WORKSPACE',
-        'name' : clust_core_id,
-        'id' : clust_ds_id,
-        'description' : "Coexpression network object " + ont_id+  " and kb|g." + gn_id + " filtered by coex_net " + coex_filter_args,
-        'properties' : { 
-          'original_data_type' : 'workspace',
-          'original_data_id' : "ws://" + workspace_id + "/" + ont_id +".g" + gn_id + ".filtered",
-          'coex_filter_args' : coex_filter_args,
-          'coex_clust_args' : coex_net_args # this line need to be changed to clust_args later...
-        }
-      }
-    ]
+    }
+    dset_clust = dset.copy()
+    dset_clust.update({'name': network.edge_core_id, 'id': network.edge_ds_id})
+    datasets = [dset, dset_clust]
 
     # --------------------------------------
     return 0
@@ -731,6 +732,7 @@ def main():
     # 8.3 process coex network file
     #open(files_rst['edge_net']);
     #cnf.readline(); # skip header
+    edges = []
     for line in net_data[1:]:
         line = line.strip().replace('"', '')
         values = line.split(',')

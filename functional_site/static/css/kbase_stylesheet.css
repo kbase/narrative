@@ -174,8 +174,8 @@ nav[role="navigation"] ul li {
 nav[role="navigation"] ul li a {
     text-decoration: none;
     font-size: 18px;
-    font-family: 'Roboto';
-    color: #777777;
+    font-family: 'RobotoBlack';
+    color: #666;
     padding: 15px;
 }
 

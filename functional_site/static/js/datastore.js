@@ -141,6 +141,26 @@
     };
 
 
+    /* toggles the chevron glyph */
+    function toggleChevron(e) {
+        console.log(e.target);
+        $(e.target)
+            .prev('.section_title')
+            .find('span')
+            .toggleClass('glyphicon-chevron-down glyphicon-chevron-right');
+    }
+
+
+    $('#narratives_container').on('hidden.bs.collapse', toggleChevron);
+    $('#narratives_container').on('shown.bs.collapse', toggleChevron);
+    $('#datasets_container').on('hidden.bs.collapse', toggleChevron);
+    $('#datasets_container').on('shown.bs.collapse', toggleChevron);
+    $('#projects_container').on('hidden.bs.collapse', toggleChevron);
+    $('#projects_container').on('shown.bs.collapse', toggleChevron);
+    
+
+
+
 
 })( jQuery );
 

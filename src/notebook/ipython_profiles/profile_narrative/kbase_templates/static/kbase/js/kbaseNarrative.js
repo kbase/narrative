@@ -8,6 +8,7 @@
     /**
      * Wait for IPython notebook to exist.
      */
+     /* skip this junk  --dang
     $(function() {
         console.debug("waitForIPython.begin");
         if (typeof IPython == 'undefined' ||
@@ -17,7 +18,7 @@
         }
         console.debug("waitForIPython.end");
     });
-
+    */
     /**
      * main function.
      */

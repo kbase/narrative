@@ -57,10 +57,10 @@
     <script src="../js/bootstrap.js"></script>
     <script src="../js/kbase.js"></script>
     <script src="../js/angular.js"></script>
-    <script src="../js/angular-route.js"></script>
     <script type="text/javascript">
     angular.module("App", ["ngRoute"])
         .config(function ($routeProvider, $locationProvider) {
+            console.log("configing")
             $routeProvider
                 .when("/Widget/:id", {
                     template: "<div></div>",

@@ -368,37 +368,8 @@ nav ul li.selected {
 	overflow-y: auto;
 }
 
-#function-header {
-	padding: 10px 0;
-	color: #fff;
-	font-weight: bold;
-	background-color: #099;
-	text-align: center;
-}
-
-.function-group-header {
-	color: #fff;
-	font-weight: bold;
-	background-color: #0bb;
-	text-align: center;
-	padding: 5px;
-}
-
-.function-group {
-	height: 150px;
-	border: 1px solid #aaa;
-	padding: 10px;
-	overflow-y: auto;
-}
-
-
-
-
-
-
-
 #data-pane {
-	height: 49%;
+	height: 69%;
 	margin-top: 1px;
 	border-bottom: 1px solid #AAA;
 	overflow: auto;
@@ -426,7 +397,7 @@ nav ul li.selected {
 	background: -webkit-linear-gradient(top, #ccc, #999);
 }
 #function-pane {
-	height: 50%;
+	height: 30%;
 	margin-top: 1px;
 	overflow: auto;
 }

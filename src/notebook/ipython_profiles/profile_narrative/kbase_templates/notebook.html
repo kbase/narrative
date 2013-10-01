@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrativeWorkspace.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseUpload.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseData.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
 
     <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
 
@@ -221,27 +222,19 @@ class="notebook_app"
                 </table>
             </div>
         </div>
-        <div id="function-panel" class="left-pane">
-            <div id="function-header">
+        <div class="kb-function-panel" class="left-pane">
+            <div class="kb-function-header">
                 Functions
             </div>
-            <div id="model-pane">
-                <div class="function-group-header">
-                    Modeling
-                </div>
-                <div id="model-function-group" class="function-group">
-                </div>
-                <div class="function-group-header">
-                    Genomics
-                </div>
-                <div id="genome-function-group" class="function-group">
-                </div>
-                <div class="function-group-header">
-                    Phenotypes
-                </div>
-                <div id="phenotype-function-group" class="function-group">
-                </div>
-            </div>
+            <div class="kb-function-body">
+                <ul>
+                    <li><a href="#" data-name="plants">Plants Co-expression</a>
+                        <span data-name="plants" class="kb-function-help">?</a>
+                    </li>
+                    <li><a href="#" data-name="communities">Communities</a>
+                        <span data-name="plants" class="kb-function-help">?</a>
+                    </li>
+                </ul>
         </div>
 
 

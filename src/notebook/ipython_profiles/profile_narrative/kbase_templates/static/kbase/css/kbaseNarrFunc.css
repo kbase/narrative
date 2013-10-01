@@ -1,0 +1,59 @@
+/*
+ * Styles for KBase Narrative notebook page, function panel
+ */
+ /* Header for panel */
+ .kb-function-header {
+    padding: 10px 0;
+    color: #fff;
+    font-weight: bold;
+    background-color: #099;
+    text-align: center;
+}
+
+/* Container for func list */
+.kb-function-body {
+    height: 150px;
+    border: 1px solid #aaa;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+/* List of functions */
+.kb-function-body {
+    padding: 0;
+    border: 0;
+}
+.kb-function-body ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+.kb-function-body li {
+    padding: 5px 5px;
+}
+/* alt. rows */
+.kb-function-body li:nth-child(odd) {
+    background-color: #eee;
+    border-bottom: 1px solid #ddd;
+}
+.kb-function-body li:nth-child(even) {
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Link to a function */
+.kb-function-body a {
+    text-decoration: none;
+}
+.kb-function-body a:hover {
+    text-decoration: none;
+}
+
+/* Help on a function */
+.kb-function-help {
+    font-family: Arial sans-serif;
+    background-color: #B5D811;
+    color: white;
+    padding: 0 3px;
+    float: right;
+}

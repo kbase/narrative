@@ -41,6 +41,7 @@
                 tbl.fnFilter($search_inp.val());
                 tbl.fnDraw();
             });
+            this.initFuncs();
 			return this;
 		},
         /**
@@ -99,6 +100,38 @@
                 container: elem
              });
             return this;
+        },
+
+        /**
+         * Set up interactive features of the function-list panel.
+         */
+        initFuncs: function() {
+            $('.kb-function-body ul li').each(function(index) {
+                var $anchor = $(this).find('a');
+                this.name = $anchor.data('name');
+                var self = this;
+                // Add cell for function
+                $anchor.click(function() {
+                    alert("clicked on " + self.name);
+                });
+                // Help for function
+                console.debug("anchor2", $anchor2);
+                var $anchor2 = $(this).find('span.kb-function-help');
+                this.help = $anchor2.data('help');
+                $anchor2.click(function() {
+                    var o = $('#kb-function-show-help');
+                    o.hide();
+                    o.addClass("alert alert-info alert-dismissable");
+                    var b = $('button');
+                    b.addClass('close');
+                    b.attr('data-dismiss', 'alert');
+                    b.attr('aria-hidden', 'true');
+                    b.text('&times;');
+                    o.append(b);
+                    o.text(self.help);
+                    o.show();
+                });
+            });
         },
 
         /**

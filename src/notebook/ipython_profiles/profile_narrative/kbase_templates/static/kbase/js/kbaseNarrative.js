@@ -8,17 +8,15 @@
     /**
      * Wait for IPython notebook to exist.
      */
-     /* skip this junk  --dang
     $(function() {
         console.debug("waitForIPython.begin");
         if (typeof IPython == 'undefined' ||
             typeof IPython.notebook == 'undefined' ||
             typeof IPython.notebook.metadata == 'undefined') {
-            setTimeout(this._waitForIpython, 100);
+            setTimeout(this._waitForIpython, 300);
         }
         console.debug("waitForIPython.end");
     });
-    */
     /**
      * main function.
      */

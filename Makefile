@@ -12,37 +12,46 @@ DOCSDIR      ?= $(DISTDIR)/docs
 MINDISTLIB   ?= $(DISTDIR)/kbase.min.js
 
 FILEORDER     = ./src/file-order.txt
+SOURCES       = $(shell find ./src -name "*.js")
 
 all: test
 
 init:
 	@ npm install
 	@ git submodule update --init
+	@ mkdir -p $(DISTDIR)
 
 build-angular: init
 	@ cd ./ext/angularjs && $(GRUNT) package
 
-build-datavis: init
-	@ cd ./ext/kbase-datavis && make dist
+ext/kbase-datavis/dist/datavis.js:
+	@ cd ./ext/kbase-datavis && make build
 
-docs: init
+$(DOCSDIR)/index.html: $(SOURCES)
 ifndef JSDUCK
 	$(error JSDuck not found (install with `gem install jsduck`).)
 endif
 	@ $(JSDUCK) --builtin-classes --output $(DOCSDIR) -- ./src
+	
+docs: init $(DOCSDIR)/index.html
 
-dist: init docs build-datavis
+$(DISTLIB): ext/kbase-datavis/dist/datavis.js
 	@ $(UGLIFY) `cat $(FILEORDER) | sed -e "s/\#.*//g" -e "s|^\.|./src|g"` \
 		--beautify --output $(DISTLIB)
+
+$(MINDISTLIB): $(DISTLIB)
 	@ $(UGLIFY) $(DISTLIB) --comments --compress --mangle --output $(MINDISTLIB)
+
+
+dist: docs $(DISTLIB)
 
 test: init
 	@ $(MOCHA)
 
 clean:
-	rm -rf $(DISTLIB) $(BUILDDIR)
+	@ rm -rf $(DISTLIB)
 
 dist-clean: clean
-	rm -rf node_modules/ $(DISTLIB)
+	@ rm -rf node_modules/
 
 .PHONY: test all dist

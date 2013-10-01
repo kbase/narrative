@@ -1,1 +1,1 @@
-../../ext/angularjs/build/angular.min.js
+../../ext/angularjs/app/lib/angular/angular.js

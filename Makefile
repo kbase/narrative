@@ -42,7 +42,7 @@ $(DISTLIB): ext/kbase-datavis/dist/datavis.js
 $(MINDISTLIB): $(DISTLIB)
 	@ $(UGLIFY) $(DISTLIB) --comments --compress --mangle --output $(MINDISTLIB)
 
-dist: $(DISTLIB) $(MINDISTLIB)
+dist: init $(DISTLIB) $(MINDISTLIB)
 
 test: init
 	@ $(MOCHA)

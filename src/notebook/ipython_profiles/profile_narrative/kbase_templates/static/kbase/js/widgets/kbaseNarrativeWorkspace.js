@@ -107,13 +107,14 @@
          */
         initFuncs: function() {
             console.debug("initFuncs.start");
+            var env = this;
             $('.kb-function-body ul li').each(function(index) {
                 var $anchor = $(this).find('a');
                 this.name = $anchor.data('name');
                 var self = this;
                 // Add cell for function
                 $anchor.click(function() {
-                    alert("clicked on " + self.name);
+                    env.addCellForFunction(self.name);
                 });
                 // Help for function
                 var $anchor2 = $(this).find('span.kb-function-help');
@@ -121,22 +122,228 @@
                 $anchor2.click(function() {
                     console.debug("help asked for");
                     var $elt = $('#kb-function-help');
-                    $elt.addClass("alert alert-info alert-dismissable");
+                    $elt.addClass("alert alert-info");
                     $elt.text(self.help);
-                    var $btn = $('<button>');
-                    $btn.attr('type', 'button')
-                        .addClass('close')
-                        .attr('data-dismiss', 'alert')
-                        .attr('aria-hidden', 'true')
-                        .html('&times;');
-                    $elt.append($btn);
-                    $btn.click(function() {
-                        $('#kb-function-help').hide();
+                    $elt.click(function() {
+                        $(this).hide();
                     });
                     $elt.show();
                 });
             });
         },
+
+        /**
+         * Add a new IPython notebook cell for a given function.
+         */
+        addCellForFunction: function(name) {
+            var env = this;
+            console.debug("adding cell for " + name);
+            var nb = IPython.notebook;
+            var cell = nb.insert_cell_at_bottom('markdown');
+            var content = "";
+            var runner = undefined;
+            switch(name) {
+                case 'plants':
+                    content = this._plantsContent();
+                    runner = this._plantsRunner();
+                    break;
+                case 'communities':
+                    content = this._communitiesContent();
+                    break; 
+                default:
+                    content = "wtf?!"
+                    break;
+            }
+            cell.set_text("<div class='kb-cell-run'>" + 
+                          "<h1>" + name + "</h1>" +
+                          "<div class='kb-cell-params'>" +  
+                          content + 
+                          "</div>" +
+                          "</div>");
+            cell.rendered = false; // force a render
+            cell.render();
+            var $frm = $('div.kb-cell-run form');
+            $frm.on("submit", function(event) {
+                event.preventDefault();
+                var params = {};
+                var fn_name = ""; 
+                $.each($(this)[0], function(key, field) {
+                    var full_name = field.name;
+                    var value = field.value;
+                    //console.debug("field " + key + ": " + full_name + "=" + value);
+                    switch(full_name) {
+                        case "":
+                            break;
+                        default:
+                            params[full_name] = value;
+                    }
+                });
+                runner(fn_name, params);
+            });
+        },
+
+        /** 
+         * Generate input form for plants demo.
+         */
+        _plantsContent: function() {
+            var cfg = {
+                'Filter': {
+                    gene_id: '3899',
+                    ontology_id: 'PO:0009025',
+                },
+                'Network': {
+                    '-m': 'simple',
+                    '-t': 'edge'
+                },
+                'Cluster': {
+                    '-c': 'hclust',
+                    '-n': 'simple'
+                }
+            }
+            var sbn = "style='border: none'";
+            var text = "<form>" + 
+                       "<input type='hidden' name='kbfunc' value='plants' />" +
+                       "<table " + sbn + ">";
+            $.each(cfg, function(key, value) {
+                text += "<tr " + sbn + "><td " + sbn + ">" + key + "</td>";
+                $.each(value, function(key2, value2) { 
+                    text += "<td " + sbn + "><label>" + key2 + "</label>" + 
+                           "<input type='text' " + 
+                           "name='" + key + "." + key2 + "' " +
+                           "value='" + value2 + "'>"
+                           "</input></td>";
+                });
+                text += "</tr>";
+            });
+            text += "</table>" +
+                    "<input type='submit' value='Run' class='button'></input>" + 
+                    "</form>";
+            return text;
+        },
+
+        /**
+         * Run plants demo on backend
+         */
+        _plantsRunner: function(name, params) {
+            console.debug("run function:" + name);
+            //var pymod =  "biokbase.narrative.demo.coex_workflow.coex_network_ws";
+            // Build code
+            var pymod =  "biokbase.narrative.demo.coex_workflow.coex_network_test";
+            var pyfunc = "run";
+            var code = "from " + pymod + " import " + pyfunc + "\n";
+            code += "params = " + this._pythonDictify(params) + "\n";
+            code += pyfunc + "(params)" + "\n";
+            console.debug("CODE:",code);
+            var callbacks = {
+                'execute_reply': $.proxy(this._handle_execute_reply, this),
+                //'output': $.proxy(this.output_area.handle_output, this.output_area),
+                'output': $.proxy(this._handle_output, this),
+                'clear_output': $.proxy(this._handle_clear_output, this),
+                'set_next_input': $.proxy(this._handle_set_next_input, this),
+                'input_request': $.proxy(this._handle_input_request, this)
+            };
+            // XXX: mark this widget as running.. and block other things from running..
+            this.element.addClass("running");
+            var msg_id = this.kernel.execute(code, callbacks, {silent: true});
+        },
+
+        /* ------------------------------------------------------
+         * Functions to handle running code.
+         */
+        /**
+         * @method _handle_execute_reply
+         * @private
+         */
+        _handle_execute_reply: function (content) {
+            alert("Done running!")
+            //this.set_input_prompt(content.execution_count);
+            this.element.removeClass("running");
+            $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
+        },
+        /**
+         * @method _handle_set_next_input
+         * @private
+         */
+        _handle_set_next_input: function (text) {
+            var data = {'cell': this, 'text': text}
+            $([IPython.events]).trigger('set_next_input.Notebook', data);
+        },
+        /**
+         * @method _handle_input_request
+         * @private
+         */
+        _handle_input_request: function (content) {
+            return;
+            //this.output_area.append_raw_input(content);
+        },
+        /**
+         * @method _handle_clear_output
+         * @private
+         */
+        _handle_clear_output: function (content) {
+            return;
+            //this.clear_output(content.stdout, content.stderr, content.other);
+        },
+        /**
+         * @method _handle_output
+         * @private
+         */
+        _handle_output: function (content) {
+            // XXX: copied from outputarea.js
+            var json = {};
+            json.output_type = "pyout"; //msg_type;
+            if (msg_type === "stream") {
+                json.text = content.data;
+                json.stream = content.name;
+            } else if (msg_type === "display_data") {
+                json = this.convert_mime_types(json, content.data);
+                json.metadata = this.convert_mime_types({}, content.metadata);
+            } else if (msg_type === "pyout") {
+                json.prompt_number = content.execution_count;
+                json = this.convert_mime_types(json, content.data);
+                json.metadata = this.convert_mime_types({}, content.metadata);
+            } else if (msg_type === "pyerr") {
+                json.ename = content.ename;
+                json.evalue = content.evalue;
+                json.traceback = content.traceback;
+            }            
+            console.debug("OUTPUT", json);
+            // XXX: transform output into a new cell
+            return;
+        },
+        /** We all oveah dem mime types */
+        convert_mime_types: function (json, data) {
+            if (data === undefined) {
+                return json;
+            }
+            if (data['text/plain'] !== undefined) {
+                json.text = data['text/plain'];
+            }
+            if (data['text/html'] !== undefined) {
+                json.html = data['text/html'];
+            }
+            if (data['image/svg+xml'] !== undefined) {
+                json.svg = data['image/svg+xml'];
+            }
+            if (data['image/png'] !== undefined) {
+                json.png = data['image/png'];
+            }
+            if (data['image/jpeg'] !== undefined) {
+                json.jpeg = data['image/jpeg'];
+            }
+            if (data['text/latex'] !== undefined) {
+                json.latex = data['text/latex'];
+            }
+            if (data['application/json'] !== undefined) {
+                json.json = data['application/json'];
+            }
+            if (data['application/javascript'] !== undefined) {
+                json.javascript = data['application/javascript'];
+            }
+            return json;
+        },
+
+        /* ------------------------------------------------------ */
 
         /**
          * Render the widgets.

@@ -61,5 +61,40 @@
     position: absolute;
     top: 400px;
     left: 300px;
+    z-index: 99;
 }
 
+/* ------------------------------------------------- */
+/* IPython cells */
+
+.kb-cell-run {
+}
+.kb-cell-run h1 {
+    font-family: 'Roboto';
+    font-size: 12pt;
+    line-height: 15px;
+    color: #0D7876;
+    margin: 3px;
+}
+.kb-cell-run form input[type="submit"] {
+    float: right;
+}
+.kb-cell-params table {
+    border: none;
+    margin-bottom: 10px;
+}
+.kb-cell-params tr,td {
+    border: none;
+}
+
+.kb-cell-params input {
+    margin-left: 5px;
+}
+.kb-cell-params tr:nth-child(odd) {
+    background-color: #eee;
+    border-bottom: 1px solid #ddd;    
+}
+.kb-cell-params tr:nth-child(even) {
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;    
+}

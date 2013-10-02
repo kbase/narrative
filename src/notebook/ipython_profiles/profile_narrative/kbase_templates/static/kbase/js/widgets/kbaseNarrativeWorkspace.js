@@ -296,7 +296,7 @@
          * @private
          */
         _handle_execute_reply: function (content) {
-            alert("Done running!")
+            console.debug("Done running the function");
             //this.set_input_prompt(content.execution_count);
             //this.element.removeClass("running");
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
@@ -329,11 +329,10 @@
          * @method _handle_output
          * @private
          */
-        _handle_output: function (content) {
-            // XXX: copied from outputarea.js
-            console.debug("output is:",content);
+        _handle_output: function (msg_type, content) {
+            // copied from outputarea.js
             var json = {};
-            json.output_type = msg_type = "pyout"; //msg_type;
+            json.output_type = msg_type;
             if (msg_type === "stream") {
                 json.text = content.data;
                 json.stream = content.name;
@@ -351,8 +350,23 @@
             }            
             console.debug("OUTPUT", json);
             // XXX: transform output into a new cell
+            this._addOutputCell(json.text);
             return;
         },
+        /**
+         * Add a new cell for output of the script.
+         *
+         * @method _addOutputCell
+         * @private
+         */
+         _addOutputCell: function(text) {
+            var nb = IPython.notebook;
+            var cell = nb.insert_cell_at_bottom('markdown');
+            var content = "";
+            cell.set_text(text);
+            cell.rendered = false; // force a render
+            cell.render();
+         },
         /** We all oveah dem mime types */
         convert_mime_types: function (json, data) {
             if (data === undefined) {

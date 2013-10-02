@@ -106,6 +106,7 @@
          * Set up interactive features of the function-list panel.
          */
         initFuncs: function() {
+            console.debug("initFuncs.start");
             $('.kb-function-body ul li').each(function(index) {
                 var $anchor = $(this).find('a');
                 this.name = $anchor.data('name');
@@ -115,21 +116,24 @@
                     alert("clicked on " + self.name);
                 });
                 // Help for function
-                console.debug("anchor2", $anchor2);
                 var $anchor2 = $(this).find('span.kb-function-help');
                 this.help = $anchor2.data('help');
                 $anchor2.click(function() {
-                    var o = $('#kb-function-show-help');
-                    o.hide();
-                    o.addClass("alert alert-info alert-dismissable");
-                    var b = $('button');
-                    b.addClass('close');
-                    b.attr('data-dismiss', 'alert');
-                    b.attr('aria-hidden', 'true');
-                    b.text('&times;');
-                    o.append(b);
-                    o.text(self.help);
-                    o.show();
+                    console.debug("help asked for");
+                    var $elt = $('#kb-function-help');
+                    $elt.addClass("alert alert-info alert-dismissable");
+                    $elt.text(self.help);
+                    var $btn = $('<button>');
+                    $btn.attr('type', 'button')
+                        .addClass('close')
+                        .attr('data-dismiss', 'alert')
+                        .attr('aria-hidden', 'true')
+                        .html('&times;');
+                    $elt.append($btn);
+                    $btn.click(function() {
+                        $('#kb-function-help').hide();
+                    });
+                    $elt.show();
                 });
             });
         },

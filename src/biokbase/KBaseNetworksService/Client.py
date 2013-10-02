@@ -58,7 +58,7 @@ def _read_rcfile( file=os.environ['HOME']+"/.authrc"):
             with open( file ) as authrc:
                 rawdata = json.load( authrc)
                 # strip down whatever we read to only what is legit
-                authdata = { x : rawdata.get(x) for x in ( 'user_id', 'auth_token',
+                authdata = { x : rawdata.get(x) for x in ( 'user_id', 'token',
                                                            'client_secret', 'keyfile',
                                                            'keyfile_passphrase','password')}
         except Exception, e:
@@ -74,7 +74,7 @@ def _read_inifile( file=os.environ.get('KB_DEPLOYMENT_CONFIG',os.environ['HOME']
             config.read(file)
             # strip down whatever we read to only what is legit
             authdata = { x : config.get('authentication',x) if config.has_option('authentication',x) else None for x in
-                         ( 'user_id', 'auth_token','client_secret', 'keyfile','keyfile_passphrase','password') }
+                         ( 'user_id', 'token','client_secret', 'keyfile','keyfile_passphrase','password') }
         except Exception, e:
             print "Error while reading INI file %s: %s" % (file, e)
     return authdata
@@ -122,8 +122,8 @@ class KBaseNetworks:
             if authdata is None:
                 authdata = _read_rcfile()
             if authdata is not None:
-                if authdata.get('auth_token') is not None:
-                    self._headers['AUTHORIZATION'] = authdata['auth_token']
+                if authdata.get('token') is not None:
+                    self._headers['AUTHORIZATION'] = authdata['token']
                 elif authdata.get('user_id') is not None and authdata.get('password') is not None:
                     self._headers['AUTHORIZATION'] = _get_token( authdata['user_id'],authdata['password'] )
         if self.timeout < 1:

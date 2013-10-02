@@ -50,7 +50,14 @@ $newDiv.KBaseGenomeOverview({ genomeID: "{{object_id}}" });
 """ % get_widget_js('genomes/kbaseGenomeOverview.js')
 
 widgetdef['network-coex'] = """
-<iframe src=http://140.221.85.95/gvisualize/{{ shock_id }} width=800 height=500></iframe>
+<div id="widget_container_{{rand_id}}"></div>
+<script>
+    var token = $("#login-widget").kbaseLogin("session", "token");
+    $('#widget_container_{{rand_id}}').ForceDirectedNetwork({
+        new_workspaceID: "{{workspace_id}}",
+        token: token
+    });
+</script>
 """
 
 def new_widget( widget_name, **kwargs):

@@ -4,7 +4,7 @@ body {
 	padding-top: 75px;
 }
 
-header[role="banner"] {
+/*header[role="banner"] {
 	position: fixed;
 	top: 0;
 	width: 100%;
@@ -51,31 +51,8 @@ nav[role="navigation"] ul li.active a {
 	-moz-box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
 	box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
 }
+*/
 
-nav[role="navigation"] input[type="text"] {
-	display:inline;
-}
-
-.table_section {
-	margin-top: 20px;
-}
-.section_title {
-	background-color: #f2f2f2;
-	border: 1px solid #d3d3d3;
-	color: black;
-	padding: 5px 10px;
-	margin-top: 30px;
-	margin-bottom: 10px;
-	font-size: 16px;
-}
-
-#search_terms {
-	width: 350px;
-	background-image: url(search.png);
-	background-size: 22px; 
-	background-repeat:no-repeat;
-	background-position:right center; 
-}
 
 
 /** redundant styles
@@ -105,6 +82,81 @@ h4 {
 	
 */
 
+nav[role="navigation"] input[type="text"] {
+	display:inline;
+}
+
+
+#search_terms {
+	width: 350px;
+	background-image: url("../images/search.png");
+	background-size: 22px; 
+	background-repeat:no-repeat;
+	background-position:right center; 
+}
+
+h1, h2 {
+	margin: 0;
+}
+#project_title {
+	overflow: auto;
+}
+#project_title h2 {
+	color: #00834b;
+}
+
+.table_section {
+	margin-top: 0;
+}
+.section_title {
+	background-color: #b6e9f8;
+	color: #0066b9;
+	padding: 5px 10px;
+	margin-top: 20px;
+	margin-bottom: 10px;
+	font-size: 16px;
+	border: none;
+	-webkit-border-radius: 4px 4px 4px 4px;
+	-moz-border-radius: 4px 4px 4px 4px;
+	border-radius: 4px 4px 4px 4px;
+	overflow: auto;
+
+}
+
+.section_title a {
+	color: #0066b9;
+	text-decoration: none;
+}
+.section_title .title {
+	margin-top: 4px;
+}
+
 span.aside {
 	font-style: italic;
 } 
+.dataTables_table_info, #datasets_table_paginate {
+	margin-top: 5px;
+} 
+
+.dataTables_filter {
+	float: left;
+	text-align: left;
+}
+
+.paging_full_numbers a.paginate_button, .paging_full_numbers a.paginate_active {
+	border: none;
+}
+
+.paging_full_numbers a.paginate_active {
+	background-color: #b6e9f8;
+	border: none;
+}
+
+th {
+	font-family: 'OxygenBold';
+}
+
+.title {
+	float: left;
+	width: 120px;
+}

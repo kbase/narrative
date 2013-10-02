@@ -3,6 +3,7 @@ html, body {
 }
 body {
 	padding-top: 75px;
+	font-size: 14px;
 }
 
 #login_form {
@@ -60,7 +61,7 @@ body {
 	background-color: #E6E6E6;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
-	margin: 10px;
+	/*margin: 10px;*/
 	
 }
 
@@ -85,17 +86,17 @@ body {
 
 /** H styling */
 h1 {
-	font-family:'Roboto', Arial, sans-serif;
+	font-family:'RobotoBlack', Arial, sans-serif;
 	letter-spacing: 0; 
 	color: #232323;
 	}
 h2 {
-	font-family: 'Roboto', Arial, sans-serif; 
+	font-family: 'RobotoBlack', Arial, sans-serif; 
 	color: #898989; 
 	letter-spacing: 0;
 	}
 h3 {
-	font-family: 'Roboto', Arial, sans-serif; 
+	font-family: 'RobotoBlack', Arial, sans-serif; 
 	letter-spacing: 0;
 	}
 h4 {
@@ -107,4 +108,23 @@ h4 {
 
 span.aside {
 	font-style: italic;
+}
+
+
+.full-width {
+	width: 100%;
+}
+
+ul li, ol li {
+	list-style: none;
+	padding: 10px 0 0 0px;
+}
+
+ul, ol {
+	padding-left: 0;
+	margin: 0 0 10px 25px;
+}
+
+#metrics_section ul, #metrics_section ol {
+	margin-left: 0;
 }

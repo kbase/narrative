@@ -18,10 +18,27 @@
         // set the auth token by calling the kernel execute method on a function in
         // the magics module
 
+	var set_cookie = function() {
+	    var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
+	    console.log( 'Setting kbase_session cookie');
+	    $.cookie('kbase_session',
+		     'un=' + c.user_id
+		     + '|'
+		     + 'kbase_sessionid=' + c.kbase_sessionid 
+		     + '|'
+		     + 'user_id=' + c.user_id
+		     + '|'
+		     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'))
+
+	    
+	}
+
         var set_token = function () {
             // grab the token from the handler, since it isn't passed in with args
+	    set_cookie();
             var tok = $("#login-widget").kbaseLogin('session','token');
-            console.log( "kbase/narrativeLogin: Logging in on back-end");
+
+            console.log( "kbase/narrativeLogin: Logging in on back-end with token ",tok);
 
             // set the token in the ipython kernel using special handler
             var cmd = "biokbase.narrative.magics.set_token( '" + tok + "')";
@@ -56,6 +73,7 @@
                 // If the notebook kernel's initialized, tell it to clear the token in 
                 // the ipython kernel using special handler
                 if (IPython.notebook) {
+		        $.removeCookie( 'kbase_session');
 	                var cmd = "biokbase.narrative.magics.clear_token()";
 	                IPython.notebook.kernel.execute( cmd );
 	            }
@@ -66,6 +84,7 @@
             prior_login_callback: function(args) {
                 $(".whiteout-pane").remove();
 
+		set_cookie();
                 // Do actual login once the kernel is up - only an issue for prior_login
                 $([IPython.events]).on('status_started.Kernel', set_token);
             },

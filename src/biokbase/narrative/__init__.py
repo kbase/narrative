@@ -1,1 +1,1 @@
-__all__ = ['magics','mongonbmanager']
+__all__ = ['magics','mongonbmanager','ws_util']

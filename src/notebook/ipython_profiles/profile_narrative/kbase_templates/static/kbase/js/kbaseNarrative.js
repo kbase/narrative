@@ -22,7 +22,7 @@
      */
     $(function() {
         $(document).on('loggedIn.kbase', function(event, token) {
-            console.debug("logged in")
+            console.debug("logged in");
             narrativeWsWidget.loggedIn(token);
         });
 

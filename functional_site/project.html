@@ -8,6 +8,21 @@
         <link href="static/dataTables/1.9.4/css/jquery.dataTables.css" rel="stylesheet">
 		<link href="static/css/datastore.css" rel="stylesheet">
 
+		<style>
+
+			#project_title h2 {
+				color: #379846;
+			}
+
+			.title {
+				width: 200px;
+			}
+
+			a.btn-primary {
+				color: #fff;
+			}
+
+		</style>
     </head>
 
     <body>
@@ -34,12 +49,18 @@
 		</header>
 
 		<div id="main" class="container">
-			<h1 class="pds_name">My Stuff</h1>
+			<div id="project_title">
+				<div class="pull-left">
+					<h2 class="pds_name">Project</h2>
+					<h1 class="pds_name">Thermopilae in the Southern Ocean</h1>
+				</div>
+				<span class="pull-right"><a href="#" class="btn btn-primary">Manage Projects</a></span>
+			</div>
 
 			<div class="table_section container">
 				<div class="section_title row">
 					<div class="title">
-						<a href="#" data-toggle="collapse" data-target="#narratives_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Narratives&nbsp;&nbsp;&nbsp;<img id="narratives_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
+						<a href="#" data-toggle="collapse" data-target="#narratives_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Narratives in Project&nbsp;&nbsp;&nbsp;<img id="narratives_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
 					</div>
 					<div class="col-md-2">
 						<button class="btn btn-primary btn-sm">new</button>
@@ -111,62 +132,18 @@
 			<div class="table_section container">
 				<div class="section_title row">
 					<div class="title">
-						<a href="#" data-toggle="collapse" data-target="#datasets_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Datasets&nbsp;&nbsp;&nbsp;<img id="datasets_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
+						<a href="#" data-toggle="collapse" data-target="#datasets_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Datasets in Project&nbsp;&nbsp;&nbsp;<img id="datasets_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
 					</div>
 					<div class="col-md-2">
 						<button class="btn btn-primary btn-sm">upload</button>
 					</div>
 				</div>
-
-				<div id="datasets_container" class="row collapse in">
+	 			<div id="datasets_container" class="row collapse in">
 					<table id="datasets_table" class="table table-striped table-bordered" cellpadding="0" cellspacing="0" border="0" ></table>
 				</div>
 			</div>
 
-			<div class="table_section container">
-				<div class="section_title row">
-					<div class="title">
-						<a href="#" data-toggle="collapse" data-target="#projects_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Projects&nbsp;&nbsp;&nbsp;<img id="projects_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
-					</div>
-					<div class="col-md-2 collapse in">
-						<button class="btn btn-primary btn-sm">manage projects</button>
-					</div>
-				</div>
-				<div id="projects_container" class="row collapse in">
-					<table id="projects_table" class="table table-striped table-bordered" cellpadding="0" cellspacing="0" border="0" >
-						<thead>
-							<tr>
-								<th>&nbsp;</th>
-								<th>Name</th>
-
-								<th>Owner</th>
-								<th>Working with</th>
-
-								<th>Last modified</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td><input type="checkbox"></td>
-								<td>Thermopilae in the Southern Ocean</td>
-								<td>Jane Scientist</td>
-								<td>Will Smith and 3 others</td>
-
-								<td>09 Sep 2013 03:02:58</td>
-							</tr>
-							<tr>
-								<td><input type="checkbox"></td>
-								<td>Thermopilae in the Artic Ocean</td>
-
-								<td>Will Smith</td>
-								<td>You and 2 others</td>
-
-								<td>09 Sep 2013 03:02:58</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>	
+			
 			
 		</div>
 		

@@ -1536,24 +1536,53 @@
         },
         render: function() {
             var self = this;
-            $.ajax({
-                dataType: "json",
-                url: URL_ROOT + "/" + encodeURIComponent(this.options.workspaceID) + ".json"
-            }).done(function(result) {
-                var data = transformNetwork(result.data);
-                datavis.require([ "renderers/network" ], function(Network) {
-                    var network = new Network({
-                        element: self.$elem,
-                        dock: false,
-                        nodeLabel: {
-                            type: "GENE"
-                        }
-                    });
-                    network.setData(data);
-                    network.render();
-                });
-            });
-            return self;
+	    if (this.options.token && this.options.new_workspaceID) {
+                var ws_regex = /^(\w+)\.(.+)/;
+		var wsid = ws_regex.exec( this.options.new_workspaceID);
+		console.log( wsid);
+                if ( wsid[1] && wsid[2]) {
+		    var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+		    meta_AJAX = kbws.get_object( { auth : this.options.token,
+						workspace : wsid[1],
+						id : wsid[2],
+						type : 'Networks'
+					      });
+		    $.when(meta_AJAX).done( function(result) {
+						console.log( result);
+						var data = transformNetwork(result.data);
+						datavis.require([ "renderers/network" ], function(Network) {
+								    var network = new Network({
+												  element: self.$elem,
+												  dock: false,
+												  nodeLabel: {
+												      type: "GENE"
+												  }
+											      });
+								    network.setData(data);
+								    network.render();
+								});
+					    });
+		}
+	    } else {
+		$.ajax({
+			   dataType: "json",
+			   url: URL_ROOT + "/" + encodeURIComponent(this.options.workspaceID) + ".json"
+		       }).done(function(result) {
+				   var data = transformNetwork(result.data);
+				   datavis.require([ "renderers/network" ], function(Network) {
+						       var network = new Network({
+										     element: self.$elem,
+										     dock: false,
+										     nodeLabel: {
+											 type: "GENE"
+										     }
+										 });
+						       network.setData(data);
+						       network.render();
+						   });
+			       });
+	    }
+	    return self;
         }
     });
     function transformNetwork(networkJson) {

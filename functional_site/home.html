@@ -8,7 +8,7 @@
         <link href="static/css/datastore.css" rel="stylesheet">
 		<link href="static/css/user.css" rel="stylesheet">
         <style type="text/css">
-			
+
         </style>
     </head>
 
@@ -37,14 +37,14 @@
 
 		<div id="main" class="container">
 			<div id="maincontent" class="row">
-				<div id="public_section" class="col-md-6 col-md-offset-1">
+				<div id="public_section" class="col-md-6">
 					<div id="welcome_section">
 						<h1>Your science, your way.</h1>
 						<span>Build narratives that capture your analyses, including rich annotations, visualization widgets, reusable workflows, and custom scripts. Share your work and your data with colleagues. Follow the field through the people, organisms, and projects that matter to you. <a href="#">Learn more</a></span>
 					</div>
 					
 				</div>
-				<div id="login_section" class="col-md-3 ">
+				<div id="login_section" class="col-md-offset-1 col-md-4 ">
 					
 					<form id="login_form">
 				    <div>
@@ -55,12 +55,12 @@
 				    		<input type="text" placeholder="username" id="kbase_username" class=" form-control" tabindex="1">
 				    	</div>
 				    	<div class="form-group">
-							<label for="kbase_password">Password:<span class="pull-right"><a target="_blank" href="http://gologin.kbase.us/ResetPassword" tabindex="4">Forgot password?</a></span></label>
+							<label for="kbase_password" class="full-width">Password:<span class="pull-right"><a target="_blank" href="http://gologin.kbase.us/ResetPassword" tabindex="4">Forgot password?</a></span></label>
 				    		<input type="password" placeholder="password" id="kbase_password" class="form-control" tabindex="2">
 				    	</div>
 					
 				    
-				    	<button type="button" class="btn " onclick="login($('#kbase_username').val(),$('#kbase_password').val());" tabindex="3">Sign In</button> <img src="./img/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
+				    	<button type="button" class="btn " onclick="login($('#kbase_username').val(),$('#kbase_password').val());" tabindex="3">Sign In</button> <img src="./static/images/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
 				
 				    </div>
 				
@@ -74,34 +74,15 @@
 						<div id="feed_section" class="col-md-8 pull-left">
 						<h2 class="small">Newsfeed</h2>
 						<div class="newsfeed_section">
-							<h3>Workspaces Shared With Me <img src="./img/ajax-loader-white.gif" id="loading-indicator-ws"  /></h3>
+							<h3>Projects I'm Following <img src="./static/images/ajax-loader.gif" id="loading-indicator-ws"  /></h3>
 							<ol id="people_feed">
 								<!--<li><a href="#">bobtheguy@kbase.us</a> started a new narrative entitled <a href="#">"GWAS of Klebsiella spp."</a></li>
 								<li><a href="#">kristen@uchicago.edu</a> commented on <a href="#">bobtheguy@kbase.us's narrative</a></li>-->
 							</ol>
 						</div>
-						<div class="newsfeed_section">
+						
 				
-							<h3>Organisms I'm following</h3>
-							<h4 class="feed_projects_title">E coli H25</h4>
-							<ol>
-								<li><a href="#">pipsqueak@concordia.gov</a> started a new narrative entitled <a href="#">"GWAS Analysis of a New Strain of E. coli"</a></li>
-								<li><a href="#">qsquirrel@concordia.gov</a> commented on a narrative entitled <a href="#">"E. coli H25 Regulatory Model"</a></li>
-								<li><a href="#">qsquirrel@concordia.gov</a> cloned the narrative entitled <a href="#">"E. coli H25 Regulatory Model"</a> as <a href="#">"E. coli H25 Regulatory Model with Gapfilling"</a></li>
-								<li><a href="#">qsquirrel@concordia.gov</a> added a <a href="#">citation</a> to the narrative entitled <a href="#">"E. coli H25 Metabolic Model"</a></li>
-
-							</ol>			
-						</div>
-				
-						<div class="newsfeed_section">
-				
-							<h3>Projects I'm following</h3>
-							<span class="aside">You are not currently following any projects. <a href="#">Find some projects to follow.</a></span>
-						</div>
-				
-						<div class="newsfeed_section">
-							<a href="#">Manage my subscriptions</a>
-						</div>
+						
 					</div>
 					
 					
@@ -179,7 +160,7 @@
 		<!-- HTML Templates -->
 		<script id="workspaces" type="text/html">
 		{{#rows}}
-		<li><a href="#">{{ username }}</a>&#39;s workspace <a href="#">{{ workspace }}</a> was updated on {{ date }}.</li>
+		<li><a href="#">{{ username }}</a> updated the project <a href="#">{{ workspace }}</a> on {{ date }}.</li>
 		{{/rows}}
 		</script>
 		

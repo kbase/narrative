@@ -1,3 +1,3 @@
+from IPython.core.display import HTML
 def run(params):
-    print ("this is some output")
-    print("some more output")
+    return HTML("<h2>Title</h2><p>This is some output</p>")

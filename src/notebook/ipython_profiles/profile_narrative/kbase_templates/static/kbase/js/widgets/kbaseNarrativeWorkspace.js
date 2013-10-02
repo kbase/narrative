@@ -139,6 +139,7 @@
             var env = this;
             console.debug("adding cell for " + name);
             var nb = IPython.notebook;
+            this.kernel = nb.kernel; // stash current kernel
             var cell = nb.insert_cell_at_bottom('markdown');
             var content = "";
             var runner = undefined;
@@ -224,28 +225,68 @@
         /**
          * Run plants demo on backend
          */
-        _plantsRunner: function(name, params) {
-            console.debug("run function:" + name);
-            //var pymod =  "biokbase.narrative.demo.coex_workflow.coex_network_ws";
-            // Build code
-            var pymod =  "biokbase.narrative.demo.coex_workflow.coex_network_test";
-            var pyfunc = "run";
-            var code = "from " + pymod + " import " + pyfunc + "\n";
-            code += "params = " + this._pythonDictify(params) + "\n";
-            code += pyfunc + "(params)" + "\n";
-            console.debug("CODE:",code);
-            var callbacks = {
-                'execute_reply': $.proxy(this._handle_execute_reply, this),
-                //'output': $.proxy(this.output_area.handle_output, this.output_area),
-                'output': $.proxy(this._handle_output, this),
-                'clear_output': $.proxy(this._handle_clear_output, this),
-                'set_next_input': $.proxy(this._handle_set_next_input, this),
-                'input_request': $.proxy(this._handle_input_request, this)
+        _plantsRunner: function() {
+            var self = this;
+            return function(name, params) {
+                console.debug("run function " + name + " with params:", params);
+                //var pymod =  "biokbase.narrative.demo.coex_workflow.coex_network_ws";
+                // Build code
+                var pymod =  "biokbase.narrative.demo.coex_workflow.coex_network_test";
+                var pyfunc = "run";
+                var code = "from " + pymod + " import " + pyfunc + "\n";
+                console.debug("this:",self);
+                code += "params = " + self._pythonDict(params) + "\n";
+                code += pyfunc + "(params)" + "\n";
+                console.debug("CODE:",code);
+                var callbacks = {
+                    'execute_reply': $.proxy(self._handle_execute_reply, self),
+                    //'output': $.proxy(self.output_area.handle_output, self.output_area),
+                    'output': $.proxy(self._handle_output, self),
+                    'clear_output': $.proxy(self._handle_clear_output, self),
+                    'set_next_input': $.proxy(self._handle_set_next_input, self),
+                    'input_request': $.proxy(self._handle_input_request, self)
+                };
+                // XXX: mark self widget as running.. and block other things from running..
+                //self.element.addClass("running");
+                var msg_id = self.kernel.execute(code, callbacks, {silent: true});
             };
-            // XXX: mark this widget as running.. and block other things from running..
-            this.element.addClass("running");
-            var msg_id = this.kernel.execute(code, callbacks, {silent: true});
         },
+
+        /**
+         * Make JS dict into Python dict (string)
+         */
+         _pythonDict: function(data) {
+            var dict = "{";
+            $.each(data, function(key, value) {
+                dict += "'" + key + "': ";
+                // XXX: assume either more maps or simple type
+                var vtype = typeof value;
+                switch(vtype) {
+                    case "boolean":
+                        if (value)
+                            dict += "True";
+                        else
+                            dict += "False";
+                        break;
+                    case "number":
+                        dict += value;
+                        break;
+                    case "string":
+                        dict += "'" + value + "'";
+                        break;
+                    case "undefined":
+                        dict += "None";
+                        break;
+                    case "object":
+                        dict += this._pythonDict(value);
+                        break;
+                    default:
+                        console.error("Cannot convert to Python:", value);
+                }
+                dict += ", "
+            });
+            return dict + "}";
+         },
 
         /* ------------------------------------------------------
          * Functions to handle running code.
@@ -257,7 +298,7 @@
         _handle_execute_reply: function (content) {
             alert("Done running!")
             //this.set_input_prompt(content.execution_count);
-            this.element.removeClass("running");
+            //this.element.removeClass("running");
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
         },
         /**
@@ -290,8 +331,9 @@
          */
         _handle_output: function (content) {
             // XXX: copied from outputarea.js
+            console.debug("output is:",content);
             var json = {};
-            json.output_type = "pyout"; //msg_type;
+            json.output_type = msg_type = "pyout"; //msg_type;
             if (msg_type === "stream") {
                 json.text = content.data;
                 json.stream = content.name;

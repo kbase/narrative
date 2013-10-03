@@ -52,15 +52,11 @@
             }
             $.when(fetchAjax).done(function (result) {
                 var data = transformNetwork(result.data);
-                datavis.require([
-                    "renderers/network"
-                ], function(Network) {
+                KBVis.require(["renderers/network"], function (Network) {
                     var network = new Network({
                         element: self.$elem,
                         dock: false,
-                        nodeLabel: {
-                            type: "GENE"
-                        }
+                        nodeLabel: { type: "GENE" }
                     });
                     network.setData(data);
                     network.render();

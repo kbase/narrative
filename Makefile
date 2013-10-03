@@ -31,7 +31,8 @@ $(DOCSDIR)/index.html: $(SOURCES)
 ifndef JSDUCK
 	$(error JSDuck not found (install with `gem install jsduck`).)
 endif
-	@ $(JSDUCK) --builtin-classes --output $(DOCSDIR) -- ./src
+	@ $(JSDUCK) --builtin-classes --output $(DOCSDIR) \
+		--exclude ./src/datavis.js -- ./src
 
 docs: init $(DOCSDIR)/index.html
 

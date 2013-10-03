@@ -3,14 +3,28 @@
  *
  * Implements a force-directed network widget
  *
- * @extends KBWidget
- *
  * And here's an example:
  *
  *     @example
- *     var widget = $.ForceDirectedNetwork({
- *         workspaceID: "workspace.1",
+ *     $("#div-id").ForceDirectedNetwork({
+ *         minHeight   : "300px",
+ *         workspaceID : "workspace.1",
+ *         token       : "user-token-53"
  *     });
+ *
+ * @extends KBWidget
+ * @chainable
+ * @param {Object} options
+ * The options
+ *
+ * @param {String} options.workspaceID
+ * The workspace ID of the network to look up
+ *
+ * @param {String} options.token
+ * The authorization token used for workspace lookup
+ *
+ * @param {String|Number} options.minHeight
+ * A minimum height for the widget
  */
 (function($) {
     var URL_ROOT = "http://140.221.84.142/objects/coexpr_test/Networks";
@@ -18,7 +32,9 @@
     $.KBWidget({
         name: "ForceDirectedNetwork",
         version: "0.1.0",
-        options: {},
+        options: {
+            minHeight: "300px"
+        },
         init: function(options) {
             this._super(options);
             this.render();
@@ -27,13 +43,16 @@
         render: function () {
             var self = this;
             var fetchAjax = function () { return 1; };
-            if (this.options.token) {
+            if (self.options.minHeight) {
+                self.$elem.css("min-height", self.options.minHeight);
+            }
+            if (self.options.token) {
                 var wsRegex = /^(\w+)\.(.+)/;
-                var wsid = wsRegex.exec(this.options.workspaceID);
+                var wsid = wsRegex.exec(self.options.workspaceID);
                 if (wsid !== null && wsid[1] && wsid[2]) {
                     var kbws = new workspaceService(WS_URL);
                     fetchAjax = kbws.get_object({
-                        auth: this.options.token,
+                        auth: self.options.token,
                         workspace: wsid[1],
                         id: wsid[2],
                         type: 'Networks'
@@ -47,7 +66,7 @@
                 fetchAjax = $.ajax({
                     dataType: "json",
                     url: URL_ROOT + "/" +
-                        encodeURIComponent(this.options.workspaceID) + ".json"
+                        encodeURIComponent(self.options.workspaceID) + ".json"
                 });
             }
             $.when(fetchAjax).done(function (result) {

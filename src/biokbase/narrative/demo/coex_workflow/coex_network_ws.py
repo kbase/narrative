@@ -133,10 +133,11 @@ def submit_awe_job(uri, awe_job_document):
 
 
 class URLS:
-    main = "http://140.221.84.236:8000/node"
+    _host = '140.221.84.248'
+    main = "http://{40.221.84.236:8000/node"
     shock = "http://140.221.84.236:8000"
     awe = "http://140.221.84.236:8001/"
-    expression= "http://localhost:7075"
+    expression= "http://{}:7075".format(_host)
     workspace= "http://kbase.us/services/workspace"
     ids = "http://kbase.us/services/idserver"
     cdmi = "http://kbase.us/services/cdmi_api"
@@ -186,14 +187,25 @@ ugids = {}
 nodes = []
 ## MAIN ##
 
-def main():
+def main(ont_id="PO:0009005", gn_id='3899',
+         fltr_m='anova', fltr_n='100',
+         net_c='0.75',
+         clust_c='hclust', clust_n='simple'):
     """Create a narrative for co-expression network workflow
 
     1. User uploads multiple files to shock and remembers shock node IDs
     2. An AWE job script is created
     3. Job is submitted to awe service
     4. Node ids of output files are provided
+
+    Modifications (dan gunter):
+    - add parameters
     """
+
+    # parameterize --dang
+    coex_args['coex_filter'] = "-m {} -n {}".format(fltr_m, fltr_n)
+    coex_args['coex_net'] = "-c {}".format(net_c)
+    coex_args['coex_cluster'] = "-c {} -n {}".format(clust_c, clust_n)
 
     ##
     # 1. Get token
@@ -209,8 +221,6 @@ def main():
     ## 
 
     _log.info("Get expression data")
-    ont_id = "PO:0009005" # 9025 for 44 samples
-    gn_id = '3899'
     workspace_id = 'coexpr_test'
     edge_object_id = ont_id + ".g" + gn_id +".filtered.edge_net"
     clust_object_id = ont_id+ ".g" + gn_id +".filtered.clust_net"
@@ -237,10 +247,10 @@ def main():
                   'type' : 'ExpressionDataSamplesMap', 
                   'data' : sample_data, 'workspace' : workspace_id,
                   'auth' : token})
-    except Exception,e:
-        #raise Exception("Could not parse out merged_csv_node: %s" % e)
-        print "Err store error...\n"
-        sys.exit(1)
+    except Exception as e:
+        raise Exception("Could not parse out merged_csv_node: {}".format(e))
+        #print "Err store error...\n"
+        #sys.exit(1)
 
     ##
     # 4. Download expression object from workspace
@@ -316,8 +326,6 @@ def main():
             break
         _log.debug("job.run tasks_remaining={:d}".format(count))
     _log.info("job.end")
-
-    #XXX: Never get past this point
 
     #print("\n##############################\nDownload and visualize network output\n")
 
@@ -510,10 +518,26 @@ def main():
                      'data' : net_object, 'workspace' : workspace_id,
                      'auth' : token});
 
-    #sys.exit(0);
-    
+    return edge_object_id
 
-    return 0
+
+# Entry point from IPython
+def run(params, quiet=True):
+    if quiet:
+        # disable logging
+        _log.setLevel(logging.CRITICAL - 1)
+    # parse params
+    p = {
+        'fltr_n': params['Filter.-n'],
+        'fltr_m': params['Filter.-m'],
+        'gn_id': params['Filter.gene_id'],
+        'ont_id': params['Filter.ontology_id'],
+        'net_c': params['Network.-c'],
+        'clust_n': params['Cluster.-n'],
+        'clust_c': params['Cluster.-c']
+    }
+    obj_id = main(**p)
+    print('<a href="#">{}</a>'.format(obj_id))
 
 if __name__ == '__main__':
     sys.exit(main())

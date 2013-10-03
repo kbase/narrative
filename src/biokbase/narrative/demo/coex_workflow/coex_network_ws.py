@@ -9,16 +9,10 @@ __version__ = '0.1'
 
 ## Imports
 
-from biokbase.auth import Token
-from biokbase.workspaceService.Client import workspaceService
-from biokbase.ExpressionServices.ExpressionServicesClient import ExpressionServices
-from biokbase.idserver.client import IDServerAPI
-from biokbase.cdmi.client import CDMI_API
-from biokbase.OntologyService.Client import Ontology
-
 # system
 import json
 import logging
+import os
 from string import Template
 import sys
 import time
@@ -27,6 +21,13 @@ import uuid
 import requests
 import os
 import urllib2
+# package
+from biokbase.auth import Token
+from biokbase.workspaceService.Client import workspaceService
+from biokbase.ExpressionServices.ExpressionServicesClient import ExpressionServices
+from biokbase.idserver.client import IDServerAPI
+from biokbase.cdmi.client import CDMI_API
+from biokbase.OntologyService.Client import Ontology
 
 ## Configure logging
 
@@ -190,7 +191,8 @@ nodes = []
 def main(ont_id="PO:0009005", gn_id='3899',
          fltr_m='anova', fltr_n='100',
          net_c='0.75',
-         clust_c='hclust', clust_n='simple'):
+         clust_c='hclust', clust_n='simple',
+         token=None, workspace_id=None):
     """Create a narrative for co-expression network workflow
 
     1. User uploads multiple files to shock and remembers shock node IDs
@@ -214,14 +216,14 @@ def main(ont_id="PO:0009005", gn_id='3899',
     _log.info("Get auth token")
     #aconf = {"username" :'kbasetest', "password" :'@Suite525'}
     #auth = Token(aconf)
-    token = 'un=kbasetest|tokenid=0ff5667c-2ae0-11e3-88f8-12313809f035|expiry=1412198758|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/105f50b4-2ae0-11e3-88f8-12313809f035|sig=a288a0e941120509d3ee1a8ce091160b71f0a61a0731ccf95cc7655266167c9b85b64356f8cec48d67164a55bec1f92074f09367f936e5dac1119744ff2d1c315174fa38285d4e3be612c9cbb83c66242f13a790610eef701e31cb9213d0c48304b9a68d40d3e8f77c8b67f8f97e4d1ec49de10f3c7c8648985354349fb8ea85';
+    #token = 'un=kbasetest|tokenid=0ff5667c-2ae0-11e3-88f8-12313809f035|expiry=1412198758|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/105f50b4-2ae0-11e3-88f8-12313809f035|sig=a288a0e941120509d3ee1a8ce091160b71f0a61a0731ccf95cc7655266167c9b85b64356f8cec48d67164a55bec1f92074f09367f936e5dac1119744ff2d1c315174fa38285d4e3be612c9cbb83c66242f13a790610eef701e31cb9213d0c48304b9a68d40d3e8f77c8b67f8f97e4d1ec49de10f3c7c8648985354349fb8ea85';
 
     ##
     # 2. Get expression data
     ## 
 
     _log.info("Get expression data")
-    workspace_id = 'coexpr_test'
+    #workspace_id = 'coexpr_test'
     edge_object_id = ont_id + ".g" + gn_id +".filtered.edge_net"
     clust_object_id = ont_id+ ".g" + gn_id +".filtered.clust_net"
     edge_core_id = "ws//" +workspace_id+ "/" +edge_object_id
@@ -535,6 +537,8 @@ def run(params, quiet=True):
         'clust_n': params['Cluster.-n'],
         'clust_c': params['Cluster.-c']
     }
+    p.update(dict(token=os.environ['KB_AUTH_TOKEN'],
+                  workspace_id=os.environ['KB_WORKSPACE_ID']))
     obj_id = main(**p)
     print('<a href="#">{}</a>'.format(obj_id))
 

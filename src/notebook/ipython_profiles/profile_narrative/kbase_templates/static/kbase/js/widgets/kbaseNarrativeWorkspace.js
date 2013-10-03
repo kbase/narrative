@@ -206,7 +206,7 @@
         plantsRunConfig: {
             'Filter': {
                 gene_id: '3899',
-                ontology_id: 'PO:0009025',
+                ontology_id: 'PO:0001016',
                 '-m': 'anova',
                 '-n': '100',
             },
@@ -264,6 +264,8 @@
             var cmd = "run";
             var code = "from " + pkg + " import " + module + "\n";
             code += "reload(" + module + ")\n"; // in case it changed
+            // hack to add in workspace id
+            code += "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n";  
             code += "params = " + this._pythonDict(params) + "\n";
             code += module + "." + cmd + "(params)" + "\n";
             console.debug("CODE:", code);

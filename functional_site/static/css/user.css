@@ -128,3 +128,7 @@ ul, ol {
 #metrics_section ul, #metrics_section ol {
 	margin-left: 0;
 }
+
+#login_error {
+	color: red;
+}

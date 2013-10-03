@@ -60,7 +60,7 @@
 				    	</div>
 					
 				    
-				    	<button type="button" class="btn " onclick="login($('#kbase_username').val(),$('#kbase_password').val());" tabindex="3">Sign In</button> <img src="./static/images/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
+				    	<button id="signinbtn" type="button" class="btn " tabindex="3">Sign In</button> <img src="./static/images/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
 				
 				    </div>
 				
@@ -149,12 +149,16 @@
 			</div>
 		</div>
 		
-        <script src="static/js/jquery-1.10.2.min.js"></script>
+		<script src="static/js/jquery-1.10.2.min.js"></script>
+		<script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+		<script src="static/dataTables/1.9.4/js/jquery.dataTables.js"></script>
         <script src="static/js/jquery.cookie.min.js"></script>
-        <script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+        <script src="static/js/kbwidget.js"></script>
+        <script src="static/js/kbasePrompt.js"></script>
+        <script src="static/js/kbaseLogin.js"></script>
+		<script src="static/js/kbase.js"></script>
 		<script src="static/js/underscore.js"></script>
 		<script src="static/js/ICanHaz.min.js"></script>
-		<script src="static/js/kbase.js"></script>
         <script src="static/js/users.js"></script>
 
 		<!-- HTML Templates -->

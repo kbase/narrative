@@ -58,7 +58,7 @@ def _read_rcfile( file=os.environ['HOME']+"/.authrc"):
             with open( file ) as authrc:
                 rawdata = json.load( authrc)
                 # strip down whatever we read to only what is legit
-                authdata = { x : rawdata.get(x) for x in ( 'user_id', 'auth_token',
+                authdata = { x : rawdata.get(x) for x in ( 'user_id', 'token',
                                                            'client_secret', 'keyfile',
                                                            'keyfile_passphrase','password')}
         except Exception, e:
@@ -74,7 +74,7 @@ def _read_inifile( file=os.environ.get('KB_DEPLOYMENT_CONFIG',os.environ['HOME']
             config.read(file)
             # strip down whatever we read to only what is legit
             authdata = { x : config.get('authentication',x) if config.has_option('authentication',x) else None for x in
-                         ( 'user_id', 'auth_token','client_secret', 'keyfile','keyfile_passphrase','password') }
+                         ( 'user_id', 'token','client_secret', 'keyfile','keyfile_passphrase','password') }
         except Exception, e:
             print "Error while reading INI file %s: %s" % (file, e)
     return authdata
@@ -122,8 +122,8 @@ class workspaceService:
             if authdata is None:
                 authdata = _read_rcfile()
             if authdata is not None:
-                if authdata.get('auth_token') is not None:
-                    self._headers['AUTHORIZATION'] = authdata['auth_token']
+                if authdata.get('token') is not None:
+                    self._headers['AUTHORIZATION'] = authdata['token']
                 elif authdata.get('user_id') is not None and authdata.get('password') is not None:
                     self._headers['AUTHORIZATION'] = _get_token( authdata['user_id'],authdata['password'] )
         if self.timeout < 1:
@@ -342,6 +342,41 @@ class workspaceService:
     def get_object(self, params):
 
         arg_hash = { 'method': 'workspaceService.get_object',
+                     'params': [params],
+                     'version': '1.1',
+                     'id': str(random.random())[2:]
+                     }
+
+        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        try:
+            request = urllib2.Request( self.url, body, self._headers)
+#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
+            ret = urllib2.urlopen(request, timeout = self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b) 
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            #this should never happen... but if it does 
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    raise se
+                    #raise h      #  h.read() will return '' in the calling code.
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' + ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def get_objects(self, params):
+
+        arg_hash = { 'method': 'workspaceService.get_objects',
                      'params': [params],
                      'version': '1.1',
                      'id': str(random.random())[2:]

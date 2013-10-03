@@ -575,12 +575,12 @@
                              )
                          .append(
                              $('<button></button>')
-                                 .addClass('btn btn-default')
+                                 .addClass('btn btn-default btn-xs')
                                  .attr('id', 'logoutbutton')
                                  .append(
                                      $('<i></i>')
                                          .attr('id', 'logouticon')
-                                         .addClass('icon-signout')
+                                         .addClass('glyphicon glyphicon-log-out')
                                  )
                          )
                  );
@@ -609,7 +609,7 @@
              this.data('logoutbutton').bind('click',
                  $.proxy(
                      function(e) {
-                         this.logout();
+                         this.logout(false); //TODO fix this to not hardcode false
                          this.data('user_id').focus();
                      },
                      this

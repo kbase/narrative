@@ -188,6 +188,9 @@
                     console.error("Cannot get/create workspace: " + name, err);
                 });
             this.ws_id = name;
+            // Set the title of the UI element showing the data
+            $('#kb-wsname').text(name);
+            
             return this;
         },
 

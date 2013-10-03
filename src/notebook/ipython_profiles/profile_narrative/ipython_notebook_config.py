@@ -10,6 +10,9 @@ c = get_config()
 # NotebookApp configuration
 #------------------------------------------------------------------------------
 
+# Use the workspace based notebook manager
+c.NotebookApp.notebook_manager_class="biokbase.narrative.kbasewsmanager.KBaseWSNotebookManager"
+
 # NotebookApp will inherit config from: BaseIPythonApplication, Application
 
 # The IPython profile to use.

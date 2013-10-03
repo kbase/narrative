@@ -4,7 +4,7 @@ For data in KBase workspace
 #kb-ws {
     background-color: #fff;
     width: 100%;
-    height: 345px;
+    height: 350px;
 }
 
 #kb-ws .dataTable {
@@ -12,20 +12,32 @@ For data in KBase workspace
     height: 300px;
 }
 
+/* header area */
 #kb-ws .kb-header {
     background-color: #008988;
     width: 100%;
-    color: white;
+    color: #ddd;
     font-family: OxygenRegular;
     font-size: 16px;
     text-align: center;
-    padding: 5px 0;
+    padding: 5px 5px 5px 10px;
+}
+.kb-header #kb-wsname {
+    color: white;
+    margin-left: 0.25em;
+    font-weight: 900;
 }
 
 #kb-ws .kb-controls {
     width: 100%;
     height: 30px;
     background-color: #008988;
+    padding-left: 3px;
+}
+
+/* little search icon next to text field */
+.icon-search {
+    padding-left: 5px;
 }
 
 #kb-ws .form-control {
@@ -43,10 +55,10 @@ For data in KBase workspace
 }
 #kb-ws-add-data {
     position: absolute;
-    top: 5px;
-    left: 0px;
+    top: 30px;
+    left: 20px;
     width: 40px;
-    font-size: 90%;
+    font-size: 100%;
     overflow-x: hidden;
     color: white;
     font-family: OxygenMonoRegular;

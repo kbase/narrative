@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrativeWorkspace.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseUpload.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseData.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
 
     <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
 
@@ -206,8 +207,9 @@ class="notebook_app"
     </div>
     <div id="left-column">
         <div id="kb-ws">
-            <div class="kb-header">Data sets</div>
-            <div class="kb-controls"><span id='kb-ws-upload-dialog'></span></div>
+            <div class="kb-header">Data in <span id='kb-wsname'>MyWorkspace</span></div>
+            <div class="kb-controls"><span id='kb-ws-upload-dialog'></span>
+            </div>
             <div class="kb-table">
                 <table>
                     <thead>
@@ -221,28 +223,30 @@ class="notebook_app"
                 </table>
             </div>
         </div>
-        <div id="function-panel" class="left-pane">
-            <div id="function-header">
+        <div class="kb-ws-browser-link">
+            See more in the 
+            <a href="http://140.221.84.142/">workspace browser</a>.
+        </div>
+        <div class="kb-function-panel left-pane">
+            <div class="kb-function-header">
                 Functions
             </div>
-            <div id="model-pane">
-                <div class="function-group-header">
-                    Modeling
-                </div>
-                <div id="model-function-group" class="function-group">
-                </div>
-                <div class="function-group-header">
-                    Genomics
-                </div>
-                <div id="genome-function-group" class="function-group">
-                </div>
-                <div class="function-group-header">
-                    Phenotypes
-                </div>
-                <div id="phenotype-function-group" class="function-group">
-                </div>
+            <div class="kb-function-body">
+                <ul>
+                    <li><a href="#" data-name="plants">Plants Co-expression</a>
+                        <span data-name="Plants Co-expression" 
+                              data-help="Plants is good eats"
+                              class="kb-function-help">?</span>
+                    </li>
+                    <li><a href="#" data-name="microbes_1">Microbes-1</a>
+                        <span data-name="Microbes-1" 
+                              data-help="There's something about microbes"
+                              class="kb-function-help">?</span>
+                    </li>
+                </ul>
             </div>
         </div>
+    <div id="kb-function-help"></div>
 
 
 

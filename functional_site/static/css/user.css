@@ -16,42 +16,41 @@ body {
 	padding-right: 30px;
 }
 
+#feed_section h2 {
+	color: #489f47;
+}
+
 /** styling for the narrative column */
 #narrative_column{
-    padding: 30px 30px 0 20px;
-	border-right: 1px solid #898989;
-	position: fixed;
-	bottom: 0;
-	top: 75px;
-	background-color: #E6E6E6;
+    padding: 30px 30px 30px 20px;
+		border: 1px solid #f2f2f2;
+	background-color: #f2f2f2;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+	/*margin: 10px;*/
+	min-height: 600px;
 	
 }
 
-/* this is for the little 'more' tab */
-#narrative_column:after {
-	content: "more\a0\a0\21E7";
-	padding-left: 20px;
-	padding-right: 10px;
-	width: 60px;
-	height: 23px;
-	position: absolute;
-	top: 30px;
-	right: -56px;
-	border-right: 1px solid #898989;
-	border-top: 1px solid #898989;
-	background-color: #E6E6E6;
-	-moz-border-radius-topright: 10px;
-	border-top-right-radius: 10px;
-	font-size: 16px;
-	z-index: 100;
-
-	-webkit-transform:rotate(90deg); 
-	  -moz-transform:rotate(90deg); 
-	  -ms-transform:rotate(90deg); 
-	  -o-transform:rotate(90deg); 
-	  transform:rotate(90deg);
-
+#narrative_column h2 {
+	color: #666;
 }
+
+#narrative_column h3 {
+	margin-top: 10px;
+	color: #666;
+	font-size: 18px;
+}
+
+#narrative_column ol {
+	margin: 0 0 10px 0;
+}
+
+.narrative_section {
+	margin-bottom: 40px;
+}
+
+
 
 /** styling for the metrics section */
 #maincontent #metrics_section, #maincontent #login_section {
@@ -127,4 +126,8 @@ ul, ol {
 
 #metrics_section ul, #metrics_section ol {
 	margin-left: 0;
+}
+
+#login_error {
+	color: red;
 }

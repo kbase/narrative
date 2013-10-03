@@ -207,10 +207,11 @@
             'Filter': {
                 gene_id: '3899',
                 ontology_id: 'PO:0009025',
+                '-m': 'anova',
+                '-n': '100',
             },
             'Network': {
-                '-m': 'simple',
-                '-t': 'edge'
+                '-c': '0.75',
             },
             'Cluster': {
                 '-c': 'hclust',
@@ -225,7 +226,7 @@
             var self = this;
             return function(params) {
                 return self._buildRunCommand("biokbase.narrative.demo.coex_workflow",
-                        "coex_network_test", params);
+                        "coex_network_ws", params);
             }
         },
         /* -------------- END: PLANTS ---------------------- */

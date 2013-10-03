@@ -308,11 +308,10 @@ def main(ont_id="PO:0009005", gn_id='3899',
     _log.debug("Uploaded to shock. ids = {}".format(','.join(shock_ids.values())))
 
     # Read & substitute values into job spec
-    awe_job = json.load(open("awe_job.json"))
     subst = shock_ids.copy()
     subst.update(coex_args)
     subst.update(dict(shock_uri=URLS.shock, session_id=sessionID))
-    awe_job_str = Template(json.dumps(awe_job)).substitute(subst)
+    awe_job_str = Template(AWE_JOB).substitute(subst)
 
     # Submit job
     job_id = submit_awe_job(URLS.awe, awe_job_str)
@@ -331,7 +330,7 @@ def main(ont_id="PO:0009005", gn_id='3899',
 
     #print("\nURLs to download output files\n")
     download_urls = get_output_files(URLS.awe, job_id)
-    print download_urls
+    _log.info("Download URLS: {}".format(download_urls))
     #print('\n'.join(['\t\t' + s for s in download_urls]))
 
     #print("URL to visualize the network\n")
@@ -541,3 +540,96 @@ def run(params, quiet=True):
 
 if __name__ == '__main__':
     sys.exit(main())
+
+# DATA
+
+AWE_JOB = """
+{
+    "info": {
+        "pipeline": "coex-example",
+        "name": "testcoex",
+        "project": "default",
+        "user": "default",
+        "clientgroups":"",
+         "sessionId":"xyz1234"
+    }, 
+    "tasks": [
+        {
+            "cmd": {
+                "args": "-i @data_csv --output=data_filtered_csv -m anova -n 200 --sample_index=@sample_id_csv  -u n -r y -d y", 
+                "description": "filtering", 
+                "name": "coex_filter"
+            }, 
+            "dependsOn": [], 
+            "inputs": {
+               "data_csv": {
+                    "host": "$shock_uri",
+                    "node": "$expression"
+                },
+               "sample_id_csv": {
+                    "host": "$shock_uri",
+                    "node": "$sample_id"
+                }
+            }, 
+            "outputs": {
+                "data_filtered_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "0",
+            "skip": 0,
+            "totalwork": 1                
+        },
+        {
+            "cmd": {
+                "args": "-i @data_filtered_csv -o net_edge_csv -m simple -t edge -c 0.75 -r 0.8 -k 40 -p 50", 
+                "description": "coex network", 
+                "name": "coex_net"
+            }, 
+            "dependsOn": ["0"], 
+            "inputs": {
+               "data_filtered_csv": {
+                    "host": "$shock_uri",
+                    "origin": "0"
+                }
+            }, 
+            "outputs": {
+                "net_edge_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "1",
+            "skip": 0, 
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "args": "-i @data_filtered_csv -o module_csv -s 100 -c hclust -n simple -r 0.8 -k 40 -p 50 -d 0.99", 
+                "description": "clustering", 
+                "name": "coex_cluster2"
+            }, 
+            "dependsOn": ["1"], 
+            "inputs": {
+               "data_filtered_csv": {
+                    "host": "$shock_uri",
+                    "origin": "0"
+                }
+            }, 
+            "outputs": {
+                "hclust_tree_method=hclust.txt": {
+                    "host": "$shock_uri"
+                },
+                "module_network_edgelist_method=hclust.csv": {
+                    "host": "$shock_uri"
+                },
+                "module_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "2",
+            "skip": 0,
+            "totalwork": 1
+        }
+    ]
+}
+"""

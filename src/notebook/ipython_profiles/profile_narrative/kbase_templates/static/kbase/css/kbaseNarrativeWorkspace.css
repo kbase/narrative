@@ -51,3 +51,16 @@
 	padding: 4px 10px;
 	background-color: #ddd;
 }
+
+.kb-ws-browser-link {
+    background-color: #ddd;
+    width: 100%;
+    color: #099;
+}
+.kb-ws-browser-link a {
+    text-decoration: underline;
+    color: #099;
+}
+.kb-ws-browser-link a:visited {
+    color: #099;
+}

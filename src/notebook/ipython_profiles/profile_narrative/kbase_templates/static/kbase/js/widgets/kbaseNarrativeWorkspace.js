@@ -119,11 +119,14 @@
                 // Help for function
                 var $anchor2 = $(this).find('span.kb-function-help');
                 this.help = $anchor2.data('help');
+                this.help_title = $anchor2.data('name');
                 $anchor2.click(function() {
                     console.debug("help asked for");
                     var $elt = $('#kb-function-help');
                     $elt.addClass("alert alert-info");
-                    $elt.text(self.help);
+                    $elt.html("<h1>" + self.help_title + " help</h1>" + 
+                              self.help + 
+                              "<h2>Click to hide</h2>");
                     $elt.click(function() {
                         $(this).hide();
                     });
@@ -134,6 +137,10 @@
 
         /**
          * Add a new IPython notebook cell for a given function.
+         *
+         * The name of the function comes from the 'data-name'
+         * attribute in the HTML that is hard-coded into notebook.html
+         * under $('div.kb-function-body ul').
          */
         addCellForFunction: function(name) {
             var env = this;
@@ -141,20 +148,21 @@
             var nb = IPython.notebook;
             this.kernel = nb.kernel; // stash current kernel
             var cell = nb.insert_cell_at_bottom('markdown');
-            var content = "";
-            var runner = undefined;
+            var command_builder = undefined;
+            var config = {};
+            var runner = this._runner(); 
             switch(name) {
+                // To add a new function, you need to define
+                // one JSON structure for params, and one function
+                // to build the actual command.
                 case 'plants':
-                    content = this._plantsContent();
-                    runner = this._plantsRunner();
-                    break;
-                case 'communities':
-                    content = this._communitiesContent();
-                    break; 
-                default:
-                    content = "wtf?!"
+                    // configuration for parameters
+                    config = this.plantsRunConfig;
+                    // function to build the code which is executed
+                    command_builder = this.plantsRunCommand();
                     break;
             }
+            var content = this._buildRunForm(config);
             cell.set_text("<div class='kb-cell-run'>" + 
                           "<h1>" + name + "</h1>" +
                           "<div class='kb-cell-params'>" +  
@@ -179,28 +187,47 @@
                             params[full_name] = value;
                     }
                 });
-                runner(fn_name, params);
+                console.debug("Run with params", params);
+                runner(command_builder(params));
             });
         },
 
+        /* -------------- PLANTS ---------------------- */
         /** 
-         * Generate input form for plants demo.
+         * Input data for plants demo.
          */
-        _plantsContent: function() {
-            var cfg = {
-                'Filter': {
-                    gene_id: '3899',
-                    ontology_id: 'PO:0009025',
-                },
-                'Network': {
-                    '-m': 'simple',
-                    '-t': 'edge'
-                },
-                'Cluster': {
-                    '-c': 'hclust',
-                    '-n': 'simple'
-                }
+        plantsRunConfig: {
+            'Filter': {
+                gene_id: '3899',
+                ontology_id: 'PO:0009025',
+            },
+            'Network': {
+                '-m': 'simple',
+                '-t': 'edge'
+            },
+            'Cluster': {
+                '-c': 'hclust',
+                '-n': 'simple'
             }
+        },
+        /**
+         * Run plants demo on backend.
+         * Closure is used to get proper context.
+         */
+        plantsRunCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.coex_workflow",
+                        "coex_network_test", params);
+            }
+        },
+        /* -------------- END: PLANTS ---------------------- */
+
+        /**
+         * Build 'run script' HTML form from
+         * configuration data. See 
+         */
+        _buildRunForm: function(cfg) {
             var sbn = "style='border: none'";
             var text = "<form>" + 
                        "<input type='hidden' name='kbfunc' value='plants' />" +
@@ -223,21 +250,24 @@
         },
 
         /**
-         * Run plants demo on backend
+         * Re-usable utility function to build the code block to run something.
          */
-        _plantsRunner: function() {
+        _buildRunCommand: function(pkg, module, params) {
+            var cmd = "run";
+            var code = "from " + pkg + " import " + module + "\n";
+            code += "reload(" + module + ")\n"; // in case it changed
+            code += "params = " + this._pythonDict(params) + "\n";
+            code += module + "." + cmd + "(params)" + "\n";
+            console.debug("CODE:", code);
+            return code;
+        },
+
+        /**
+         * Return a generic command runner.
+         */
+        _runner: function() {
             var self = this;
-            return function(name, params) {
-                console.debug("run function " + name + " with params:", params);
-                //var pymod =  "biokbase.narrative.demo.coex_workflow.coex_network_ws";
-                // Build code
-                var pymod =  "biokbase.narrative.demo.coex_workflow.coex_network_test";
-                var pyfunc = "run";
-                var code = "from " + pymod + " import " + pyfunc + "\n";
-                console.debug("this:",self);
-                code += "params = " + self._pythonDict(params) + "\n";
-                code += pyfunc + "(params)" + "\n";
-                console.debug("CODE:",code);
+            return function(code) {
                 var callbacks = {
                     'execute_reply': $.proxy(self._handle_execute_reply, self),
                     //'output': $.proxy(self.output_area.handle_output, self.output_area),
@@ -281,7 +311,7 @@
                         dict += this._pythonDict(value);
                         break;
                     default:
-                        console.error("Cannot convert to Python:", value);
+                        console.error("Cannot convert to Python:", vtype);
                 }
                 dict += ", "
             });
@@ -336,6 +366,7 @@
             if (msg_type === "stream") {
                 json.text = content.data;
                 json.stream = content.name;
+            // The rest of this isn't really used
             } else if (msg_type === "display_data") {
                 json = this.convert_mime_types(json, content.data);
                 json.metadata = this.convert_mime_types({}, content.metadata);
@@ -347,27 +378,34 @@
                 json.ename = content.ename;
                 json.evalue = content.evalue;
                 json.traceback = content.traceback;
-            }            
-            console.debug("OUTPUT", json);
-            // XXX: transform output into a new cell
+            }
+            // Transform output into a new cell
             this._addOutputCell(json.text);
             return;
         },
         /**
          * Add a new cell for output of the script.
          *
+         * XXX: The cell is added at the bottom, which is really
+         * not the right thing to do if the script is in
+         * the middle of the narrative. It should replace or
+         * at least insert itself right after the script.
+         *
          * @method _addOutputCell
          * @private
          */
          _addOutputCell: function(text) {
+            console.debug("Output cell content:", text);
             var nb = IPython.notebook;
             var cell = nb.insert_cell_at_bottom('markdown');
-            var content = "";
-            cell.set_text(text);
+            // by surrounding with div's we guarantee that markdown
+            // sees this as HTML content
+            var content = "<div>\n" + text + "\n</div>";
+            cell.set_text(content);
             cell.rendered = false; // force a render
             cell.render();
          },
-        /** We all oveah dem mime types */
+        /** Not really used right now. */
         convert_mime_types: function (json, data) {
             if (data === undefined) {
                 return json;

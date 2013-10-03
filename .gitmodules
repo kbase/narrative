@@ -7,3 +7,6 @@
 [submodule "ext/angularjs"]
 	path = ext/angularjs
 	url = https://github.com/angular/angular.js
+[submodule "ext/kbase-api"]
+	path = ext/kbase-api
+	url = git://github.com/gingi/kbasejs

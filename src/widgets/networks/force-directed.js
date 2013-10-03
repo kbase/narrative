@@ -30,8 +30,7 @@
             if (this.options.token) {
                 var wsRegex = /^(\w+)\.(.+)/;
                 var wsid = wsRegex.exec(this.options.workspaceID);
-                console.log(wsid);
-                if (wsid[1] && wsid[2]) {
+                if (wsid !== null && wsid[1] && wsid[2]) {
                     var kbws = new workspaceService(WS_URL);
                     fetchAjax = kbws.get_object({
                         auth: this.options.token,
@@ -39,6 +38,10 @@
                         id: wsid[2],
                         type: 'Networks'
                     });
+                } else {
+                    self.trigger("error", ["Cannot parse workspace ID " +
+                        self.options.workspaceID ]);
+                    return self;
                 }
             } else {
                 fetchAjax = $.ajax({

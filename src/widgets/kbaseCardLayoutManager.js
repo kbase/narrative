@@ -142,7 +142,7 @@
             return $dm;
         },
 
-        reallyUpdateDataManager: function() {
+        updateDataManager: function() {
             if (!this.$dataManager)
                 return;
 
@@ -202,17 +202,23 @@
                                               .attr("data-target", "#kblpc-" + underscoreType)
                                               .append($chevron)
                                               .append(" " + type + " (<span id='kblpc-count'>" + dataHash[type].length + "</span>)")
-                                              .on("click", { chevron: $chevron }, 
-                                                function(event) {
-                                                    event.data.chevron.toggleClass("glyphicon-chevron-down");
-                                                    event.data.chevron.toggleClass("glyphicon-chevron-right");
-                                                }
-                                              )
                                             );
                     var $dataSet = $("<div/>")
                                    .attr("id", "kblpc-" + underscoreType)
                                    .attr("data-type", type)
-                                   .addClass("row collapse in");
+                                   .addClass("row collapse in")
+                                   .on("hidden.bs.collapse", { chevron: $chevron }, 
+                                        function(event) {
+                                            event.data.chevron.toggleClass("glyphicon-chevron-down");
+                                            event.data.chevron.toggleClass("glyphicon-chevron-right");
+                                        }
+                                    )
+                                   .on("shown.bs.collapse", { chevron: $chevron }, 
+                                        function(event) {
+                                            event.data.chevron.toggleClass("glyphicon-chevron-down");
+                                            event.data.chevron.toggleClass("glyphicon-chevron-right");
+                                        }
+                                    );
 
                     $dataBlock.append($dataHeader)
                               .append($dataSet);
@@ -266,93 +272,6 @@
                 if (!dataHash.hasOwnProperty($(element).attr("data-type")))
                     $(element).remove();
             });
-        },
-
-        /**
-         * Updates the data manager to show displayed data.
-         */
-        updateDataManager: function() {
-            this.reallyUpdateDataManager();
-            return;
-
-
-            // if (!this.$dataManager)
-            //     return;
-
-            // // get the loaded data
-            // var data = this.getDataObjects();
-
-            // // shuffle it into a hash of unique ids.
-            // var dataHash = {};
-            // $.each(data, function(i, obj) {
-            //     // accessors to make this legible.
-            //     var t = obj.type;
-            //     var id = obj.id;
-
-            //     if (dataHash[t]) {
-            //         if ($.inArray(id, dataHash[t]) === -1) {
-            //             dataHash[t].push(id);
-            //         }
-            //     }
-            //     else
-            //         dataHash[t] = [id];
-            // });
-
-            // // now we have a hash of all data present.
-            // // make some html out of it.
-            // var dataTypes = [];
-            // for (var k in dataHash) {
-            //     if (dataHash.hasOwnProperty(k))
-            //         dataTypes.push(k);
-            // }
-            // dataTypes.sort();
-
-            // var $dm = $("<div/>");
-
-            // /**
-            //  * Each datatype gets its own block ($dataBlock)
-            //  * Each block has a header and a dataSet.
-            //  * The header does some funkiness where it toggles which way the pointer chevron is pointing.
-            //  * When the header is clicked it toggles the display of its corresponding dataset.
-            //  */
-            // $.each(dataTypes, function(i, type) {
-            //     var underscoreType = type.replace(" ", "_");
-
-            //     var $dataBlock = $("<div/>")
-            //                      .addClass("kblpc-manager-dataset");
-
-            //     var $chevron = $("<span/>")
-            //                    .addClass("glyphicon glyphicon-chevron-down");
-
-            //     var $dataHeader = $("<div/>")
-            //                       .addClass("row")
-            //                       .append($("<a/>")
-            //                               .attr("data-toggle", "collapse")
-            //                               .attr("data-target", "#kblpc-" + underscoreType)
-            //                               .append($chevron)
-            //                               .append(" " + type + " (" + dataHash[type].length + ")")
-            //                               .on("click", { chevron: $chevron }, 
-            //                                 function(event) {
-            //                                     event.data.chevron.toggleClass("glyphicon-chevron-down");
-            //                                     event.data.chevron.toggleClass("glyphicon-chevron-right");
-            //                                 }
-            //                               )
-            //                             );
-            //     var $dataSet = $("<div/>")
-            //                    .attr("id", "kblpc-" + underscoreType)
-            //                    .addClass("row collapse in");
-
-            //     $.each(dataHash[type], function(j, id) {
-            //         var $dataDiv = $("<div/>")
-            //                        .append($("<input type='checkbox'> "))
-            //                        .append(id);
-            //         $dataSet.append($dataDiv);
-            //     });
-            //     $dm.append($dataBlock.append($dataHeader).append($dataSet));
-            // });
-
-
-            // this.$dataManager.find(".panel-body").html($dm);
         },
 
         /**

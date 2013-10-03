@@ -51,9 +51,34 @@
 	}
     };
 
+    // We are tagging workspaces with _SOMETHING objects to distinguish
+    // project workspaces from other containers. Using this in case we
+    // decide to include other types of workspaces
+    
+    var ws_tag = {
+	project : '_project'
+    };
+
     // id of the div containing the kbase login widget to query for auth
     // info. Set this to a different value if the div has been named differently.
     project.auth_div = 'login-widget';
+
+    /*
+     * This is a handler to pickup get_workspaces() results and
+     * filter out anything that isn't a project workspace
+     * (basically only include it if it has a _project object
+     * within)
+     */
+    var filter_wsobj = function (p_in) {
+	var def_params = { callback : undefined,
+			   perms : ['a'],
+			   workspace_id : undefined,
+			   filter_tag : ws_tag.project };
+	var p = $.extend( def_params, p_in);
+	var auth = $(project.auth_div).kbaseLogin('get_kbase_cookie');
+
+        	
+    };
 
     // Get all the workspaces that match the values of the
     // permission array. Defaults to only workspaces that the
@@ -66,7 +91,7 @@
 	var def_params = { callback : undefined,
 			   perms : ['a'],
 			   workspace_id : undefined};
-	var p = _.extend( def_params, p_in);
+	var p = $.extend( def_params, p_in);
 	var auth = $(project.auth_div).kbaseLogin('get_kbase_cookie');
     };
 

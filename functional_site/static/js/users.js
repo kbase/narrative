@@ -72,6 +72,7 @@
     	$("#login_section").show();
 		$("#public_section").show();
 	    $("#newsfeed_column").hide();
+	    $("#narrative_column").hide();
 	    $("#login-widget").hide();
 
     }
@@ -82,6 +83,7 @@
 		$("#login_section").hide();
 		$("#public_section").hide();
 	    $("#newsfeed_column").show();
+	    $("#narrative_column").show();
 	    $("#login-widget").show();
 
         var token = $("#login-widget").kbaseLogin("token");

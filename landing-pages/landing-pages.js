@@ -52,14 +52,14 @@ function router() {
 
     Path.map("#/genomes/cs/:genome_id")
         .to(function(){ 
-            genome_view({'genomeID': this.params['genome_id']});
+            genome_view({'genomeID': unescape(this.params['genome_id'])});
         })
         .enter(navEvent)
         .exit(removeCards);
 
     Path.map("#/genomes/:ws_id")
         .to(function() {
-            genome_view({'workspaceID': this.params['ws_id']});
+            genome_view({'workspaceID': unescape(this.params['ws_id'])});
         })
         .enter(navEvent)
         .exit(removeCards);
@@ -68,8 +68,8 @@ function router() {
         .to(function() {
             genome_view(
                 {
-                    'workspaceID': this.params['ws_id'],
-                    'genomeID': this.params['genome_id']
+                    'workspaceID': unescape(this.params['ws_id']),
+                    'genomeID': unescape(this.params['genome_id'])
                 }
             );
         })

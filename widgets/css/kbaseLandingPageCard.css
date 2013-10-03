@@ -18,3 +18,16 @@
 .ui-widget-content a {
 	color: #428bca;
 }
+
+.kblpc-control-box {
+	position: absolute;
+	right: 0px;
+	top: 50px;
+	max-width: 500px;
+	width: 200px;
+}
+
+.kblpc-manager-dataset {
+	padding-left: 8px;
+	padding-bottom: 15px;
+}

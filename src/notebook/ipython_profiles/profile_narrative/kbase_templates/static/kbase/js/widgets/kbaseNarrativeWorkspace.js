@@ -187,6 +187,13 @@
                             params[full_name] = value;
                     }
                 });
+                // capture & ignore double-click
+                $('div.kb-cell-run').dblclick(function(event) {
+                    console.debug("double-click");
+                });
+                $('div.kb-cell-params').dblclick(function(event) {
+                    console.debug("double-click");
+                });
                 console.debug("Run with params", params);
                 runner(command_builder(params));
             });

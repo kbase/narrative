@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Widget</title>
+    <link rel="stylesheet" href="css/bootstrap.css" type="text/css" media="screen" charset="utf-8">
+    <style type="text/css" media="screen">
+    body { padding-top: 20px; }
+    #login-button {
+        /* Note: don't put styling in javascript */
+        padding: 13px 15px 7px 10px !important; 
+    }
+    .widget {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 5px;
+        margin-bottom: 30px;
+        min-height: 600px;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="alert alert-dismissable alert-danger"
+            aria-hidden="true" id="error">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <span id="error-message"></span>
+        </div>
+        <div class="pull-right" id="login-button"></div>
+        <div class="masthead">
+            <h1>Network Widget</h1>
+        </div>
+        <form id="network-input-form" class="form-horizontal">
+            <div class="form-group">
+                <label class="col-lg-2 control-label"
+                     for="workspace-input">Workspace ID</label>
+                <div class="col-lg-6">
+                    <input class="form-control input-sm"
+                        type="text" length="60" name="workspace-input"
+                        id="workspace-input"/>
+                </div>
+                <div class="col-lg-1">
+                    <button
+                        type="button"
+                        class="btn btn-default btn-sm"
+                        id="show-network-btn">Show</button>
+                </div>
+                <div class="col-lg-1">
+                    <button
+                        type="button"
+                        class="btn btn-default btn-sm"
+                        id="reset-btn">Reset</button>
+                </div>
+            </div>
+        </form>
+        <div class="widget" id="network-widget"></div>
+    </div>
+    </script>
+    
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/kbase-api.js"></script>
+    <script src="js/kbwidget.js"></script>
+    <script src="js/kbasePrompt.js"></script>
+    <script src="js/kbaseLogin.js"></script>
+    <script src="js/force-directed.js"></script>
+    <script src="js/datavis.js"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        $(function () {
+            $("#error").hide();
+            $("#network-widget").on("error", function (event, msg) {
+                $("#error-message").text(msg).show();
+                $("#error").show();
+            });
+            var workspaceID = window.location.hash.replace('#', '');
+            if (workspaceID) {
+                $("#workspace-input").attr("value", workspaceID);
+                $("#login-button").kbaseLogin({
+                    login_callback: function () {
+                        window.location.reload();
+                    }
+                });
+                var token = $("#login-button").kbaseLogin("session", "token");
+                if (token !== undefined) {
+                    $("#network-widget").ForceDirectedNetwork({
+                        workspaceID: workspaceID,
+                        token: token,
+                        minHeight: "600px"
+                    });
+                }
+            } else {
+                resetInput();
+            }
+            $("#network-input-form").submit(function (e) {
+                e.preventDefault();
+                $("#show-network-btn").click();
+                return false;
+            });
+            $("#show-network-btn").click(function (e) {
+                window.location.hash = $("#workspace-input").val();
+                window.location.reload();
+            });
+            $("#reset-btn").click(function (e) {
+                e.preventDefault();
+                resetInput();
+            })
+            function resetInput() {
+                $("#workspace-input").attr("value",
+                    "coexpr_test.PO:0009005.g3899.filtered.edge_net");
+                window.location.hash = $("#workspace-input").val();
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html>

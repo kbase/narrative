@@ -54,7 +54,7 @@ widgetdef['network-coex'] = """
 <script>
     var token = $("#login-widget").kbaseLogin("session", "token");
     $('#widget_container_{{rand_id}}').ForceDirectedNetwork({
-        new_workspaceID: "{{workspace_id}}",
+        workspaceID: "{{workspace_id}}",
         token: token
     });
 </script>

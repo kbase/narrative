@@ -1,0 +1,1193 @@
+
+
+
+<!DOCTYPE html>
+<html>
+  <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# githubog: http://ogp.me/ns/fb/githubog#">
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>underscore/underscore-min.map at master · jashkenas/underscore</title>
+    <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="GitHub" />
+    <link rel="fluid-icon" href="https://github.com/fluidicon.png" title="GitHub" />
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-114.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-144.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-144.png" />
+    <link rel="logo" type="image/svg" href="https://github-media-downloads.s3.amazonaws.com/github-logo.svg" />
+    <meta property="og:image" content="https://github.global.ssl.fastly.net/images/modules/logos_page/Octocat.png">
+    <meta name="hostname" content="github-fe117-cp1-prd.iad.github.net">
+    <meta name="ruby" content="ruby 1.9.3p194-tcs-github-tcmalloc (2012-05-25, TCS patched 2012-05-27, GitHub v1.0.36) [x86_64-linux]">
+    <link rel="assets" href="https://github.global.ssl.fastly.net/">
+    <link rel="conduit-xhr" href="https://ghconduit.com:25035/">
+    <link rel="xhr-socket" href="/_sockets" />
+    
+
+
+    <meta name="msapplication-TileImage" content="/windows-tile.png" />
+    <meta name="msapplication-TileColor" content="#ffffff" />
+    <meta name="selected-link" value="repo_source" data-pjax-transient />
+    <meta content="collector.githubapp.com" name="octolytics-host" /><meta content="github" name="octolytics-app-id" /><meta content="45B53223:78F2:14162DB:524F2AFE" name="octolytics-dimension-request_id" /><meta content="1479353" name="octolytics-actor-id" /><meta content="sychan" name="octolytics-actor-login" /><meta content="59a0c55f26d03a9b89187613cad28e009a7227c34739a3c7d63b36aee3476eaa" name="octolytics-actor-hash" />
+    
+
+    
+    
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <meta content="authenticity_token" name="csrf-param" />
+<meta content="HuPa4q4nRjMykEAd8/t5XpRDU3DvairUIVAhpOz2Iyo=" name="csrf-token" />
+
+    <link href="https://github.global.ssl.fastly.net/assets/github-05a75a572a86cfef8425f698ed0e5b891f24118e.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="https://github.global.ssl.fastly.net/assets/github2-5270ba98127dece0c192c0a6c0aa3d40b92efaf0.css" media="all" rel="stylesheet" type="text/css" />
+    
+
+    
+
+      <script src="https://github.global.ssl.fastly.net/assets/frameworks-c4f8e49c5f967e72dd0ab79195971321e5adb6cc.js" type="text/javascript"></script>
+      <script src="https://github.global.ssl.fastly.net/assets/github-4c1ed99b69d256c6b0fb6253d24e3b8e9a161c14.js" type="text/javascript"></script>
+      
+      <meta http-equiv="x-pjax-version" content="c45931cd594da468a1410fe98f97fff6">
+
+        <link data-pjax-transient rel='permalink' href='/jashkenas/underscore/blob/dc3efb2aa4016af06e12f2c4c9abc776e239d41b/underscore-min.map'>
+  <meta property="og:title" content="underscore"/>
+  <meta property="og:type" content="githubog:gitrepository"/>
+  <meta property="og:url" content="https://github.com/jashkenas/underscore"/>
+  <meta property="og:image" content="https://github.global.ssl.fastly.net/images/gravatars/gravatar-user-420.png"/>
+  <meta property="og:site_name" content="GitHub"/>
+  <meta property="og:description" content="underscore - JavaScript&#39;s utility _ belt"/>
+
+  <meta name="description" content="underscore - JavaScript&#39;s utility _ belt" />
+
+  <meta content="4732" name="octolytics-dimension-user_id" /><meta content="jashkenas" name="octolytics-dimension-user_login" /><meta content="349241" name="octolytics-dimension-repository_id" /><meta content="jashkenas/underscore" name="octolytics-dimension-repository_nwo" /><meta content="true" name="octolytics-dimension-repository_public" /><meta content="false" name="octolytics-dimension-repository_is_fork" /><meta content="349241" name="octolytics-dimension-repository_network_root_id" /><meta content="jashkenas/underscore" name="octolytics-dimension-repository_network_root_nwo" />
+  <link href="https://github.com/jashkenas/underscore/commits/master.atom" rel="alternate" title="Recent Commits to underscore:master" type="application/atom+xml" />
+
+  </head>
+
+
+  <body class="logged_in  env-production macintosh vis-public  page-blob">
+    <div class="wrapper">
+      
+      
+      
+
+
+      <div class="header header-logged-in true">
+  <div class="container clearfix">
+
+    <a class="header-logo-invertocat" href="https://github.com/">
+  <span class="mega-octicon octicon-mark-github"></span>
+</a>
+
+    
+    <a href="/notifications" class="notification-indicator tooltipped downwards" data-gotokey="n" title="You have unread notifications">
+        <span class="mail-status unread"></span>
+</a>
+
+      <div class="command-bar js-command-bar  in-repository">
+          <form accept-charset="UTF-8" action="/search" class="command-bar-form" id="top_search_form" method="get">
+
+<input type="text" data-hotkey="/ s" name="q" id="js-command-bar-field" placeholder="Search or type a command" tabindex="1" autocapitalize="off"
+    
+    data-username="sychan"
+      data-repo="jashkenas/underscore"
+      data-branch="master"
+      data-sha="60fe99d71a7d38b3c3deb53b6110a3906243861a"
+  >
+
+    <input type="hidden" name="nwo" value="jashkenas/underscore" />
+
+    <div class="select-menu js-menu-container js-select-menu search-context-select-menu">
+      <span class="minibutton select-menu-button js-menu-target">
+        <span class="js-select-button">This repository</span>
+      </span>
+
+      <div class="select-menu-modal-holder js-menu-content js-navigation-container">
+        <div class="select-menu-modal">
+
+          <div class="select-menu-item js-navigation-item js-this-repository-navigation-item selected">
+            <span class="select-menu-item-icon octicon octicon-check"></span>
+            <input type="radio" class="js-search-this-repository" name="search_target" value="repository" checked="checked" />
+            <div class="select-menu-item-text js-select-button-text">This repository</div>
+          </div> <!-- /.select-menu-item -->
+
+          <div class="select-menu-item js-navigation-item js-all-repositories-navigation-item">
+            <span class="select-menu-item-icon octicon octicon-check"></span>
+            <input type="radio" name="search_target" value="global" />
+            <div class="select-menu-item-text js-select-button-text">All repositories</div>
+          </div> <!-- /.select-menu-item -->
+
+        </div>
+      </div>
+    </div>
+
+  <span class="octicon help tooltipped downwards" title="Show command bar help">
+    <span class="octicon octicon-question"></span>
+  </span>
+
+
+  <input type="hidden" name="ref" value="cmdform">
+
+</form>
+        <ul class="top-nav">
+          <li class="explore"><a href="/explore">Explore</a></li>
+            <li><a href="https://gist.github.com">Gist</a></li>
+            <li><a href="/blog">Blog</a></li>
+          <li><a href="https://help.github.com">Help</a></li>
+        </ul>
+      </div>
+
+    
+
+
+  <ul id="user-links">
+    <li>
+      <a href="/sychan" class="name">
+        <img height="20" src="https://2.gravatar.com/avatar/59aca2117b509b4fa1e695d779a1e728?d=https%3A%2F%2Fidenticons.github.com%2F8b7e63bcd18a4f21795f610494ec7be8.png&amp;s=140" width="20" /> sychan
+      </a>
+    </li>
+
+      <li>
+        <a href="/new" id="new_repo" class="tooltipped downwards" title="Create a new repo" aria-label="Create a new repo">
+          <span class="octicon octicon-repo-create"></span>
+        </a>
+      </li>
+
+      <li>
+        <a href="/settings/profile" id="account_settings"
+          class="tooltipped downwards"
+          aria-label="Account settings "
+          title="Account settings ">
+          <span class="octicon octicon-tools"></span>
+        </a>
+      </li>
+      <li>
+        <a class="tooltipped downwards" href="/logout" data-method="post" id="logout" title="Sign out" aria-label="Sign out">
+          <span class="octicon octicon-log-out"></span>
+        </a>
+      </li>
+
+  </ul>
+
+<div class="js-new-dropdown-contents hidden">
+  
+
+<ul class="dropdown-menu">
+  <li>
+    <a href="/new"><span class="octicon octicon-repo-create"></span> New repository</a>
+  </li>
+  <li>
+    <a href="/organizations/new"><span class="octicon octicon-organization"></span> New organization</a>
+  </li>
+
+
+
+    <li class="section-title">
+      <span title="jashkenas/underscore">This repository</span>
+    </li>
+    <li>
+      <a href="/jashkenas/underscore/issues/new"><span class="octicon octicon-issue-opened"></span> New issue</a>
+    </li>
+</ul>
+
+</div>
+
+
+    
+  </div>
+</div>
+
+      
+
+      
+
+
+
+
+          <div class="site" itemscope itemtype="http://schema.org/WebPage">
+    
+    <div class="pagehead repohead instapaper_ignore readability-menu">
+      <div class="container">
+        
+
+<ul class="pagehead-actions">
+
+    <li class="subscription">
+      <form accept-charset="UTF-8" action="/notifications/subscribe" class="js-social-container" data-autosubmit="true" data-remote="true" method="post"><div style="margin:0;padding:0;display:inline"><input name="authenticity_token" type="hidden" value="HuPa4q4nRjMykEAd8/t5XpRDU3DvairUIVAhpOz2Iyo=" /></div>  <input id="repository_id" name="repository_id" type="hidden" value="349241" />
+
+    <div class="select-menu js-menu-container js-select-menu">
+        <a class="social-count js-social-count" href="/jashkenas/underscore/watchers">
+          543
+        </a>
+      <span class="minibutton select-menu-button with-count js-menu-target" role="button" tabindex="0">
+        <span class="js-select-button">
+          <span class="octicon octicon-eye-watch"></span>
+          Watch
+        </span>
+      </span>
+
+      <div class="select-menu-modal-holder">
+        <div class="select-menu-modal subscription-menu-modal js-menu-content">
+          <div class="select-menu-header">
+            <span class="select-menu-title">Notification status</span>
+            <span class="octicon octicon-remove-close js-menu-close"></span>
+          </div> <!-- /.select-menu-header -->
+
+          <div class="select-menu-list js-navigation-container" role="menu">
+
+            <div class="select-menu-item js-navigation-item selected" role="menuitem" tabindex="0">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <div class="select-menu-item-text">
+                <input checked="checked" id="do_included" name="do" type="radio" value="included" />
+                <h4>Not watching</h4>
+                <span class="description">You only receive notifications for discussions in which you participate or are @mentioned.</span>
+                <span class="js-select-button-text hidden-select-button-text">
+                  <span class="octicon octicon-eye-watch"></span>
+                  Watch
+                </span>
+              </div>
+            </div> <!-- /.select-menu-item -->
+
+            <div class="select-menu-item js-navigation-item " role="menuitem" tabindex="0">
+              <span class="select-menu-item-icon octicon octicon octicon-check"></span>
+              <div class="select-menu-item-text">
+                <input id="do_subscribed" name="do" type="radio" value="subscribed" />
+                <h4>Watching</h4>
+                <span class="description">You receive notifications for all discussions in this repository.</span>
+                <span class="js-select-button-text hidden-select-button-text">
+                  <span class="octicon octicon-eye-unwatch"></span>
+                  Unwatch
+                </span>
+              </div>
+            </div> <!-- /.select-menu-item -->
+
+            <div class="select-menu-item js-navigation-item " role="menuitem" tabindex="0">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <div class="select-menu-item-text">
+                <input id="do_ignore" name="do" type="radio" value="ignore" />
+                <h4>Ignoring</h4>
+                <span class="description">You do not receive any notifications for discussions in this repository.</span>
+                <span class="js-select-button-text hidden-select-button-text">
+                  <span class="octicon octicon-mute"></span>
+                  Stop ignoring
+                </span>
+              </div>
+            </div> <!-- /.select-menu-item -->
+
+          </div> <!-- /.select-menu-list -->
+
+        </div> <!-- /.select-menu-modal -->
+      </div> <!-- /.select-menu-modal-holder -->
+    </div> <!-- /.select-menu -->
+
+</form>
+    </li>
+
+  <li>
+  
+<div class="js-toggler-container js-social-container starring-container ">
+  <a href="/jashkenas/underscore/unstar" class="minibutton with-count js-toggler-target star-button starred upwards" title="Unstar this repo" data-remote="true" data-method="post" rel="nofollow">
+    <span class="octicon octicon-star-delete"></span><span class="text">Unstar</span>
+  </a>
+  <a href="/jashkenas/underscore/star" class="minibutton with-count js-toggler-target star-button unstarred upwards" title="Star this repo" data-remote="true" data-method="post" rel="nofollow">
+    <span class="octicon octicon-star"></span><span class="text">Star</span>
+  </a>
+  <a class="social-count js-social-count" href="/jashkenas/underscore/stargazers">9,440</a>
+</div>
+
+  </li>
+
+
+        <li>
+          <a href="/jashkenas/underscore/fork" class="minibutton with-count js-toggler-target fork-button lighter upwards" title="Fork this repo" rel="facebox nofollow">
+            <span class="octicon octicon-git-branch-create"></span><span class="text">Fork</span>
+          </a>
+          <a href="/jashkenas/underscore/network" class="social-count">1,717</a>
+        </li>
+
+
+</ul>
+
+        <h1 itemscope itemtype="http://data-vocabulary.org/Breadcrumb" class="entry-title public">
+          <span class="repo-label"><span>public</span></span>
+          <span class="mega-octicon octicon-repo"></span>
+          <span class="author">
+            <a href="/jashkenas" class="url fn" itemprop="url" rel="author"><span itemprop="title">jashkenas</span></a></span
+          ><span class="repohead-name-divider">/</span><strong
+          ><a href="/jashkenas/underscore" class="js-current-repository js-repo-home-link">underscore</a></strong>
+
+          <span class="page-context-loader">
+            <img alt="Octocat-spinner-32" height="16" src="https://github.global.ssl.fastly.net/images/spinners/octocat-spinner-32.gif" width="16" />
+          </span>
+
+        </h1>
+      </div><!-- /.container -->
+    </div><!-- /.repohead -->
+
+    <div class="container">
+
+      <div class="repository-with-sidebar repo-container ">
+
+        <div class="repository-sidebar">
+            
+
+<div class="repo-nav repo-nav-full js-repository-container-pjax js-octicon-loaders">
+  <div class="repo-nav-contents">
+    <ul class="repo-menu">
+      <li class="tooltipped leftwards" title="Code">
+        <a href="/jashkenas/underscore" aria-label="Code" class="js-selected-navigation-item selected" data-gotokey="c" data-pjax="true" data-selected-links="repo_source repo_downloads repo_commits repo_tags repo_branches /jashkenas/underscore">
+          <span class="octicon octicon-code"></span> <span class="full-word">Code</span>
+          <img alt="Octocat-spinner-32" class="mini-loader" height="16" src="https://github.global.ssl.fastly.net/images/spinners/octocat-spinner-32.gif" width="16" />
+</a>      </li>
+
+        <li class="tooltipped leftwards" title="Issues">
+          <a href="/jashkenas/underscore/issues" aria-label="Issues" class="js-selected-navigation-item js-disable-pjax" data-gotokey="i" data-selected-links="repo_issues /jashkenas/underscore/issues">
+            <span class="octicon octicon-issue-opened"></span> <span class="full-word">Issues</span>
+            <span class='counter'>5</span>
+            <img alt="Octocat-spinner-32" class="mini-loader" height="16" src="https://github.global.ssl.fastly.net/images/spinners/octocat-spinner-32.gif" width="16" />
+</a>        </li>
+
+      <li class="tooltipped leftwards" title="Pull Requests"><a href="/jashkenas/underscore/pulls" aria-label="Pull Requests" class="js-selected-navigation-item js-disable-pjax" data-gotokey="p" data-selected-links="repo_pulls /jashkenas/underscore/pulls">
+            <span class="octicon octicon-git-pull-request"></span> <span class="full-word">Pull Requests</span>
+            <span class='counter'>3</span>
+            <img alt="Octocat-spinner-32" class="mini-loader" height="16" src="https://github.global.ssl.fastly.net/images/spinners/octocat-spinner-32.gif" width="16" />
+</a>      </li>
+
+
+        <li class="tooltipped leftwards" title="Wiki">
+          <a href="/jashkenas/underscore/wiki" aria-label="Wiki" class="js-selected-navigation-item " data-pjax="true" data-selected-links="repo_wiki /jashkenas/underscore/wiki">
+            <span class="octicon octicon-book"></span> <span class="full-word">Wiki</span>
+            <img alt="Octocat-spinner-32" class="mini-loader" height="16" src="https://github.global.ssl.fastly.net/images/spinners/octocat-spinner-32.gif" width="16" />
+</a>        </li>
+    </ul>
+    <div class="repo-menu-separator"></div>
+    <ul class="repo-menu">
+
+      <li class="tooltipped leftwards" title="Pulse">
+        <a href="/jashkenas/underscore/pulse" aria-label="Pulse" class="js-selected-navigation-item " data-pjax="true" data-selected-links="pulse /jashkenas/underscore/pulse">
+          <span class="octicon octicon-pulse"></span> <span class="full-word">Pulse</span>
+          <img alt="Octocat-spinner-32" class="mini-loader" height="16" src="https://github.global.ssl.fastly.net/images/spinners/octocat-spinner-32.gif" width="16" />
+</a>      </li>
+
+      <li class="tooltipped leftwards" title="Graphs">
+        <a href="/jashkenas/underscore/graphs" aria-label="Graphs" class="js-selected-navigation-item " data-pjax="true" data-selected-links="repo_graphs repo_contributors /jashkenas/underscore/graphs">
+          <span class="octicon octicon-graph"></span> <span class="full-word">Graphs</span>
+          <img alt="Octocat-spinner-32" class="mini-loader" height="16" src="https://github.global.ssl.fastly.net/images/spinners/octocat-spinner-32.gif" width="16" />
+</a>      </li>
+
+      <li class="tooltipped leftwards" title="Network">
+        <a href="/jashkenas/underscore/network" aria-label="Network" class="js-selected-navigation-item js-disable-pjax" data-selected-links="repo_network /jashkenas/underscore/network">
+          <span class="octicon octicon-git-branch"></span> <span class="full-word">Network</span>
+          <img alt="Octocat-spinner-32" class="mini-loader" height="16" src="https://github.global.ssl.fastly.net/images/spinners/octocat-spinner-32.gif" width="16" />
+</a>      </li>
+    </ul>
+
+
+  </div>
+</div>
+
+            <div class="only-with-full-nav">
+              
+
+  
+
+<div class="clone-url open"
+  data-protocol-type="http"
+  data-url="/users/set_protocol?protocol_selector=http&amp;protocol_type=clone">
+  <h3><strong>HTTPS</strong> clone URL</h3>
+  <div class="clone-url-box">
+    <input type="text" class="clone js-url-field"
+           value="https://github.com/jashkenas/underscore.git" readonly="readonly">
+
+    <span class="js-zeroclipboard url-box-clippy minibutton zeroclipboard-button" data-clipboard-text="https://github.com/jashkenas/underscore.git" data-copied-hint="copied!" title="copy to clipboard"><span class="octicon octicon-clippy"></span></span>
+  </div>
+</div>
+
+  
+
+<div class="clone-url "
+  data-protocol-type="ssh"
+  data-url="/users/set_protocol?protocol_selector=ssh&amp;protocol_type=clone">
+  <h3><strong>SSH</strong> clone URL</h3>
+  <div class="clone-url-box">
+    <input type="text" class="clone js-url-field"
+           value="git@github.com:jashkenas/underscore.git" readonly="readonly">
+
+    <span class="js-zeroclipboard url-box-clippy minibutton zeroclipboard-button" data-clipboard-text="git@github.com:jashkenas/underscore.git" data-copied-hint="copied!" title="copy to clipboard"><span class="octicon octicon-clippy"></span></span>
+  </div>
+</div>
+
+  
+
+<div class="clone-url "
+  data-protocol-type="subversion"
+  data-url="/users/set_protocol?protocol_selector=subversion&amp;protocol_type=clone">
+  <h3><strong>Subversion</strong> checkout URL</h3>
+  <div class="clone-url-box">
+    <input type="text" class="clone js-url-field"
+           value="https://github.com/jashkenas/underscore" readonly="readonly">
+
+    <span class="js-zeroclipboard url-box-clippy minibutton zeroclipboard-button" data-clipboard-text="https://github.com/jashkenas/underscore" data-copied-hint="copied!" title="copy to clipboard"><span class="octicon octicon-clippy"></span></span>
+  </div>
+</div>
+
+
+<p class="clone-options">You can clone with
+      <a href="#" class="js-clone-selector" data-protocol="http">HTTPS</a>,
+      <a href="#" class="js-clone-selector" data-protocol="ssh">SSH</a>,
+      or <a href="#" class="js-clone-selector" data-protocol="subversion">Subversion</a>.
+  <span class="octicon help tooltipped upwards" title="Get help on which URL is right for you.">
+    <a href="https://help.github.com/articles/which-remote-url-should-i-use">
+    <span class="octicon octicon-question"></span>
+    </a>
+  </span>
+</p>
+
+  <a href="http://mac.github.com" data-url="github-mac://openRepo/https://github.com/jashkenas/underscore" class="minibutton sidebar-button js-conduit-rewrite-url">
+    <span class="octicon octicon-device-desktop"></span>
+    Clone in Desktop
+  </a>
+
+
+              <a href="/jashkenas/underscore/archive/master.zip"
+                 class="minibutton sidebar-button"
+                 title="Download this repository as a zip file"
+                 rel="nofollow">
+                <span class="octicon octicon-cloud-download"></span>
+                Download ZIP
+              </a>
+            </div>
+        </div><!-- /.repository-sidebar -->
+
+        <div id="js-repo-pjax-container" class="repository-content context-loader-container" data-pjax-container>
+          
+
+
+<!-- blob contrib key: blob_contributors:v21:df45c5ba7919674a3cd046a86a46ab25 -->
+
+<p title="This is a placeholder element" class="js-history-link-replace hidden"></p>
+
+<a href="/jashkenas/underscore/find/master" data-pjax data-hotkey="t" class="js-show-file-finder" style="display:none">Show File Finder</a>
+
+<div class="file-navigation">
+  
+
+
+<div class="select-menu js-menu-container js-select-menu" >
+  <span class="minibutton select-menu-button js-menu-target" data-hotkey="w"
+    data-master-branch="master"
+    data-ref="master"
+    role="button" aria-label="Switch branches or tags" tabindex="0">
+    <span class="octicon octicon-git-branch"></span>
+    <i>branch:</i>
+    <span class="js-select-button">master</span>
+  </span>
+
+  <div class="select-menu-modal-holder js-menu-content js-navigation-container" data-pjax>
+
+    <div class="select-menu-modal">
+      <div class="select-menu-header">
+        <span class="select-menu-title">Switch branches/tags</span>
+        <span class="octicon octicon-remove-close js-menu-close"></span>
+      </div> <!-- /.select-menu-header -->
+
+      <div class="select-menu-filters">
+        <div class="select-menu-text-filter">
+          <input type="text" aria-label="Filter branches/tags" id="context-commitish-filter-field" class="js-filterable-field js-navigation-enable" placeholder="Filter branches/tags">
+        </div>
+        <div class="select-menu-tabs">
+          <ul>
+            <li class="select-menu-tab">
+              <a href="#" data-tab-filter="branches" class="js-select-menu-tab">Branches</a>
+            </li>
+            <li class="select-menu-tab">
+              <a href="#" data-tab-filter="tags" class="js-select-menu-tab">Tags</a>
+            </li>
+          </ul>
+        </div><!-- /.select-menu-tabs -->
+      </div><!-- /.select-menu-filters -->
+
+      <div class="select-menu-list select-menu-tab-bucket js-select-menu-tab-bucket" data-tab-filter="branches">
+
+        <div data-filterable-for="context-commitish-filter-field" data-filterable-type="substring">
+
+
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/blob/async/underscore-min.map"
+                 data-name="async"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="async">async</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/blob/gh-pages/underscore-min.map"
+                 data-name="gh-pages"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="gh-pages">gh-pages</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item selected">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/blob/master/underscore-min.map"
+                 data-name="master"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="master">master</a>
+            </div> <!-- /.select-menu-item -->
+        </div>
+
+          <div class="select-menu-no-results">Nothing to show</div>
+      </div> <!-- /.select-menu-list -->
+
+      <div class="select-menu-list select-menu-tab-bucket js-select-menu-tab-bucket" data-tab-filter="tags">
+        <div data-filterable-for="context-commitish-filter-field" data-filterable-type="substring">
+
+
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.5.2/underscore-min.map"
+                 data-name="1.5.2"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.5.2">1.5.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.5.1/underscore-min.map"
+                 data-name="1.5.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.5.1">1.5.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.5.0/underscore-min.map"
+                 data-name="1.5.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.5.0">1.5.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.4.4/underscore-min.map"
+                 data-name="1.4.4"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.4.4">1.4.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.4.3/underscore-min.map"
+                 data-name="1.4.3"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.4.3">1.4.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.4.2/underscore-min.map"
+                 data-name="1.4.2"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.4.2">1.4.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.4.1/underscore-min.map"
+                 data-name="1.4.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.4.1">1.4.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.4.0/underscore-min.map"
+                 data-name="1.4.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.4.0">1.4.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.3.3/underscore-min.map"
+                 data-name="1.3.3"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.3.3">1.3.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.3.2/underscore-min.map"
+                 data-name="1.3.2"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.3.2">1.3.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.3.1/underscore-min.map"
+                 data-name="1.3.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.3.1">1.3.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.3.0/underscore-min.map"
+                 data-name="1.3.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.3.0">1.3.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.2.4/underscore-min.map"
+                 data-name="1.2.4"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.2.4">1.2.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.2.3/underscore-min.map"
+                 data-name="1.2.3"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.2.3">1.2.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.2.2/underscore-min.map"
+                 data-name="1.2.2"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.2.2">1.2.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.2.1/underscore-min.map"
+                 data-name="1.2.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.2.1">1.2.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.2.0/underscore-min.map"
+                 data-name="1.2.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.2.0">1.2.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.1.7/underscore-min.map"
+                 data-name="1.1.7"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.1.7">1.1.7</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.1.6/underscore-min.map"
+                 data-name="1.1.6"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.1.6">1.1.6</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.1.5/underscore-min.map"
+                 data-name="1.1.5"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.1.5">1.1.5</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.1.4/underscore-min.map"
+                 data-name="1.1.4"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.1.4">1.1.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.1.3/underscore-min.map"
+                 data-name="1.1.3"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.1.3">1.1.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.1.2/underscore-min.map"
+                 data-name="1.1.2"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.1.2">1.1.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.1.1/underscore-min.map"
+                 data-name="1.1.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.1.1">1.1.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.1.0/underscore-min.map"
+                 data-name="1.1.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.1.0">1.1.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.0.4/underscore-min.map"
+                 data-name="1.0.4"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.0.4">1.0.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.0.3/underscore-min.map"
+                 data-name="1.0.3"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.0.3">1.0.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.0.2/underscore-min.map"
+                 data-name="1.0.2"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.0.2">1.0.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.0.1/underscore-min.map"
+                 data-name="1.0.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.0.1">1.0.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/1.0.0/underscore-min.map"
+                 data-name="1.0.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="1.0.0">1.0.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.6.0/underscore-min.map"
+                 data-name="0.6.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.6.0">0.6.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.5.7/underscore-min.map"
+                 data-name="0.5.7"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.5.7">0.5.7</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.5.5/underscore-min.map"
+                 data-name="0.5.5"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.5.5">0.5.5</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.5.4/underscore-min.map"
+                 data-name="0.5.4"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.5.4">0.5.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.5.3/underscore-min.map"
+                 data-name="0.5.3"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.5.3">0.5.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.5.2/underscore-min.map"
+                 data-name="0.5.2"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.5.2">0.5.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.5.1/underscore-min.map"
+                 data-name="0.5.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.5.1">0.5.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.5.0/underscore-min.map"
+                 data-name="0.5.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.5.0">0.5.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.4.7/underscore-min.map"
+                 data-name="0.4.7"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.4.7">0.4.7</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.4.6/underscore-min.map"
+                 data-name="0.4.6"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.4.6">0.4.6</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.4.5/underscore-min.map"
+                 data-name="0.4.5"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.4.5">0.4.5</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.4.4/underscore-min.map"
+                 data-name="0.4.4"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.4.4">0.4.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.4.3/underscore-min.map"
+                 data-name="0.4.3"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.4.3">0.4.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.4.2/underscore-min.map"
+                 data-name="0.4.2"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.4.2">0.4.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.4.1/underscore-min.map"
+                 data-name="0.4.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.4.1">0.4.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.4.0/underscore-min.map"
+                 data-name="0.4.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.4.0">0.4.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.3.3/underscore-min.map"
+                 data-name="0.3.3"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.3.3">0.3.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.3.2/underscore-min.map"
+                 data-name="0.3.2"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.3.2">0.3.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.3.1/underscore-min.map"
+                 data-name="0.3.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.3.1">0.3.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.3.0/underscore-min.map"
+                 data-name="0.3.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.3.0">0.3.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.2.0/underscore-min.map"
+                 data-name="0.2.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.2.0">0.2.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.1.1/underscore-min.map"
+                 data-name="0.1.1"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.1.1">0.1.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="/jashkenas/underscore/tree/0.1.0/underscore-min.map"
+                 data-name="0.1.0"
+                 data-skip-pjax="true"
+                 rel="nofollow"
+                 class="js-navigation-open select-menu-item-text js-select-button-text css-truncate-target"
+                 title="0.1.0">0.1.0</a>
+            </div> <!-- /.select-menu-item -->
+        </div>
+
+        <div class="select-menu-no-results">Nothing to show</div>
+      </div> <!-- /.select-menu-list -->
+
+    </div> <!-- /.select-menu-modal -->
+  </div> <!-- /.select-menu-modal-holder -->
+</div> <!-- /.select-menu -->
+
+  <div class="breadcrumb">
+    <span class='repo-root js-repo-root'><span itemscope="" itemtype="http://data-vocabulary.org/Breadcrumb"><a href="/jashkenas/underscore" data-branch="master" data-direction="back" data-pjax="true" itemscope="url"><span itemprop="title">underscore</span></a></span></span><span class="separator"> / </span><strong class="final-path">underscore-min.map</strong> <span class="js-zeroclipboard minibutton zeroclipboard-button" data-clipboard-text="underscore-min.map" data-copied-hint="copied!" title="copy to clipboard"><span class="octicon octicon-clippy"></span></span>
+  </div>
+</div>
+
+
+
+  <div class="commit file-history-tease">
+      <img class="main-avatar" height="24" src="https://0.gravatar.com/avatar/32652ed5b8fbd2ecdb1c78e9ac567b4b?d=https%3A%2F%2Fidenticons.github.com%2Ffd1d83de2517a02d4e221ede9a681432.png&amp;s=140" width="24" />
+      <span class="author"><a href="/jashkenas" rel="author">jashkenas</a></span>
+      <time class="js-relative-date" datetime="2013-09-07T05:58:21-07:00" title="2013-09-07 05:58:21">September 07, 2013</time>
+      <div class="commit-title">
+          <a href="/jashkenas/underscore/commit/101c10a60019fe870d21868835f65c25d64968fc" class="message" data-pjax="true" title="Underscore.js 1.5.2">Underscore.js 1.5.2</a>
+      </div>
+
+      <div class="participation">
+        <p class="quickstat"><a href="#blob_contributors_box" rel="facebox"><strong>1</strong> contributor</a></p>
+        
+      </div>
+      <div id="blob_contributors_box" style="display:none">
+        <h2 class="facebox-header">Users who have contributed to this file</h2>
+        <ul class="facebox-user-list">
+          <li class="facebox-user-list-item">
+            <img height="24" src="https://0.gravatar.com/avatar/32652ed5b8fbd2ecdb1c78e9ac567b4b?d=https%3A%2F%2Fidenticons.github.com%2Ffd1d83de2517a02d4e221ede9a681432.png&amp;s=140" width="24" />
+            <a href="/jashkenas">jashkenas</a>
+          </li>
+        </ul>
+      </div>
+  </div>
+
+<div id="files" class="bubble">
+  <div class="file">
+    <div class="meta">
+      <div class="info">
+        <span class="icon"><b class="octicon octicon-file-text"></b></span>
+        <span class="mode" title="File Mode">file</span>
+          <span>1 lines (1 sloc)</span>
+        <span>22.616 kb</span>
+      </div>
+      <div class="actions">
+        <div class="button-group">
+            <a class="minibutton tooltipped leftwards js-conduit-mac-openfile-check"
+               href="http://mac.github.com"
+               data-url="github-mac://openRepo/https://github.com/jashkenas/underscore?branch=master&amp;filepath=underscore-min.map"
+               title="Open this file in GitHub for Mac">
+                <span class="octicon octicon-device-desktop"></span> Open
+            </a>
+                <a class="minibutton tooltipped upwards"
+                   title="Clicking this button will automatically fork this project so you can edit the file"
+                   href="/jashkenas/underscore/edit/master/underscore-min.map"
+                   data-method="post" rel="nofollow">Edit</a>
+          <a href="/jashkenas/underscore/raw/master/underscore-min.map" class="button minibutton " id="raw-url">Raw</a>
+            <a href="/jashkenas/underscore/blame/master/underscore-min.map" class="button minibutton ">Blame</a>
+          <a href="/jashkenas/underscore/commits/master/underscore-min.map" class="button minibutton " rel="nofollow">History</a>
+        </div><!-- /.button-group -->
+            <a class="minibutton danger empty-icon tooltipped downwards"
+               href="/jashkenas/underscore/delete/master/underscore-min.map"
+               title="Fork this project and delete file"
+               data-method="post" data-test-id="delete-blob-file" rel="nofollow">
+            Delete
+          </a>
+      </div><!-- /.actions -->
+
+    </div>
+        <div class="blob-wrapper data type-text js-blob-data">
+        <table class="file-code file-diff">
+          <tr class="file-code-line">
+            <td class="blob-line-nums">
+              <span id="L1" rel="#L1">1</span>
+
+            </td>
+            <td class="blob-line-code">
+                  <div class='line' id='LC1'>{&quot;version&quot;:3,&quot;file&quot;:&quot;underscore-min.js&quot;,&quot;sources&quot;:[&quot;underscore.js&quot;],&quot;names&quot;:[&quot;root&quot;,&quot;this&quot;,&quot;previousUnderscore&quot;,&quot;_&quot;,&quot;breaker&quot;,&quot;ArrayProto&quot;,&quot;Array&quot;,&quot;prototype&quot;,&quot;ObjProto&quot;,&quot;Object&quot;,&quot;FuncProto&quot;,&quot;Function&quot;,&quot;push&quot;,&quot;slice&quot;,&quot;concat&quot;,&quot;toString&quot;,&quot;hasOwnProperty&quot;,&quot;nativeForEach&quot;,&quot;forEach&quot;,&quot;nativeMap&quot;,&quot;map&quot;,&quot;nativeReduce&quot;,&quot;reduce&quot;,&quot;nativeReduceRight&quot;,&quot;reduceRight&quot;,&quot;nativeFilter&quot;,&quot;filter&quot;,&quot;nativeEvery&quot;,&quot;every&quot;,&quot;nativeSome&quot;,&quot;some&quot;,&quot;nativeIndexOf&quot;,&quot;indexOf&quot;,&quot;nativeLastIndexOf&quot;,&quot;lastIndexOf&quot;,&quot;nativeIsArray&quot;,&quot;isArray&quot;,&quot;nativeKeys&quot;,&quot;keys&quot;,&quot;nativeBind&quot;,&quot;bind&quot;,&quot;obj&quot;,&quot;_wrapped&quot;,&quot;exports&quot;,&quot;module&quot;,&quot;VERSION&quot;,&quot;each&quot;,&quot;iterator&quot;,&quot;context&quot;,&quot;length&quot;,&quot;i&quot;,&quot;call&quot;,&quot;collect&quot;,&quot;results&quot;,&quot;value&quot;,&quot;index&quot;,&quot;list&quot;,&quot;reduceError&quot;,&quot;foldl&quot;,&quot;inject&quot;,&quot;memo&quot;,&quot;initial&quot;,&quot;arguments&quot;,&quot;TypeError&quot;,&quot;foldr&quot;,&quot;find&quot;,&quot;detect&quot;,&quot;result&quot;,&quot;any&quot;,&quot;select&quot;,&quot;reject&quot;,&quot;all&quot;,&quot;identity&quot;,&quot;contains&quot;,&quot;include&quot;,&quot;target&quot;,&quot;invoke&quot;,&quot;method&quot;,&quot;args&quot;,&quot;isFunc&quot;,&quot;isFunction&quot;,&quot;apply&quot;,&quot;pluck&quot;,&quot;key&quot;,&quot;where&quot;,&quot;attrs&quot;,&quot;first&quot;,&quot;isEmpty&quot;,&quot;findWhere&quot;,&quot;max&quot;,&quot;Math&quot;,&quot;Infinity&quot;,&quot;computed&quot;,&quot;min&quot;,&quot;shuffle&quot;,&quot;rand&quot;,&quot;shuffled&quot;,&quot;random&quot;,&quot;sample&quot;,&quot;n&quot;,&quot;guard&quot;,&quot;lookupIterator&quot;,&quot;sortBy&quot;,&quot;criteria&quot;,&quot;sort&quot;,&quot;left&quot;,&quot;right&quot;,&quot;a&quot;,&quot;b&quot;,&quot;group&quot;,&quot;behavior&quot;,&quot;groupBy&quot;,&quot;has&quot;,&quot;indexBy&quot;,&quot;countBy&quot;,&quot;sortedIndex&quot;,&quot;array&quot;,&quot;low&quot;,&quot;high&quot;,&quot;mid&quot;,&quot;toArray&quot;,&quot;values&quot;,&quot;size&quot;,&quot;head&quot;,&quot;take&quot;,&quot;last&quot;,&quot;rest&quot;,&quot;tail&quot;,&quot;drop&quot;,&quot;compact&quot;,&quot;flatten&quot;,&quot;input&quot;,&quot;shallow&quot;,&quot;output&quot;,&quot;isArguments&quot;,&quot;without&quot;,&quot;difference&quot;,&quot;uniq&quot;,&quot;unique&quot;,&quot;isSorted&quot;,&quot;seen&quot;,&quot;union&quot;,&quot;intersection&quot;,&quot;item&quot;,&quot;other&quot;,&quot;zip&quot;,&quot;object&quot;,&quot;from&quot;,&quot;hasIndex&quot;,&quot;range&quot;,&quot;start&quot;,&quot;stop&quot;,&quot;step&quot;,&quot;ceil&quot;,&quot;idx&quot;,&quot;ctor&quot;,&quot;func&quot;,&quot;bound&quot;,&quot;self&quot;,&quot;partial&quot;,&quot;bindAll&quot;,&quot;funcs&quot;,&quot;Error&quot;,&quot;f&quot;,&quot;memoize&quot;,&quot;hasher&quot;,&quot;delay&quot;,&quot;wait&quot;,&quot;setTimeout&quot;,&quot;defer&quot;,&quot;throttle&quot;,&quot;options&quot;,&quot;timeout&quot;,&quot;previous&quot;,&quot;later&quot;,&quot;leading&quot;,&quot;Date&quot;,&quot;now&quot;,&quot;remaining&quot;,&quot;clearTimeout&quot;,&quot;trailing&quot;,&quot;debounce&quot;,&quot;immediate&quot;,&quot;timestamp&quot;,&quot;callNow&quot;,&quot;once&quot;,&quot;ran&quot;,&quot;wrap&quot;,&quot;wrapper&quot;,&quot;compose&quot;,&quot;after&quot;,&quot;times&quot;,&quot;pairs&quot;,&quot;invert&quot;,&quot;functions&quot;,&quot;methods&quot;,&quot;names&quot;,&quot;extend&quot;,&quot;source&quot;,&quot;prop&quot;,&quot;pick&quot;,&quot;copy&quot;,&quot;omit&quot;,&quot;defaults&quot;,&quot;clone&quot;,&quot;isObject&quot;,&quot;tap&quot;,&quot;interceptor&quot;,&quot;eq&quot;,&quot;aStack&quot;,&quot;bStack&quot;,&quot;className&quot;,&quot;String&quot;,&quot;global&quot;,&quot;multiline&quot;,&quot;ignoreCase&quot;,&quot;aCtor&quot;,&quot;constructor&quot;,&quot;bCtor&quot;,&quot;pop&quot;,&quot;isEqual&quot;,&quot;isString&quot;,&quot;isElement&quot;,&quot;nodeType&quot;,&quot;name&quot;,&quot;isFinite&quot;,&quot;isNaN&quot;,&quot;parseFloat&quot;,&quot;isNumber&quot;,&quot;isBoolean&quot;,&quot;isNull&quot;,&quot;isUndefined&quot;,&quot;noConflict&quot;,&quot;accum&quot;,&quot;floor&quot;,&quot;entityMap&quot;,&quot;escape&quot;,&quot;&amp;&quot;,&quot;&lt;&quot;,&quot;&gt;&quot;,&quot;\&quot;&quot;,&quot;&#39;&quot;,&quot;unescape&quot;,&quot;entityRegexes&quot;,&quot;RegExp&quot;,&quot;join&quot;,&quot;string&quot;,&quot;replace&quot;,&quot;match&quot;,&quot;property&quot;,&quot;mixin&quot;,&quot;idCounter&quot;,&quot;uniqueId&quot;,&quot;prefix&quot;,&quot;id&quot;,&quot;templateSettings&quot;,&quot;evaluate&quot;,&quot;interpolate&quot;,&quot;noMatch&quot;,&quot;escapes&quot;,&quot;\\&quot;,&quot;\r&quot;,&quot;\n&quot;,&quot;\t&quot;,&quot; &quot;,&quot; &quot;,&quot;escaper&quot;,&quot;template&quot;,&quot;text&quot;,&quot;data&quot;,&quot;settings&quot;,&quot;render&quot;,&quot;matcher&quot;,&quot;offset&quot;,&quot;variable&quot;,&quot;e&quot;,&quot;chain&quot;,&quot;_chain&quot;],&quot;mappings&quot;:&quot;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&quot;}</div>
+            </td>
+          </tr>
+        </table>
+  </div>
+
+  </div>
+</div>
+
+<a href="#jump-to-line" rel="facebox[.linejump]" data-hotkey="l" class="js-jump-to-line" style="display:none">Jump to Line</a>
+<div id="jump-to-line" style="display:none">
+  <form accept-charset="UTF-8" class="js-jump-to-line-form">
+    <input class="linejump-input js-jump-to-line-field" type="text" placeholder="Jump to line&hellip;" autofocus>
+    <button type="submit" class="button">Go</button>
+  </form>
+</div>
+
+        </div>
+
+      </div><!-- /.repo-container -->
+      <div class="modal-backdrop"></div>
+    </div><!-- /.container -->
+  </div><!-- /.site -->
+
+
+    </div><!-- /.wrapper -->
+
+      <div class="container">
+  <div class="site-footer">
+    <ul class="site-footer-links right">
+      <li><a href="https://status.github.com/">Status</a></li>
+      <li><a href="http://developer.github.com">API</a></li>
+      <li><a href="http://training.github.com">Training</a></li>
+      <li><a href="http://shop.github.com">Shop</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/about">About</a></li>
+
+    </ul>
+
+    <a href="/">
+      <span class="mega-octicon octicon-mark-github"></span>
+    </a>
+
+    <ul class="site-footer-links">
+      <li>&copy; 2013 <span title="0.03598s from github-fe117-cp1-prd.iad.github.net">GitHub</span>, Inc.</li>
+        <li><a href="/site/terms">Terms</a></li>
+        <li><a href="/site/privacy">Privacy</a></li>
+        <li><a href="/security">Security</a></li>
+        <li><a href="/contact">Contact</a></li>
+    </ul>
+  </div><!-- /.site-footer -->
+</div><!-- /.container -->
+
+
+    <div class="fullscreen-overlay js-fullscreen-overlay" id="fullscreen_overlay">
+  <div class="fullscreen-container js-fullscreen-container">
+    <div class="textarea-wrap">
+      <textarea name="fullscreen-contents" id="fullscreen-contents" class="js-fullscreen-contents" placeholder="" data-suggester="fullscreen_suggester"></textarea>
+          <div class="suggester-container">
+              <div class="suggester fullscreen-suggester js-navigation-container" id="fullscreen_suggester"
+                 data-url="/jashkenas/underscore/suggestions/commit">
+              </div>
+          </div>
+    </div>
+  </div>
+  <div class="fullscreen-sidebar">
+    <a href="#" class="exit-fullscreen js-exit-fullscreen tooltipped leftwards" title="Exit Zen Mode">
+      <span class="mega-octicon octicon-screen-normal"></span>
+    </a>
+    <a href="#" class="theme-switcher js-theme-switcher tooltipped leftwards"
+      title="Switch themes">
+      <span class="octicon octicon-color-mode"></span>
+    </a>
+  </div>
+</div>
+
+
+
+    <div id="ajax-error-message" class="flash flash-error">
+      <span class="octicon octicon-alert"></span>
+      <a href="#" class="octicon octicon-remove-close close ajax-error-dismiss"></a>
+      Something went wrong with that request. Please try again.
+    </div>
+
+  </body>
+</html>
+

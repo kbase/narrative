@@ -1,6 +1,9 @@
 /**
  * Made to work with the landing page.
  * This initializes all card positions relative to the #app div.
+ *
+ * It manages all cards and widgets, organizes which data is available,
+ * and (with available handlers) exports data to the user's workspace.
  */
 
 (function( $, undefined ) {
@@ -11,18 +14,29 @@
         options: {
             template: null,
             data: {},
+            auth: null,
+            userId: null,
+            loadingImage: "../widgets/images/ajax-loader.gif",
         },
         cardIndex: 0,
         cards: {},
         defaultLocation: "CDS",
         defaultWidth: 300,
 
+        workspaceURL: "https://www.kbase.us/services/workspace",
+        fbaURL: "https://www.kbase.us/services/fba_model_services",
+        workspaceClient: null,
+        fbaClient: null,        // used to export CDS genomes to workspace.
+
         /**
          * Initializes this widget
          */
         init: function(options) {
             this._super(options);
-    
+
+            this.workspaceClient = new workspaceService(this.workspaceURL);
+            this.fbaClient = new fbaModelServices(this.fbaURL);
+
             $.ui.dialog.prototype._makeDraggable = function() {
                 this.uiDialog.draggable({
                     containment: false
@@ -60,8 +74,41 @@
         render: function(options) {
             this.initControlBox();
             $("#app").append(this.$controlBox);
-            
+
+            this.initExportModal();
+            this.$elem.append(this.exportModal.modal);
+
             return this;
+        },
+
+        initExportModal: function() {
+            var $body = $("<div class='modal-body'></div>");
+            var $okButton = $("<button type='button' class='btn btn-primary'>Export</button>");
+
+            var $modal = $("<div class='modal fade'>")
+                         .append($("<div class='modal-dialog'>")
+                                 .append($("<div class='modal-content'>")
+                                         .append($("<div class='modal-header'>")
+                                                 .append($("<h4 class='modal-title'>Export data?</h4>"))
+                                                )
+                                         .append($body)
+                                         .append($("<div class='modal-footer'>")
+                                                 .append($("<button type='button' class='btn btn-default' data-dismiss='modal'>Cancel</button>"))
+                                                 .append($okButton)
+                                                 )
+                                         )
+                                 );
+
+            var $loadingDiv = $("<div style='width: 100%; text-align: center; padding: 20px'><img src=" + this.options.loadingImage + "/><br/>Exporting data. This may take a moment...</div>");
+
+            var exportModal = {
+                modal: $modal,
+                body: $body,
+                okButton: $okButton,
+                loadingDiv: $loadingDiv
+            };
+
+            this.exportModal = exportModal;
         },
 
         /**
@@ -267,9 +314,6 @@
                     dataDivHash[ws + ":" + id] = $(child);
                 });
 
-                console.log(dataIdHash);
-                console.log(dataDivHash);
-
                 // 3. if it's in the idhash, and not the displayed hash, add it to the display.
                 $.each(dataHash[type], function(j, wsId) {
                     if (!dataDivHash.hasOwnProperty(wsId)) {
@@ -332,28 +376,98 @@
                 });
             });
 
+            var self = this;
+            var doExport = function() {
+                self.exportModal.body.append(self.exportModal.loadingDiv);
+
+                var jobsList = [];
+                for (var type in exportData) {
+                    var exportCommand = "_export" + type;
+                    jobsList = jobsList.concat(self[exportCommand](exportData[type]));
+                }
+
+                $.when.apply($, jobsList).done(function() {
+                    self.exportModal.modal.modal('hide');
+                    console.log("Done exporting genomes!");
+                });
+            };
+
+
+            /*
+             * Now we have the data, so make an "Are you REALLY sure?" modal.
+             * If the user says yes, modify it to show a progress bar or something.
+             */
+            var exportWs = this.options.userId + "_home";
+
+            if (Object.keys(exportData).length === 0) {
+                this.exportModal.body.html("No data selected for export!");
+                this.exportModal.okButton.addClass("hide");
+            }
+            else {
+                var $bodyHtml = "Export selected data to workspace '<b>" + exportWs + "</b>'?";
+                this.exportModal.body.html($bodyHtml);
+                this.exportModal.okButton.removeClass("hide");
+                this.exportModal.okButton.click(function(event) { doExport(); });
+            }
+            this.exportModal.modal.modal({'backdrop': 'static', 'keyboard': false});
+
+
             // Each data type needs an export handler. Might need to be handled elsewhere?
             // Or at least handled later.
 
-            for (var type in exportData) {
-                var exportCommand = "_export" + type;
-                this[exportCommand](exportData[type]);
-            }
+            /**
+             * An exporter should queue up the list of objects to be exported via 
+             * the standard KBase Javascript API calls, or by other workspace-related calls.
+             *
+             * However they're done, this should return an array of AJAX promises.
+             */
+            // var jobsList = [];
+            // for (var type in exportData) {
+            //     var exportCommand = "_export" + type;
+            //     this[exportCommand](exportData[type]);
+            // }
+
 
         },
 
         _exportGenome: function(data) {
             console.log("Exporting genomes");
             console.log(data);
+            console.log(this.options.auth);
+
+            var exportWs = this.options.userId + "_home";
+            console.log(exportWs);
+
+            // capture the list of async workspace api calls.
+            var exportJobs = [];
+
             for (var i=0; i<data.length; i++) {
                 var obj = data[i];
                 if (obj.workspace === this.defaultLocation) {
                     console.log("exporting central store genome " + obj.id + " to workspace");
+                    exportJobs.push(this.fbaClient.genome_to_workspace(
+                        {
+                            genome: obj.id,
+                            workspace: exportWs,
+                            auth: this.options.auth
+                        },
+                        function(objectMeta) {
+                            console.log(objectMeta);
+                        },
+                        this.clientError
+                    ));
                 }
                 else {
                     console.log("copying workspace genome " + obj.ws + ":" + obj.id + " to workspace");
                 }
             }
+
+            return exportJobs;
+        },
+
+        clientError: function(error) {
+            console.log("A client error occurred: ");
+            console.log(error);
         },
 
         _exportDescription: function(data) {

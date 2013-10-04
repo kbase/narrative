@@ -11,7 +11,8 @@ $(function() {
         $('#signin-button').kbaseLogin({style: 'text', 
             login_callback: reload_window, logout_callback: reload_window});
         USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-    
+        USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+
         // global state object to store state
         state = new State();
 
@@ -195,7 +196,14 @@ function genome_view(params) {
     if (!params)
         $("#genomes").append("No id given");
     else {
-        $("#genomes").KBaseCardLayoutManager( {template: "genome", data: params} );
+        $("#genomes").KBaseCardLayoutManager( 
+            {
+                template: "genome", 
+                data: params, 
+                auth: USER_TOKEN,
+                userId: USER_ID
+            }
+        );
     }
 }
 

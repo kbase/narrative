@@ -148,6 +148,7 @@
             var nb = IPython.notebook;
             this.kernel = nb.kernel; // stash current kernel
             var cell = nb.insert_cell_at_bottom('markdown');
+            this._cur_index = nb.ncells() - 1; // stash cell's index
             var command_builder = undefined;
             var config = {};
             var runner = this._runner(); 
@@ -163,14 +164,20 @@
                     break;
             }
             var content = this._buildRunForm(config);
-            cell.set_text("<div class='kb-cell-run'>" + 
+            var cell_id = "kb-cell-" + this._cur_index;
+            cell.set_text("<div class='kb-cell-run' " + "id='" + cell_id + "'>" + 
                           "<h1>" + name + "</h1>" +
+                          "<div class='kb-cell-progress progress'>" + 
+                          "  <div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " + 
+                          "  aria-valuemin='0' aria-valuemax='100' style='width: 0%;'>" +
+                          "</div>" +
                           "<div class='kb-cell-params'>" +  
                           content + 
                           "</div>" +
                           "</div>");
             cell.rendered = false; // force a render
             cell.render();
+            this.element = $("#" + cell_id);
             var $frm = $('div.kb-cell-run form');
             $frm.on("submit", function(event) {
                 event.preventDefault();
@@ -186,13 +193,6 @@
                         default:
                             params[full_name] = value;
                     }
-                });
-                // capture & ignore double-click
-                $('div.kb-cell-run').dblclick(function(event) {
-                    console.debug("double-click");
-                });
-                $('div.kb-cell-params').dblclick(function(event) {
-                    console.debug("double-click");
                 });
                 console.debug("Run with params", params);
                 runner(command_builder(params));
@@ -290,8 +290,11 @@
                     'set_next_input': $.proxy(self._handle_set_next_input, self),
                     'input_request': $.proxy(self._handle_input_request, self)
                 };
-                // XXX: mark self widget as running.. and block other things from running..
-                //self.element.addClass("running");
+                self._buf = ""; // buffered output, see _handle_output()
+                self.element.addClass("running");
+                // activate progress dialog
+                self.progress_element.addClass("running");
+                self.progress_element.
                 var msg_id = self.kernel.execute(code, callbacks, {silent: true});
             };
         },
@@ -380,16 +383,44 @@
             var json = {};
             json.output_type = msg_type;
             if (msg_type === "stream") {
-                var progress = content.data.match(/^PROGRESS,.*/);
-                if (progress) {
-                    var items = content.data.split(",");
-                    this._showProgress(items[1], items[2], items[3]);
-                    return; // don't show the output to user
+                console.debug("read from stream: '" + content.data + "'");
+                this._buf += content.data;
+                var lines = this._buf.split("\n");
+                var offs = 0, done = false, self = this;
+                var not_progress = "";
+                $.each(lines, function(index, line) {
+                    if (!done) {
+                        var progress = line.match(/^\.P.*/);
+                        if (progress) {
+                            var items = line.split(",");
+                            // expect: .p,name-of-thing,done,total
+                            if (items.length == 4) {
+                                self._showProgress(items[1], items[2], items[3]);
+                                // will trim buffer to remove this
+                                offs += line.length + 1; // +1 for newline char
+                            }
+                            else {
+                                done = true; // halt further processing
+                            }
+                        }
+                        else {
+                            // save non-progress lines
+                            // XXX: not currently used
+                            not_progress += line + "\n";
+                        }
+                    }
+                });
+                if (offs > 0) {
+                    // if we found progress markers, trim processed prefix from buffer
+                    this._buf = this._buf.substr(offs, this._buf.length - offs);
                 }
-                json.text = content.data;
+                if (not_progress != "") {
+                    json.text = not_progress;
+                }
                 json.stream = content.name;
+            }    
             // The rest of this isn't really used
-            } else if (msg_type === "display_data") {
+            else if (msg_type === "display_data") {
                 json = this.convert_mime_types(json, content.data);
                 json.metadata = this.convert_mime_types({}, content.metadata);
             } else if (msg_type === "pyout") {

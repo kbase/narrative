@@ -87,6 +87,8 @@
 /* IPython cells */
 
 .kb-cell-run {
+    z-index: auto;
+    opacity: 1;
 }
 .kb-cell-run h1 {
     font-family: 'Roboto';
@@ -94,13 +96,16 @@
     line-height: 15px;
     color: #0D7876;
     margin: 3px;
+    opacity: inherit;
 }
 .kb-cell-run form input[type="submit"] {
     float: right;
+    opacity: inherit;
 }
 .kb-cell-params table {
     border: none;
     margin-bottom: 10px;
+    opacity: inherit;
 }
 .kb-cell-params tr,td {
     border: none;
@@ -116,4 +121,16 @@
 .kb-cell-params tr:nth-child(even) {
     background-color: #fff;
     border-bottom: 1px solid #ddd;    
+}
+/* grey out while running */
+.kb-cell-run.running {
+    opacity: 0.4;
+}
+/* progress "meter" */
+.kb-cell-progress {
+    display: none;
+}
+.kb-cell-progress.running {
+    display: block;
+    z-index: 99;
 }

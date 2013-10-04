@@ -51,7 +51,7 @@ class SubmitException(Exception):
 ## Functions
 
 def print_progress(stage, completed, total):
-    print("PROGRESS,{},{:d},{:d}".format(stage, completed, total))
+    print(".P,{},{:d},{:d}".format(stage, completed, total))
 
 def get_node_id(node, nt = "GENE"):
     if not node in ugids.keys() :

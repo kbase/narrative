@@ -14,6 +14,7 @@
 		options: {
 			featureID: null,
 			auth: null,
+			height: 300,
 		},
 
 		cdmiURL: "https://kbase.us/services/cdmi_api",

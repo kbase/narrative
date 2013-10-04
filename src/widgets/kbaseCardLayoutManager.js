@@ -14,6 +14,8 @@
         },
         cardIndex: 0,
         cards: {},
+        defaultLocation: "CDS",
+        defaultWidth: 300,
 
         /**
          * Initializes this widget
@@ -124,13 +126,26 @@
                           .append($("<a/>")
                                   .append($("<span/>")
                                           .addClass("glyphicon glyphicon-remove pull-right")
-                                          .on("click", function(event) { self.toggleDataManager(self); })
+                                          .on("click", function(event) { self.toggleDataManager(); })
                                           )
                                  );
+            var $buttonPanel = $("<div/>")
+                               .addClass("btn-group btn-group-sm")
+                               .append($("<button/>")
+                                       .on("click", function(event) { self.toggleSelectAll($(event.currentTarget)); })
+                                       .addClass("btn btn-default")
+                                       .append($("<span/>")
+                                               .addClass("glyphicon glyphicon-check")
+                                               )
+                                       )
+                               .append($("<button class='btn btn-default'>")
+                                       .append("Export selected")
+                                       .on("click", function(event) { self.exportToWorkspace(); })
+                                       );
 
             var $body = $("<div/>")
-                        .addClass("panel-body")
-                        .append("<div/>");
+                        .addClass("panel-body kblpc-manager")
+                        .append($buttonPanel);
 
             var $dm = $("<div/>")
                       .addClass("row")
@@ -142,28 +157,25 @@
             return $dm;
         },
 
+        toggleSelectAll: function($target) {
+            // check off everything.
+            if ($target.find("> .glyphicon").hasClass("glyphicon-check")) {
+                $(".kblpc-manager-dataset > div > table > tbody > tr > td > input").prop('checked', true);
+            }
+            // uncheck everything.
+            else {
+                $(".kblpc-manager-dataset > div > table > tbody > tr > td > input").prop('checked', false);
+            }
+
+            $target.find("> .glyphicon").toggleClass("glyphicon-check glyphicon-unchecked");
+        },
+
         updateDataManager: function() {
             if (!this.$dataManager)
                 return;
 
             // get the loaded data
-            var data = this.getDataObjects();
-
-            // shuffle it into a hash of unique ids.
-            var dataHash = {};
-            $.each(data, function(i, obj) {
-                // accessors to make this legible.
-                var t = obj.type;
-                var id = obj.id;
-
-                if (dataHash[t]) {
-                    if ($.inArray(id, dataHash[t]) === -1) {
-                        dataHash[t].push(id);
-                    }
-                }
-                else
-                    dataHash[t] = [id];
-            });
+            var dataHash = this.getDataObjectsHash();
 
             // now we have a hash of all data present.
             // make some html out of it.
@@ -174,7 +186,7 @@
             }
             dataTypes.sort();
 
-            var $dm = this.$dataManager.find(".panel-body");
+            var $dm = this.$dataManager.find(".kblpc-manager");
 
             /**
              * Each datatype gets its own block ($dataBlock)
@@ -185,16 +197,21 @@
             $.each(dataTypes, function(i, type) {
                 var underscoreType = type.replace(" ", "_");
 
-                // try to find $kblpc-underscoreType
                 var $dataBlock = $dm.find(".kblpc-manager-dataset[data-type='" + type + "']");
+
                 if ($dataBlock.length === 0) {
+                    // make a new datablock - this is the enclosing div
+                    // for the section containing a header (with data type and count)
+                    // and chevron for expanding/collapsing.
                     $dataBlock = $("<div/>")
                                      .addClass("kblpc-manager-dataset")
                                      .attr("data-type", type);
 
+                    // The chevron is just a glyphicon.
                     var $chevron = $("<span/>")
                                    .addClass("glyphicon glyphicon-chevron-down");
 
+                    // The header contains the name of the data type and number of objects
                     var $dataHeader = $("<div/>")
                                       .addClass("row")
                                       .append($("<a/>")
@@ -203,7 +220,9 @@
                                               .append($chevron)
                                               .append(" " + type + " (<span id='kblpc-count'>" + dataHash[type].length + "</span>)")
                                             );
-                    var $dataSet = $("<div/>")
+
+                    // The dataset is the meat of the table, the collapsible list of data object ids.
+                    var $dataSetRow = $("<div/>")
                                    .attr("id", "kblpc-" + underscoreType)
                                    .attr("data-type", type)
                                    .addClass("row collapse in")
@@ -218,10 +237,12 @@
                                             event.data.chevron.toggleClass("glyphicon-chevron-down");
                                             event.data.chevron.toggleClass("glyphicon-chevron-right");
                                         }
-                                    );
+                                    )
+                                   .append($("<table/>")
+                                           .addClass("table"));
 
                     $dataBlock.append($dataHeader)
-                              .append($dataSet);
+                              .append($dataSetRow);
 
                     $dm.append($dataBlock);
                 }
@@ -229,7 +250,7 @@
                     $dataBlock.find("> div > a > span#kblpc-count").html(dataHash[type].length);
                 }
 
-                $dataSet = $dataBlock.find("> div#kblpc-" + underscoreType);
+                var $dataSet = $dataBlock.find("> div#kblpc-" + underscoreType + " > table");
 
                 // search for what needs to be synched.
                 // 1. hash the list of ids
@@ -240,19 +261,27 @@
 
                 // 2. hash the displayed elements
                 var dataDivHash = {};
-                $.each($dataSet.find("> div > span"), function(j, child) {
-                    console.log(j);
-                    console.log(child);
-
-                    dataDivHash[$(child).html()] = $(child).parent();
+                $.each($dataSet.find("> tbody > tr"), function(j, child) {
+                    var ws = $(child).find(":last-child").html();
+                    var id = $(child).find(":nth-child(2)").html();
+                    dataDivHash[ws + ":" + id] = $(child);
                 });
 
+                console.log(dataIdHash);
+                console.log(dataDivHash);
+
                 // 3. if it's in the idhash, and not the displayed hash, add it to the display.
-                $.each(dataHash[type], function(j, id) {
-                    if (!dataDivHash.hasOwnProperty(id)) {
-                        var $dataDiv = $("<div/>")
-                                       .append($("<input type='checkbox'> "))
-                                       .append($("<span>" + id + "</span>"));
+                $.each(dataHash[type], function(j, wsId) {
+                    if (!dataDivHash.hasOwnProperty(wsId)) {
+                        var parts = wsId.split(':');
+                        var ws = parts.shift();
+                        var id = parts.join(':');
+
+                        var $dataDiv = $("<tr/>")
+                                       .addClass("pull-left")
+                                       .append($("<td><input type='checkbox'></td> "))
+                                       .append($("<td>" + id + "</td>"))
+                                       .append($("<td>" + ws + "</td>"));
                         $dataSet.append($dataDiv);
                     }
                 });
@@ -272,6 +301,74 @@
                 if (!dataHash.hasOwnProperty($(element).attr("data-type")))
                     $(element).remove();
             });
+        },
+
+        /**
+         * Exports the selected data elements to the user's workspace.
+         */
+        exportToWorkspace: function() {
+            // 1. Get the data to export.
+            var exportData = {};
+
+            /* Probably not optimal, but it scrapes the data to export out of
+             * the HTML tables.
+             * It might be best to store everything being displayed, but that's just something
+             * else to keep updated on each change.
+             * And we need to check what's selected anyway. This is probably more efficient.
+             * Still kinda ugly, though.
+             */
+            $.each($(".kblpc-manager-dataset"), function(i, element) {
+                var type = $(element).attr("data-type");
+                $.each($(element).find("> div[data-type='" + type + "'] > table > tbody > tr"), function(j, row) {
+                    if ($(row).find(":first-child > input").prop("checked")) {
+                        if (!exportData.hasOwnProperty(type))
+                            exportData[type] = [];
+
+                        var ws = $(row).find(":nth-child(3)").html();
+                        var id = $(row).find(":nth-child(2)").html();
+                        exportData[type].push({'id': id, 'workspace': ws});
+
+                    }
+                });
+            });
+
+            // Each data type needs an export handler. Might need to be handled elsewhere?
+            // Or at least handled later.
+
+            for (var type in exportData) {
+                var exportCommand = "_export" + type;
+                this[exportCommand](exportData[type]);
+            }
+
+        },
+
+        _exportGenome: function(data) {
+            console.log("Exporting genomes");
+            console.log(data);
+            for (var i=0; i<data.length; i++) {
+                var obj = data[i];
+                if (obj.workspace === this.defaultLocation) {
+                    console.log("exporting central store genome " + obj.id + " to workspace");
+                }
+                else {
+                    console.log("copying workspace genome " + obj.ws + ":" + obj.id + " to workspace");
+                }
+            }
+        },
+
+        _exportDescription: function(data) {
+            console.log("Exporting description");
+            console.log(data);
+        },
+
+        _exportContig: function(data) {
+            console.log("Exporting contigs");
+            console.log(data);
+        },
+
+        _exportFeature: function(data) {
+            console.log("Exporting genes");
+            console.log(data);
         },
 
         /**
@@ -539,23 +636,28 @@
             var data = newWidget.getData();
             var cardTitle = data.title ? data.title : "";
             var cardSubtitle = data.id ? data.id : "";
-            var cardWidth = newWidget.options.width ? newWidget.options.width : 300;
-            var cardWorkspace = data.workspace ? data.workspace : "KBase Central Store";
+            var cardWidth = newWidget.options.width ? newWidget.options.width : this.defaultWidth;
+            var cardWorkspace = data.workspace ? data.workspace : this.defaultLocation;
 
-            var self = this;
-            var newCard = $("#" + newCardId).LandingPageCard({
+            var cardOptions = {
                 position: position,
                 title: "<div>" + 
                        cardTitle + 
                        "</div>" +
-                       "<div style='font-size: 14px; font-weight: normal'>" + 
+                       "<div class='kblpc-subtitle'>" + 
                        cardSubtitle + 
                        "<span class='label label-primary pull-right'>" +
                        cardWorkspace + 
                        "</span></div>",
                 width: cardWidth,
                 id: newCardId,
-            });
+            };
+
+            if (newWidget.options.height)
+                cardOptions.height = newWidget.options.height;
+
+            var self = this;
+            var newCard = $("#" + newCardId).LandingPageCard(cardOptions);
 
             this.cards[newCardId] = {
                 card: newCard,
@@ -575,13 +677,32 @@
             this.updateDataManager();
         },
 
-        /**
-         * Simple function that lists all loaded cards.
-         */
-        listDataObjects: function() {
-            for (var cardId in this.cards) {
-                console.log(this.cards[cardId].widget.getData());
-            }
+        getDataObjectsHash: function() {
+            var data = this.getDataObjects();
+            // shuffle it into a hash of unique ids and a list of their workspaces.
+
+            var dataHash = {};
+            var self = this;
+            $.each(data, function(i, obj) {
+                // accessors to make this legible.
+                var t = obj.type;
+                var id = obj.id;
+
+                var ws = obj.workspace;
+                if (!ws)
+                    ws = self.defaultLocation;
+
+                var idStr = ws + ":" + id;
+                if (dataHash[t]) {
+                    if ($.inArray(idStr, dataHash[t]) === -1) {
+                        dataHash[t].push(idStr);
+                    }
+                }
+                else
+                    dataHash[t] = [idStr];
+            });
+
+            return dataHash;
         },
 
         getDataObjects: function() {

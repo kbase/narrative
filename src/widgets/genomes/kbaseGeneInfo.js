@@ -105,7 +105,7 @@
                 type: "Feature",
                 id: this.options.featureID,
                 workspace: this.options.workspaceID,
-                title: "Feature Info"
+                title: "Gene Info"
             };
         },
 

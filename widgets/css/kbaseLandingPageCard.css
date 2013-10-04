@@ -1,4 +1,5 @@
 .kblpc {
+	overflow: auto;
 	-webkit-box-sizing: content-box;
 	   -moz-box-sizing: content-box;
             box-sizing: content-box;
@@ -19,15 +20,33 @@
 	color: #428bca;
 }
 
+.kblpc-subtitle {
+	font-size: 14px;
+	font-weight: normal;
+}
+
 .kblpc-control-box {
 	position: absolute;
 	right: 0px;
 	top: 50px;
-	max-width: 500px;
-	width: 200px;
+	width: 300px;
 }
 
 .kblpc-manager-dataset {
 	padding-left: 8px;
-	padding-bottom: 15px;
+	padding-top: 15px;
+}
+
+.kblpc-manager-dataset > div > div > input {
+	margin-right: 5px;
+	margin-left: 10px;
+}
+
+.kblpc-manager {
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.kblpc-manager-dataset > .row > a:hover {
+	text-decoration: none;
 }

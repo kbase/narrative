@@ -50,6 +50,9 @@ class SubmitException(Exception):
 
 ## Functions
 
+def print_progress(stage, completed, total):
+    print("PROGRESS,{},{:d},{:d}".format(stage, completed, total))
+
 def get_node_id(node, nt = "GENE"):
     if not node in ugids.keys() :
         ugids[node] = len(ugids)
@@ -203,6 +206,7 @@ def main(ont_id="PO:0009005", gn_id='3899',
     Modifications (dan gunter):
     - add parameters
     """
+    _num_done, total_work = 0, 8
 
     # parameterize --dang
     coex_args['coex_filter'] = "-m {} -n {}".format(fltr_m, fltr_n)
@@ -212,6 +216,7 @@ def main(ont_id="PO:0009005", gn_id='3899',
     ##
     # 1. Get token
     ## 
+    print_progress("Get token", _num_done, total_work)
 
     _log.info("Get auth token")
     #aconf = {"username" :'kbasetest', "password" :'@Suite525'}
@@ -221,6 +226,8 @@ def main(ont_id="PO:0009005", gn_id='3899',
     ##
     # 2. Get expression data
     ## 
+    _num_done += 1
+    print_progress("Get expression data", _num_done, total_work)
 
     _log.info("Get expression data")
     #workspace_id = 'coexpr_test'
@@ -241,6 +248,8 @@ def main(ont_id="PO:0009005", gn_id='3899',
     ##
     # 3. Store expression in workspace
     ## 
+    _num_done += 1
+    print_progress("Store expression in workspace", _num_done, total_work)
 
     _log.info("Store expression data in workspace")
     wsc = workspaceService(URLS.workspace)
@@ -257,6 +266,8 @@ def main(ont_id="PO:0009005", gn_id='3899',
     ##
     # 4. Download expression object from workspace
     ##
+    _num_done += 1
+    print_progress("Download expression object from workspace", _num_done, total_work)
 
     _log.info("Download expression data from workspace")
     lsamples = wsc.get_object({'id' : ont_id + ".g" + gn_id, 

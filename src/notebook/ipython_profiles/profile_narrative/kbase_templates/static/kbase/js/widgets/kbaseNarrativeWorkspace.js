@@ -265,6 +265,10 @@
             var code = "from " + pkg + " import " + module + "\n";
             code += "reload(" + module + ")\n"; // in case it changed
             // hack to add in workspace id
+            if (this.ws_id === null) {
+                alert("Unable to run command: No active workspace!");
+                return "";
+            }
             code += "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n";  
             code += "params = " + this._pythonDict(params) + "\n";
             code += module + "." + cmd + "(params)" + "\n";
@@ -354,6 +358,7 @@
          * @private
          */
         _handle_input_request: function (content) {
+            console.log("handle input request called");
             return;
             //this.output_area.append_raw_input(content);
         },
@@ -362,6 +367,7 @@
          * @private
          */
         _handle_clear_output: function (content) {
+            console.debug("handle clear ouput called");
             return;
             //this.clear_output(content.stdout, content.stderr, content.other);
         },
@@ -374,6 +380,12 @@
             var json = {};
             json.output_type = msg_type;
             if (msg_type === "stream") {
+                var progress = content.data.match(/^PROGRESS,.*/);
+                if (progress) {
+                    var items = content.data.split(",");
+                    this._showProgress(items[1], items[2], items[3]);
+                    return; // don't show the output to user
+                }
                 json.text = content.data;
                 json.stream = content.name;
             // The rest of this isn't really used
@@ -392,6 +404,13 @@
             // Transform output into a new cell
             this._addOutputCell(json.text);
             return;
+        },
+        /**
+         * @method _show_progress
+         * @private
+         */
+        _showProgress: function(name, done, total) {
+            console.debug("Progress: '" + name + "': " + done + " / " + total);
         },
         /**
          * Add a new cell for output of the script.
@@ -467,7 +486,9 @@
 		loggedIn: function(token) {
             console.debug("NarrativeWorkspace.loggedIn");
             this.ws_client = new workspaceService(this.options.workspaceURL);
-            this.ws_auth = token;            
+            this.ws_auth = token;
+            var un = token.match(/un=[\w_]+|/);
+            this.ws_user = un[0].substr(3, un[0].length - 3);
             // grab ws_id to give to, e.g., upload widget
             this.ws_id = this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
             // refresh the upload dialog, which needs login to populate types

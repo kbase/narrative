@@ -239,21 +239,30 @@
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
 
         if ( legit_ws_id.test(p.project_id)) {
-	    // create workspace and populate with _project object
+	    // Check if the workspace exists already. If it does, then 'upgrade'
+	    // it by adding a _project object, if it doesn't exist yet then
+	    // create it, then add the _project otag
+	    var tag_ws = function(ws_meta) {
+		var proj = empty_proj_tag;
+		proj.auth = token;
+		proj.workspace = p.project_id;
+		var ws_fn2 = project.ws_client.save_object( proj);
+		$.when( ws_fn2 ).done( function(obj_meta) {
+					   p.callback( obj_meta_dict(obj_meta));
+				       });
+	    };
+	    // function to create workspace and populate with _project object
 	    var ws_fn = project.ws_client.create_workspace( {
 							    auth: token,
 							    workspace : p.project_id,
 							    default_permission : p.def_perm
 							    });
-	    $.when( ws_fn).done( function(ws_meta) {
-				     var proj = empty_proj_tag;
-				     proj.auth = token;
-				     proj.workspace = p.project_id;
-				     var ws_fn2 = project.ws_client.save_object( proj);
-				     $.when( ws_fn2 ).done( function(obj_meta) {
-								p.callback( obj_meta_dict(obj_meta));
-							    });
-				 });
+	    var ws_exists = project.ws_client.get_workspacemeta( { auth: token, workspace : p.project_id });
+	    $.when( ws_exists).then( tag_ws, // if exists, tag
+				     function() { // else create then tag
+					 console.log( 'Creating new workspace:',p.project_id);
+				     	 $.when( ws_fn).done( tag_ws );
+				     });
 	} else {
 	    console.log( "Bad project id: ",p.project_id);
 	}
@@ -268,7 +277,7 @@
 	var auth = $(project.auth_div).kbaseLogin('get_kbase_cookie');
 
         if ( legit_ws_id.test(p.project_id)) {
-	    // create workspace and populate with _project object
+	    // delete
 	} else {
 	    console.log( "Bad project id: ",p.project_id);
 	}

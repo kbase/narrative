@@ -133,10 +133,11 @@ def submit_awe_job(uri, awe_job_document):
 
 
 class URLS:
-    main = "http://140.221.84.236:8000/node"
+    _host = '140.221.84.248'
+    main = "http://{40.221.84.236:8000/node"
     shock = "http://140.221.84.236:8000"
     awe = "http://140.221.84.236:8001/"
-    expression= "http://localhost:7075"
+    expression= "http://{}:7075".format(_host)
     workspace= "http://kbase.us/services/workspace"
     ids = "http://kbase.us/services/idserver"
     cdmi = "http://kbase.us/services/cdmi_api"
@@ -186,14 +187,25 @@ ugids = {}
 nodes = []
 ## MAIN ##
 
-def main():
+def main(ont_id="PO:0009005", gn_id='3899',
+         fltr_m='anova', fltr_n='100',
+         net_c='0.75',
+         clust_c='hclust', clust_n='simple'):
     """Create a narrative for co-expression network workflow
 
     1. User uploads multiple files to shock and remembers shock node IDs
     2. An AWE job script is created
     3. Job is submitted to awe service
     4. Node ids of output files are provided
+
+    Modifications (dan gunter):
+    - add parameters
     """
+
+    # parameterize --dang
+    coex_args['coex_filter'] = "-m {} -n {}".format(fltr_m, fltr_n)
+    coex_args['coex_net'] = "-c {}".format(net_c)
+    coex_args['coex_cluster'] = "-c {} -n {}".format(clust_c, clust_n)
 
     ##
     # 1. Get token
@@ -209,8 +221,6 @@ def main():
     ## 
 
     _log.info("Get expression data")
-    ont_id = "PO:0009005" # 9025 for 44 samples
-    gn_id = '3899'
     workspace_id = 'coexpr_test'
     edge_object_id = ont_id + ".g" + gn_id +".filtered.edge_net"
     clust_object_id = ont_id+ ".g" + gn_id +".filtered.clust_net"
@@ -237,10 +247,10 @@ def main():
                   'type' : 'ExpressionDataSamplesMap', 
                   'data' : sample_data, 'workspace' : workspace_id,
                   'auth' : token})
-    except Exception,e:
-        #raise Exception("Could not parse out merged_csv_node: %s" % e)
-        print "Err store error...\n"
-        sys.exit(1)
+    except Exception as e:
+        raise Exception("Could not parse out merged_csv_node: {}".format(e))
+        #print "Err store error...\n"
+        #sys.exit(1)
 
     ##
     # 4. Download expression object from workspace
@@ -298,11 +308,10 @@ def main():
     _log.debug("Uploaded to shock. ids = {}".format(','.join(shock_ids.values())))
 
     # Read & substitute values into job spec
-    awe_job = json.load(open("awe_job.json"))
     subst = shock_ids.copy()
     subst.update(coex_args)
     subst.update(dict(shock_uri=URLS.shock, session_id=sessionID))
-    awe_job_str = Template(json.dumps(awe_job)).substitute(subst)
+    awe_job_str = Template(AWE_JOB).substitute(subst)
 
     # Submit job
     job_id = submit_awe_job(URLS.awe, awe_job_str)
@@ -317,13 +326,11 @@ def main():
         _log.debug("job.run tasks_remaining={:d}".format(count))
     _log.info("job.end")
 
-    #XXX: Never get past this point
-
     #print("\n##############################\nDownload and visualize network output\n")
 
     #print("\nURLs to download output files\n")
     download_urls = get_output_files(URLS.awe, job_id)
-    print download_urls
+    _log.info("Download URLS: {}".format(download_urls))
     #print('\n'.join(['\t\t' + s for s in download_urls]))
 
     #print("URL to visualize the network\n")
@@ -510,10 +517,119 @@ def main():
                      'data' : net_object, 'workspace' : workspace_id,
                      'auth' : token});
 
-    #sys.exit(0);
-    
+    return edge_object_id
 
-    return 0
+
+# Entry point from IPython
+def run(params, quiet=True):
+    if quiet:
+        # disable logging
+        _log.setLevel(logging.CRITICAL - 1)
+    # parse params
+    p = {
+        'fltr_n': params['Filter.-n'],
+        'fltr_m': params['Filter.-m'],
+        'gn_id': params['Filter.gene_id'],
+        'ont_id': params['Filter.ontology_id'],
+        'net_c': params['Network.-c'],
+        'clust_n': params['Cluster.-n'],
+        'clust_c': params['Cluster.-c']
+    }
+    obj_id = main(**p)
+    print('<a href="#">{}</a>'.format(obj_id))
 
 if __name__ == '__main__':
     sys.exit(main())
+
+# DATA
+
+AWE_JOB = """
+{
+    "info": {
+        "pipeline": "coex-example",
+        "name": "testcoex",
+        "project": "default",
+        "user": "default",
+        "clientgroups":"",
+         "sessionId":"xyz1234"
+    }, 
+    "tasks": [
+        {
+            "cmd": {
+                "args": "-i @data_csv --output=data_filtered_csv -m anova -n 200 --sample_index=@sample_id_csv  -u n -r y -d y", 
+                "description": "filtering", 
+                "name": "coex_filter"
+            }, 
+            "dependsOn": [], 
+            "inputs": {
+               "data_csv": {
+                    "host": "$shock_uri",
+                    "node": "$expression"
+                },
+               "sample_id_csv": {
+                    "host": "$shock_uri",
+                    "node": "$sample_id"
+                }
+            }, 
+            "outputs": {
+                "data_filtered_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "0",
+            "skip": 0,
+            "totalwork": 1                
+        },
+        {
+            "cmd": {
+                "args": "-i @data_filtered_csv -o net_edge_csv -m simple -t edge -c 0.75 -r 0.8 -k 40 -p 50", 
+                "description": "coex network", 
+                "name": "coex_net"
+            }, 
+            "dependsOn": ["0"], 
+            "inputs": {
+               "data_filtered_csv": {
+                    "host": "$shock_uri",
+                    "origin": "0"
+                }
+            }, 
+            "outputs": {
+                "net_edge_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "1",
+            "skip": 0, 
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "args": "-i @data_filtered_csv -o module_csv -s 100 -c hclust -n simple -r 0.8 -k 40 -p 50 -d 0.99", 
+                "description": "clustering", 
+                "name": "coex_cluster2"
+            }, 
+            "dependsOn": ["1"], 
+            "inputs": {
+               "data_filtered_csv": {
+                    "host": "$shock_uri",
+                    "origin": "0"
+                }
+            }, 
+            "outputs": {
+                "hclust_tree_method=hclust.txt": {
+                    "host": "$shock_uri"
+                },
+                "module_network_edgelist_method=hclust.csv": {
+                    "host": "$shock_uri"
+                },
+                "module_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "2",
+            "skip": 0,
+            "totalwork": 1
+        }
+    ]
+}
+"""

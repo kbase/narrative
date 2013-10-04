@@ -1,3 +1,12 @@
 [submodule "ext/emberjs"]
 	path = ext/emberjs
 	url = https://github.com/emberjs/starter-kit
+[submodule "ext/kbase-datavis"]
+	path = ext/kbase-datavis
+	url = git://github.com/gingi/kbase-datavis
+[submodule "ext/angularjs"]
+	path = ext/angularjs
+	url = https://github.com/angular/angular-seed
+[submodule "ext/kbase-api"]
+	path = ext/kbase-api
+	url = git://github.com/gingi/kbasejs

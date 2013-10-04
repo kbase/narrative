@@ -6,6 +6,7 @@
 ./widgets/kbasePrompt.js
 ./widgets/kbaseTable.js
 ./widgets/kbaseTabs.js
+./widgets/networks/force-directed.js
 # ./widgets/kbaseWorkspaceBrowser.js
 ./widgets/kbaseAccordion.js
 ./widgets/kbaseBox.js

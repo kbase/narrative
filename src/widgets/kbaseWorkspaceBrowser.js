@@ -1,8 +1,10 @@
-/*
-
-
-*/
-
+/**
+ * @class KBaseWorkspaceBrowser
+ *
+ * A widget for browsing workspaces.
+ * 
+ * @extends KBWidget
+ */
 (function( $, undefined ) {
 
 

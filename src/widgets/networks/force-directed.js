@@ -14,6 +14,7 @@
  *
  * @extends KBWidget
  * @chainable
+ *
  * @param {Object} options
  * The options
  *
@@ -71,9 +72,16 @@
             }
             $.when(fetchAjax).done(function (result) {
                 var data = transformNetwork(result.data);
-                KBVis.require(["renderers/network"], function (Network) {
+                KBVis.require(["renderers/network"/*, "util/viewport"*/],
+                function (Network/*, Viewport*/) {
+                    // var viewport = new Viewport({
+                    //     parent: self.$elem,
+                    //     title: "Network",
+                    //     maximize: true
+                    // });
+                    // viewport.css("min-height", "700px");
                     var network = new Network({
-                        element: self.$elem,
+                        element: /* viewport */self.$elem,
                         dock: false,
                         nodeLabel: { type: "GENE" }
                     });

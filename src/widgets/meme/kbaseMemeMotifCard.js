@@ -50,7 +50,7 @@
 			$sitesTable += "<tr><td>Sequence ID</td><td>Start</td><td>p-value</td><td>&nbsp;</td><td>Site sequence</td><td>&nbsp;</td></tr>";
 
 			for (var site in self.motif.sites) {
-				$sitesTable+= "<tr><td>" + self.motif.sites[site].sourceSequenceId + "</td><td>" + self.motif.sites[site].start + "</td><td>" + self.motif.sites[site].pvalue + "</td><td>" + self.motif.sites[site].leftFlank + "</td><td>" + self.motif.sites[site].sequence + "</td><td>" + self.motif.sites[site].rightFlank + "</td></tr>";
+				$sitesTable+= "<tr><td>" + self.motif.sites[site].source_sequence_id + "</td><td>" + self.motif.sites[site].start + "</td><td>" + self.motif.sites[site].pvalue + "</td><td>" + self.motif.sites[site].left_flank + "</td><td>" + self.motif.sites[site].sequence + "</td><td>" + self.motif.sites[site].right_flank + "</td></tr>";
 			}
 			
 			$sitesTable+= "</table>";

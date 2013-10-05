@@ -31,9 +31,6 @@
             }
 
             var self = this;
-            this.options.open = function(event, ui) {
-                self.$elem.css('overflow', 'hidden');
-            };
             
             this.options.close = function(event, ui) {
                 self.$elem.dialog("destroy");

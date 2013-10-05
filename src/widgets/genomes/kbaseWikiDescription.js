@@ -38,8 +38,6 @@
 			this.workspaceClient = new workspaceService(this.workspaceURL);
 			this.wikiClient = new WikiScraper(this.wikiScraperURL);
 
-			this.options.title += " - " + this.options.genomeID;
-
 			return this.render();
 		},
 
@@ -199,7 +197,8 @@
             return {
                 type: "Description",
                 id: this.options.genomeID,
-                workspace: this.options.workspaceID
+                workspace: this.options.workspaceID,
+                title: "Organism Description"
             };
         },
 

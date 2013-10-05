@@ -6,10 +6,9 @@
 
         options: {
             genomeID: null,
-            workspace: null,
+            workspaceID: null,
             loadingImage: "../../widgets/images/ajax-loader.gif",
-            title: "Genome Overview",
-            isInCard: false
+            isInCard: false,
         },
 
         cdmiURL: "https://kbase.us/services/cdmi_api",
@@ -147,7 +146,8 @@
             return {
                 type: "Genome",
                 id: this.options.genomeID,
-                workspace: this.options.workspaceID
+                workspace: this.options.workspaceID,
+                title: "Genome Overview"
             };
         },
 

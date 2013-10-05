@@ -11,7 +11,8 @@ $(function() {
         $('#signin-button').kbaseLogin({style: 'text', 
             login_callback: reload_window, logout_callback: reload_window});
         USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-    
+        USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+
         // global state object to store state
         state = new State();
 
@@ -52,14 +53,14 @@ function router() {
 
     Path.map("#/genomes/cs/:genome_id")
         .to(function(){ 
-            genome_view({'genomeID': this.params['genome_id']});
+            genome_view({'genomeID': unescape(this.params['genome_id'])});
         })
         .enter(navEvent)
         .exit(removeCards);
 
     Path.map("#/genomes/:ws_id")
         .to(function() {
-            genome_view({'workspaceID': this.params['ws_id']});
+            genome_view({'workspaceID': unescape(this.params['ws_id'])});
         })
         .enter(navEvent)
         .exit(removeCards);
@@ -68,8 +69,8 @@ function router() {
         .to(function() {
             genome_view(
                 {
-                    'workspaceID': this.params['ws_id'],
-                    'genomeID': this.params['genome_id']
+                    'workspaceID': unescape(this.params['ws_id']),
+                    'genomeID': unescape(this.params['genome_id'])
                 }
             );
         })
@@ -126,6 +127,21 @@ function router() {
         media_view(this.params['ws_id'], this.params['id']);
     }).enter(navEvent);
 
+    // Meme Routes
+    Path.map("#/meme").to(function() {
+            meme_view();
+    }).enter(navEvent)
+	.exit(removeCards);
+
+    Path.map("#/meme/:ws_id/:id").to(function() {
+		meme_view(
+			{
+			'workspace_id': this.params['ws_id'],
+			'meme_run_result_id': this.params['id']
+			}
+		);
+    }).enter(navEvent)
+	.exit(removeCards);
 
     // analysis Routes
     Path.map("#/run-fba/:ws_id/:id").to(function(){ 
@@ -195,7 +211,14 @@ function genome_view(params) {
     if (!params)
         $("#genomes").append("No id given");
     else {
-        $("#genomes").KBaseCardLayoutManager( {template: "genome", data: params} );
+        $("#genomes").KBaseCardLayoutManager( 
+            {
+                template: "genome", 
+                data: params, 
+                auth: USER_TOKEN,
+                userId: USER_ID
+            }
+        );
     }
 }
 
@@ -326,6 +349,20 @@ function media_view(ws_id, id) {
     $(document).on("selectedWS", function(e, data) {
         console.log(data.ws);
     });
+}
+
+/*
+*    Meme view
+*/
+
+function meme_view(params) {
+    $('#app').html(simple_layout2('meme'));
+
+    if (params === undefined)
+        $("#meme").append("No id given");
+    else {
+        $("#meme").KBaseCardLayoutManager( {template: "meme", data: params} );
+    }
 }
 
 function help_view() {

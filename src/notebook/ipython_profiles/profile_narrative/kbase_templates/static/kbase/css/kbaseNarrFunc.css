@@ -122,8 +122,8 @@
     background-color: #fff;
     border-bottom: 1px solid #ddd;    
 }
-/* grey out while running */
-.kb-cell-run.running {
+/* grey out the form while running */
+.kb-cell-run.running form {
     opacity: 0.4;
 }
 /* progress "meter" */
@@ -132,5 +132,4 @@
 }
 .kb-cell-progress.running {
     display: block;
-    z-index: 99;
 }

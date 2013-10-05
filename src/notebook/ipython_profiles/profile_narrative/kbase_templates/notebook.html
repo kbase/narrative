@@ -44,6 +44,7 @@ class="notebook_app"
 
 {% block site %}
 <div id="main-container">
+    <div id="kb-ws-guard">Connecting to KBase..</div>
     <div id="content-column">
         <div id="menubar-container" class="container">
             <div id="menubar">
@@ -201,8 +202,8 @@ class="notebook_app"
                     </div>
                     <div id="pager-container" class="container"></div>
                 </div>
+                <div id="kb-ws-progress"></div>
             </div>
-
         </div>
     </div>
     <div id="left-column">
@@ -235,7 +236,7 @@ class="notebook_app"
                 <ul>
                     <li><a href="#" data-name="plants">Plants Co-expression</a>
                         <span data-name="Plants Co-expression" 
-                              data-help="Plants is good eats"
+                              data-help="KBase Coexpression network using dynamic visualization. Navigate among different experimental conditions, sets of genes and clusters over a variety of expression datasets from microarray to RNASeq available from microbes and plants"
                               class="kb-function-help">?</span>
                     </li>
                     <li><a href="#" data-name="microbes_1">Microbes-1</a>

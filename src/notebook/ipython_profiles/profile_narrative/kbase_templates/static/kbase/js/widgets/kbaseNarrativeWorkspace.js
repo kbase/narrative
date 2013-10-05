@@ -13,7 +13,7 @@
  */
 
 (function( $, undefined ) {
-	$.KBWidget({
+    $.KBWidget({
         name: "kbaseNarrativeWorkspace", 
         parent: "kbaseWidget",
 		version: "1.0.0",
@@ -29,7 +29,6 @@
         ws_id: null,
 
 		init: function(options) {
-            console.debug("kbaseNarrativeWorkspace options:", options);
 			this._super(options);
             this.initDataTable(options.tableElem);
             this.initControls(options.controlsElem);
@@ -83,7 +82,8 @@
             var $dlg = $('#kb-ws-upload-dialog');
             var opts = {$anchor: $('#' + dd_items.upload.id),
                         ws_parent: this};
-            this.uploadWidget = $dlg.kbaseUploadWidget(opts);
+            this.uploadWidget_dlg = $dlg //$dlg.kbaseUploadWidget;
+            this.uploadWidget_opts = opts;
             console.debug('initControls.end');
             return this;
         },
@@ -167,10 +167,6 @@
             var cell_id = "kb-cell-" + this._cur_index;
             cell.set_text("<div class='kb-cell-run' " + "id='" + cell_id + "'>" + 
                           "<h1>" + name + "</h1>" +
-                          "<div class='kb-cell-progress progress'>" + 
-                          "  <div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " + 
-                          "  aria-valuemin='0' aria-valuemax='100' style='width: 0%;'>" +
-                          "</div>" +
                           "<div class='kb-cell-params'>" +  
                           content + 
                           "</div>" +
@@ -204,18 +200,25 @@
          * Input data for plants demo.
          */
         plantsRunConfig: {
+            'Identifiers': {
+                'Genome': '3899',
+                'Ontology': 'PO:0001016'
+            },
             'Filter': {
-                gene_id: '3899',
-                ontology_id: 'PO:0001016',
-                '-m': 'anova',
-                '-n': '100',
+                //'-m': 'anova',
+                //'-n': '100',
+                'p-value': '0.05',
+                '':'x',
             },
             'Network': {
-                '-c': '0.75',
+                'Pearson cutoff': '0.75',
+                '':'x'
             },
             'Cluster': {
-                '-c': 'hclust',
-                '-n': 'simple'
+                //'-c': 'hclust',
+                //'-n': 'simple'
+                'Number of modules': '50',
+                '':'x'
             }
         },
         /**
@@ -243,11 +246,17 @@
             $.each(cfg, function(key, value) {
                 text += "<tr " + sbn + "><td " + sbn + ">" + key + "</td>";
                 $.each(value, function(key2, value2) { 
-                    text += "<td " + sbn + "><label>" + key2 + "</label>" + 
-                           "<input type='text' " + 
-                           "name='" + key + "." + key2 + "' " +
-                           "value='" + value2 + "'>"
-                           "</input></td>";
+                    if (key2 == '') {
+                        // this cell intentionally left blank
+                        text += "<td " + sbn + ">&nbsp;</td>";
+                    }
+                    else {
+                        text += "<td " + sbn + "><label>" + key2 + "</label>" + 
+                               "<input type='text' " + 
+                               "name='" + key + "." + key2 + "' " +
+                               "value='" + value2 + "'>"
+                               "</input></td>";
+                    }
                 });
                 text += "</tr>";
             });
@@ -292,9 +301,18 @@
                 };
                 self._buf = ""; // buffered output, see _handle_output()
                 self.element.addClass("running");
+                // Progress bar elements
+                var eoffs = self.element.position();
+                self.progressdiv = $('<div/>').addClass('progress progress-striped').css({
+                    'width': '400px', 'height': '20px'});
+                self.progressbar = $('<div/>').addClass('progress-bar progress-bar-success').attr({
+                    'role': 'progressbar', 'aria-valuenow': '0', 'aria-valuemin': '0', 'aria-valuemax': '100'})
+                    .css('width', '0%');
+                self.progressmsg = $('<p/>').addClass('text-success');
+                self.progressdiv.append(self.progressbar);
+                self.element.append(self.progressdiv);
+                self.element.append(self.progressmsg);
                 // activate progress dialog
-                self.progress_element.addClass("running");
-                self.progress_element.
                 var msg_id = self.kernel.execute(code, callbacks, {silent: true});
             };
         },
@@ -343,9 +361,18 @@
          * @private
          */
         _handle_execute_reply: function (content) {
-            console.debug("Done running the function");
+            console.debug("Done running the function", content);
+            if (false) {
+                // Transform output into a new cell
+                if (json.text != "" && json.text != undefined) {
+                    this._addOutputCell(json.text);
+                }
+                else if (json.html != "" && json.html != undefined) {
+                    this._addOutputCell(json.html);
+                }
+            }
+            this._showProgress("DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
-            //this.element.removeClass("running");
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
         },
         /**
@@ -380,33 +407,44 @@
          */
         _handle_output: function (msg_type, content) {
             // copied from outputarea.js
-            var json = {};
-            json.output_type = msg_type;
             if (msg_type === "stream") {
-                console.debug("read from stream: '" + content.data + "'");
                 this._buf += content.data;
                 var lines = this._buf.split("\n");
                 var offs = 0, done = false, self = this;
                 var not_progress = "";
                 $.each(lines, function(index, line) {
                     if (!done) {
-                        var progress = line.match(/^\.P.*/);
-                        if (progress) {
-                            var items = line.split(",");
-                            // expect: .p,name-of-thing,done,total
-                            if (items.length == 4) {
-                                self._showProgress(items[1], items[2], items[3]);
-                                // will trim buffer to remove this
-                                offs += line.length + 1; // +1 for newline char
-                            }
-                            else {
-                                done = true; // halt further processing
-                            }
+                        if (line.length == 0) {
+                            offs += 1; // blank line, move offset
                         }
                         else {
-                            // save non-progress lines
-                            // XXX: not currently used
-                            not_progress += line + "\n";
+                            // 1st char hash is marker for progress line
+                            var progress = line.match(/^#/);
+                            // Found progress marker
+                            if (progress) {
+                                var items = line.substr(1, line.length - 1).split(",");
+                                // expect: .p,name-of-thing,done,total
+                                if (items.length == 3) {
+                                    self._showProgress(items[0], items[1], items[2]);
+                                    // will trim buffer to remove this
+                                    offs += line.length; 
+                                    if (index < lines.length - 1) {
+                                        offs += 1; // +1 for newline char
+                                    }
+                                }
+                                else {
+                                    done = true; // partial line; wait for more data
+                                }
+                            }
+                            // No progress marker on non-empty line => final output of program
+                            else {
+                                // save the line
+                                not_progress += line;
+                                // all but the last line should have \n appended
+                                if (index < lines.length - 1) {
+                                    not_progress += "\n";
+                                }
+                            }
                         }
                     }
                 });
@@ -414,26 +452,11 @@
                     // if we found progress markers, trim processed prefix from buffer
                     this._buf = this._buf.substr(offs, this._buf.length - offs);
                 }
-                if (not_progress != "") {
-                    json.text = not_progress;
+                if (not_progress.length > 0) {
+                    this._addOutputCell(not_progress);
+                    this._buf = "";
                 }
-                json.stream = content.name;
             }    
-            // The rest of this isn't really used
-            else if (msg_type === "display_data") {
-                json = this.convert_mime_types(json, content.data);
-                json.metadata = this.convert_mime_types({}, content.metadata);
-            } else if (msg_type === "pyout") {
-                json.prompt_number = content.execution_count;
-                json = this.convert_mime_types(json, content.data);
-                json.metadata = this.convert_mime_types({}, content.metadata);
-            } else if (msg_type === "pyerr") {
-                json.ename = content.ename;
-                json.evalue = content.evalue;
-                json.traceback = content.traceback;
-            }
-            // Transform output into a new cell
-            this._addOutputCell(json.text);
             return;
         },
         /**
@@ -442,6 +465,23 @@
          */
         _showProgress: function(name, done, total) {
             console.debug("Progress: '" + name + "': " + done + " / " + total);
+            var pct_done = 0;
+            if (name == 'DONE') {
+                this.progressmsg.text("Completed");
+                pct_done = 100;
+            }
+            else {
+                this.progressmsg.text("Step " + done + " / " + total + ": " + name);
+                pct_done = (100 * done - 100) / total;
+            }
+
+            this.progressbar.css('width', pct_done.toFixed(0) + '%');
+
+            if (name == 'DONE') {
+                this.progressmsg.fadeOut(1000);
+                this.progressdiv.fadeOut(1000);
+                this.element.removeClass('running');
+            }
         },
         /**
          * Add a new cell for output of the script.
@@ -456,6 +496,7 @@
          */
          _addOutputCell: function(text) {
             console.debug("Output cell content:", text);
+            if (!text) return;
             var nb = IPython.notebook;
             var cell = nb.insert_cell_at_bottom('markdown');
             // by surrounding with div's we guarantee that markdown
@@ -515,16 +556,15 @@
          * @returns this
          */
 		loggedIn: function(token) {
-            console.debug("NarrativeWorkspace.loggedIn");
             this.ws_client = new workspaceService(this.options.workspaceURL);
             this.ws_auth = token;
             var un = token.match(/un=[\w_]+|/);
             this.ws_user = un[0].substr(3, un[0].length - 3);
             // grab ws_id to give to, e.g., upload widget
             this.ws_id = this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
-            // refresh the upload dialog, which needs login to populate types
-            console.debug("refresh upload widget");
-            this.uploadWidget.createDialog();
+            // create/refresh the upload dialog, which needs login to populate types
+            this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
+            //this.uploadWidget.createDialog(); -- redundant
 		},
 
         /**

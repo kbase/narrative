@@ -517,6 +517,13 @@
 
             return [];
         },
+	
+        _exportMemeRunResult: function(data, workspace) {
+            console.log("Exporting MEME run result");
+            console.log(data);
+
+            return [];
+        },
 
         /**
          * Toggles the data manager div
@@ -542,6 +549,8 @@
         showInitialCards: function() {
             if (this.options.template.toLowerCase() === "genome")
                 this.showGenomeCards();
+            else if (this.options.template.toLowerCase() === "meme")
+                this.showMemeRunResultCard();
             // else if (this.options.template.toLowerCase() === "hello")
             //     this.showHelloCards();
             else {
@@ -599,6 +608,26 @@
         },
 
         /**
+         * Initial template for showing MEME cards.
+         */
+        showMemeRunResultCard: function() {
+            this.addNewCard("KBaseMemeRunResultCard",
+                {
+                    meme_run_result_id: this.options.data.meme_run_result_id,
+                    workspace_id: this.options.data.workspace_id,
+                    loadingImage: "../../../widgets/images/ajax-loader.gif",
+                    isInCard: true
+                },
+                {
+                    my: "left top",
+                    at: "left bottom",
+                    of: "#app"
+                }
+            );
+	    return this;
+        },
+
+        /**
          * Registers all events that this manager should know about.
          * Also makes a list of all registered events, stored in this.registeredEvents[], so they
          * can be unregistered.
@@ -606,7 +635,7 @@
         registerEvents: function() {
             var self = this;
 
-            this.registeredEvents = ["featureClick", "showContig", "showDomains", "showOperons", "showBiochemistry"];
+            this.registeredEvents = ["featureClick", "showContig", "showDomains", "showOperons", "showBiochemistry", "showMemeMotif", "showMemeRunParameters", "showMemeRawOutput"];
 
             /**
              * Event: showDomains
@@ -710,6 +739,70 @@
                     }
                 );
             });
+
+
+            /**
+             * Event: showMemeMotif
+             * -------------------
+             * Adds new MEME Motif card.
+             */
+            $(document).on("showMemeMotif", function(event, data) {
+                self.addNewCard("KBaseMemeMotifCard",
+                    {
+                        motif: data.motif,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+800 bottom",
+                        of: "#app"
+                    }
+                );
+            });
+            
+            /**
+             * Event: showMemeRunParameters
+             * -------------------
+             * Adds card with MEME run parameters.
+             */
+
+            $(document).on("showMemeRunParameters", function(event, data) {
+                self.addNewCard("KBaseMemeRunParametersCard",
+                    {
+                        collection: data.collection,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left bottom+450",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showMemeRawOutput
+             * -------------------
+             * Adds card with raw MEME output.
+             */
+            $(document).on("showMemeRawOutput", function(event, data) {
+                self.addNewCard("KBaseMemeRawOutputCard",
+                    {
+                        memeOutput: data.memeOutput,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "center top",
+                        at: "center bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+
 
             $(document).on("helloClick", function(event, data) {
                 window.alert(data.message);

@@ -3,6 +3,17 @@
  * 
  * This is broken into different sections - the first is the card dialog box,
  * followed by styles for each of the various cards used in the landing pages.
+ *
+ * Style Class prefixes used:
+ * kblpc- kbaseLandingPageCard.js
+ *        landing page card dialog container
+ *        (.ui-dialog-* extend the jquery-ui dialogs that make up the container)
+ * kbwidget- multiple widgets
+ *           cross-cutting classes across multiple widgets
+ * kbcb- kbaseContigBrowser.js, kbaseContigBrowserButtons.js
+ *       Contig Browser and its control panel widget.
+ * kbgo- kbaseGenomeOverview.js
+ *       Genome Overview widget
  */
 
 /*---------- Landing page card dialog rules ----------*/

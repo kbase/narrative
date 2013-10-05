@@ -52,6 +52,16 @@
 				},{});
     };
 
+    // We are tagging workspaces with _SOMETHING objects to distinguish
+    // project workspaces from other containers. Using this in case we
+    // decide to include other types of workspaces
+    
+    project.ws_tag = {
+	project : '_project'
+    };
+
+    project.ws_tag_type = 'workspace_meta';
+    project.narrative_type = 'Narrative';
     // Fields in an empty narrative
     var empty_narrative = {
 	data: {
@@ -66,18 +76,12 @@
 		data_dependencies: []
 	    },
 	    nbformat: 3
-	}
+	},
+	metadata : {},
+	id : undefined,
+	type : project.narrative_type,
+	workspace : undefined
     };
-
-    // We are tagging workspaces with _SOMETHING objects to distinguish
-    // project workspaces from other containers. Using this in case we
-    // decide to include other types of workspaces
-    
-    project.ws_tag = {
-	project : '_project'
-    };
-
-    project.ws_tag_type = 'workspace_meta';
 
     // Empty project tag template
     var empty_proj_tag = {
@@ -93,6 +97,13 @@
     // id of the div containing the kbase login widget to query for auth
     // info. Set this to a different value if the div has been named differently.
     project.auth_div = 'login-widget';
+
+    // Common error handler callback
+    var error_handler = function() {
+	// neat trick to pickup all arguments passed in
+	var results = [].slice.call(arguments);
+	console.log( "Error in method call. Response was: ", results);
+    };
 
     /*
      * This is a handler to pickup get_workspaces() results and
@@ -130,7 +141,7 @@
 					      id : project.ws_tag.project,
 					      type : project.ws_tag_type });
 				    });
-	$.when.apply(null, ws_obj_fn).done( function() {
+	$.when.apply(null, ws_obj_fn).then( function() {
 						var results = [].slice.call(arguments);
 						var reduce_ws_proj = function(prev,curr,index){
 						    if (curr) {
@@ -141,7 +152,8 @@
 						};
 						var proj_list = results.reduce( reduce_ws_proj,{});
 						p.callback( proj_list );
-					    });
+					    },
+					    error_handler);
     };
 
     // Get all the workspaces that match the values of the
@@ -161,18 +173,20 @@
 	if ( p.workspace_id ) {
 	    META_ws = project.ws_client.get_workspacemeta( { auth : token,
 							      workspace : p.workspace_id } );
-	    $.when( META_ws).done( function(result) {
+	    $.when( META_ws).then( function(result) {
 				       filter_wsobj( { res: [result],
 						       callback : p.callback,
 						       perms: p.perms });
-				   });
+				   },
+				   error_handler);
 	} else {
 	    META_ws = project.ws_client.list_workspaces( { auth : token} );
-	    $.when( META_ws).done( function(result) {
+	    $.when( META_ws).then( function(result) {
 				       filter_wsobj( { res: result,
 						       callback : p.callback,
 						       perms: p.perms });
-				   });
+				   },
+				   error_handler);
 	}
     };
 
@@ -187,14 +201,15 @@
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
         var ws_meta = project.ws_client.list_workspace_objects( { auth: token,
 								  workspace: p.workspace_id});
-	$.when( ws_meta).done( function (results) {
+	$.when( ws_meta).then( function (results) {
 				   var res = {};
 				   $.each( results, function (index, val) {
 					       var obj_meta = obj_meta_dict( val);
 					       res[val[0]] = obj_meta;
 					   });
-				   p.callback( res)
-			       });
+				   p.callback( res);
+			       },
+			       error_handler);
     };
 
     // Get the individual workspace object named. Takes names
@@ -202,6 +217,9 @@
     // fields, and the type in the type field. Returns the
     // object as the workspace service would return it,
     // as a dict with 'data' and 'metadata' fields
+    // if the type is given, it will save one RPC call,
+    // otherwise we fetch the metadata for it and then
+    // grab the type
     project.get_object = function( p_in ) {
 	var def_params = { callback : undefined,
 			   workspace_id : undefined,
@@ -209,7 +227,7 @@
 			   type : undefined
 			 };
 	var p = $.extend( def_params, p_in);
-	var auth = $(project.auth_div).kbaseLogin('get_kbase_cookie');
+	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
 	
     };
 
@@ -221,7 +239,7 @@
 			   object_id : undefined,
 			   type: undefined };
 	var p = $.extend( def_params, p_in);
-	var auth = $(project.auth_div).kbaseLogin('get_kbase_cookie');
+	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
 	
     };
 
@@ -229,7 +247,8 @@
     // *must" conform to the future workspace rules about object naming,
     // the it can only contain [a-zA-Z0-9_]. We show the error prompt
     // if it fails to conform
-
+    // If it is passed the id of an existing workspace, add the _project
+    // tag object to it
     project.new_project = function( p_in ) {
 	var def_params = { callback : undefined,
 			   project_id : undefined,
@@ -243,13 +262,14 @@
 	    // it by adding a _project object, if it doesn't exist yet then
 	    // create it, then add the _project otag
 	    var tag_ws = function(ws_meta) {
-		var proj = empty_proj_tag;
+		var proj = $.extend(true,{},empty_proj_tag);
 		proj.auth = token;
 		proj.workspace = p.project_id;
 		var ws_fn2 = project.ws_client.save_object( proj);
-		$.when( ws_fn2 ).done( function(obj_meta) {
+		$.when( ws_fn2 ).then( function(obj_meta) {
 					   p.callback( obj_meta_dict(obj_meta));
-				       });
+				       },
+				       error_handler);
 	    };
 	    // function to create workspace and populate with _project object
 	    var ws_fn = project.ws_client.create_workspace( {
@@ -261,23 +281,31 @@
 	    $.when( ws_exists).then( tag_ws, // if exists, tag
 				     function() { // else create then tag
 					 console.log( 'Creating new workspace:',p.project_id);
-				     	 $.when( ws_fn).done( tag_ws );
+				     	 $.when( ws_fn).then( tag_ws,
+							      error_handler);
 				     });
 	} else {
-	    console.log( "Bad project id: ",p.project_id);
+	    error_handler( "Bad project id: "+p.project_id);
 	}
     };
 
     // Delete a workspace(project)
+    // will wipe out everything there, so make sure you prompt "Are you REALLY SURE?"
+    // before calling this.
+    // the callback gets the workspace metadata object of the deleted workspace
     project.delete_project = function( p_in ) {
 	var def_params = { callback : undefined,
 			   project_id : undefined
 			 };
 	var p = $.extend( def_params, p_in);
-	var auth = $(project.auth_div).kbaseLogin('get_kbase_cookie');
+	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
 
         if ( legit_ws_id.test(p.project_id)) {
-	    // delete
+	    var ws_def_fun = project.ws_client.delete_workspace({ auth: token,
+								  workspace: p.project_id});
+	    $.when( ws_def_fun).then( p.callback,
+				      error_handler
+				    );
 	} else {
 	    console.log( "Bad project id: ",p.project_id);
 	}
@@ -290,11 +318,31 @@
 
     project.new_narrative = function( p_in ) {
 	var def_params = { callback : undefined,
-			   workspace_id : undefined,
-			   object_id : undefined,
-			   type: undefined };
+			   project_id : undefined,
+			   narrative_id : undefined,
+			   description : "A KBase narrative" };
 	var p = $.extend( def_params, p_in);
-	var auth = $(project.auth_div).kbaseLogin('get_kbase_cookie');
+	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
+
+        if ( legit_ws_id.test(p.narrative_id)) {
+	    var nar = $.extend(true,{},empty_narrative);
+	    nar.auth = token;
+	    nar.workspace = p.project_id;
+	    nar.id = p.narrative_id;
+	    nar.data.metadata.name = p.narrative_id;
+	    nar.data.metadata.creator = user_id;
+	    nar.data.metadata.description = p.description;
+	    nar.metadata = nar.data.metadata;
+
+	    var ws_fn = project.ws_client.save_object( nar);
+	    $.when( ws_fn ).then( function(obj_meta) {
+				      p.callback( obj_meta_dict(obj_meta));
+				  },
+				  error_handler);
+	} else {
+	    error_handler( "Bad narrative_id");
+	}
 	
     };
 

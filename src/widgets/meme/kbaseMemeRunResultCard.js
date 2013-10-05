@@ -10,7 +10,7 @@
             loadingImage: "../../../widgets/images/ajax-loader.gif",
             title: "MEME Run Result Overview",
             isInCard: false,
-            width: 540
+            width: 400
         },
 
         workspaceURL: "https://kbase.us/services/workspace",

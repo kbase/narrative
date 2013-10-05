@@ -72,16 +72,16 @@
             }
             $.when(fetchAjax).done(function (result) {
                 var data = transformNetwork(result.data);
-                KBVis.require(["renderers/network"/*, "util/viewport"*/],
-                function (Network/*, Viewport*/) {
-                    // var viewport = new Viewport({
-                    //     parent: self.$elem,
-                    //     title: "Network",
-                    //     maximize: true
-                    // });
-                    // viewport.css("min-height", "700px");
+                KBVis.require(["renderers/network", "util/viewport"],
+                function (Network, Viewport) {
+                    var viewport = new Viewport({
+                        parent: self.$elem,
+                        title: "Network",
+                        maximize: true
+                    });
+                    viewport.css("min-height", "700px");
                     var network = new Network({
-                        element: /* viewport */self.$elem,
+                        element: viewport,
                         dock: false,
                         nodeLabel: { type: "GENE" }
                     });

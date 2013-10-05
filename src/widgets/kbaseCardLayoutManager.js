@@ -8,6 +8,7 @@
  * For the purposes of the SAC demo, the user can only export to the default
  * username_home workspace. This might change later, dependent on input
  * from the UI and UX teams.
+ *
  */
 (function( $, undefined ) {
     $.KBWidget({

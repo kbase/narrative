@@ -127,6 +127,21 @@ function router() {
         media_view(this.params['ws_id'], this.params['id']);
     }).enter(navEvent);
 
+    // Meme Routes
+    Path.map("#/meme").to(function() {
+            meme_view();
+    }).enter(navEvent)
+	.exit(removeCards);
+
+    Path.map("#/meme/:ws_id/:id").to(function() {
+		meme_view(
+			{
+			'workspace_id': this.params['ws_id'],
+			'meme_run_result_id': this.params['id']
+			}
+		);
+    }).enter(navEvent)
+	.exit(removeCards);
 
     // analysis Routes
     Path.map("#/run-fba/:ws_id/:id").to(function(){ 
@@ -334,6 +349,20 @@ function media_view(ws_id, id) {
     $(document).on("selectedWS", function(e, data) {
         console.log(data.ws);
     });
+}
+
+/*
+*    Meme view
+*/
+
+function meme_view(params) {
+    $('#app').html(simple_layout2('meme'));
+
+    if (params === undefined)
+        $("#meme").append("No id given");
+    else {
+        $("#meme").KBaseCardLayoutManager( {template: "meme", data: params} );
+    }
 }
 
 function help_view() {

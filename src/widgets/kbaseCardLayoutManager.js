@@ -1,11 +1,14 @@
 /**
- * Made to work with the landing page.
+ * This is designed to work in the context of the landing page.
  * This initializes all card positions relative to the #app div.
  *
  * It manages all cards and widgets, organizes which data is available,
  * and (with available handlers) exports data to the user's workspace.
+ *
+ * For the purposes of the SAC demo, the user can only export to the default
+ * username_home workspace. This might change later, dependent on input
+ * from the UI and UX teams.
  */
-
 (function( $, undefined ) {
     $.KBWidget({
         name: "KBaseCardLayoutManager",
@@ -20,7 +23,7 @@
         },
         cardIndex: 0,
         cards: {},
-        defaultLocation: "CDS",
+        cdmWorkspace: "CDS",
         defaultWidth: 300,
 
         workspaceURL: "https://www.kbase.us/services/workspace",
@@ -43,8 +46,8 @@
                 });
             };
 
-            // allow html in dialog title bar
-            // safe, since they're not user-generated or modified
+            // Allows html in dialog title bar
+            // This is safe here, since these title bars are not user-generated or modified.
             // http://stackoverflow.com/questions/14488774/using-html-in-a-dialogs-title-in-jquery-ui-1-10
             $.widget("ui.dialog", $.extend({}, $.ui.dialog.prototype, {
                 _title: function(title) {
@@ -69,7 +72,6 @@
 
         /**
          * Renders the control box panel.
-         * This is optional, so it's (currently) kept separate from the init function.
          */
         render: function(options) {
             this.initControlBox();
@@ -81,6 +83,16 @@
             return this;
         },
 
+        /**
+         * Initializes the modal dialog that appears when a user tries to export data to their workspace.
+         * TODO: make this less full of sloppy html, and more jQuery-ish.
+         *
+         * It creates and stores a few accessible nodes in this.exportModal:
+         *   modal: the modal itself. can be shown with exportModal.modal.modal('show')
+         *   body: the body content of the modal - so it can be modified by the exporter method.
+         *   okButton: exported so it can be rebound to save user-selected data.
+         *   loadingDiv: exported so it can be readily added/removed from the modal body.
+         */
         initExportModal: function() {
             var $body = $("<div class='modal-body'></div>");
             var $okButton = $("<button type='button' class='btn btn-primary'>Export</button>");
@@ -204,6 +216,9 @@
             return $dm;
         },
 
+        /**
+         * Toggles between selecting all elements in the data manager, and unselecting them all.
+         */
         toggleSelectAll: function($target) {
             // check off everything.
             if ($target.find("> .glyphicon").hasClass("glyphicon-check")) {
@@ -217,7 +232,13 @@
             $target.find("> .glyphicon").toggleClass("glyphicon-check glyphicon-unchecked");
         },
 
+        /**
+         * Updates the data manager to show data from all cards on the screen.
+         * This does its updating in place, meaning that it compares the currently shown data against what's
+         * being displayed in the data manager window, and makes adjustments accordingly.
+         */
         updateDataManager: function() {
+            // If the data manager isn't rendered, skip this all together.
             if (!this.$dataManager)
                 return;
 
@@ -246,10 +267,12 @@
 
                 var $dataBlock = $dm.find(".kblpc-manager-dataset[data-type='" + type + "']");
 
+                //If there's no datablock for that data type, make a new one!
                 if ($dataBlock.length === 0) {
-                    // make a new datablock - this is the enclosing div
-                    // for the section containing a header (with data type and count)
-                    // and chevron for expanding/collapsing.
+                    /* make a new datablock - this is the enclosing div
+                     * for the section containing a header (with data type and count)
+                     * and chevron for expanding/collapsing.
+                     */
                     $dataBlock = $("<div/>")
                                      .addClass("kblpc-manager-dataset")
                                      .attr("data-type", type);
@@ -294,13 +317,14 @@
                     $dm.append($dataBlock);
                 }
                 else {
+                    // If we already have a datablock for that type, just update the number of elements it's showing.
                     $dataBlock.find("> div > a > span#kblpc-count").html(dataHash[type].length);
                 }
 
                 var $dataSet = $dataBlock.find("> div#kblpc-" + underscoreType + " > table");
 
-                // search for what needs to be synched.
-                // 1. hash the list of ids
+                // search for what needs to be synched between the cards and the data manager.
+                // 1. hash the list of data ids
                 var dataIdHash = {};
                 $.each(dataHash[type], function(j, id) {
                     dataIdHash[id] = 1;
@@ -340,7 +364,6 @@
 
             // at the very very end, remove any blocks that don't match to any current datatypes
             // i.e.: those blocks whose last card was just removed.
-
             $.each($(".kblpc-manager-dataset"), function(i, element) {
                 if (!dataHash.hasOwnProperty($(element).attr("data-type")))
                     $(element).remove();
@@ -349,6 +372,31 @@
 
         /**
          * Exports the selected data elements to the user's workspace.
+         *
+         * This pops up a modal, making sure the user wants to copy everything.
+         * If so, it invokes an export handler for each data type, then does it.
+         * Each export process is expected to proceed asynchronously, so the handlers should
+         * all return an array of ajax promises.
+         *
+         * Once these promises are fulfilled, the modal goes away.
+         *
+         * Each data type needs to have a corresponding function called _export<type>.
+         * For example, the Genome type exporter is _exportGenome.
+         *
+         * Each exporter is passed a list of data objects, all containing these fields:
+         * {
+         *    id: <object id>,
+         *    workspace: <workspace id>  // note that this might be === this.cdmWorkspace
+         * }
+         *
+         * the exporter is also passed the workspace it should export to as a separate parameter.
+         * Thus, the prototype for exporters is:
+         * 
+         * _exportDatatype: function(data, workspace) {}
+         *
+         * Note that auth tokens and user ids are available as
+         * this.options.auth and
+         * this.options.userId, repectively.
          */
         exportToWorkspace: function() {
             // 1. Get the data to export.
@@ -376,6 +424,10 @@
                 });
             });
 
+            /**
+             * This internal function does the work of invoking all the exporters.
+             */
+            var exportWs = this.options.userId + "_home";
             var self = this;
             var doExport = function() {
                 self.exportModal.body.append(self.exportModal.loadingDiv);
@@ -383,7 +435,7 @@
                 var jobsList = [];
                 for (var type in exportData) {
                     var exportCommand = "_export" + type;
-                    jobsList = jobsList.concat(self[exportCommand](exportData[type]));
+                    jobsList = jobsList.concat(self[exportCommand](exportData[type], exportWs));
                 }
 
                 $.when.apply($, jobsList).done(function() {
@@ -392,12 +444,10 @@
                 });
             };
 
-
             /*
              * Now we have the data, so make an "Are you REALLY sure?" modal.
              * If the user says yes, modify it to show a progress bar or something.
              */
-            var exportWs = this.options.userId + "_home";
 
             if (Object.keys(exportData).length === 0) {
                 this.exportModal.body.html("No data selected for export!");
@@ -415,46 +465,27 @@
             // Each data type needs an export handler. Might need to be handled elsewhere?
             // Or at least handled later.
 
-            /**
-             * An exporter should queue up the list of objects to be exported via 
-             * the standard KBase Javascript API calls, or by other workspace-related calls.
-             *
-             * However they're done, this should return an array of AJAX promises.
-             */
-            // var jobsList = [];
-            // for (var type in exportData) {
-            //     var exportCommand = "_export" + type;
-            //     this[exportCommand](exportData[type]);
-            // }
-
 
         },
 
-        _exportGenome: function(data) {
-            console.log("Exporting genomes");
-            console.log(data);
-            console.log(this.options.auth);
-
-            var exportWs = this.options.userId + "_home";
-            console.log(exportWs);
-
+        _exportGenome: function(data, workspace) {
             // capture the list of async workspace api calls.
             var exportJobs = [];
 
             for (var i=0; i<data.length; i++) {
                 var obj = data[i];
-                if (obj.workspace === this.defaultLocation) {
-                    console.log("exporting central store genome " + obj.id + " to workspace");
+                if (obj.workspace === this.cdmWorkspace) {
+                    console.log("exporting central store genome " + obj.id + " to workspace '" + workspace + "'");
                     exportJobs.push(this.fbaClient.genome_to_workspace(
                         {
                             genome: obj.id,
-                            workspace: exportWs,
+                            workspace: workspace,
                             auth: this.options.auth
                         },
                         function(objectMeta) {
                             console.log(objectMeta);
                         },
-                        this.clientError
+                        this.kbaseClientError
                     ));
                 }
                 else {
@@ -465,24 +496,25 @@
             return exportJobs;
         },
 
-        clientError: function(error) {
-            console.log("A client error occurred: ");
-            console.log(error);
-        },
-
-        _exportDescription: function(data) {
+        _exportDescription: function(data, workspace) {
             console.log("Exporting description");
             console.log(data);
+
+            return [];
         },
 
-        _exportContig: function(data) {
+        _exportContig: function(data, workspace) {
             console.log("Exporting contigs");
             console.log(data);
+
+            return [];
         },
 
-        _exportFeature: function(data) {
+        _exportFeature: function(data, workspace) {
             console.log("Exporting genes");
             console.log(data);
+
+            return [];
         },
 
         /**
@@ -505,7 +537,6 @@
         loadLayout: function() {
             window.alert("load layout");
         },
-
 
         showInitialCards: function() {
             if (this.options.template.toLowerCase() === "genome")
@@ -751,7 +782,7 @@
             var cardTitle = data.title ? data.title : "";
             var cardSubtitle = data.id ? data.id : "";
             var cardWidth = newWidget.options.width ? newWidget.options.width : this.defaultWidth;
-            var cardWorkspace = data.workspace ? data.workspace : this.defaultLocation;
+            var cardWorkspace = data.workspace ? data.workspace : this.cdmWorkspace;
 
             var cardOptions = {
                 position: position,
@@ -804,7 +835,7 @@
 
                 var ws = obj.workspace;
                 if (!ws)
-                    ws = self.defaultLocation;
+                    ws = self.cdmWorkspace;
 
                 var idStr = ws + ":" + id;
                 if (dataHash[t]) {
@@ -827,14 +858,9 @@
             return data;
         },
 
-        exportAllCardsToWorkspace: function(workspace) {
-            for (var cardId in this.cards) {
-                sendCardToWorkspace(cardId, workspace);
-            }
-        },
-
-        exportCardToWorkspace: function(cardId, workspace) {
-            this.cards[cardId].widget.exportToWorkspace(workspace);
+        kbaseClientError: function(error) {
+            console.log("A KBase client error occurred: ");
+            console.log(error);
         },
 
         /**

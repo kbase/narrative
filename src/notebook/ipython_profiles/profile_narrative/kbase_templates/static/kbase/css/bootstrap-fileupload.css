@@ -7,6 +7,9 @@
  *
  * Designed and built with all the love in the world by @mdo and @fat, extended by @ArnoldDaniels.
  */
+ .kb-upload.form-group {
+    margin: 0;
+ }
 .clearfix {
   *zoom: 1;
 }
@@ -59,6 +62,9 @@
   margin-bottom: 0px;
   vertical-align: middle;
   cursor: text;
+  /* added for BS3 */
+  overflow: hidden;
+  max-height: 34px;        
 }
 .fileupload .thumbnail {
   overflow: hidden;
@@ -72,6 +78,10 @@
   vertical-align: middle;
   max-height: 100%;
 }
+/* added for BS3 */
+.fileupload .fileupload-preview {
+  line-height: 21px;
+}   
 .fileupload .btn {
   vertical-align: middle;
 }
@@ -82,10 +92,17 @@
 .fileupload-inline .fileupload-controls {
   display: inline;
 }
+/* modified for BS3:
 .fileupload-new .input-append .btn-file {
   -webkit-border-radius: 0 3px 3px 0;
   -moz-border-radius: 0 3px 3px 0;
   border-radius: 0 3px 3px 0;
+}
+*/
+.fileupload-new .input-group .btn-file {
+  -webkit-border-radius: 0 3px 3px 0 !important;
+  -moz-border-radius: 0 3px 3px 0 !important;
+  border-radius: 0 3px 3px 0 !important;
 }
 .thumbnail-borderless .thumbnail {
   border: none;

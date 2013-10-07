@@ -1,14 +1,14 @@
 (function( $, undefined ) { 
     $.KBWidget({ 
-        name: "KBaseMemeRunResultCard", 
+        name: "KBaseTomtomRunResultCard", 
         parent: "kbaseWidget", 
         version: "1.0.0",
 
         options: {
-            meme_run_result_id: null,
+            tomtom_run_result_id: null,
             workspace_id: null,
             loadingImage: "assets/img/ajax-loader.gif",
-            title: "MEME Run Result Overview",
+            title: "TOMTOM Run Result Overview",
             isInCard: false,
             width: 400
         },
@@ -17,7 +17,7 @@
 
         init: function(options) {
             this._super(options);
-            if (this.options.meme_run_result_id === null) {
+            if (this.options.tomtom_run_result_id === null) {
                 //throw an error
                 return;
             }
@@ -39,68 +39,53 @@
              * Fields to show:
              * ID
              * Timestamp
-             * Number of motifs
+             * Number of hits
              */
             var self = this;
-            this.workspaceClient.get_object({"id" : this.options.meme_run_result_id, "type" : "MemeRunResult", "workspace": this.options.workspace_id}, 
-		    	function(data){
-					self.collection = data;
-					rawOutput = self.collection.data.raw_output;
-					var d = new Date(parseInt(self.collection.data.timestamp));
+            this.workspaceClient.get_object({"id" : this.options.tomtom_run_result_id, "type" : "TomtomRunResult", "workspace": this.options.workspace_id},
+
+	    		function(data){
+					self.tomtomresult = data;
+					var d = new Date(parseInt(self.tomtomresult.data.timestamp));
 					var creationMonth = d.getMonth()+1;
-					self.$elem.append("<h3>MEME Run Info</h3>");
+					self.$elem.append("<h3>TOMTOM Run Info</h3>");
 			        self.$elem.append($("<div />").
 					append($("<table/>").addClass("kbgo-table")
-					    .append($("<tr/>").append("<td>ID</td><td>" + self.collection.data.id + "</td>"))
+					    .append($("<tr/>").append("<td>ID</td><td>" + self.tomtomresult.data.id + "</td>"))
 					    .append($("<tr/>").append("<td>Created: </td><td>" + creationMonth +"/"+ d.getDate() +"/"+ d.getFullYear() +" "+ d.getHours() +":"+ d.getMinutes() +":"+ d.getSeconds() + "</td>"))
-						.append($("<tr/>").append("<td>Number of motifs</td><td>" + self.collection.data.nmotifs + "</td>"))
+						.append($("<tr/>").append("<td>Number of hits</td><td>" + self.tomtomresult.data.hits.length + "</td>"))
 					));
-					self.$elem.append("<h3>View motifs</h3>");
-
-					var $dropdown = $("<select />");
-					for (var motif in self.collection.data.motifs) {
-						rawOutput+=self.collection.data.motifs[motif].raw_output;
-						$dropdown.append("<option id='" + motif + "'> Motif " + self.collection.data.motifs[motif].id + " ("+ self.collection.data.motifs[motif].sites.length +" sites)</option>");
-					}
-					self.$elem.append($dropdown);
-					self.$elem.append($("<button class='btn btn-default'>Show Motif</button>")
+					
+					self.$elem.append($("<span />").append("<br><button class='btn btn-default'>Show TOMTOM run parameters</button>")
 	                	.on("click", 
 	                    	function(event) {
-								$(self.$elem.selector + " > select option:selected").each(function() {
-    //                      	console.log(event);
-								self.trigger("showMemeMotif", { motif: self.collection.data.motifs[$(this).attr("id")], event: event });
-	                        });
+								self.trigger("showTomtomRunParameters", { tomtomresult: self.tomtomresult, event: event });
 	                    })
 	                );
-						
-					self.$elem.append($("<span />").append("<br><button class='btn btn-default'>Show MEME run parameters</button>")
+	
+			        
+			        self.$elem.append("<h3>View hits</h3>");
+					self.$elem.append($("<button class='btn btn-default'>Show hit list</button>")
 	                	.on("click", 
 	                    	function(event) {
-								self.trigger("showMemeRunParameters", { collection: self.collection, event: event });
-	                    })
-	                );
-	              
-					self.$elem.append($("<span />").append("<br><button class='btn btn-default'>Show MEME raw output</button>")
-	                	.on("click", 
-	                    	function(event) {
-								self.trigger("showMemeRawOutput", { memeOutput: rawOutput, event: event });
+								self.trigger("showTomtomHits", { tomtomresult: self.tomtomresult, event: event });
 	                    })
 	                );
 			    },
-
+			    
 			    self.rpcError
-		    );
+			);
+			
             this.hideMessage();
             return this;
-        },
-
-
+	        },
+	
         getData: function() {
             return {
-                type: "MemeRunResult",
-                id: this.options.meme_run_result_id,
+                type: "TomtomRunResult",
+                id: this.options.tomtom_run_result_id,
                 workspace: this.options.workspace_id,
-                title: "MEME Run Result Overview"
+                title: "TOMTOM Run Result Overview"
             };
         },
 

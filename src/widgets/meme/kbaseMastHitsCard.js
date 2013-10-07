@@ -1,21 +1,18 @@
 (function( $, undefined ) { 
     $.KBWidget({ 
-        name: "KBaseMemeRawOutputCard", 
+        name: "KBaseMastHitsCard", 
         parent: "kbaseWidget", 
         version: "1.0.0",
 
         options: {
-            title: "MEME raw output",
+            title: "MAST Hits",
             isInCard: false,
-            width: 800
+            width: 600
         },
-
-//        workspaceURL: "https://kbase.us/services/workspace",
 
         init: function(options) {
             this._super(options);
-            
-            if (this.options.memeOutput === null) {
+            if (this.options.mastresult === null) {
                 //throw an error
                 return;
             }
@@ -25,34 +22,34 @@
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-//            this.workspaceClient = new workspaceService(this.workspaceURL);
             return this.render();
-
         },
 
         render: function(options) {
 
-            /**
-             * Fields to show:
-             * ID
-             * Timestamp
-             * Run parameters
-             * Number of motifs
-             */
             var self = this;
-            self.memeOutput = this.options.memeOutput;
+            self.mastresult = this.options.mastresult;
+			var $hitsTable = '<table id="hits-table' + self.mastresult.data.id + '" class="kbgo-table">';
+			$hitsTable += "<tr><td>PSPM ID</td><td>Sequence ID</td><td>Strand</td><td>Start</td><td>End</td><td>Score</td><td>p-value</td></tr>";
 
-	        self.$elem.append($("<div />").append($("<pre />").append(this.options.memeOutput)));
-
+			for (var hit in self.mastresult.data.hits) {
+				$hitsTable+= "<tr><td>" + self.mastresult.data.hits[hit].pspm_id + "</td><td>" + self.mastresult.data.hits[hit].sequence_id + "</td><td>" + self.mastresult.data.hits[hit].strand +
+				"</td><td>" + self.mastresult.data.hits[hit].hit_start + "</td><td>" + self.mastresult.data.hits[hit].hit_end + "</td><td>" + self.mastresult.data.hits[hit].score +
+				"</td><td>" + self.mastresult.data.hits[hit].hit_pvalue + "</td></tr>";
+			}
+			
+			$hitsTable+= "</table>";
+			self.$elem.append($("<div />").append($hitsTable));
+			
             return this;
         },
 
         getData: function() {
             return {
-                type: "MemeRunResult",
-//                id: this.options.meme_run_result_id,
+                type: "MastRunResult",
+                id: this.options.mastresult.data.id,
                 workspace: this.options.workspace_id,
-                title: "MEME raw output"
+                title: "MAST Hits"
             };
         },
 

@@ -164,6 +164,11 @@
                     // function to handle the result data
                     this.result_handler = this.plantsCreateOutput;
                     break;
+                case 'genomeToFba':
+                    config = this.genomeToFbaConfig;
+                    command_builder = this.genomeToFbaCommand();
+                    this.result_handler = this.genomeToFbaCreateOutput;
+                    break;
             }
             var content = this._buildRunForm(config);
             var cell_id = "kb-cell-" + this._cur_index;
@@ -253,6 +258,26 @@
         },
 
         /* -------------- END: PLANTS ---------------------- */
+
+        /* -------------- MICROBES ---------------- */
+        genomeToFbaConfig: {
+            'Identifiers': {
+                'Genome': '',
+            },
+        },
+
+        genomeToFbaCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "microbes_workflow", params);
+            }
+        },
+
+        genomeToFbaCreateOutput: function(element, text) {
+            element.html("Genome to FBA output.");
+            element.css({ margin: '-10px' });
+            element.off('click dblclick keydown keyup keypress focus');
+        },
 
         /**
          * Build 'run script' HTML form from

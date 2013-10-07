@@ -1,6 +1,5 @@
 <!DOCTYPE HTML>
-
-<html>
+<html ng-app="landing-pages" lang="en">
     <head>
         <title>KBase Data Pages</title>
         <link rel="icon" type="image/x-icon" href="assets/img/KBase_favicon.ico">
@@ -19,6 +18,7 @@
 
         <!-- KBase widget css -->
         <link rel="stylesheet" type="text/css" href="../widgets/css/kbaseLandingPageCard.css" />
+
 
         <!-- External javascript packages -->
         <script src="../ext/jquery/jquery-1.10.2.min.js"></script>
@@ -65,7 +65,6 @@
         <script src="../src/widgets/biochemistry/kbaseBioCpdTable.js"></script>
 
         <script src="../src/widgets/media/kbaseMediaEditor.js"></script>
-        <script src="../src/widgets/biochemistry/kbaseRxnModal.js"></script>
 
         <script src="../src/widgets/misc/kbaseSeqSearch.js"></script>
 
@@ -76,6 +75,10 @@
         <script src="../src/widgets/workspaces/kbaseWSHandler.js"></script>
         <script src="../src/widgets/workspaces/kbaseWSSelector.js"></script>
         <script src="../src/widgets/workspaces/kbaseWSObjectTable.js"></script>
+
+
+        <script src="../src/widgets/biochemistry/kbaseRxn.js"></script>
+        <script src="../src/widgets/biochemistry/kbaseCpd.js"></script>        
 
         <!-- Genome widgets -->
         <script src = "../src/widgets/kbaseLandingPageCard.js"></script>
@@ -106,14 +109,49 @@
         <!-- End Meme widgets -->
 
 
-        <script src="landing-pages.js"></script>
+
+        <!-- Iris widgets -->
+        <link href="http://www.kbase.us/services/docs/invocation/Iris/jquery/external/font-awesome/css/font-awesome.min.css">
+        <script src = '../src/widgets/kbaseAuthenticatedWidget.js'></script>
+        <script src = '../src/widgets/kbaseButtonControls.js'></script>
+        <script src = '../src/widgets/kbaseBox.js'></script>
+        <script src = '../src/widgets/kbaseDeletePrompt.js'></script>
+        <script src = '../src/widgets/kbaseErrorPrompt.js'></script>
+        <script src = '../src/widgets/kbaseAccordion.js'></script>
+        <script src = '../src/widgets/kbaseTabs.js'></script>
+        <script src = '../src/widgets/kbaseTable.js'></script>
+        <script src = '../src/widgets/kbaseIrisCommands.js'></script>
+        <script src = '../src/widgets/kbaseDataBrowser.js'></script>
+        <script src = '../src/widgets/kbaseIrisFileBrowser.js'></script>
+        <script src = '../src/widgets/kbaseIrisProcessList.js'></script>
+        <script src = '../src/widgets/kbaseIrisTerminal.js'></script>
+        <script src = '../src/widgets/kbaseIrisGrammar.js'></script>
+        <script src = '../src/widgets/kbaseIrisFileEditor.js'></script>
+        <script src = '../src/widgets/kbaseIrisTutorial.js'></script>
+        <script src="http://www.kbase.us/services/docs/invocation/lib/InvocationService.js" 
+        type="text/javascript" charset="utf-8"></script>
+        <!-- End Iris widgets -->
+
+        <!-- application -->
+        <script src="lib/angular/angular.js"></script>
+        <script src="js/app.js"></script>
+        <script src="js/directives.js"></script>      
+        <script src="js/controllers.js"></script>
+        <script src="js/cacheclient.js"></script>
+
+        <!-- this is an experiemental inclusion of iris -->
+        <script src="js/iris-directives.js"></script>
+        <!--<script src="landing-pages.js"></script>-->
+
     </head>
 
     <body>
         <div id="navigation"></div>
 
         <!-- app -->
-        <div id ="app" class="wrapper"></div>
+        <div id ="app" class="wrapper" ng-view>
+        </div>
+
         <div id="modals"></div>
         <!-- End app -->
 

@@ -8,25 +8,14 @@ $.KBWidget({
     init: function(options) {
         this._super(options);
         var self = this;        
-        var token = options.auth;
         var ws = options.ws
-        var title = options.title ? options.title : "Biochemistry Media"
-        var selectable = options.selectable;
+        var title = options.title;
+        var data = options.data;
 
-        var container = $('<div id="kbase-ws-media-table" class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <h4 class="panel-title">'+title+'</h4>\
-                                    <span class="label label-primary pull-right select-ws" \
-                                    data-ws="'+ws+'">'+ws+'</span><br>\
-                                </div>\
-                                <div class="panel-body"></div>\
-                           </div>')
-        this.$elem.append(container);
-
-        var panel_body = container.find('.panel-body');
-
-        var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-        var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+        var panel = this.$elem.kbasePanel({title: 'Biochemistry Media', 
+                                           rightLabel: ws});
+        panel.loading();
+        var panel_body = panel.body();
 
         var tableSettings = {
             "fnDrawCallback": mediaEvents,
@@ -38,23 +27,13 @@ $.KBWidget({
             }
         }
 
-        //var bioAJAX = fba.get_biochemistry({});
-        var wsAJAX = kbws.list_workspace_objects({workspace: ws, type:"Media"})
-
-        panel_body.append('<p class="muted loader-table"> \
-                                  <img src="assets/img/ajax-loader.gif"> loading...</p>')
-
-        $.when(wsAJAX).done(function(data){
-            var dataList = formatObjs(data);
-            var labels = ["id", "abbrev", "formula", "charge", "deltaG", "deltaGErr", "name", "aliases"];
-            var cols = getColumnsByLabel(labels);
-            tableSettings.aoColumns = cols;
-            panel_body.append('<table id="media-table2" class="table table-striped table-bordered"></table>')
-            var table = $('#media-table2').dataTable(tableSettings);
-            table.fnAddData(dataList);
-
-            $('.loader-table').remove()
-        });
+        var dataList = formatObjs(data);
+        var labels = ["id", "abbrev", "formula", "charge", "deltaG", "deltaGErr", "name", "aliases"];
+        var cols = getColumnsByLabel(labels);
+        tableSettings.aoColumns = cols;
+        panel_body.append('<table id="media-table2" class="table table-striped table-bordered"></table>')
+        var table = $('#media-table2').dataTable(tableSettings);
+        table.fnAddData(dataList);
 
         function ws_list(count) {
             var ws = []
@@ -63,12 +42,15 @@ $.KBWidget({
         }
 
         function formatObjs(media_meta) {
+            console.log(media_meta)
+            var media_list = [];
             for (var i in media_meta) {
-                var media = media_meta[i];
+                var media = media_meta[i].slice();
                 media[0] = '<a class="media-click" data-media="'+media[0]+'">'
                             +media[0]+'</a>'
+                media_list.push(media);
             }
-            return media_meta;
+            return media_list;
         }
 
         function getColumnsByLabel(labels) {

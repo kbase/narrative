@@ -13,7 +13,6 @@ $.KBWidget({
         var ws = options.ws;        
 
         var fba = new fbaModelServices('http://140.221.85.73:4043');
-
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
         var panel = self.$elem.kbasePanel({title: 'Media Info', subText: media})
@@ -103,8 +102,7 @@ $.KBWidget({
 
 
            });
-
-
+    
 
             container.append('<a class="btn btn-primary save-to-ws-btn">Save to a workspace -></a>');
             events();
@@ -137,6 +135,11 @@ $.KBWidget({
                     minflux: [maxflux]
 
                 };
+
+                container.append('<div id="save-to-ws"></div>')
+                var test = $('#save-to-ws').kbaseSimpleWSSelect({defaultWS:ws, auth: token});
+                test.show();
+
 
                 self.trigger('saveToWSClick', newmedia);
             });

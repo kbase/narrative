@@ -279,6 +279,9 @@
             element.off('click dblclick keydown keyup keypress focus');
         },
 
+        /* --------------- END: MICROBES ----------------- */
+
+
         /**
          * Build 'run script' HTML form from
          * configuration data. See 

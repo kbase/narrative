@@ -47,6 +47,9 @@ class UploadException(Exception):
 class SubmitException(Exception):
     pass
 
+class WorkspaceException(Exception):
+    def __init__(self, err):
+        Exception.__init__("Workspace error: {}".format(err))
 
 ## Functions
 
@@ -99,8 +102,8 @@ def get_url_visualization(uri, id_):
     response = json.loads(r.text)
     try:
         merged_csv_node = response["data"]["tasks"][3]["outputs"]["merged_list_json"]["node"]
-    except Exception,e:
-        raise Exception("Could not parse out merged_csv_node: %s" % e)
+    except Exception as err:
+        raise Exception("Parsing merged_csv_node: {}. Response: {}", err, response)
     url_viz = "http://140.221.85.95/gvisualize/%s" % merged_csv_node
     return url_viz
 
@@ -208,6 +211,7 @@ def main(ont_id="PO:0009005", gn_id='3899',
     _num_done, total_work = 0, 12
 
     # parameterize --dang
+    coex_args = {}
     coex_args['coex_filter'] = "-p {}".format(fltr_p)
     coex_args['coex_net'] = "-c {}".format(net_c)
     coex_args['coex_cluster'] = "-s {}".format(clust_s)
@@ -255,8 +259,8 @@ def main(ont_id="PO:0009005", gn_id='3899',
                   'type' : 'ExpressionDataSamplesMap', 
                   'data' : sample_data, 'workspace' : workspace_id,
                   'auth' : token})
-    except Exception as e:
-        raise Exception("Could not parse out merged_csv_node: {}".format(e))
+    except Exception as err:
+        raise WorkspaceException("Storing expression data", err)
         #print "Err store error...\n"
         #sys.exit(1)
 
@@ -558,8 +562,7 @@ def main(ont_id="PO:0009005", gn_id='3899',
 
 
 # Entry point from IPython
-def run(params, quiet=True):
-    from IPython.core.display import HTML
+def run_real(params, quiet=True):
     if quiet:
         # disable logging
         _log.setLevel(logging.CRITICAL - 1)
@@ -578,11 +581,17 @@ def run(params, quiet=True):
     p.update(dict(token=os.environ['KB_AUTH_TOKEN'],
                   workspace_id=os.environ['KB_WORKSPACE_ID']))
     obj_id = main(**p)
-    print('<a href="#">{}</a>'.format(obj_id))
-    return obj_id
+    print(obj_id)
+    return 0
+
+def run_debug(params,**kw):
+    print("PO:0001016.g3899.filtered.edge_net")
+
+run = run_debug
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 # DATA
 

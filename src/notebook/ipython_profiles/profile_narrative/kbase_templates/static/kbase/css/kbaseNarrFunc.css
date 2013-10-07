@@ -124,7 +124,7 @@
 }
 /* grey out the form while running */
 .kb-cell-run.running form {
-    opacity: 0.4;
+    opacity: 0.6;
 }
 /* progress "meter" */
 .kb-cell-progress {

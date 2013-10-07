@@ -161,6 +161,8 @@
                     config = this.plantsRunConfig;
                     // function to build the code which is executed
                     command_builder = this.plantsRunCommand();
+                    // function to handle the result data
+                    this.result_handler = this.plantsCreateOutput;
                     break;
             }
             var content = this._buildRunForm(config);
@@ -232,6 +234,24 @@
                         "coex_network_ws", params);
             }
         },
+        /** 
+         * Create the output of the demo in the area given by 'element'.
+         */
+        plantsCreateOutput: function(element, text) {
+            var oid = text.trim();
+            var token = $("#login-widget").kbaseLogin("session","token");
+            var full_id = this.ws_id + "." + oid;
+            console.debug("ForceDirectedNetwork ID="+full_id);
+            element.ForceDirectedNetwork({
+                workspaceID: this.ws_id + "." + oid,
+                token: token
+            });
+            // Make the element a little bigger
+            element.css({margin: '-10px'});
+            // Disable most actions on this element
+            element.off('click dblclick keydown keyup keypress focus');
+        },
+
         /* -------------- END: PLANTS ---------------------- */
 
         /**
@@ -362,15 +382,6 @@
          */
         _handle_execute_reply: function (content) {
             console.debug("Done running the function", content);
-            if (false) {
-                // Transform output into a new cell
-                if (json.text != "" && json.text != undefined) {
-                    this._addOutputCell(json.text);
-                }
-                else if (json.html != "" && json.html != undefined) {
-                    this._addOutputCell(json.html);
-                }
-            }
             this._showProgress("DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
@@ -401,9 +412,9 @@
             return;
             //this.clear_output(content.stdout, content.stderr, content.other);
         },
+
         /**
          * @method _handle_output
-         * @private
          */
         _handle_output: function (msg_type, content) {
             // copied from outputarea.js
@@ -411,7 +422,7 @@
                 this._buf += content.data;
                 var lines = this._buf.split("\n");
                 var offs = 0, done = false, self = this;
-                var not_progress = "";
+                var result = "";
                 $.each(lines, function(index, line) {
                     if (!done) {
                         if (line.length == 0) {
@@ -439,10 +450,10 @@
                             // No progress marker on non-empty line => final output of program
                             else {
                                 // save the line
-                                not_progress += line;
+                                result += line;
                                 // all but the last line should have \n appended
                                 if (index < lines.length - 1) {
-                                    not_progress += "\n";
+                                    result += "\n";
                                 }
                             }
                         }
@@ -452,13 +463,14 @@
                     // if we found progress markers, trim processed prefix from buffer
                     this._buf = this._buf.substr(offs, this._buf.length - offs);
                 }
-                if (not_progress.length > 0) {
-                    this._addOutputCell(not_progress);
+                if (result.length > 0) {
+                    var element = this._addOutputCell();
+                    this.result_handler(element, result);
                     this._buf = "";
                 }
-            }    
-            return;
+            }
         },
+
         /**
          * @method _show_progress
          * @private
@@ -483,6 +495,7 @@
                 this.element.removeClass('running');
             }
         },
+
         /**
          * Add a new cell for output of the script.
          *
@@ -493,19 +506,19 @@
          *
          * @method _addOutputCell
          * @private
+         * @return id of <div> inside cell where content can be placed
          */
-         _addOutputCell: function(text) {
-            console.debug("Output cell content:", text);
-            if (!text) return;
+         _addOutputCell: function() {
             var nb = IPython.notebook;
             var cell = nb.insert_cell_at_bottom('markdown');
-            // by surrounding with div's we guarantee that markdown
-            // sees this as HTML content
-            var content = "<div>\n" + text + "\n</div>";
+            eid = this._uuidgen();
+            var content = "<div id='" + eid + "'></div>";
             cell.set_text(content);
             cell.rendered = false; // force a render
             cell.render();
+            return $('#' + eid);
          },
+
         /** Not really used right now. */
         convert_mime_types: function (json, data) {
             if (data === undefined) {
@@ -539,6 +552,34 @@
         },
 
         /* ------------------------------------------------------ */
+        /* Accessors */
+
+        workspace : function(key, value) {
+            return this._accessor('_workspace', key, value);
+        },
+
+        _accessor : function(name, key, value) {
+            if (this.data(name) == undefined) {
+                this.data(name, {});
+            }
+
+            var obj = this.data(name);
+
+            if (arguments.length == 2) {
+                obj[key] = value;
+            }
+
+            if (arguments.length > 0) {
+                return obj[key];
+            }
+            else {
+                return obj;
+            }
+        },
+
+
+
+        /* ------------------------------------------------------ */
 
         /**
          * Render the widgets.
@@ -562,6 +603,7 @@
             this.ws_user = un[0].substr(3, un[0].length - 3);
             // grab ws_id to give to, e.g., upload widget
             this.ws_id = this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
+            this.workspace("id", this.ws_id); // add to global accessor
             // create/refresh the upload dialog, which needs login to populate types
             this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
             //this.uploadWidget.createDialog(); -- redundant
@@ -584,8 +626,17 @@
         initLogging: function(level) {
             Logger.useDefaults();
             Logger.setLevel(level);
-        }
-
+        },
+        /**
+         * uuid generator
+         *
+         * @private
+         */
+         _uuidgen: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);});
+         }
 	});
 
 })( jQuery );

@@ -1,5 +1,7 @@
 body {
+
     padding-top: 70px;
+  height: 100%;
 }
 
 a:hover, 
@@ -19,8 +21,9 @@ rect:hover {
 
 
 #signin-button {
-    /* Note: don't put styling in javascript */
-    padding: 13px 15px 7px 10px !important; 
+    /* Note: don't put styling in javascript, Jim*/
+    padding: 15px 15px 7px 10px !important; 
+    margin: 0 7px 0 0;
 }
 
 #signin-button a {
@@ -54,5 +57,5 @@ table {  /* what's this about */
 }
 
 #selected-workspace {
-    margin: 15px 30px 15px 0px;
+    margin: 17px 14px 15px 0px;
 }

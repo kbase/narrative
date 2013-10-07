@@ -6,18 +6,18 @@
     top: 0 !important;    
 }*/
 
-
+body, html {
+  height: 100%;
+}
 
 
 /* Begin Workspace Selector */
 
-#ws-container {
-    position: relative;
+#ws-selector {
     height: 100%;
 }
 
 #ws-table-div {
-    height: 100%; 
     overflow: scroll;
 }
 

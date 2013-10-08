@@ -269,12 +269,14 @@
         genomeToFbaCommand: function() {
             var self = this;
             return function(params) {
-                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "microbes_workflow", params);
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "genome_to_fba", params);
             }
         },
 
         genomeToFbaCreateOutput: function(element, text) {
-            element.html("Genome to FBA output.");
+            console.log("got to fba output");
+            console.log(element);
+            element.html("Finished genome to fba");
             element.css({ margin: '-10px' });
             element.off('click dblclick keydown keyup keypress focus');
         },

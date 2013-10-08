@@ -15,12 +15,10 @@
     <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
 
     {{super()}}
-    <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrap-fileupload.min.css") }}" type="text/css" />
-    <!--<link rel="stylesheet" href="{{ static_url("kbase/css/kbase-workspace-mini.css") }}" type="text/css" />-->
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrativeWorkspace.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseUpload.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseData.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrap-fileupload.min.css") }}" type="text/css" />
 
     <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
 
@@ -44,6 +42,7 @@ class="notebook_app"
 
 {% block site %}
 <div id="main-container">
+    <div id="kb-ws-guard">Connecting to KBase..</div>
     <div id="content-column">
         <div id="menubar-container" class="container">
             <div id="menubar">
@@ -201,8 +200,8 @@ class="notebook_app"
                     </div>
                     <div id="pager-container" class="container"></div>
                 </div>
+                <div id="kb-ws-progress"></div>
             </div>
-
         </div>
     </div>
     <div id="left-column">
@@ -235,7 +234,7 @@ class="notebook_app"
                 <ul>
                     <li><a href="#" data-name="plants">Plants Co-expression</a>
                         <span data-name="Plants Co-expression" 
-                              data-help="Plants is good eats"
+                              data-help="KBase Coexpression network using dynamic visualization. Navigate among different experimental conditions, sets of genes and clusters over a variety of expression datasets from microarray to RNASeq available from microbes and plants"
                               class="kb-function-help">?</span>
                     </li>
                     <li><a href="#" data-name="microbes_1">Microbes-1</a>
@@ -337,17 +336,16 @@ class="notebook_app"
 <!-- inserted KBase Javascript below -->
 <script src="{{ static_url("kbase/js/jquery.cookie.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
-<!-- <script src="{{ static_url("kbase/js/kbase.min.js") }}"  type="text/javascript" charset="utf-8"></script> -->
 <script src="{{ static_url("kbase/js/widgets/kbwidget.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbaseLogging.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/workspaceService.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/kbase.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseLogin.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceData.js") }}" type="text/javascript" charset="utf-8"></script>
-
+<script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
 {% endblock %}

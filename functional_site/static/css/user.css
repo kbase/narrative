@@ -1,10 +1,6 @@
 html, body {
 	height: 100%;
 }
-body {
-	padding-top: 75px;
-	font-size: 14px;
-}
 
 #login_form {
 	margin-bottom: 10px;

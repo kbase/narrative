@@ -9,16 +9,10 @@ __version__ = '0.1'
 
 ## Imports
 
-from biokbase.auth import Token
-from biokbase.workspaceService.Client import workspaceService
-from biokbase.ExpressionServices.ExpressionServicesClient import ExpressionServices
-from biokbase.idserver.client import IDServerAPI
-from biokbase.cdmi.client import CDMI_API
-from biokbase.OntologyService.Client import Ontology
-
 # system
 import json
 import logging
+import os
 from string import Template
 import sys
 import time
@@ -27,6 +21,13 @@ import uuid
 import requests
 import os
 import urllib2
+# package
+from biokbase.auth import Token
+from biokbase.workspaceService.Client import workspaceService
+from biokbase.ExpressionServices.ExpressionServicesClient import ExpressionServices
+from biokbase.idserver.client import IDServerAPI
+from biokbase.cdmi.client import CDMI_API
+from biokbase.OntologyService.Client import Ontology
 
 ## Configure logging
 
@@ -46,8 +47,14 @@ class UploadException(Exception):
 class SubmitException(Exception):
     pass
 
+class WorkspaceException(Exception):
+    def __init__(self, err):
+        Exception.__init__("Workspace error: {}".format(err))
 
 ## Functions
+
+def print_progress(stage, completed, total):
+    print("#{},{:d},{:d}".format(stage, completed, total))
 
 def get_node_id(node, nt = "GENE"):
     if not node in ugids.keys() :
@@ -95,8 +102,8 @@ def get_url_visualization(uri, id_):
     response = json.loads(r.text)
     try:
         merged_csv_node = response["data"]["tasks"][3]["outputs"]["merged_list_json"]["node"]
-    except Exception,e:
-        raise Exception("Could not parse out merged_csv_node: %s" % e)
+    except Exception as err:
+        raise Exception("Parsing merged_csv_node: {}. Response: {}", err, response)
     url_viz = "http://140.221.85.95/gvisualize/%s" % merged_csv_node
     return url_viz
 
@@ -175,22 +182,22 @@ for file_type, file_name in files.iteritems():
         "sessionID": sessionID
     }
 
-coex_args = dict(
-    coex_filter="-m anova -n 100",
-    coex_net="-c 0.75",
-    coex_cluster2="-c hclust -n simple")
-
-coex_filter_args = "-i " + files['expression'] + " -s " + files['sample_id'] + " -o " +files_rst['expression_filtered'] + " -m anova -n 100"
-coex_net_args = "-i " + files_rst['expression_filtered'] +  " -o " +files_rst['edge_net'] + " -c 0.75 "
+#coex_filter_args = "-i " + files['expression'] + " -s " + files['sample_id'] + " -o " +files_rst['expression_filtered'] + " -m anova -n 100"
+#coex_net_args = "-i " + files_rst['expression_filtered'] +  " -o " +files_rst['edge_net'] + " -c 0.75 "
 
 ugids = {}
 nodes = []
+
+def gnid(s):
+    return s if s.startswith('kb|g.') else 'kb|g.' + s
+
 ## MAIN ##
 
 def main(ont_id="PO:0009005", gn_id='3899',
-         fltr_m='anova', fltr_n='100',
+         fltr_m='anova', fltr_n='100', fltr_p='0.05',
          net_c='0.75',
-         clust_c='hclust', clust_n='simple'):
+         clust_c='hclust', clust_n='simple', clust_s='100',
+         token=None, workspace_id=None):
     """Create a narrative for co-expression network workflow
 
     1. User uploads multiple files to shock and remembers shock node IDs
@@ -201,27 +208,30 @@ def main(ont_id="PO:0009005", gn_id='3899',
     Modifications (dan gunter):
     - add parameters
     """
+    _num_done, total_work = 0, 12
 
     # parameterize --dang
-    coex_args['coex_filter'] = "-m {} -n {}".format(fltr_m, fltr_n)
+    coex_args = {}
+    coex_args['coex_filter'] = "-p {}".format(fltr_p)
     coex_args['coex_net'] = "-c {}".format(net_c)
-    coex_args['coex_cluster'] = "-c {} -n {}".format(clust_c, clust_n)
+    coex_args['coex_cluster'] = "-s {}".format(clust_s)
 
     ##
     # 1. Get token
     ## 
-
     _log.info("Get auth token")
     #aconf = {"username" :'kbasetest', "password" :'@Suite525'}
     #auth = Token(aconf)
-    token = 'un=kbasetest|tokenid=0ff5667c-2ae0-11e3-88f8-12313809f035|expiry=1412198758|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/105f50b4-2ae0-11e3-88f8-12313809f035|sig=a288a0e941120509d3ee1a8ce091160b71f0a61a0731ccf95cc7655266167c9b85b64356f8cec48d67164a55bec1f92074f09367f936e5dac1119744ff2d1c315174fa38285d4e3be612c9cbb83c66242f13a790610eef701e31cb9213d0c48304b9a68d40d3e8f77c8b67f8f97e4d1ec49de10f3c7c8648985354349fb8ea85';
+    #token = 'un=kbasetest|tokenid=0ff5667c-2ae0-11e3-88f8-12313809f035|expiry=1412198758|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/105f50b4-2ae0-11e3-88f8-12313809f035|sig=a288a0e941120509d3ee1a8ce091160b71f0a61a0731ccf95cc7655266167c9b85b64356f8cec48d67164a55bec1f92074f09367f936e5dac1119744ff2d1c315174fa38285d4e3be612c9cbb83c66242f13a790610eef701e31cb9213d0c48304b9a68d40d3e8f77c8b67f8f97e4d1ec49de10f3c7c8648985354349fb8ea85';
 
     ##
     # 2. Get expression data
     ## 
+    _num_done += 1
+    print_progress("Get expression data", _num_done, total_work)
 
     _log.info("Get expression data")
-    workspace_id = 'coexpr_test'
+    #workspace_id = 'coexpr_test'
     edge_object_id = ont_id + ".g" + gn_id +".filtered.edge_net"
     clust_object_id = ont_id+ ".g" + gn_id +".filtered.clust_net"
     edge_core_id = "ws//" +workspace_id+ "/" +edge_object_id
@@ -232,13 +242,15 @@ def main(ont_id="PO:0009005", gn_id='3899',
 
 
     exprc = ExpressionServices(URLS.expression)
-    sample_ids = exprc.get_expression_sample_ids_by_ontology_ids([ont_id],'and',"kb|g."+gn_id, 'microarray', 'N');
+    sample_ids = exprc.get_expression_sample_ids_by_ontology_ids([ont_id],'and',gnid(gn_id), 'microarray', 'N');
     sample_data = exprc.get_expression_samples_data(sample_ids);
     
     
     ##
     # 3. Store expression in workspace
     ## 
+    _num_done += 1
+    print_progress("Store expression in workspace", _num_done, total_work)
 
     _log.info("Store expression data in workspace")
     wsc = workspaceService(URLS.workspace)
@@ -247,14 +259,16 @@ def main(ont_id="PO:0009005", gn_id='3899',
                   'type' : 'ExpressionDataSamplesMap', 
                   'data' : sample_data, 'workspace' : workspace_id,
                   'auth' : token})
-    except Exception as e:
-        raise Exception("Could not parse out merged_csv_node: {}".format(e))
+    except Exception as err:
+        raise WorkspaceException("Storing expression data", err)
         #print "Err store error...\n"
         #sys.exit(1)
 
     ##
     # 4. Download expression object from workspace
     ##
+    _num_done += 1
+    print_progress("Download expression object from workspace", _num_done, total_work)
 
     _log.info("Download expression data from workspace")
     lsamples = wsc.get_object({'id' : ont_id + ".g" + gn_id, 
@@ -293,6 +307,8 @@ def main(ont_id="PO:0009005", gn_id='3899',
     # 5. Run coex_filter <-- this step can be replaced with awk job
     ##
     # os.system("coex_filter " + coex_filter_args)
+    _num_done += 1
+    print_progress("Submit coexpression filter to AWE", _num_done, total_work)
 
 
     _log.info("Run coex_* tools")
@@ -312,11 +328,18 @@ def main(ont_id="PO:0009005", gn_id='3899',
     subst.update(coex_args)
     subst.update(dict(shock_uri=URLS.shock, session_id=sessionID))
     awe_job_str = Template(AWE_JOB).substitute(subst)
-
     # Submit job
     job_id = submit_awe_job(URLS.awe, awe_job_str)
+    # record provenance
+    awe_job_dict = json.loads(awe_job_str)
+    coex_filter_args = awe_job_dict['tasks'][0]['cmd']['args']
+    coex_net_args = awe_job_dict['tasks'][1]['cmd']['args']
+    coex_clust_args = awe_job_dict['tasks'][2]['cmd']['args']
 
     # Wait for job to complete
+    _num_done += 1
+    print_progress("Wait for AWE coexpression job to complete", _num_done, total_work)
+
     _log.info("job.begin")
     while 1:
         time.sleep(5)
@@ -341,6 +364,8 @@ def main(ont_id="PO:0009005", gn_id='3899',
     ##
     # 6. Upload filtered output back into Workspace
     ##
+    _num_done += 1
+    print_progress("Upload filtered output into workspace", _num_done, total_work)
 
     # 6.1 get the reference object
     lsamples = wsc.get_object({'id' : ont_id + ".g" + gn_id, 
@@ -388,6 +413,8 @@ def main(ont_id="PO:0009005", gn_id='3899',
     # Note : this step clould be started from already saved coex filtered object
     # In that case we just need to add download and converting again back to csv
     ##
+    _num_done += 1
+    print_progress("Run coex_net and coex_clust", _num_done, total_work)
     
     #os.system("coex_net " + coex_net_args);
     #$run_output = `coex_clust2 $coex_clust_args`; # on test machine, it's not working due to single core (requires at least two cores)
@@ -408,14 +435,17 @@ def main(ont_id="PO:0009005", gn_id='3899',
     datasets = [];
 
     # 8.2 generate Networks datasets
+    _num_done += 1
+    print_progress("Generate networks datasets", _num_done, total_work)
+
     datasets = [ 
       {
         'networkType' : 'FUNCTIONAL_ASSOCIATION',
-        'taxons' : [ "kb|g." + gn_id ],
+        'taxons' : [ gnid(gn_id) ],
         'sourceReference' : 'WORKSPACE',
         'name' : edge_core_id,
         'id' : edge_ds_id,
-        'description' : "Coexpression network object " + ont_id+  " and kb|g." + gn_id + " filtered by coex_net " + coex_filter_args,
+        'description' : "Coexpression network object " + ont_id+  " and " + gnid(gn_id) + " filtered by coex_net " + coex_filter_args,
         'properties' : { 
           'original_data_type' : 'workspace',
           'original_data_id' : "ws://" + workspace_id + "/" + ont_id +".g" + gn_id + ".filtered",
@@ -425,11 +455,11 @@ def main(ont_id="PO:0009005", gn_id='3899',
       },
       {
         'networkType' : 'FUNCTIONAL_ASSOCIATION',
-        'taxons' : [ "kb|g." + gn_id ],
+        'taxons' : [ gnid(gn_id) ],
         'sourceReference' : 'WORKSPACE',
         'name' : clust_core_id,
         'id' : clust_ds_id,
-        'description' : "Coexpression network object " + ont_id+  " and kb|g." + gn_id + " filtered by coex_net " + coex_filter_args,
+        'description' : "Coexpression network object " + ont_id+  " and " + gnid(gn_id) + " filtered by coex_net " + coex_filter_args,
         'properties' : { 
           'original_data_type' : 'workspace',
           'original_data_id' : "ws://" + workspace_id + "/" + ont_id +".g" + gn_id + ".filtered",
@@ -441,6 +471,9 @@ def main(ont_id="PO:0009005", gn_id='3899',
 
 
     # 8.3 process coex network file
+    _num_done += 1
+    print_progress("Process coexpression network file", _num_done, total_work)
+
     #cnf = open(files_rst['edge_net']);
     cnf = urllib2.urlopen(download_urls[files_rst['edge_net']]);
     cnf.readline(); # skip header
@@ -463,6 +496,8 @@ def main(ont_id="PO:0009005", gn_id='3899',
   
           
     # 8.4 process coex cluster file
+    _num_done += 1
+    print_progress("Process coexpression cluster file", _num_done, total_work)
     #cnf = open(files_rst['cluster']);
     cnf = urllib2.urlopen(download_urls[files_rst['cluster']]);
     cnf.readline(); # skip header
@@ -485,6 +520,9 @@ def main(ont_id="PO:0009005", gn_id='3899',
   
     
     # 8.5 fill annotations
+    _num_done += 1
+    print_progress("Fill annotations", _num_done, total_work)
+
     idc = IDServerAPI("http://kbase.us/services/idserver")
     cdmic = CDMI_API("http://kbase.us/services/cdmi_api")
     oc  = Ontology("http://kbase.us/services/ontology_service") 
@@ -512,6 +550,9 @@ def main(ont_id="PO:0009005", gn_id='3899',
     }
 
     # 8.7 Store results object into workspace
+    _num_done += 1
+    print_progress("Store result object into workspace", _num_done, total_work)
+
     wsc.save_object({'id' : edge_object_id, 
                      'type' : 'Networks', 
                      'data' : net_object, 'workspace' : workspace_id,
@@ -521,25 +562,36 @@ def main(ont_id="PO:0009005", gn_id='3899',
 
 
 # Entry point from IPython
-def run(params, quiet=True):
+def run_real(params, quiet=True):
     if quiet:
         # disable logging
         _log.setLevel(logging.CRITICAL - 1)
     # parse params
     p = {
-        'fltr_n': params['Filter.-n'],
-        'fltr_m': params['Filter.-m'],
-        'gn_id': params['Filter.gene_id'],
-        'ont_id': params['Filter.ontology_id'],
-        'net_c': params['Network.-c'],
-        'clust_n': params['Cluster.-n'],
-        'clust_c': params['Cluster.-c']
+        #'fltr_n': params['Filter.-n'],
+        #'fltr_m': params['Filter.-m'],
+        'fltr_p': params['Filter.p-value'],
+        'gn_id': params['Identifiers.Genome'],
+        'ont_id': params['Identifiers.Ontology'],
+        'net_c': params['Network.Pearson cutoff'],
+        #'clust_n': params['Cluster.-n'],
+        #'clust_c': params['Cluster.-c']
+        'clust_s': params['Cluster.Number of modules']
     }
+    p.update(dict(token=os.environ['KB_AUTH_TOKEN'],
+                  workspace_id=os.environ['KB_WORKSPACE_ID']))
     obj_id = main(**p)
-    print('<a href="#">{}</a>'.format(obj_id))
+    print(obj_id)
+    return 0
+
+def run_debug(params,**kw):
+    print("PO:0001016.g3899.filtered.edge_net")
+
+run = run_debug
 
 if __name__ == '__main__':
     sys.exit(main())
+
 
 # DATA
 
@@ -556,7 +608,7 @@ AWE_JOB = """
     "tasks": [
         {
             "cmd": {
-                "args": "-i @data_csv --output=data_filtered_csv -m anova -n 200 --sample_index=@sample_id_csv  -u n -r y -d y", 
+                "args": "-i @data_csv --output=data_filtered_csv -m anova -n 200 --sample_index=@sample_id_csv  -u n -r y -d y $coex_filter", 
                 "description": "filtering", 
                 "name": "coex_filter"
             }, 
@@ -582,7 +634,7 @@ AWE_JOB = """
         },
         {
             "cmd": {
-                "args": "-i @data_filtered_csv -o net_edge_csv -m simple -t edge -c 0.75 -r 0.8 -k 40 -p 50", 
+                "args": "-i @data_filtered_csv -o net_edge_csv -m simple -t edge -r 0.8 -k 40 -p 50 $coex_net", 
                 "description": "coex network", 
                 "name": "coex_net"
             }, 
@@ -604,7 +656,7 @@ AWE_JOB = """
         },
         {
             "cmd": {
-                "args": "-i @data_filtered_csv -o module_csv -s 100 -c hclust -n simple -r 0.8 -k 40 -p 50 -d 0.99", 
+                "args": "-i @data_filtered_csv -o module_csv -c hclust -n simple -r 0.8 -k 40 -p 50 -d 0.99 $coex_cluster", 
                 "description": "clustering", 
                 "name": "coex_cluster2"
             }, 

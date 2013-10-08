@@ -5,43 +5,56 @@
 
 (function( $ ) {
 
+    var narr_ws = null;
+
     /**
-     * Wait for IPython notebook to exist.
+     * Connecting to KBase..
      */
-    $(function() {
-        console.debug("waitForIPython.begin");
-        if (typeof IPython == 'undefined' ||
-            typeof IPython.notebook == 'undefined' ||
-            typeof IPython.notebook.metadata == 'undefined') {
-            setTimeout(this._waitForIpython, 300);
+    var kbaseConnecting = function() {
+        console.debug("Connecting.begin");
+        $("#main-container").addClass("pause");
+        $("#kb-ws-guard").addClass("pause");
+        console.debug("Connecting.end");
+    };
+
+    /** Once connected */
+    var kbaseConnected = function() {
+        console.debug("kbaseConnected!");
+        $('#main-container').removeClass('pause');
+        $('#kb-ws-guard').removeClass('pause').css("display", "none");
+        if (narr_ws == null) {
+            var $ws = $('#kb-ws');
+            narr_ws = $ws
+                .kbaseNarrativeWorkspace({
+                  loadingImage: "/static/kbase/images/ajax-loader.gif",
+                  controlsElem: $ws.find('.kb-controls'),
+                  tableElem: $ws.find('.kb-table')
+            });
         }
-        console.debug("waitForIPython.end");
-    });
+        var token = $("#login-widget").kbaseLogin("session", "token");
+        narr_ws.loggedIn(token);
+    };
+    
     /**
      * main function.
      */
     $(function() {
+
+        kbaseConnecting();
+
         $(document).on('loggedIn.kbase', function(event, token) {
-            console.debug("logged in");
-            narrativeWsWidget.loggedIn(token);
+            kbaseConnected();
         });
 
         $(document).on('loggedOut.kbase', function(event, token) {
-            console.debug("logged out")
-            narrativeWsWidget.loggedOut(token);
-        });
-        var $ws = $('#kb-ws');
-        var narrativeWsWidget = $ws
-            .kbaseNarrativeWorkspace({
-              loadingImage: "/static/kbase/images/ajax-loader.gif",
-              controlsElem: $ws.find('.kb-controls'),
-              tableElem: $ws.find('.kb-table')
+            narr_ws.loggedOut(token);
+            kbaseConnecting();
         });
 
         var token = $("#login-widget").kbaseLogin("session", "token");
         if (token) {
-            console.debug("auth token",token);
-            narrativeWsWidget.loggedIn(token);
+            console.debug("Authorization token found");
+            kbaseConnected();
         }
     });
 

@@ -132,6 +132,7 @@
                         }
                     });
                     self.network = network;
+                    viewport.renderer(network);
                     network.setData(data);
                     network.render();
 
@@ -205,12 +206,14 @@
                 }
             widget.network.update();
         })
+        var button = $("<div/>", {
+            class: "btn btn-default btn-sm dropdown-toggle",
+            "data-toggle": "dropdown"
+        }).text("Data Set ").append($("<span/>", { class: "caret"}))
+            .dropdown();
         wrapper
-            .append($("<div/>", {
-                class: "btn btn-default btn-sm dropdown-toggle",
-                "data-toggle": "dropdown"
-            }).text("Data Set ").append($("<span/>", { class: "caret"})))
-            .append(list);
+            .append(button)
+            .append(list)
         $container.prepend(wrapper);
     }
     

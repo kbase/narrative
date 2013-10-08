@@ -27,7 +27,7 @@
  * @param {String|Number} options.minHeight
  * A minimum height for the widget
  */
-(function($) {
+(function ($) {
     var URL_ROOT = "http://140.221.84.142/objects/coexpr_test/Networks";
     var WS_URL   = "http://kbase.us/services/workspace_service/";
     $.KBWidget({
@@ -47,6 +47,10 @@
             KBVis.require(["renderers/network", "util/viewport", "underscore"],
             function (Network, Viewport, _) {
                 self.minStrength = self.options.minStrength;
+                var datasetFilter = function () { return true; };
+                var goLink = _.template(
+                    "http://www.ebi.ac.uk/QuickGO/GTerm?id=<%= id %>"
+                );
                 var viewport = new Viewport({
                     parent: self.$elem,
                     title: "Network",
@@ -56,7 +60,7 @@
                 var toolbox = viewport.toolbox();
                 viewport.addTool($("<a/>", { href: "#" }).html("Click me!"));
                 addSlider(toolbox, self);
-                addSearch(toolbox);
+                addSearch(toolbox, self);
                 
                 var fetchAjax = function () { return 1; };
                 if (self.options.minHeight) {
@@ -91,21 +95,50 @@
                     var network = new Network({
                         element: viewport,
                         dock: false,
-                        nodeLabel: { type: "GENE" },
+                        nodeLabel: { type: "CLUSTER" },
                         infoOn: "hover",
                         edgeFilter: function (edge) {
                             return edge.source != edge.target &&
-                            edge.strength >= minStrength;
+                                (edge.strength >= minStrength || edge.strength === 0) &&
+                                datasetFilter(edge);
+                        },
+                        nodeInfo: function (node, makeRow) {
+                            makeRow("Type", node.type);
+                            makeRow("KBase ID", link(node.entityId, "#"));
+                            if (node.type === "GENE" && node.userAnnotations !== undefined) {
+                                var annotations = node.userAnnotations;
+                                if (annotations.external_id !== undefined)
+                                    makeRow("External ID", link(annotations.external_id, "#"));
+                                if (annotations.functions !== undefined)
+                                    makeRow("Function", annotations.functions);
+                                if (annotations.ontologies !== undefined) {
+                                    var goList = $("<ul/>");
+                                    _.each(_.keys(annotations.ontologies), function (item) {
+                                        goList.append($("<li/>")
+                                            .append(link(item, goLink({ id: item }))));
+                                    });
+                                    makeRow("GO terms", goList);
+                                }
+                            }
+                        },
+                        searchTerms: function (node, indexMe) {
+                            indexMe(node.entityId);
+                            indexMe(node.kbid);
+                            if (node.userAnnotations !== undefined) {
+                                var annotations = node.userAnnotations;
+                                if (annotations.functions !== undefined)
+                                    indexMe(annotations.functions);
+                            }
                         }
                     });
                     self.network = network;
                     network.setData(data);
                     network.render();
 
-                    addDatasetDropdown(toolbox, data);
+                    addDatasetDropdown(toolbox, data, self);
                 });
+                return self;
             });
-            return self;
         }
     });
 
@@ -115,7 +148,7 @@
             id: "strength-slider",
             class: "btn btn-default tool"
         });
-        var slider = $("<div/>", { style: "min-width:70px" });
+        var slider = $("<div/>", { style: "min-width:70px;margin-right:5px" });
         wrapper
             .append($("<div/>", { class: "btn-pad" })
                 .append($("<i/>", { class: "icon-adjust" })))
@@ -127,7 +160,7 @@
            placement: "bottom"
         });
         slider.slider({
-            min: 0, max: 1, step: 0.05, value: 0.8,
+            min: 0, max: 1, step: 0.01, value: 0.8,
             slide: function (event, ui) {
                 widget.minStrength = ui.value;
                 widget.network.update();
@@ -137,29 +170,40 @@
         });
     }
 
-    function addSearch($container) {
+    function addSearch($container, widget) {
         var wrapper = $("<div/>", { class: "btn btn-default tool" });
         wrapper
             .append($("<div/>", { class: "btn-pad" })
-                .append($("<input/>", { type: "text", class: " input-xs" })))
+                .append($("<input/>", {
+                    id: "network-search", type: "text", class: " input-xs"
+                })))
             .append($("<div/>", { class: "btn-pad" })
                 .append($("<i/>", { class: "icon-search" })));
         $container.prepend(wrapper);
+        $("#network-search").keyup(function () {
+            widget.network.updateSearch($(this).val());
+        });
     }
 
-    function addDatasetDropdown($container, data) {
+    function addDatasetDropdown($container, data, widget) {
         var wrapper = $("<div/>", { class: "btn-group tool" });
         var list = $("<ul/>", { class: "dropdown-menu", role: "menu" });
+        list.append(dropdownLink("All data sets", "", "all"));
         _.each(data.datasets, function (ds) {
             var dsStr = ds.id.replace(/^kb.*\.ws\/\//, "");
-            list.append($("<li/>")
-                .append($("<a/>", {
-                    href: "#",
-                    "data-toggle": "tooltip",
-                    "data-container": "body",
-                    "title": ds.description,
-                    "data-original-title": ds.description
-                }).html(dsStr)));
+            list.append(dropdownLink(dsStr, ds.description, ds.id))
+        });
+        list.find("a").on("click", function (event) {
+            var id = $(this).data("value");
+            list.find("li").removeClass("active");
+            $(this).parent().addClass("active");
+            if (id == "all")
+                datasetFilter = function () { return true; };
+            else
+                datasetFilter = function (edge) {
+                    return edge.datasetId == id;
+                }
+            widget.network.update();
         })
         wrapper
             .append($("<div/>", {
@@ -169,7 +213,21 @@
             .append(list);
         $container.prepend(wrapper);
     }
-
+    
+    function dropdownLink(linkText, title, value) {
+        return $("<li/>")
+            .append($("<a/>", {
+                href: "#",
+                "data-toggle": "tooltip",
+                "data-container": "body",
+                "title": title,
+                "data-original-title": title,
+                "data-value": value
+            }).html(linkText));
+    }
+    function link(content, href, attrs) {
+        return $("<a/>", _.extend({ href: href }, attrs)).html(content);
+    }
 
     function transformNetwork(networkJson) {
         var json = {};

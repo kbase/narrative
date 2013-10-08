@@ -66,15 +66,13 @@
         get_kbase_cookie : function (field) {
 
             var chips = sessionStorage.getItem('kbase_session');
-            console.log(sessionStorage);
+
             if (chips != undefined) {
-            console.log(chips);
                 chips = JSON.parse(chips);
             }
             else {
                 chips = {};
             }
-            console.log(chips);
 
             return field == undefined
                 ? chips
@@ -242,8 +240,8 @@
                                 .addClass('btn btn-default')
                                 .addClass('btn-xs')
                                 .addClass('dropdown-toggle')
-                                .append($('<i></i>').addClass('icon-user'))
-                                .append($('<i></i>').addClass('icon-caret-down'))
+                                .append($('<span></span>').addClass('glyphicon glyphicon-user'))
+                                .append($('<span></span>').addClass('caret'))
                                 .bind('click',
                                 //$.proxy(
                                 function(e) {
@@ -264,19 +262,18 @@
                                         .css('border-bottom', '1px solid lightgray')
                                         .css('white-space', 'nowrap')
                                         .append(
-                                            $('<span></span>')
-                                        .css('white-space', 'nowrap')
-                                            .append('Signed in as ')
-
-                                        .append(
-                                            $('<a></a>')
-                                                .attr('id', 'loggedinuser_id')
-                                                .css('font-weight', 'bold')
-                                                .attr('href', 'https://gologin.kbase.us/account/UpdateProfile')
-                                                .attr('target', '_blank')
-                                                .css('padding-right', '0px')
-                                                .css('padding-left', '0px')
-                                        ))
+                                            $.jqElem('div')  //so as to style the link in blue.
+                                            .css('text-align', 'right')
+                                            .append(
+                                                $('<a></a>')
+                                                    .attr('id', 'loggedinuser_id')
+                                                    .css('font-weight', 'bold')
+                                                    .attr('href', 'https://gologin.kbase.us/account/UpdateProfile')
+                                                    .attr('target', '_blank')
+                                                    .css('padding-right', '0px')
+                                                    .css('padding-left', '0px')
+                                            )
+                                        )
                                 )
                                 .append(
                                     $('<li></li>')
@@ -368,7 +365,7 @@
                                             )
                                     )
                                     .append(
-                                        $('<input/>')
+                                        $('<input>')
                                             .attr('type', 'text')
                                             .attr('name', 'user_id')
                                             .attr('id', 'user_id')
@@ -386,7 +383,7 @@
                                             )
                                     )
                                     .append(
-                                        $('<input/>')
+                                        $('<input>')
                                             .attr('type', 'password')
                                             .attr('name', 'password')
                                             .attr('id', 'password')
@@ -795,39 +792,49 @@
                                             .append(
                                                 $('<div></div>')
                                                     .attr('class', 'form-group')
-                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
+                                                            .addClass('col-lg-2')
                                                             .attr('for', 'user_id')
                                                             .css('margin-right', '10px')
                                                             .append('Username:\n')
                                                     )
                                                     .append(
-                                                        $('<input/>')
-                                                            .attr('type', 'text')
-                                                            .attr('name', 'user_id')
-                                                            .attr('id', 'user_id')
-                                                            .attr('size', '20')
+                                                        $.jqElem('div')
+                                                        .addClass('col-lg-9')
+                                                        .append(
+                                                            $('<input>')
+                                                                .addClass('form-control')
+                                                                .attr('type', 'text')
+                                                                .attr('name', 'user_id')
+                                                                .attr('id', 'user_id')
+                                                                .attr('size', '20')
+                                                        )
                                                     )
                                             )
                                             .append(
                                                 $('<div></div>')
                                                     .attr('class', 'form-group')
-                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
+                                                            .addClass('col-lg-2')
                                                             .attr('for', 'password')
                                                             .css('margin-right', '10px')
                                                             .append('Password:\n')
                                                     )
                                                     .append(
-                                                        $('<input/>')
-                                                            .attr('type', 'password')
-                                                            .attr('name', 'password')
-                                                            .attr('id', 'password')
-                                                            .attr('size', '20')
+                                                        $.jqElem('div')
+                                                        .addClass('col-lg-9')
+                                                        .append(
+                                                            $('<input>')
+                                                                .addClass('form-control')
+                                                                .attr('type', 'password')
+                                                                .attr('name', 'password')
+                                                                .attr('id', 'password')
+                                                                .attr('size', '20')
+                                                        )
                                                     )
                                             )
                                     )
@@ -880,8 +887,7 @@
 
             $ld.dialogModal().on('shown.bs.modal',
                 function (e) {
-                console.log("IS SHOWNz!");
-                console.log(                        $(this).data('user_id'));
+
                     if ($(this).data('user_id').val().length == 0) {
                         $(this).data('user_id').focus();
                     }
@@ -931,10 +937,14 @@
 
                                 if (data.kbase_sessionid) {
 
-									//$.cookie('kbase_session',
-								    //	  'un=' + data.user_id
-									//	+ '|'
-									//	+ 'kbase_sessionid=' + data.kbase_sessionid);
+									if ($.cookie) {
+                                        $.cookie('kbase_session',
+                                              'unEQUALSSIGN' + data.user_id
+                                            + 'PIPESIGN'
+                                            + 'kbase_sessionidEQUALSSIGN' + data.kbase_sessionid
+                                            + 'PIPESIGN'
+                                            + 'token_idEQUALSSIGN' + data.kbase_sessionid);
+                                    }
 
                                     var cookieArray = [];
 
@@ -948,10 +958,8 @@
                                     var jsonARGS = JSON.stringify(args);
 
                                     sessionStorage.setItem('kbase_session', jsonARGS);
-                                    console.log(sessionStorage);
 
                                     this.populateLoginInfo(args);
-                                    console.log("ARGS");console.log(args);console.log(jsonARGS);
 
                                     this.trigger('loggedIn', this.get_kbase_cookie());
 

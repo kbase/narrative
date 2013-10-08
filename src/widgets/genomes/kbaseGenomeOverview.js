@@ -118,7 +118,6 @@
                                                           .on("click", 
                                                               function(event) {
                                                                   $(self.$elem.selector + " > select option:selected").each(function() {
-    //                                                                  console.log(event);
                                                                       self.trigger("showContig", { contig: $(this).attr("id"), event: event });
                                                                   })
                                                               })
@@ -164,7 +163,6 @@
         },
 
         rpcError: function(error) {
-            console.log("An error occurred: " + error);
         }
 
     });

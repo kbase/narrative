@@ -85,6 +85,7 @@ app.run(function ($rootScope) {
 	        login_callback: reload_window, logout_callback: reload_window});
 
 	    $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+        $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
 
 	    // global state object to store state
 	    state = new State();

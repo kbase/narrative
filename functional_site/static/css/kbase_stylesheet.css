@@ -190,6 +190,10 @@ input#search_terms{
     left: -.5em;
     font-size: 1em;
     margin-top: -3px;
+    background-image: url("../images/search.png");
+    background-size: 22px; 
+    background-repeat:no-repeat;
+    background-position:right center; 
 }
 span#searchspan{
     display: inline-block;

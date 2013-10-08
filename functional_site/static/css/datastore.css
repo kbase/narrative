@@ -84,14 +84,6 @@ nav[role="navigation"] input[type="text"] {
 }
 
 
-#search_terms {
-	width: 350px;
-	background-image: url("../images/search.png");
-	background-size: 22px; 
-	background-repeat:no-repeat;
-	background-position:right center; 
-}
-
 h1, h2 {
 	margin: 0;
 }

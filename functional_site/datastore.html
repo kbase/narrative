@@ -39,7 +39,7 @@
 			<div class="table_section container">
 				<div class="section_title row">
 					<div class="title">
-						<a href="#" data-toggle="collapse" data-target="#narratives_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Narratives&nbsp;&nbsp;&nbsp;<img id="narratives_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
+						<a href="#" data-toggle="collapse" data-target="#narratives_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Narratives&nbsp;&nbsp;&nbsp;<img id="narratives_loading" src="static/images/ajax-loader-blue.gif" style="display:none"></a>
 					</div>
 					<div class="col-md-2">
 						<button class="btn btn-primary btn-sm">new</button>
@@ -111,7 +111,7 @@
 			<div class="table_section container">
 				<div class="section_title row">
 					<div class="title">
-						<a href="#" data-toggle="collapse" data-target="#datasets_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Datasets&nbsp;&nbsp;&nbsp;<img id="datasets_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
+						<a href="#" data-toggle="collapse" data-target="#datasets_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Datasets&nbsp;&nbsp;&nbsp;<img id="datasets_loading" src="static/images/ajax-loader-blue.gif" style="display:none"></a>
 					</div>
 					<div class="col-md-2">
 						<button class="btn btn-primary btn-sm">upload</button>
@@ -126,7 +126,7 @@
 			<div class="table_section container">
 				<div class="section_title row">
 					<div class="title">
-						<a href="#" data-toggle="collapse" data-target="#projects_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Projects&nbsp;&nbsp;&nbsp;<img id="projects_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
+						<a href="#" data-toggle="collapse" data-target="#projects_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Projects&nbsp;&nbsp;&nbsp;<img id="projects_loading" src="static/images/ajax-loader-blue.gif" style="display:none"></a>
 					</div>
 					<div class="col-md-2 collapse in">
 						<button class="btn btn-primary btn-sm">manage projects</button>
@@ -134,7 +134,7 @@
 				</div>
 				<div id="projects_container" class="row collapse in">
 					<table id="projects_table" class="table table-striped table-bordered" cellpadding="0" cellspacing="0" border="0" >
-						<thead>
+						<thead id="project_table_header" style="display: none;">
 							<tr>
 								<th>&nbsp;</th>
 								<th>Name</th>
@@ -145,24 +145,8 @@
 								<th>Last modified</th>
 							</tr>
 						</thead>
-						<tbody>
-							<tr>
-								<td><input type="checkbox"></td>
-								<td>Thermopilae in the Southern Ocean</td>
-								<td>Jane Scientist</td>
-								<td>Will Smith and 3 others</td>
-
-								<td>09 Sep 2013 03:02:58</td>
-							</tr>
-							<tr>
-								<td><input type="checkbox"></td>
-								<td>Thermopilae in the Artic Ocean</td>
-
-								<td>Will Smith</td>
-								<td>You and 2 others</td>
-
-								<td>09 Sep 2013 03:02:58</td>
-							</tr>
+						<tbody id="projectTableRows">
+							
 						</tbody>
 					</table>
 				</div>
@@ -173,11 +157,14 @@
 		<script src="static/js/jquery-1.10.2.min.js"></script>
 		<script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
 		<script src="static/dataTables/1.9.4/js/jquery.dataTables.js"></script>
+		<script src="static/js/underscore.js"></script>
         <script src="static/js/jquery.cookie.min.js"></script>
         <script src="static/js/kbwidget.js"></script>
         <script src="static/js/kbasePrompt.js"></script>
         <script src="static/js/kbaseLogin.js"></script>
 		<script src="static/js/kbase.js"></script>
+		<script src="static/js/ICanHaz.min.js"></script>
+		<script src="static/js/projects.js"></script>
         <script src="static/js/datastore.js"></script>
 
 		<!-- HTML Templates -->
@@ -192,6 +179,20 @@
 		<li><a href="#">{{ username }}</a> asserts: "{{ assertion }}"</li>
 		{{/rows}}
 		</script>
+
+		<script id="project_table_rows" type="text/html">
+		{{#rows}}
+		<tr>
+			<td><input type="checkbox"></td>
+			<td>{{name}}</td>
+			<td>{{owner}}</td>
+			<td></td>
+
+			<td>{{date}}</td>
+		</tr>
+		{{/rows}}
+		</script>
+
 
     </body>
 </html>

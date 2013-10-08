@@ -128,6 +128,29 @@
     };
 
     function loadProjects() {
+        $("#projects_loading").show();
+        console.log("loading projects");
+        var projects = project.get_projects({
+            callback: function(results) {
+                var data = { rows: []};
+                _.each(results, function(workspace){
+                    console.log(workspace.id);
+                    console.log(workspace.owner);
+
+                    data.rows.push({
+                        "name": workspace.id,
+                        "owner": workspace.owner,
+                        "date": workspace.moddate
+                    }); 
+        
+                });
+                $("#project_table_header").show();
+                rows = ich.project_table_rows(data)
+                $('#projectTableRows').append(rows);
+
+                $("#projects_loading").hide();
+            }
+        });
 
     };
 

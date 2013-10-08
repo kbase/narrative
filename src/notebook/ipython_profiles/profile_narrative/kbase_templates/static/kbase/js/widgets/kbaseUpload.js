@@ -150,27 +150,23 @@
                     case "file":
                         // This uses Bootstrap file-upload, see: http://jasny.github.io/bootstrap/javascript.html#fileupload
                         // Input and buttons
-                        var $buttons = $('<span>').addClass('btn btn-file')
-                        var $input = $('<input type="file" id="upload_files" multiple>')
-                        $buttons.append($input);
-                        $control = $('<div>')
-                            .addClass('fileupload fileupload-new').attr('data-provides','fileupload');
-                        var $preview = $('<div>').addClass('uneditable-input span3">');
-                        $preview.append($('<i>').addClass('icon-file fileupload-exists'));
-                        $preview.append($('<span>').addClass('fileupload-preview'));
-                        $.each({'Select file': 'fileupload-new',
-                                'Change': 'fileupload-exists'}, function(bname, bclass) {
-                            var $btn = $('<span>').addClass(bclass).text(bname);
-                            $buttons.append($btn);
-                        });
-                        var $ia = $('<div>').addClass('input-append')
-                        $ia.append($preview);
-                        $ia.append($buttons);
-                        $control.append($ia);
+                        $control = $('<div/>').addClass('form-group kb-upload')
+                        $control.html('<div class="fileupload fileupload-new" data-provides="fileupload">' +
+                            '<div class="input-group">' +
+                                '<div class="form-control uneditable-input"><i class="icon-file fileupload-exists"></i> ' +
+                                    '<span class="fileupload-preview"></span>' +
+                                '</div>'+
+                                '<div class="input-group-btn">'+
+                                    '<a class="btn btn-default btn-file">'+
+                                        '<span class="fileupload-new">Select file</span>'+
+                                        '<span class="fileupload-exists">Change</span>'+
+                                        '<input type="file" class="file-input"/></a>'+
+                                    '<a href="#" class="btn btn-default fileupload-exists" data-dismiss="fileupload">Remove</a>'+
+                                '</div> </div> </div>');
                         break;
                     case "text":
                         $control = $('<input>').attr({type:'text', name: value.id,
-                            placeholder: value.placeholder}).addClass('input-xxlarge');
+                            placeholder: value.placeholder}).addClass('form-control');
                         // remember whether this value was modified by the user
                         $control.change(function() {
                             // count as modified if non-empty
@@ -180,7 +176,7 @@
                         that.desc_elem = $control;
                         break;
                     case "select":
-                        $control = $('<select>').attr('name', value.id);
+                        $control = $('<select>').attr('name', value.id).addClass("form-control");
                         var keys = [];
                         $.each(value.options, function(k,v){keys.push(v);})
                         keys.sort();
@@ -200,6 +196,7 @@
                 $frm.append($frm_grp);
             });
             // Add actions
+
             var $up_btn = $('<button>').addClass('btn btn-primary').text('Upload');
             var $cancel_btn = $('<button>').addClass('btn btn-link').text('Cancel');
             var $actions = $('<div>').addClass('form-actions');

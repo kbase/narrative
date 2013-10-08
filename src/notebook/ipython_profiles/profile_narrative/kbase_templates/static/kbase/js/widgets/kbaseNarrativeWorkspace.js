@@ -13,7 +13,7 @@
  */
 
 (function( $, undefined ) {
-	$.KBWidget({
+    $.KBWidget({
         name: "kbaseNarrativeWorkspace", 
         parent: "kbaseWidget",
 		version: "1.0.0",
@@ -29,7 +29,6 @@
         ws_id: null,
 
 		init: function(options) {
-            console.debug("kbaseNarrativeWorkspace options:", options);
 			this._super(options);
             this.initDataTable(options.tableElem);
             this.initControls(options.controlsElem);
@@ -83,7 +82,8 @@
             var $dlg = $('#kb-ws-upload-dialog');
             var opts = {$anchor: $('#' + dd_items.upload.id),
                         ws_parent: this};
-            this.uploadWidget = $dlg.kbaseUploadWidget(opts);
+            this.uploadWidget_dlg = $dlg //$dlg.kbaseUploadWidget;
+            this.uploadWidget_opts = opts;
             console.debug('initControls.end');
             return this;
         },
@@ -148,6 +148,7 @@
             var nb = IPython.notebook;
             this.kernel = nb.kernel; // stash current kernel
             var cell = nb.insert_cell_at_bottom('markdown');
+            this._cur_index = nb.ncells() - 1; // stash cell's index
             var command_builder = undefined;
             var config = {};
             var runner = this._runner(); 
@@ -160,10 +161,13 @@
                     config = this.plantsRunConfig;
                     // function to build the code which is executed
                     command_builder = this.plantsRunCommand();
+                    // function to handle the result data
+                    this.result_handler = this.plantsCreateOutput;
                     break;
             }
             var content = this._buildRunForm(config);
-            cell.set_text("<div class='kb-cell-run'>" + 
+            var cell_id = "kb-cell-" + this._cur_index;
+            cell.set_text("<div class='kb-cell-run' " + "id='" + cell_id + "'>" + 
                           "<h1>" + name + "</h1>" +
                           "<div class='kb-cell-params'>" +  
                           content + 
@@ -171,6 +175,7 @@
                           "</div>");
             cell.rendered = false; // force a render
             cell.render();
+            this.element = $("#" + cell_id);
             var $frm = $('div.kb-cell-run form');
             $frm.on("submit", function(event) {
                 event.preventDefault();
@@ -197,18 +202,25 @@
          * Input data for plants demo.
          */
         plantsRunConfig: {
+            'Identifiers': {
+                'Genome': '3899',
+                'Ontology': 'PO:0001016'
+            },
             'Filter': {
-                gene_id: '3899',
-                ontology_id: 'PO:0009025',
-                '-m': 'anova',
-                '-n': '100',
+                //'-m': 'anova',
+                //'-n': '100',
+                'p-value': '0.05',
+                '':'x',
             },
             'Network': {
-                '-c': '0.75',
+                'Pearson cutoff': '0.75',
+                '':'x'
             },
             'Cluster': {
-                '-c': 'hclust',
-                '-n': 'simple'
+                //'-c': 'hclust',
+                //'-n': 'simple'
+                'Number of modules': '50',
+                '':'x'
             }
         },
         /**
@@ -222,6 +234,24 @@
                         "coex_network_ws", params);
             }
         },
+        /** 
+         * Create the output of the demo in the area given by 'element'.
+         */
+        plantsCreateOutput: function(element, text) {
+            var oid = text.trim();
+            var token = $("#login-widget").kbaseLogin("session","token");
+            var full_id = this.ws_id + "." + oid;
+            console.debug("ForceDirectedNetwork ID="+full_id);
+            element.ForceDirectedNetwork({
+                workspaceID: this.ws_id + "." + oid,
+                token: token
+            });
+            // Make the element a little bigger
+            element.css({margin: '-10px'});
+            // Disable most actions on this element
+            element.off('click dblclick keydown keyup keypress focus');
+        },
+
         /* -------------- END: PLANTS ---------------------- */
 
         /**
@@ -236,11 +266,17 @@
             $.each(cfg, function(key, value) {
                 text += "<tr " + sbn + "><td " + sbn + ">" + key + "</td>";
                 $.each(value, function(key2, value2) { 
-                    text += "<td " + sbn + "><label>" + key2 + "</label>" + 
-                           "<input type='text' " + 
-                           "name='" + key + "." + key2 + "' " +
-                           "value='" + value2 + "'>"
-                           "</input></td>";
+                    if (key2 == '') {
+                        // this cell intentionally left blank
+                        text += "<td " + sbn + ">&nbsp;</td>";
+                    }
+                    else {
+                        text += "<td " + sbn + "><label>" + key2 + "</label>" + 
+                               "<input type='text' " + 
+                               "name='" + key + "." + key2 + "' " +
+                               "value='" + value2 + "'>"
+                               "</input></td>";
+                    }
                 });
                 text += "</tr>";
             });
@@ -257,6 +293,12 @@
             var cmd = "run";
             var code = "from " + pkg + " import " + module + "\n";
             code += "reload(" + module + ")\n"; // in case it changed
+            // hack to add in workspace id
+            if (this.ws_id === null) {
+                alert("Unable to run command: No active workspace!");
+                return "";
+            }
+            code += "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n";  
             code += "params = " + this._pythonDict(params) + "\n";
             code += module + "." + cmd + "(params)" + "\n";
             console.debug("CODE:", code);
@@ -277,8 +319,20 @@
                     'set_next_input': $.proxy(self._handle_set_next_input, self),
                     'input_request': $.proxy(self._handle_input_request, self)
                 };
-                // XXX: mark self widget as running.. and block other things from running..
-                //self.element.addClass("running");
+                self._buf = ""; // buffered output, see _handle_output()
+                self.element.addClass("running");
+                // Progress bar elements
+                var eoffs = self.element.position();
+                self.progressdiv = $('<div/>').addClass('progress progress-striped').css({
+                    'width': '400px', 'height': '20px'});
+                self.progressbar = $('<div/>').addClass('progress-bar progress-bar-success').attr({
+                    'role': 'progressbar', 'aria-valuenow': '0', 'aria-valuemin': '0', 'aria-valuemax': '100'})
+                    .css('width', '0%');
+                self.progressmsg = $('<p/>').addClass('text-success');
+                self.progressdiv.append(self.progressbar);
+                self.element.append(self.progressdiv);
+                self.element.append(self.progressmsg);
+                // activate progress dialog
                 var msg_id = self.kernel.execute(code, callbacks, {silent: true});
             };
         },
@@ -327,9 +381,9 @@
          * @private
          */
         _handle_execute_reply: function (content) {
-            console.debug("Done running the function");
+            console.debug("Done running the function", content);
+            this._showProgress("DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
-            //this.element.removeClass("running");
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
         },
         /**
@@ -345,6 +399,7 @@
          * @private
          */
         _handle_input_request: function (content) {
+            console.log("handle input request called");
             return;
             //this.output_area.append_raw_input(content);
         },
@@ -353,37 +408,94 @@
          * @private
          */
         _handle_clear_output: function (content) {
+            console.debug("handle clear ouput called");
             return;
             //this.clear_output(content.stdout, content.stderr, content.other);
         },
+
         /**
          * @method _handle_output
-         * @private
          */
         _handle_output: function (msg_type, content) {
             // copied from outputarea.js
-            var json = {};
-            json.output_type = msg_type;
             if (msg_type === "stream") {
-                json.text = content.data;
-                json.stream = content.name;
-            // The rest of this isn't really used
-            } else if (msg_type === "display_data") {
-                json = this.convert_mime_types(json, content.data);
-                json.metadata = this.convert_mime_types({}, content.metadata);
-            } else if (msg_type === "pyout") {
-                json.prompt_number = content.execution_count;
-                json = this.convert_mime_types(json, content.data);
-                json.metadata = this.convert_mime_types({}, content.metadata);
-            } else if (msg_type === "pyerr") {
-                json.ename = content.ename;
-                json.evalue = content.evalue;
-                json.traceback = content.traceback;
+                this._buf += content.data;
+                var lines = this._buf.split("\n");
+                var offs = 0, done = false, self = this;
+                var result = "";
+                $.each(lines, function(index, line) {
+                    if (!done) {
+                        if (line.length == 0) {
+                            offs += 1; // blank line, move offset
+                        }
+                        else {
+                            // 1st char hash is marker for progress line
+                            var progress = line.match(/^#/);
+                            // Found progress marker
+                            if (progress) {
+                                var items = line.substr(1, line.length - 1).split(",");
+                                // expect: .p,name-of-thing,done,total
+                                if (items.length == 3) {
+                                    self._showProgress(items[0], items[1], items[2]);
+                                    // will trim buffer to remove this
+                                    offs += line.length; 
+                                    if (index < lines.length - 1) {
+                                        offs += 1; // +1 for newline char
+                                    }
+                                }
+                                else {
+                                    done = true; // partial line; wait for more data
+                                }
+                            }
+                            // No progress marker on non-empty line => final output of program
+                            else {
+                                // save the line
+                                result += line;
+                                // all but the last line should have \n appended
+                                if (index < lines.length - 1) {
+                                    result += "\n";
+                                }
+                            }
+                        }
+                    }
+                });
+                if (offs > 0) {
+                    // if we found progress markers, trim processed prefix from buffer
+                    this._buf = this._buf.substr(offs, this._buf.length - offs);
+                }
+                if (result.length > 0) {
+                    var element = this._addOutputCell();
+                    this.result_handler(element, result);
+                    this._buf = "";
+                }
             }
-            // Transform output into a new cell
-            this._addOutputCell(json.text);
-            return;
         },
+
+        /**
+         * @method _show_progress
+         * @private
+         */
+        _showProgress: function(name, done, total) {
+            console.debug("Progress: '" + name + "': " + done + " / " + total);
+            var pct_done = 0;
+            if (name == 'DONE') {
+                this.progressmsg.text("Completed");
+                pct_done = 100;
+            }
+            else {
+                this.progressmsg.text("Step " + done + " / " + total + ": " + name);
+                pct_done = (100 * done - 100) / total;
+            }
+
+            this.progressbar.css('width', pct_done.toFixed(0) + '%');
+
+            if (name == 'DONE') {
+                this.progressmsg.fadeOut(1000);
+                this.progressdiv.fadeOut(1000);
+                this.element.removeClass('running');
+            }
+        },
+
         /**
          * Add a new cell for output of the script.
          *
@@ -394,18 +506,19 @@
          *
          * @method _addOutputCell
          * @private
+         * @return id of <div> inside cell where content can be placed
          */
-         _addOutputCell: function(text) {
-            console.debug("Output cell content:", text);
+         _addOutputCell: function() {
             var nb = IPython.notebook;
             var cell = nb.insert_cell_at_bottom('markdown');
-            // by surrounding with div's we guarantee that markdown
-            // sees this as HTML content
-            var content = "<div>\n" + text + "\n</div>";
+            eid = this._uuidgen();
+            var content = "<div id='" + eid + "'></div>";
             cell.set_text(content);
             cell.rendered = false; // force a render
             cell.render();
+            return $('#' + eid);
          },
+
         /** Not really used right now. */
         convert_mime_types: function (json, data) {
             if (data === undefined) {
@@ -439,6 +552,34 @@
         },
 
         /* ------------------------------------------------------ */
+        /* Accessors */
+
+        workspace : function(key, value) {
+            return this._accessor('_workspace', key, value);
+        },
+
+        _accessor : function(name, key, value) {
+            if (this.data(name) == undefined) {
+                this.data(name, {});
+            }
+
+            var obj = this.data(name);
+
+            if (arguments.length == 2) {
+                obj[key] = value;
+            }
+
+            if (arguments.length > 0) {
+                return obj[key];
+            }
+            else {
+                return obj;
+            }
+        },
+
+
+
+        /* ------------------------------------------------------ */
 
         /**
          * Render the widgets.
@@ -456,14 +597,16 @@
          * @returns this
          */
 		loggedIn: function(token) {
-            console.debug("NarrativeWorkspace.loggedIn");
             this.ws_client = new workspaceService(this.options.workspaceURL);
-            this.ws_auth = token;            
+            this.ws_auth = token;
+            var un = token.match(/un=[\w_]+|/);
+            this.ws_user = un[0].substr(3, un[0].length - 3);
             // grab ws_id to give to, e.g., upload widget
             this.ws_id = this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
-            // refresh the upload dialog, which needs login to populate types
-            console.debug("refresh upload widget");
-            this.uploadWidget.createDialog();
+            this.workspace("id", this.ws_id); // add to global accessor
+            // create/refresh the upload dialog, which needs login to populate types
+            this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
+            //this.uploadWidget.createDialog(); -- redundant
 		},
 
         /**
@@ -483,8 +626,17 @@
         initLogging: function(level) {
             Logger.useDefaults();
             Logger.setLevel(level);
-        }
-
+        },
+        /**
+         * uuid generator
+         *
+         * @private
+         */
+         _uuidgen: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);});
+         }
 	});
 
 })( jQuery );

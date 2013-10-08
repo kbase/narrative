@@ -12,6 +12,7 @@
 
     <body>
       <!--#include virtual="header.html" -->
+      <!--# include virtual="header.html" -->
 
 		<div id="main" class="container">
 			<h1 class="pds_name">My Stuff</h1>

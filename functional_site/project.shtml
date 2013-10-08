@@ -27,6 +27,7 @@
 
     <body>
       <!--#include virtual="header.html" -->
+      <!--# include virtual="header.html" -->
 
 		<div id="main" class="container">
 			<div id="project_title">

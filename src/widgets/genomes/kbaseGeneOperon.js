@@ -36,8 +36,6 @@
 
         init: function(options) {
             this._super(options);
-            console.log("fid");
-            console.log(this.options.featureID);
 
             if (this.options.featureID === null) {
                 //throw an error.
@@ -133,7 +131,6 @@
                                 self.renderFromRange(features);
                             }, self.clientError);
 
-                        // console.log(operons);
                         // operonStr = "";
                         // for (var i in operons) {
                         //     operonStr += operons[i] + " ";

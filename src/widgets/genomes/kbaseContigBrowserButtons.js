@@ -15,7 +15,6 @@
             this._super(options);
 
             if (this.options.browser === null) {
-                console.log("No browser exists for the button set!");
                 return;
             }
 

@@ -39,18 +39,23 @@ function Cache() {
 var cache = new Cache();
 function fbaGet(type, ws, id) {
     var key = type+';'+ws+';'+id;
+    console.log(key)
 
     var data = cache.get(key);
 
     // if data is already being fetched, return promise;
-    if (data) return data.prom;
+    if (data) {
+        console.log(data.prom)
+        return data.prom;
+    }
 
     var prom;
     if (type == 'Model') {
-        prom = fba.get_models({models: [id], 
+        prom = fba.get_models({models: [id],
                                workspaces: [ws]});
     } else if (type == 'FBA') {
-
+        prom = fba.get_fbas({fbas: [id], 
+                             workspaces: [ws]});
     } else if (type == 'Media') {
 
     } else if (type == 'Rxn') {

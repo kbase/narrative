@@ -10,56 +10,60 @@ $.KBWidget({
         var self = this;
         var token = options.auth;
         var default_ws = options.defaultWS;
+        var selected;
 
         var kbws = new workspaceService('http://kbase.us/services/workspace_service/');        
 
-        this.show = function(options) {
-            var modal = self.$elem.kbaseModal({title: "Save to a Workspace"})
-            var modal_body = modal.body('<p class="muted loader"> \
-                    <img src="assets/img/ajax-loader.gif"> loading...</p>');
-            modal.buttons([{text: 'Close'}, {text: 'Save', color: 'primary'}]);
+        console.log('here1');
+        this.show = function() {
+            console.log('here2')
+            $('body').append('<div id="save-to-ws-modal"></div>');
+            var prompt = $('#save-to-ws-modal').kbasePrompt({
+                title : 'Select a workspace',
+                modalClass : '',
+                controls : [
+                    'okayButton',
+                    {
+                        name : 'Delete',
+                        type : 'primary',
+                        callback : function(e, $prompt) {
 
-            modal.show()
+                        }
+                    }
+                ],
+            });
+            prompt.openPrompt();
 
-            var wsAJAX = kbws.list_workspaces({auth: token})
+
+
+            /*
+            var wsAJAX = kbws.list_workspaces({auth: token});
+
             $.when(wsAJAX).done(function(data){
-                ws_selector_modal(modal_body, data);
-            });
-        }
-
-        function ws_selector_modal(container, data) {
-            container.find('.loader').remove();
-
-            var form = $('<form>');
-            var newMediaName = $('<div class="col-xs-6 col-md-4">\
-                <p>Enter new name:</p>\
-                <p><input class="form-control" placeholder="new name"></input>\
-                <p>Enter new pH:</p><p><input class="form-control" placeholder="pH"></input></p>\
-                <p>Save to Workspace:</p></div><br/>');
-            var select = $('<select class="form-control simple-ws-select"></select>');
-            for (var i in data) {
-                if (data[i][0] == default_ws) {
-                    select.append('<option selected="selected">'+data[i][0]+'</option>');
-                } else {
-                    select.append('<option>'+data[i][0]+'</option>');
+                var form = $('<form>');
+                var newMediaName = $('<div class="col-xs-6 col-md-4">\
+                    <p>Enter new name:</p>\
+                    <p><input class="form-control" placeholder="new name"></input>\
+                    <p>Enter new pH:</p><p><input class="form-control" placeholder="pH"></input></p>\
+                    <p>Save to Workspace:</p></div><br/>');
+                var select = $('<select class="form-control simple-ws-select"></select>');
+                for (var i in data) {
+                    if (data[i][0] == default_ws) {
+                        select.append('<option selected="selected">'+data[i][0]+'</option>');
+                        var selected = data[i][0]
+                    } else {
+                        select.append('<option>'+data[i][0]+'</option>');
+                    }
                 }
-            }
-            form.append(newMediaName);
-            form.append(select);
-            container.append(form);
-
-            events();
+                form.append(newMediaName);
+                form.append(select);
+                self.$elem.append(form);
+            });
+            */
         }
 
-        function events(container) {
-            $('.select-ws-btn').unbind('click');
-            $('.select-ws-btn').click(function() {
-                alert('yo');
-                //console.log('why?');
-                var ws = $('.simple-ws-select').val();
-                var newMediaInfo = {ws: ws, name: newMediaName};
-                self.trigger('selectedWS', newMediaInfo);
-            });
+        this.getSelected = function() {
+            return selected;
         }
 
         return this;

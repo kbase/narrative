@@ -10,17 +10,10 @@ $.KBWidget({
         var self = this;
         var models = options.ids;
         var workspaces = options.workspaces;
-        var token = options.auth;
+        var models_data = options.modelsData;
 
-        var panel = this.$elem.kbasePanel({title: 'Model Info', 
-                                           rightLabel: workspaces[0],
-                                           subText: models[0],
-                                           body: '<div id="core-model"></div>'});
-        panel.loading();
-        var panel_body = panel.body();
-
-        var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-        var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+        var container = this.$elem
+        container.append('<div id="core-model"></div>');
 
         var flux_threshold = 0.001;
         var heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
@@ -42,13 +35,10 @@ $.KBWidget({
 
         function draw_core_model(kbids) {
             var graph_AJAX = $.getJSON('assets/data/core.json');
-            var modelAJAX = fba.get_models({models: models, workspaces: workspaces, auth: token});
-            //var fbaAJAX = fba.get_fbas({fbas: fbas_to_retrieve, workspaces: ws, auth: token});  
 
-            $.when(graph_AJAX, modelAJAX).done(function(core_data, models_data){
-                var core = join_model_to_core(core_data[0], models_data, kbids);
+            $.when(graph_AJAX).done(function(core_data){
+                var core = join_model_to_core(core_data, models_data, kbids);
                 var stage = core_model(core, true);
-                panel.rmLoading();
             });
         }
 

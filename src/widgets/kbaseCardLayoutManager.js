@@ -550,7 +550,7 @@
             if (this.options.template.toLowerCase() === "genome")
                 this.showGenomeCards();
             else if (this.options.template.toLowerCase() === "meme")
-                this.showMemeRunResultCard();
+                this.showMemeCards();
             // else if (this.options.template.toLowerCase() === "hello")
             //     this.showHelloCards();
             else {
@@ -610,23 +610,63 @@
         /**
          * Initial template for showing MEME cards.
          */
-        showMemeRunResultCard: function() {
-            this.addNewCard("KBaseMemeRunResultCard",
-                {
-                    meme_run_result_id: this.options.data.meme_run_result_id,
-                    workspace_id: this.options.data.workspace_id,
-                    loadingImage: "../../../widgets/images/ajax-loader.gif",
-                    isInCard: true
-                },
-                {
-                    my: "left top",
-                    at: "left bottom",
-                    of: "#app"
-                }
-            );
-	    return this;
+        
+        showMemeCards: function() {
+        	var pattMeme = /MemeRunResult/i;
+        	var pattTomtom = /TomtomRunResult/i;
+        	var pattMast = /MastRunResult/i;
+        	if (this.options.data.meme_run_result_id.match(pattMeme)){
+            	this.addNewCard("KBaseMemeRunResultCard",
+                        {
+                            meme_run_result_id: this.options.data.meme_run_result_id,
+                            workspace_id: this.options.data.workspace_id,
+                            loadingImage: "assets/img/ajax-loader.gif",
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        	}
+        	else if (this.options.data.meme_run_result_id.match(pattTomtom)){
+            	this.addNewCard("KBaseTomtomRunResultCard",
+                        {
+                            tomtom_run_result_id: this.options.data.meme_run_result_id,
+                            workspace_id: this.options.data.workspace_id,
+                            loadingImage: "assets/img/ajax-loader.gif",
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        	}
+        	else if (this.options.data.meme_run_result_id.match(pattMast)){
+            	this.addNewCard("KBaseMastRunResultCard",
+                        {
+                            mast_run_result_id: this.options.data.meme_run_result_id,
+                            workspace_id: this.options.data.workspace_id,
+                            loadingImage: "assets/img/ajax-loader.gif",
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        	} else {
+        		return this;
+        	};
         },
-
+        
         /**
          * Registers all events that this manager should know about.
          * Also makes a list of all registered events, stored in this.registeredEvents[], so they
@@ -635,7 +675,7 @@
         registerEvents: function() {
             var self = this;
 
-            this.registeredEvents = ["featureClick", "showContig", "showDomains", "showOperons", "showBiochemistry", "showMemeMotif", "showMemeRunParameters", "showMemeRawOutput"];
+            this.registeredEvents = ["featureClick", "showContig", "showDomains", "showOperons", "showBiochemistry", "showMemeMotif", "showMemeRunParameters", "showMemeRawOutput", "showTomtomHits", "showTomtomRunParameters", "showMastHits"];
 
             /**
              * Event: showDomains
@@ -776,7 +816,7 @@
                     },
                     {
                         my: "left top",
-                        at: "left bottom+450",
+                        at: "left bottom+480",
                         of: "#app"
                     }
                 );
@@ -803,7 +843,66 @@
             });
 
 
+            /**
+             * Event: showTomtomHits
+             * -------------------
+             * Adds new TOMTOM Hit List card.
+             */
+            $(document).on("showTomtomHits", function(event, data) {
+                self.addNewCard("KBaseTomtomHitsCard",
+                    {
+                        tomtomresult: data.tomtomresult,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top+400",
+                        at: "left bottom",
+                        of: "#app"
+                    }
+                );
+            });
 
+            /**
+             * Event: showTomtomRunParameters
+             * -------------------
+             * Adds new TOMTOM Hits card.
+             */
+            $(document).on("showTomtomRunParameters", function(event, data) {
+                self.addNewCard("KBaseTomtomRunParametersCard",
+                    {
+                        tomtomresult: data.tomtomresult,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+420 bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showMastHits
+             * -------------------
+             * Adds new MAST Hit List card.
+             */
+            $(document).on("showMastHits", function(event, data) {
+                self.addNewCard("KBaseMastHitsCard",
+                    {
+                        mastresult: data.mastresult,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left+440 top",
+                        at: "left bottom",
+                        of: "#app"
+                    }
+                );
+            });
+            
             $(document).on("helloClick", function(event, data) {
                 window.alert(data.message);
             })

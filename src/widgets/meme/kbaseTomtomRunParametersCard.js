@@ -1,21 +1,18 @@
 (function( $, undefined ) { 
     $.KBWidget({ 
-        name: "KBaseMemeRawOutputCard", 
+        name: "KBaseTomtomRunParametersCard", 
         parent: "kbaseWidget", 
         version: "1.0.0",
 
         options: {
-            title: "MEME raw output",
+            title: "TOMTOM run parameters",
             isInCard: false,
-            width: 800
+            width: 400
         },
-
-//        workspaceURL: "https://kbase.us/services/workspace",
 
         init: function(options) {
             this._super(options);
-            
-            if (this.options.memeOutput === null) {
+            if (this.options.tomtomresult === null) {
                 //throw an error
                 return;
             }
@@ -25,36 +22,35 @@
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-//            this.workspaceClient = new workspaceService(this.workspaceURL);
             return this.render();
-
         },
 
         render: function(options) {
 
-            /**
-             * Fields to show:
-             * ID
-             * Timestamp
-             * Run parameters
-             * Number of motifs
-             */
             var self = this;
-            self.memeOutput = this.options.memeOutput;
-
-	        self.$elem.append($("<div />").append($("<pre />").append(this.options.memeOutput)));
+            self.tomtomresult = this.options.tomtomresult;
+            
+			self.$elem.append($("<div />")
+					.append($("<table/>").addClass("kbgo-table")
+				    .append($("<tr/>").append("<td>Threshold</td><td>" + self.tomtomresult.data.thresh.toString() + "</td>"))
+				    .append($("<tr/>").append("<td>Distance scoring</td><td>" + self.tomtomresult.data.dist + "</td>"))
+					.append($("<tr/>").append("<td>Use evalue</td><td>" + self.tomtomresult.data.evalue.toString() + "</td>"))
+					.append($("<tr/>").append("<td>Use internal</td><td>" + self.tomtomresult.data.internal.toString() + "</td>"))
+					.append($("<tr/>").append("<td>Minimal overlap</td><td>" + self.tomtomresult.data.min_overlap.toString() + "</td>"))
+			));
 
             return this;
         },
 
         getData: function() {
             return {
-                type: "MemeRunResult",
-//                id: this.options.meme_run_result_id,
+                type: "TomtomRunResult",
+                id: this.options.tomtomresult.data.id,
                 workspace: this.options.workspace_id,
-                title: "MEME raw output"
+                title: "TOMTOM run parameters"
             };
         },
+
 
         showMessage: function(message) {
             var span = $("<span/>").append(message);

@@ -84,14 +84,17 @@ $.KBWidget({
 
  
         function formatObjs(objs) {
+            var fluxes = []
             for (var i in objs) {
-                var obj = objs[i];
+                console.log(objs[i])
+                var obj = $.extend({}, objs[i]);
                 var rxn = obj[0].split('_')[0]
                 var compart = obj[0].split('_')[1]
                 obj[0] = '<a class="rxn-click" data-rxn="'+rxn+'">'
-                            +rxn+'</a> ('+compart+')'
+                            +rxn+'</a> ('+compart+')';
+                fluxes.push(obj);
             }
-            return objs;
+            return fluxes;
         }
 
         function getColumnsByLabel(labels) {

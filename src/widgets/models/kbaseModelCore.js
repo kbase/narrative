@@ -11,6 +11,9 @@ $.KBWidget({
         var models = options.ids;
         var workspaces = options.workspaces;
         var models_data = options.modelsData;
+        var fbas_data = options.fbasData;
+        console.log('in model core!')
+        console.log('fba_data', fbas_data)        
 
         var container = this.$elem
         container.append('<div id="core-model"></div>');
@@ -37,13 +40,14 @@ $.KBWidget({
             var graph_AJAX = $.getJSON('assets/data/core.json');
 
             $.when(graph_AJAX).done(function(core_data){
-                var core = join_model_to_core(core_data, models_data, kbids);
+                var core = join_model_to_core(core_data, models_data, kbids, fbas_data);
                 var stage = core_model(core, true);
             });
         }
 
         // Fixme: This looks a little worse than it is, but can be refactored.
         function join_model_to_core(core, models, kbids, fba_data) {
+
             var org_names = [];
             for (var i in models) {
                 org_names.push(models[i].name)
@@ -66,6 +70,7 @@ $.KBWidget({
 
                 var model_fba = [];
                 for (var k in fba_data) {
+                    console.log(get_genome_id(fba_data[k].id), get_genome_id(model.id) )
                     if (get_genome_id(fba_data[k].id) == get_genome_id(model.id) ) {
                         model_fba = fba_data[k];
                     }
@@ -93,6 +98,7 @@ $.KBWidget({
                         // get any associated flux values for rxn_id
                         for (var z in model_fba.reactionFluxes) {
                             var rxn_flux = model_fba.reactionFluxes[z];
+                            console.log(rxn_flux)
                             if (rxn_flux[0].slice(0,rxn_flux[0].indexOf('_')) == rxn_id) {
                                 dict.flux = parseFloat(rxn_flux[1]); // reaction flux value
                             }
@@ -264,10 +270,6 @@ $.KBWidget({
                             title: org_name,
                             trigger: 'hover', html: true,
                             container: 'body', placement: 'bottom'});
-
-                    //$(rect.node).click(function() {
-                    //    window.open('http://140.221.92.12/genome_info/showGenome.html?id='+kbid)
-                    //});
 
                     //var rect = this.rect(x+(i*offset), y, offset, r_height)
 

@@ -59,7 +59,6 @@ angular.module('lp-directives')
     .directive('genomecards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                console.log(scope.params)
                 $(element).KBaseCardLayoutManager({template: "genome", 
                                                    data: scope.params, 
                                                    auth: $rootScope.USER_TOKEN,
@@ -106,7 +105,7 @@ angular.module('lp-directives')
                 p.loading();
 
                 var prom = fbaGet('Model', scope.ws, scope.id)
-                $.when(prom).done(function(data){
+                $.when(prom).done(function(data) {
                     $(p.body()).kbaseModelCore({ids: [scope.id], 
                                                 workspaces : [scope.ws],
                                                 modelsData: data});
@@ -122,6 +121,64 @@ angular.module('lp-directives')
             }
         };
     })
+    .directive('fbameta', function() {
+        return {
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'FBA Info', 
+                                               rightLabel: scope.ws,
+                                               subText: scope.id});
+                p.loading();
+
+                var prom = wsGet('objectMeta', 'FBA', scope.ws, scope.id);
+                $.when(prom).done(function(data){
+                    $(p.body()).kbaseFbaMeta({data: data});
+                })
+            }
+        };
+    })
+    .directive('fbatabs', function() {
+        return {
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'FBA Details', 
+                                               rightLabel: scope.ws,
+                                               subText: scope.id});
+                p.loading();
+
+                var prom = fbaGet('FBA', scope.ws, scope.id)
+                $.when(prom).done(function(data){
+                    $(p.body()).kbaseFbaTabs({fbaData: data});
+                })
+            }
+        };
+    })
+    .directive('fbacore', function() {
+        return {
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'Core Metabolic Pathway', 
+                                               rightLabel: scope.ws,
+                                               subText: scope.id});
+                p.loading();
+
+                var proms = [];
+                //var prom1 = fbaGet('Model', scope.ws, scope.id);
+                var prom1 = fbaGet('FBA', scope.ws, scope.id);
+                $.when(prom1).done(function(fbas_data) {
+                    var model_ws = fbas_data[0].model_workspace;
+                    var model_id = fbas_data[0].model;
+
+                    var prom2 = fbaGet('Model', model_ws, model_id);
+                    $.when(prom2).done(function(models_data){
+                        $(p.body()).kbaseModelCore({ids: [scope.id], 
+                                                    workspaces : [scope.ws],
+                                                    modelsData: models_data,
+                                                    fbasData: fbas_data});
+                    })
+
+                })
+            }
+        };
+    })
+
     .directive('rxndetail', function() {
         return {
             link: function(scope, element, attrs) {

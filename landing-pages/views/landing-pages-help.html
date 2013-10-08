@@ -16,13 +16,39 @@
     </div>
     <div class="col-md-10">
 
+
         <div class="page-header"><h3>Genomes</h3></div>
         <h4>URLs</h4>
+            <a href="#/gnomes">#/genomes</a> <span class="glyphicon glyphicon-unchecked"></span><br>
+        <h5>Params</h5>
+            #/genomes/cs/$genomeID <br>
+            #/genomes/$workspaceID/$genomeID <br>            
+        <h5>Examples</h5>
+            <form class="form-inline" role="form" type="genomes/cs">
+              #/genomes/cs/
+              <div class="form-group">
+                <label class="sr-only" for="input1">gnome id</label>
+                <input class="form-control" id="input1" placeholder="kb|g.0" value="kb|g.0">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                <span class="glyphicon glyphicon-check"></span>               
+            </form>
+            <form class="form-inline" role="form" type="genomes">
+              #/genomes/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="KBaseCDMGenomes" value="KBaseCDMGenomes">
+              </div>
+              <div class="form-group">
+                <label class="sr-only" for="input2">genome id</label>
+                <input class="form-control" id="input2" placeholder="Seed" value="kb|g.0">
+              </div>              
+              <a class="btn btn-default api-url-submit">Go</a>
+                <span class="glyphicon glyphicon-unchecked"></span>
+            </form>            
 
-        <div class="page-header"><h3>Organisms</h3></div>
-        <h4>URLs</h4>
-
-
+        <!--<div class="page-header"><h3>Organisms</h3></div>
+        <h4>URLs</h4>-->
 
         <div class="page-header"><h3>Reactions</h3></div>
         <h4>URLs</h4>
@@ -37,7 +63,7 @@
                 <input class="form-control" id="input1" placeholder="rxn00001" value="rxn00001">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
-                <span class="glyphicon glyphicon-unchecked"></span>              
+                <span class="glyphicon glyphicon-check"></span>              
             </form>
 
 
@@ -55,7 +81,7 @@
                 <input class="form-control" id="input1" placeholder="cpd00001" value="cpd00001">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
-                <span class="glyphicon glyphicon-unchecked"></span>               
+                <span class="glyphicon glyphicon-check"></span>               
             </form>
 
 
@@ -159,7 +185,7 @@
 
         <div class="page-header"><h3>MEME</h3></div>
         <h4>URLs</h4>
-            <a href="#/meme">#/meme</a> <span class="glyphicon glyphicon-check"></span><br>
+            <a href="#/meme">#/meme</a> <span class="glyphicon glyphicon-unchecked"></span><br>
         <h5>Params</h5>        
             #/meme/$workspaceId/$memeRunResultId<br>
         <h5>Examples</h5>        

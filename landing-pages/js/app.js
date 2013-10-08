@@ -41,8 +41,8 @@ var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
             {templateUrl: 'views/object-list.html',
              controller: WSObjects})
         .when('/fbas/:ws/:id', 
-            {templateUrl: 'views/objects/model.html',
-             controller: ModelDetail})        
+            {templateUrl: 'views/objects/fba.html',
+             controller: FBADetail})
 
         .when('/rxns', 
             {templateUrl: 'views/object-list.html',
@@ -73,6 +73,10 @@ var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
         .when('/404',
             {templateUrl: 'views/404.html'})
 
+        .when('/',
+            {templateUrl: 'views/landing-pages-help.html',
+             controller: LPHelp})
+
         .otherwise({redirectTo: '/404'})
 
 }])
@@ -85,6 +89,7 @@ app.run(function ($rootScope) {
 	        login_callback: reload_window, logout_callback: reload_window});
 
 	    $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+        $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
 
 	    // global state object to store state
 	    state = new State();

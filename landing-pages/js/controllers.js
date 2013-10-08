@@ -26,11 +26,16 @@ function WSBrowser($scope, $routeParams) {
 
 function GenomeDetail($scope, $routeParams) {
     $scope.params = {'genomeID': $routeParams.id,
-                    'workspaceID': $routeParams.ws}
+                     'workspaceID': $routeParams.ws}
 }
 
 
 function ModelDetail($scope, $routeParams) {
+    $scope.ws = $routeParams.ws;
+    $scope.id = $routeParams.id;
+}
+
+function FBADetail($scope, $routeParams) {
     $scope.ws = $routeParams.ws;
     $scope.id = $routeParams.id;
 }

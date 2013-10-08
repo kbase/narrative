@@ -38,6 +38,9 @@
         init: function(options) {
             this._super(options);
 
+            this.dbg('user:' + this.options.userId);
+            this.dbg('token:' + this.options.auth);
+
             this.workspaceClient = new workspaceService(this.workspaceURL);
             this.fbaClient = new fbaModelServices(this.fbaURL);
 
@@ -441,7 +444,7 @@
 
                 $.when.apply($, jobsList).done(function() {
                     self.exportModal.modal.modal('hide');
-                    console.log("Done exporting genomes!");
+                    self.dbg("Done exporting genomes!");
                 });
             };
 
@@ -476,7 +479,8 @@
             for (var i=0; i<data.length; i++) {
                 var obj = data[i];
                 if (obj.workspace === this.cdmWorkspace) {
-                    console.log("exporting central store genome " + obj.id + " to workspace '" + workspace + "'");
+                    this.dbg("exporting central store genome " + obj.id + " to workspace '" + workspace + "'");
+                    var self = this;
                     exportJobs.push(this.fbaClient.genome_to_workspace(
                         {
                             genome: obj.id,
@@ -484,13 +488,13 @@
                             auth: this.options.auth
                         },
                         function(objectMeta) {
-                            console.log(objectMeta);
+                            self.dbg(objectMeta);
                         },
                         this.kbaseClientError
                     ));
                 }
                 else {
-                    console.log("copying workspace genome " + obj.ws + ":" + obj.id + " to workspace");
+                    this.dbg("copying workspace genome " + obj.ws + ":" + obj.id + " to workspace");
                 }
             }
 
@@ -498,29 +502,29 @@
         },
 
         _exportDescription: function(data, workspace) {
-            console.log("Exporting description");
-            console.log(data);
+            this.dbg("Exporting description");
+            this.dbg(data);
 
             return [];
         },
 
         _exportContig: function(data, workspace) {
-            console.log("Exporting contigs");
-            console.log(data);
+            this.dbg("Exporting contigs");
+            this.dbg(data);
 
             return [];
         },
 
         _exportFeature: function(data, workspace) {
-            console.log("Exporting genes");
-            console.log(data);
+            this.dbg("Exporting genes");
+            this.dbg(data);
 
             return [];
         },
 	
         _exportMemeRunResult: function(data, workspace) {
-            console.log("Exporting MEME run result");
-            console.log(data);
+            this.dbg("Exporting MEME run result");
+            this.dbg(data);
 
             return [];
         },
@@ -1052,8 +1056,8 @@
         },
 
         kbaseClientError: function(error) {
-            console.log("A KBase client error occurred: ");
-            console.log(error);
+            this.dbg("A KBase client error occurred: ");
+            this.dbg(error);
         },
 
         /**

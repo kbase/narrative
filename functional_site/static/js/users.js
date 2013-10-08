@@ -1,15 +1,18 @@
 (function($, undefined) {
     var workspaceURL = "https://kbase.us/services/workspace";
     var workspaceClient = new workspaceService(workspaceURL);
+    notLoggedIn();
 
 
     $(function() {
         $(document).on('loggedIn.kbase', function(event, token) {
             console.debug("logged in")
+            loadFeed();
         });
 
         $(document).on('loggedOut.kbase', function(event, token) {
             console.debug("logged out")
+            notLoggedIn();
         });
 
         var loginWidget = $("#login-widget").kbaseLogin({ 
@@ -68,7 +71,10 @@
     });
 
     function notLoggedIn() {
-    	$("#login-widget").hide();
+    	console.log("got here");
+    	$("#header_banner").hide();
+    	$("#alt_banner").show();
+     	$("#login-widget").hide();
     	$("#login_section").show();
 		$("#public_section").show();
 	    $("#newsfeed_column").hide();
@@ -80,6 +86,8 @@
 
 
     function loadFeed() {
+    	$("#alt_banner").hide();
+    	$("#header_banner").show();
 		$("#login_section").hide();
 		$("#public_section").hide();
 	    $("#newsfeed_column").show();

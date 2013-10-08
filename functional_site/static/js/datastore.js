@@ -129,26 +129,35 @@
 
     function loadProjects() {
         $("#projects_loading").show();
-        console.log("loading projects");
         var projects = project.get_projects({
             callback: function(results) {
-                var data = { rows: []};
-                _.each(results, function(workspace){
-                    console.log(workspace.id);
-                    console.log(workspace.owner);
+                if (Object.keys(results).length > 0) {
+                    var data = { rows: []};
+                    _.each(results, function(workspace){
+                        
+                        console.log(workspace.id);
+                        console.log(workspace.owner);
 
-                    data.rows.push({
-                        "name": workspace.id,
-                        "owner": workspace.owner,
-                        "date": workspace.moddate
-                    }); 
-        
-                });
-                $("#project_table_header").show();
-                rows = ich.project_table_rows(data)
-                $('#projectTableRows').append(rows);
+                        data.rows.push({
+                            "name": workspace.id,
+                            "owner": workspace.owner,
+                            "date": workspace.moddate
+                        });
+            
+                    });
 
-                $("#projects_loading").hide();
+                    //populate the html template
+                    $("#project_table_header").show();
+                    rows = ich.project_table_rows(data)
+                    $('#projectTableRows').append(rows);
+
+                    $("#projects_loading").hide();
+
+                } else {
+                    $("#projects_loading").hide();
+                    $("#no_projects").show();
+                }
+                
             }
         });
 

@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <html>
 	<head>
-        <title>KBase User Page</title>
+        <title>Manage Projects</title>
         <link rel="icon" href="static/images/KBase_favicon.ico" type="image/x-icon">
         <link href="static/bootstrap-3.0.0/css/bootstrap.min.css" rel="stylesheet">
         <link href="static/css/kbase_stylesheet.css" rel="stylesheet">
@@ -43,27 +43,9 @@
     </head>
 
     <body>
-		<header role="banner">      
-			<div id="logo">
-				<a href="kbase.us"><img src="static/images/kbase_logo.png" alt="KBase User Home" /></a>
-			</div>
-			<nav role="navigation">
-				<ul>
-					<li><a href="#">Home</a></li>
-					<li><a href="#">My Stuff</a></li>
-					<li id="search_nav">
-							<a href="#">Search</a>
-							<input type="text" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input>
-							
-						
-					</li>
-				</ul>
-			</nav>
-				
-			<div id="login-widget" class="pull-right" />
-		</header>
+      <!--#include virtual="header.html" -->
 
-		<div id="main" class="container">
+		<main class="container">
     <div class="row">
    		<div id="subnav" class="col-sm-3" role="navigation">
    			<ul class="subnav">
@@ -148,7 +130,7 @@
       </div><!-- end project stuff -->
 
 		</div><!-- end row -->
-    </div><!-- end main container -->
+    </main><!-- end main container -->
 		<script src="static/js/jquery-1.10.2.min.js"></script>
 		<script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
         <script src="static/js/jquery.cookie.min.js"></script>

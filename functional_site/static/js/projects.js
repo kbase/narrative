@@ -311,6 +311,45 @@
 	}
     };
 
+    // Will search the given list of project_ids for objects of type narrative
+    // if no project_ids are given, then all a call will be made to get_projects
+    // first - avoid doing this if possible as it will be miserably slow.
+    // an array of obj_meta dictionaries will be handed to the callback
+    project.get_narratives = function(p_in) {
+	var def_params = { callback : undefined,
+			   project_ids : undefined,
+			   error_callback : error_handler,
+			   type: project.narrative_type};
+	var p = $.extend( def_params, p_in);
+	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
+	
+	var all_my_narratives = function (project_ids) {
+	    var get_ws_narr = project_ids.map( function(ws_id) {
+						     return(project.ws_client.list_workspace_objects( { auth: token,
+													workspace: ws_id,
+													type: p.type }));
+						 });
+	    $.when.apply(null, get_ws_narr).then( function() {
+						      var results = [].slice.call(arguments);
+						      var merged = [].concat.apply([],results);
+						      var dict = merged.map( obj_meta_dict);
+						      p.callback( dict);
+						      // merge all the results into a single array
+						  },
+						  p.error_callback
+					    );
+	};
+	if (p.project_ids) {
+	    all_my_narratives( p.project_ids);
+	} else {
+	    project.get_projects( { callback: function (pdict) {
+					all_my_narratives( Object.keys( pdict));
+				    }
+				  });
+	}
+    };
+
     // Create an empty narrative object with the specified name. The name
     // *must" conform to the future workspace rules about object naming,
     // the it can only contain [a-zA-Z0-9_]. We show the error prompt

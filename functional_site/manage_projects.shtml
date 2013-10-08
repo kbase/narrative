@@ -44,7 +44,6 @@
 
     <body>
       <!--#include virtual="header.html" -->
-      <!--# include virtual="header.html" -->
 
 		<main class="container">
     <div class="row">

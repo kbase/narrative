@@ -2,3 +2,6 @@ node_modules/
 dist/kbase.js
 dist/kbase.min.js
 dist/docs
+.project
+.externalToolBuilders/
+.settings/

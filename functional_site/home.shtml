@@ -37,10 +37,14 @@
 			<div id="maincontent" class="row">
 				<div id="public_section" class="col-md-4 col-md-offset-2">
 					<div id="welcome_section">
+						<p id="doodle"><img src="/static/images/doodle.png" /></p>
 						<h1>Your science, your way.</h1>
 						<p>Build narratives that capture your analyses, including rich annotations, visualization widgets, reusable workflows, and custom scripts. Share your work and your data with colleagues. Follow the field through the people, organisms, and projects that matter to you. </p>
-						<p>Building narratives not your style? You can still work with KBase tools via <a href="http://www.kbase.us/services/docs/invocation/Iris/">IRIS</a>, our web-based command-line interface, or access your IRIS workspace with the <a href="http://140.221.84.142">Workspace Browser</a>.
+					</div><br clear="right" />
+					<div id="iris_ws_section">
+						<p>Building narratives not your style? You can still work with KBase tools via <a href="http://www.kbase.us/services/docs/invocation/Iris/">IRIS</a>, our web-based command-line interface, or access your IRIS workspace with the <a href="http://140.221.84.142">Workspace Browser</a>.</p>
 					</div>
+
 					
 				</div>
 				<div id="login_section" class="col-md-4">

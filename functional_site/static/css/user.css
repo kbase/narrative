@@ -6,6 +6,10 @@ nav[role="navigation"] ul li.alt a{
 	color: #5c9531;
 }
 
+#doodle{
+	text-align: center;
+}
+
 #login_form {
 	margin-bottom: 10px;
 }
@@ -65,6 +69,14 @@ nav[role="navigation"] ul li.alt a{
 	border-radius: 10px;
 	/*margin: 10px;*/
 	
+}
+
+#maincontent #login_section {
+	padding-top: 4em;
+	padding-bottom: 5em;
+}
+#doodle img{
+	height: 8em;
 }
 
 .stats_section {

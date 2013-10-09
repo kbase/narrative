@@ -24,6 +24,8 @@ init:
 ext/kbase-datavis/dist/datavis.js:
 	@ cd ./ext/kbase-datavis && make dist MINIFY=0
 
+dist-datavis: ext/kbase-datavis/dist/datavis.js
+
 $(DOCSDIR)/index.html: $(SOURCES)
 ifndef JSDUCK
 	$(error JSDuck not found (install with `gem install jsduck`).)
@@ -40,7 +42,7 @@ $(DISTLIB): $(SOURCES) ext/kbase-datavis/dist/datavis.js
 $(MINDISTLIB): $(DISTLIB)
 	@ $(UGLIFY) $(DISTLIB) --comments --compress --mangle --output $(MINDISTLIB)
 
-dist: init $(DISTLIB) $(MINDISTLIB)
+dist: init dist-datavis $(DISTLIB) $(MINDISTLIB) 
 
 test: init
 	@ $(MOCHA)

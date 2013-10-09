@@ -66,6 +66,16 @@ angular.module('lp-directives')
             }
         };
     })
+    .directive('genecards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "gene", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
     .directive('memecards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {

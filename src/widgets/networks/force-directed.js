@@ -56,7 +56,7 @@
                     title: "Network",
                     maximize: true
                 });
-                viewport.css("min-height", "700px");
+                viewport.css("min-height", "400px");
                 var toolbox = viewport.toolbox();
                 viewport.addTool($("<a/>", { href: "#" }).html("Click me!"));
                 addSlider(toolbox, self);
@@ -66,7 +66,9 @@
                 if (self.options.minHeight) {
                     self.$elem.css("min-height", self.options.minHeight);
                 }
-                if (self.options.token) {
+                if (self.options.workspaceID === undefined) {
+                    fetchAjax = self.exampleData();
+                } else if (self.options.token) {
                     var wsRegex = /^(\w+)\.(.+)/;
                     var wsid = wsRegex.exec(self.options.workspaceID);
                     if (wsid !== null && wsid[1] && wsid[2]) {
@@ -140,6 +142,128 @@
                 });
                 return self;
             });
+        },
+        exampleData: function () {
+            return {
+                data: {
+                    nodes: [
+                        {
+                            type: "GENE",
+                            id: "kb|netnode.0",
+                            userAnnotations: {
+                                external_id: "Athaliana.TAIR10:AT2G15410",
+                                functions: "transposable element gene.[Source:TAIR;Acc:AT2G15410]"
+                            },
+                            entityId: "kb|g.3899.locus.10011"
+                        },
+                        {
+                            type: "GENE",
+                            id: "kb|netnode.1",
+                            userAnnotations: {
+                                ontologies: {
+                                    "GO:0006468": [{
+                                        ec: "IEA",
+                                        desc: "protein phosphorylation",
+                                        domain: "biological_process"
+                                    }]
+                                },
+                                external_id: "Athaliana.TAIR10:AT1G32320",
+                                functions: "MAP kinase kinase 10 [Source:EMBL;Acc:AEE31463.1]"
+                            },
+                            entityId: "kb|g.3899.locus.3560"
+                        },
+                        {
+                            type: "GENE",
+                            id: "kb|netnode.2",
+                            userAnnotations: {
+                                external_id: "Athaliana.TAIR10:AT2G21600",
+                                functions: "protein RER1B [Source:EMBL;Acc:AEC07201.1]"
+                            },
+                            entityId: "kb|g.3899.locus.10793"
+                        },
+                        {
+                          type: "CLUSTER",
+                          id: "kb|netnode.3",
+                          userAnnotations: {},
+                          entityId: "cluster.1\n"
+                        },
+                        {
+                          type: "CLUSTER",
+                          id: "kb|netnode.4",
+                          userAnnotations: {},
+                          entityId: "cluster.2\n"
+                        }
+                    ],
+                    edges: [
+                        {
+                            nodeId2: "kb|netnode.0",
+                            nodeId1: "kb|netnode.3",
+                            id: "kb|netedge.0",
+                            name: "interacting gene pair",
+                            strength: "0.7",
+                            datasetId: "kb|netdataset.ws//DataSet1",
+                            directed: "false",
+                            userAnnotations: {},
+                        },
+                        {
+                            nodeId2: "kb|netnode.0",
+                            nodeId1: "kb|netnode.4",
+                            id: "kb|netedge.0",
+                            name: "interacting gene pair",
+                            strength: "1",
+                            datasetId: "kb|netdataset.ws//DataSet1",
+                            directed: "false",
+                            userAnnotations: {},
+                        },
+                        {
+                            nodeId2: "kb|netnode.1",
+                            nodeId1: "kb|netnode.4",
+                            id: "kb|netedge.0",
+                            name: "interacting gene pair",
+                            strength: "0.9",
+                            datasetId: "kb|netdataset.ws//DataSet1",
+                            directed: "false",
+                            userAnnotations: {},
+                        },
+                        {
+                            nodeId2: "kb|netnode.2",
+                            nodeId1: "kb|netnode.4",
+                            id: "kb|netedge.0",
+                            name: "interacting gene pair",
+                            strength: "0.85",
+                            datasetId: "kb|netdataset.ws//DataSet1",
+                            directed: "false",
+                            userAnnotations: {},
+                        },
+                        {
+                            nodeId2: "kb|netnode.1",
+                            nodeId1: "kb|netnode.3",
+                            id: "kb|netedge.0",
+                            name: "interacting gene pair",
+                            strength: "0.65",
+                            datasetId: "kb|netdataset.ws//DataSet1",
+                            directed: "false",
+                            userAnnotations: {},
+                        }
+                    ],
+                    datasets: [
+                        {
+                            properties: {
+                                original_data_type: "workspace",
+                                coex_net_args: "-i datafiltered.csv -o edge_list.csv -c 0.75 ",
+                                original_data_id: "ws://DataSet1",
+                                coex_filter_args: "-i data.csv -s sample.csv -o datafiltered.csv -m anova -n 100"
+                            },
+                            description: "Data Set description",
+                            id: "kb|netdataset.ws//DataSet1",
+                            name: "First Data Set",
+                            taxons: [ "kb|g.3899" ],
+                            sourceReference: "WORKSPACE",
+                            networkType: "FUNCTIONAL_ASSOCIATION"
+                        },
+                    ]
+                }
+            };
         }
     });
 
@@ -192,7 +316,7 @@
         list.append(dropdownLink("All data sets", "", "all"));
         _.each(data.datasets, function (ds) {
             var dsStr = ds.id.replace(/^kb.*\.ws\/\//, "");
-            list.append(dropdownLink(dsStr, ds.description, ds.id))
+            list.append(dropdownLink(dsStr, ds.description, ds.id));
         });
         list.find("a").on("click", function (event) {
             var id = $(this).data("value");
@@ -203,17 +327,15 @@
             else
                 datasetFilter = function (edge) {
                     return edge.datasetId == id;
-                }
+                };
             widget.network.update();
-        })
+        });
         var button = $("<div/>", {
             class: "btn btn-default btn-sm dropdown-toggle",
             "data-toggle": "dropdown"
         }).text("Data Set ").append($("<span/>", { class: "caret"}))
             .dropdown();
-        wrapper
-            .append(button)
-            .append(list)
+        wrapper.append(button).append(list);
         $container.prepend(wrapper);
     }
     
@@ -223,7 +345,7 @@
                 href: "#",
                 "data-toggle": "tooltip",
                 "data-container": "body",
-                "title": title,
+                title: title,
                 "data-original-title": title,
                 "data-value": value
             }).html(linkText));
@@ -249,8 +371,8 @@
         }
         for (var i = 0; i < networkJson.edges.length; i++) {
             var edge = $.extend({}, networkJson.edges[i]);
-            edge.source = parseInt(nodeMap[edge.nodeId1]);
-            edge.target = parseInt(nodeMap[edge.nodeId2]);
+            edge.source = parseInt(nodeMap[edge.nodeId1], 0);
+            edge.target = parseInt(nodeMap[edge.nodeId2], 0);
             edge.weight = 1;
             json.edges.push(edge);
         }

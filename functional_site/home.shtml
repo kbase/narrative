@@ -55,7 +55,7 @@
 					<div class="narrative_section">
 						<h3>Recent Narratives</h3>
 						<img src="./static/images/ajax-loader.gif" id="narratives_loading"  />
-						<div class="no_narratives" style="display: none;">You do not have any narratives. Create a narrative to get started.</div>
+						<div id="no_narratives" style="display: none;">You do not have any narratives. Create a narrative to get started.</div>
 						<ol id="recent_narratives_list">
 							
 						</ol>
@@ -66,12 +66,12 @@
 					<div class="narrative_section">
 						<h3>Recent Projects</h3>
 						<img src="./static/images/ajax-loader.gif" id="projects_loading"  />
-						<div class="no_narratives" style="display: none;">You do not have any projects. Create a project to get started.</div>
+						<div id="no_projects" style="display: none;">You do not have any projects. Create a project to get started.</div>
 						<ol id="recent_projects_list">
 							
 							
 						</ol>
-						<a href="./manage_projects.shtml" class="btn btn-default">Manage and Add Projects</a>
+						<a href="./manage_projects.shtml" class="btn btn-default">Create/Manage Projects</a>
 					</div>
 					
 			

@@ -274,9 +274,12 @@
         },
 
         genomeToFbaCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+
             console.log("got to fba output");
             console.log(element);
-            element.html("Finished genome to fba");
+//            element.html("Finished genome to fba");
+            element.kbaseModelMetaNarrative({data: data});
             element.css({ margin: '-10px' });
             element.off('click dblclick keydown keyup keypress focus');
         },

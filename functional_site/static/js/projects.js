@@ -364,6 +364,20 @@
 								 }));
 	    delete( p.perms['default']);
 	}
+	// sort users into lists based on the permissions we are giving them
+	var user_by_perm = Object.keys(p.perms).reduce(
+	    function(prev,curr,index) {
+		if (p.perms[curr] in prev) {
+		    prev[p.perms[curr]].push( curr);
+		    return prev;
+		} else {
+		    prev[p.perms[curr]] = [curr];
+		    return prev;
+		}
+	    },
+	    {});
+	console.log( user_by_perm);
+	// set_perm_fn.push( project.ws_client.set )
 	/*
 	$.when( set_perm_fn).then( function(perms) {
 				       console.log( perms);
@@ -421,13 +435,13 @@
     // if it fails to conform
 
     project.new_narrative = function( p_in ) {
+	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
 	var def_params = { callback : undefined,
-			   project_id : undefined,
+			   project_id : user_id+"_home",
 			   narrative_id : undefined,
 			   description : "A KBase narrative" };
 	var p = $.extend( def_params, p_in);
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
-	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
 
         if ( legit_ws_id.test(p.narrative_id)) {
 	    var nar = $.extend(true,{},empty_narrative);

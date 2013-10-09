@@ -53,18 +53,19 @@
 
                     _.each(results, function(narrative){
                         
-                        console.log(narrative.id);
-                        console.log(narrative.owner);
+                        var name = narrative.id.replace(/_/g," ");
+                        var project_id = narrative.workspace.replace(/_/g," ");
+
 
                         _.each(Object.keys(narrative), function(key) {
                             console.log(key);
                         });
 
                         data.rows.push({
-                            "name": narrative.id,
+                            "name": name,
                             "owner": narrative.owner,
                             "date": narrative.moddate,
-                            "project_id": narrative.workspace,
+                            "project_id": project_id,
                             "userId": userId
                         });
             
@@ -191,11 +192,10 @@
                     var data = { rows: []};
                     _.each(results, function(workspace){
                         
-                        console.log(workspace.id);
-                        console.log(workspace.owner);
+                        var name = workspace.id.replace(/_/g," ");
 
                         data.rows.push({
-                            "name": workspace.id,
+                            "name": name,
                             "owner": workspace.owner,
                             "date": workspace.moddate
                         });

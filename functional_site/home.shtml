@@ -178,19 +178,19 @@
 		
 		<script id="recent_narratives" type="text/html">
 		{{#rows}}
-		<li><a href="http://narrative.kbase.us/narratives/{{userId}}/{{project_id}}.{{name}}">{{name}}</a></li>		
+		<li><a href="http://narrative.kbase.us/narratives/{{userId}}/{{project_id}}.{{narrative_id}}">{{name}}</a></li>		
 		{{/rows}}
 		</script>
 
 		<script id="recent_projects" type="text/html">
 		{{#rows}}
-		<li><a href="./project.shtml#{{name}}">{{name}}</a></li>		
+		<li><a href="./project.shtml#{{project_id}}">{{name}}</a></li>		
 		{{/rows}}
 		</script>
 
 		<script id="project_select_options" type="text/html">
 		{{#rows}}
-		<option value={{name}}>{{name}}</option>
+		<option value={{project_id}}>{{name}}</option>
 		{{/rows}}
 		</script>
 

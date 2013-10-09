@@ -5,8 +5,11 @@
     //get the project_id 
     var project_id = window.location.hash.substr(1);
     if (project_id !== "") {
-        $("#project_name").html(project_id);
-        $("#project_id_option").html(project_id);
+
+        var project_name = project_id.replace(/_/g," ");
+        $("#project_name").html(project_name);
+        $("#project_id_option").val(project_id);
+        $("#project_id_option").html(project_name);
     
 
         $(function() {
@@ -71,10 +74,13 @@
                             console.log(key);
                         });
 
+                        var moddate = narrative.moddate;
+                        moddate = moddate.replace(/T/g," ");
                         data.rows.push({
                             "name": name,
+                            "narrative_id": narrative.id,
                             "owner": narrative.owner,
-                            "date": narrative.moddate,
+                            "date": moddate,
                             "project_id": project_id,
                             "userId": userId
                         });
@@ -140,17 +146,27 @@
         $.when.apply($, getWorkspaceObjects).done(function() {
             var objectMetaTable = [];
             for (var i=0; i<allObjectsList.length; i++) {
-                objectMetaTable.push([
-                    "<input type='checkbox' />",
-                    allObjectsList[i][0], // id
-                    allObjectsList[i][1], // type
-                    allObjectsList[i][6], // owner
-                                          // shared with
-                                          // source
-                                          // created
-                    allObjectsList[i][7], // (workspace)
-                    allObjectsList[i][2]  // modified
-                ]);
+                var type = allObjectsList[i][1];
+                if (type === "Narrative") { 
+                    continue;
+                } else if (type === "workspace_meta") {
+                    continue;
+                } else {
+                    var moddate = allObjectsList[i][2];
+                    moddate = moddate.replace(/T/g," ");
+
+                    objectMetaTable.push([
+                        "<input type='checkbox' />",
+                        allObjectsList[i][0], // id
+                        allObjectsList[i][1], // type
+                        allObjectsList[i][6], // owner
+                                              // shared with
+                                              // source
+                                              // created
+                        allObjectsList[i][7], // (workspace)
+                        moddate  // modified
+                    ]);
+                }
             }
 
             if (objectMetaTable.length > 0) {

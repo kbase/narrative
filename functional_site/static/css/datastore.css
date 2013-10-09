@@ -80,7 +80,12 @@ h4 {
 */
 
 body {
+	
 	margin-bottom: 80px;
+}
+
+#main {
+	margin-top: 20px;
 }
 
 nav[role="navigation"] input[type="text"] {

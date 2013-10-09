@@ -48,6 +48,8 @@
             callback: function(results) {
                 if (Object.keys(results).length > 0) {
                     var data = { rows: []};
+                    var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+
                     _.each(results, function(narrative){
                         
                         console.log(narrative.id);
@@ -61,7 +63,8 @@
                             "name": narrative.id,
                             "owner": narrative.owner,
                             "date": narrative.moddate,
-                            "project_id": narrative.workspace
+                            "project_id": narrative.workspace,
+                            "userId": userId
                         });
             
                     });
@@ -159,7 +162,7 @@
                                 { "sTitle" : "ID" },
                                 { "sTitle" : "Type" },
                                 { "sTitle" : "Owner" },
-                                { "sTitle" : "Location" },
+                                { "sTitle" : "In Projects" },
                                 { "sTitle" : "Last modified" },
                             ],
                             "sPaginationType" : "full_numbers",

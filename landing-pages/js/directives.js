@@ -66,6 +66,16 @@ angular.module('lp-directives')
             }
         };
     })
+    .directive('memecards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "meme", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
     .directive('modelmeta', function() {
         return {
             link: function(scope, element, attrs) {

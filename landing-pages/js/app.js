@@ -60,8 +60,14 @@ var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
         .when('/cpds/:ids', 
             {templateUrl: 'views/objects/cpd.html',
              controller: CpdDetail})           
-      
-   
+
+        .when('/meme',
+            {templateUrl: 'views/objects/meme.html',
+             controller: MemeDetail})
+        .when('/meme/:ws/:id',
+            {templateUrl: 'views/objects/meme.html',
+             controller: MemeDetail})
+         
         .when('/iris', 
             {templateUrl: 'views/iris.html',
              controller: IRIS})   

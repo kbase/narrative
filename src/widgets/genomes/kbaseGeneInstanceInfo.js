@@ -53,71 +53,136 @@
 
 
             this.$table = $("<table />")
-                         .addClass("kbgo-table");
+                         .addClass("table table-striped table-bordered");
             
             // Data fetching!
-            // First, get feature data
-            this.cdmiClient.fids_to_feature_data (
-                [self.options.featureID],
-
-                // this.populateFeatureData,
-                // this.clientError
-
+            var jobsList = [];
+            var data = {};
+            jobsList.push(this.cdmiClient.fids_to_feature_data([self.options.featureID],
                 function(featureData) {
-                    featureData = featureData[self.options.featureID];
+                    data.featureData = featureData[self.options.featureID];
+                },
+                this.clientError
+            ));
+            jobsList.push(this.cdmiClient.fids_to_genomes([self.options.featureID],
+                function(genome) {
+                    data.genome = genome[self.options.featureID];
+                },
+                this.clientError
+            ));
+            jobsList.push(this.cdmiClient.fids_to_dna_sequences([this.options.featureID],
+                function(dnaSeq) {
+                    data.dnaSeq = dnaSeq[self.options.featureID];
+                },
+                this.clientError
+            ));
+            jobsList.push(this.cdmiClient.fids_to_protein_families([this.options.featureID],
+                function(families) {
+                    data.families = families[self.options.featureID];
+                },
+                this.clientError
+            ));
 
-                    // Add this data to the table before moving on.
-                    self.$table.append(self.makeRow("Function", featureData.feature_function));
-                    self.$table.append(self.makeRow("Length", featureData.feature_length + " bp"));
-                    self.$table.append(self.makeRow("Location", $("<div/>")
-                                                           .append(self.parseLocation(featureData.feature_location))
-                                                           .append(self.makeContigButton(featureData.feature_location))));
+            $.when.apply($, jobsList).done(function() {
+                self.$table.append(self.makeRow("Function", data.featureData.feature_function));
+                self.$table.append(self.makeRow("Genome", $("<div/>")
+                                                          .append(data.featureData.genome_name)
+                                                          .append("<br/>")
+                                                          .append(self.makeGenomeButton(data.genome))));
+                self.$table.append(self.makeRow("Length", data.featureData.feature_length + " bp"));
+                self.$table.append(self.makeRow("Location", $("<div/>")
+                                                            .append(self.parseLocation(data.featureData.feature_location))
+                                                            .append(self.makeContigButton(data.featureData.feature_location))));
 
-                    self.cdmiClient.fids_to_dna_sequences([self.options.featureID],
-                        function(dnaSeq) {
-                            self.$table.append(self.makeRow("GC Content", 
-                                    self.calculateGCContent(dnaSeq[self.options.featureID]).toFixed(2) + "%"));
+                self.$table.append(self.makeRow("GC Content", self.calculateGCContent(data.dnaSeq).toFixed(2) + "%"));
 
-                            self.cdmiClient.fids_to_protein_families([self.options.featureID], 
-                                function(families) {
-
-                                    families = families[self.options.featureID];
-                                    if (families) {
-                                        self.cdmiClient.protein_families_to_functions(families, 
-                                            // on success
-                                            function(families) {
-                                                var familyStr = '';
-
-                                                if (families && families.length != 0) {
-                                                    for (var fam in families) {
-                                                        if (families.hasOwnProperty(fam))
-                                                            familyStr += fam + ": " + families[fam] + "<br/>";
-                                                    }
-                                                }
-
-                                                self.$table.append(self.makeRow("Protein Families", familyStr));
-                                            
-                                            },
-
-                                            self.clientError
-                                        );
-                                    }
-                                    else {
-                                        self.$table.append(self.makeRow("Protein Families", "None found"));
-                                    }
-
-                                },
-
-                                self.clientError
-                            );
+                if (data.families && data.families.length != 0) {
+                    self.cdmiClient.protein_families_to_functions(data.families,
+                        function(families) {
+                            var familyStr = '';
+                            for (var fam in families) {
+                                familyStr += fam + ": " + families[fam] + "<br/>";
+                            }
+                            self.$table.append(self.makeRow("Protein Families", familyStr));
                         },
-
                         self.clientError
                     );
-                },
+                }
+                else
+                    self.$table.append(self.makeRow("Protein Families", "None found"));
+            });
 
-                this.clientError
-            );
+
+
+
+
+
+
+            // // First, get feature data
+            // this.cdmiClient.fids_to_feature_data (
+            //     [self.options.featureID],
+
+            //     // this.populateFeatureData,
+            //     // this.clientError
+
+            //     function(featureData) {
+            //         featureData = featureData[self.options.featureID];
+
+            //         // Add this data to the table before moving on.
+            //         self.$table.append(self.makeRow("Function", featureData.feature_function));
+            //         self.$table.append(self.makeRow("Genome", featureData.genome_name)); //$("<div/>")
+            //                                                // .append(featureData.genome_name)
+            //                                                // .append(self.makeGenomeButton(self.options.)));
+            //         self.$table.append(self.makeRow("Length", featureData.feature_length + " bp"));
+            //         self.$table.append(self.makeRow("Location", $("<div/>")
+            //                                                .append(self.parseLocation(featureData.feature_location))
+            //                                                .append(self.makeContigButton(featureData.feature_location))));
+
+            //         self.cdmiClient.fids_to_dna_sequences([self.options.featureID],
+            //             function(dnaSeq) {
+            //                 self.$table.append(self.makeRow("GC Content", 
+            //                         self.calculateGCContent(dnaSeq[self.options.featureID]).toFixed(2) + "%"));
+
+            //                 self.cdmiClient.fids_to_protein_families([self.options.featureID], 
+            //                     function(families) {
+
+            //                         families = families[self.options.featureID];
+            //                         if (families) {
+            //                             self.cdmiClient.protein_families_to_functions(families, 
+            //                                 // on success
+            //                                 function(families) {
+            //                                     var familyStr = '';
+
+            //                                     if (families && families.length != 0) {
+            //                                         for (var fam in families) {
+            //                                             if (families.hasOwnProperty(fam))
+            //                                                 familyStr += fam + ": " + families[fam] + "<br/>";
+            //                                         }
+            //                                     }
+
+            //                                     self.$table.append(self.makeRow("Protein Families", familyStr));
+                                            
+            //                                 },
+
+            //                                 self.clientError
+            //                             );
+            //                         }
+            //                         else {
+            //                             self.$table.append(self.makeRow("Protein Families", "None found"));
+            //                         }
+
+            //                     },
+
+            //                     self.clientError
+            //                 );
+            //             },
+
+            //             self.clientError
+            //         );
+            //     },
+
+            //     this.clientError
+            // );
 
             this.$elem.append(this.$table);
 
@@ -198,6 +263,30 @@
             return $contigBtn;
         },
 
+        makeGenomeButton: function(genomeID, workspaceID) {
+            if (!genomeID)
+                return "";
+
+            if (!workspaceID)
+                workspaceID = null;
+
+            var self = this;
+            var $genomeBtn = $("<button />")
+                             .addClass("btn btn-default")
+                             .append("Show Genome")
+                             .on("click",
+                                function(event) {
+                                    self.trigger("showGenome", {
+                                        genomeID: genomeID,
+                                        workspaceID: workspaceID,
+                                        event: event
+                                    });
+                                }
+                             );
+
+            return $genomeBtn;
+        },
+
         calculateGCContent: function(s) {
             var gc = 0;
             s = s.toLowerCase();
@@ -247,7 +336,7 @@
         },
 
         clientError: function(error) {
-
+            this.dbg(error);
         },
     })
 })( jQuery );

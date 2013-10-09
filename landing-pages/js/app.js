@@ -20,6 +20,13 @@ var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
             {templateUrl: 'views/objects/genome.html',
              controller: GenomeDetail})
 
+        .when('/genes/CDS/:id',
+            {templateUrl: 'views/objects/gene.html',
+             controller: GeneDetail })
+        .when('/genes/:ws/:id',
+            {templateUrl: 'views/objects/gene.html',
+             controller: GeneDetail })
+
         .when('/models',
             {templateUrl: 'views/object-list.html',
              controller: WSObjects})        
@@ -60,8 +67,14 @@ var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
         .when('/cpds/:ids', 
             {templateUrl: 'views/objects/cpd.html',
              controller: CpdDetail})           
-      
-   
+
+        .when('/meme',
+            {templateUrl: 'views/objects/meme.html',
+             controller: MemeDetail})
+        .when('/meme/:ws/:id',
+            {templateUrl: 'views/objects/meme.html',
+             controller: MemeDetail})
+         
         .when('/iris', 
             {templateUrl: 'views/iris.html',
              controller: IRIS})   

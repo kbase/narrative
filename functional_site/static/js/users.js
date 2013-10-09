@@ -156,7 +156,7 @@
 		}	
 	}
 
-
+	//populates the recent narratives section of the user home page
 	function loadRecentNarratives() {
         $("#narratives_loading").show();
         project.get_narratives({
@@ -181,7 +181,7 @@
                             "userId": userId
                         });
                         count++;
-						return count !== 2;
+						return count !== 5;
 					});
 
 
@@ -204,7 +204,7 @@
         });
     };
 
-
+    //populates the recent projects portion of the user home
 	function loadRecentProjects() {
         $("#projects_loading").show();
         project.get_projects({

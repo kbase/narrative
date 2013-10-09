@@ -34,6 +34,10 @@ function MemeDetail($scope, $routeParams) {
                      'workspace_id': $routeParams.ws}
 }
 
+function GeneDetail($scope, $routeParams) {
+    $scope.params = {'geneID': $routeParams.id,
+                     'workspaceID': $routeParams.ws}
+}
 
 function ModelDetail($scope, $routeParams) {
     $scope.ws = $routeParams.ws;

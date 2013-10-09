@@ -48,7 +48,7 @@
 			var self = this;
 
 			this.$table = $("<table />")
-						  .addClass("kbgo-table");
+						  .addClass("table table-striped table-bordered");
 
 			// chain of callbacks.
 			// first, get the Feature entity from CDS

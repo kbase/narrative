@@ -20,6 +20,13 @@ var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
             {templateUrl: 'views/objects/genome.html',
              controller: GenomeDetail})
 
+        .when('/genes/CDS/:id',
+            {templateUrl: 'views/objects/gene.html',
+             controller: GeneDetail })
+        .when('/genes/:ws/:id',
+            {templateUrl: 'views/objects/gene.html',
+             controller: GeneDetail })
+
         .when('/models',
             {templateUrl: 'views/object-list.html',
              controller: WSObjects})        

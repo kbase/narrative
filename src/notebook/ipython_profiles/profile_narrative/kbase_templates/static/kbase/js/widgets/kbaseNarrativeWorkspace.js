@@ -164,7 +164,7 @@
                     // function to handle the result data
                     this.result_handler = this.plantsCreateOutput;
                     break;
-                case 'genomeToFba':
+                case 'Genome To FBA Model':
                     config = this.genomeToFbaConfig;
                     command_builder = this.genomeToFbaCommand();
                     this.result_handler = this.genomeToFbaCreateOutput;

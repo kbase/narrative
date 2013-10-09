@@ -7,7 +7,7 @@
     $(function() {
         $(document).on('loggedIn.kbase', function(event, token) {
             console.debug("logged in")
-            loadFeed();
+            loadPage();
         });
 
         $(document).on('loggedOut.kbase', function(event, token) {

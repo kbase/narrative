@@ -184,9 +184,13 @@
 					var count = 0;
 					_.every(results, function(narrative){
 
+						var name = narrative.id.replace(/_/g," ");
+						var project_id = narrative.workspace.replace(/_/g," ");
+
+
 						data.rows.push({
-                            "name": narrative.id,
-                            "project_id": narrative.workspace,
+                            "name": name,
+                            "project_id": project_id,
                             "userId": userId
                         });
                         count++;
@@ -235,8 +239,10 @@
 					var count = 0;
 					_.every(results, function(project_id){
 
+						var name = project_id.id.replace(/_/g," ");
+
 						data.rows.push({
-                            "name": project_id.id,
+                            "name": name,
                             
                         });
                         count++;

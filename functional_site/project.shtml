@@ -32,79 +32,36 @@
 			<div id="project_title">
 				<div class="pull-left">
 					<h2 class="pds_name">Project</h2>
-					<h1 class="pds_name">Thermopilae in the Southern Ocean</h1>
+					<h1 id="project_name" class="pds_name"></h1>
 				</div>
-				<span class="pull-right"><a href="#" class="btn btn-primary">Manage Projects</a></span>
+				<span class="pull-right"><a href="./manage_projects.shtml" class="btn btn-primary">Manage Projects</a></span>
 			</div>
 
 			<div class="table_section container">
 				<div class="section_title row">
 					<div class="title">
-						<a href="#" data-toggle="collapse" data-target="#narratives_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Narratives in Project&nbsp;&nbsp;&nbsp;<img id="narratives_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
+						<a href="#" data-toggle="collapse" data-target="#narratives_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Narratives in Project&nbsp;&nbsp;&nbsp;<img id="narratives_loading" src="static/images/ajax-loader-blue.gif" style="display:none"></a>
 					</div>
 					<div class="col-md-2">
-						<button class="btn btn-primary btn-sm">new</button>
+						<a id="new_narrative_button" data-toggle="modal" href="#newNarrative" class="btn btn-primary btn-sm">new</a>
 					</div>
 				</div>
 	 			<div id="narratives_container" class="row collapse in">
+	 				<div id="no_narratives" style="display: none">You do not have any narratives in this project. <a href="#" id="create_narrative_link">Create a narrative</a> to get started.</div>
 					<table id="narratives_table" class="table table-striped table-bordered" cellpadding="0" cellspacing="0" border="0" >
-						<thead>
+						<thead id="narrative_table_header" style="display: none;">
 							<tr>
 								<th>&nbsp;</th>
 								<th>Name</th>
 								<th>Owner</th>
 								<th>Shared with</th>
 								<th>In Projects</th>
-								<th>Date started</th>
 								<th>Last modified</th>
 							</tr>
 						</thead>
-						<tbody>
-							<tr>
-								<td><input type="checkbox"></td>
-								<td>Thermopilae growth I</td>
-								<td>Jane Scientist</td>
-								<td>Will Smith and 3 others</td>
-								<td>Thermopilae in the Southern Ocean</td>
-								<td>03 Mar 2013 12:33:34</td>
-								<td>09 Sep 2013 03:02:58</td>
-							</tr>
-							<tr>
-								<td><input type="checkbox"></td>
-								<td>Thermopilae growth II</td>
-								<td>Jane Scientist</td>
-								<td>Will Smith and 2 others</td>
-								<td>Thermopilae in the Southern Ocean,<BR>Thermopilae in the Artic Ocean</td>
-								<td>03 Mar 2013 12:33:34</td>
-								<td>09 Sep 2013 03:02:58</td>
-							</tr>
-							<tr>
-								<td><input type="checkbox"></td>
-								<td>Helicobacter spp.</td>
-								<td>Jane Scientist</td>
-								<td>Will Smith and 3 others</td>
-								<td>Thermopilae in the Southern Ocean</td>
-								<td>07 Apr 2013 12:33:34</td>
-								<td>09 Apr 2013 03:02:58</td>
-							</tr>
-							<tr>
-								<td><input type="checkbox"></td>
-								<td>Thermus thermophilus extracts</td>
-								<td>Jeff Trotter</td>
-								<td>You and 3 others</td>
-								<td>&nbsp;</td>
-								<td>07 Jul 2013 12:33:34</td>
-								<td>09 Jul 2013 03:02:58</td>
-							</tr>
-							<tr>
-								<td><input type="checkbox"></td>
-								<td>What are the most toxic thermophiles ...</td>
-								<td>Jane Scientist</td>
-								<td>Jeff Trotter and 2 others</td>
-								<td>Thermopilae in the Southern Ocean</td>
-								<td>07 Aug 2013 12:33:34</td>
-								<td>09 Aug 2013 03:02:58</td>
-					        </tr>
+						<tbody id="narrative_table_rows">
+							
+						</tbody>
 					 </table>
 				</div>
 			</div>
@@ -112,20 +69,56 @@
 			<div class="table_section container">
 				<div class="section_title row">
 					<div class="title">
-						<a href="#" data-toggle="collapse" data-target="#datasets_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Datasets in Project&nbsp;&nbsp;&nbsp;<img id="datasets_loading" src="static/images/ajax-loader.gif" style="display:none"></a>
+						<a href="#" data-toggle="collapse" data-target="#datasets_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Datasets in Project&nbsp;&nbsp;&nbsp;<img id="datasets_loading" src="static/images/ajax-loader-blue.gif" style="display:none"></a>
 					</div>
 					<div class="col-md-2">
 						<button class="btn btn-primary btn-sm">upload</button>
 					</div>
 				</div>
-	 			<div id="datasets_container" class="row collapse in">
+				
+				<div id="datasets_container" class="row collapse in">
+					<div id="no_datasets" style="display: none">You do not have any datasets in this project.</div>
 					<table id="datasets_table" class="table table-striped table-bordered" cellpadding="0" cellspacing="0" border="0" ></table>
 				</div>
 			</div>
 
 			
+		
+
+			
 			
 		</div>
+
+		<!-- modal dialogs --->
+		<!-- Modal -->
+		  <div class="modal fade" id="newNarrative" tabindex="-1" role="dialog" aria-labelledby="NewNarrative" aria-hidden="true">
+		    <div class="modal-dialog">
+		      <div class="modal-content">
+		        <div class="modal-header">
+		          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		          <h4 class="modal-title">New Narrative</h4>
+		        </div>
+		        <div class="modal-body">
+		          <form role="form">
+					  <div class="form-group">
+					    <label for="exampleInputEmail1">Narrative Name</label>
+					    <input type="text" class="form-control" id="new_narrative_name" name="new_narrative_name">
+					  </div>
+					  <div class="form-group">
+					    <label for="exampleInputPassword1">Create in Project</label>
+					    <select id="new_narrative_project" name="new_narrative_project" class="form-control">
+						  <option id="project_id_option"></option>
+						</select>
+					  </div>
+				  </form>
+		        </div>
+		        <div class="modal-footer">
+		          <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+		          <button id="new_narrative_submit" type="button" class="btn btn-primary">create</button>
+		        </div>
+		      </div><!-- /.modal-content -->
+		    </div><!-- /.modal-dialog -->
+		  </div><!-- /.modal -->
 		
 		<script src="static/js/jquery-1.10.2.min.js"></script>
 		<script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
@@ -135,20 +128,25 @@
         <script src="static/js/kbasePrompt.js"></script>
         <script src="static/js/kbaseLogin.js"></script>
 		<script src="static/js/kbase.js"></script>
-        <script src="static/js/datastore.js"></script>
+		<script src="static/js/underscore.js"></script>
+		<script src="static/js/ICanHaz.min.js"></script>
+        <script src="static/js/project_page.js"></script>
+        <script src="static/js/projects.js"></script>
 
 		<!-- HTML Templates -->
-		<script id="workspaces" type="text/html">
+		<script id="narrative_table_rows" type="text/html">
 		{{#rows}}
-		<li><a href="#">{{ username }}</a>&#39;s workspace <a href="#">{{ workspace }}</a> was updated on {{ date }}.</li>
+		<tr>
+			<td><input type="checkbox"></td>
+			<td><a href="http://narrative.kbase.us/narratives/{{userId}}/{{project_id}}.{{name}}">{{name}}</a></td>
+			<td>{{owner}}</td>
+			<td></td>
+			<td>{{project_id}}</td>
+			<td>{{date}}</td>
+		</tr>
 		{{/rows}}
 		</script>
-		
-		<script id="assertions" type="text/html">
-		{{#rows}}
-		<li><a href="#">{{ username }}</a> asserts: "{{ assertion }}"</li>
-		{{/rows}}
-		</script>
+
 
     </body>
 </html>

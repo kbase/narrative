@@ -79,6 +79,15 @@ h4 {
 	
 */
 
+body {
+	
+	margin-bottom: 80px;
+}
+
+#main {
+	margin-top: 20px;
+}
+
 nav[role="navigation"] input[type="text"] {
 	display:inline;
 }
@@ -116,6 +125,11 @@ h1, h2 {
 	color: #0066b9;
 	text-decoration: none;
 }
+
+.section_title a.btn {
+	color: #fff;
+}
+
 .section_title .title {
 	margin-top: 4px;
 }
@@ -123,7 +137,7 @@ h1, h2 {
 span.aside {
 	font-style: italic;
 } 
-.dataTables_table_info, #datasets_table_paginate {
+.dataTables_table_info, #datasets_table_paginate, #projects_table_paginate, #narratives_table_paginate {
 	margin-top: 5px;
 } 
 
@@ -148,4 +162,7 @@ th {
 .title {
 	float: left;
 	width: 120px;
+}
+h4.modal-title {
+	font: 1.15em/1.25em 'OxygenBold', Arial, sans-serif;
 }

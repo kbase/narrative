@@ -43,7 +43,57 @@
     };
 
     function loadNarratives() {
-        // stub for now.
+        $("#narratives_loading").show();
+        project.get_narratives({
+            callback: function(results) {
+                if (Object.keys(results).length > 0) {
+                    var data = { rows: []};
+                    var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+
+                    _.each(results, function(narrative){
+                        
+                        console.log(narrative.id);
+                        console.log(narrative.owner);
+
+                        _.each(Object.keys(narrative), function(key) {
+                            console.log(key);
+                        });
+
+                        data.rows.push({
+                            "name": narrative.id,
+                            "owner": narrative.owner,
+                            "date": narrative.moddate,
+                            "project_id": narrative.workspace,
+                            "userId": userId
+                        });
+            
+                    });
+
+                    //populate the html template
+                    $("#narrative_table_header").show();
+                    var rows = ich.narrative_table_rows(data)
+                    $('#narrative_table_rows').append(rows);
+
+                    $("#narratives_loading").hide();
+
+                    //make into a datatable
+                    oTable3 = $('#narratives_table').dataTable( {
+                        "bLengthChange" : false,
+                            "sPaginationType" : "full_numbers",
+                            "aaSorting" : [[1, "asc"]],
+                            "aoColumnDefs" : [
+                            ]
+                    } );
+
+
+                } else {
+                    $("#narratives_loading").hide();
+                    $("#no_narratives").show();
+
+                }
+                
+            }
+        });
     };
 
     function loadDatasets(token, userId, onlyOwned) {
@@ -101,23 +151,28 @@
                         ]);
                     }
 
-                    $("#datasets_table").dataTable({
-                        "bLengthChange" : false,
-                        "iDisplayLength": 5,
-                        "aaData" : objectMetaTable,
-                        "aoColumns" : [
-                            { "sTitle" : "&nbsp;" },
-                            { "sTitle" : "ID" },
-                            { "sTitle" : "Type" },
-                            { "sTitle" : "Owner" },
-                            { "sTitle" : "Location" },
-                            { "sTitle" : "Last modified" },
-                        ],
-                        "sPaginationType" : "full_numbers",
-                        "aaSorting" : [[1, "asc"]],
-                        "aoColumnDefs" : [
-                        ]
-                    });
+                    if (objectMetaTable.length > 0) {
+
+                        $("#datasets_table").dataTable({
+                            "bLengthChange" : false,
+                            "iDisplayLength": 5,
+                            "aaData" : objectMetaTable,
+                            "aoColumns" : [
+                                { "sTitle" : "&nbsp;" },
+                                { "sTitle" : "ID" },
+                                { "sTitle" : "Type" },
+                                { "sTitle" : "Owner" },
+                                { "sTitle" : "In Projects" },
+                                { "sTitle" : "Last modified" },
+                            ],
+                            "sPaginationType" : "full_numbers",
+                            "aaSorting" : [[1, "asc"]],
+                            "aoColumnDefs" : [
+                            ]
+                        });
+                    } else {
+                        $("#no_datasets").show();
+                    }
                     $("#datasets_loading").css({ 'display' : 'none' });
 
                 });
@@ -128,8 +183,59 @@
     };
 
     function loadProjects() {
+        $("#projects_loading").show();
+        var projects = project.get_projects({
+            callback: function(results) {
+                if (Object.keys(results).length > 0) {
+                    var data = { rows: []};
+                    _.each(results, function(workspace){
+                        
+                        console.log(workspace.id);
+                        console.log(workspace.owner);
+
+                        data.rows.push({
+                            "name": workspace.id,
+                            "owner": workspace.owner,
+                            "date": workspace.moddate
+                        });
+            
+                    });
+
+                    //populate the html template
+                    $("#project_table_header").show();
+                    var rows = ich.project_table_rows(data)
+                    $('#projectTableRows').append(rows);
+
+                    $("#projects_loading").hide();
+
+                    //make into a datatable
+                    oTable3 = $('#projects_table').dataTable( {
+                        "bLengthChange" : false,
+                            "iDisplayLength": 5,
+                            "sPaginationType" : "full_numbers",
+                            "aaSorting" : [[1, "asc"]],
+                            "aoColumnDefs" : [
+                            ]
+                    } );
+
+                    //load the dropdown menu for the new narrative dialog box
+                    var options = ich.project_select_options(data);
+                    $('#new_narrative_project').append(options);
+                    
+
+
+                } else {
+                    $("#projects_loading").hide();
+                    $("#no_projects").show();
+                }
+                
+            }
+        });
 
     };
+
+
+
 
     function clientError(error) {
         console.debug(error);
@@ -157,196 +263,40 @@
     $('#datasets_container').on('shown.bs.collapse', toggleChevron);
     $('#projects_container').on('hidden.bs.collapse', toggleChevron);
     $('#projects_container').on('shown.bs.collapse', toggleChevron);
+
+    $("#create_narrative_link").click(function() {
+        $("#new_narrative_button").click();
+    });
     
+    //add click handler for creating new narrative
+    $( "#new_narrative_submit" ).click(function() {
+        var name = $("#new_narrative_name").val();
+        var project_id = $("#new_narrative_project").val();
+
+        //no spaces allowed in narrative name
+        name = name.replace(/ /g,"_");
+        name = name.replace(/\W/g,"");
+        
+        if (project_id === "") {
+            project_id = undefined;
+        }
+
+        //create the new narrative in ws
+        project.new_narrative({
+            narrative_id: name, 
+            project_id: project_id,
+            callback: function(results) {
+                console.log("narrative created.");
+                //redirect to the narrative page
+                var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+                window.location.href = "http://narrative.kbase.us/narratives/"+userId+"/"+project_id+"."+name;
+            }
+        }); 
+    });
 
 
 
 
 })( jQuery );
 
-
-
-
-
-// var login_url = "https://kbase.us/services/authorization/Sessions/Login/";
-// var userData;
-
-
-// var defaultUserData = {
-//  active_content: $("#new_workspace"),
-//  active_button: $("#workspace_button"),
-//     auth_token: null,
-    
-// };
-
-
-// /** checks to see if the user is authenticated */
-// function checkUserAuth() {
-    
-//     //check to see if we still have authentication or not
-//     var hasLocalStorage = false;
-
-//  if (localStorage && localStorage !== null) {
-//         hasLocalStorage = true;
-//     }
-
-//     if (hasLocalStorage && localStorage["auth_token"] !== undefined && localStorage["auth_token"] !== "null") {
-//      userData = jQuery.extend(true, {}, defaultUserData);
-//      userData.auth_token = localStorage["auth_token"];
-
-//         var user_id = userData.auth_token.split("|")[0].split("=")[1];
-           
-//      $("#login_info span").text("Logged in as: " + user_id);
-//      $("#login_info").show();
-        
-//      $("#login_section").hide();
-//      $("#public_section").hide();
-//      $("#newsfeed_column").show();
-//      loadFeed();
-//     } 
-// }
-
-// /** logs a user in */
-// function login(user_id, password) {
-//     var initializeUser = function (token) {
-//      userData = jQuery.extend(true, {}, defaultUserData);
-//      userData.auth_token = token;
-           
-//      $("#login_info span").text("Logged in as: " + user_id);
-//      $("#login_info").show();
-
-//      $("#login_section").hide();
-//      $("#public_section").hide();
-//      $("#newsfeed_column").show();
-//      loadFeed();
-//     };
-
-
-//     var hasLocalStorage = false;
-
-//  if (localStorage && localStorage !== null) {
-//         hasLocalStorage = true;
-//     }
-
-//  var options = {
-//      loginURL : login_url,
-//      possibleFields : ['verified','name','opt_in','kbase_sessionid','token','groups','user_id','email','system_admin'],
-//      fields : ['token', 'kbase_sessionid', 'user_id']
-//  };
-
-//  var args = { "user_id" : user_id, "password": password, "fields": options.fields.join(',')};
-    
-//  login_result = $.ajax({type: "POST",
-//                        url: options.loginURL,
-//                        data: args,
-//                        beforeSend: function (xhr) {
-//                                       showLoading();
-//                                    },
-//                        success: function(data, textStatus, jqXHR) {
-//                                     if (hasLocalStorage) {
-//                                         localStorage["auth_token"] = data.token;
-//                                     }
-//                                     console.log(textStatus);
-//                                     initializeUser(data.token);
-//                                 }, 
-//                        error: function(jqXHR, textStatus, errorThrown) {
-//                            console.log(errorThrown);
-//                            //$('#login_form button[type="submit"]').removeAttr('disabled');
-//                            $("#loading-indicator").hide();
-//                            $("#login_error").html("There was a problem signing in: " + errorThrown);
-//                            $("#login_error").show();
-//                        },
-//                        dataType: "json"});
-// }
-
-// /** shows an animated gif indicating things are loading */
-// function showLoading() {
-//  //$('#login_form button[type="submit"]').attr('disabled','disabled');
-//  $("#loading-indicator").show();
-// }
-
-// function logout() {
-
-//     var hasLocalStorage = false;
-
-//  if (localStorage && localStorage !== null) {
-//         hasLocalStorage = true;
-//     }
-
-//     if (hasLocalStorage) {
-//         localStorage.clear();
-//     }
-    
-//     userData = null;
-//  $("#login_info").hide();
-//  $("#newsfeed_column").hide()    
-//     $("#login_section").show();
-//  $("#public_section").show();
-
-    
-//  location.reload(); 
-// }
-
-
-// $(document).ready(function(){
-//  checkUserAuth();
-//  //check_login(assertions_data);
-// });
-
-// /*** feed */
-// function loadFeed () {
-//  var workspaceURL = "https://www.kbase.us/services/workspace",
-
-//  wsClient = new workspaceService(workspaceURL);
-//  var hasLocalStorage = false;
-//  if (localStorage && localStorage !== null) {
-//         hasLocalStorage = true;
-//     }
-
-//  //get auth token
-//  if (hasLocalStorage && localStorage["auth_token"] !== undefined && localStorage["auth_token"] !== "null") {
-        
-//      userData = jQuery.extend(true, {}, defaultUserData);
-//      userData.auth_token = localStorage["auth_token"];
-//      var user_id = userData.auth_token.split("|")[0].split("=")[1];
-    
-//      wsClient.list_workspaces_async({ auth: userData.auth_token }, 
-//              function(results) {
-//                  var data = { rows: []};
-//                  var count = 0;
-                    
-//                  //first sort
-//                  results = _.sortBy(results, function(ws) {
-//                      return ws[2];
-//                  });
-//                  results.reverse();
-                    
-//                  //populate the data structure for the template
-//                  _.every(results, function(workspace){
-
-//                      if (user_id != workspace[1]) {
-//                          data.rows.push({
-//                              "username": workspace[1],
-//                              "workspace": workspace[0],
-//                              "date": workspace[2]
-//                          });     
-//                          count++;
-//                      }
-//                      return count !== 10;
-//                  });
-
-//                  //call the template
-//                  rows = ich.workspaces(data)
-//                  $('#people_feed').append(rows);
-//                  $('#loading-indicator-ws').hide();
-
-                    
-//              },
-
-//              function(err) {
-//                  console.log(err);
-//              }
-//      );
-//  }   
-// }
 

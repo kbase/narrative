@@ -11,3 +11,7 @@ body.notebook_app {
     position: relative;
     font-size: 110%;
 }
+/* Shiran: undoing style introduced by datavis.css */
+pre { outline: none; }
+
+.btn * { color: black; }

@@ -1,6 +1,14 @@
 html, body {
 	height: 100%;
 }
+nav[role="navigation"] ul li.alt a{
+	background-color: #fff;
+	color: #5c9531;
+}
+
+#doodle{
+	text-align: center;
+}
 
 #login_form {
 	margin-bottom: 10px;
@@ -46,18 +54,29 @@ html, body {
 	margin-bottom: 40px;
 }
 
-
+#maincontent{
+	padding: 2em 0 0 0;
+}
 
 /** styling for the metrics section */
 #maincontent #metrics_section, #maincontent #login_section {
 
-	padding: 5px 20px 20px 20px;
+	margin: 20px 0 0 0;
+	padding: 20px 20px 20px 20px;
 	border: 1px solid #E6E6E6;
 	background-color: #E6E6E6;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
 	/*margin: 10px;*/
 	
+}
+
+#maincontent #login_section {
+	padding-top: 4em;
+	padding-bottom: 5em;
+}
+#doodle img{
+	height: 8em;
 }
 
 .stats_section {

@@ -1536,9 +1536,9 @@
         },
         render: function() {
             var self = this;
-	    if (this.options.token && this.options.new_workspaceID) {
+	    if (this.options.token && this.options.workspaceID) {
                 var ws_regex = /^(\w+)\.(.+)/;
-		var wsid = ws_regex.exec( this.options.new_workspaceID);
+		var wsid = ws_regex.exec( this.options.workspaceID);
 		console.log( wsid);
                 if ( wsid[1] && wsid[2]) {
 		    var kbws = new workspaceService("http://kbase.us/services/workspace_service/");

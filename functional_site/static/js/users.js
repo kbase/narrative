@@ -18,7 +18,7 @@
 
             login_callback: function(args) {
             	alert("callback call");
-                loadFeed();
+                loadPage();
             },
 
             logout_callback: function(args) {
@@ -27,7 +27,7 @@
             },
 
             prior_login_callback: function(args) {
-                loadFeed();
+                loadPage();
             },
         });
 
@@ -79,7 +79,7 @@
 
 
 
-    function loadFeed() {
+    function loadPage() {
 		$("#login_section").hide();
 		$("#public_section").hide();
 	    $("#newsfeed_column").show();
@@ -95,6 +95,9 @@
         $("#kb_name").html(userName);
 
         loadProjectFeed(token, userId);
+        loadRecentNarratives();
+        loadRecentProjects();
+
     };
 
 
@@ -153,6 +156,105 @@
 		}	
 	}
 
+
+	function loadRecentNarratives() {
+        $("#narratives_loading").show();
+        project.get_narratives({
+            callback: function(results) {
+                if (Object.keys(results).length > 0) {
+                    var data = { rows: []};
+                    var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+
+					//first sort
+					results = _.sortBy(results, function(narrative) {
+					    return narrative.moddate;
+					});
+					results.reverse();
+					
+					//populate the data structure for the template
+					var count = 0;
+					_.every(results, function(narrative){
+
+						data.rows.push({
+                            "name": narrative.id,
+                            "project_id": narrative.workspace,
+                            "userId": userId
+                        });
+                        count++;
+						return count !== 2;
+					});
+
+
+
+                    //populate the html template
+                    var rows = ich.recent_narratives(data)
+                    $('#recent_narratives_list').append(rows);
+
+                    $("#narratives_loading").hide();
+
+
+
+                } else {
+                    $("#narratives_loading").hide();
+                    $("#no_narratives").show();
+
+                }
+                
+            }
+        });
+    };
+
+
+	function loadRecentProjects() {
+        $("#projects_loading").show();
+        project.get_projects({
+            callback: function(results) {
+            	console.log("got here2");
+                if (Object.keys(results).length > 0) {
+                    var data = { rows: []};
+
+                    console.log("got here");
+            
+					//first sort
+					results = _.sortBy(results, function(project_id) {
+					    return project_id.moddate;
+					});
+					results.reverse();
+					
+					//populate the data structure for the template
+					var count = 0;
+					_.every(results, function(project_id){
+
+						data.rows.push({
+                            "name": project_id.id,
+                            
+                        });
+                        count++;
+						return count !== 5;
+					});
+
+
+
+                    //populate the html template
+                    var rows = ich.recent_projects(data)
+                    $('#recent_projects_list').append(rows);
+
+                    $("#projects_loading").hide();
+
+					var options = ich.project_select_options(data);
+                    $('#new_narrative_project').append(options);
+
+
+                } else {
+                    $("#projects_loading").hide();
+                    $("#no_projects").show();
+
+                }
+                
+            }
+        });
+    };
+
 	function showLoading() {
 	//$('#login_form button[type="submit"]').attr('disabled','disabled');
 	$("#loading-indicator").show();
@@ -162,86 +264,32 @@
 		$("#loading-indicator").hide();
 	}
 
+   //add click handler for creating new narrative
+    $( "#new_narrative_submit" ).click(function() {
+        var name = $("#new_narrative_name").val();
+        var project_id = $("#new_narrative_project").val();
 
+        //no spaces allowed in narrative name
+        name = name.replace(/ /g,"_");
+        name = name.replace(/\W/g,"");
+        
+        if (project_id === "") {
+            project_id = undefined;
+        }
+
+        //create the new narrative in ws
+        project.new_narrative({
+            narrative_id: name, 
+            project_id: project_id,
+            callback: function(results) {
+                console.log("narrative created.");
+                //redirect to the narrative page
+                var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+                window.location.href = "http://narrative.kbase.us/narratives/"+userId+"/"+project_id+"."+name;
+            }
+        }); 
+    });
 
 
 })( jQuery );
 
-/*
-
-var login_url = "https://kbase.us/services/authorization/Sessions/Login/";
-var userData;
-
-
-var defaultUserData = {
-	active_content: $("#new_workspace"),
-	active_button: $("#workspace_button"),
-    auth_token: null,
-	
-};
-
-
-	
-
-
-// logs a user in 
-function login(user_id, password) {
-    var initializeUser = function (token) {
-	    userData = jQuery.extend(true, {}, defaultUserData);
-	    userData.auth_token = token;
-	   	   
-	    $("#login-widget").show();
-
-	    $("#login_section").hide();
-		$("#public_section").hide();
-	    $("#newsfeed_column").show();
-		loadProjectFeed();
-    };
-
-
-    var hasLocalStorage = false;
-
-	if (localStorage && localStorage !== null) {
-        hasLocalStorage = true;
-    }
-
-	var options = {
-		loginURL : login_url,
-		possibleFields : ['verified','name','opt_in','kbase_sessionid','token','groups','user_id','email','system_admin'],
-		fields : ['token', 'kbase_sessionid', 'user_id']
-	};
-
-	var args = { "user_id" : user_id, "password": password, "fields": options.fields.join(',')};
-	
-	login_result = $.ajax({type: "POST",
-	                      url: options.loginURL,
-	                      data: args,
-	                      beforeSend: function (xhr) {
-										 showLoading();
-	                                  },
-	                      success: function(data, textStatus, jqXHR) {
-									   if (hasLocalStorage) {
-										   localStorage["auth_token"] = data.token;
-									   }
-									   console.log(textStatus);
-									   initializeUser(data.token);
-									   $("#login-widget").kbaseLogin();
-	                               }, 
-	                      error: function(jqXHR, textStatus, errorThrown) {
-	                          console.log(errorThrown);
-							  //$('#login_form button[type="submit"]').removeAttr('disabled');
-							  $("#loading-indicator").hide();
-							  $("#login_error").html("There was a problem signing in: " + errorThrown);
-							  $("#login_error").show();
-	                      },
-	                      dataType: "json"});
-}
-
-
-	// shows an animated gif indicating things are loading 
-function showLoading() {
-	//$('#login_form button[type="submit"]').attr('disabled','disabled');
-	$("#loading-indicator").show();
-}
-
-*/

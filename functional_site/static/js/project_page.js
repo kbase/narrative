@@ -27,7 +27,7 @@
                 },
 
                 logout_callback: function(args) {
-                    window.location.href="./home.html";
+                    window.location.href="./home.shtml";
                 },
 
                 prior_login_callback: function(args) {

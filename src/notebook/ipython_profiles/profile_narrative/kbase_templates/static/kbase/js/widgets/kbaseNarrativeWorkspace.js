@@ -164,6 +164,9 @@
                     // function to handle the result data
                     this.result_handler = this.plantsCreateOutput;
                     break;
+
+                
+
                 case 'Genome To FBA Model':
                     config = this.genomeToFbaConfig;
                     command_builder = this.genomeToFbaCommand();
@@ -259,7 +262,15 @@
 
         /* -------------- END: PLANTS ---------------------- */
 
+
+
         /* -------------- MICROBES ---------------- */
+
+        /* --------- Assemble Contigs from FASTA reads -----------*/
+
+        /* ---------- Annotate Assembled Genome ----------- */
+
+        /* ------------ Genome to FBA Model ----------------- */ 
         genomeToFbaConfig: {
             'Identifiers': {
                 'Genome': '',
@@ -278,11 +289,19 @@
 
             console.log("got to fba output");
             console.log(element);
-//            element.html("Finished genome to fba");
             element.kbaseModelMetaNarrative({data: data});
             element.css({ margin: '-10px' });
             element.off('click dblclick keydown keyup keypress focus');
         },
+
+        /* --------- Run Flux Balance Analysis --------------- */
+        
+        /* ------------ Gapfill FBA Model -------------- */
+
+        /* ------------ Integrate Gapfill Solution ---------------- */
+
+
+
 
         /* --------------- END: MICROBES ----------------- */
 

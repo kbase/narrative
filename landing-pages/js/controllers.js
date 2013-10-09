@@ -29,6 +29,10 @@ function GenomeDetail($scope, $routeParams) {
                     'workspaceID': $routeParams.ws}
 }
 
+function GeneDetail($scope, $routeParams) {
+    $scope.params = {'geneID': $routeParams.id,
+                     'workspaceID': $routeParams.ws}
+}
 
 function ModelDetail($scope, $routeParams) {
     $scope.ws = $routeParams.ws;

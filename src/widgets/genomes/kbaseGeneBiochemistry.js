@@ -37,7 +37,7 @@
 
 		render: function(options) {
 			var $table = $("<table/>")
-						 .addClass("kbgo-table");
+						 .addClass("table table-striped table-bordered");
 
 			var self = this;
 			this.cdmiClient.fids_to_roles([this.options.featureID],

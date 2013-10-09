@@ -555,6 +555,8 @@
                 this.showGenomeCards();
             else if (this.options.template.toLowerCase() === "meme")
                 this.showMemeCards();
+            else if (this.options.template.toLowerCase() === "gene")
+                this.showGeneCards();
             // else if (this.options.template.toLowerCase() === "hello")
             //     this.showHelloCards();
             else {
@@ -610,6 +612,33 @@
             );
             return this;
         },
+
+        /**
+         * Template for showing gene cards.
+         */
+        showGeneCards: function() {
+            this.addNewCard("KBaseGeneInfo",
+                {
+                    featureID: this.options.data.geneID,
+                },
+                {
+                    my: "left top",
+                    at: "left bottom",
+                    of: "#app"
+                }
+            );
+            this.addNewCard("KBaseGeneInstanceInfo",
+                {
+                    featureID: this.options.data.geneID,
+                },
+                {
+                    my: "left top",
+                    at: "left+330 bottom",
+                    of: "#app"
+                }
+            );
+        },
+
 
         /**
          * Initial template for showing MEME cards.
@@ -679,7 +708,19 @@
         registerEvents: function() {
             var self = this;
 
-            this.registeredEvents = ["featureClick", "showContig", "showDomains", "showOperons", "showBiochemistry", "showMemeMotif", "showMemeRunParameters", "showMemeRawOutput", "showTomtomHits", "showTomtomRunParameters", "showMastHits"];
+            this.registeredEvents = ["featureClick", 
+                                     "showContig",
+                                     "showGenome", 
+                                     "showGenomeDescription",
+                                     "showDomains", 
+                                     "showOperons", 
+                                     "showBiochemistry", 
+                                     "showMemeMotif", 
+                                     "showMemeRunParameters", 
+                                     "showMemeRawOutput", 
+                                     "showTomtomHits", 
+                                     "showTomtomRunParameters", 
+                                     "showMastHits"];
 
             /**
              * Event: showDomains
@@ -784,6 +825,39 @@
                 );
             });
 
+            /**
+             * Event: showGenome
+             * -----------------
+             * Adds a genome overview card for the given genome ID
+             */
+            $(document).on("showGenome", function(event, data) {
+                self.addNewCard("KBaseGenomeOverview",
+                    {
+                        genomeID: data.genomeID,
+                        workspaceID: data.workspaceID,
+                        isInCard: true
+                    },
+                    {
+                        my: "left top",
+                        at: "center",
+                        of: data.event
+                    }
+                );
+            });
+
+            $(document).on("showGenomeDescription", function(event, data) {
+                self.addNewCard("KBaseWikiDescription",
+                    {
+                        genomeID: data.genomeID,
+                        loadingImage: "../../widgets/images/ajax-loader.gif",
+                    },
+                    {
+                        my: "left top",
+                        at: "center",
+                        of: data.event
+                    }
+                );
+            });
 
             /**
              * Event: showMemeMotif

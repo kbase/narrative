@@ -172,7 +172,7 @@
 	var META_ws;
 	if ( p.workspace_id ) {
 	    META_ws = project.ws_client.get_workspacemeta( { auth : token,
-							      workspace : p.workspace_id } );
+							     workspace : p.workspace_id } );
 	    $.when( META_ws).then( function(result) {
 				       filter_wsobj( { res: [result],
 						       callback : p.callback,
@@ -310,6 +310,71 @@
 	    console.log( "Bad project id: ",p.project_id);
 	}
     };
+
+    // Get the permissions for a project, returns a 2 element
+    // hash identical to get_workspacepermissions
+    // 'default' : perm // default global perms
+    // 'user_id1' : perm1 // special permission for user_id1
+    // ...
+    // 'user_idN' : permN // special permission for user_idN
+    project.get_project_perms = function( p_in ) {
+	var def_params = { callback : undefined,
+			   project_id : undefined,
+			   error_callback : error_handler
+			 };
+	var p = $.extend( def_params, p_in);
+	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+
+	var perm_fn =  project.ws_client.get_workspacepermissions( { auth : token,
+								      workspace : p.project_id });
+	$.when( perm_fn).then( function(perms) {
+				   console.log( perms);
+				   p.callback( perms);
+			       },
+			       p.error_callback
+			     );
+
+    };
+
+
+    // Set the permissions for a project, takes a project_id
+    // and a perms hash that is the same as the return format
+    // from get_project_perms
+    // 'default' : perm // default global perms
+    // 'user_id1' : perm1 // special permission for user_id1
+    // ...
+    // 'user_idN' : permN // special permission for user_idN
+    project.set_project_perms = function( p_in ) {
+	var def_params = { callback : undefined,
+			   project_id : undefined,
+			   perms : {},
+			   error_callback : error_handler
+			 };
+	var p = $.extend( def_params, p_in);
+	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+
+	var set_perm_fn =  [];
+	// If a new default permission was given push a set_global_workspace_permissions
+	// call onto the function stack
+	if ('default' in p.perms) {
+	    set_perm_fn.push( project.ws_client
+			      .set_global_workspace_permissions( { auth: token,
+								   workspace : p.project_id,
+								   new_permission : p.perms['default']
+								 }));
+	    delete( p.perms['default']);
+	}
+	/*
+	$.when( set_perm_fn).then( function(perms) {
+				       console.log( perms);
+				       p.callback( perms);
+				   },
+				   p.error_callback
+				 );
+	 */
+    };
+
+
 
     // Will search the given list of project_ids for objects of type narrative
     // if no project_ids are given, then all a call will be made to get_projects

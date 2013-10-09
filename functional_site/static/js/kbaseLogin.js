@@ -557,34 +557,82 @@
                              }, this)
                          )
                  )
-                 .append(
-                     $('<span></span>')
-                         .attr('id', 'userdisplay')
-                         .attr('style', 'display : none;')
-                         .addClass('input-prepend')
-                         .append(
-                             $('<span></span>')
-                                 .addClass('add-on')
-                                 //.attr('style', 'text-align : center')
-                                 .append(
-                                     $('<span></span>')
-                                         .attr('id', 'loggedinuser_id')
-                                         .attr('style', 'font-weight : bold')
-                                         .append('user_id\n')
-                                 )
-                             )
-                         .append(
-                             $('<button></button>')
-                                 .addClass('btn btn-default btn-xs')
-                                 .attr('id', 'logoutbutton')
-                                 .append(
-                                     $('<i></i>')
-                                         .attr('id', 'logouticon')
-                                         .addClass('glyphicon glyphicon-log-out')
-                                 )
-                         )
-                 );
- 
+                .append(
+                    $('<div></div>')
+                        .addClass('btn-group')
+                        .attr('id', 'userdisplay')
+                        .css('display', 'none')
+                        .append(
+                            $('<button></button>')
+                                .addClass('btn btn-default')
+                                .addClass('dropdown-toggle')
+                                .append(
+                                    $('<span></span>')
+                                        .attr('id', 'loggedinuser_id')
+                                        .attr('style', 'font-weight : bold')
+                                        .append('user_id')
+                                )
+                                .append(
+                                    $('<span></span>')
+				    .addClass('caret')
+                                )
+                                //.append($('<i></i>').addClass('icon-user'))
+                                //.append($('<i></i>').addClass('icon-caret-down'))
+                                .bind('click',
+                                //$.proxy(
+                                function(e) {
+                                    e.preventDefault(); e.stopPropagation();
+                                    $(this).next().toggle();//slideToggle('fast');
+                                }
+                                //, this)
+                                )
+                        )
+                        .append(
+                            $('<ul></ul>')
+                                .addClass('dropdown-menu')
+                                .addClass('pull-right')
+                                .attr('role','menu')
+                                //.css('padding', '3px')
+                                .attr('id', 'login-dropdown-menu')
+                                .append(
+                                    $('<li></li>')
+                                        .css('border-bottom', '1px solid lightgray')
+                                        .css('white-space', 'nowrap')
+                                        .append(
+                                            $('<span></span>')
+                                        .append(
+                                            $('<a></a>')
+                                                .css('font-weight', 'bold')
+                                                .attr('href', '/manage_projects.shtml')
+						.text('Manage projects')
+                                                .attr('target', '_blank')
+                                                .css('padding-right', '0px')
+                                                .css('padding-left', '0px')
+                                        ))
+                                )
+                                .append(
+                                    $('<li></li>')
+                                        .addClass('pull-right')
+                                        .append(
+                                            $('<span></span>')
+                                            .append(
+                                                $('<a></a>')
+                                                    .css('padding-right', '0px')
+                                                    .css('padding-left', '0px')
+                                                    .append('Sign out')
+                                            )
+                                            .bind('click',
+                                                $.proxy( function(e) {
+                                                    e.stopPropagation();e.preventDefault();
+                                                    this.data('login-dropdown-menu').hide();//slideUp('fast');
+                                                    this.logout();
+                                                }, this)
+                                            )
+                                        )
+                                )
+                        )
+                );
+
              this._rewireIds($prompt, this);
  
              this.registerLogin =
@@ -606,6 +654,7 @@
                  this.data("loginlink").show();
              };
  
+	    /*
              this.data('logoutbutton').bind('click',
                  $.proxy(
                      function(e) {
@@ -615,7 +664,7 @@
                      this
                  )
              );
- 
+	     */
              return $prompt;
          },
 

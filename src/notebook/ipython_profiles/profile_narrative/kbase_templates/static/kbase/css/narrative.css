@@ -624,6 +624,7 @@ p span.notification{
 	min-height: 0;
 	border: none !important;
 	background-image: none !important;
+	background-color: #fff !important;
 	-webkit-box-shadow: none;
 	box-shadow: none;
 }
@@ -632,3 +633,5 @@ p span.notification{
 	padding-left: 0;
 	padding-right: 0;
 }
+
+

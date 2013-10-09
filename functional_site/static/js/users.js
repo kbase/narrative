@@ -46,7 +46,7 @@
         			if (args.success === 1) {
         				
         				this.registerLogin(args);
-        				loadFeed();
+        				loadPage();
 	        			doneLoading();
     	    			$("#login-widget").show();
     	    		} else {
@@ -158,6 +158,7 @@
 
 	//populates the recent narratives section of the user home page
 	function loadRecentNarratives() {
+		$("#no_narratives").hide();
         $("#narratives_loading").show();
         project.get_narratives({
             callback: function(results) {
@@ -206,6 +207,7 @@
 
     //populates the recent projects portion of the user home
 	function loadRecentProjects() {
+		$("#no_projects").hide();
         $("#projects_loading").show();
         project.get_projects({
             callback: function(results) {

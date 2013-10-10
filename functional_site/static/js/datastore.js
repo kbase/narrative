@@ -54,23 +54,37 @@
                     _.each(results, function(narrative){
                         
                         var name = narrative.id.replace(/_/g," ");
-                        var project_id = narrative.workspace.replace(/_/g," ");
+                        var project_name = narrative.workspace.replace(/_/g," ");
 
 
-                        _.each(Object.keys(narrative), function(key) {
+                        /*_.each(Object.keys(narrative), function(key) {
                             console.log(key);
-                        });
+                        });*/
 
                         var moddate = narrative.moddate;
                         moddate = moddate.replace(/T/g," ");
-                        data.rows.push({
+
+                        var curdata = {
                             "name": name,
                             "narrative_id": narrative.id,
                             "owner": narrative.owner,
                             "date": moddate,
-                            "project_id": project_id,
+                            "project_id": narrative.workspace,
+                            "project_name": project_name,
                             "userId": userId
+                        };
+
+                        //get the users for the narrative, by the workspace id
+                        project.get_project_perms({
+                            project_id: narrative.workspace,
+                            callback: function(results) {
+                                var user_list = formatUsers(results);
+                                $("#"+narrative.workspace+"-"+narrative.id+"_users").html(user_list);
+                            }
                         });
+
+                        
+                        data.rows.push(curdata);
             
                     });
 
@@ -84,6 +98,7 @@
                     //make into a datatable
                     oTable3 = $('#narratives_table').dataTable( {
                         "bLengthChange" : false,
+                        "iDisplayLength": 5,
                             "sPaginationType" : "full_numbers",
                             "aaSorting" : [[1, "asc"]],
                             "aoColumnDefs" : [
@@ -208,13 +223,28 @@
 
                         var moddate = workspace.moddate;
                         moddate = moddate.replace(/T/g," ");
-                        data.rows.push({
+                        var curdata = {
                             "name": name,
                             "project_id": workspace.id,
                             "owner": workspace.owner,
                             "date": moddate
+                        };
+                        
+
+                        //get the users for the narrative, by the workspace id
+                        project.get_project_perms({
+                            project_id: workspace.id,
+                            callback: function(results) {
+                                var users_list = formatUsers(results);
+                                
+                                $("#"+workspace.id+"_users").html(users_list);
+
+                            }
                         });
+                        data.rows.push(curdata);
             
+
+
                     });
 
                     //populate the html template
@@ -265,7 +295,6 @@
 
     /* toggles the chevron glyph */
     function toggleChevron(e) {
-        console.log(e.target);
         $(e.target)
             .prev('.section_title')
             .find('span')
@@ -302,7 +331,6 @@
             narrative_id: name, 
             project_id: project_id,
             callback: function(results) {
-                console.log("narrative created.");
                 //redirect to the narrative page
                 var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
                 window.location.href = "http://narrative.kbase.us/narratives/"+userId+"/"+project_id+"."+name;
@@ -310,6 +338,26 @@
         }); 
     });
 
+    //formats a hash of user params to a user list
+    function formatUsers(results) {
+        var users = "";
+        var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+
+        if (Object.keys(results).length > 0) {
+            
+            _.each(results, function(permission, username){
+                if ((permission === "a") || (permission === "w")  || (permission === "r")) {
+                    if ((username !== "default") && (username != userId)) {
+                        users += username + ", ";
+                    }
+                } 
+            });
+
+            users = users.replace(/, $/, "");
+
+        } 
+        return users;
+    }
 
 
 

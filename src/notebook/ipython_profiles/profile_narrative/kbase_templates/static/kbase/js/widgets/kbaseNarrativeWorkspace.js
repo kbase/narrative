@@ -142,6 +142,7 @@
          * attribute in the HTML that is hard-coded into notebook.html
          * under $('div.kb-function-body ul').
          */
+
         addCellForFunction: function(name) {
             var env = this;
             console.debug("adding cell for " + name);
@@ -152,6 +153,10 @@
             var command_builder = undefined;
             var config = {};
             var runner = this._runner(); 
+            var funcs = this._getFunctionsForFunction(name);
+            this.result_handler = funcs.result_handler;
+            var content = this._buildRunForm(funcs.config);
+            // @@ code
             switch(name) {
                 // To add a new function, you need to define
                 // one JSON structure for params, and one function
@@ -203,10 +208,56 @@
             cell.render();
             this.element = $("#" + cell_id);
             var $frm = $('div.kb-cell-run form');
-            $frm.on("submit", function(event) {
+            var submit_fn = this._bindRunButton();
+            $frm.on("submit", submit_fn);
+            // function(event) {
+            //     event.preventDefault();
+            //     var params = {};
+            //     var fn_name = ""; 
+            //     $.each($(this)[0], function(key, field) {
+            //         var full_name = field.name;
+            //         var value = field.value;
+            //         //console.debug("field " + key + ": " + full_name + "=" + value);
+            //         switch(full_name) {
+            //             case "":
+            //                 break;
+            //             default:
+            //                 params[full_name] = value;
+            //         }
+            //     });
+            //     console.debug("Run with params", params);
+            //     runner(funcs.command_builder(params));
+            // });
+        },
+
+         // yes, I know - ugh.
+        _getFunctionsForFunction: function(name) {
+            console.debug("Find custom functions for: " + name);
+            switch(name) {
+                // To add a new function, you need to define
+                // one JSON structure for params, and one function
+                // to build the actual command.
+                case 'plants':
+                    return {
+                        // configuration for parameters
+                        'config': this.plantsRunConfig,
+                        // function to build the code which is executed
+                        'command_builder': this.plantsRunCommand(),
+                        // function to handle the result data
+                        'result_handler': this.plantsCreateOutput
+                    }
+                    break;
+                default:
+                    return {};
+            }
+        },
+
+        _bindRunButton: function() {
+            var self = this;
+            return (function(event) {
                 event.preventDefault();
                 var params = {};
-                var fn_name = ""; 
+                // extract params from form
                 $.each($(this)[0], function(key, field) {
                     var full_name = field.name;
                     var value = field.value;
@@ -218,8 +269,20 @@
                             params[full_name] = value;
                     }
                 });
-                console.debug("Run with params", params);
-                runner(command_builder(params));
+                var name = params['kbfunc'];
+                var funcs = self._getFunctionsForFunction(name);
+                console.debug("Run fn(" + name + ") with params", params);
+                self._runner()(funcs.command_builder(params));
+            });
+        },
+
+        // Rebind all the run buttons to their original function
+        rebindRunButtons: function() {
+            var self = this;
+            $.each($('div.kb-cell-run form'), function(key, element) {
+                console.debug("rebind run button to element:", this);
+                var submit_fn = self._bindRunButton();
+                $(element).on("submit", submit_fn);
             });
         },
 
@@ -230,12 +293,13 @@
         plantsRunConfig: {
             'Identifiers': {
                 'Genome': '3899',
-                'Ontology': 'PO:0001016'
+                //'Ontology': 'PO:0001016'
+                'Ontology': 'GSE5622'
             },
             'Filter': {
                 //'-m': 'anova',
                 //'-n': '100',
-                'p-value': '0.05',
+                'p-value': '0.00005',
                 '':'x',
             },
             'Network': {
@@ -245,7 +309,7 @@
             'Cluster': {
                 //'-c': 'hclust',
                 //'-n': 'simple'
-                'Number of modules': '50',
+                'Number of modules': '25',
                 '':'x'
             }
         },
@@ -258,16 +322,20 @@
             return function(params) {
                 return self._buildRunCommand("biokbase.narrative.demo.coex_workflow",
                         "coex_network_ws", params);
+                
             }
         },
         /** 
          * Create the output of the demo in the area given by 'element'.
          */
         plantsCreateOutput: function(element, text) {
+            // Since we must be done running, allow Run button to work again
+            this.rebindRunButtons();
+            // Now create output
             var oid = text.trim();
             var token = $("#login-widget").kbaseLogin("session","token");
             var full_id = this.ws_id + "." + oid;
-            console.debug("ForceDirectedNetwork ID="+full_id);
+            console.debug("ForceDirectedNetwork ID = "+full_id);
             element.ForceDirectedNetwork({
                 workspaceID: this.ws_id + "." + oid,
                 token: token
@@ -381,16 +449,21 @@
         _runner: function() {
             var self = this;
             return function(code) {
+                // @@ code cell
+                var nb = IPython.notebook;
+                self.code_cell = nb.insert_cell_at_bottom('code');
+                self.code_cell.element.css("display", "none");
                 var callbacks = {
                     'execute_reply': $.proxy(self._handle_execute_reply, self),
                     //'output': $.proxy(self.output_area.handle_output, self.output_area),
+                    //'output': $.proxy(self._handle_output, self),
                     'output': $.proxy(self._handle_output, self),
                     'clear_output': $.proxy(self._handle_clear_output, self),
                     'set_next_input': $.proxy(self._handle_set_next_input, self),
                     'input_request': $.proxy(self._handle_input_request, self)
                 };
                 self._buf = ""; // buffered output, see _handle_output()
-                self.element.addClass("running");
+                //self.element.addClass("running");
                 // Progress bar elements
                 var eoffs = self.element.position();
                 self.progressdiv = $('<div/>').addClass('progress progress-striped').css({
@@ -403,7 +476,14 @@
                 self.element.append(self.progressdiv);
                 self.element.append(self.progressmsg);
                 // activate progress dialog
-                var msg_id = self.kernel.execute(code, callbacks, {silent: true});
+                // @@ create code cell
+                self.code_cell.set_text(code); // @@ can this be skipped?
+                // @@ old execute
+                // var msg_id = self.kernel.execute(code, callbacks, {silent: true});
+                self.code_cell.output_area.clear_output(true, true, true);
+                self.code_cell.set_input_prompt('*');
+                self.code_cell.element.addClass("running");
+                var msgid = nb.kernel.execute(code, callbacks, {silent: true});
             };
         },
 
@@ -488,6 +568,7 @@
          */
         _handle_output: function (msg_type, content) {
             // copied from outputarea.js
+            console.debug("_handle_output got (" + msg_type + ") " + content);
             if (msg_type === "stream") {
                 this._buf += content.data;
                 var lines = this._buf.split("\n");
@@ -677,6 +758,7 @@
             // create/refresh the upload dialog, which needs login to populate types
             this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
             //this.uploadWidget.createDialog(); -- redundant
+            this.rebindRunButtons();
 		},
 
         /**

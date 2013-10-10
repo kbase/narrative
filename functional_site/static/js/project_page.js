@@ -54,6 +54,7 @@
 
         loadNarratives(project_id);
         loadDatasets(project_id, token, userId, true);
+        loadProjectUsers(project_id);
     };
 
     function loadNarratives(project_id) {
@@ -68,11 +69,11 @@
                     _.each(results, function(narrative){
                         
                         var name = narrative.id.replace(/_/g," ");
-                        var project_id = narrative.workspace.replace(/_/g," ");
+                        var project_name = narrative.workspace.replace(/_/g," ");
 
-                        _.each(Object.keys(narrative), function(key) {
+                        /*_.each(Object.keys(narrative), function(key) {
                             console.log(key);
-                        });
+                        });*/
 
                         var moddate = narrative.moddate;
                         moddate = moddate.replace(/T/g," ");
@@ -81,7 +82,8 @@
                             "narrative_id": narrative.id,
                             "owner": narrative.owner,
                             "date": moddate,
-                            "project_id": project_id,
+                            "project_name": project_name,
+                            "project_id": narrative.workspace,
                             "userId": userId
                         });
             
@@ -249,13 +251,38 @@
             narrative_id: name, 
             project_id: project_id,
             callback: function(results) {
-                console.log("narrative created.");
                 //redirect to the narrative page
                 var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
                 window.location.href = "http://narrative.kbase.us/narratives/"+userId+"/"+project_id+"."+name;
             }
         }); 
     });
+
+    //load all the user for a project
+    function loadProjectUsers(project_id) {
+        var projects = project.get_project_perms({
+            project_id: project_id,
+            callback: function(results) {
+                if (Object.keys(results).length > 0) {
+                    var users = "<strong>Members:</strong> ";
+                    _.each(results, function(permission, username){
+                        if ((permission === "a") || (permission === "w")) {
+                            if (username !== "default") {
+                                users += username + ", ";
+                            }
+                        } //considered members if admin or can write
+                    });
+
+                    users = users.replace(/, $/, "");
+
+                    $("#member_list").append(users);
+
+
+                } 
+            }
+            
+        });
+    }
 
 
 

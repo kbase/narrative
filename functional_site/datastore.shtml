@@ -145,7 +145,7 @@
 			<td><input type="checkbox"></td>
 			<td><a href="./project.shtml#{{project_id}}">{{name}}</a></td>
 			<td>{{owner}}</td>
-			<td></td>
+			<td id="{{project_id}}_users"></td>
 
 			<td>{{date}}</td>
 		</tr>
@@ -158,8 +158,8 @@
 			<td><input type="checkbox"></td>
 			<td><a href="http://narrative.kbase.us/narratives/{{userId}}/{{project_id}}.{{narrative_id}}">{{name}}</a></td>
 			<td>{{owner}}</td>
-			<td></td>
-			<td>{{project_id}}</td>
+			<td id="{{project_id}}-{{narrative_id}}_users"></td>
+			<td>{{project_name}}</td>
 			<td>{{date}}</td>
 		</tr>
 		{{/rows}}

@@ -46,6 +46,8 @@
 
             $.ui.dialog.prototype._makeDraggable = function() {
                 this.uiDialog.draggable({
+                    cancel: ".ui-dialog-content, .ui-dialog-titlebar-close",
+                    handle: ".ui-dialog-titlebar",
                     containment: false
                 });
             };
@@ -1085,12 +1087,15 @@
                 cardOptions.height = newWidget.options.height;
 
             var self = this;
-            var newCard = $("#" + newCardId).LandingPageCard(cardOptions);
+            var newCard = newWidget.$elem.LandingPageCard(cardOptions); //$("#" + newCardId).LandingPageCard(cardOptions);
 
             this.cards[newCardId] = {
                 card: newCard,
                 widget: newWidget
             };
+
+            $("#" + newCardId).on("")
+
 
             this.cardIndex++;
 

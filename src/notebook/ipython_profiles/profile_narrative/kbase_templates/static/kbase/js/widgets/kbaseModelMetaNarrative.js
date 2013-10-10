@@ -5,40 +5,40 @@ $.KBWidget({
     version: "1.0.0",
     options: {
     },
+
+    glammURL: "http://140.221.84.217:7040/glamm/#",
+    glammModelTag: "mod",
+    glammWorkspaceTag: "ws",
+    wsBrowserURL: "http://narrative.kbase.us/landing/#/models/",
+
     init: function(options) {
         var self = this;
         this._super(options);
         var data = options.data;
-        this.dbg(data);
 
-        var container = this.$elem;
+        var table = $('<table/>')
+                    .addClass('table table-striped table-bordered')
+                    .css({'margin-left': 'auto', 'margin-right': 'auto'});
 
-        var labels = ['ID','Type','Moddate','Instance',
-                      'Command','Last Modifier','Owner','Workspace','Ref']
+        var createTableRow = function(name, value) {
+            return "<tr><td>" + name + "</td><td>" + value + "</td></tr>";
+        };
 
-        var table = $('<table class="table table-striped table-bordered" \
-                              style="margin-left: auto; margin-right: auto;"></table>');
-        for (var i=0; i<data.length-2; i++) {
-            table.append('<tr><td>'+labels[i]+'</td> \
-                          <td>'+data[i]+'</td></tr>');
-        }
+        table.append(createTableRow("ID", data[0]));
+        table.append(createTableRow("Genome", data[10].name));
+        table.append(createTableRow("# Genes", data[10].number_genes));
+        table.append(createTableRow("# Compounds", data[10].number_compounds));
+        table.append(createTableRow("# Reactions", data[10].number_reactions));
+        table.append(createTableRow("# Compartments", data[10].number_compartments));
+        table.append(createTableRow("Workspace", data[7]));
 
-        /**
-         * Need to show:
-         * 
-         * ID
-         * name
-         * number compounds
-         * number reactions
-         * number genes
-         * number compartments
-         * workspace
-         * link to landing page
-         * link to GLAMM
-         */
+        this.$elem.append(table);
 
+        var wsBrowserLink = "<a href='" + this.wsBrowserURL + data[7] + "/" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View Details</a>";
+        var glammLink = "<a href='" + this.glammURL + this.glammWorkspaceTag + "=" + data[7] + "&" + this.glammModelTag + "=" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View in GLAMM</a>";
 
-        container.append(table);
+        this.$elem.append(wsBrowserLink);
+        this.$elem.append(" " + glammLink);
 
         return this;
 

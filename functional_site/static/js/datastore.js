@@ -54,7 +54,7 @@
                     _.each(results, function(narrative){
                         
                         var name = narrative.id.replace(/_/g," ");
-                        var project_id = narrative.workspace.replace(/_/g," ");
+                        var project_name = narrative.workspace.replace(/_/g," ");
 
 
                         _.each(Object.keys(narrative), function(key) {
@@ -68,7 +68,8 @@
                             "narrative_id": narrative.id,
                             "owner": narrative.owner,
                             "date": moddate,
-                            "project_id": project_id,
+                            "project_id": narrative.workspace,
+                            "project_name": project_name,
                             "userId": userId
                         });
             

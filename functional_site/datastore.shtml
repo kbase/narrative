@@ -159,7 +159,7 @@
 			<td><a href="http://narrative.kbase.us/narratives/{{userId}}/{{project_id}}.{{narrative_id}}">{{name}}</a></td>
 			<td>{{owner}}</td>
 			<td></td>
-			<td>{{project_id}}</td>
+			<td>{{project_name}}</td>
 			<td>{{date}}</td>
 		</tr>
 		{{/rows}}

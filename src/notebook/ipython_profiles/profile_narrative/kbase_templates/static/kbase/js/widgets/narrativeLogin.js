@@ -33,7 +33,7 @@
 		       domain: 'kbase.us' });
 
 	    
-	}
+	};
 
         var set_token = function () {
             // grab the token from the handler, since it isn't passed in with args
@@ -66,8 +66,11 @@
 
 		set_cookie();
                 // If the notebook kernel's initialized, tell it to set the token.
-                if (IPython.notebook)
-	                set_token();
+                if (IPython.notebook) {
+	            set_token();
+		} else {
+		    console.log( "IPython.notebook not set, cannot set token on backend");
+		}
             },
 
             logout_callback: function(args) {

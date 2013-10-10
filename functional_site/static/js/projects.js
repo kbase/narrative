@@ -166,7 +166,8 @@
     project.get_projects = function( p_in ) {
 	var def_params = { callback : undefined,
 			   perms : ['a'],
-			   workspace_id : undefined};
+			   workspace_id : undefined,
+			   error_callback: error_handler };
 	var p = $.extend( def_params, p_in);
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
 	var META_ws;
@@ -178,7 +179,7 @@
 						       callback : p.callback,
 						       perms: p.perms });
 				   },
-				   error_handler);
+				   p.error_callback);
 	} else {
 	    META_ws = project.ws_client.list_workspaces( { auth : token} );
 	    $.when( META_ws).then( function(result) {
@@ -186,7 +187,7 @@
 						       callback : p.callback,
 						       perms: p.perms });
 				   },
-				   error_handler);
+				   p.error_callback);
 	}
     };
 
@@ -196,7 +197,8 @@
     // value is a dictionary keyed on obj_meta_fields
     project.get_project = function( p_in ) {
 	var def_params = { callback : undefined,
-			   workspace_id : undefined};
+			   workspace_id : undefined,
+			   error_callback: error_handler };
 	var p = $.extend( def_params, p_in);
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
         var ws_meta = project.ws_client.list_workspace_objects( { auth: token,
@@ -209,7 +211,7 @@
 					   });
 				   p.callback( res);
 			       },
-			       error_handler);
+			       p.error_callback);
     };
 
     // Get the individual workspace object named. Takes names
@@ -224,10 +226,17 @@
 	var def_params = { callback : undefined,
 			   workspace_id : undefined,
 			   object_id : undefined,
-			   type : undefined
+			   type : undefined,
+			   error_callback: error_handler
 			 };
 	var p = $.extend( def_params, p_in);
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+        var del_fn = project.ws_client.get_object( { auth: token,
+						     type: p.type,
+						     workspace: p.workspace,
+						     id: p.object_id });
+	$.when( del_fn).then( p.callback,
+			      p.error_callback);
 	
     };
 
@@ -237,10 +246,18 @@
 	var def_params = { callback : undefined,
 			   workspace_id : undefined,
 			   object_id : undefined,
-			   type: undefined };
+			   type: undefined,
+			   error_callback: error_handler };
 	var p = $.extend( def_params, p_in);
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
-	
+	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
+
+        var del_fn = project.ws_client.delete_object( { auth: token,
+							type: p.type,
+							workspace: p.workspace,
+							id: p.object_id });
+	$.when( del_fn).then( p.callback,
+			      p.error_callback);
     };
 
     // Create an new workspace and tag it with a project tag. The name
@@ -252,7 +269,8 @@
     project.new_project = function( p_in ) {
 	var def_params = { callback : undefined,
 			   project_id : undefined,
-			   def_perm : 'n'
+			   def_perm : 'n',
+			   error_callback: error_handler
 			 };
 	var p = $.extend( def_params, p_in);
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
@@ -269,7 +287,7 @@
 		$.when( ws_fn2 ).then( function(obj_meta) {
 					   p.callback( obj_meta_dict(obj_meta));
 				       },
-				       error_handler);
+				       p.error_callback);
 	    };
 	    // function to create workspace and populate with _project object
 	    var ws_fn = project.ws_client.create_workspace( {
@@ -282,10 +300,10 @@
 				     function() { // else create then tag
 					 console.log( 'Creating new workspace:',p.project_id);
 				     	 $.when( ws_fn).then( tag_ws,
-							      error_handler);
+							      p.error_callback);
 				     });
 	} else {
-	    error_handler( "Bad project id: "+p.project_id);
+	    p.error_callback( "Bad project id: "+p.project_id);
 	}
     };
 
@@ -295,7 +313,8 @@
     // the callback gets the workspace metadata object of the deleted workspace
     project.delete_project = function( p_in ) {
 	var def_params = { callback : undefined,
-			   project_id : undefined
+			   project_id : undefined,
+			   error_callback: error_handler
 			 };
 	var p = $.extend( def_params, p_in);
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
@@ -304,7 +323,7 @@
 	    var ws_def_fun = project.ws_client.delete_workspace({ auth: token,
 								  workspace: p.project_id});
 	    $.when( ws_def_fun).then( p.callback,
-				      error_handler
+				      p.error_callback
 				    );
 	} else {
 	    console.log( "Bad project id: ",p.project_id);
@@ -328,7 +347,6 @@
 	var perm_fn =  project.ws_client.get_workspacepermissions( { auth : token,
 								      workspace : p.project_id });
 	$.when( perm_fn).then( function(perms) {
-				   console.log( perms);
 				   p.callback( perms);
 			       },
 			       p.error_callback
@@ -344,6 +362,7 @@
     // 'user_id1' : perm1 // special permission for user_id1
     // ...
     // 'user_idN' : permN // special permission for user_idN
+    // The return results seem to be broken
     project.set_project_perms = function( p_in ) {
 	var def_params = { callback : undefined,
 			   project_id : undefined,
@@ -364,14 +383,36 @@
 								 }));
 	    delete( p.perms['default']);
 	}
-	/*
-	$.when( set_perm_fn).then( function(perms) {
-				       console.log( perms);
-				       p.callback( perms);
-				   },
-				   p.error_callback
-				 );
-	 */
+	// sort users into lists based on the permissions we are giving them
+	var user_by_perm = Object.keys(p.perms).reduce(
+	    function(prev,curr,index) {
+		if (p.perms[curr] in prev) {
+		    prev[p.perms[curr]].push( curr);
+		    return prev;
+		} else {
+		    prev[p.perms[curr]] = [curr];
+		    return prev;
+		}
+	    },
+	    {});
+	console.log( user_by_perm);
+	var by_perms_fn = Object.keys( user_by_perm).map(
+	    function(perm) {
+		return project.ws_client.set_workspace_permissions( {users: user_by_perm[perm],
+								     new_permission : perm,
+								     workspace: p.project_id,
+								     auth: token
+								     });
+	    });
+	set_perm_fn = set_perm_fn.concat(by_perms_fn);
+	$.when.apply( set_perm_fn).then( function() {
+					     console.log( arguments);
+					     var results = [].slice.call(arguments);
+					     console.log( results);
+					     p.callback( results);
+					 },
+					 p.error_callback
+				       );
     };
 
 
@@ -384,7 +425,8 @@
 	var def_params = { callback : undefined,
 			   project_ids : undefined,
 			   error_callback : error_handler,
-			   type: project.narrative_type};
+			   type: project.narrative_type,
+			   error_callback: error_handler };
 	var p = $.extend( def_params, p_in);
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
 	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
@@ -421,13 +463,14 @@
     // if it fails to conform
 
     project.new_narrative = function( p_in ) {
+	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
 	var def_params = { callback : undefined,
-			   project_id : undefined,
+			   project_id : user_id+"_home",
 			   narrative_id : undefined,
-			   description : "A KBase narrative" };
+			   description : "A KBase narrative",
+			   error_callback: error_handler };
 	var p = $.extend( def_params, p_in);
 	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
-	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
 
         if ( legit_ws_id.test(p.narrative_id)) {
 	    var nar = $.extend(true,{},empty_narrative);
@@ -443,9 +486,9 @@
 	    $.when( ws_fn ).then( function(obj_meta) {
 				      p.callback( obj_meta_dict(obj_meta));
 				  },
-				  error_handler);
+				  p.error_callback);
 	} else {
-	    error_handler( "Bad narrative_id");
+	    p.error_callback( "Bad narrative_id");
 	}
 	
     };

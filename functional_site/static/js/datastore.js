@@ -20,6 +20,7 @@
             },
 
             logout_callback: function(args) {
+                window.location.href="./home.shtml";
             },
 
             prior_login_callback: function(args) {
@@ -52,18 +53,22 @@
 
                     _.each(results, function(narrative){
                         
-                        console.log(narrative.id);
-                        console.log(narrative.owner);
+                        var name = narrative.id.replace(/_/g," ");
+                        var project_id = narrative.workspace.replace(/_/g," ");
+
 
                         _.each(Object.keys(narrative), function(key) {
                             console.log(key);
                         });
 
+                        var moddate = narrative.moddate;
+                        moddate = moddate.replace(/T/g," ");
                         data.rows.push({
-                            "name": narrative.id,
+                            "name": name,
+                            "narrative_id": narrative.id,
                             "owner": narrative.owner,
-                            "date": narrative.moddate,
-                            "project_id": narrative.workspace,
+                            "date": moddate,
+                            "project_id": project_id,
                             "userId": userId
                         });
             
@@ -138,17 +143,26 @@
                 $.when.apply($, getWorkspaceObjects).done(function() {
                     var objectMetaTable = [];
                     for (var i=0; i<allObjectsList.length; i++) {
-                        objectMetaTable.push([
-                            "<input type='checkbox' />",
-                            allObjectsList[i][0], // id
-                            allObjectsList[i][1], // type
-                            allObjectsList[i][6], // owner
-                                                  // shared with
-                                                  // source
-                                                  // created
-                            allObjectsList[i][7], // (workspace)
-                            allObjectsList[i][2]  // modified
-                        ]);
+                        var type = allObjectsList[i][1];
+                        if (type === "Narrative") { 
+                            continue;
+                        } else if (type === "workspace_meta") {
+                            continue;
+                        } else {
+                            var moddate = allObjectsList[i][2];
+                            moddate = moddate.replace(/T/g," ");
+                            objectMetaTable.push([
+                                "<input type='checkbox' />",
+                                allObjectsList[i][0], // id
+                                allObjectsList[i][1], // type
+                                allObjectsList[i][6], // owner
+                                                      // shared with
+                                                      // source
+                                                      // created
+                                allObjectsList[i][7], // (workspace)
+                                moddate  // modified
+                            ]);
+                        }
                     }
 
                     if (objectMetaTable.length > 0) {
@@ -190,13 +204,15 @@
                     var data = { rows: []};
                     _.each(results, function(workspace){
                         
-                        console.log(workspace.id);
-                        console.log(workspace.owner);
+                        var name = workspace.id.replace(/_/g," ");
 
+                        var moddate = workspace.moddate;
+                        moddate = moddate.replace(/T/g," ");
                         data.rows.push({
-                            "name": workspace.id,
+                            "name": name,
+                            "project_id": workspace.id,
                             "owner": workspace.owner,
-                            "date": workspace.moddate
+                            "date": moddate
                         });
             
                     });

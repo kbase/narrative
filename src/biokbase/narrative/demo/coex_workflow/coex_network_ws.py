@@ -595,7 +595,7 @@ def run_real(params, quiet=True):
 def run_debug(params,**kw):
     print("PO:0001016.g3899.filtered.edge_net")
 
-run = (run_real, run_debug)[1]
+run = (run_real, run_debug)[0]
 
 if __name__ == '__main__':
     sys.exit(main())

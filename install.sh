@@ -2,7 +2,7 @@
 
 installPath=`pwd`
 venv="narrative-venv"
-branch="rel-1.1.0"
+branch="1.x"
 commit="" 
 profile_name="narrative"
 # set to your python

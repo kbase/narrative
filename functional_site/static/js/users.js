@@ -5,11 +5,12 @@
 
 
     $(function() {
-        $(document).on('loggedIn.kbase', function(event, token) {
+      /*  $(document).on('loggedIn.kbase', function(event, token) {
             console.debug("logged in")
             loadPage();
         });
 
+        */
         $(document).on('loggedOut.kbase', function(event, token) {
             console.debug("logged out")
             notLoggedIn();
@@ -49,7 +50,7 @@
         			if (args.success === 1) {
         				
         				this.registerLogin(args);
-        				loadPage();
+                        loadPage();
 	        			doneLoading();
     	    			$("#login-widget").show();
     	    		} else {
@@ -139,10 +140,12 @@
 						_.every(results, function(workspace){
 
 							if (userId != workspace[1]) {
+                                var moddate = workspace[2];
+                                moddate = moddate.replace(/T/g," ");
 								data.rows.push({
 									"username": workspace[1],
 									"workspace": workspace[0],
-									"date": workspace[2]
+									"date": moddate
 								});		
 								count++;
 							}
@@ -184,9 +187,14 @@
 					var count = 0;
 					_.every(results, function(narrative){
 
+						var name = narrative.id.replace(/_/g," ");
+						var project_id = narrative.workspace.replace(/_/g," ");
+
+
 						data.rows.push({
-                            "name": narrative.id,
-                            "project_id": narrative.workspace,
+                            "name": name,
+                            "narrative_id": narrative.id,
+                            "project_id": project_id,
                             "userId": userId
                         });
                         count++;
@@ -218,25 +226,28 @@
 		$("#no_projects").hide();
         $("#projects_loading").show();
         project.get_projects({
-            callback: function(results) {
+            callback: function(projectresults) {
             	console.log("got here2");
-                if (Object.keys(results).length > 0) {
+                if (Object.keys(projectresults).length > 0) {
                     var data = { rows: []};
 
                     console.log("got here");
             
 					//first sort
-					results = _.sortBy(results, function(project_id) {
+					results = _.sortBy(projectresults, function(project_id) {
 					    return project_id.moddate;
 					});
 					results.reverse();
 					
 					//populate the data structure for the template
 					var count = 0;
-					_.every(results, function(project_id){
+					_.every(projectresults, function(project_id){
+
+						var name = project_id.id.replace(/_/g," ");
 
 						data.rows.push({
-                            "name": project_id.id,
+                            "name": name,
+                            "project_id": project_id.id
                             
                         });
                         count++;

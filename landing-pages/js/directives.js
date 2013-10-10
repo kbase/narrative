@@ -141,6 +141,111 @@ angular.module('lp-directives')
             }
         };
     })
+    .directive('modelcards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+
+                // This is silly, because we may have 2 or 3 layers of frameworks, 
+                /*$(element).KBaseCardLayoutManager({template: "model", 
+                                                       data: data,
+                                                       title: 'Model Info',
+                                                       id: scope.id,
+                                                       ws: scope.ws});
+                */
+
+                // I'll try this... this all just seems soo... questionable.
+                var prom = wsGet('objectMeta', 'Model', scope.ws, scope.id);
+                $.when(prom).done(function(data){
+                    $(element).KBaseCardManager().addNewCard("kbaseModelMeta", 
+                        { data: data,
+                          title: 'Model Info',
+                          id: scope.id,
+                          ws: scope.ws},
+                        { my: "left top+50",
+                          at: "left bottom",
+                          of: "#app"
+                    });
+                });
+
+                var prom = fbaGet('Model', scope.ws, scope.id);
+                $.when(prom).done(function(data) {
+                    $(element).KBaseCardManager().addNewCard("kbaseModelTabs", 
+                        { modelsData: data,
+                          title: 'Model Details',
+                          id: scope.id,
+                          ws: scope.ws,
+                          width: 700},
+                        { my: "left+400 top+50",
+                          at: "left bottom",
+                          of: "#app"
+                    });
+                    $(element).KBaseCardManager().addNewCard("kbaseModelCore", 
+                        { modelsData: data,
+                          title: 'Central Carbon Core Metabolic Pathway',
+                          ids: [scope.id],
+                          workspaces: [scope.ws],
+                          width: 900},
+                        { my: "left+800 top+600",
+                          at: "left bottom",
+                          of: "#app"
+                    });                    
+                });
+
+            }
+        }
+ 
+    })
+    .directive('fbacards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                // I'll try this... this all just seems soo... questionable.
+                var prom = wsGet('objectMeta', 'FBA', scope.ws, scope.id);
+                $.when(prom).done(function(data){
+                    $(element).KBaseCardManager().addNewCard("kbaseFbaMeta", 
+                        { data: data,
+                          title: 'Model Info',
+                          id: scope.id,
+                          ws: scope.ws },
+                        { my: "left top+50",
+                          at: "left bottom",
+                          of: "#app"
+                    });
+                });
+
+                var prom = fbaGet('FBA', scope.ws, scope.id);
+                $.when(prom).done(function(fbas_data) {
+                    $(element).KBaseCardManager().addNewCard("kbaseFbaTabs", 
+                        { fbaData: fbas_data,
+                          title: 'FBA Details',
+                          id: scope.id,
+                          ws: scope.ws,
+                          width: 700 },
+                        { my: "left+400 top+50",
+                          at: "left bottom",
+                          of: "#app"
+                    });
+                    var model_ws = fbas_data[0].model_workspace;
+                    var model_id = fbas_data[0].model;
+
+                    var prom2 = fbaGet('Model', model_ws, model_id);
+                    $.when(prom2).done(function(models_data){
+                        $(element).KBaseCardManager().addNewCard("kbaseModelCore", 
+                            { modelsData: models_data,
+                              fbasData: fbas_data,
+                              title: 'Central Carbon Core Metabolic Pathway',
+                              ids: [scope.id],
+                              workspaces: [scope.ws],
+                              width: 900 },
+                            { my: "left+800 top+600",
+                              at: "left bottom",
+                              of: "#app"
+                        });
+                    });
+                });
+            }
+        }
+    })
+
     .directive('fbameta', function() {
         return {
             link: function(scope, element, attrs) {
@@ -179,8 +284,6 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var proms = [];
-                //var prom1 = fbaGet('Model', scope.ws, scope.id);
                 var prom1 = fbaGet('FBA', scope.ws, scope.id);
                 $.when(prom1).done(function(fbas_data) {
                     var model_ws = fbas_data[0].model_workspace;

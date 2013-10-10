@@ -44,11 +44,19 @@ function ModelDetail($scope, $routeParams) {
     $scope.id = $routeParams.id;
 }
 
-function FBADetail($scope, $routeParams) {
+function ModelDetailCards($scope, $routeParams) {
     $scope.ws = $routeParams.ws;
     $scope.id = $routeParams.id;
 }
 
+function FBADetail($scope, $routeParams) {
+    $scope.ws = $routeParams.ws;
+    $scope.id = $routeParams.id;
+}
+function FBADetailCards($scope, $routeParams) {
+    $scope.ws = $routeParams.ws;
+    $scope.id = $routeParams.id;
+}
 
 function LPHelp($scope, $routeParams) {
     // Fixme: move out of controller
@@ -78,15 +86,3 @@ function CpdDetail($scope, $routeParams, $location) {
     $scope.ids = $routeParams.ids.split('&');
 }
 
-
-/*
-var cache = $cacheFactory('lpCache');
-
-var data = cache.get(someKey);
-
-if (!data) {
-   $http.get(url).success(function(result) {
-      data = result;
-      cache.put(someKey, data);
-   });
-  */ 

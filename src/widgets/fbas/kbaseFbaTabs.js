@@ -86,7 +86,6 @@ $.KBWidget({
         function formatObjs(objs) {
             var fluxes = []
             for (var i in objs) {
-                console.log(objs[i])
                 var obj = $.extend({}, objs[i]);
                 var rxn = obj[0].split('_')[0]
                 var compart = obj[0].split('_')[1]

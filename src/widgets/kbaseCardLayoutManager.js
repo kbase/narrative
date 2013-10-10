@@ -557,6 +557,8 @@
                 this.showMemeCards();
             else if (this.options.template.toLowerCase() === "gene")
                 this.showGeneCards();
+            else if (this.options.template.toLowerCase() === "model")
+                this.showModelCards();
             // else if (this.options.template.toLowerCase() === "hello")
             //     this.showHelloCards();
             else {
@@ -617,7 +619,7 @@
          * Template for showing gene cards.
          */
         showGeneCards: function() {
-            this.addNewCard("KBaseGeneInfo",
+            this.addNewCard("kbaseGeneInfo",
                 {
                     featureID: this.options.data.geneID,
                 },
@@ -639,6 +641,22 @@
             );
         },
 
+        /**
+         * Template for showing model cards.
+         */
+        showModelCards: function() {
+            // testing layout manager.
+            // I'm thinking I shouldn't use this because api calls 
+            // are made outside of the widgets
+            this.addNewCard("kbaseModelMeta", 
+                { data: this.options.data,
+                  title: this.options.title,
+                  id: this.options.id,
+                  ws: this.options.ws},
+                { my: "left top+50",
+                  at: "left bottom",
+                  of: "#app"});
+        },
 
         /**
          * Initial template for showing MEME cards.
@@ -1049,11 +1067,20 @@
 
             var newWidget = $("#" + newCardId)[cardName](options);
 
-            var data = newWidget.getData();
-            var cardTitle = data.title ? data.title : "";
-            var cardSubtitle = data.id ? data.id : "";
-            var cardWidth = newWidget.options.width ? newWidget.options.width : this.defaultWidth;
-            var cardWorkspace = data.workspace ? data.workspace : this.cdmWorkspace;
+            // if widget has getData() method, get panel title stuff,
+            // otherwise use options.
+            if (newWidget.getData) {
+                var data = newWidget.getData();
+                var cardTitle = data.title ? data.title : "";
+                var cardSubtitle = data.id ? data.id : "";
+                var cardWidth = newWidget.options.width ? newWidget.options.width : this.defaultWidth;
+                var cardWorkspace = data.workspace ? data.workspace : this.cdmWorkspace;
+            } else {
+                var cardTitle = options.title ? options.title : "";
+                var cardSubtitle = options.id ? options.id : "";
+                var cardWidth = options.width ? options.width : this.defaultWidth;                
+                var cardWorkspace = options.workspace ? options.workspace : this.cdmWorkspace;                
+            }
 
             var cardOptions = {
                 position: position,

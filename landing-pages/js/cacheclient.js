@@ -39,15 +39,11 @@ function Cache() {
 var cache = new Cache();
 function fbaGet(type, ws, id) {
     var key = type+';'+ws+';'+id;
-    console.log(key)
 
     var data = cache.get(key);
 
     // if data is already being fetched, return promise;
-    if (data) {
-        console.log(data.prom)
-        return data.prom;
-    }
+    if (data) return data.prom;
 
     var prom;
     if (type == 'Model') {

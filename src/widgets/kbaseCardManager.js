@@ -97,11 +97,20 @@
 
             var newWidget = $("#" + newCardId)[cardName](options);
 
-            var data = newWidget.getData();
-            var cardTitle = data.title ? data.title : "";
-            var cardSubtitle = data.id ? data.id : "";
-            var cardWidth = newWidget.options.width ? newWidget.options.width : 300;
-            var cardWorkspace = data.workspace ? data.workspace : "KBase Central Store";
+            // if widget has getData() method, get panel title stuff,
+            // otherwise use options.
+            if (newWidget.getData) {
+                var data = newWidget.getData();
+                var cardTitle = data.title ? data.title : "";
+                var cardSubtitle = data.id ? data.id : "";
+                var cardWidth = newWidget.options.width ? newWidget.options.width : 300;
+                var cardWorkspace = data.workspace ? data.workspace : "KBase Central Store";
+            } else {
+                var cardTitle = options.title ? options.title : "";
+                var cardSubtitle = options.id ? options.id : "";
+                var cardWidth = options.width ? options.width : this.defaultWidth;                    
+                var cardWorkspace = options.workspace ? options.workspace : this.cdmWorkspace;                
+            }
 
             var self = this;
             var newCard = $("#" + newCardId).LandingPageCard({

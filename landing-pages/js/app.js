@@ -1,8 +1,25 @@
 
+/*
+ *  Landing Page App 
+ *
+ *  Right now, this file is responsible for landing page URLs
+ *  and which controllers and templates are used.
+ *
+ *  The app uses angular.js, a MVC front-end framework.
+ *  Various parts of angular are be included incrementally.
+ *
+ *  -- Some of the critical files --
+ *  Controllers:       landing-pages/js/controllers.js
+ *  Directives:        landing-pages/js/directives.js 
+ *                                     /iris-directives.js
+ *  Views (templates): landing-pages/views/* 
+ *
+*/
 
 
-var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
-    config(['$routeProvider', function($routeProvider) {
+var app = angular.module('landing-pages', 
+    ['lp-directives', 'iris-directives'])
+    .config(['$routeProvider', function($routeProvider) {
     $routeProvider
         .when('/workspace-browser', 
             {templateUrl: 'views/ws-browser.html',
@@ -34,6 +51,9 @@ var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
         .when('/models/:ws/:id', 
             {templateUrl: 'views/objects/model.html',
              controller: ModelDetail})
+        .when('/cards/models/:ws/:id', 
+            {templateUrl: 'views/objects/modelcards.html',
+             controller: ModelDetailCards})        
 
         .when('/media',
             {templateUrl: 'views/object-list.html',
@@ -48,6 +68,9 @@ var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
         .when('/fbas/:ws/:id', 
             {templateUrl: 'views/objects/fba.html',
              controller: FBADetail})
+        .when('/cards/fbas/:ws/:id', 
+            {templateUrl: 'views/objects/fbacards.html',
+             controller: FBADetailCards})        
 
         .when('/rxns', 
             {templateUrl: 'views/object-list.html',

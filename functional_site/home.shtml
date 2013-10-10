@@ -27,7 +27,7 @@
         <nav id="header_nav" role="navigation" class="row">
           <ul>
     				<li class="alt"><a href="http://www.kbase.us/services/docs/invocation/Iris/">IRIS</a></li>
-    				<li class="alt"><a href="http://140.221.84.142">Workspace Browser</a></li>
+    				<li class="alt"><a href="http://140.221.84.142/browse.html">Workspace Browser</a></li>
             <li id="searchlabel"><a href="https://niya.qb3.berkeley.edu/search_client/search_client.html">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>
           </ul>
         </nav>

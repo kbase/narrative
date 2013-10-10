@@ -41,6 +41,7 @@
                 tbl.fnDraw();
             });
             this.initFuncs();
+            this.render();
 			return this;
 		},
         /**
@@ -277,8 +278,8 @@
             },
             'Filter': {
                 //'-m': 'anova',
-                //'-n': '100',
-                'p-value': '0.00005',
+                '-n': '100',
+                //'p-value': '0.00005',
                 '':'x',
             },
             'Network': {
@@ -701,6 +702,7 @@
          * @returns this
          */
 		render: function() {
+            this.rebindRunButtons();
 			return this;
 		},
 
@@ -721,7 +723,7 @@
             // create/refresh the upload dialog, which needs login to populate types
             this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
             //this.uploadWidget.createDialog(); -- redundant
-            this.rebindRunButtons();
+            this.render();
 		},
 
         /**

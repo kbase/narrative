@@ -306,7 +306,7 @@ def main(ont_id="GSE5622", gn_id='3899',
 
     # parameterize --dang
     coex_args = {}
-    coex_args['coex_filter'] = "-p {}".format(fltr_p)
+    coex_args['coex_filter'] = "-n {}".format(fltr_n)
     coex_args['coex_net'] = "-c {}".format(net_c)
     coex_args['coex_cluster'] = "-s {}".format(clust_s)
 
@@ -670,9 +670,9 @@ def run(params, quiet=True):
         _log.setLevel(logging.CRITICAL - 1)
     # parse params
     p = {
-        #'fltr_n': params['Filter.-n'],
+        'fltr_n': params['Filter.-n'],
         #'fltr_m': params['Filter.-m'],
-        'fltr_p': params['Filter.p-value'],
+        #'fltr_p': params['Filter.p-value'],
         'gn_id': params['Identifiers.Genome'],
         'ont_id': params['Identifiers.Ontology'],
         'net_c': params['Network.Pearson cutoff'],

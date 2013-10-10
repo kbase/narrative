@@ -34,7 +34,7 @@ $.KBWidget({
 
         this.$elem.append(table);
 
-        var wsBrowserLink = "<a href='" + this.wsBrowserURL + data[7] + "/" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View Details</a>";
+        var wsBrowserLink = "<a href='" + this.wsBrowserURL + data[7] + "/" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View Model Details</a>";
         var glammLink = "<a href='" + this.glammURL + this.glammWorkspaceTag + "=" + data[7] + "&" + this.glammModelTag + "=" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View in GLAMM</a>";
 
         this.$elem.append(wsBrowserLink);

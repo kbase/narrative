@@ -5,6 +5,16 @@ $.KBWidget({
     version: "1.0.0",
     options: {
     },
+    
+    getData: function() {
+        return {
+            id: this.options.data[0],
+            type: "Model",
+            workspace: this.options.data[7],
+            title: "Model Info"
+        };
+    },
+
     init: function(options) {
         var self = this;
         this._super(options);

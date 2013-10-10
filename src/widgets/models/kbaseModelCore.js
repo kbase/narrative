@@ -5,6 +5,16 @@ $.KBWidget({
     version: "1.0.0",
     options: {
     },
+
+    getData: function() {
+        return {
+            id: this.options.ids,
+            workspace: this.options.workspaces,
+            title: "Central Carbon Core Metabolic Pathway",
+            type: "Model"
+        }
+    },
+
     init: function(options) {
         this._super(options);
         var self = this;

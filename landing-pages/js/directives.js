@@ -156,7 +156,7 @@ angular.module('lp-directives')
                 // I'll try this... this all just seems soo... questionable.
                 var prom = wsGet('objectMeta', 'Model', scope.ws, scope.id);
                 $.when(prom).done(function(data){
-                    $(element).KBaseCardManager().addNewCard("kbaseModelMeta", 
+                    $(element).KBaseCardLayoutManager().addNewCard("kbaseModelMeta", 
                         { data: data,
                           title: 'Model Info',
                           id: scope.id,
@@ -169,7 +169,7 @@ angular.module('lp-directives')
 
                 var prom = fbaGet('Model', scope.ws, scope.id);
                 $.when(prom).done(function(data) {
-                    $(element).KBaseCardManager().addNewCard("kbaseModelTabs", 
+                    $(element).KBaseCardLayoutManager().addNewCard("kbaseModelTabs", 
                         { modelsData: data,
                           title: 'Model Details',
                           id: scope.id,
@@ -179,7 +179,7 @@ angular.module('lp-directives')
                           at: "left bottom",
                           of: "#app"
                     });
-                    $(element).KBaseCardManager().addNewCard("kbaseModelCore", 
+                    $(element).KBaseCardLayoutManager().addNewCard("kbaseModelCore", 
                         { modelsData: data,
                           title: 'Central Carbon Core Metabolic Pathway',
                           ids: [scope.id],

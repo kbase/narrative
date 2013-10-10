@@ -551,6 +551,10 @@
         },
 
         showInitialCards: function() {
+            // if no template given, just load a blank layout.
+            if (!this.options.template)
+                return;
+
             if (this.options.template.toLowerCase() === "genome")
                 this.showGenomeCards();
             else if (this.options.template.toLowerCase() === "meme")

@@ -165,7 +165,25 @@
                     this.result_handler = this.plantsCreateOutput;
                     break;
 
-                
+                case 'Assemble Contigs':
+                    console.log('Assemble Contigs');
+                    break;
+
+                case 'Annotate Genome':
+                    console.log('Annotate Genome');
+                    break;
+
+                case 'Run FBA':
+                    console.log('Run FBA');
+                    break;
+
+                case 'Gapfill FBA':
+                    console.log('Gapfill FBA');
+                    break;
+
+                case 'Integrate Gapfill Solution':
+                    console.log('Integrate Gapfill Solution');
+                    break;
 
                 case 'Genome To FBA Model':
                     config = this.genomeToFbaConfig;

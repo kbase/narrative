@@ -553,13 +553,21 @@ def main(ont_id="PO:0009005", gn_id='3899',
     _num_done += 1
     print_progress("Store result object into workspace", _num_done, total_work)
 
-    wsc.save_object({'id' : edge_object_id, 
-                     'type' : 'Networks', 
-                     'data' : net_object, 'workspace' : workspace_id,
-                     'auth' : token});
-
+    retry, failed = 0, True
+    while failed and (retry < 3):
+        retry += 1
+        failed = False
+        try:
+            wsc.save_object({'id' : edge_object_id, 
+                             'type' : 'Networks', 
+                             'data' : net_object, 'workspace' : workspace_id,
+                             'auth' : token})
+        except Exception as err:
+            print("{}/3: Failed to store result object: {}".format(retry, err))
+            failed = True
+    if failed:
+        return None
     return edge_object_id
-
 
 # Entry point from IPython
 def run_real(params, quiet=True):
@@ -587,7 +595,7 @@ def run_real(params, quiet=True):
 def run_debug(params,**kw):
     print("PO:0001016.g3899.filtered.edge_net")
 
-run = run_debug
+run = (run_real, run_debug)[0]
 
 if __name__ == '__main__':
     sys.exit(main())

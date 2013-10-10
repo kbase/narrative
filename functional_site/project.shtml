@@ -33,6 +33,8 @@
 				<div class="pull-left">
 					<h2 class="pds_name">Project</h2>
 					<h1 id="project_name" class="pds_name"></h1>
+					<div id="member_list">
+					</div>
 				</div>
 				<span class="pull-right"><a href="./manage_projects.shtml" class="btn btn-primary">Manage Projects</a></span>
 			</div>
@@ -54,7 +56,6 @@
 								<th>&nbsp;</th>
 								<th>Name</th>
 								<th>Owner</th>
-								<th>Shared with</th>
 								<th>In Projects</th>
 								<th>Last modified</th>
 							</tr>
@@ -140,8 +141,7 @@
 			<td><input type="checkbox"></td>
 			<td><a href="http://narrative.kbase.us/narratives/{{userId}}/{{project_id}}.{{narrative_id}}">{{name}}</a></td>
 			<td>{{owner}}</td>
-			<td></td>
-			<td>{{project_id}}</td>
+			<td>{{project_name}}</td>
 			<td>{{date}}</td>
 		</tr>
 		{{/rows}}

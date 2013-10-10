@@ -188,13 +188,13 @@
 					_.every(results, function(narrative){
 
 						var name = narrative.id.replace(/_/g," ");
-						var project_id = narrative.workspace.replace(/_/g," ");
+						//var project_id = narrative.workspace.replace(/_/g," ");
 
 
 						data.rows.push({
                             "name": name,
                             "narrative_id": narrative.id,
-                            "project_id": project_id,
+                            "project_id": narrative.workspace,
                             "userId": userId
                         });
                         count++;

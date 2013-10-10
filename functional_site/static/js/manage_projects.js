@@ -146,6 +146,8 @@
                     user_data.selectedadmin = "selected=selected";
                 } else if (new_perm === 'w') {
                     user_data.selectedwrite = "selected=selected";
+                } else if (new_perm === 'n') {
+                    user_data.selectednone = "selected=selected";
                 }
 
                 data.users.push(user_data);
@@ -154,12 +156,17 @@
                 var rows = ich.user_row(data)
                 $("#user_"+project_id+"_rows").append(rows);
 
+                //add a handler for saving the permissions for each user
+                $(".inlinePermissionUpdate").click(function(e) {
+                    saveUserPermission(e);
+                });
 
-                $("#success_message_"+project_id).append("You have successfully added user permissions.");
+
+                $("#success_message_"+project_id+" span").html("You have successfully added user permissions.");
                 $("#success_message_"+project_id).show();
             },
             error_callback: function(results) {
-                $("#error_message_"+project_id).append("An error occurred while adding user permissions.");
+                $("#error_message_"+project_id+" span").html("An error occurred while adding user permissions.");
                 $("#error_message_"+project_id).show();
             }
         }); 
@@ -190,11 +197,12 @@
                             user_data.selectedadmin = "selected=selected";
                         } else if (permission === 'w') {
                             user_data.selectedwrite = "selected=selected";
+                        } else if (permission === 'n') {
+                            user_data.selectednone = "selected=selected";
                         }
 
-                        //if (permission !== 'n') { 
-                            data.users.push(user_data);
-                        //}
+                        data.users.push(user_data);
+                        
             
                     });
 
@@ -247,6 +255,9 @@
         var trid = $(e.target).parent().parent();
         var project_id = $(trid).find(".inline_project").val();
 
+        $("#success_message_"+project_id).hide();
+        $("#error_message_"+project_id).hide();
+
         var users_perms = {};
 
 
@@ -264,12 +275,12 @@
             project_id: project_id,
             perms: users_perms,
             callback: function(results) {
-                $("#success_message_"+project_id).append("You have successfully changed user permissions.");
+                $("#success_message_"+project_id + " span").html("You have successfully changed user permissions.");
                 $("#success_message_"+project_id).show();
                     
             },
             error_callback: function(results) {
-                $("#error_message_"+project_id).append("An error occurred changing user permissions.");
+                $("#error_message_"+project_id + " span").html("An error occurred changing user permissions.");
                 $("#error_message_"+project_id).show();
             }
         }); 
@@ -284,6 +295,7 @@
     
     //add click handler for creating new project
     $( "#create_project" ).click(function() {
+        $("#success_message").hide();
         var name = $("#projectname").val();
 
         //no spaces allowed in project name
@@ -298,7 +310,7 @@
                 console.log("project created.");
                 var clean_name = name.replace(/_/g, " ");
                 $("#projectname").val("");
-                $("#success_message").append("You have successfully create the project \"" + clean_name + "\"");
+                $("#success_message span").html("You have successfully create the project \"" + clean_name + "\"");
                 $("#success_message").show();
 
             }

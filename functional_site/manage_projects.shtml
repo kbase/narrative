@@ -73,11 +73,13 @@
   			<h1>Manage Projects</h1>
         
         <div id="success_message" class="alert alert-success" style="display: none;">
+          <span></span>
           <button type="button" class="close" aria-hidden="true">&times;</button>
           
         </div>
         
         <div id="error_message" class="alert alert-danger" style="display: none;">
+          <span></span>
           <button type="button" class="close" aria-hidden="true">&times;</button>
         </div>
   			<p>A project holds assets that can be shared by members. Project members&mdash;the people who have permission to use the project's assets&mdash;can be individuals or teams. You set permissions for all assets shared in the project, but you can set additional permissions on any individual asset. </p>
@@ -126,11 +128,13 @@
 
               <h3>Project Permissions</h3>
               <div id="success_message_{{project_id}}" class="alert alert-success" style="display: none;">
+                <span></span>
                 <button type="button" class="close" aria-hidden="true">&times;</button>
-                
+
               </div>
               
               <div id="error_message_{{project_id}}" class="alert alert-danger" style="display: none;">
+                <span></span>
                 <button type="button" class="close" aria-hidden="true">&times;</button>
               </div>
               <img src="./static/images/ajax-loader.gif" id="users_{{project_id}}_loading" style="display: none;"  />

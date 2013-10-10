@@ -48,8 +48,8 @@ class SubmitException(Exception):
     pass
 
 class WorkspaceException(Exception):
-    def __init__(self, err):
-        Exception.__init__("Workspace error: {}".format(err))
+    def __init__(self, msg, err):
+        Exception.__init__(self, "Workspace error: {} :: {}".format(msg, err))
 
 ## Functions
 
@@ -188,15 +188,107 @@ for file_type, file_name in files.iteritems():
 ugids = {}
 nodes = []
 
+# DATA
+
+AWE_JOB = """
+{
+    "info": {
+        "pipeline": "coex-example",
+        "name": "testcoex",
+        "project": "default",
+        "user": "default",
+        "clientgroups":"",
+         "sessionId":"xyz1234"
+    }, 
+    "tasks": [
+        {
+            "cmd": {
+                "args": "-i @data_csv --output=data_filtered_csv -m anova --sample_index=@sample_id_csv  -u n -r y -d y $coex_filter", 
+                "description": "filtering", 
+                "name": "coex_filter"
+            }, 
+            "dependsOn": [], 
+            "inputs": {
+               "data_csv": {
+                    "host": "$shock_uri",
+                    "node": "$expression"
+                },
+               "sample_id_csv": {
+                    "host": "$shock_uri",
+                    "node": "$sample_id"
+                }
+            }, 
+            "outputs": {
+                "data_filtered_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "0",
+            "skip": 0,
+            "totalwork": 1                
+        },
+        {
+            "cmd": {
+                "args": "-i @data_filtered_csv -o net_edge_csv -m simple -t edge -r 0.8 -k 40 -p 50 $coex_net", 
+                "description": "coex network", 
+                "name": "coex_net"
+            }, 
+            "dependsOn": ["0"], 
+            "inputs": {
+               "data_filtered_csv": {
+                    "host": "$shock_uri",
+                    "origin": "0"
+                }
+            }, 
+            "outputs": {
+                "net_edge_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "1",
+            "skip": 0, 
+            "totalwork": 1
+        },
+        {
+            "cmd": {
+                "args": "-i @data_filtered_csv -o module_csv -c hclust -n simple -r 0.8 -k 40 -p 50 -d 0.99 $coex_cluster", 
+                "description": "clustering", 
+                "name": "coex_cluster2"
+            }, 
+            "dependsOn": ["1"], 
+            "inputs": {
+               "data_filtered_csv": {
+                    "host": "$shock_uri",
+                    "origin": "0"
+                }
+            }, 
+            "outputs": {
+                "hclust_tree_method=hclust.txt": {
+                    "host": "$shock_uri"
+                },
+                "module_network_edgelist_method=hclust.csv": {
+                    "host": "$shock_uri"
+                },
+                "module_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "2",
+            "skip": 0,
+            "totalwork": 1
+        }
+    ]
+}
+"""
 def gnid(s):
     return s if s.startswith('kb|g.') else 'kb|g.' + s
 
 ## MAIN ##
 
-def main(ont_id="PO:0009005", gn_id='3899',
-         fltr_m='anova', fltr_n='100', fltr_p='0.05',
+def main(ont_id="GSE5622", gn_id='3899',
+         fltr_m='anova', fltr_n='100', fltr_p='0.00005',
          net_c='0.75',
-         clust_c='hclust', clust_n='simple', clust_s='100',
+         clust_c='hclust', clust_n='simple', clust_s='10',
          token=None, workspace_id=None):
     """Create a narrative for co-expression network workflow
 
@@ -242,7 +334,9 @@ def main(ont_id="PO:0009005", gn_id='3899',
 
 
     exprc = ExpressionServices(URLS.expression)
-    sample_ids = exprc.get_expression_sample_ids_by_ontology_ids([ont_id],'and',gnid(gn_id), 'microarray', 'N');
+    #series_ids = exprc.get_expression_series_ids_by_series_external_source_ids([ont_id],'and',gnid(gn_id), 'microarray', 'N');
+    series_ids = exprc.get_expression_series_ids_by_series_external_source_ids([ont_id]);
+    sample_ids = exprc.get_expression_sample_ids_by_series_ids(series_ids);
     sample_data = exprc.get_expression_samples_data(sample_ids);
     
     
@@ -501,8 +595,9 @@ def main(ont_id="PO:0009005", gn_id='3899',
     #cnf = open(files_rst['cluster']);
     cnf = urllib2.urlopen(download_urls[files_rst['cluster']]);
     cnf.readline(); # skip header
+    clstr2genes = {};
     for line in cnf :
-        line.strip();
+        line = line.strip();
         line = line.replace('"','')
         values = line.split(',')
         edges.append( {
@@ -517,6 +612,8 @@ def main(ont_id="PO:0009005", gn_id='3899',
           'nodeId2' : get_node_id("cluster." + values[1], 'CLUSTER'),
           'confidence' : '0'
         })
+        if not "cluster." + values[1] in clstr2genes.keys() : clstr2genes["cluster." + values[1]] = {}
+        clstr2genes["cluster." + values[1]][values[0]] = 1;
   
     
     # 8.5 fill annotations
@@ -535,6 +632,9 @@ def main(ont_id="PO:0009005", gn_id='3899',
         if gid in  eids.keys() : hr_nd['userAnnotations']['external_id'] = eids[gid][1]
         if gid in funcs.keys() : hr_nd['userAnnotations']['functions'] = funcs[gid]
         if gid in ots.keys() : hr_nd['userAnnotations']['ontologies'] = ots[gid] # TODO: convert it to JSON string
+        if gid.startswith('cluster.') :
+            enr = oc.get_go_enrichment(clstr2genes[gid].keys(), ['biological_process'], ["IEA","IDA","IPI","IMP","IGI","IEP","ISS","ISS","ISO","ISA","ISM","IGC","IBA","IBD","IKR","IRD","RCA","TAS","NAS","IC","ND","NR"], 'hypergeometric', 'GO')
+            hr_nd['userAnnotations']['ontologies'] = enr
 
     # 8.6 generate Networks object
     net_object = {
@@ -553,21 +653,13 @@ def main(ont_id="PO:0009005", gn_id='3899',
     _num_done += 1
     print_progress("Store result object into workspace", _num_done, total_work)
 
-    retry, failed = 0, True
-    while failed and (retry < 3):
-        retry += 1
-        failed = False
-        try:
-            wsc.save_object({'id' : edge_object_id, 
-                             'type' : 'Networks', 
-                             'data' : net_object, 'workspace' : workspace_id,
-                             'auth' : token})
-        except Exception as err:
-            print("{}/3: Failed to store result object: {}".format(retry, err))
-            failed = True
-    if failed:
-        return None
+    wsc.save_object({'id' : edge_object_id, 
+                     'type' : 'Networks', 
+                     'data' : net_object, 'workspace' : workspace_id,
+                     'auth' : token});
+
     return edge_object_id
+
 
 # Entry point from IPython
 def run_real(params, quiet=True):
@@ -593,103 +685,11 @@ def run_real(params, quiet=True):
     return 0
 
 def run_debug(params,**kw):
-    print("PO:0001016.g3899.filtered.edge_net")
+    print("GSE5622.g3899.filtered.edge_net")
 
-run = (run_real, run_debug)[0]
+run = run_real # run_debug
 
 if __name__ == '__main__':
     sys.exit(main())
 
 
-# DATA
-
-AWE_JOB = """
-{
-    "info": {
-        "pipeline": "coex-example",
-        "name": "testcoex",
-        "project": "default",
-        "user": "default",
-        "clientgroups":"",
-         "sessionId":"xyz1234"
-    }, 
-    "tasks": [
-        {
-            "cmd": {
-                "args": "-i @data_csv --output=data_filtered_csv -m anova -n 200 --sample_index=@sample_id_csv  -u n -r y -d y $coex_filter", 
-                "description": "filtering", 
-                "name": "coex_filter"
-            }, 
-            "dependsOn": [], 
-            "inputs": {
-               "data_csv": {
-                    "host": "$shock_uri",
-                    "node": "$expression"
-                },
-               "sample_id_csv": {
-                    "host": "$shock_uri",
-                    "node": "$sample_id"
-                }
-            }, 
-            "outputs": {
-                "data_filtered_csv": {
-                    "host": "$shock_uri"
-                }
-            },
-            "taskid": "0",
-            "skip": 0,
-            "totalwork": 1                
-        },
-        {
-            "cmd": {
-                "args": "-i @data_filtered_csv -o net_edge_csv -m simple -t edge -r 0.8 -k 40 -p 50 $coex_net", 
-                "description": "coex network", 
-                "name": "coex_net"
-            }, 
-            "dependsOn": ["0"], 
-            "inputs": {
-               "data_filtered_csv": {
-                    "host": "$shock_uri",
-                    "origin": "0"
-                }
-            }, 
-            "outputs": {
-                "net_edge_csv": {
-                    "host": "$shock_uri"
-                }
-            },
-            "taskid": "1",
-            "skip": 0, 
-            "totalwork": 1
-        },
-        {
-            "cmd": {
-                "args": "-i @data_filtered_csv -o module_csv -c hclust -n simple -r 0.8 -k 40 -p 50 -d 0.99 $coex_cluster", 
-                "description": "clustering", 
-                "name": "coex_cluster2"
-            }, 
-            "dependsOn": ["1"], 
-            "inputs": {
-               "data_filtered_csv": {
-                    "host": "$shock_uri",
-                    "origin": "0"
-                }
-            }, 
-            "outputs": {
-                "hclust_tree_method=hclust.txt": {
-                    "host": "$shock_uri"
-                },
-                "module_network_edgelist_method=hclust.csv": {
-                    "host": "$shock_uri"
-                },
-                "module_csv": {
-                    "host": "$shock_uri"
-                }
-            },
-            "taskid": "2",
-            "skip": 0,
-            "totalwork": 1
-        }
-    ]
-}
-"""

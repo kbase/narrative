@@ -24,7 +24,7 @@ $.KBWidget({
             return "<tr><td>" + name + "</td><td>" + value + "</td></tr>";
         };
 
-        table.append(createTableRow("ID", data[0]));
+        table.append(createTableRow("<b>ID</b>", "<b>" + data[0] + "</b>"));
         table.append(createTableRow("Genome", data[10].name));
         table.append(createTableRow("# Genes", data[10].number_genes));
         table.append(createTableRow("# Compounds", data[10].number_compounds));

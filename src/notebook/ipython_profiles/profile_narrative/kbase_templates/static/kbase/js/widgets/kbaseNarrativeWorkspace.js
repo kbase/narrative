@@ -154,60 +154,25 @@
             var config = {};
             var runner = this._runner(); 
             var funcs = this._getFunctionsForFunction(name);
+
             this.result_handler = funcs.result_handler;
-            var content = this._buildRunForm(funcs.config);
-            // @@ code
-            switch(name) {
-                // To add a new function, you need to define
-                // one JSON structure for params, and one function
-                // to build the actual command.
-                case 'plants':
-                    // configuration for parameters
-                    config = this.plantsRunConfig;
-                    // function to build the code which is executed
-                    command_builder = this.plantsRunCommand();
-                    // function to handle the result data
-                    this.result_handler = this.plantsCreateOutput;
-                    break;
+            config = funcs.config;
+            command_builder = funcs.command_builder;
 
-                case 'Assemble Contigs':
-                    console.log('Assemble Contigs');
-                    break;
-
-                case 'Annotate Genome':
-                    console.log('Annotate Genome');
-                    break;
-
-                case 'Run FBA':
-                    console.log('Run FBA');
-                    break;
-
-                case 'Gapfill FBA':
-                    console.log('Gapfill FBA');
-                    break;
-
-                case 'Integrate Gapfill Solution':
-                    console.log('Integrate Gapfill Solution');
-                    break;
-
-                case 'Genome To FBA Model':
-                    config = this.genomeToFbaConfig;
-                    command_builder = this.genomeToFbaCommand();
-                    this.result_handler = this.genomeToFbaCreateOutput;
-                    break;
-            }
-            var content = this._buildRunForm(config);
+            var content = this._buildRunForm(name, config);
             var cell_id = "kb-cell-" + this._cur_index;
+            console.log(content);
             cell.set_text("<div class='kb-cell-run' " + "id='" + cell_id + "'>" + 
                           "<h1>" + name + "</h1>" +
                           "<div class='kb-cell-params'>" +  
                           content + 
                           "</div>" +
                           "</div>");
+
             cell.rendered = false; // force a render
             cell.render();
             this.element = $("#" + cell_id);
-            var $frm = $('div.kb-cell-run form');
+            var $frm = $('div#' + cell_id + ' form');
             var submit_fn = this._bindRunButton();
             $frm.on("submit", submit_fn);
             // function(event) {
@@ -247,6 +212,80 @@
                         'result_handler': this.plantsCreateOutput
                     }
                     break;
+                case 'Assemble Contigs':
+                    return {
+                        'config' : this.runAssemblyConfig,
+                        'command_builder' : this.runAssemblyCommand(),
+                        'result_handler' : this.runAssemblyCreateOutput,
+                    }
+                    break;
+
+                case 'Annotate Genome':
+                    console.log('Annotate Genome');
+                    return {
+                        'config' : this.annotateGenomeConfig,
+                        'command_builder' : this.annotateGenomeCommand(),
+                        'result_handler' : this.annotateGenomeCreateOutput,
+                    };
+                    break;
+
+                case 'Genome To FBA Model':
+                    return {
+                        'config' : this.genomeToFbaConfig,
+                        'command_builder' : this.genomeToFbaCommand(),
+                        'result_handler' : this.genomeToFbaCreateOutput,
+                    };
+                    break;
+
+                case 'View FBA Model Details':
+                    return {
+                        'config' : this.viewFbaModelConfig,
+                        'command_builder' : this.viewFbaModelCommand(),
+                        'result_handler' : this.viewFbaModelCreateOutput,
+                    };
+                    break;
+
+                case 'Build Media':
+                    return {
+                        'config' : this.buildMediaConfig,
+                        'command_builder' : this.buildMediaCommand(),
+                        'result_handler' : this.buildMediaCreateOutput,
+                    };
+                    break;
+
+                case 'View Media':
+                    return {
+                        'config' : this.viewMediaConfig,
+                        'command_builder' : this.viewMediaCommand(),
+                        'result_handler' : this.viewMediaCreateOutput,
+                    };
+                    break;
+
+                case 'Run FBA':
+                    return {
+                        'config' : this.runFbaConfig,
+                        'command_builder' : this.runFbaCommand(),
+                        'result_handler' : this.runFbaCreateOutput,
+                    };
+                    break;
+
+                case 'Gapfill FBA':
+                    return {
+                        'config' : this.runGapfillConfig,
+                        'command_builder' : this.runGapfillCommand(),
+                        'result_handler' : this.runGapfillCreateOutput,
+                    };
+                    break;
+
+                case 'Integrate Gapfill Solution':
+                    console.log('Integrate Gapfill Solution');
+                    return {
+                        'config' : this.integrateGapfillConfig,
+                        'command_builder' : this.integrateGapfillCommand(),
+                        'result_handler' : this.runGapfillCreateOutput,
+                    };
+                    break;
+
                 default:
                     return {};
             }
@@ -353,8 +392,37 @@
         /* -------------- MICROBES ---------------- */
 
         /* --------- Assemble Contigs from FASTA reads -----------*/
+        runAssemblyConfig: {
+            'Not finished yet' : {},
+        },
+
+        runAssemblyCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "run_assembly", params);
+            };
+        },
+
+        runAssemblyCreateOutput: function(element, text) {
+
+        },
 
         /* ---------- Annotate Assembled Genome ----------- */
+        annotateGenomeConfig: {
+            'Not finished yet' : {},
+
+        },
+
+        annotateGenomeCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "annotate_genome", params);
+            };
+        },
+
+        annotateGenomeCreateOutput: function(element, text) {
+
+        },
 
         /* ------------ Genome to FBA Model ----------------- */ 
         genomeToFbaConfig: {
@@ -366,26 +434,125 @@
         genomeToFbaCommand: function() {
             var self = this;
             return function(params) {
-                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "genome_to_fba", params);
-            }
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "genome_to_fba_model", params);
+            };
         },
 
         genomeToFbaCreateOutput: function(element, text) {
             var data = JSON.parse(text);
 
-            console.log("got to fba output");
-            console.log(element);
             element.kbaseModelMetaNarrative({data: data});
+            element.off('click dblclick keydown keyup keypress focus');
+        },
+
+        /* ---------- View Model ----------- */
+        viewFbaModelConfig: {
+            'Identifiers': {
+                'Model': '',
+            },
+        },
+
+        viewFbaModelCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "view_fba_model", params);
+            };
+        },
+
+        viewFbaModelCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+
+            element.kbaseModelTabs({modelsData: data});
             element.css({ margin: '-10px' });
             element.off('click dblclick keydown keyup keypress focus');
         },
 
+
+        /* --------- Build Media ------------ */
+        buildMediaConfig: {
+            'Not finished yet' : {},
+
+        },
+
+        buildMediaCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "build_media", params);
+            };
+        },
+
+        buildMediaCreateOutput: function(element, text) {
+
+        },
+
+        /* ---------- View Media ---------- */
+        viewMediaConfig: {
+            'Not finished yet' : {},
+
+        },
+
+        viewMediaCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "view_media", params);
+            };
+        },
+
+        viewMediaCreateOutput: function(element, text) {
+
+        },
+
+
         /* --------- Run Flux Balance Analysis --------------- */
-        
+        runFbaConfig: {
+            'Not finished yet' : {},
+
+        },
+
+        runFbaCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "run_fba", params);
+            };
+        },
+
+        runFbaCreateOutput: function(element, text) {
+
+        },
+
         /* ------------ Gapfill FBA Model -------------- */
+        runGapfillConfig: {
+            'Not finished yet' : {},
+
+        },
+
+        runGapfillCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "run_gapfill", params);
+            };
+        },
+
+        runGapfillCreateOutput: function(element, text) {
+
+        },
 
         /* ------------ Integrate Gapfill Solution ---------------- */
+        integrateGapfillConfig: {
+            'Not finished yet' : {},
 
+        },
+
+        integrateGapfillCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "integrate_gapfill", params);
+            };
+        },
+
+        integrateGapfillCreateOutput: function(element, text) {
+
+        },
 
 
 
@@ -396,19 +563,33 @@
          * Build 'run script' HTML form from
          * configuration data. See 
          */
-        _buildRunForm: function(cfg) {
+        _buildRunForm: function(name, cfg) {
+            console.log('_buildRunForm');
+            console.log(cfg);
+
+            var cls = "class='table'";
             var sbn = "style='border: none'";
+
             var text = "<form>" + 
-                       "<input type='hidden' name='kbfunc' value='plants' />" +
-                       "<table " + sbn + ">";
+                       "<input type='hidden' name='kbfunc' value='" + name + "' />" +
+                       "<table " + cls + ">";
             $.each(cfg, function(key, value) {
+
                 text += "<tr " + sbn + "><td " + sbn + ">" + key + "</td>";
                 $.each(value, function(key2, value2) { 
                     if (key2 == '') {
                         // this cell intentionally left blank
                         text += "<td " + sbn + ">&nbsp;</td>";
+//                        paramRow.append("<td>&nbsp</td>");
                     }
                     else {
+                        // paramRow.append($("<td/>")
+                        //                 .append("<label>" + key2 + "</label>")
+                        //                 .append($("<input>")
+                        //                         .attr("type", "text")
+                        //                         .attr("name", key + "." + key2)
+                        //                         .attr("value", value2)));
+
                         text += "<td " + sbn + "><label>" + key2 + "</label>" + 
                                "<input type='text' " + 
                                "name='" + key + "." + key2 + "' " +
@@ -416,11 +597,20 @@
                                "</input></td>";
                     }
                 });
+
+//                paramTable.append(paramRow);
+
                 text += "</tr>";
             });
+
             text += "</table>" +
                     "<input type='submit' value='Run' class='button'></input>" + 
                     "</form>";
+            // var form = $("<form>")
+            //            .append($("<input type='hidden' name='kbfunc' value='" + name + "/>"))
+            //            .append(paramTable)
+            //            .append($("<input type='submit' value='Run' class='button btn btn-default'/>"));
+
             return text;
         },
 

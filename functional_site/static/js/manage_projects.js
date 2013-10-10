@@ -75,6 +75,16 @@
                             loadProjectUsers($(e.target).attr('id').replace(/^collapse_/, ""));
                         });
 
+                    //add event handler for the add new user button
+                    $(".add_new_user").click(function(e) {
+                        addUser(e);
+                    });
+
+                    //add click handlers for success/error messages
+                    $(".close").click(function(e) {
+                        $(e.target).parent().hide();
+                    });
+
                     $("#projects_loading").hide();
 
                 } else {
@@ -87,8 +97,80 @@
 
     };
 
-    
+    //adds a new user/permission for a project
+    function addUser(e) {
 
+        $("#success_message_"+project_id).hide();
+        $("#error_message_"+project_id).hide();
+
+        
+        //get the form elements
+        var form = $(e.target).parent().parent();
+        var new_user = $(form).find(".new_username").val();
+        var project_id = $(form).find(".new_user_project").val();
+        var new_perm = $(form).find(".new_permlevel :selected").val();
+
+        $("#adding_user_"+project_id).show();
+
+        console.log(new_user + " " + new_perm + " " + project_id);
+
+        var users_perms = {};
+        users_perms[new_user] = new_perm;
+     
+        //get all the other permission, since the set params needs the full list
+        $("#user_"+project_id+"_rows tr").each(function() {
+
+            var permission = $(this).find(".inline_permission :selected").val();
+            var username = $(this).find(".inline_username").val();
+
+            console.log(permission + " is perm " + username);
+            users_perms[username] = permission;
+        });
+
+        //save the permissions for the project
+        project.set_project_perms({
+            project_id: project_id,
+            perms: users_perms,
+            callback: function(results) {
+
+                //add the new user to the table
+                var data = { users: []};
+                var user_data = {
+                    "username" : new_user,
+                    "project_id" : project_id,
+                };
+
+                if (new_perm === 'r') {
+                    user_data.selectedread = "selected=selected";
+                } else if (new_perm === 'a') {
+                    user_data.selectedadmin = "selected=selected";
+                } else if (new_perm === 'w') {
+                    user_data.selectedwrite = "selected=selected";
+                }
+
+                data.users.push(user_data);
+                        
+                //populate the html template
+                var rows = ich.user_row(data)
+                $("#user_"+project_id+"_rows").append(rows);
+
+
+                $("#success_message_"+project_id).append("You have successfully added user permissions.");
+                $("#success_message_"+project_id).show();
+            },
+            error_callback: function(results) {
+                $("#error_message_"+project_id).append("An error occurred while adding user permissions.");
+                $("#error_message_"+project_id).show();
+            }
+        }); 
+
+        $(form).find(".new_username").val("");
+        $("#adding_user_"+project_id).hide();
+
+    }
+
+    
+    //load all the user/permissions for a project
     function loadProjectUsers(project_id) {
         $("#users_"+project_id+"_loading").show();
         var projects = project.get_project_perms({
@@ -110,9 +192,9 @@
                             user_data.selectedwrite = "selected=selected";
                         }
 
-                        if (permission !== 'n') { 
+                        //if (permission !== 'n') { 
                             data.users.push(user_data);
-                        }
+                        //}
             
                     });
 
@@ -174,19 +256,21 @@
             var permission = $(this).find(".inline_permission :selected").val();
             var username = $(this).find(".inline_username").val();
 
-            console.log(permission + " is perm " + username);
             users_perms[username] = permission;
         });
 
         //save the permissions for the project
-        project.get_project_perms({
+        project.set_project_perms({
             project_id: project_id,
             perms: users_perms,
             callback: function(results) {
-                console.log("saved permissions");
+                $("#success_message_"+project_id).append("You have successfully changed user permissions.");
+                $("#success_message_"+project_id).show();
+                    
             },
             error_callback: function(results) {
-                console.log("error saving");
+                $("#error_message_"+project_id).append("An error occurred changing user permissions.");
+                $("#error_message_"+project_id).show();
             }
         }); 
 

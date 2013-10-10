@@ -563,28 +563,9 @@
                 this.showGeneCards();
             else if (this.options.template.toLowerCase() === "model")
                 this.showModelCards();
-            // else if (this.options.template.toLowerCase() === "hello")
-            //     this.showHelloCards();
             else {
                 // throw an error. modal dialog, maybe?
             }
-        },
-
-        /**
-         * This is just left in here as an example stub. Not actually used.
-         */
-        showHelloCards: function() {
-            this.addNewCard("HelloWidget",
-                {
-                    color: this.options.data.color,
-                },
-                {
-                    my: "left top",
-                    at: "left bottom",
-                    of: "#app"
-                }
-            );
-
         },
 
         /**
@@ -1155,7 +1136,35 @@
         getDataObjects: function() {
             var data = [];
             for (var cardId in this.cards) {
-                data.push(this.cards[cardId].widget.getData());
+                var cardData = this.cards[cardId].widget.getData();
+
+                // This is hacky as hell for now. 
+                // 
+                // Cases
+                // 1. cardData.id = array and cardData.workspace != array
+                //   Add a new data hunk for each id, point to same workspace.
+                // 2. cardData.id = array and cardData.workspace = array
+                //   Assume there's a one-to-one matching, do as above.
+                //   If not a one to one matching, match what's there, and leave rest of workspaces blank.
+                // 3. cardData.id != array, cardData.workspace != array
+                //   I like this case.
+                // 4. cardData.id = scalar, cardData.workspace = array
+                //   Doubt this'll happen, ignore until it's a problem.
+
+                console.log(cardData);
+
+                if (Array.isArray(cardData.id)) {
+                    for (var i in cardData.id) {
+                        var id = cardData.id[i];
+                        var ws = "";
+                        if (Array.isArray(cardData.workspace) && cardData.workspace[i])
+                            ws = cardData.workspace[i];
+
+                        data.push({ id: id, ws: ws, type: cardData.type }); // don't need title.
+                    }
+                }
+                else
+                    data.push(this.cards[cardId].widget.getData());
             }
             return data;
         },

@@ -28,7 +28,9 @@
 		     + '|'
 		     + 'user_id=' + c.user_id
 		     + '|'
-		     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'))
+		     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+		     { path: '/',
+		       domain: 'kbase.us' });
 
 	    
 	}
@@ -62,6 +64,7 @@
             login_callback: function(args) {
                 $(".whiteout-pane").remove();
 
+		set_cookie();
                 // If the notebook kernel's initialized, tell it to set the token.
                 if (IPython.notebook)
 	                set_token();

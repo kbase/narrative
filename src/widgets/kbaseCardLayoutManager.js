@@ -564,7 +564,7 @@
             else if (this.options.template.toLowerCase() === "model")
                 this.showModelCards();
             else {
-                // throw an error. modal dialog, maybe?
+                // throw an error for an unknown template. modal dialog, maybe?
             }
         },
 
@@ -1151,16 +1151,17 @@
                 // 4. cardData.id = scalar, cardData.workspace = array
                 //   Doubt this'll happen, ignore until it's a problem.
 
-                console.log(cardData);
-
                 if (Array.isArray(cardData.id)) {
                     for (var i in cardData.id) {
                         var id = cardData.id[i];
                         var ws = "";
-                        if (Array.isArray(cardData.workspace) && cardData.workspace[i])
+                        if (!Array.isArray(cardData.workspace))
+                            ws = cardData.workspace;
+
+                        else if (Array.isArray(cardData.workspace) && cardData.workspace[i])
                             ws = cardData.workspace[i];
 
-                        data.push({ id: id, ws: ws, type: cardData.type }); // don't need title.
+                        data.push({ id: id, workspace: ws, type: cardData.type }); // don't need title.
                     }
                 }
                 else

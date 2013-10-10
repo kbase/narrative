@@ -12,7 +12,8 @@ $.KBWidget({
             title: "Model Options",
             type: "Model"
         }
-    }
+    },
+    
     init: function(options) {
         var self = this;
         this._super(options);

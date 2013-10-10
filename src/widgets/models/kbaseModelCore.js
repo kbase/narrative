@@ -10,7 +10,7 @@ $.KBWidget({
         return {
             id: this.options.ids,
             workspace: this.options.workspaces,
-            title: "Central Carbon Core Metabolic Pathway",
+            title: this.options.title,
             type: "Model"
         }
     },
@@ -22,8 +22,6 @@ $.KBWidget({
         var workspaces = options.workspaces;
         var models_data = options.modelsData;
         var fbas_data = options.fbasData;
-        console.log('in model core!')
-        console.log('fba_data', fbas_data)        
 
         var container = this.$elem
         container.append('<div id="core-model"></div>');
@@ -80,7 +78,6 @@ $.KBWidget({
 
                 var model_fba = [];
                 for (var k in fba_data) {
-                    console.log(get_genome_id(fba_data[k].id), get_genome_id(model.id) )
                     if (get_genome_id(fba_data[k].id) == get_genome_id(model.id) ) {
                         model_fba = fba_data[k];
                     }
@@ -108,7 +105,6 @@ $.KBWidget({
                         // get any associated flux values for rxn_id
                         for (var z in model_fba.reactionFluxes) {
                             var rxn_flux = model_fba.reactionFluxes[z];
-                            console.log(rxn_flux)
                             if (rxn_flux[0].slice(0,rxn_flux[0].indexOf('_')) == rxn_id) {
                                 dict.flux = parseFloat(rxn_flux[1]); // reaction flux value
                             }

@@ -1063,6 +1063,7 @@
                 var cardWidth = newWidget.options.width ? newWidget.options.width : this.defaultWidth;
                 var cardWorkspace = data.workspace ? data.workspace : this.cdmWorkspace;
             } else {
+                console.log('here')
                 var cardTitle = options.title ? options.title : "";
                 var cardSubtitle = options.id ? options.id : "";
                 var cardWidth = options.width ? options.width : this.defaultWidth;                
@@ -1091,7 +1092,8 @@
 
             this.cards[newCardId] = {
                 card: newCard,
-                widget: newWidget
+                widget: newWidget,
+                name: cardName
             };
 
             $("#" + newCardId).on("")
@@ -1141,7 +1143,11 @@
         getDataObjects: function() {
             var data = [];
             for (var cardId in this.cards) {
-                var cardData = this.cards[cardId].widget.getData();
+                try {
+                    var cardData = this.cards[cardId].widget.getData();
+                } catch(err) {
+                    throw err.message+' for widget: '+this.cards[cardId].name;
+                }
 
                 // This is hacky as hell for now. 
                 // 

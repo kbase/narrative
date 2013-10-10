@@ -18,8 +18,13 @@
 
 
 var app = angular.module('landing-pages', 
-    ['lp-directives', 'iris-directives'])
-    .config(['$routeProvider', function($routeProvider) {
+    ['lp-directives','iris-directives', 'card-directives'])
+    .config(['$routeProvider', '$locationProvider', 
+    function($routeProvider, $locationProvider) {
+
+    // with some configuration, we can change this in the future.
+    $locationProvider.html5Mode(false);  
+
     $routeProvider
         .when('/workspace-browser', 
             {templateUrl: 'views/ws-browser.html',
@@ -112,6 +117,7 @@ var app = angular.module('landing-pages',
              controller: LPHelp})
 
         .otherwise({redirectTo: '/404'})
+
 
 }])
 

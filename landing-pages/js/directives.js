@@ -144,23 +144,13 @@ angular.module('lp-directives')
     .directive('modelcards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-
-                // This is silly, because we may have 2 or 3 layers of frameworks, 
-                /*$(element).KBaseCardLayoutManager({template: "model", 
-                                                       data: data,
-                                                       title: 'Model Info',
-                                                       id: scope.id,
-                                                       ws: scope.ws});
-                */
-
-                // I'll try this... this all just seems soo... questionable.
                 var prom = wsGet('objectMeta', 'Model', scope.ws, scope.id);
                 $.when(prom).done(function(data){
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseModelMeta", 
-                        { data: data,
-                          title: 'Model Info',
+                        { title: 'Model Info',
+                          data: data,
                           id: scope.id,
-                          ws: scope.ws},
+                          ws: scope.ws },
                         { my: "left top+50",
                           at: "left bottom",
                           of: "#app"
@@ -174,17 +164,17 @@ angular.module('lp-directives')
                           title: 'Model Details',
                           id: scope.id,
                           ws: scope.ws,
-                          width: 700},
+                          width: 700 },
                         { my: "left+400 top+50",
                           at: "left bottom",
                           of: "#app"
                     });
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseModelCore", 
-                        { modelsData: data,
-                          title: 'Central Carbon Core Metabolic Pathway',
+                        { title: 'Central Carbon Core Metabolic Pathway',
+                          modelsData: data,
                           ids: [scope.id],
                           workspaces: [scope.ws],
-                          width: 900},
+                          width: 900 },
                         { my: "left+800 top+600",
                           at: "left bottom",
                           of: "#app"
@@ -198,12 +188,11 @@ angular.module('lp-directives')
     .directive('fbacards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                // I'll try this... this all just seems soo... questionable.
                 var prom = wsGet('objectMeta', 'FBA', scope.ws, scope.id);
                 $.when(prom).done(function(data){
-                    $(element).KBaseCardManager().addNewCard("kbaseFbaMeta", 
-                        { data: data,
-                          title: 'Model Info',
+                    $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaMeta", 
+                        { title: 'Model Info',
+                          data: data,
                           id: scope.id,
                           ws: scope.ws },
                         { my: "left top+50",
@@ -214,9 +203,9 @@ angular.module('lp-directives')
 
                 var prom = fbaGet('FBA', scope.ws, scope.id);
                 $.when(prom).done(function(fbas_data) {
-                    $(element).KBaseCardManager().addNewCard("kbaseFbaTabs", 
-                        { fbaData: fbas_data,
-                          title: 'FBA Details',
+                    $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaTabs", 
+                        { title: 'FBA Details',
+                          fbaData: fbas_data,
                           id: scope.id,
                           ws: scope.ws,
                           width: 700 },
@@ -229,10 +218,10 @@ angular.module('lp-directives')
 
                     var prom2 = fbaGet('Model', model_ws, model_id);
                     $.when(prom2).done(function(models_data){
-                        $(element).KBaseCardManager().addNewCard("kbaseModelCore", 
-                            { modelsData: models_data,
+                        $(element).KBaseCardLayoutManager().addNewCard("kbaseModelCore", 
+                            { title: 'Central Carbon Core Metabolic Pathway',
+                              modelsData: models_data,
                               fbasData: fbas_data,
-                              title: 'Central Carbon Core Metabolic Pathway',
                               ids: [scope.id],
                               workspaces: [scope.ws],
                               width: 900 },

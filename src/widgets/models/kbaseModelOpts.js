@@ -9,7 +9,7 @@ $.KBWidget({
         return {
             id: this.options.id,
             ws: this.options.workspace,
-            title: "Model Options",
+            title: this.option.title,
             type: "Model"
         }
     },

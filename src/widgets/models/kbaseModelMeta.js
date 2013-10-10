@@ -11,7 +11,7 @@ $.KBWidget({
             id: this.options.data[0],
             type: "Model",
             workspace: this.options.data[7],
-            title: "Model Info"
+            title: this.options.title
         };
     },
 

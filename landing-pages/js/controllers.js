@@ -58,7 +58,7 @@ function FBADetailCards($scope, $routeParams) {
     $scope.id = $routeParams.id;
 }
 
-function LPHelp($scope, $routeParams) {
+function LPHelp($scope, $routeParams, $location) {
     // Fixme: move out of controller
     $('.api-url-submit').click(function() {
         var form = $(this).parents('form');
@@ -66,7 +66,8 @@ function LPHelp($scope, $routeParams) {
         if (form.find('#input2').val()) {
             url = url+'/'+form.find('#input2').val();
         }
-        window.location.hash = url;
+    
+        $scope.$apply( $location.path( url ) );
     });
 }
 

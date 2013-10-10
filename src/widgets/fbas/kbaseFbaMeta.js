@@ -5,6 +5,15 @@ $.KBWidget({
     version: "1.0.0",
     options: {
     },
+    getData: function() {
+        return {
+            id: this.options.ids,
+            workspace: this.options.workspaces,
+            title: this.options.title,
+            type: "FBA"
+        }
+    },
+    
     init: function(options) {
         var self = this;
         this._super(options);

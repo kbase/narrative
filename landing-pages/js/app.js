@@ -1,6 +1,4 @@
 
-var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 
 
 var app = angular.module('landing-pages', ['lp-directives', 'iris-directives']).
@@ -110,6 +108,13 @@ app.run(function ($rootScope) {
 	    // set the currently selected workspace.
 	    set_selected_workspace();
 	});
+
+
+    //  Here's a sort of hack to remove any cards when a view changes.
+    //  There may be a better way to manage this.
+    $rootScope.$on('$routeChangeSuccess', function() {
+        removeCards();
+    })
 });
 
 
@@ -138,6 +143,10 @@ function navEvent() {
     $(document).trigger("navEvent");
 }
 
+function removeCards() {
+    $(".ui-dialog").remove();    
+    //$("#genomes").KBaseCardLayoutManager("destroy");
+}
 
 
 

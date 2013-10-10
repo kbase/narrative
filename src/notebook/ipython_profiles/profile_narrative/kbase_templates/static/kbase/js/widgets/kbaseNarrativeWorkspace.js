@@ -272,12 +272,13 @@
         plantsRunConfig: {
             'Identifiers': {
                 'Genome': '3899',
-                'Ontology': 'PO:0001016'
+                //'Ontology': 'PO:0001016'
+                'Ontology': 'GSE5622'
             },
             'Filter': {
                 //'-m': 'anova',
                 //'-n': '100',
-                'p-value': '0.05',
+                'p-value': '0.00005',
                 '':'x',
             },
             'Network': {
@@ -287,7 +288,7 @@
             'Cluster': {
                 //'-c': 'hclust',
                 //'-n': 'simple'
-                'Number of modules': '50',
+                'Number of modules': '25',
                 '':'x'
             }
         },

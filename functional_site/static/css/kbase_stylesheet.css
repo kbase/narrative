@@ -180,6 +180,17 @@ nav[role="navigation"] ul li a {
     box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.125);
     border: 1px solid #5c9531;
 }
+
+#header_banner .dropdown-menu a {
+    color: #0066b9;
+} 
+#header_banner .dropdown-menu a:hover {
+    background-color: #b6e9f8;
+    color: #0066b9;
+    text-decoration: none;
+} 
+
+
 li#searchlabel a{
  }
 
@@ -213,7 +224,7 @@ span#searchspan{
     span#searchspan{width: 60%;}   
 }
 #login-widget{
-    padding: 2.3em 1em 0 0;
+    padding: 1em 1em 0 0;
     line-height: 1.5em;
 }
 

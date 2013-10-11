@@ -1,159 +1,141 @@
 <!DOCTYPE html>
 <html>
-	<head>
+    <head>
         <title>KBase</title>
         <meta charset="utf-8">
         <link rel="icon" href="static/images/KBase_favicon.ico" type="image/x-icon">
         <link href="static/bootstrap-3.0.0/css/bootstrap.min.css" rel="stylesheet">
         <link href="static/css/kbase_stylesheet.css" rel="stylesheet">
         <link href="static/css/datastore.css" rel="stylesheet">
-		<link href="static/css/user.css" rel="stylesheet">
+        <link href="static/css/user.css" rel="stylesheet">
         <style type="text/css">
-        	a.btn-default {
-        		color: black;
-        	}
+            a.btn-default {
+                color: black;
+            }
         </style>
     </head>
 
     <body>
-      <!--#include virtual="header.html" -->
+        <!--#include virtual="header.html" -->
+        <header id="alt_banner" role="banner">
+            <div id="navrow" class="row">     
+                <div id="logo" class="col-sm-1">
+                    <a href="http://www.kbase.us"><img src="static/images/kbase_logo.png" alt="KBase User Home" /></a>
+                </div>
+                <div class="col-sm-11">
+                    <nav id="header_nav" role="navigation" class="row">
+                        <ul>
+                            <li class="alt"><a href="http://www.kbase.us/services/docs/invocation/Iris/">IRIS</a></li>
+                            <li class="alt"><a href="http://140.221.84.142/browse.html">Workspace Browser</a></li>
+                            <!-- <li id="searchlabel"><a href="https://niya.qb3.berkeley.edu/search_client/search_client.html">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>-->
+                            <li><a href="search.shtml">Search</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <div id="main" class="container">
+            <div id="maincontent" class="row">
+                <div id="public_section" class="col-md-4 col-md-offset-2">
+                    <div id="welcome_section">
+                        <p id="doodle"><img src="/static/images/doodle.png" /></p>
+                        <h1>Your science, your way.</h1>
+                        <p>Build narratives that capture your analyses, including rich annotations, visualization widgets, reusable workflows, and custom scripts. Share your work and your data with colleagues. Follow the field through the people, organisms, and projects that matter to you. </p>
+                    </div><br clear="right" />
+                    <div id="iris_ws_section">
+                        <p>Building narratives not your style? You can still work with KBase tools via <a href="http://www.kbase.us/services/docs/invocation/Iris/">IRIS</a>, our web-based command-line interface, or access your IRIS workspace with the <a href="http://140.221.84.142">Workspace Browser</a>.</p>
+                    </div>					
+                </div>
+                <div id="login_section" class="col-md-4">
+                    <form id="login_form">
+                        <div>
+                            <legend>Please Sign in</legend>
+                            <p id="login_error" class="text-error" style="display:none"></p>
+                            <div class="form-group">
+                                <label for="kbase_username">Username:</label>
+                                <input type="text" placeholder="username" id="kbase_username" class=" form-control" tabindex="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="kbase_password" class="full-width">Password:<span class="pull-right"><a target="_blank" href="http://gologin.kbase.us/ResetPassword" tabindex="4">Forgot password?</a></span></label>
+                                <input type="password" placeholder="password" id="kbase_password" class="form-control" tabindex="2">
+                            </div>
 
-		<header id="alt_banner" role="banner">
-    <div id="navrow" class="row">     
-			<div id="logo" class="col-sm-1">
-				<a href="http://www.kbase.us"><img src="static/images/kbase_logo.png" alt="KBase User Home" /></a>
-			</div>
-      <div class="col-sm-11">
-        <nav id="header_nav" role="navigation" class="row">
-          <ul>
-    				<li class="alt"><a href="http://www.kbase.us/services/docs/invocation/Iris/">IRIS</a></li>
-    				<li class="alt"><a href="http://140.221.84.142/browse.html">Workspace Browser</a></li>
-            <li id="searchlabel"><a href="https://niya.qb3.berkeley.edu/search_client/search_client.html">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>
-          </ul>
-        </nav>
-      </div>
-          
-    </div>
-
-		</header>
-
-
-		<div id="main" class="container">
-			<div id="maincontent" class="row">
-				<div id="public_section" class="col-md-4 col-md-offset-2">
-					<div id="welcome_section">
-						<p id="doodle"><img src="/static/images/doodle.png" /></p>
-						<h1>Your science, your way.</h1>
-						<p>Build narratives that capture your analyses, including rich annotations, visualization widgets, reusable workflows, and custom scripts. Share your work and your data with colleagues. Follow the field through the people, organisms, and projects that matter to you. </p>
-					</div><br clear="right" />
-					<div id="iris_ws_section">
-						<p>Building narratives not your style? You can still work with KBase tools via <a href="http://www.kbase.us/services/docs/invocation/Iris/">IRIS</a>, our web-based command-line interface, or access your IRIS workspace with the <a href="http://140.221.84.142">Workspace Browser</a>.</p>
-					</div>
-
-					
-				</div>
-				<div id="login_section" class="col-md-4">
-					
-					<form id="login_form">
-				    <div>
-				    	<legend>Please Sign in</legend>
-						<p id="login_error" class="text-error" style="display:none"></p>
-						<div class="form-group">
-				    		<label for="kbase_username">Username:</label>
-				    		<input type="text" placeholder="username" id="kbase_username" class=" form-control" tabindex="1">
-				    	</div>
-				    	<div class="form-group">
-							<label for="kbase_password" class="full-width">Password:<span class="pull-right"><a target="_blank" href="http://gologin.kbase.us/ResetPassword" tabindex="4">Forgot password?</a></span></label>
-				    		<input type="password" placeholder="password" id="kbase_password" class="form-control" tabindex="2">
-				    	</div>
-					
-				    
-				    	<button id="signinbtn" type="button" class="btn btn-primary" tabindex="3">Sign In</button> <img src="./static/images/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
+                            <button id="signinbtn" type="button" class="btn btn-primary" tabindex="3">Sign In</button> <img src="./static/images/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
+                        </div>
+                    </form>
+                    <span>New to KBase? <a target="_blank" href="http://gologin.kbase.us/Signup">Register now</a></span>
+                </div>
 				
-				    </div>
-				
-				    </form>
-				<span>New to KBase? <a target="_blank" href="http://gologin.kbase.us/Signup">Register now</a></span>
-				</div>
-				
-				<div id="narrative_column" class="col-sm-3" style="display: none">
-					
-					<div class="narrative_section">
-						<h3>Recent Narratives</h3>
-						<img src="./static/images/ajax-loader.gif" id="narratives_loading"  />
-						<div id="no_narratives" style="display: none;">You do not have any narratives. Create a narrative to get started.</div>
-						<ol id="recent_narratives_list">
-							
-						</ol>
-						<a id="new_narrative_button" data-toggle="modal" href="#newNarrative" class="btn btn-default">Create a New Narrative</a>
-					</div>
-					
-					
-					<div class="narrative_section">
-						<h3>Recent Projects</h3>
-						<img src="./static/images/ajax-loader.gif" id="projects_loading"  />
-						<div id="no_projects" style="display: none;">You do not have any projects. Create a project to get started.</div>
-						<ol id="recent_projects_list">
-							
-							
-						</ol>
-						<a href="./manage_projects.shtml" class="btn btn-default">Create/Manage Projects</a>
-					</div>
-					
-			
-		        </div>
+                <div id="narrative_column" class="col-sm-3" style="display: none">
+                    <div class="narrative_section">
+                        <h3>Recent Narratives</h3>
+                        <img src="./static/images/ajax-loader.gif" id="narratives_loading"  />
+                        <div id="no_narratives" style="display: none;">You do not have any narratives. Create a narrative to get started.</div>
+                        <ol id="recent_narratives_list">
+    
+                        </ol>
+                        <a id="new_narrative_button" data-toggle="modal" href="#newNarrative" class="btn btn-default">Create a New Narrative</a>
+                    </div>
+                    <div class="narrative_section">
+                        <h3>Recent Projects</h3>
+                        <img src="./static/images/ajax-loader.gif" id="projects_loading"  />
+                        <div id="no_projects" style="display: none;">You do not have any projects. Create a project to get started.</div>
+                        <ol id="recent_projects_list">
+    
+    
+                        </ol>
+                        <a href="./manage_projects.shtml" class="btn btn-default">Create/Manage Projects</a>
+                    </div>
+                </div>
 
-
-
-
-		        <div id="newsfeed_column" class="col-sm-8 col-sm-offset-1" style="display: none;">
-					<div id="newsfeed_inner" >
-						<div id="feed_section" >
-							<h2 class="small">Newsfeed</h2>
-							<div class="newsfeed_section">
-								<h3>Projects I'm Following <img src="./static/images/ajax-loader.gif" id="loading-indicator-ws"  /></h3>
-								<ol id="people_feed">
-									<!--<li><a href="#">bobtheguy@kbase.us</a> started a new narrative entitled <a href="#">"GWAS of Klebsiella spp."</a></li>
-									<li><a href="#">kristen@uchicago.edu</a> commented on <a href="#">bobtheguy@kbase.us's narrative</a></li>-->
-								</ol>
-							</div>	
-						</div>
-	
-					</div>
-				</div>	
-		   
-		</div>
+                <div id="newsfeed_column" class="col-sm-8 col-sm-offset-1" style="display: none;">
+                    <div id="newsfeed_inner" >
+                        <div id="feed_section" >
+                            <h2 class="small">Newsfeed</h2>
+                            <div class="newsfeed_section">
+                                <h3>Projects I'm Following <img src="./static/images/ajax-loader.gif" id="loading-indicator-ws"  /></h3>
+                                <ol id="people_feed">
+                                    <!--<li><a href="#">bobtheguy@kbase.us</a> started a new narrative entitled <a href="#">"GWAS of Klebsiella spp."</a></li>
+                                    <li><a href="#">kristen@uchicago.edu</a> commented on <a href="#">bobtheguy@kbase.us's narrative</a></li>-->
+                                </ol>
+                            </div>	
+                        </div>
+                    </div>
+                </div>
+            </div>    
+        </div>
 		
 		<!-- modal dialogs --->
 		<!-- Modal -->
-		  <div class="modal fade" id="newNarrative" tabindex="-1" role="dialog" aria-labelledby="NewNarrative" aria-hidden="true">
-		    <div class="modal-dialog">
-		      <div class="modal-content">
-		        <div class="modal-header">
-		          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		          <h4 class="modal-title">New Narrative</h4>
-		        </div>
-		        <div class="modal-body">
-		          <form role="form">
-					  <div class="form-group">
-					    <label for="exampleInputEmail1">Narrative Name</label>
-					    <input type="text" class="form-control" id="new_narrative_name" name="new_narrative_name">
-					  </div>
-					  <div class="form-group">
-					    <label for="exampleInputPassword1">Create in Project</label>
-					    <select id="new_narrative_project" name="new_narrative_project" class="form-control">
-						  <option value="">------</option>
-						</select>
-					  </div>
-				  </form>
-		        </div>
-		        <div class="modal-footer">
-		          <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
-		          <button id="new_narrative_submit" type="button" class="btn btn-primary">create</button>
-		        </div>
-		      </div><!-- /.modal-content -->
-		    </div><!-- /.modal-dialog -->
-		  </div><!-- /.modal -->
+        <div class="modal fade" id="newNarrative" tabindex="-1" role="dialog" aria-labelledby="NewNarrative" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">New Narrative</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="exampleInputEmail1">Narrative Name</label>
+                                <input type="text" class="form-control" id="new_narrative_name" name="new_narrative_name">
+                            </div>
+                            <div class="form-group">
+                                <label for="exampleInputPassword1">Create in Project</label>
+                                <select id="new_narrative_project" name="new_narrative_project" class="form-control">
+                                    <option value="">------</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                        <button id="new_narrative_submit" type="button" class="btn btn-primary">create</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
 
 
 		<script src="static/js/jquery-1.10.2.min.js"></script>
@@ -161,6 +143,7 @@
 		<script src="static/dataTables/1.9.4/js/jquery.dataTables.js"></script>
         <script src="static/js/jquery.cookie.min.js"></script>
         <script src="static/js/kbwidget.js"></script>
+        <script src="static/js/kbaseLogging.js"></script>
         <script src="static/js/kbasePrompt.js"></script>
         <script src="static/js/kbaseLogin.js"></script>
 		<script src="static/js/kbase.js"></script>

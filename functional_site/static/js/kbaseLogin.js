@@ -574,7 +574,8 @@
                                 )
                                 .append(
                                     $('<span></span>')
-				    .addClass('caret')
+				                    .addClass('caret')
+                                    .css('margin-left', '3px')
                                 )
                                 //.append($('<i></i>').addClass('icon-user'))
                                 //.append($('<i></i>').addClass('icon-caret-down'))
@@ -598,34 +599,36 @@
                                     $('<li></li>')
                                         .css('border-bottom', '1px solid lightgray')
                                         .css('white-space', 'nowrap')
+                                        .css('padding', '0')
                                         .append(
                                             $('<span></span>')
                                         .append(
                                             $('<a></a>')
                                                 .css('font-weight', 'bold')
+                                                .css('display', 'block')
                                                 .attr('href', '/manage_projects.shtml')
-						.text('Manage projects')
+						                          .text('Manage projects')
                                                 .attr('target', '_blank')
-                                                .css('padding-right', '0px')
-                                                .css('padding-left', '0px')
+                                                .css('padding', '6px 20px')
                                         ))
                                 )
                                 .append(
                                     $('<li></li>')
-                                        .addClass('pull-right')
+                                        .css('padding', '0')
                                         .append(
                                             $('<span></span>')
                                             .append(
                                                 $('<a></a>')
-                                                    .css('padding-right', '0px')
-                                                    .css('padding-left', '0px')
+                                                    .css('padding', '6px 20px')
+                                                    .css('display', 'block')
+                                                    .css('cursor', 'pointer')
                                                     .append('Sign out')
                                             )
                                             .bind('click',
                                                 $.proxy( function(e) {
                                                     e.stopPropagation();e.preventDefault();
                                                     this.data('login-dropdown-menu').hide();//slideUp('fast');
-                                                    this.logout();
+                                                    this.logout(false);
                                                 }, this)
                                             )
                                         )

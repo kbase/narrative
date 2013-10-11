@@ -112,48 +112,55 @@
      * within)
      */
     var filter_wsobj = function (p_in) {
-	var def_params = { callback : undefined,
-			   perms : ['a'],
-			   filter_tag : project.ws_tag.project };
-	var p = $.extend( def_params, p_in);
+    	var def_params = {callback : undefined,
+    			   perms : ['a'],
+    			   filter_tag : project.ws_tag.project};
+    	var p = $.extend( def_params, p_in);
 
-	var ignore = /^core/;
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+    	var ignore = /^core/;
+    	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
 
-	// ignore any workspace with the name prefix of "core"
-	// and ignore workspace that doesn't match perms
-	var reduce_ws_meta = function ( prev, curr) {
-	    if ( ignore.test(curr[0])) {
-		return( prev);
-	    }
-	    if ( p.perms.indexOf(curr[4]) >= 0 ) {
-		return( prev.concat([curr]));
-	    } else {
-		return( prev);
-	    }
-	};
-	var ws_match = p.res.reduce(reduce_ws_meta,[]);
-	var ws_ids = ws_match.map( function(v) { return v[0]});
-	var ws_obj_fn = ws_ids.map( function( wsid) {
-					return project.ws_client.has_object(
-					    { auth: token,
-					      workspace: wsid,
-					      id : project.ws_tag.project,
-					      type : project.ws_tag_type });
-				    });
-	$.when.apply(null, ws_obj_fn).then( function() {
-						var results = [].slice.call(arguments);
-						var reduce_ws_proj = function(prev,curr,index){
-						    if (curr) {
-							// convert array into dict and then bind to ws_id
-							prev[ ws_match[index][0]] = ws_meta_dict(ws_match[index]);
-						    } 
-						    return( prev);
-						};
-						var proj_list = results.reduce( reduce_ws_proj,{});
-						p.callback( proj_list );
-					    },
-					    error_handler);
+    	// ignore any workspace with the name prefix of "core"
+    	// and ignore workspace that doesn't match perms
+    	var reduce_ws_meta = function ( prev, curr) {
+    	    if ( ignore.test(curr[0])) {
+    		    return( prev);
+    	    }
+    	    if ( p.perms.indexOf(curr[4]) >= 0 ) {
+    		    return( prev.concat([curr]));
+    	    } else {
+    		    return( prev);
+    	    }
+	   };
+
+       // get non-core workspaces with correct permissions
+       var ws_match = p.res.reduce(reduce_ws_meta,[]);
+       // extract workspace ids into a list
+    	var ws_ids = ws_match.map( function(v) { return v[0]});
+        // filter ids to only 'project' workspaces 
+    	var ws_obj_fn = ws_ids.map( function( wsid) {
+			return project.ws_client.has_object(
+			    { auth: token,
+			      workspace: wsid,
+			      id : project.ws_tag.project,
+			      type : project.ws_tag_type });
+		});
+        // build result, which is mapping of workspace id to metadata
+    	$.when.apply(null, ws_obj_fn).then(
+            function() {
+    			var results = [].slice.call(arguments);
+    			var reduce_ws_proj = function(prev,curr,index) {
+                    if (curr) {
+        			    // convert array into dict and then bind to ws_id
+        			    prev[ws_match[index][0]] = ws_meta_dict(ws_match[index]);
+        			} 
+        			return( prev);
+    			};
+    			var proj_list = results.reduce(reduce_ws_proj, {});
+                // return result
+    			p.callback(proj_list);
+		    },
+		    error_handler);
     };
 
     // Get all the workspaces that match the values of the
@@ -164,31 +171,31 @@
     // if a specific workspace name is given its metadata will be
     // returned
     project.get_projects = function( p_in ) {
-	var def_params = { callback : undefined,
-			   perms : ['a'],
-			   workspace_id : undefined,
-			   error_callback: error_handler };
-	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
-	var META_ws;
-	if ( p.workspace_id ) {
-	    META_ws = project.ws_client.get_workspacemeta( { auth : token,
-							     workspace : p.workspace_id } );
-	    $.when( META_ws).then( function(result) {
-				       filter_wsobj( { res: [result],
-						       callback : p.callback,
-						       perms: p.perms });
-				   },
-				   p.error_callback);
-	} else {
-	    META_ws = project.ws_client.list_workspaces( { auth : token} );
-	    $.when( META_ws).then( function(result) {
-				       filter_wsobj( { res: result,
-						       callback : p.callback,
-						       perms: p.perms });
-				   },
-				   p.error_callback);
-	}
+    	var def_params = { callback : undefined,
+    			   perms : ['a'],
+    			   workspace_id : undefined,
+    			   error_callback: error_handler };
+    	var p = $.extend( def_params, p_in);
+    	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+    	var META_ws;
+    	if ( p.workspace_id ) {
+    	    META_ws = project.ws_client.get_workspacemeta( { auth : token,
+    							     workspace : p.workspace_id } );
+    	    $.when( META_ws).then( function(result) {
+    				       filter_wsobj( { res: [result],
+    						       callback : p.callback,
+    						       perms: p.perms });
+    				   },
+    				   p.error_callback);
+    	} else {
+    	    META_ws = project.ws_client.list_workspaces( { auth : token} );
+    	    $.when( META_ws).then( function(result) {
+    				       filter_wsobj( { res: result,
+    						       callback : p.callback,
+    						       perms: p.perms });
+    				   },
+    				   p.error_callback);
+    	}
     };
 
 
@@ -422,39 +429,39 @@
     // first - avoid doing this if possible as it will be miserably slow.
     // an array of obj_meta dictionaries will be handed to the callback
     project.get_narratives = function(p_in) {
-	var def_params = { callback : undefined,
-			   project_ids : undefined,
-			   error_callback : error_handler,
-			   type: project.narrative_type,
-			   error_callback: error_handler };
-	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
-	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
-	
-	var all_my_narratives = function (project_ids) {
-	    var get_ws_narr = project_ids.map( function(ws_id) {
-						     return(project.ws_client.list_workspace_objects( { auth: token,
-													workspace: ws_id,
-													type: p.type }));
-						 });
-	    $.when.apply(null, get_ws_narr).then( function() {
-						      var results = [].slice.call(arguments);
-						      var merged = [].concat.apply([],results);
-						      var dict = merged.map( obj_meta_dict);
-						      p.callback( dict);
-						      // merge all the results into a single array
-						  },
-						  p.error_callback
-					    );
-	};
-	if (p.project_ids) {
-	    all_my_narratives( p.project_ids);
-	} else {
-	    project.get_projects( { callback: function (pdict) {
-					all_my_narratives( Object.keys( pdict));
-				    }
-				  });
-	}
+    	var def_params = { callback : undefined,
+    			   project_ids : undefined,
+    			   error_callback : error_handler,
+    			   type: project.narrative_type,
+    			   error_callback: error_handler };
+    	var p = $.extend( def_params, p_in);
+    	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+    	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
+    	
+    	var all_my_narratives = function (project_ids) {
+    	    var get_ws_narr = project_ids.map( function(ws_id) {
+                console.debug("project narratives: list for workspace=" + ws_id);
+    		    return(project.ws_client.list_workspace_objects({
+                    auth: token, workspace: ws_id, type: p.type}));
+    		});
+    	    $.when.apply(null, get_ws_narr).then( function() {
+    						      var results = [].slice.call(arguments);
+    						      var merged = [].concat.apply([],results);
+    						      var dict = merged.map( obj_meta_dict);
+    						      p.callback( dict);
+    						      // merge all the results into a single array
+    						  },
+    						  p.error_callback
+    					    );
+    	};
+    	if (p.project_ids) {
+    	    all_my_narratives( p.project_ids);
+    	} else {
+    	    project.get_projects( { callback: function (pdict) {
+    					all_my_narratives( Object.keys( pdict));
+    				    }
+    				  });
+    	}
     };
 
     // Create an empty narrative object with the specified name. The name

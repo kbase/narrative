@@ -3,7 +3,14 @@
             <div id="logo" class="col-sm-1">
                 <a href="http://www.kbase.us"><img src="static/images/kbase_logo.png" alt="KBase User Home" /></a>
             </div>
-            <div class="col-sm-9">
+            <div id="apps_menu" class="dropdown col-sm-1">
+              <button type="button" class="btn btn-default" data-toggle="dropdown" href="#" onclick="$('#apps_menu_items').toggle();">Apps <span class="caret"></span></button>
+              <ul class="dropdown-menu" role="menu" id="apps_menu_items">
+                <li role="presentation"><a role="menuitem" tabindex="-1" href="#"><a href="http://www.kbase.us/services/docs/invocation/Iris/iris.html">IRIS</a></li>
+                <li role="presentation"><a role="menuitem" tablindex="-1" href="#"><a href="http://140.221.84.142/browse.html">Workspace Browser</a></li>
+              </ul>
+            </div>
+            <div class="col-sm-8">
                 <nav id="header_nav" role="navigation" class="row">
                     <ul>
                         <li><a href="home.shtml">Home</a></li>

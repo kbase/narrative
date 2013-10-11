@@ -1,3 +1,9 @@
+/*
+ * Create a users object
+ * Uses namespacing technique from here:
+ * http://enterprisejquery.com/2010/10/how-good-c-habits-can-encourage-bad-javascript-habits-part-1/
+ * 
+ */
 (function($, undefined) {
     var workspaceURL = "https://kbase.us/services/workspace";
     var workspaceClient = new workspaceService(workspaceURL);
@@ -227,6 +233,22 @@
 		$("#no_narratives").hide();
         $("#narratives_loading").show();
         // get the data & then show it
+        getAllNarratives(
+            _showRecentNarratives,
+            function() {
+                $("#no_narratives").show(); 
+                $("#narratives_loading").hide();
+            }
+        );
+    }
+
+    /**
+     * Get all narratives for this user.
+     *
+     * @param show_results_cb - Called with object containing results.
+     * @param no_results_cb - Called if no results
+     */
+    function getAllNarratives(show_results_cb, no_results_cb) {
         project.get_narratives({
             callback: function(results) {
                 console.debug("Project narratives:", results);
@@ -237,18 +259,16 @@
                         console.debug("Project + home narratives:", results);
                         // show combined results
                         if (Object.keys(results).length > 0) {
-                            console.debug("Show recent narratives");
-                            _showRecentNarratives(results);
+                            show_results_cb(results);
                         }
                         // no data? show that, too
                         else {
-                            $("#no_narratives").show();
+                            no_results_cb();
                         }
-                        $("#narratives_loading").hide();
                     }
                 );
             }
-        });
+        });        
     }
 
     /**
@@ -289,6 +309,8 @@
         //populate the html template
         var rows2 = ich.recent_narratives({'rows': rows});
         $('#recent_narratives_list').append(rows2);
+
+        $("#narratives_loading").hide();
     }
 
     //populates the recent projects portion of the user home
@@ -382,5 +404,5 @@
     });
 
 
-})( jQuery );
+})(jQuery);
 

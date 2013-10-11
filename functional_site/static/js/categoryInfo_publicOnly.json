@@ -1,0 +1,57 @@
+{
+"structure": { "unauthenticated": {
+                     "label": "Public Data",
+                     "children": [
+                         {
+                             "label": "Communities",
+                             "category": "MGAll",
+                             "children": [
+                                 {"label": "Shotgun Metagenomes", "category": "MGShotguns"},
+                                 {"label": "Populations", "category": "MGAmplicons"},
+                                 {"label": "Metatranscriptomes", "category": "MGMetatranscriptomes"}
+                             ]
+                         },
+                         {
+                             "label": "Genomes",
+                             "category": "CSGenomes",
+                             "children": [
+                                 {"label": "Archaea", "category": "CSArchaea"},
+                                 {"label": "Bacteria", "category": "CSBacteria"},
+                                 {"label": "Fungi", "category": "CSFungi"},
+                                 {"label": "Plants", "category": "CSPlants"},
+                                 {"label": "Other Eukaryotes", "category": "CSOtherEukaryotes"}
+                             ]
+                         }, 
+                         {
+                             "label": "Features",
+                             "category": "CSFeatures",
+                             "children": [
+                                 {"label": "Protein Genes", "category": "CSProteinGenes"},
+                                 {"label": "RNA Genes", "category": "CSRNAGenes"},
+                                 {"label": "Plant Loci", "category": "CSPlantLoci"},
+                                 {"label": "Plant mRNAs", "category": "CSPlantmRNAs"},
+                                 {"label": "Promoters", "category": "CSPromoters"},
+                                 {"label": "Protein Binding Sites", "category": "CSProteinBindingSites"},
+                                 {"label": "PseudoGenes", "category": "CSPseudoGenes"},
+                                 {"label": "CRISPR/Spacers", "category": "CSCRISPRSpacers"}
+                             ]
+                         }, 
+                         {
+                             "label": "Publications",
+                             "category": "CSPublications"
+                         }
+                     ]
+                 }
+},
+"groupings": {
+        "genomes": ["CSGenomes","CSArchaea","CSBacteria","CSFungi","CSPlants","CSOtherEukaryotes",
+                   "WSGenomes","WSArchaea","WSBacteria","WSFungi","WSPlants","WSOtherEukaryotes"]
+        ,
+        "features": ["CSFeatures","CSCRISPRSpacers","CSPlantLoci","CSPlantmRNAs","CSPromoters","CSProteinGenes","CSProteinBindingSites","CSPseudoGenes","CSRNAGenes",
+                    "WSFeatures","WSCRISPRSpacers","WSPlantLoci","WSPlantmRNAs","WSPromoters","WSProteinGenes","WSProteinBindingSites","WSPseudoGenes","WSRNAGenes"]
+        ,
+        "metagenomes": ["MGAll","MGShotguns","MGAmplicons","MGOthers"],
+        "public": ["CSGenomes","CSArchaea","CSBacteria","CSFungi","CSPlants","CSOtherEukaryotes","CSFeatures","CSCRISPRSpacers","CSPlantLoci","CSPlantmRNAs","CSPromoters","CSProteinGenes","CSProteinBindingSites","CSPseudoGenes","CSRNAGenes","MGAll","MGShotguns","MGAmplicons","MGOthers"],
+        "private": ["WSGenomes","WSArchaea","WSBacteria","WSFungi","WSPlants","WSOtherEukaryotes","WSFeatures","WSCRISPRSpacers","WSPlantLoci","WSPlantmRNAs","WSPromoters","WSProteinGenes","WSProteinBindingSites","WSPseudoGenes","WSRNAGenes"]
+    }
+}

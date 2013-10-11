@@ -9,6 +9,8 @@ import datetime
 import dateutil.parser
 import json
 import re
+import biokbase
+import biokbase.workspaceService
 from biokbase.workspaceService.Client import workspaceService
 
 # regex for parsing out workspace_id and object_id from

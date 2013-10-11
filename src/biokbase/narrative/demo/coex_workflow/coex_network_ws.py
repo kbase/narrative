@@ -54,7 +54,9 @@ class WorkspaceException(Exception):
 ## Functions
 
 def print_progress(stage, completed, total):
-    print("#{},{:d},{:d}".format(stage, completed, total))
+    o = sys.stdout
+    o.write("#{},{:d},{:d}\n".format(stage, completed, total))
+    o.flush()
 
 def get_node_id(node, nt = "GENE"):
     if not node in ugids.keys() :
@@ -304,7 +306,7 @@ def main(ont_id="GSE5622", gn_id='3899',
 
     # parameterize --dang
     coex_args = {}
-    coex_args['coex_filter'] = "-p {}".format(fltr_p)
+    coex_args['coex_filter'] = "-n {}".format(fltr_n)
     coex_args['coex_net'] = "-c {}".format(net_c)
     coex_args['coex_cluster'] = "-s {}".format(clust_s)
 
@@ -662,15 +664,15 @@ def main(ont_id="GSE5622", gn_id='3899',
 
 
 # Entry point from IPython
-def run_real(params, quiet=True):
+def run(params, quiet=True):
     if quiet:
         # disable logging
         _log.setLevel(logging.CRITICAL - 1)
     # parse params
     p = {
-        #'fltr_n': params['Filter.-n'],
+        'fltr_n': params['Filter.-n'],
         #'fltr_m': params['Filter.-m'],
-        'fltr_p': params['Filter.p-value'],
+        #'fltr_p': params['Filter.p-value'],
         'gn_id': params['Identifiers.Genome'],
         'ont_id': params['Identifiers.Ontology'],
         'net_c': params['Network.Pearson cutoff'],
@@ -683,11 +685,6 @@ def run_real(params, quiet=True):
     obj_id = main(**p)
     print(obj_id)
     return 0
-
-def run_debug(params,**kw):
-    print("GSE5622.g3899.filtered.edge_net")
-
-run = run_real # run_debug
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -161,6 +161,7 @@
 		<script src="static/dataTables/1.9.4/js/jquery.dataTables.js"></script>
         <script src="static/js/jquery.cookie.min.js"></script>
         <script src="static/js/kbwidget.js"></script>
+        <script src="static/js/kbaseLogging.js"></script>
         <script src="static/js/kbasePrompt.js"></script>
         <script src="static/js/kbaseLogin.js"></script>
 		<script src="static/js/kbase.js"></script>

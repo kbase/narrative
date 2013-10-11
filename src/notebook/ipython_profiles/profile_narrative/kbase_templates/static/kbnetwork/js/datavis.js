@@ -4739,7 +4739,7 @@ jQuery.event = {
 					undefined;
 			};
 			// Add elem as a property of the handle fn to prevent a memory leak with IE non-native events
-			eventHandle.elem = elem;
+			//eventHandle.elem = elem;
 		}
 
 		// Handle multiple events separated by a space

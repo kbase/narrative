@@ -273,7 +273,7 @@
 
         // build data from first <= 5 items in the sorted list
         var rows = [], n = indexed.length;
-        var limit = min([n, 5]);
+        var limit = _.min([n, 5]);
         for (var i=0; i < limit; i++) {
             var narr = results[indexed[i].id];
             var name = narr.id.replace(/_/g," ");

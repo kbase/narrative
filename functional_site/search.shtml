@@ -111,7 +111,7 @@
             </div>
         </div>
 
-        <script src="static/js/jquery-1.10.1.min.js"></script>
+        <script src="static/js/jquery-1.10.2.min.js"></script>
         <script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
         <script src="static/bootstrap-3.0.0/js/bootstrap.js"></script>
         <script src="static/js/jquery.cookie.min.js"></script>

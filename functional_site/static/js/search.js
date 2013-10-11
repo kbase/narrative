@@ -34,6 +34,7 @@ var expandedView = false;
 
 
 $(window).load(function() {
+    $("#searchspan").hide();
     $("#login-area").kbaseLogin({style: "text"});
 
     //register for login event, then capture token
@@ -90,7 +91,7 @@ function loadCategories() {
     var search_api_url = "";
     var queryOptions = {};
 
-    $.getJSON("js/categoryInfo_publicOnly.json", function (data) {
+    $.getJSON("/static/js/categoryInfo_publicOnly.json", function (data) {
         categoryInfo = data;    
         
         for (var p in categoryInfo.structure) {

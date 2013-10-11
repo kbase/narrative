@@ -269,12 +269,17 @@ class="notebook_app"
                               data-help="Select and view a media set from your data."
                               class="kb-function-help">?</span>
                     </li>
-                    <li><a href="#" data-name="Run FBA">Run Flux Balance Analysis</a>
-                        <span data-name="Run FBA" 
+                    <li><a href="#" data-name="Run Flux Balance Analysis">Run Flux Balance Analysis</a>
+                        <span data-name="Run Flux Balance Analysis" 
                               data-help="Run a Flux Balance Analysis using a model and media set."
                               class="kb-function-help">?</span>
                     </li>                    
-                    <li><a href="#" data-name="Gapfill FBA">Gapfill FBA Model</a>
+                    <li><a href="#" data-name="View FBA Results">View FBA Results</a>
+                        <span data-name="View FBA Results" 
+                              data-help="Select and view FBA results from your data."
+                              class="kb-function-help">?</span>
+                    </li>                    
+                    <li><a href="#" data-name="Gapfill FBA Model">Gapfill FBA Model</a>
                         <span data-name="Gapfill FBA Model" 
                               data-help="Generate a set of reactions to add to your FBA model in order to allow biomass production in a set of conditions."
                               class="kb-function-help">?</span>
@@ -388,8 +393,12 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceData.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseModelTabs.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<!-- function output JS widgets -->
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelCoreNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
 {% endblock %}

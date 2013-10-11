@@ -261,7 +261,7 @@
                     };
                     break;
 
-                case 'Run FBA':
+                case 'Run Flux Balance Analysis':
                     return {
                         'config' : this.runFbaConfig,
                         'command_builder' : this.runFbaCommand(),
@@ -269,7 +269,15 @@
                     };
                     break;
 
-                case 'Gapfill FBA':
+                case 'View FBA Results':
+                    return {
+                        'config' : this.viewFbaConfig,
+                        'command_builder' : this.viewFbaCommand(),
+                        'result_handler' : this.viewFbaCreateOutput,
+                    };
+                    break;
+
+                case 'Gapfill FBA Model':
                     return {
                         'config' : this.runGapfillConfig,
                         'command_builder' : this.runGapfillCommand(),
@@ -399,7 +407,8 @@
         runAssemblyCommand: function() {
             var self = this;
             return function(params) {
-                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "run_assembly", params);
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "run_assembly", params);
             };
         },
 
@@ -416,7 +425,8 @@
         annotateGenomeCommand: function() {
             var self = this;
             return function(params) {
-                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "annotate_genome", params);
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "annotate_genome", params);
             };
         },
 
@@ -429,12 +439,23 @@
             'Identifiers': {
                 'Genome': '',
             },
+    // -m --model         Name to be provided for output model
+    // --genomews         Workspace where genome is located
+    // --templateid       ID of template model to use
+    // --templatews       Workspace with template model
+    // --core             Build core model
+    // -w --workspace     Reference default workspace
+    // -o --overwrite     Overwrite any existing model with same name
+    // -e --showerror     Set as 1 to show any errors in execution
+    // -v --verbose       Print verbose messages
+    // -? -h --help       Print this usage information
         },
 
         genomeToFbaCommand: function() {
             var self = this;
             return function(params) {
-                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "genome_to_fba_model", params);
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "genome_to_fba_model", params);
             };
         },
 
@@ -455,7 +476,8 @@
         viewFbaModelCommand: function() {
             var self = this;
             return function(params) {
-                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "view_fba_model", params);
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "view_fba_model", params);
             };
         },
 
@@ -470,14 +492,25 @@
 
         /* --------- Build Media ------------ */
         buildMediaConfig: {
-            'Not finished yet' : {},
-
+            'Not finished yet - this requires fancier input than we have right now. ETA Sunday night.' : {},
+    // --name                Media name
+    // --concentrations      Compound concentrations (; delimiter)
+    // --minflux             Compound minimum fluxes (; delimiter)
+    // --maxflux             Compound maximum fluxes (; delimiter)
+    // -t --type             Type of media
+    // -d --defined          Media is defined
+    // -m --minimal          Media is minimal
+    // -w --workspace        Workspace with model
+    // -e --showerror        Set as 1 to show any errors in execution
+    // -v --verbose          Print verbose messages
+    // -? -h --help          Print this usage information
         },
 
         buildMediaCommand: function() {
             var self = this;
             return function(params) {
-                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "build_media", params);
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "build_media", params);
             };
         },
 
@@ -487,26 +520,72 @@
 
         /* ---------- View Media ---------- */
         viewMediaConfig: {
-            'Not finished yet' : {},
-
+            'Identifiers' : {
+                'Media' : '',
+            },
         },
 
         viewMediaCommand: function() {
             var self = this;
             return function(params) {
-                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "view_media", params);
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "view_media", params);
             };
         },
 
         viewMediaCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+
+            console.log(data);
 
         },
 
 
         /* --------- Run Flux Balance Analysis --------------- */
         runFbaConfig: {
-            'Not finished yet' : {},
+            'Identifiers' : {
+                'Model' : '',
+                'Media' : '',
+            },
+            'Misc' : {
+                'Notes' : '',
+            },
 
+    // --fbaid                 ID for FBA in workspace
+    // -m --media              Media formulation for FBA
+    // --mediaws               Workspace with media formulation
+    // --modelws               Workspace with model
+    // -c --addlcpd            Additional compounds (; delimiter)
+    // --maximize              Maximize objective
+    // --objterms              Objective terms
+    // --geneko                List of gene KO (; delimiter)
+    // --rxnko                 List of reaction KO (; delimiter)
+    // --bounds                Custom bounds
+    // --constraints           Custom constraints
+    // -p --prommodel          ID of PROMModel
+    // --prommodelws           Workspace with PROMModel
+    // --defaultmaxflux        Default maximum reaction flux
+    // --defaultminuptake      Default minimum nutrient uptake
+    // --defaultmaxuptake      Default maximum nutrient uptake
+    // --uptakelim             Atom uptake limits
+    // --simplethermo          Use simple thermodynamic constraints
+    // --thermoconst           Use full thermodynamic constraints
+    // --nothermoerror         No uncertainty in thermodynamic constraints
+    // --minthermoerror        Minimize uncertainty in thermodynamic
+    //                         constraints
+    // --allrev                Treat all reactions as reversible
+    // --objfraction           Fraction of objective for follow on analysis
+    // --fva                   Run flux variability analysis
+    // --simko                 Simulate singel gene KO
+    // --minfluxes             Minimize fluxes from FBA
+    // --findminmedia          Find minimal media
+    // --addtomodel            Add FBA to model
+    // --notes                 Notes for flux balance analysis
+    // -w --workspace          Workspace to save FBA results
+    // -o --overwrite          Overwrite any existing FBA with same name
+    // -e --showerror          Set as 1 to show any errors in execution
+    // -v --verbose            Print verbose messages
+    // -? -h --help            Print this usage information
         },
 
         runFbaCommand: function() {
@@ -517,13 +596,45 @@
         },
 
         runFbaCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+            element.kbaseFbaTabsNarrative({ fbaData: data });
+        },
 
+
+        /* ------------ View FBA Results ------------ */
+
+        viewFbaConfig: {
+            'Identifiers' : {
+                'FBA Result' : '',
+            },
+        },
+
+        viewFbaCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "view_fba", params);
+            };
+        },
+
+        viewFbaCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+            console.log(data); 
+            element.kbaseFbaTabsNarrative({ fbaData: data });
         },
 
         /* ------------ Gapfill FBA Model -------------- */
         runGapfillConfig: {
-            'Not finished yet' : {},
-
+            'Identifiers' : {
+                'Model' : '',
+                'Media' : '',
+            },
+            'Solutions' : {
+                'Number to seek' : '1',
+            },
+            'Time' : {
+                'Per Solution (sec)' : '3600',
+                'Total Limit (sec)' : '3600'
+            }
         },
 
         runGapfillCommand: function() {
@@ -534,13 +645,34 @@
         },
 
         runGapfillCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+            var jobId = data.id;
+            var totalTime = data.jobdata.postprocess_args[0].totalTimeLimit;
+            var totalTimeHrs = totalTime/3600;
+            var outModel = data.jobdata.postprocess_args[0].out_model;
 
+            var outputText = "<div>Your gapfill job has been successfully queued, with job ID: <b>" + jobId + "</b>.<br/>" +
+                             "This will take approximately " + totalTime + " seconds (" + totalTimeHrs + " hour" +
+                             (totalTimeHrs === 1 ? "" : "s") + ").<br/><br/>" +
+                             "Your gapfill solutions will be stored in model ID: <b>" + outModel + "</b>.</div>";
+
+            element.append(outputText);
         },
 
         /* ------------ Integrate Gapfill Solution ---------------- */
         integrateGapfillConfig: {
             'Not finished yet' : {},
-
+    // -f --gapfillsols      IDs of gapfilling solutions to integrate (;
+    //                       delimiter)
+    // -g --gapgensols       IDs of gapgen solutions to integrate (;
+    //                       delimiter)
+    // -i --outmodel         ID to save new model as
+    // -w --workspace        Reference default workspace
+    // --modelws             Workspace for input FBA model
+    // -o --overwrite        Overwrite any existing model with same name
+    // -e --showerror        Set as 1 to show any errors in execution
+    // -v --verbose          Print verbose messages
+    // -? -h --help          Print this usage information
         },
 
         integrateGapfillCommand: function() {
@@ -580,36 +712,22 @@
                     if (key2 == '') {
                         // this cell intentionally left blank
                         text += "<td " + sbn + ">&nbsp;</td>";
-//                        paramRow.append("<td>&nbsp</td>");
                     }
                     else {
-                        // paramRow.append($("<td/>")
-                        //                 .append("<label>" + key2 + "</label>")
-                        //                 .append($("<input>")
-                        //                         .attr("type", "text")
-                        //                         .attr("name", key + "." + key2)
-                        //                         .attr("value", value2)));
-
                         text += "<td " + sbn + "><label>" + key2 + "</label>" + 
-                               "<input type='text' " + 
-                               "name='" + key + "." + key2 + "' " +
-                               "value='" + value2 + "'>"
-                               "</input></td>";
+                                "<input type='text' " + 
+                                "name='" + key + "." + key2 + "' " +
+                                "value='" + value2 + "'>"
+                                "</input></td>";
                     }
                 });
-
-//                paramTable.append(paramRow);
 
                 text += "</tr>";
             });
 
             text += "</table>" +
-                    "<input type='submit' value='Run' class='button'></input>" + 
+                    "<input type='submit' value='Run' class='button' style='margin-top:5px'></input>" + 
                     "</form>";
-            // var form = $("<form>")
-            //            .append($("<input type='hidden' name='kbfunc' value='" + name + "/>"))
-            //            .append(paramTable)
-            //            .append($("<input type='submit' value='Run' class='button btn btn-default'/>"));
 
             return text;
         },

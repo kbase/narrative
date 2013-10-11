@@ -31,6 +31,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-modules
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make
 # Maybe this will get all the necessary dependencies!
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ipython-notebook
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-matplotlib
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libcairo2-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y texlive-latex-base
@@ -41,7 +42,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libzmq-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libreadline6-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-numpy
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-scipy
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-matplotlib
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-setuptools
@@ -65,3 +65,6 @@ RUN cd /kb/dev_container/narrative; /bin/bash install.sh -p /kb/deployment/servi
 # proxy environment
 CMD ["kbasetest"]
 ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/run_magellan_narrative.sh"]
+
+# CMD /bin/bash /kb/deployment/services/narrative-venv/bin/run_notebook.sh notebook --ip='*' --NotebookApp.password='sha1:89e8b3c3b94f:34c04b4f82d4f5442094cbf73204333 176be148a' --NotebookApp.open_browser='False'
+

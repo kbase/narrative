@@ -24,11 +24,13 @@ $.KBWidget({
 
         var container = this.$elem;
 
+        var randId = this._uuidgen();
+
         var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfill', 'Gapgen'];
-        var tableIds = ['reaction', 'compound', 'compartment', 'biomass', 'gapfill', 'gapgen'];
+        var tableIds = [randId+'reaction', randId+'compound', randId+'compartment', randId+'biomass', randId+'gapfill', randId+'gapgen'];
 
         // build tabs
-        var tabs = $('<ul id="table-tabs" class="nav nav-tabs"> \
+        var tabs = $('<ul id="'+randId+'table-tabs" class="nav nav-tabs"> \
                         <li class="active" > \
                         <a href="#'+tableIds[0]+'" data-toggle="tab" style="text-decoration:none">'+tables[0]+'</a> \
                       </li></ul>');
@@ -57,7 +59,7 @@ $.KBWidget({
         container.append(tab_pane)
 
         // event for showing tabs
-        $('#table-tabs a').click(function (e) {
+        $('#'+randId+'table-tabs a').click(function (e) {
             e.preventDefault();
             $(this).tab('show');
         })
@@ -73,6 +75,8 @@ $.KBWidget({
 
 
         model = data[0];
+        console.log("kbaseModelTabsNarrative");
+        console.log(model);
 
         // compartment table
         var dataDict = model.compartments;
@@ -80,7 +84,7 @@ $.KBWidget({
         var labels = ["id", "index", "name", "pH", "potential"];
         var cols = getColumns(keys, labels);
         tableSettings.aoColumns = cols;
-        var table = $('#compartment-table').dataTable(tableSettings);
+        var table = $('#'+randId+'compartment-table').dataTable(tableSettings);
         table.fnAddData(dataDict);
 
         // reaction table
@@ -93,7 +97,7 @@ $.KBWidget({
         var cols = getColumns(keys, labels);
         var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
         rxnTableSettings.aoColumns = cols;
-        var table = $('#reaction-table').dataTable(rxnTableSettings);
+        var table = $('#'+randId+'reaction-table').dataTable(rxnTableSettings);
         table.fnAddData(dataDict);
 
         // compound table
@@ -102,7 +106,7 @@ $.KBWidget({
         var labels = ["compartment", "compound", "name"];
         var cols = getColumns(keys, labels);
         tableSettings.aoColumns = cols;
-        var table = $('#compound-table').dataTable(tableSettings);
+        var table = $('#'+randId+'compound-table').dataTable(tableSettings);
         table.fnAddData(dataDict);
 
         // biomass table
@@ -111,7 +115,7 @@ $.KBWidget({
         var labels = ["definition", "id", "name"];
         var cols = getColumns(keys, labels);
         tableSettings.aoColumns = cols;
-        var table = $('#biomass-table').dataTable(tableSettings);
+        var table = $('#'+randId+'biomass-table').dataTable(tableSettings);
         table.fnAddData(dataDict);
 
         // gapfilling table
@@ -132,7 +136,7 @@ $.KBWidget({
         var labels = ["id", "index", "name", "pH","potential"];
         var cols = getColumns(keys, labels);
         tableSettings.aoColumns = cols;
-        var table = $('#gapgen-table').dataTable(tableSettings);
+        var table = $('#'+randId+'gapgen-table').dataTable(tableSettings);
 
         function formatRxnObjs(rxnObjs) {
             var rxn_objs = []
@@ -189,9 +193,9 @@ $.KBWidget({
 
             var initTable = function(settings){
                 if (settings) {
-                    gapTable = $('#gapfill-table').dataTable(settings);
+                    gapTable = $('#'+randId+'gapfill-table').dataTable(settings);
                 } else { 
-                    gapTable = $('#gapfill-table').dataTable(init_data);
+                    gapTable = $('#'+randId+'gapfill-table').dataTable(init_data);
                 }
 
                 //add_search_boxes()
@@ -203,12 +207,12 @@ $.KBWidget({
                                           class="search_init input-mini"> \
                                      </th>';
                 var searches = $('<tr>');
-                $('#gapfill-table thead tr th').each(function(){
+                $('#'+randId+'gapfill-table thead tr th').each(function(){
                     $(this).css('border-bottom', 'none');
                     searches.append(single_search);
                 })
 
-                $('#gapfill-table thead').append(searches);
+                $('#'+randId+'gapfill-table thead').append(searches);
                 $("thead input").keyup( function () {
                     gapTable.fnFilter( this.value, $("thead input").index(this) );
                 });
@@ -344,7 +348,7 @@ $.KBWidget({
                     $("input[name='gapfillRadios']").unbind('change');
                     $("input[name='gapfillRadios']").change(function(){
                         $('.integrate-btn').hide();
-                        $(this).parent().next('.integrate-btn').show();
+//                        $(this).parent().next('.integrate-btn').show();
                     });
 
                     $('.gap-sol').unbind('click')
@@ -359,24 +363,24 @@ $.KBWidget({
                         }
 
                     })
-                    $('.integrate-btn').unbind('click');
-                    $('.integrate-btn').click(function() {
-                        $(this).after('<span class="muted loader-integrating" > \
-                              <img src="assets/img/ajax-loader.gif"> loading...</span>')
-                        var gapfill_id = $(this).data('gapfill');
-                        var model = modelspace.active_kbids()[0]
-                        var fbaAJAX = fba.integrate_reconciliation_solutions({model: model,
-                            model_workspace: ws,
-                            gapfillSolutions: [gapfill_id],
-                            gapgenSolutions: [''],
-                            auth: USER_TOKEN, 
-                            workspace: ws})
+                    // $('.integrate-btn').unbind('click');
+                    // $('.integrate-btn').click(function() {
+                    //     $(this).after('<span class="muted loader-integrating" > \
+                    //           <img src="assets/img/ajax-loader.gif"> loading...</span>')
+                    //     var gapfill_id = $(this).data('gapfill');
+                    //     var model = modelspace.active_kbids()[0]
+                    //     var fbaAJAX = fba.integrate_reconciliation_solutions({model: model,
+                    //         model_workspace: ws,
+                    //         gapfillSolutions: [gapfill_id],
+                    //         gapgenSolutions: [''],
+                    //         auth: USER_TOKEN, 
+                    //         workspace: ws})
 
-                        $.when(fbaAJAX).done(function(data){
-                            alert('NOTE: This functionality is still under development\n', data)
-                            $('.loader-integrating').remove()
-                        })
-                    })
+                    //     $.when(fbaAJAX).done(function(data){
+                    //         alert('NOTE: This functionality is still under development\n', data)
+                    //         $('.loader-integrating').remove()
+                    //     })
+                    // })
 
                    $('.gap-rxn').click(function(){ 
                         var rxn = $(this).data('rxn');
@@ -391,8 +395,18 @@ $.KBWidget({
 
         //this._rewireIds(this.$elem, this);
         return this;
-    }  //end init
+    },  //end init
 
+    /**
+     * uuid generator
+     *
+     * @private
+     */
+     _uuidgen: function() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);});
+     },
 
 })
 }( jQuery ) );

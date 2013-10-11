@@ -467,7 +467,10 @@
         viewFbaModelCreateOutput: function(element, text) {
             var data = JSON.parse(text);
 
+            console.log(data);
             element.kbaseModelTabs({modelsData: data});
+
+
             element.css({ margin: '-10px' });
             element.off('click dblclick keydown keyup keypress focus');
         },
@@ -533,42 +536,6 @@
             'Misc' : {
                 'Notes' : '',
             },
-
-    // --fbaid                 ID for FBA in workspace
-    // -m --media              Media formulation for FBA
-    // --mediaws               Workspace with media formulation
-    // --modelws               Workspace with model
-    // -c --addlcpd            Additional compounds (; delimiter)
-    // --maximize              Maximize objective
-    // --objterms              Objective terms
-    // --geneko                List of gene KO (; delimiter)
-    // --rxnko                 List of reaction KO (; delimiter)
-    // --bounds                Custom bounds
-    // --constraints           Custom constraints
-    // -p --prommodel          ID of PROMModel
-    // --prommodelws           Workspace with PROMModel
-    // --defaultmaxflux        Default maximum reaction flux
-    // --defaultminuptake      Default minimum nutrient uptake
-    // --defaultmaxuptake      Default maximum nutrient uptake
-    // --uptakelim             Atom uptake limits
-    // --simplethermo          Use simple thermodynamic constraints
-    // --thermoconst           Use full thermodynamic constraints
-    // --nothermoerror         No uncertainty in thermodynamic constraints
-    // --minthermoerror        Minimize uncertainty in thermodynamic
-    //                         constraints
-    // --allrev                Treat all reactions as reversible
-    // --objfraction           Fraction of objective for follow on analysis
-    // --fva                   Run flux variability analysis
-    // --simko                 Simulate singel gene KO
-    // --minfluxes             Minimize fluxes from FBA
-    // --findminmedia          Find minimal media
-    // --addtomodel            Add FBA to model
-    // --notes                 Notes for flux balance analysis
-    // -w --workspace          Workspace to save FBA results
-    // -o --overwrite          Overwrite any existing FBA with same name
-    // -e --showerror          Set as 1 to show any errors in execution
-    // -v --verbose            Print verbose messages
-    // -? -h --help            Print this usage information
         },
 
         runFbaCommand: function() {
@@ -644,18 +611,13 @@
 
         /* ------------ Integrate Gapfill Solution ---------------- */
         integrateGapfillConfig: {
-            'Not finished yet' : {},
-    // -f --gapfillsols      IDs of gapfilling solutions to integrate (;
-    //                       delimiter)
-    // -g --gapgensols       IDs of gapgen solutions to integrate (;
-    //                       delimiter)
-    // -i --outmodel         ID to save new model as
-    // -w --workspace        Reference default workspace
-    // --modelws             Workspace for input FBA model
-    // -o --overwrite        Overwrite any existing model with same name
-    // -e --showerror        Set as 1 to show any errors in execution
-    // -v --verbose          Print verbose messages
-    // -? -h --help          Print this usage information
+            'Identifiers' : {
+                'Model' : '',
+                'Gapfill' : '',
+            },
+            'Output' : {
+                'New Model (optional)' : ''
+            }
         },
 
         integrateGapfillCommand: function() {

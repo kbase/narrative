@@ -12,13 +12,16 @@ $.KBWidget({
         var workspaces = options.workspaces;
         var data = options.fbaData;
 
+        var randId = this._uuidgen();
+
+
         var container = this.$elem;
 
         var tables = ['Reactions', 'Compounds'];
-        var tableIds = ['reaction', 'compound'];
+        var tableIds = [randId+'reaction', randId+'compound'];
 
         // build tabs
-        var tabs = $('<ul id="table-tabs" class="nav nav-tabs"> \
+        var tabs = $('<ul id="' + randId + 'table-tabs" class="nav nav-tabs"> \
                         <li class="active" > \
                         <a href="#'+tableIds[0]+'" data-toggle="tab" >'+tables[0]+'</a> \
                       </li></ul>')
@@ -47,7 +50,7 @@ $.KBWidget({
         container.append(tab_pane)
 
         // event for showing tabs
-        $('#table-tabs a').click(function (e) {
+        $('#' + randId + 'table-tabs a').click(function (e) {
             e.preventDefault();
             $(this).tab('show');
         })
@@ -69,8 +72,8 @@ $.KBWidget({
         var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});               
         rxnTableSettings.aoColumns = cols;
         rxnTableSettings.aaData = dataDict;
-        container.append('<table id="reaction-table" class="table table-striped table-bordered" style:"margin:0"></table>');           
-        var table = $('#reaction-table').dataTable(rxnTableSettings);
+        container.append('<table id="' + randId + 'reaction-table" class="table table-striped table-bordered" style:"margin:0"></table>');           
+        var table = $('#' + randId + 'reaction-table').dataTable(rxnTableSettings);
 
         // cpd flux table
         var dataDict = formatObjs(fba.compoundFluxes);
@@ -79,8 +82,8 @@ $.KBWidget({
         var cpdTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});
         cpdTableSettings.aoColumns = cols;
         cpdTableSettings.aaData = dataDict;
-        container.append('<table id="compound-table" class="table table-striped table-bordered" style:"margin:0"></table>');
-        var table = $('#compound-table').dataTable(cpdTableSettings);
+        container.append('<table id="' + randId + 'compound-table" class="table table-striped table-bordered" style:"margin:0"></table>');
+        var table = $('#' + randId + 'compound-table').dataTable(cpdTableSettings);
 
  
         function formatObjs(objs) {
@@ -89,7 +92,7 @@ $.KBWidget({
                 var obj = $.extend({}, objs[i]);
                 var rxn = obj[0].split('_')[0]
                 var compart = obj[0].split('_')[1]
-                obj[0] = '<a class="rxn-click" data-rxn="'+rxn+'">'
+                obj[0] = '<a class="' + randId + 'rxn-click" data-rxn="'+rxn+'">'
                             +rxn+'</a> ('+compart+')';
                 fluxes.push(obj);
             }
@@ -105,8 +108,8 @@ $.KBWidget({
         }
 
         function events() {
-            $('.rxn-click').unbind('click');
-            $('.rxn-click').click(function() {
+            $('.' + randId + 'rxn-click').unbind('click');
+            $('.' + randId + 'rxn-click').click(function() {
                 var rxn = [$(this).data('rxn')];
                 self.trigger('rxnClick', {rxns: rxn});
             });            
@@ -114,8 +117,18 @@ $.KBWidget({
 
         //this._rewireIds(this.$elem, this);
         return this;
-    }  //end init
+    },  //end init
 
+    /**
+     * uuid generator
+     *
+     * @private
+     */
+     _uuidgen: function() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);});
+     },
 
 
 

@@ -9,7 +9,7 @@ $.KBWidget({
     glammURL: "http://140.221.84.217:7040/glamm/#",
     glammModelTag: "mod",
     glammWorkspaceTag: "ws",
-    wsBrowserURL: "http://narrative.kbase.us/landing/#/models/",
+    wsBrowserURL: "http://narrative.kbase.us/landing/#/cards/models/",
 
     init: function(options) {
         var self = this;

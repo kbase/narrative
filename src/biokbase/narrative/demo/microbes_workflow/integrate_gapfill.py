@@ -20,8 +20,17 @@ class URLS:
 def main():
     return 0
 
+def print_progress(stage, completed, total):
+    o = sys.stdout
+    o.write("#{},{:d},{:d}\n".format(stage, completed, total))
+    o.flush()
 
 def run(params):
+    _num_done, total_work = 0, 4
+
+    _num_done += 1
+    print_progress("Parse Parameters", _num_done, total_work)
+
     fba = fbaModelServices(URLS.fba)
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
@@ -43,25 +52,37 @@ def run(params):
         'model' : params['Identifiers.Model'],
         'model_workspace' : workspace,
         'gapfillSolutions' : params['Identifiers.Gapfill'],
-        'out_model' : params['Output.New Model'],
         'workspace' : workspace,
         'auth' : token,
     }
 
+    new_model = params['New model (optional)']
+    new_model = new_model.strip()
+    if (new_model)
+        integrate_params['out_model'] = new_model
+
     # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);
+
+    _num_done += 1
+    print_progress("Integrate Gapfill results", _num_done, total_work)
     
     model_meta = fba.integrate_reconciliation_solutions(integrate_params)
 
+    _num_done += 1
+    print_progress("Fetch Gapfilled FBA Model", _num_done, total_work)
 
+    model_params = {
+        'models': [model_meta[0]],
+        'workspaces': [workspace],
+        'auth': token,
+    }
+    model = fba.get_models(model_params)
 
-
-
-
-
-    metadata = fba.genome_to_fbamodel(fba_params)
+    _num_done += 1
+    print_progress("Render FBA Model", _num_done, total_work)
 
     print json.dumps(metadata)
-    return metadata
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())

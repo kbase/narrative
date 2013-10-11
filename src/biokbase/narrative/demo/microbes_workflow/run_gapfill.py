@@ -21,7 +21,17 @@ def main():
     return 0
 
 
+def print_progress(stage, completed, total):
+    o = sys.stdout
+    o.write("#{},{:d},{:d}\n".format(stage, completed, total))
+    o.flush()
+
 def run(params):
+    _num_done, total_work = 0, 3
+
+    _num_done += 1
+    print_progress("Parse Parameters", _num_done, total_work)
+
     fba = fbaModelServices(URLS.fba)
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
@@ -117,8 +127,14 @@ def run(params):
         'auth' : token
     }
 
+    _num_done += 1
+    print_progress("Submit Gapfill job", _num_done, total_work)
+
     job_data = fba.queue_gapfill_model(gapfill_params)
 
+    _num_done += 1
+    print_progress("Return job statement", _num_done, total_work)
+    
     print json.dumps(job_data)
     return "Done!"
 

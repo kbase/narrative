@@ -190,24 +190,6 @@
             var $frm = $('div.kb-cell-run form');
             var submit_fn = this._bindRunButton();
             $frm.on("submit", submit_fn);
-            // function(event) {
-            //     event.preventDefault();
-            //     var params = {};
-            //     var fn_name = ""; 
-            //     $.each($(this)[0], function(key, field) {
-            //         var full_name = field.name;
-            //         var value = field.value;
-            //         //console.debug("field " + key + ": " + full_name + "=" + value);
-            //         switch(full_name) {
-            //             case "":
-            //                 break;
-            //             default:
-            //                 params[full_name] = value;
-            //         }
-            //     });
-            //     console.debug("Run with params", params);
-            //     runner(funcs.command_builder(params));
-            // });
         },
 
          // yes, I know - ugh.
@@ -283,13 +265,13 @@
                 '':'x',
             },
             'Network': {
-                'Pearson cutoff': '0.75',
+                'Pearson cutoff': '0.50',
                 '':'x'
             },
             'Cluster': {
                 //'-c': 'hclust',
                 //'-n': 'simple'
-                'Number of modules': '25',
+                'Number of modules': '5',
                 '':'x'
             }
         },

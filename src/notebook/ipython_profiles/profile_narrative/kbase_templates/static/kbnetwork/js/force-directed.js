@@ -77,7 +77,7 @@
                     url: URL_ROOT + "/" + encodeURIComponent(self.options.workspaceID) + ".json"
                 });
             }
-            KBVis.require(["jquery", "underscore", "renderers/network",
+            KBVis.require(["underscore", "renderers/network",
                     "util/viewport", "text!sample-data/network1.json",
                     "transformers/netindex", "util/slider", "util/progress",
                     "text!templates/checkbox.html",
@@ -85,7 +85,7 @@
                     "jquery-ui"
                 ],
                 function (
-                    JQ, _, Network, Viewport, Example, NetIndex, Slider,
+                    _, Network, Viewport, Example, NetIndex, Slider,
                     Progress, CheckboxTemplate, ErrorTemplate
                 ) {
                     Example = JSON.parse(Example);
@@ -122,9 +122,9 @@
                                 if (annotations["functions"] !== undefined)
                                     makeRow("Function", annotations["functions"]);
                                 if (annotations.ontologies !== undefined) {
-                                    var goList = JQ("<ul/>");
+                                    var goList = $("<ul/>");
                                     _.each(_.keys(annotations.ontologies), function (item) {
-                                        goList.append(JQ("<li/>")
+                                        goList.append($("<li/>")
                                             .append(link(item, goLink({
                                                 id: item
                                             }))));
@@ -145,11 +145,11 @@
                     });
                     viewport.renderer(network);
                     forceSlider(viewport, "charge", "Node charge",
-                        JQ("<i>", { class: "icon-magnet" }), 5);
+                        $("<i>", { class: "icon-magnet" }), 5);
                     forceSlider(viewport, "distance", "Edge distance",
-                        JQ("<i>", { class: "icon-resize-horizontal" }));
+                        $("<i>", { class: "icon-resize-horizontal" }));
                     forceSlider(viewport, "strength", "Edge strength",
-                         JQ("<span>", { class: "glyphicon glyphicon-link" }),
+                         $("<span>", { class: "glyphicon glyphicon-link" }),
                          0.015);
                     forceSlider(viewport, "gravity", "Gravity", "G", 0.012);
                     var toolbox = viewport.toolbox();
@@ -161,7 +161,7 @@
                         element: viewport
                     });
                     progress.show();
-                    JQ.when(fetchAjax).done(function (result) {
+                    $.when(fetchAjax).done(function (result) {
                         var maxGenes = 300;
                         var geneCounter = 0;
                         var data = NetIndex(result.data, {
@@ -171,7 +171,7 @@
                         try {
                             network.setData(data);
                         } catch (error) {
-                            JQ(self.$elem)
+                            $(self.$elem)
                                 .prepend(_.template(ErrorTemplate, error));
                             return;
                         }
@@ -200,7 +200,7 @@
 
                     function addSlider($container) {
                         var slider = new Slider({
-                            label: JQ("<i>", {
+                            label: $("<i>", {
                                 class: "icon-adjust"
                             }),
                             title: "Minimum edge strength",
@@ -213,10 +213,10 @@
                                 network.update();
                             }
                         });
-                        $container.prepend(JQ("<div>", {
+                        $container.prepend($("<div>", {
                             class: "btn btn-default tool"
                         })
-                        .append(JQ("<div>", {
+                        .append($("<div>", {
                                 class: "btn-pad"
                             })
                             .append(slider.element())
@@ -224,31 +224,31 @@
                     }
 
                     function addSearch($container) {
-                        var wrapper = JQ("<div>", {
+                        var wrapper = $("<div>", {
                             class: "btn btn-default tool"
                         });
                         wrapper
-                            .append(JQ("<div>", { class: "btn-pad" })
-                                .append(JQ("<input/>", {
+                            .append($("<div>", { class: "btn-pad" })
+                                .append($("<input/>", {
                                     id: "network-search",
                                     type: "text",
                                     class: "input-xs"
                                 }))
-                            ).append(JQ("<div/>", { class: "btn-pad" })
-                                .append(JQ("<i/>", { class: "icon-search" })));
+                            ).append($("<div/>", { class: "btn-pad" })
+                                .append($("<i/>", { class: "icon-search" })));
                         $container.prepend(wrapper);
-                        JQ("#network-search").keyup(function () {
-                            network.updateSearch(JQ(this).val());
+                        $("#network-search").keyup(function () {
+                            network.updateSearch($(this).val());
                         });
                     }
 
                     function addClusterDropdown($container, data) {
-                        var list = JQ("<fieldset>");
-                        var menu = JQ("<ul>", {
+                        var list = $("<fieldset>");
+                        var menu = $("<ul>", {
                             class: "dropdown-menu",
                             role: "menu"
                         })
-                            .append(JQ("<li>").append(list));
+                            .append($("<li>").append(list));
                         var allClusters = dropdownCheckbox("all", "All clusters", true);
                         var allCheckbox = allClusters.find("input");
                         allClusters.css("background-color", "#666").css("color", "#fff");
@@ -273,16 +273,16 @@
                                 }),
                             function (entry) {
                                 var box = dropdownCheckbox(entry.node.id, "", true);
-                                var labelDiv = JQ("<div>", {
+                                var labelDiv = $("<div>", {
                                     style: "min-width:120px"
                                 })
                                     .append(
-                                        JQ("<span>", {
+                                        $("<span>", {
                                             style: "float: left"
                                         })
                                         .html(entry.node.entityId)
                                 ).append(
-                                    JQ("<span>", {
+                                    $("<span>", {
                                         style: "float:right;color:#aaa"
                                     })
                                     .html("N:" + entry.neighbors)
@@ -297,7 +297,7 @@
                         list.find("input[type='checkbox']").click(function (event) {
                             // Prevent menu from closing on checkbox
                             event.stopPropagation();
-                            var box = JQ(this);
+                            var box = $(this);
                             var id = box.val();
                             var checked = box.prop("checked");
                             var clSelect = "input[type='checkbox'][value!='all']";
@@ -313,8 +313,8 @@
 
                             }
                         }).change(function (event) {
-                            var id = JQ(this).val();
-                            var checked = JQ(this).prop("checked");
+                            var id = $(this).val();
+                            var checked = $(this).prop("checked");
                             if (id === "all")
                                 return;
                             var node = network.findNode(id);
@@ -332,14 +332,14 @@
                             }
                             network.resume();
                         });
-                        var button = JQ("<div>", {
+                        var button = $("<div>", {
                             class: "btn btn-default btn-sm dropdown-toggle",
                             "data-toggle": "dropdown"
-                        }).text("Clusters ").append(JQ("<span/>", {
+                        }).text("Clusters ").append($("<span/>", {
                             class: "caret"
                         }))
                             .dropdown();
-                        $container.prepend(JQ("<div>", {
+                        $container.prepend($("<div>", {
                                 class: "btn-group tool"
                             })
                             .append(button)
@@ -368,10 +368,10 @@
                     }
 
                     function addDatasetDropdown($container, data) {
-                        var wrapper = JQ("<div>", {
+                        var wrapper = $("<div>", {
                             class: "btn-group tool"
                         });
-                        var list = JQ("<ul>", {
+                        var list = $("<ul>", {
                             class: "dropdown-menu",
                             role: "menu"
                         });
@@ -381,9 +381,9 @@
                             list.append(dropdownLink(dsStr, ds.description, ds.id));
                         });
                         list.find("a").on("click", function (event) {
-                            var id = JQ(this).data("value");
+                            var id = $(this).data("value");
                             list.find("li").removeClass("active");
-                            JQ(this).parent().addClass("active");
+                            $(this).parent().addClass("active");
                             if (id == "all")
                                 datasetFilter = function () {
                                     return true;
@@ -394,10 +394,10 @@
                                 };
                             network.update();
                         });
-                        var button = JQ("<div/>", {
+                        var button = $("<div/>", {
                             class: "btn btn-default btn-sm dropdown-toggle",
                             "data-toggle": "dropdown"
-                        }).text("Data Set ").append(JQ("<span/>", {
+                        }).text("Data Set ").append($("<span/>", {
                             class: "caret"
                         }))
                             .dropdown();
@@ -408,8 +408,8 @@
                     }
 
                     function dropdownLink(linkText, title, value) {
-                        return JQ("<li>")
-                            .append(JQ("<a>", {
+                        return $("<li>")
+                            .append($("<a>", {
                                 href: "#",
                                 "data-toggle": "tooltip",
                                 "data-container": "body",
@@ -420,7 +420,7 @@
                     }
 
                     function dropdownCheckbox(value, label, checked) {
-                        return JQ("<div>", {
+                        return $("<div>", {
                             class: "dropdown-menu-item"
                         })
                             .append(_.template(CheckboxTemplate, {
@@ -431,7 +431,7 @@
                     }
 
                     function link(content, href, attrs) {
-                        return JQ("<a>", _.extend({
+                        return $("<a>", _.extend({
                             href: href
                         }, attrs)).html(content);
                     }

@@ -4738,7 +4738,7 @@ jQuery.event = {
 					jQuery.event.dispatch.apply( eventHandle.elem, arguments ) :
 					undefined;
 			};
-			//eventHandle.elem = elem;
+			// eventHandle.elem = elem;
 		}
 
 		// Handle multiple events separated by a space

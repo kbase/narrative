@@ -734,3 +734,9 @@ table.dataTable tr.even td.sorting_3 { background-color: transparent; }
 a.ui-slider-handle:focus {
     outline: none;
 }
+ul.dropdown-menu {
+    list-style: none;
+}
+.dropdown-menu > li > a, .rendered_html :link {
+    text-decoration: none;
+}

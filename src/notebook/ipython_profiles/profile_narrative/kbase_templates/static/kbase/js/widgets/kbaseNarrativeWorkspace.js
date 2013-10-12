@@ -523,7 +523,6 @@
             var data = JSON.parse(text);
 
             console.log(data);
-
         },
 
 

@@ -400,7 +400,19 @@
 
         /* --------- Assemble Contigs from FASTA reads -----------*/
         runAssemblyConfig: {
-            'Not finished yet' : {},
+            'Identifiers' : {
+                'Paired-End Files<br>(comma-delimited)': '',
+                'Single-End Files<br>(comma-delimited)': '',
+                'Sequence Files<br>(comma-delimited)': '',
+            },
+            'Assembly Params' : {
+                'Assemblers' : '',
+                'Reference' : '',
+                'Notes' : '',
+            },
+            'Output' : {
+                'Contig Set Name' : ''
+            }
         },
 
         runAssemblyCommand: function() {
@@ -412,7 +424,16 @@
         },
 
         runAssemblyCreateOutput: function(element, text) {
+            var jobId = "";
+            for (var i=0; i<5; i++) {
+                jobId += Math.floor((Math.random()*10));
+            }
+            var outText = "Your contig assembly job has been submitted successfully.<br/>" +
+                          "Your job ID is <b>job." + jobId + "</b><br/>" + 
+                          "This will likely take a few hours.<br/>" +
+                          "When complete, your ContigSet will have ID <b>" + text + "</b>";
 
+            element.append(outText);
         },
 
         /* ---------- Assemble Genome from Contigs ----------- */

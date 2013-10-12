@@ -55,12 +55,8 @@ def run(params):
     5. Return genome metadata (or something) to user.
     """
 
-
-    # 1. Do setup.
-    _num_done, total_work = 0, 5
     _num_done += 1
     print_progress("Parse Parameters", _num_done, total_work)
-
 
     inv_lines = 100
     token = os.environ['KB_AUTH_TOKEN']

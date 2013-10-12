@@ -26,25 +26,42 @@ def print_progress(stage, completed, total):
     o.flush()
 
 def run(params):
-    _num_done, total_work = 0, 4
+
+    _num_done, total_work = 0, 5
 
     _num_done += 1
     print_progress("Parse Parameters", _num_done, total_work)
 
-    fba = fbaModelServices(URLS.fba)
-    token = os.environ['KB_AUTH_TOKEN']
-    workspace = os.environ['KB_WORKSPACE_ID']
+    contig_file = params['Output.Contig Set Name']
+    contig_file.strip()
+    contig_file.replace(' ', '_')
+    if (not contig_file):
+        import random
+        contig_file = "kb|contigset." + str(random.randint(0,50))
 
-    fba_params = {
-        'genome': params['Identifiers.Genome'],
-        'workspace': workspace,
-        'auth': token,
-    }
+    # 1. Do setup.
+    _num_done += 1
+    print_progress("Parse Parameters", _num_done, total_work)
 
-    metadata = fba.genome_to_fbamodel(fba_params)
+    import time
+    time.sleep(1)
 
-    print json.dumps(metadata)
-    return metadata
+    _num_done += 1
+    print_progress("Initialize assembly service", _num_done, total_work)
+
+    time.sleep(1)
+
+    _num_done += 1
+    print_progress("Start assembly job", _num_done, total_work)
+
+    time.sleep(3)
+
+    _num_done += 1
+    print_progress("Render job information", _num_done, total_work)
+
+    print contig_file
+
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())

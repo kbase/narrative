@@ -33,13 +33,114 @@ var selectedWorkspace;
 var expandedView = false;
 
 
+
 $(window).load(function() {
     $("#searchspan").hide();
-    $("#login-area").kbaseLogin({style: "text"});
+    //beginning of stuff copied from users.js
 
-    //register for login event, then capture token
-    $(document).on('loggedIn.kbase', function() { searchOptions["general"]["token"] = $("#login-area").kbaseLogin("session", "token"); });
-    $(document).on('loggedOut.kbase', function() { delete searchOptions["general"]["token"]; });
+    // Function that sets a cookie compatible with the current narrative
+    // (it expects to find user_id and token in the cookie)
+    var set_cookie = function() {
+        var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
+        console.log( 'Setting kbase_session cookie');
+        $.cookie('kbase_session',
+                 'un=' + c.user_id
+                 + '|'
+                 + 'kbase_sessionid=' + c.kbase_sessionid
+                 + '|'
+                 + 'user_id=' + c.user_id
+                 + '|'
+                 + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+                 { path: '/',
+                   domain: 'kbase.us' });
+    };
+
+
+
+
+    $(function() {
+      /*  $(document).on('loggedIn.kbase', function(event, token) {
+            console.debug("logged in")
+            loadPage();
+        });
+
+        */
+        $(document).on('loggedOut.kbase', function() { delete searchOptions["general"]["token"]; });
+        $(document).on('loggedOut.kbase', function(event, token) {
+            console.debug("logged out");
+            searchOptions["general"]["token"] = $("#login-widget").kbaseLogin("session", "token");
+        });
+
+        var loginWidget = $("#login-widget").kbaseLogin({ 
+            style: "narrative",
+            rePrompt: false,
+
+            login_callback: function(args) {
+        set_cookie();
+                loadPage();
+            },
+
+            logout_callback: function(args) {
+                $.removeCookie( 'kbase_session');
+            },
+
+            prior_login_callback: function(args) {
+        set_cookie();
+                loadPage();
+            },
+        });
+
+
+        $("#signinbtn").click(function() {
+
+            showLoading();
+            $("#login_error").hide();
+
+            loginWidget.login(
+
+                $('#kbase_username').val(),
+                $('#kbase_password').val(), 
+                function(args) {
+                    console.log(args);
+                    if (args.success === 1) {
+                        
+                        this.registerLogin(args);
+                    set_cookie();
+                    loadPage();
+                        doneLoading();
+                            $("#login-widget").show();
+                        } else {
+                            $("#loading-indicator").hide();
+                    $("#login_error").html(args.message);
+                    $("#login_error").show();
+                        }
+                }
+            );
+        });
+
+        $('#kbase_password').keypress(function(e){
+            if(e.which == 13){//Enter key pressed
+                $('#signinbtn').click();
+            }
+        });
+
+
+    });
+
+
+
+    function loadPage() {
+
+        var userName = $("#login-widget").kbaseLogin("get_kbase_cookie", "name");
+
+        if (!userName)
+            userName = "KBase User";
+        $("#kb_name").html(userName);
+
+
+    };
+    //end of stuff copied from users.js
+
 
     initToken();
 
@@ -75,7 +176,7 @@ function initToken() {
     searchOptions = defaultSearchOptions;
 
     try {
-        searchOptions["general"]["token"] = $("#login-area").kbaseLogin("session", "token");
+        searchOptions["general"]["token"] = $("#login-widget").kbaseLogin("session", "token");
         
         if (searchOptions["general"]["token"] === undefined) {
             delete searchOptions["general"]["token"];            
@@ -161,7 +262,7 @@ function startSearch(queryString) {
     searchOptions = defaultSearchOptions;
 
     try {
-        searchOptions["general"]["token"] = $("#login-area").kbaseLogin("session", "token");
+        searchOptions["general"]["token"] = $("#login-widget").kbaseLogin("session", "token");
     }
     catch (e) {
         delete searchOptions["general"]["token"];

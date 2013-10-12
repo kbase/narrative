@@ -140,21 +140,33 @@ For data in KBase workspace
 }
 
 #kb-obj .kb-table > h3 {
-    margin-top: -20px;
+    margin-top: -10px;
 }
 /* underline name of object */
 #kb-obj .kb-table tr.row_selected td {
     text-decoration: underline;
     cursor: pointer;
 }
+#kb-obj ul.list-group {
+    display: block;
+    margin-top: 15px;
+    list-style-type: none;
+}
 
-#kb-obj .list-group li {
+#kb-obj ul.list-group li {
     display: inline-block;
-    padding: 4px;
     margin: 0;
-    border: 1px solid #CCC;
-    height: 25px;
+    padding: 0 5px;
     color: #0074C5;
+    border-top: 1px solid #DDD;
+    text-align: center;
+}
+#kb-obj .list-group li {
+    border-right: 1px solid #DDD;
+    box-sizing: border-box;
+}
+#kb-obj .list-group li:first-child {
+    border-left: 1px solid #DDD;
 }
 #kb-obj .list-group a {
     color: #0074C5;

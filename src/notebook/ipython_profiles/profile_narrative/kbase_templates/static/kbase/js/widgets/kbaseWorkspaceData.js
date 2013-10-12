@@ -147,7 +147,8 @@
                 'workspace': m[7], // a workspace_id string
                 'ref': m[8], // a workspace_ref string
                 'chsum': m[9], // a string
-                'metadata': m[10] // an object
+                // XXX: need to do more with this one:
+                //'metadata': m[10] // an object
             };
         },
 
@@ -234,6 +235,8 @@
 
         descriptionPanel: function($elem, data) {
             console.log("Populate descriptionPanel desc=",data);
+            var $footer = $('#kb-obj .modal-footer');
+            $footer.empty();
             var self = this;
             var body = $elem.find('tbody');
             body.empty();
@@ -242,7 +245,45 @@
                 tr.append($('<td>').text(key));
                 tr.append($('<td>').text(value));
             });
+            // XXX: hack! add button for viz if network
+            if (data.type == 'Networks') {
+                this.addNetworkVisualization(data);
+            }
         },
+
+        addNetworkVisualization: function(data) {
+            console.debug("Add button for Networks data");
+            var oid = data.id;
+            var $footer = $('#kb-obj .modal-footer');
+            var $btn = $footer.append($('<button>')
+                .attr('type',"button")
+                .addClass("btn btn-primary")
+                .text("Insert visualization"));
+            var self = this;
+            $btn.click(function(e) {
+                var cell = IPython.notebook.insert_cell_at_bottom('markdown');
+                // put div inside cell with an addr
+                var eid = self._uuidgen();
+                var content = "<div id='" + eid + "'></div>";
+                cell.set_text(content);
+                // re-render cell to make <div> appear
+                cell.rendered = false;
+                cell.render();
+                // slap network into div by addr
+                var $target = $('#' + eid);
+                $target.css({'margin': '-10px'});
+                $target.ForceDirectedNetwork({
+                    workspaceID: self.ws_id + "." + oid,
+                    token: self.ws_auth
+                });
+            });
+        },
+
+        _uuidgen: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);});
+         },
 
         /**
          * Render the widget.

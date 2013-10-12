@@ -609,18 +609,9 @@
 
         /* --------- Build Media ------------ */
         buildMediaConfig: {
-            'Not finished yet - this requires fancier input than we have right now. ETA Sunday night.' : {},
-    // --name                Media name
-    // --concentrations      Compound concentrations (; delimiter)
-    // --minflux             Compound minimum fluxes (; delimiter)
-    // --maxflux             Compound maximum fluxes (; delimiter)
-    // -t --type             Type of media
-    // -d --defined          Media is defined
-    // -m --minimal          Media is minimal
-    // -w --workspace        Workspace with model
-    // -e --showerror        Set as 1 to show any errors in execution
-    // -v --verbose          Print verbose messages
-    // -? -h --help          Print this usage information
+            'Identifiers' : {
+                'Base Media (optional)' : '',
+            },
         },
 
         buildMediaCommand: function() {
@@ -632,6 +623,12 @@
         },
 
         buildMediaCreateOutput: function(element, text) {
+            var data = null;
+            if (text !== "null") {
+                data = JSON.parse(text);
+            }
+
+            element.kbaseMediaEditorNarrative({ mediaData: data, viewOnly: false, editOnly: true, ws: this.ws_id });
 
         },
 
@@ -652,8 +649,7 @@
 
         viewMediaCreateOutput: function(element, text) {
             var data = JSON.parse(text);
-
-            console.log(data);
+            element.kbaseMediaEditorNarrative({ mediaData: data });
         },
 
 

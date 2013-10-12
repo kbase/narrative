@@ -37,51 +37,35 @@ def run(params):
 
     """
     typedef structure {
-        fbamodel_id model;
-        workspace_id model_workspace;
-        list<gapfillsolution_id> gapfillSolutions;
-        list<gapgensolution_id> gapgenSolutions;
-        fbamodel_id out_model;
-        workspace_id workspace;
+        list<media_id> medias;
+        list<workspace_id> workspaces;
         string auth;
-        bool overwrite;
-    } integrate_reconciliation_solutions_params;
+    } get_media_params;
     """
 
-    integrate_params = {
-        'model' : params['Identifiers.Model'],
-        'model_workspace' : workspace,
-        'gapfillSolutions' : params['Identifiers.Gapfill'],
-        'workspace' : workspace,
-        'auth' : token,
-    }
-
-    new_model = params['New model (optional)']
-    new_model = new_model.strip()
-    if (new_model)
-        integrate_params['out_model'] = new_model
-
-    # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);
+    base_media = params['Identifiers.Base Media (optional)']
+    base_media = base_media.strip()
+    base_media = base_media.replace(' ', '_')
 
     _num_done += 1
-    print_progress("Integrate Gapfill results", _num_done, total_work)
-    
-    model_meta = fba.integrate_reconciliation_solutions(integrate_params)
+    print_progress("Fetch Base Media", _num_done, total_work)    
 
-    _num_done += 1
-    print_progress("Fetch Gapfilled FBA Model", _num_done, total_work)
+    if (base_media):
+        media_params = {
+            'medias' : [base_media],
+            'workspaces' : [workspace],
+            'auth' : token
+        }
 
-    model_params = {
-        'models': [model_meta[0]],
-        'workspaces': [workspace],
-        'auth': token,
-    }
-    model = fba.get_models(model_params)
+        media_list = fba.get_media(media_params)
 
-    _num_done += 1
-    print_progress("Render FBA Model", _num_done, total_work)
+        _num_done += 1
+        print_progress("Render Media", _num_done, total_work)
 
-    print json.dumps(metadata)
+        print json.dumps(media_list)
+        return 0
+
+    print "null"
     return 0
 
 if __name__ == '__main__':

@@ -4738,7 +4738,6 @@ jQuery.event = {
 					jQuery.event.dispatch.apply( eventHandle.elem, arguments ) :
 					undefined;
 			};
-			// Add elem as a property of the handle fn to prevent a memory leak with IE non-native events
 			//eventHandle.elem = elem;
 		}
 
@@ -36501,19 +36500,462 @@ function (JQ, d3, EventEmitter, HUD) {
     JQ.extend(Dock.prototype, EventEmitter);
     return Dock;
 });
+(function (exports) {
+  exports.validate = validate;
+  exports.mixin = mixin;
+
+  //
+  // ### function validate (object, schema, options)
+  // #### {Object} object the object to validate.
+  // #### {Object} schema (optional) the JSON Schema to validate against.
+  // #### {Object} options (optional) options controlling the validation
+  //      process. See {@link #validate.defaults) for details.
+  // Validate <code>object</code> against a JSON Schema.
+  // If <code>object</code> is self-describing (i.e. has a
+  // <code>$schema</code> property), it will also be validated
+  // against the referenced schema. [TODO]: This behaviour bay be
+  // suppressed by setting the {@link #validate.options.???}
+  // option to <code>???</code>.[/TODO]
+  //
+  // If <code>schema</code> is not specified, and <code>object</code>
+  // is not self-describing, validation always passes.
+  //
+  // <strong>Note:</strong> in order to pass options but no schema,
+  // <code>schema</code> <em>must</em> be specified in the call to
+  // <code>validate()</code>; otherwise, <code>options</code> will
+  // be interpreted as the schema. <code>schema</code> may be passed
+  // as <code>null</code>, <code>undefinded</code>, or the empty object
+  // (<code>{}</code>) in this case.
+  //
+  function validate(object, schema, options) {
+    options = mixin({}, options, validate.defaults);
+    var errors = [];
+
+    validateObject(object, schema, options, errors);
+
+    //
+    // TODO: self-described validation
+    // if (! options.selfDescribing) { ... }
+    //
+
+    return {
+      valid: !(errors.length),
+      errors: errors
+    };
+  };
+
+  /**
+   * Default validation options. Defaults can be overridden by
+   * passing an 'options' hash to {@link #validate}. They can
+   * also be set globally be changing the values in
+   * <code>validate.defaults</code> directly.
+   */
+  validate.defaults = {
+      /**
+       * <p>
+       * Enforce 'format' constraints.
+       * </p><p>
+       * <em>Default: <code>true</code></em>
+       * </p>
+       */
+      validateFormats: true,
+      /**
+       * <p>
+       * When {@link #validateFormats} is <code>true</code>,
+       * treat unrecognized formats as validation errors.
+       * </p><p>
+       * <em>Default: <code>false</code></em>
+       * </p>
+       *
+       * @see validation.formats for default supported formats.
+       */
+      validateFormatsStrict: false,
+      /**
+       * <p>
+       * When {@link #validateFormats} is <code>true</code>,
+       * also validate formats defined in {@link #validate.formatExtensions}.
+       * </p><p>
+       * <em>Default: <code>true</code></em>
+       * </p>
+       */
+      validateFormatExtensions: true
+  };
+
+  /**
+   * Default messages to include with validation errors.
+   */
+  validate.messages = {
+      required:         "is required",
+      minLength:        "is too short (minimum is %{expected} characters)",
+      maxLength:        "is too long (maximum is %{expected} characters)",
+      pattern:          "invalid input",
+      minimum:          "must be greater than or equal to %{expected}",
+      maximum:          "must be less than or equal to %{expected}",
+      exclusiveMinimum: "must be greater than %{expected}",
+      exclusiveMaximum: "must be less than %{expected}",
+      divisibleBy:      "must be divisible by %{expected}",
+      minItems:         "must contain more than %{expected} items",
+      maxItems:         "must contain less than %{expected} items",
+      uniqueItems:      "must hold a unique set of values",
+      format:           "is not a valid %{expected}",
+      conform:          "must conform to given constraint",
+      type:             "must be of %{expected} type"
+  };
+  validate.messages['enum'] = "must be present in given enumerator";
+
+  /**
+   *
+   */
+  validate.formats = {
+    'email':          /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i,
+    'ip-address':     /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/i,
+    'ipv6':           /^([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}$/,
+    'date-time':      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:.\d{1,3})?Z$/,
+    'date':           /^\d{4}-\d{2}-\d{2}$/,
+    'time':           /^\d{2}:\d{2}:\d{2}$/,
+    'color':          /^#[a-z0-9]{6}|#[a-z0-9]{3}|(?:rgb\(\s*(?:[+-]?\d+%?)\s*,\s*(?:[+-]?\d+%?)\s*,\s*(?:[+-]?\d+%?)\s*\))aqua|black|blue|fuchsia|gray|green|lime|maroon|navy|olive|orange|purple|red|silver|teal|white|and yellow$/i,
+    //'style':        (not supported)
+    //'phone':        (not supported)
+    //'uri':          (not supported)
+    'host-name':      /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])/,
+    'utc-millisec':   {
+      test: function (value) {
+        return typeof(value) === 'number' && value >= 0;
+      }
+    },
+    'regex':          {
+      test: function (value) {
+        try { new RegExp(value) }
+        catch (e) { return false }
+
+        return true;
+      }
+    }
+  };
+
+  /**
+   *
+   */
+  validate.formatExtensions = {
+    'url': /^(https?|ftp|git):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i
+  };
+
+  function mixin(obj) {
+    var sources = Array.prototype.slice.call(arguments, 1);
+    while (sources.length) {
+      var source = sources.shift();
+      if (!source) { continue }
+
+      if (typeof(source) !== 'object') {
+        throw new TypeError('mixin non-object');
+      }
+
+      for (var p in source) {
+        if (source.hasOwnProperty(p)) {
+          obj[p] = source[p];
+        }
+      }
+    }
+
+    return obj;
+  };
+
+  function validateObject(object, schema, options, errors) {
+    var props, allProps = Object.keys(object),
+        visitedProps = [];
+
+    // see 5.2
+    if (schema.properties) {
+      props = schema.properties;
+      for (var p in props) {
+        if (props.hasOwnProperty(p)) {
+          visitedProps.push(p);
+          validateProperty(object, object[p], p, props[p], options, errors);
+        }
+      }
+    }
+
+    // see 5.3
+    if (schema.patternProperties) {
+      props = schema.patternProperties;
+      for (var p in props) {
+        if (props.hasOwnProperty(p)) {
+          var re = new RegExp(p);
+
+          // Find all object properties that are matching `re`
+          for (var k in object) {
+            if (object.hasOwnProperty(k)) {
+              visitedProps.push(k);
+              if (re.exec(k) !== null) {
+                validateProperty(object, object[k], p, props[p], options, errors);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // see 5.4
+    if (undefined !== schema.additionalProperties) {
+      var i, l;
+
+      var unvisitedProps = allProps.filter(function(k){
+        return -1 === visitedProps.indexOf(k);
+      });
+
+      // Prevent additional properties; each unvisited property is therefore an error
+      if (schema.additionalProperties === false && unvisitedProps.length > 0) {
+        for (i = 0, l = unvisitedProps.length; i < l; i++) {
+          error("additionalProperties", unvisitedProps[i], object[unvisitedProps[i]], false, errors);
+        }
+      }
+      // additionalProperties is a schema and validate unvisited properties against that schema
+      else if (typeof schema.additionalProperties == "object" && unvisitedProps.length > 0) {
+        for (i = 0, l = unvisitedProps.length; i < l; i++) {
+          validateProperty(object, object[unvisitedProps[i]], unvisitedProps[i], schema.unvisitedProperties, options, errors);
+        }
+      }
+    }
+
+  };
+
+  function validateProperty(object, value, property, schema, options, errors) {
+    var format,
+        valid,
+        spec,
+        type;
+
+    function constrain(name, value, assert) {
+      if (schema[name] !== undefined && !assert(value, schema[name])) {
+        error(name, property, value, schema, errors);
+      }
+    }
+
+    if (value === undefined) {
+      if (schema.required && schema.type !== 'any') {
+        return error('required', property, undefined, schema, errors);
+      } else {
+        return;
+      }
+    }
+
+    if (options.cast) {
+      if (('integer' === schema.type || 'number' === schema.type) && value == +value) {
+        value = +value;
+      }
+
+      if ('boolean' === schema.type) {
+        if ('true' === value || '1' === value || 1 === value) {
+          value = true;
+        }
+
+        if ('false' === value || '0' === value || 0 === value) {
+          value = false;
+        }
+      }
+    }
+
+    if (schema.format && options.validateFormats) {
+      format = schema.format;
+
+      if (options.validateFormatExtensions) { spec = validate.formatExtensions[format] }
+      if (!spec) { spec = validate.formats[format] }
+      if (!spec) {
+        if (options.validateFormatsStrict) {
+          return error('format', property, value, schema, errors);
+        }
+      }
+      else {
+        if (!spec.test(value)) {
+          return error('format', property, value, schema, errors);
+        }
+      }
+    }
+
+    if (schema['enum'] && schema['enum'].indexOf(value) === -1) {
+      error('enum', property, value, schema, errors);
+    }
+
+    // Dependencies (see 5.8)
+    if (typeof schema.dependencies === 'string' &&
+        object[schema.dependencies] === undefined) {
+      error('dependencies', property, null, schema, errors);
+    }
+
+    if (isArray(schema.dependencies)) {
+      for (var i = 0, l = schema.dependencies.length; i < l; i++) {
+        if (object[schema.dependencies[i]] === undefined) {
+          error('dependencies', property, null, schema, errors);
+        }
+      }
+    }
+
+    if (typeof schema.dependencies === 'object') {
+      validateObject(object, schema.dependencies, options, errors);
+    }
+
+    checkType(value, schema.type, function(err, type) {
+      if (err) return error('type', property, typeof value, schema, errors);
+
+      constrain('conform', value, function (a, e) { return e(a) });
+
+      switch (type || (isArray(value) ? 'array' : typeof value)) {
+        case 'string':
+          constrain('minLength', value.length, function (a, e) { return a >= e });
+          constrain('maxLength', value.length, function (a, e) { return a <= e });
+          constrain('pattern',   value,        function (a, e) {
+            e = typeof e === 'string'
+              ? e = new RegExp(e)
+              : e;
+            return e.test(a)
+          });
+          break;
+        case 'integer':
+        case 'number':
+          constrain('minimum',     value, function (a, e) { return a >= e });
+          constrain('maximum',     value, function (a, e) { return a <= e });
+          constrain('exclusiveMinimum', value, function (a, e) { return a > e });
+          constrain('exclusiveMaximum', value, function (a, e) { return a < e });
+          constrain('divisibleBy', value, function (a, e) {
+            var multiplier = Math.max((a - Math.floor(a)).toString().length - 2, (e - Math.floor(e)).toString().length - 2);
+            multiplier = multiplier > 0 ? Math.pow(10, multiplier) : 1;
+            return (a * multiplier) % (e * multiplier) === 0
+          });
+          break;
+        case 'array':
+          constrain('items', value, function (a, e) {
+            for (var i = 0, l = a.length; i < l; i++) {
+              validateProperty(object, a[i], property, e, options, errors);
+            }
+            return true;
+          });
+          constrain('minItems', value, function (a, e) { return a.length >= e });
+          constrain('maxItems', value, function (a, e) { return a.length <= e });
+          constrain('uniqueItems', value, function (a) {
+            var h = {};
+
+            for (var i = 0, l = a.length; i < l; i++) {
+              var key = JSON.stringify(a[i]);
+              if (h[key]) return false;
+              h[key] = true;
+            }
+
+            return true;
+          });
+          break;
+        case 'object':
+          // Recursive validation
+          if (schema.properties || schema.patternProperties || schema.additionalProperties) {
+            validateObject(value, schema, options, errors);
+          }
+          break;
+      }
+    });
+  };
+
+  function checkType(val, type, callback) {
+    var result = false,
+        types = isArray(type) ? type : [type];
+
+    // No type - no check
+    if (type === undefined) return callback(null, type);
+
+    // Go through available types
+    // And fine first matching
+    for (var i = 0, l = types.length; i < l; i++) {
+      type = types[i].toLowerCase().trim();
+      if (type === 'string' ? typeof val === 'string' :
+          type === 'array' ? isArray(val) :
+          type === 'object' ? val && typeof val === 'object' &&
+                             !isArray(val) :
+          type === 'number' ? typeof val === 'number' :
+          type === 'integer' ? typeof val === 'number' && ~~val === val :
+          type === 'null' ? val === null :
+          type === 'boolean'? typeof val === 'boolean' :
+          type === 'any' ? typeof val !== 'undefined' : false) {
+        return callback(null, type);
+      }
+    };
+
+    callback(true);
+  };
+
+  function error(attribute, property, actual, schema, errors) {
+    var lookup = { expected: schema[attribute], attribute: attribute, property: property };
+    var message = schema.messages && schema.messages[attribute] || schema.message || validate.messages[attribute] || "no default message";
+    message = message.replace(/%\{([a-z]+)\}/ig, function (_, match) { return lookup[match.toLowerCase()] || ''; });
+    errors.push({
+      attribute: attribute,
+      property:  property,
+      expected:  schema[attribute],
+      actual:    actual,
+      message:   message
+    });
+  };
+
+  function isArray(value) {
+    var s = typeof value;
+    if (s === 'object') {
+      if (value) {
+        if (typeof value.length === 'number' &&
+           !(value.propertyIsEnumerable('length')) &&
+           typeof value.splice === 'function') {
+           return true;
+        }
+      }
+    }
+    return false;
+  }
+
+
+})(typeof(window) === 'undefined' ? module.exports : (window.json = window.json || {}));
+
+KBVis.define("revalidator", (function (global) {
+    return function () {
+        var ret, fn;
+        return ret || global.window.json;
+    };
+}(this)));
+
 KBVis.define('renderers/network',['jquery', 'd3', 'underscore',
-    'util/dock', 'util/eventemitter', 'util/hud'],
-function (JQ, d3, _, Dock, EventEmitter, HUD) {
+    'util/dock', 'util/eventemitter', 'util/hud', 'revalidator'],
+function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
+    
+    var FIX_NODE_DELAY = 2000;
     var defaults = {
         dock: true,
         joinAttribute: "name",
         nodeLabel: {},
         highlightNeighbors: true,
-        searchTerms: function (node, indexMe) {
-            indexMe(node.name);
-        }
+        searchTerms: function (node, indexMe) { indexMe(node.name); },
+        edgeStroke: function () { return 2; }
     };
     var visCounter = 1;
+    var Schema = { properties: {
+        nodes: {
+            description: "List of nodes",
+            type:        "array",
+            required:    true
+        },
+        edges: {
+            description: "A list of edges",
+            type:        "array",
+            items: {
+                properties: {
+                    source: {
+                        description: "The source's index in 'nodes'",
+                        type: "number",
+                        required: true
+                    },
+                    target: {
+                        description: "The target's index in 'nodes'",
+                        type: "number",
+                        required: true
+                    }
+                }
+            }
+        }
+    }};
     
     var Physics = {
         GENE:    { charge: -70 },
@@ -36535,7 +36977,9 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             linkStrength:    1,
             charge:        -70
         }
-    }
+    };
+    var GRAVITY = 0.1;
+    var THETA   = 0.8;
     
     var NODE_SIZE  = { GENE: 8, CLUSTER: 12 };
     var HIGHLIGHT_COLOR = "rgba(255,255,70,0.9)";
@@ -36575,11 +37019,18 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
         var color;
         var visId = "network-vis-" + visCounter++;
         var width, height;
+        var Delta = {
+            charge: 0,
+            distance: 0,
+            strength: 0,
+            gravity: 0,
+            theta: 0
+        };
         
         if (options.infoOn !== undefined) {
             var clickNode = function (event, node, element) {
                 self.clickNode(node, element);
-            }
+            };
             if (options.infoOn == "all" || options.infoOn == "click") {
                 self.on("click-node", clickNode);
             }
@@ -36599,7 +37050,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             };
             edgeFilter = function (edge) {
                 return nodeFilter(edge.source) && nodeFilter(edge.target);
-            }
+            };
         } else if (options.edgeFilter !== undefined) {
             edgeFilter = function (edge) {
                 var filtered = options.edgeFilter(edge);
@@ -36612,9 +37063,9 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                         filterCache[edge.target] = true; 
                 }
                 return filtered;
-            }
+            };
             nodeFilter = function (d) { 
-                return filterCache[parseInt(d.id)] !== undefined;
+                return filterCache[parseInt(d.id, 0)] !== undefined;
             };
         } else {
             nodeFilter = function () { return true; };
@@ -36630,7 +37081,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                 x: Math.round($element.width() / 2),
                 y: Math.round($element.height() * 1 / 6),
             }
-        }
+        };
         
         function setColor(node) {
             if (!node.hasOwnProperty("group")) {
@@ -36654,7 +37105,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                 setColor(node);
             }
             return ret;
-        }
+        };
         
         function labelStatus(node) {
             var label = true;
@@ -36673,7 +37124,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             splicedEdges = splicedEdges || [];
             var i = 0;
             var n = self.findNode(id);
-            if (n == null) return;
+            if (n === null) return;
             while (i < links.length) {
                 if (links[i].source == n || links[i].target == n) {
                     var linkKey =
@@ -36689,10 +37140,20 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             }
             if (_autoUpdate) update();
             return this;
-        }
+        };
         
         self.setData  = function (data) {
-            if (data != null) {
+            if (data !== null) {
+                var validation = Revalidator.validate(data, Schema);
+                if (!validation.valid) {
+                    var errors = _.uniq(_.map(validation.errors, function (e) {
+                        return [e.property, e.message].join(" ");
+                    }));
+                    throw {
+                        message: "Data is not valid",
+                        errors: errors
+                    };
+                }
                 this.setNodes(data.nodes);
                 this.setEdges(data.edges);
             }
@@ -36705,21 +37166,21 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             };
         };
         
-        this.setNodes = function (nodesArg) {
+        this.setNodes = function (input) {
             initialize();
-            force.nodes(nodesArg);
+            force.nodes(input);
             nodes = force.nodes();
-            nodes.forEach(function (node) { setColor(node) });
-            _idSequence = d3.max(nodes, function (n) { return n.id }) + 1;
+            nodes.forEach(function (node) { setColor(node); });
+            _idSequence = d3.max(nodes, function (n) { return n.id; }) + 1;
             return this;
-        }
+        };
         
-        this.setEdges = function (edgesArg) {
+        this.setEdges = function (input) {
             initialize();
-            force.links(edgesArg);
+            force.links(input);
             links = force.links();
             return this;
-        }
+        };
 
         this.addEdge = function (edge) {
             edge.source = this.findNode(edge.source);
@@ -36727,42 +37188,43 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             links.push(edge);
             if (_autoUpdate) update();
             return this;
-        }
+        };
         
         self.addLink = function (sourceId, targetId, params) {
             var key = _hashKey([sourceId, targetId]);
-            if (_linkCache[key] != null) {
+            if (_linkCache[key] !== null) {
                 return;
             }
             var edge = {
                 source: this.findNode(sourceId),
                 target: this.findNode(targetId),
             };
-            if (edge.source == null || edge.target == null) {
+            if (edge.source === null || edge.target === null) {
                 console.log("Cannot find edge for [%d %d]",
                     sourceId, targetId, edge.source, edge.target);
             }
             for (var p in params) {
-                edge[p] = params[p];
+                if (edge.hasOwnProperty(p))
+                    edge[p] = params[p];
             }
             links.push(edge);
             _linkCache[key] = edge;
             if (_autoUpdate) update();
             return this;
-        }
+        };
         
         function _highlight(element) {
             element
                 .style("stroke", HIGHLIGHT_COLOR)
                 .style("stroke-width", 3)
-                .style("stroke-location", "outside")
+                .style("stroke-location", "outside");
         }
         
         function _unhighlight(element) {
             element
                 .style("stroke", null)
                 .style("stroke-width", null)
-                .style("stroke-location", null)
+                .style("stroke-location", null);
         }
         
         self.highlight = function (name) {
@@ -36771,7 +37233,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                 _highlight(d3.select("#" + node.elementId));
             }
             return this;
-        }
+        };
 
         self.updateSearch = function (searchTerm) {
             searchRegEx = new RegExp(searchTerm.toLowerCase());
@@ -36788,7 +37250,8 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                 });
                 if (searchTerm.length > 0 && match >= 0) {
                     _highlight(element);
-                    return d.searched = true;
+                    d.searched = true;
+                    return d.searched;
                 } else {
                     d.searched = false;
                     _unhighlight(element);
@@ -36796,22 +37259,19 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             });
         };
 
-
-
         self.unhighlightAll = function () {
             _unhighlight(nodeG.selectAll(".node"));
             return this;
-        }
+        };
         
         function _hashKey(arr) { return arr.join("-"); }
         
         self.render = function () {
-            _autoUpdate = true;
             initialize();
             width =  $element.width();
             height = $element.height();
             $element.empty();
-            if (width == 0 && height == 0) {
+            if (width === 0 && height === 0) {
                 return this;
             }
             force.size([width, height]);
@@ -36823,9 +37283,12 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             linkG =  vis.append("g").attr("id", "networkLinks");
             nodeG =  vis.append("g").attr("id", "networkNodes");
             labelG = vis.append("g").attr("id", "networkLabels");
+            force.on("tick", tick);
+            force.start();
             update();
+            _autoUpdate = true;
             return this;
-        }
+        };
 
         var _nodeCache = {};
         self.findNode = function(key, type) {
@@ -36834,23 +37297,31 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             if (typeof key === 'string') {
                 key = key.toUpperCase();
                 equalToKey = function (val) {
-                    return val !== null && key === val.toUpperCase();
-                }
+                    return val !== null &&
+                        key === new String(val).toUpperCase();
+                };
             } else {
                 equalToKey = function (val) {
                     return val === key;
-                }
+                };
             }
             var hash = _hashKey([key, type]);
-            if (_nodeCache[hash] != null) return _nodeCache[hash];
+            if (_nodeCache[hash] !== undefined) return _nodeCache[hash];
             for (var i in nodes) {
                 if (equalToKey(nodes[i][type])) {
                     _nodeCache[hash] = nodes[i];
                     return nodes[i];
                 }
             }
+            for (var id in hiddenNodes) {
+                var n = hiddenNodes[id].node;
+                if (equalToKey(n[type])) {
+                    _nodeCache[hash] = n;
+                    return n;
+                }
+            }
             return null;
-        }
+        };
         this.findEdge = function (source, target) {
             for (var i in links) {
                 if ((links[i].source.id == source.id &&
@@ -36860,7 +37331,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                     return links[i];
             }
             return null;
-        }
+        };
         
         this.find = function (key, type) {
             type = (type || 'id');
@@ -36869,18 +37340,18 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                 if (nodes[i][type] === key) result.push(nodes[i]);
             }
             return result;
-        }
+        };
 
         function findNodeIndex(id) {
-            for (var i in nodes) { if (nodes[i].id === id) return i };
+            for (var i in nodes) { if (nodes[i].id === id) return i; }
         }
         
         var physics = function (key, prop) {
             if (!Physics.hasOwnProperty(key)) key = "default";
-            var ret = Physics[key].hasOwnProperty(prop)
-                ? Physics[key][prop] : Physics["default"][prop];
+            var ret = Physics[key].hasOwnProperty(prop) ?
+                Physics[key][prop] : Physics["default"][prop];
             return ret;
-        }
+        };
         
         function nodePhysics(node, prop) {
             return physics(node.type || "default", prop);
@@ -36892,11 +37363,17 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             return physics(key, prop);
         }
         
-        function nodeCharge(d)   { return nodePhysics(d, "charge") }
-        function linkDistance(d) { return linkPhysics(d, "linkDistance") }
-        function linkStrength(d) { return linkPhysics(d, "linkStrength") }
+        function nodeCharge(d)   {
+            return Delta.charge + nodePhysics(d, "charge");
+        }
+        function linkDistance(d) {
+            return Delta.distance + linkPhysics(d, "linkDistance");
+        }
+        function linkStrength(d) {
+            return Delta.strength + linkPhysics(d, "linkStrength");
+        }
 
-        if (options.dock) { dock = new Dock() };
+        if (options.dock) { dock = new Dock(); }
             
         color = d3.scale.category20();
         
@@ -36913,16 +37390,17 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
 
             if (options.dock) {
                 dock.on("dragstart.dock", function () { force.stop(); })
-                    .on("dragmove.dock",  function () { tick() })
+                    .on("dragmove.dock",  function () { tick(); })
                     .on("dragend.dock",   function (evt, d) {
                         if (!isDocked(d)) toggleFixed(d);
-                        tick(); force.resume();
+                        tick();
+                        force.resume();
                     })
                     .on("dock", function (evt, d, element) {
                         element
                             .style("stroke", HIGHLIGHT_COLOR)
                             .style("stroke-width", 3)
-                            .style("stroke-location", "outside")   
+                            .style("stroke-location", "outside");   
                     })
                     .on("undock", function (evt, d, element) {
                         element
@@ -36933,7 +37411,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             } else {
                 force.drag().on("dragend", function (d) {
                     toggleFixed(d);
-                })
+                });
             }
         }
             
@@ -36954,7 +37432,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             svgNodes.attr("cx", function (d) { return d.x; })
                     .attr("cy", function (d) { return d.y; });
             svgLabels.attr("transform", function (d) {
-                return "translate(" + d.x + "," + d.y + ")"
+                return "translate(" + d.x + "," + d.y + ")";
             });
         }
         
@@ -36963,9 +37441,11 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             if (!dock) return false;
             var docked = dock.get();
             for (var id in docked) {
-                var n = docked[id];
-                if (d[options.joinAttribute] == n[options.joinAttribute]) {
-                    return true;
+                if (docked.hasOwnProperty(id)) {
+                    var n = docked[id];
+                    if (d[options.joinAttribute] == n[options.joinAttribute]) {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -36973,32 +37453,33 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
         
         function update() {
             filterCache = {};
+            var filteredEdges = _.filter(links, edgeFilter);
+            var filteredNodes = _.filter(nodes, nodeFilter);
             if (svgLinks) svgLinks.remove();
-            svgLinks = linkG.selectAll("line.link")
-                .data(_.filter(links, edgeFilter));
+            svgLinks = linkG.selectAll("line.link").data(filteredEdges);
             var linkEnter = svgLinks.enter()
                 .append("line")
                 .attr("class", "link")
                 .style("stroke", function (d) { return EDGE_COLOR; })
-                .style("stroke-width", function(d) { return d.weight * 2; });
+                .style("stroke-width", options.edgeStroke);
             svgLinks.exit().remove();
 
             if (svgNodes) svgNodes.remove();
-            svgNodes = nodeG.selectAll("circle.node")
-                .data(_.filter(nodes, nodeFilter));
+            svgNodes = nodeG.selectAll("circle.node").data(filteredNodes);
             var clickbuffer = false, fixNodeTimer = null;
             var nodeEnter = svgNodes.enter().append("circle")
                 .attr("class", "node")
                 .attr("id",     function (d) {
-                    d.elementId = "node-" + d.id; return d.elementId;
+                    d.elementId = "node-" + d.id;
+                    return d.elementId;
                 })
                 .attr("r",       function (d) { return nodeSize(d); })
                 .style("fill",   function (d) { return groupColor[d.id]; })
                 .style("stroke", function (d) {
-                    return isDocked(d) ? HIGHLIGHT_COLOR : "#666"
+                    return isDocked(d) ? HIGHLIGHT_COLOR : "#666";
                 })
                 .style("stroke-width", function (d) {
-                    return isDocked(d) ? 3 : null
+                    return isDocked(d) ? 3 : null;
                 })
                 
                 .on("click",    function (d) {
@@ -37030,13 +37511,13 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                     if (fixNodeTimer) {
                         if (fixNodeTimer.node == d) {
                             var timenow = new Date().getTime();
-                            if (timenow - fixNodeTimer.time > 500) {
+                            if (timenow - fixNodeTimer.time > FIX_NODE_DELAY) {
                                 if (!dock || !isDocked(d)) toggleFixed(d);
                             }
                         }
                     }
                     fixNodeTimer = null;
-                })
+                });
             if (svgLabels) svgLabels.remove();
             svgLabels = labelG.selectAll("text")
                 .data(_.filter(nodes, hasLabel));
@@ -37044,12 +37525,11 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                 .attr("y", ".35em")
                 .attr("text-anchor", "middle")
                 .style("fill", "white")
-                .text(function (d) { return d.name.substring(0,6) });
+                .text(function (d) { return d.name.substring(0,6); });
             nodeEnter.call(options.dock ? dock.drag() : force.drag);
             svgLabels.exit().remove();
             svgNodes.exit().remove();
 
-            force.on("tick", tick);
             if (!_paused) force.start();
         }
         
@@ -37062,7 +37542,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             return size;
         }
 
-        var selected, originalFill,
+        var originalFill,
             hud = new HUD({
                 position: { bottom: 20, left: 20 },
                 width: 300,
@@ -37070,12 +37550,6 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                 z: 2000
             });
         self.clickNode = function (d, element) {
-            if (selected == element) {
-                hud.dismiss();
-                selected = null;
-                return;
-            }
-            selected = element;
             var neighborSelect = { nodes: {}, links: {} };
 
             if (options.highlightNeighbors) {
@@ -37086,28 +37560,31 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                 });
             }
             neighborSelect.nodes[d.id] = true;
-            svgLinks.style("stroke", function (n) {
-                return neighborSelect.links[n.id]
-                    ? SELECT_STROKE_COLOR : EDGE_COLOR;
-            });
-            svgNodes.style("fill", function (n) {
-                return neighborSelect.nodes[n.id]
-                    ? SELECT_FILL_COLOR : groupColor[n.id];
-            });
+            function updateStyle() {
+                svgLinks.style("stroke", function (n) {
+                    return neighborSelect.links[n.id] ?
+                        SELECT_STROKE_COLOR : EDGE_COLOR;
+                });
+                svgNodes.style("fill", function (n) {
+                    return neighborSelect.nodes[n.id] ?
+                        SELECT_FILL_COLOR : groupColor[n.id];
+                });
+            }
+            updateStyle();
         
             hud.empty().append(nodeInfo(d));
             hud.show();
             hud.on("dismiss", function () {
-                if (selected != null) {
-                    selected = null;
-                }
+                neighborSelect = { nodes: {}, links: {} };
+                updateStyle();
             });
-        }
+        };
 
         function nodeInfo(d) {
             var $table =
                 JQ("<table/>", {
-                    id: "nodeInfo", class: "table table-condensed"
+                    id: "nodeInfo",
+                    class: "table table-condensed"
                 })
                 .append(JQ("<tbody/>"));
             function row(key, val) {
@@ -37133,7 +37610,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             args = args || {};
             var neigh = [];
             
-            links.forEach(function (link) {
+            function addNeighbor(link) {
                 var n;
                 if (link.source.id == node.id) {
                     n = link.target;
@@ -37147,12 +37624,16 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                         if (n[prop] != args[prop])
                             n = null;
                     }
-                }    
-                if (n != null && n !== node)
+                }
+                if (n !== undefined && n !== node)
                     neigh.push([ n, link ]);
+            }
+            _.each(links, addNeighbor);
+            _.each(_.values(hiddenNodes), function (hidden) {
+                _.each(hidden.edges, addNeighbor);
             });
             return neigh;
-        }
+        };
                 
         self.collapse = function (node) {
             var collapsed = node._collapsed = {};
@@ -37181,7 +37662,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                         edge.target = edge.target.id;
                         secondEdges.push(edge);
                         seconds.splice(j, 1);
-                    } else j++
+                    } else j++;
                 }
                 // Collapse nodes if not implicated with other nodes.
                 if (seconds.length <= 1) {
@@ -37195,38 +37676,41 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
                 }
             }
             for (var id in collapsed) {
-                self.hideNode(collapsed[id].node);
+                if (collapsed.hasOwnProperty(id))
+                    self.hideNode(collapsed[id].node);
             }
             return this;
-        }
+        };
         
         self.uncollapse = function (node) {
             if (!node._collapsed) return this;
             var origAutoUpdate = _autoUpdate;
             _autoUpdate = false;
             for (var id in node._collapsed) {
-                var d = node._collapsed[id];
-                self.unhideNode(d.node);
+                if (node._collapsed.hasOwnProperty(id)) {
+                    var d = node._collapsed[id];
+                    self.unhideNode(d.node);
+                }
             }
             
             self.render();
             _autoUpdate = true;
             delete node._collapsed;
             return this;
-        }
+        };
         
         self.merge = function (data, args) {
             args = args ? _.clone(args) : {};
-            args.hidden = args.hidden != null ? args.hidden : false;
-            if (nodes.length == 0 && links.length == 0) {
+            args.hidden = args.hidden !== null ? args.hidden : false;
+            if (nodes.length === 0 && links.length === 0) {
                 self.setData(data).render();
                 return this;
             }
             var origAutoUpdate = _autoUpdate;
             _autoUpdate = false;
             var nodeMap = {};
-            if (data.nodes == null) data.nodes = [];
-            if (data.edges == null) data.edges = [];
+            if (data.nodes === null) data.nodes = [];
+            if (data.edges === null) data.edges = [];
             var addedNodes = [];
             for (var i = 0; i < data.nodes.length; i++) {
                 var node = data.nodes[i];
@@ -37251,7 +37735,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             self.render();
             _autoUpdate = origAutoUpdate;
             return this;
-        }
+        };
         self.reset = function () {
             if (nodes) nodes.length = 0;
             if (links) links.length = 0;
@@ -37261,30 +37745,38 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             initialize();
             self.render();
             return self;
-        }
+        };
         self.dockNodes = function (names) {
             var nodes = [];
-            for (var i in names) {
+            for (var i = 0; i < names.length; i++) {
                 var node = self.findNode(names[i], 'name');
                 if (node) nodes.push(node);
             }
             dock.set(nodes);
-        }
+        };
         self.dockedNodes = function () {
             return dock.get();
-        }
+        };
         self.addDockAction = function (callback) {
             dock.addUpdateAction(callback);
-        }
+        };
         self.dockHudContent = function (callback) {
             dock.hudContent(callback);
-        }
+        };
         self.nodeProperty = function (node, prop) {
             var element = d3.select("#" + node.elementId);
             return element.style(prop);
+        };
+        self.isHidden = function (node) {
+            return hiddenNodes[node.id] !== undefined;
         }
         self.hideNode = function (node) {
-            var hNode = hiddenNodes[node.id] = { node: node, edges: [] };
+            var hNode = hiddenNodes[node.id];
+            if (hNode !== undefined) {
+                return node;
+            } else {
+                hNode = hiddenNodes[node.id] = { node: node, edges: [] };
+            }
             var splicedEdges = [];
             self.removeNode(node.id, splicedEdges);
             splicedEdges.forEach(function (edge) {
@@ -37292,30 +37784,53 @@ function (JQ, d3, _, Dock, EventEmitter, HUD) {
             });
             if (_autoUpdate) update();
             return node;
-        }
+        };
         self.unhideNode = function (node) {
             var hNode = hiddenNodes[node.id];
-            if (hNode == null)
+            if (hNode === undefined)
                 return node;
             node = hNode.node;
             nodes.push(node);
-            hNode.edges.forEach(function (edge) {
-                links.push(edge);
+            _.each(hNode.edges, function (edge) {
+                // Only unhide edge if neighbor is unhidden
+                var neighbor = edge.source.id == node.id ?
+                    edge.target : edge.source;
+                if (!self.isHidden(neighbor))
+                    links.push(edge);
             });
             delete hiddenNodes[node.id];
             if (_autoUpdate) update();
             return node;
-        }
+        };
         self.toggleHidden = function (node) {
-            return self.findNode(node.id) != null ?
+            return self.findNode(node.id) !== null ?
                 self.hideNode(node) : self.unhideNode(node);
-        }
+        };
         self.setElement = function (element) {
             options.element = element;
             $element = JQ(options.element);
-        }
+        };
         self.dock = dock;
         self.update = update;
+        self.pause = function () {
+            force.stop();
+            _paused = true;
+        }
+        self.resume = function () {
+            _paused = false;
+            force.resume();
+        }
+        self.forceDelta = function (property, value) {
+            if (Delta.hasOwnProperty(property)) {
+                Delta[property] += value;
+            }
+            if (property === "gravity") {
+                force.gravity(GRAVITY + value);
+            }
+            if (property === "theta") {
+                force.theta(THETA + value);
+            }
+        };
         
         return self;
     };
@@ -40035,7 +40550,8 @@ KBVis.define('util/progress',['jquery', 'underscore', 'util/spin'], function (JQ
         spinner: {},
         progress: {},
         type: _SPIN,
-        initialWidth: "100%"
+        initialWidth: "100%",
+        zIndex: 200
     };
     var spinnerDefaults = {
         length: 5,
@@ -40101,7 +40617,7 @@ KBVis.define('util/progress',['jquery', 'underscore', 'util/spin'], function (JQ
             if (options.fade) {
                 container = JQ("<div>")
                     .attr("id", _id)
-                    .css("z-index", 30)
+                    .css("z-index", options.zIndex)
                     .css("background-color", "rgba(100%, 100%, 100%, 0.8)")
                     .css("position", "absolute")
                     .css("top", 0)
@@ -42960,7 +43476,7 @@ KBVis.define('util/viewport',[
         };
         content.toolbox = function () {
             return self.toolbox;
-        };
+        };        
         return content;
         
         function createToolbox(options) {
@@ -43035,5 +43551,119 @@ KBVis.define('util/viewport',[
     }
     return Viewport;
 });
+KBVis.define('text!templates/slider.html',[],function () { return '<div class="slider-container">\n    <div class="slider-label"></div>\n    <div class="slider-pad">\n        <div class="slider"></div>\n    </slider>\n</div>';});
+
+KBVis.define('util/slider',["jquery", "underscore", "text!templates/slider.html"],
+function (JQ, _, template) {
+    
+    var defaults = {
+        title: null,
+        slide: function () {},
+        min: 0,
+        max: 100,
+        step: 1,
+        value: 50,
+        element: null,
+        width: "100%",
+        placement: "bottom"
+    };
+    function Slider(options) {
+        var self = this;
+        options = options ? _.clone(options) : {};
+        _.defaults(options, defaults);
+        var datum = options.value;
+        var tiptext = options.title ?
+            function () { return options.title + ": " + datum.toFixed(2); } :
+            function () { return datum.toFixed(2) };
+        if (options.label === undefined) {
+            options.label = options.title;
+        }
+        var callback = options.slide;
+        function onSlide(event, ui) {
+            datum = ui.value;
+            callback(datum);
+            self.$wrapper.find(".tooltip-inner").text(tiptext());
+        }
+        options.slide = onSlide;
+        self.$wrapper = JQ(_.template(template, options));
+        if (options.element !== undefined) {
+            JQ(options.element).append(self.$wrapper);
+        }
+        self.$wrapper.find(".slider-label").append(options.label);
+        self.$slider = self.$wrapper.find(".slider");
+        self.$slider.tooltip({
+            title: tiptext(),
+            placement: options.placement
+        });
+        self.$slider.slider(options);
+        return self;
+    }
+    Slider.prototype.element = function () { return this.$wrapper; };
+    return Slider;
+});
+KBVis.define('transformers/netindex',["underscore"], function (_) {
+    
+    var defaults = {
+        maxNodes: 500,
+        maxEdges: 2000,
+        nodeFilter: function () { return true; },
+        edgeFilter: function () { return true; }
+    };
+    function NetworkIndex(data, options) {
+        options = options ? _.clone(options) : {};
+        _.defaults(options, defaults);
+        var result = {};
+        for (var property in data) {
+            if (data.hasOwnProperty(property)) {
+                result[property] = data[property];
+            }
+        }
+        result.nodes = [];
+        result.edges = [];
+        var nodeMap = {};
+        
+        var numNodes = _.min([data.nodes.length, options.maxNodes]);
+        var numEdges = _.min([data.edges.length, options.maxEdges]);
+        var i = 0;
+        while (result.nodes.length < numNodes && i < data.nodes.length) {
+            if (options.nodeFilter(data.nodes[i])) {
+                var node = _.extend({}, data.nodes[i]);
+                nodeMap[node.id] = i;
+                node.kbid = node.id;
+                node.group = node.type;
+                node.id = i;
+                result.nodes.push(node);
+            }
+            i++;
+        }
+        i = 0;
+        while (result.edges.length < numEdges && i < data.edges.length) {
+            if (nodeMap[data.edges[i].nodeId1] !== undefined &&
+                nodeMap[data.edges[i].nodeId2] !== undefined &&
+                options.edgeFilter(data.edges[i])
+            ) {
+                var edge = _.extend({}, data.edges[i]);
+                edge.source = parseInt(nodeMap[edge.nodeId1], 0);
+                edge.target = parseInt(nodeMap[edge.nodeId2], 0);
+                edge.weight = 1;
+                result.edges.push(edge);
+            }
+            i++;
+        }
+        for (var prop in data) {
+            if (!result.hasOwnProperty(prop)) {
+                result[prop] = data[prop];
+            }
+        }
+        return result;
+    }
+    return NetworkIndex;
+});
+KBVis.define('text!templates/checkbox.html',[],function () { return '<label class="checkbox">\n    <input type="checkbox" value="<%= value %>"<%= checked ? " checked" : ""%>>\n    <%= label %>\n</label>';});
+
+KBVis.define('text!templates/error-alert.html',[],function () { return '<div class="alert alert-block alert-danger">\n  <button type="button" class="close" data-dismiss="alert">&times;</button>\n  <h4>Error!</h4>\n  <%= message %>\n  <% if (typeof errors !== "undefined") { %>:\n      <ul>\n      <% _.each(errors, function (e) { %>\n          <li><%= e %></li>\n      <% }); %>\n      </ul>\n  <% } %>\n</div>';});
+
+KBVis.define('text!sample-data/network1.json',[],function () { return '{\n    "datasets": [\n        {\n            "description": "Data Set description", \n            "id": "kb|netdataset.ws//DataSet1", \n            "name": "First Data Set", \n            "networkType": "FUNCTIONAL_ASSOCIATION", \n            "properties": {\n                "coex_filter_args": "-i data.csv -s sample.csv -o datafiltered.csv -m anova -n 100", \n                "coex_net_args": "-i datafiltered.csv -o edge_list.csv -c 0.75 ", \n                "original_data_id": "ws://DataSet1", \n                "original_data_type": "workspace"\n            }, \n            "sourceReference": "WORKSPACE", \n            "taxons": [\n                "kb|g.3899"\n            ]\n        }\n    ], \n    "edges": [\n        {\n            "datasetId": "kb|netdataset.ws//DataSet1", \n            "directed": "false", \n            "id": "kb|netedge.0", \n            "name": "interacting gene pair", \n            "nodeId1": "kb|netnode.3", \n            "nodeId2": "kb|netnode.0", \n            "strength": "0.7", \n            "userAnnotations": {}\n        }, \n        {\n            "datasetId": "kb|netdataset.ws//DataSet1", \n            "directed": "false", \n            "id": "kb|netedge.1", \n            "name": "interacting gene pair", \n            "nodeId1": "kb|netnode.4", \n            "nodeId2": "kb|netnode.0", \n            "strength": "1", \n            "userAnnotations": {}\n        }, \n        {\n            "datasetId": "kb|netdataset.ws//DataSet1", \n            "directed": "false", \n            "id": "kb|netedge.2", \n            "name": "interacting gene pair", \n            "nodeId1": "kb|netnode.4", \n            "nodeId2": "kb|netnode.1", \n            "strength": "0.9", \n            "userAnnotations": {}\n        }, \n        {\n            "datasetId": "kb|netdataset.ws//DataSet1", \n            "directed": "false", \n            "id": "kb|netedge.3", \n            "name": "interacting gene pair", \n            "nodeId1": "kb|netnode.4", \n            "nodeId2": "kb|netnode.2", \n            "strength": "0.85", \n            "userAnnotations": {}\n        }, \n        {\n            "datasetId": "kb|netdataset.ws//DataSet1", \n            "directed": "false", \n            "id": "kb|netedge.4", \n            "name": "interacting gene pair", \n            "nodeId1": "kb|netnode.3", \n            "nodeId2": "kb|netnode.1", \n            "strength": "1", \n            "userAnnotations": {}\n        }\n    ], \n    "nodes": [\n        {\n            "entityId": "kb|g.3899.locus.10011", \n            "id": "kb|netnode.0", \n            "type": "GENE", \n            "userAnnotations": {\n                "external_id": "Athaliana.TAIR10:AT2G15410", \n                "functions": "transposable element gene.[Source:TAIR;Acc:AT2G15410]"\n            }\n        }, \n        {\n            "entityId": "kb|g.3899.locus.3560", \n            "id": "kb|netnode.1", \n            "type": "GENE", \n            "userAnnotations": {\n                "external_id": "Athaliana.TAIR10:AT1G32320", \n                "functions": "MAP kinase kinase 10 [Source:EMBL;Acc:AEE31463.1]", \n                "ontologies": {\n                    "GO:0006468": [\n                        {\n                            "desc": "protein phosphorylation", \n                            "domain": "biological_process", \n                            "ec": "IEA"\n                        }\n                    ]\n                }\n            }\n        }, \n        {\n            "entityId": "kb|g.3899.locus.10793", \n            "id": "kb|netnode.2", \n            "type": "GENE", \n            "userAnnotations": {\n                "external_id": "Athaliana.TAIR10:AT2G21600", \n                "functions": "protein RER1B [Source:EMBL;Acc:AEC07201.1]"\n            }\n        }, \n        {\n            "entityId": "cluster.1", \n            "id": "kb|netnode.3", \n            "type": "CLUSTER", \n            "userAnnotations": {}\n        }, \n        {\n            "entityId": "cluster.2", \n            "id": "kb|netnode.4", \n            "type": "CLUSTER", \n            "userAnnotations": {}\n        }\n    ]\n}\n';});
+
 KBVis.define("undefined", function(){});
 window.KBVis = KBVis; jQuery.noConflict(true); }());

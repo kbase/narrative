@@ -628,7 +628,7 @@
                 data = JSON.parse(text);
             }
 
-            element.kbaseMediaEditorNarrative({ mediaData: data, viewOnly: false, editOnly: true, ws: this.ws_id });
+            element.kbaseMediaEditorNarrative({ mediaData: data, viewOnly: false, editOnly: true, ws: this.ws_id, auth: this.ws_auth });
 
         },
 

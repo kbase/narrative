@@ -126,43 +126,30 @@ $.KBWidget({
                               .addClass("alert alert-danger")
                               .css({"display" : "none"});
 
+            var $savePanel = $("<div/>")
+                             .addClass("alert alert-warning")
+                             .css({"display": "none"});
+
             var $saveButton = $("<button>")
                               .addClass("btn btn-primary")
                               .append("Save media")
                               .click(function(event) {
-                                  saveEditedMedia(ws, $errorPanel);
+                                  saveEditedMedia(ws, $errorPanel, $savePanel);
                               });
 
             container.append($saveButton);
             container.append($errorPanel);
+            container.append($savePanel);
 
 //            container.append('<a class="btn btn-primary save-to-ws-btn">Save to a workspace -></a>');
 //            events();
         }
 
-        function saveEditedMedia(workspace, $errorPanel) {
+        function saveEditedMedia(workspace, $errorPanel, $savePanel) {
             console.log("saving media to " + workspace);
 
             $errorPanel.css({"display" : "none"});
             $errorPanel.html("");
-
-            var cmpds = $('[id^=' + randId + 'cmpds]');
-            var conc = $('[id^=' + randId + 'conc]');
-            var minflux = $('[id^=' + randId + 'minflux]');
-            var maxflux = $('[id^=' + randId + 'maxflux]');
-            var newMedia = {
-                media: 'testSave',
-                workspace: 'jko',
-                name: 'testSave',
-                isDefined: 0,
-                isMinimal: 0,
-                type: 'unknown',
-                compounds: [cmpds],
-                concentrations: [conc],
-                maxflux: [minflux],
-                minflux: [maxflux]
-
-            };
 
             var mediaName = $("#" + randId + "media-name").val().trim().replace(/\s+/g, "_");
             var mediaPH = $("#" + randId + "media-ph").val().trim().replace(/\s+/g, "_");
@@ -181,7 +168,75 @@ $.KBWidget({
                 $errorPanel.css({"display" : "inline"});
             }
 
-            console.log(newMedia);
+            else {
+                var cmpdDivs = $('[id^=' + randId + 'cmpds]');
+                var concDivs = $('[id^=' + randId + 'conc]');
+                var minfluxDivs = $('[id^=' + randId + 'minflux]');
+                var maxfluxDivs = $('[id^=' + randId + 'maxflux]');
+
+                // console.log(cmpdDivs);
+                // console.log(concDivs);
+                // console.log(minfluxDivs);
+                // console.log(maxfluxDivs);
+
+                var cmpds = [];
+                var conc = [];
+                var minflux = [];
+                var maxflux = [];
+
+                for (var i=0; i<cmpdDivs.length; i++) {
+                    cmpds[i] = $(cmpdDivs[i]).val();
+                    conc[i] = $(concDivs[i]).val();
+                    minflux[i] = $(minfluxDivs[i]).val();
+                    maxflux[i] = $(maxfluxDivs[i]).val();
+                }
+
+                // typedef structure {
+                //     media_id media;
+                //     workspace_id workspace;
+                //     string name;
+                //     bool isDefined;
+                //     bool isMinimal;
+                //     string type;
+                //     list<string> compounds;
+                //     list<float> concentrations;
+                //     list<float> maxflux;
+                //     list<float> minflux;
+                //     bool overwrite;
+                //     string auth;
+                // } addmedia_params;
+                var newMedia = {
+                    media: mediaName,
+                    workspace: workspace,
+                    name: mediaName,
+                    isDefined: 0,
+                    isMinimal: 0,
+                    compounds: cmpds,
+                    concentrations: conc,
+                    maxflux: minflux,
+                    minflux: maxflux,
+                    auth: token
+                };
+
+
+                console.log(newMedia);
+
+                $savePanel.html("Saving...");
+                $savePanel.css({"display":"inline"});
+
+                var saveAJAX = fba.addmedia(newMedia);
+                $.when(saveAJAX).done(function(data){
+                    $savePanel.html("Done!");
+                });
+                // fba.addmedia(newMedia, function(metadata) {
+                // },
+                // function(error) {
+                //     $savePanel.css({"display":"none"});
+                //     $errorPanel.html("Error while saving.");
+                //     $errorPanel.css({"display":"inline"});
+                //     console.log(error);
+                // });
+            }
         }
 
 

@@ -105,9 +105,185 @@
             /* indices of displayed columns in result array */
             this.NAME_IDX = 0;
             this.TYPE_IDX = 1;
-            //this.$tbl.append(this.table);
+            // Add click handler for rows
+            var self = this;
+            $("#kb-ws .kb-table tbody tr").on("mouseover", function( e ) {
+                if ( $(this).hasClass('row_selected') ) {
+                    $(this).removeClass('row_selected');
+                }
+                else {
+                    $elem.$('tr.row_selected').removeClass('row_selected');
+                    $(this).addClass('row_selected');
+                }
+            });
+            var get_selected = function(tbl) {
+                return tbl.$('tr.row_selected');
+            }
+            $("#kb-ws .kb-table tbody tr").on("click", function( e ) {
+                if ( $(this).hasClass('row_selected') ) {
+                    var row = $(this)[0];
+                    //console.debug("obj",$(this));
+                    var name = row.children[0].textContent;
+                    var type = row.children[1].textContent;
+                    // populate and show info panel
+                    self.infoPanel(name, type, function(info) {
+                        info.modal();
+                    });
+                }
+            });
 			return this;
 		},
+
+        /* Convert object metadata from list to object */
+        _meta2obj: function(m) {
+            return {
+                'id': m[0], // an object_id
+                'type': m[1], //an object_type
+                'moddate': m[2].replace('T',' '), // a timestamp
+                'instance': m[3], // instance int
+                'command': m[4], // command string
+                'lastmodifier': m[5], // a username string
+                'owner': m[6], // a username string
+                'workspace': m[7], // a workspace_id string
+                'ref': m[8], // a workspace_ref string
+                'chsum': m[9], // a string
+                // XXX: need to do more with this one:
+                //'metadata': m[10] // an object
+            };
+        },
+
+        infoPanel: function(name, type, callback) {
+            console.debug("infoPanel.begin");
+            // Load history for this obj
+            var key = this._item_key(name, type);
+            var meta = this._meta2obj(this.table_meta[key]);
+            var opts = {workspace: this.ws_id, auth: this.ws_auth, id: meta.id, type: meta.type};
+            //console.debug("get history, opts=",opts);
+            var self = this;
+            this.ws_client.object_history(opts,
+                function (results) {
+                    var $elem = $('#kb-obj');
+                    $elem.find(".modal-title").text(name);
+                    var objlist = _.map(results, self._meta2obj);
+                    var versions = _.map(objlist, function(m) {
+                            return [m.instance, m.moddate, m.lastmodifier]; 
+                    });
+                    self.infoTable(versions, objlist);
+                    callback($elem);
+                },
+                function () {
+                    alert("Failed to get info for '" + name + "'");
+                }
+            );
+        },
+
+        infoTable : function(data, objlist) {
+            console.debug("infotable for objects",objlist);
+            var t = $('#kb-obj .kb-table table').dataTable();
+            t.fnDestroy();
+            t.dataTable({
+                aaData: data,
+                aoColumns : [
+                    { sTitle: 'Version', sWidth: "8em", bSortable: true, },
+                    { sTitle: 'Date', sWidth: "15em", bSortable: true },
+                    { sTitle: 'User', sWidth: "20em", bSortable: false }
+                ],
+                aaSorting: [[0, 'desc']],
+                bAutoWidth: false,
+                bFilter: false,
+                bInfo: false,
+                bLengthChange: false,
+                bPaginate: true,
+                iDisplayLength: 5,
+                sPaginationType: "bootstrap"                
+            });
+            // Add click handler for rows
+            var self = this;
+            var _tr = "#kb-obj .kb-table tbody tr";
+            var $rows = $(_tr); 
+            $rows.on("mouseover", function( e ) {
+                if ( $(this).hasClass('row_selected') ) {
+                    $(this).removeClass('row_selected');
+                }
+                else {
+                    t.$('tr.row_selected').removeClass('row_selected');
+                    $(this).addClass('row_selected');
+                }
+            });
+            var get_selected = function(tbl) {
+                return tbl.$('tr.row_selected');
+            }
+            $rows.on("click", function( e ) {
+                if ( $(this).hasClass('row_selected') ) {
+                    var row = $(this)[0];
+                    var version = row.children[0].textContent * 1;
+                    // pick out instance that matches version
+                    var info = _.reduce(objlist, function(memo, val) {
+                        console.debug(val.instance + " == " + version + "?");
+                        return val.instance == version ? val : memo;
+                    }, null);
+                    if (info != null) {
+                        // populate and show description
+                        // XXX: when desc. is done, check for add-ability to narr.
+                        self.descriptionPanel($("#kb-obj table.kb-info"), info);
+                    }
+                }
+            });
+            // Auto-select first row
+            $(_tr + ':first-of-type').mouseover().click();
+        },
+
+        descriptionPanel: function($elem, data) {
+            console.log("Populate descriptionPanel desc=",data);
+            var $footer = $('#kb-obj .modal-footer');
+            $footer.empty();
+            var self = this;
+            var body = $elem.find('tbody');
+            body.empty();
+            $.each(data, function(key, value) {
+                var tr = body.append($('<tr>'));                
+                tr.append($('<td>').text(key));
+                tr.append($('<td>').text(value));
+            });
+            // XXX: hack! add button for viz if network
+            if (data.type == 'Networks') {
+                this.addNetworkVisualization(data);
+            }
+        },
+
+        addNetworkVisualization: function(data) {
+            console.debug("Add button for Networks data");
+            var oid = data.id;
+            var $footer = $('#kb-obj .modal-footer');
+            var $btn = $footer.append($('<button>')
+                .attr('type',"button")
+                .addClass("btn btn-primary")
+                .text("Insert visualization"));
+            var self = this;
+            $btn.click(function(e) {
+                var cell = IPython.notebook.insert_cell_at_bottom('markdown');
+                // put div inside cell with an addr
+                var eid = self._uuidgen();
+                var content = "<div id='" + eid + "'></div>";
+                cell.set_text(content);
+                // re-render cell to make <div> appear
+                cell.rendered = false;
+                cell.render();
+                // slap network into div by addr
+                var $target = $('#' + eid);
+                $target.css({'margin': '-10px'});
+                $target.ForceDirectedNetwork({
+                    workspaceID: self.ws_id + "." + oid,
+                    token: self.ws_auth
+                });
+            });
+        },
+
+        _uuidgen: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);});
+         },
 
         /**
          * Render the widget.
@@ -136,17 +312,6 @@
                             console.error("getting objects for workspace " + that.ws_id, err);
                             that.$loading.hide();
                             that.$errorMessage.show();
-                            /* XXX: put junk in there
-                            results = [ ];
-                            for (var i=0; i < 5; i++) {
-                                results.push(['luke' + i, 'Genome']);
-                                results.push(['leia' + i, 'Model']);
-                                results.push(['anakin' + i, 'Genome']);
-                                results.push(['amidala' + i, 'Model']);
-                            }
-                            that.updateResults(results);
-                            that.createTable();
-                            */
                         }
                     )
                     that.$loading.hide();
@@ -247,13 +412,31 @@
                 mdstring = mdstring + key + "=" + val + "\n";
             });
             console.log('notebook metadata = ' + mdstring);
-            this.tableData = [ ]; // clear array
+            // just columns shown
+            this.tableData = [ ];
+            // all data from table, keyed by object name + type
+            this.table_meta = { }; // *all* data from table
+            this.table_meta_versions = {}; /* all versions of selected objects, empty for now */
             // Extract selected columns from full result set
             var i1 = this.NAME_IDX, i2 = this.TYPE_IDX;
             for (var i=0; i < results.length; i++) {
-                this.tableData.push([results[i][i1], results[i][i2]]);
+                var name = results[i][i1], type = results[i][i2];
+                this.tableData.push([name, type]);
+                this.table_meta[this._item_key(name, type)] = results[i];
             }
             return this;
+        },
+
+        /**
+         * Get key for one row in the object table.
+         *
+         * @param name (string): object name
+         * @param type (string): object type
+         * @return (string) key
+         * @private
+         */
+        _item_key: function(name, type) {
+            return name + '/' + type;
         },
 
 		loggedIn: function(client, token) {

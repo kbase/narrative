@@ -195,6 +195,7 @@
                         'result_handler': this.plantsCreateOutput
                     }
                     break;
+
                 case 'Assemble Contigs':
                     return {
                         'config' : this.runAssemblyConfig,
@@ -203,8 +204,15 @@
                     }
                     break;
 
+                case 'Assemble Genome':
+                    return {
+                        'config' : this.assembleGenomeConfig,
+                        'command_builder' : this.assembleGenomeCommand(),
+                        'result_handler' : this.assembleGenomeCreateOutput,
+                    }
+                    break;
+
                 case 'Annotate Genome':
-                    console.log('Annotate Genome');
                     return {
                         'config' : this.annotateGenomeConfig,
                         'command_builder' : this.annotateGenomeCommand(),
@@ -212,7 +220,15 @@
                     };
                     break;
 
-                case 'Genome To FBA Model':
+                case 'View Genome Details':
+                    return {
+                        'config' : this.viewGenomeConfig,
+                        'command_builder' : this.viewGenomeCommand(),
+                        'result_handler' : this.viewGenomeCreateOutput,
+                    };
+                    break;
+
+                case 'Genome To Draft FBA Model':
                     return {
                         'config' : this.genomeToFbaConfig,
                         'command_builder' : this.genomeToFbaCommand(),
@@ -399,9 +415,56 @@
 
         },
 
+        /* ---------- Assemble Genome from Contigs ----------- */
+        assembleGenomeConfig: {
+            'Identifiers' : {
+                'Contig Set' : '',
+            },
+
+            'Output' : {
+                'New Genome' : '',
+            }
+
+        },
+
+        assembleGenomeCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "assemble_genome", params);
+            };
+        },
+
+        assembleGenomeCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+
+            var tableRow = function(a, b) {
+                return $("<tr>")
+                       .append("<td>" + a + "</td>")
+                       .append("<td>" + b + "</td>");
+            };
+
+            var $metaTable = $("<table>")
+                             .addClass("table table-striped table-bordered")
+                             .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+                             .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
+                             .append(tableRow("Scientific Name", data[10].scientific_name))
+                             .append(tableRow("Size", data[10].size))
+                             .append(tableRow("GC Content", (100*(data[10].gc)).toFixed(2) + "%"))
+                             .append(tableRow("Location", data[7]));
+
+            element.append($metaTable);
+
+        },
+
         /* ---------- Annotate Assembled Genome ----------- */
         annotateGenomeConfig: {
-            'Not finished yet' : {},
+            'Identifiers' : {
+                'Genome' : '',
+            },
+            'Output' : {
+                'New Genome ID (optional)': '',
+            },
 
         },
 
@@ -414,6 +477,53 @@
         },
 
         annotateGenomeCreateOutput: function(element, text) {
+            element.append(text);
+        },
+
+        /* ---------- View Genome Details ----------- */
+        viewGenomeConfig: {
+            'Identifiers' : {
+                'Genome' : '',
+            },
+
+        },
+
+        viewGenomeCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "view_genome_details", params);
+            };
+        },
+
+        viewGenomeCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+
+            var tableRow = function(a, b) {
+                return $("<tr>")
+                       .append("<td>" + a + "</td>")
+                       .append("<td>" + b + "</td>");
+            };
+
+            var calcGC = function(gc, total) {
+                if (gc > 1)
+                    gc = gc/total;
+                return (100*gc).toFixed(2);
+            };
+
+            console.log(data);
+
+            var $metaTable = $("<table>")
+                             .addClass("table table-striped table-bordered")
+                             .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+                             .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
+                             .append(tableRow("Scientific Name", data[10].scientific_name))
+                             .append(tableRow("Size", data[10].size + " bp"))
+                             .append(tableRow("GC Content", calcGC(data[10].gc, data[10].size) + "%"))
+                             .append(tableRow("Number Features", data[10].number_features))
+                             .append(tableRow("Location", data[7]));
+
+            element.append($metaTable);
 
         },
 

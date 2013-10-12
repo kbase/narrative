@@ -57,7 +57,7 @@ def run(params):
 
 
     # 1. Do setup.
-    _num_done, total_work = 0, 6
+    _num_done, total_work = 0, 5
     _num_done += 1
     print_progress("Parse Parameters", _num_done, total_work)
 
@@ -65,11 +65,8 @@ def run(params):
     inv_lines = 100
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    genome = params['Identifiers.Genome']
-    out_genome = params['Output.New Genome ID (optional)']
-
-    out_genome = out_genome.strip()
-    out_genome = out_genome.replace(' ', '_')
+    contig_file = params['Identifiers.Contig Set']
+    out_genome = params['Output.New Genome']            
 
     # 2. Setup invocation and double-check workspace
     _num_done += 1
@@ -77,31 +74,28 @@ def run(params):
     inv = InvocationService(URLS.invocation)
     inv.run_pipeline("", "kbws-workspace " + workspace, [], 100, '/')
 
-    # 3. Run genome annotation.
+    # 3. Run sequence to genome.
     _num_done += 1
-    print_progress("Annotate Genome", _num_done, total_work)
-    run_str = "ga-annotate-ws-genome " + genome
-    if (out_genome):
-        run_str += " --newuserid " + out_genome
+    print_progress("Build Contig Set into a Genome", _num_done, total_work)
+    inv.run_pipeline("", "ga-seq-to-genome " + contig_file + " --genomeid " + out_genome, [], 100, '/')
 
-    res_list = inv.run_pipeline("", run_str, [], 100, '/')
-
-
-
-    # 4. Pass it forward to the client.
+    # 4. Fetch genome.
     _num_done += 1
-    print_progress("Rendering Job Information", _num_done, total_work)
-    job_info = res_list[0]
+    print_progress("Fetching Genome for Display", _num_done, total_work)
+    wsClient = workspaceService(URLS.workspace)
 
-    if (out_genome):
-        genome = out_genome
+    get_genome_params = {
+        'id' : out_genome,
+        'type' : 'Genome',
+        'workspace' : workspace,
+        'auth' : token,
+    }
+    genome_meta = wsClient.get_objectmeta(get_genome_params)
 
-    job_return = "Annotation job submitted successfully!<br/>" + job_info[1] + "<br/>"
-    job_return += "This job will take approximately an hour.<br/>"
-    job_return += "Your annotated genome will have ID: <b>" + genome + "</b><br/>"
-
-    print job_return
-    return 0
+    # 5. Pass it forward to the client.
+    _num_done += 1
+    print_progress("Rendering Genome Information", _num_done, total_work)
+    print json.dumps(genome_meta)
 
 if __name__ == '__main__':
     sys.exit(main())

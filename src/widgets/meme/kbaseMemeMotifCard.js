@@ -111,6 +111,18 @@
   			.style("text-anchor", "end")
 			  .text("Bits");
 
+			var letterWidth = 1;
+
+			var browserName = (function(){
+			  var N= navigator.appName, ua= navigator.userAgent, tem;
+			  var M= ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+			  if(M && (tem= ua.match(/version\/([\.\d]+)/i))!= null) M[2]= tem[1];
+			  M= M? [M[1], M[2]]: [N, navigator.appVersion,'-?'];
+			  return M;
+			 })(); 
+//		document.write(browserName);	
+			if (browserName.toString().match(/Firefox/i)) {letterWidth = x.rangeBand()};
+
 			var column = svg.selectAll(".sequence-column")
 			  .data(data)
 				.enter()
@@ -128,7 +140,7 @@
 					.attr("class", function(e) { return "memelogo-letter-" + e.letter; } )
 					.style( "text-anchor", "middle" )
 					.style( "font-family", "sequencelogo" )
-					.attr( "transform", function(e) {return "scale(" + x.rangeBand()+ "," + (y(e.y0) - y(e.y1)) + ")"})
+					.attr( "transform", function(e) {return "scale(" + letterWidth + "," + (y(e.y0) - y(e.y1)) + ")"})
 					.attr( "textLength", x.rangeBand() )
 					.attr( "lengthAdjust", "spacingAndGlyphs" )
 					.attr( "font-size", "1.37")
@@ -299,5 +311,6 @@
 	
     });
 })( jQuery );
+
 
 

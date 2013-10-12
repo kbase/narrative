@@ -54,6 +54,7 @@
             if (self.options.workspaceID === undefined) {
                 fetchAjax = self.exampleData();
             } else if (self.options.token) {
+                $.ajaxSetup({ cache: true });
                 var wsRegex = /^(\w+)\.(.+)/;
                 var wsid = wsRegex.exec(self.options.workspaceID);
                 if (wsid !== null && wsid[1] && wsid[2]) {
@@ -78,12 +79,14 @@
             }
             KBVis.require(["jquery", "underscore", "renderers/network",
                     "util/viewport", "text!sample-data/network1.json",
-                    "transformers/netindex", "util/slider",
-                    "text!templates/checkbox.html", "jquery-ui"
+                    "transformers/netindex", "util/slider", "util/progress",
+                    "text!templates/checkbox.html",
+                    "text!templates/error-alert.html",
+                    "jquery-ui"
                 ],
                 function (
                     JQ, _, Network, Viewport, Example, NetIndex, Slider,
-                    CheckboxTemplate
+                    Progress, CheckboxTemplate, ErrorTemplate
                 ) {
                     Example = JSON.parse(Example);
                     var minStrength = 0.7;
@@ -100,9 +103,6 @@
                     var network = new Network({
                         element: viewport,
                         dock: false,
-                        nodeLabel: {
-                            type: "CLUSTER"
-                        },
                         infoOn: "hover",
                         edgeFilter: function (edge) {
                             return edge.source != edge.target &&
@@ -144,35 +144,44 @@
                         }
                     });
                     viewport.renderer(network);
-                    forceSlider(viewport, "charge", "Node charge", JQ("<i>", {
-                        class: "icon-magnet"
-                    }), 5);
-                    forceSlider(viewport, "distance", "Edge distance", JQ("<i>", {
-                        class: "icon-resize-horizontal"
-                    }));
-                    forceSlider(viewport, "strength", "Edge strength", JQ("<span>", {
-                        class: "glyphicon glyphicon-link"
-                    }), 0.015);
+                    forceSlider(viewport, "charge", "Node charge",
+                        JQ("<i>", { class: "icon-magnet" }), 5);
+                    forceSlider(viewport, "distance", "Edge distance",
+                        JQ("<i>", { class: "icon-resize-horizontal" }));
+                    forceSlider(viewport, "strength", "Edge strength",
+                         JQ("<span>", { class: "glyphicon glyphicon-link" }),
+                         0.015);
                     forceSlider(viewport, "gravity", "Gravity", "G", 0.012);
                     var toolbox = viewport.toolbox();
                     addSlider(toolbox);
                     addSearch(toolbox);
 
+                    var progress = new Progress({
+                        type: Progress.SPIN,
+                        element: viewport
+                    });
+                    progress.show();
                     JQ.when(fetchAjax).done(function (result) {
-                        var data = NetIndex(result.data);
+                        var maxGenes = 300;
+                        var geneCounter = 0;
+                        var data = NetIndex(result.data, {
+                            maxEdges: 100000
+                        });
+                        progress.dismiss();
                         try {
                             network.setData(data);
                         } catch (error) {
-                            KBVis.require(["text!templates/error-alert.html"], function (template) {
-                                JQ(self.$elem).prepend(_.template(template, error));
-                            });
+                            JQ(self.$elem)
+                                .prepend(_.template(ErrorTemplate, error));
+                            return;
                         }
                         network.render();
                         addDatasetDropdown(toolbox, data);
                         addClusterDropdown(toolbox, data);
                     });
 
-                    function forceSlider(viewport, property, title, label, factor) {
+                    function forceSlider(
+                        viewport, property, title, label, factor) {
                         if (factor === undefined)
                             factor = 1;
                         viewport.addTool((new Slider({
@@ -205,14 +214,13 @@
                             }
                         });
                         $container.prepend(JQ("<div>", {
-                                class: "btn btn-default tool"
+                            class: "btn btn-default tool"
+                        })
+                        .append(JQ("<div>", {
+                                class: "btn-pad"
                             })
-                            .append(JQ("<div>", {
-                                    class: "btn-pad"
-                                })
-                                .append(slider.element())
-                            )
-                        );
+                            .append(slider.element())
+                        ));
                     }
 
                     function addSearch($container) {
@@ -220,20 +228,14 @@
                             class: "btn btn-default tool"
                         });
                         wrapper
-                            .append(JQ("<div>", {
-                                    class: "btn-pad"
-                                })
+                            .append(JQ("<div>", { class: "btn-pad" })
                                 .append(JQ("<input/>", {
                                     id: "network-search",
                                     type: "text",
                                     class: "input-xs"
-                                })))
-                            .append(JQ("<div/>", {
-                                    class: "btn-pad"
-                                })
-                                .append(JQ("<i/>", {
-                                    class: "icon-search"
-                                })));
+                                }))
+                            ).append(JQ("<div/>", { class: "btn-pad" })
+                                .append(JQ("<i/>", { class: "icon-search" })));
                         $container.prepend(wrapper);
                         JQ("#network-search").keyup(function () {
                             network.updateSearch(JQ(this).val());
@@ -317,12 +319,9 @@
                                 return;
                             var node = network.findNode(id);
                             if (node === null) {
-                                KBVis.require(["text!templates/error-alert.html"],
-                                    function (template) {
-                                        JQ("#container").prepend(_.template(template, {
-                                            message: "Could not find node " + id
-                                        }));
-                                    });
+                                self.$elem.prepend(_.template(ErrorTemplate, {
+                                    message: "Could not find node " + id
+                                }));
                                 return;
                             }
                             network.pause();

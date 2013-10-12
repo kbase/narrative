@@ -22,15 +22,23 @@
                 <div id="logo" class="col-sm-1">
                     <a href="http://www.kbase.us"><img src="static/images/kbase_logo.png" alt="KBase User Home" /></a>
                 </div>
-                <div class="col-sm-11">
+                <div id="apps_menu" class="dropdown col-sm-1">
+                  <button type="button" class="btn btn-default" data-toggle="dropdown" href="#" onclick="$('#apps_menu_items').toggle();">Apps <span class="caret"></span></button>
+                  <ul class="dropdown-menu" role="menu" id="apps_menu_items">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#"><a href="http://www.kbase.us/services/docs/invocation/Iris/iris.html">IRIS</a></li>
+                    <li role="presentation"><a role="menuitem" tablindex="-1" href="#"><a href="http://140.221.84.142/browse.html">Workspace Browser</a></li>
+                  </ul>
+                </div>
+                <div class="col-sm-8">
                     <nav id="header_nav" role="navigation" class="row">
                         <ul>
-                            <li class="alt"><a href="http://www.kbase.us/services/docs/invocation/Iris/">IRIS</a></li>
-                            <li class="alt"><a href="http://140.221.84.142/browse.html">Workspace Browser</a></li>
-                            <!-- <li id="searchlabel"><a href="https://niya.qb3.berkeley.edu/search_client/search_client.html">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>-->
-                            <li><a href="search.shtml">Search</a></li>
+                            <li id="searchlabel"><a href="https://niya.qb3.berkeley.edu/search_client/search_client.html">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>
+                            
                         </ul>
                     </nav>
+                </div>
+                <div class="col-sm-2">
+                    <div id="login-widget" class="pull-right" />
                 </div>
             </div>
         </header>

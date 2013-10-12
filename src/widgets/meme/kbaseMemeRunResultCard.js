@@ -53,7 +53,7 @@
 					append($("<table/>").addClass("kbgo-table")
 					    .append($("<tr/>").append("<td>ID</td><td>" + self.collection.data.id + "</td>"))
 					    .append($("<tr/>").append("<td>Created: </td><td>" + creationMonth +"/"+ d.getDate() +"/"+ d.getFullYear() +" "+ d.getHours() +":"+ d.getMinutes() +":"+ d.getSeconds() + "</td>"))
-						.append($("<tr/>").append("<td>Number of motifs</td><td>" + self.collection.data.nmotifs + "</td>"))
+						.append($("<tr/>").append("<td>Number of motifs</td><td>" + self.collection.data.motifs.length + "</td>"))
 					));
 					self.$elem.append("<h3>View motifs</h3>");
 

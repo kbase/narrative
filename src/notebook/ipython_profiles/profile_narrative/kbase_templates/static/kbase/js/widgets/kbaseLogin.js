@@ -66,15 +66,15 @@
         get_kbase_cookie : function (field) {
 
             var chips = sessionStorage.getItem('kbase_session');
-            console.log(sessionStorage);
+//            console.log(sessionStorage);
             if (chips != undefined) {
-            console.log(chips);
+//            console.log(chips);
                 chips = JSON.parse(chips);
             }
             else {
                 chips = {};
             }
-            console.log(chips);
+//            console.log(chips);
 
             return field == undefined
                 ? chips
@@ -1010,7 +1010,7 @@
 
                                 if (data.kbase_sessionid) {
 				    console.log(data);
-				    $.cookie('kbase_session',
+				    /* $.cookie('kbase_session',
 					     'un=' + data.user_id
 					     + '|'
 					     + 'kbase_sessionid=' + data.kbase_sessionid 
@@ -1018,7 +1018,7 @@
 					     + 'user_id=' + data.user_id
 					     + '|'
 					     + 'token=' + data.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'))
-
+				    */
                                     var cookieArray = [];
 
                                     var args = { success : 1 };//this.get_kbase_cookie();

@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrativeWorkspace.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseData.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFuncResults.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrap-fileupload.min.css") }}" type="text/css" />
 
     <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
@@ -225,7 +226,7 @@ class="notebook_app"
         </div>
         <div class="kb-ws-browser-link">
             See more in the 
-            <a href="http://140.221.84.142/">workspace browser</a>.
+            <a href="http://140.221.84.142/" target="_blank">workspace browser</a>.
         </div>
         <div class="kb-function-panel left-pane">
             <div class="kb-function-header">
@@ -235,12 +236,57 @@ class="notebook_app"
                 <ul>
                     <li><a href="#" data-name="plants">Plants Co-expression</a>
                         <span data-name="Plants Co-expression" 
-                              data-help="KBase Coexpression network using dynamic visualization. Navigate among different experimental conditions, sets of genes and clusters over a variety of expression datasets from microarray to RNASeq available from microbes and plants"
+                              data-help="KBase Coexpression network using dynamic visualization. Navigate among different experimental conditions, sets of genes and clusters over a variety of expression datasets from microarray to RNASeq available from microbes and plants."
                               class="kb-function-help">?</span>
                     </li>
-                    <li><a href="#" data-name="genomeToFba">Genome to FBA Model</a>
+                    <li><a href="#" data-name="Assemble Contigs">Assemble Contigs from FASTA reads</a>
+                        <span data-name="Assemble Contigs" 
+                              data-help="Assemble a set of contigs from a FASTA reads file."
+                              class="kb-function-help">?</span>
+                    </li>
+                    <li><a href="#" data-name="Annotate Genome">Annotate Assembled Genome</a>
+                        <span data-name="Annotate Genome" 
+                              data-help="Annotate an assembled set of contigs."
+                              class="kb-function-help">?</span>
+                    </li>
+                    <li><a href="#" data-name="Genome To FBA Model">Genome to FBA Model</a>
                         <span data-name="Genome to FBA Model" 
-                              data-help="Build a draft FBA model from a genome in your workspace"
+                              data-help="Build a draft FBA model from a genome in your workspace."
+                              class="kb-function-help">?</span>
+                    </li>
+                    <li><a href="#" data-name="View FBA Model Details">View FBA Model Details</a>
+                        <span data-name="View FBA Model Details" 
+                              data-help="Select and view a constructed FBA Model from your data."
+                              class="kb-function-help">?</span>
+                    </li>
+                    <li><a href="#" data-name="Build Media">Build Media</a>
+                        <span data-name="Build Media" 
+                              data-help="Assemble a set of compounds to use as a media set for performing FBA on a model."
+                              class="kb-function-help">?</span>
+                    </li>
+                    <li><a href="#" data-name="View Media">View Media</a>
+                        <span data-name="View Media" 
+                              data-help="Select and view a media set from your data."
+                              class="kb-function-help">?</span>
+                    </li>
+                    <li><a href="#" data-name="Run Flux Balance Analysis">Run Flux Balance Analysis</a>
+                        <span data-name="Run Flux Balance Analysis" 
+                              data-help="Run a Flux Balance Analysis using a model and media set."
+                              class="kb-function-help">?</span>
+                    </li>                    
+                    <li><a href="#" data-name="View FBA Results">View FBA Results</a>
+                        <span data-name="View FBA Results" 
+                              data-help="Select and view FBA results from your data."
+                              class="kb-function-help">?</span>
+                    </li>                    
+                    <li><a href="#" data-name="Gapfill FBA Model">Gapfill FBA Model</a>
+                        <span data-name="Gapfill FBA Model" 
+                              data-help="Generate a set of reactions to add to your FBA model in order to allow biomass production in a set of conditions."
+                              class="kb-function-help">?</span>
+                    </li>
+                    <li><a href="#" data-name="Integrate Gapfill Solution">Integrate Gapfill Solution</a>
+                        <span data-name="Integrate Gapfill Solution" 
+                              data-help="Integrate a set of gapfilled reactions into your FBA model."
                               class="kb-function-help">?</span>
                     </li>
                 </ul>
@@ -347,7 +393,12 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceData.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<!-- function output JS widgets -->
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelCoreNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
 {% endblock %}

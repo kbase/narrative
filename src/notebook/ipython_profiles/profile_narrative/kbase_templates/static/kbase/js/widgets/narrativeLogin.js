@@ -28,10 +28,20 @@
 		     + '|'
 		     + 'user_id=' + c.user_id
 		     + '|'
-		     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'))
+		     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+		     { path: '/'});
+	    $.cookie('kbase_session',
+		     'un=' + c.user_id
+		     + '|'
+		     + 'kbase_sessionid=' + c.kbase_sessionid 
+		     + '|'
+		     + 'user_id=' + c.user_id
+		     + '|'
+		     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+		     { path: '/',
+		       domain: 'kbase.us' });
 
-	    
-	}
+	};
 
         var set_token = function () {
             // grab the token from the handler, since it isn't passed in with args
@@ -62,9 +72,13 @@
             login_callback: function(args) {
                 $(".whiteout-pane").remove();
 
+		set_cookie();
                 // If the notebook kernel's initialized, tell it to set the token.
-                if (IPython.notebook)
-	                set_token();
+                if (IPython.notebook) {
+	            set_token();
+		} else {
+		    console.log( "IPython.notebook not set, cannot set token on backend");
+		}
             },
 
             logout_callback: function(args) {

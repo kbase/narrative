@@ -2,7 +2,7 @@
 
 installPath=`pwd`
 venv="narrative-venv"
-branch="rel-1.1.0"
+branch="1.x"
 commit="" 
 profile_name="narrative"
 # set to your python
@@ -121,7 +121,7 @@ source %s/bin/activate
 export NARRATIVEDIR=%s
 export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
 
-ipython notebook --NotebookManager.notebook_dir=~/.narrative --profile=narrative_mongo --NotebookApp.base_project_url="/narrative/$1" --NotebookApp.base_kernel_url="/narrative/$1" --NotebookApp.password="sha1:89e8b3c3b94f:34c04b4f82d4f5442094cbf73204333176be148a" --NotebookApp.open_browser="False" --ip="*"
+ipython notebook --profile=narrative --NotebookApp.base_project_url="/narrative/$1" --NotebookApp.base_kernel_url="/narrative/$1" --NotebookApp.open_browser="False" --ip="*"
 ' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" &> $installPath/$venv/bin/run_magellan_narrative.sh
 
 chmod +x $installPath/$venv/bin/run_magellan_narrative.sh

@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/narrative.css") }}" type="text/css" />
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
     <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
       require.config({
@@ -49,6 +50,7 @@
   </div>
 </noscript>
 
+<!--
 <header role="banner">      
     <div id="logo">
         <a href="http://www.kbase.us"><img src="{{static_url("kbase/images/kbase_logo.png")}}" alt="KBase User Home" /></a>
@@ -65,26 +67,41 @@
             </li>
         </ul>
     </nav>
-
-    {% block login_widget %}
-        
-    <div id="login-info" class="pull-right">
-        <div id="login-widget">
-        </div>
-<!--         <span></span>
-        <a href="#" onclick="logout();">log out</a>
- -->    </div>
-
-    <div id="login_widget">
-        {% if logged_in %}
-            <button id="logout">Logout</button>
-        {% elif login_available and not logged_in %}
-            <button id="login">Login</button>
-        {% endif %}
+-->
+<header id="header_banner" role="banner">
+  <div id="navrow" class="row">     
+    <div id="logo" class="col-sm-1">
+      <a href="http://www.kbase.us"><img src="static/kbase/images/kbase_logo.png" alt="KBase User Home" /></a>
+    </div>
+    <div class="col-sm-9">
+      <nav id="header_nav" role="navigation" class="row">
+        <ul>
+    	  <li><a href="/home.shtml">Home</a></li>
+    	  <li><a href="/datastore.shtml">My Stuff</a></li>
+          <li id="searchlabel"><a href="https://niya.qb3.berkeley.edu/search_client/search_client.html">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>
+        </ul>
+      </nav>
     </div>
 
-    {% endblock %}
+    {% block login_widget %}
+    
+    <div id="login-info" class="pull-right">
+      <div id="login-widget">
+      </div>
+      <!--         <span></span>
+           <a href="#" onclick="logout();">log out</a>
+      -->    </div>
 
+      <div id="login_widget">
+        {% if logged_in %}
+        <button id="logout">Logout</button>
+        {% elif login_available and not logged_in %}
+        <button id="login">Login</button>
+        {% endif %}
+      </div>
+
+      {% endblock %}
+  </div>
 </header>
 
 

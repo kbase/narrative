@@ -1,6 +1,7 @@
 #!/bin/bash
-
-www_root=`dirname $0`
+port=8088
+scriptpath=$( cd "$(dirname "$0")" ; pwd -P )
+www_root=$scriptpath
 mongoose=""
 if [ $# -gt 0 ]; then
     mongoose="$1"
@@ -13,11 +14,11 @@ fi
 
 # test for path
 if [ "x$mongoose" = "x" ]; then
-    echo "please edit the script or give an argument for the location of mongoose"
+    printf "please edit the script or give an argument for the location of mongoose\n"
     exit 1
 fi
 
-opts="-document_root $www_root -listening_ports 8888"
+opts="-document_root $www_root -listening_ports $port"
 
 printf "running mongoose with options: $opts \n"
 $mongoose $opts

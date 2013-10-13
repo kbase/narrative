@@ -4739,7 +4739,6 @@ jQuery.event = {
 					undefined;
 			};
 			// Add elem as a property of the handle fn to prevent a memory leak with IE non-native events
-            // @@ XXX: removed: --dang
 			//eventHandle.elem = elem;
 		}
 

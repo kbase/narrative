@@ -249,13 +249,20 @@
                 tr.append($('<td>').text(key));
                 tr.append($('<td>').text(value));
             });
+            
             // XXX: hack! add button for viz if network
-            if (data.type == 'Networks') {
-                this.addNetworkVisualization(data);
-            }
+            // (slightly less of a hack now? --Bill)
+            this.addVisualizationButton(data);
+
+
+            // if (data.type === 'Networks') {
+            //     this.addNetworkVisualization(data);
+            // }
+
+
         },
 
-        addNetworkVisualization: function(data) {
+        addVisualizationButton: function(data) {
             var oid = data.id, oinst = data.instance;
             var $footer = $('#kb-obj .modal-footer');
             var $btn = $footer.find('button.kb-network');
@@ -263,6 +270,17 @@
             // add new button/binding
             var self = this;
             $btn.click(function(e) {
+                // Figure out the viz function for the data type.
+                // If it doesn't exist throw an error/warning and stop here.
+                // Later-- have it autogen/insert some kind of table for unregistered data types.
+                // Or maybe just insert the metadata?
+
+                var type = data.type;
+                type = type.trim().replace(/\s+/g, "_");
+                var typeVizFunction = "_add" + type + "Visualization";
+                if (!self[typeVizFunction])
+                    typeVizFunction = "_addDefaultVisualization";
+
                 console.debug("creating vis. for object: " + oid + "." + oinst);
                 var cell = IPython.notebook.insert_cell_at_bottom('markdown');
                 // put div inside cell with an addr
@@ -275,12 +293,58 @@
                 // slap network into div by addr
                 var $target = $('#' + eid);
                 $target.css({'margin': '-10px'});
-                $target.ForceDirectedNetwork({
-                    workspaceID: self.ws_id + "." + oid + "#" + oinst,
-                    token: self.ws_auth,
-                });
+
+                self[typeVizFunction](data, $target);
+
+                // $target.ForceDirectedNetwork({
+                //     workspaceID: self.ws_id + "." + oid + "#" + oinst,
+                //     token: self.ws_auth,
+                // });
             });
         },
+
+        _addNetworksVisualization: function(data, $target) {
+            var oid = data.id;
+            var oinst = data.instance;
+            // var workspaceID = self.ws_id + "." + oid + "#" + oinst;
+            // var token = self.ws_auth;
+            $target.ForceDirectedNetwork({
+                workspaceID: self.ws_id + "." + oid + "#" + oinst,
+                token: self.ws_auth,
+            });
+
+        },
+
+        _addDefaultVisualization: function(data, $target) {
+            $target.append("HOT DOG");
+        },
+
+        // _addNetworkVisualization: function(data) {
+        //     var oid = data.id, oinst = data.instance;
+        //     var $footer = $('#kb-obj .modal-footer');
+        //     var $btn = $footer.find('button.kb-network');
+        //     $btn.show();
+        //     // add new button/binding
+        //     var self = this;
+        //     $btn.click(function(e) {
+        //         console.debug("creating vis. for object: " + oid + "." + oinst);
+        //         var cell = IPython.notebook.insert_cell_at_bottom('markdown');
+        //         // put div inside cell with an addr
+        //         var eid = self._uuidgen();
+        //         var content = "<div id='" + eid + "'></div>";
+        //         cell.set_text(content);
+        //         // re-render cell to make <div> appear
+        //         cell.rendered = false;
+        //         cell.render();
+        //         // slap network into div by addr
+        //         var $target = $('#' + eid);
+        //         $target.css({'margin': '-10px'});
+        //         $target.ForceDirectedNetwork({
+        //             workspaceID: self.ws_id + "." + oid + "#" + oinst,
+        //             token: self.ws_auth,
+        //         });
+        //     });
+        // },
 
         _uuidgen: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

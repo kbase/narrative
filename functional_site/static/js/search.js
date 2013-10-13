@@ -32,10 +32,27 @@ var token;
 var selectedWorkspace;
 var expandedView = false;
 
+function GetUrlValue(VarSearch){
+    var SearchString = window.location.search.substring(1);
+    var VariableArray = SearchString.split('&');
+    for(var i = 0; i < VariableArray.length; i++){
+        var KeyValuePair = VariableArray[i].split('=');
+        if(KeyValuePair[0] == VarSearch){
+            return KeyValuePair[1];
+        }
+    }
+}
 
 
 $(window).load(function() {
     $("#searchspan").hide();
+
+    var sentQuery = GetUrlValue('q');
+    if(sentQuery != "") {
+        $("#searchTextInput").val(sentQuery);
+        startSearch(sentQuery);
+    }
+
     //beginning of stuff copied from users.js
 
     // Function that sets a cookie compatible with the current narrative
@@ -65,9 +82,10 @@ $(window).load(function() {
         });
 
         */
+
+        initToken();
         $(document).on('loggedOut.kbase', function() { delete searchOptions["general"]["token"]; });
-        $(document).on('loggedOut.kbase', function(event, token) {
-            console.debug("logged out");
+        $(document).on('loggedIn.kbase', function() {
             searchOptions["general"]["token"] = $("#login-widget").kbaseLogin("session", "token");
         });
 
@@ -141,8 +159,6 @@ $(window).load(function() {
     };
     //end of stuff copied from users.js
 
-
-    initToken();
 
     $('.dropdown-toggle').dropdown();
 
@@ -871,13 +887,12 @@ function displayCount(category) {
 
 function getCount(options, category) {
     var queryOptions = {};
-    
+
     for (var prop in options) {
         if (options.hasOwnProperty(prop)) {
             queryOptions[prop] = options[prop];
         }        
     }
-    
     queryOptions["page"] = 1;
     queryOptions["itemsPerPage"] = 0;
     queryOptions["category"] = category;
@@ -916,7 +931,7 @@ function getResults(category, options) {
         var queryOptions = {'q': options["general"]['q']};
 
         try {
-            options["general"]["token"].substr(0,20);
+            options["general"]["token"].substr(0,20);//?
             queryOptions["token"] = options["general"]["token"];
         }
         catch (e) {            
@@ -926,18 +941,18 @@ function getResults(category, options) {
         numCounts = 0;
         for (var i = 0; i < searchCategories.length; i++) {
             if (searchCategories[i].indexOf("WS") !== 0 || (searchCategories[i].indexOf("WS") === 0 && queryOptions.hasOwnProperty("token") && queryOptions.token !== null)) {
-                getCount(queryOptions, searchCategories[i]);            
+                getCount(queryOptions, searchCategories[i]);
             }
             else {
                 categoryCounts[category] = 0;
             }
         }
-        
+
         return;
     }
 
     var queryOptions = {};
-    
+
     queryOptions["category"] = selectedCategory;
     for (var prop in options) {        
         if (prop === "general") {
@@ -959,7 +974,6 @@ function getResults(category, options) {
             }
         }    
     }
-    
     console.log(queryOptions);
     
     jQuery.ajax({

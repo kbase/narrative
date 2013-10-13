@@ -32,16 +32,133 @@ var token;
 var selectedWorkspace;
 var expandedView = false;
 
+function GetUrlValue(VarSearch){
+    var SearchString = window.location.search.substring(1);
+    var VariableArray = SearchString.split('&');
+    for(var i = 0; i < VariableArray.length; i++){
+        var KeyValuePair = VariableArray[i].split('=');
+        if(KeyValuePair[0] == VarSearch){
+            return KeyValuePair[1];
+        }
+    }
+}
+
 
 $(window).load(function() {
     $("#searchspan").hide();
-    $("#login-area").kbaseLogin({style: "text"});
 
-    //register for login event, then capture token
-    $(document).on('loggedIn.kbase', function() { searchOptions["general"]["token"] = $("#login-area").kbaseLogin("session", "token"); });
-    $(document).on('loggedOut.kbase', function() { delete searchOptions["general"]["token"]; });
+    var sentQuery = GetUrlValue('q');
+    if(sentQuery != "") {
+        $("#searchTextInput").val(sentQuery);
+        startSearch(sentQuery);
+    }
 
-    initToken();
+    //beginning of stuff copied from users.js
+
+    // Function that sets a cookie compatible with the current narrative
+    // (it expects to find user_id and token in the cookie)
+    var set_cookie = function() {
+        var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
+        console.log( 'Setting kbase_session cookie');
+        $.cookie('kbase_session',
+                 'un=' + c.user_id
+                 + '|'
+                 + 'kbase_sessionid=' + c.kbase_sessionid
+                 + '|'
+                 + 'user_id=' + c.user_id
+                 + '|'
+                 + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+                 { path: '/',
+                   domain: 'kbase.us' });
+    };
+
+
+
+
+    $(function() {
+      /*  $(document).on('loggedIn.kbase', function(event, token) {
+            console.debug("logged in")
+            loadPage();
+        });
+
+        */
+
+        initToken();
+        $(document).on('loggedOut.kbase', function() { delete searchOptions["general"]["token"]; });
+        $(document).on('loggedIn.kbase', function() {
+            searchOptions["general"]["token"] = $("#login-widget").kbaseLogin("session", "token");
+        });
+
+        var loginWidget = $("#login-widget").kbaseLogin({ 
+            style: "narrative",
+            rePrompt: false,
+
+            login_callback: function(args) {
+        set_cookie();
+                loadPage();
+            },
+
+            logout_callback: function(args) {
+                $.removeCookie( 'kbase_session');
+            },
+
+            prior_login_callback: function(args) {
+        set_cookie();
+                loadPage();
+            },
+        });
+
+
+        $("#signinbtn").click(function() {
+
+            showLoading();
+            $("#login_error").hide();
+
+            loginWidget.login(
+
+                $('#kbase_username').val(),
+                $('#kbase_password').val(), 
+                function(args) {
+                    console.log(args);
+                    if (args.success === 1) {
+                        
+                        this.registerLogin(args);
+                    set_cookie();
+                    loadPage();
+                        doneLoading();
+                            $("#login-widget").show();
+                        } else {
+                            $("#loading-indicator").hide();
+                    $("#login_error").html(args.message);
+                    $("#login_error").show();
+                        }
+                }
+            );
+        });
+
+        $('#kbase_password').keypress(function(e){
+            if(e.which == 13){//Enter key pressed
+                $('#signinbtn').click();
+            }
+        });
+
+
+    });
+
+
+
+    function loadPage() {
+
+        var userName = $("#login-widget").kbaseLogin("get_kbase_cookie", "name");
+
+        if (!userName)
+            userName = "KBase User";
+        $("#kb_name").html(userName);
+
+
+    };
+    //end of stuff copied from users.js
+
 
     $('.dropdown-toggle').dropdown();
 
@@ -75,7 +192,7 @@ function initToken() {
     searchOptions = defaultSearchOptions;
 
     try {
-        searchOptions["general"]["token"] = $("#login-area").kbaseLogin("session", "token");
+        searchOptions["general"]["token"] = $("#login-widget").kbaseLogin("session", "token");
         
         if (searchOptions["general"]["token"] === undefined) {
             delete searchOptions["general"]["token"];            
@@ -161,7 +278,7 @@ function startSearch(queryString) {
     searchOptions = defaultSearchOptions;
 
     try {
-        searchOptions["general"]["token"] = $("#login-area").kbaseLogin("session", "token");
+        searchOptions["general"]["token"] = $("#login-widget").kbaseLogin("session", "token");
     }
     catch (e) {
         delete searchOptions["general"]["token"];
@@ -770,13 +887,12 @@ function displayCount(category) {
 
 function getCount(options, category) {
     var queryOptions = {};
-    
+
     for (var prop in options) {
         if (options.hasOwnProperty(prop)) {
             queryOptions[prop] = options[prop];
         }        
     }
-    
     queryOptions["page"] = 1;
     queryOptions["itemsPerPage"] = 0;
     queryOptions["category"] = category;
@@ -815,7 +931,7 @@ function getResults(category, options) {
         var queryOptions = {'q': options["general"]['q']};
 
         try {
-            options["general"]["token"].substr(0,20);
+            options["general"]["token"].substr(0,20);//?
             queryOptions["token"] = options["general"]["token"];
         }
         catch (e) {            
@@ -825,18 +941,18 @@ function getResults(category, options) {
         numCounts = 0;
         for (var i = 0; i < searchCategories.length; i++) {
             if (searchCategories[i].indexOf("WS") !== 0 || (searchCategories[i].indexOf("WS") === 0 && queryOptions.hasOwnProperty("token") && queryOptions.token !== null)) {
-                getCount(queryOptions, searchCategories[i]);            
+                getCount(queryOptions, searchCategories[i]);
             }
             else {
                 categoryCounts[category] = 0;
             }
         }
-        
+
         return;
     }
 
     var queryOptions = {};
-    
+
     queryOptions["category"] = selectedCategory;
     for (var prop in options) {        
         if (prop === "general") {
@@ -858,7 +974,6 @@ function getResults(category, options) {
             }
         }    
     }
-    
     console.log(queryOptions);
     
     jQuery.ajax({

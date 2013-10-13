@@ -227,4 +227,14 @@ span#searchspan{
     padding: 1em 1em 0 0;
     line-height: 1.5em;
 }
+#apps_menu{
+    padding: 1em 0 0 0;
+    margin: 0;
+}
+#apps_menu li{
+    padding: 0;
+}
+#apps_menu_items{
+    padding-top: 0;
+}
 

@@ -111,8 +111,6 @@
   			.style("text-anchor", "end")
 			  .text("Bits");
 
-			var letterWidth = 1;
-
 			var browserName = (function(){
 			  var N= navigator.appName, ua= navigator.userAgent, tem;
 			  var M= ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
@@ -120,9 +118,7 @@
 			  M= M? [M[1], M[2]]: [N, navigator.appVersion,'-?'];
 			  return M;
 			 })(); 
-//		document.write(browserName);	
-			if (browserName.toString().match(/Firefox/i)) {letterWidth = x.rangeBand()};
-
+	
 			var column = svg.selectAll(".sequence-column")
 			  .data(data)
 				.enter()
@@ -130,21 +126,66 @@
 				.attr("transform", function(d, i) { return "translate(" + (x(i) + (x.rangeBand() / 2)) + ",0)"; })
 				.attr("class", "sequence-column");
 
-			column
-				.selectAll("text")
-				.data( function(d) { return d.bits; })
-				.enter()
-				.append("text")
-					.attr("y", function(e) { return y(e.y0)/(y(e.y0) - y(e.y1)); })
-					.text( function(e) { return e.letter; } )
-					.attr("class", function(e) { return "memelogo-letter-" + e.letter; } )
-					.style( "text-anchor", "middle" )
-					.style( "font-family", "sequencelogo" )
-					.attr( "transform", function(e) {return "scale(" + letterWidth + "," + (y(e.y0) - y(e.y1)) + ")"})
-					.attr( "textLength", x.rangeBand() )
-					.attr( "lengthAdjust", "spacingAndGlyphs" )
-					.attr( "font-size", "1.37")
-					.style( "font-size", "1.37")
+
+                        if (browserName.toString().match(/Firefox/i)) {
+
+	                        column
+                                .selectAll("text")
+                                .data( function(d) { return d.bits; })
+                                .enter()
+                                .append("text")
+                                        .attr("y", function(e) { return y(e.y0)/(y(e.y0) - y(e.y1)); })
+                                        .text( function(e) { return e.letter; } )
+                                        .attr("class", function(e) { return "memelogo-letter-" + e.letter; } )
+                                        .style( "text-anchor", "middle" )
+                                        .style( "font-family", "sequencelogo" )
+                                        .attr( "transform", function(e) {return "scale(" + x.rangeBand() + "," + (y(e.y0) - y(e.y1)) + ")"})
+                                        .attr( "textLength", x.rangeBand() )
+                                        .attr( "lengthAdjust", "spacingAndGlyphs" )
+                                        .attr( "font-size", "1.37")
+                                        .style( "font-size", "1.37")
+
+
+                        }
+                        else if (browserName.toString().match(/Safari/i)){
+                                var capHeightAdjust  = 0.99, // approximation to bring cap-height to full font size
+                                logoYAdjust      = 0.053;
+
+
+                                column
+                                        .selectAll("text")
+                                        .data( function(d) { return d.bits; })
+                                        .enter()
+                                        .append("text")
+                                        .attr("y", function(e) { return y(e.y0) - (y(e.y0) - y(e.y1))*logoYAdjust ; })
+                                        .text( function(e) { return e.letter; } )
+                                        .attr("class", function(e) { return "memelogo-letter-" + e.letter; } )
+                                        .style( "text-anchor", "middle" )
+                                        .style( "font-family", "sequencelogo" )
+                                        .attr( "textLength", x.rangeBand() )
+                                        .attr( "lengthAdjust", "spacingAndGlyphs" )
+                                        .attr( "font-size", function(e) { return ( y(e.y0) - y(e.y1) ) * capHeightAdjust; } )
+                                        .style( "font-size", function(e) { return ( y(e.y0) - y(e.y1) ) * capHeightAdjust; } )
+
+                        }
+                        else {
+                                column
+                                .selectAll("text")
+                                .data( function(d) { return d.bits; })
+                                .enter()
+                                .append("text")
+                                        .attr("y", function(e) { return y(e.y0)/(y(e.y0) - y(e.y1)); })
+                                        .text( function(e) { return e.letter; } )
+                                        .attr("class", function(e) { return "memelogo-letter-" + e.letter; } )
+                                        .style( "text-anchor", "middle" )
+                                        .style( "font-family", "sequencelogo" )
+                                        .attr( "transform", function(e) {return "scale(1," + (y(e.y0) - y(e.y1)) + ")"})
+                                        .attr( "textLength", x.rangeBand() )
+                                        .attr( "lengthAdjust", "spacingAndGlyphs" )
+                                        .attr( "font-size", "1.37")
+                                        .style( "font-size", "1.37")
+
+                        };
 
 			function sequencelogoFont(){
 				var font = svg.append("defs").append("font")
@@ -311,6 +352,5 @@
 	
     });
 })( jQuery );
-
 
 

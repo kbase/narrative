@@ -171,39 +171,25 @@
             var config = {};
             var runner = this._runner(); 
             var funcs = this._getFunctionsForFunction(name);
+
             this.result_handler = funcs.result_handler;
-            var content = this._buildRunForm(funcs.config);
-            // @@ code
-            switch(name) {
-                // To add a new function, you need to define
-                // one JSON structure for params, and one function
-                // to build the actual command.
-                case 'plants':
-                    // configuration for parameters
-                    config = this.plantsRunConfig;
-                    // function to build the code which is executed
-                    command_builder = this.plantsRunCommand();
-                    // function to handle the result data
-                    this.result_handler = this.plantsCreateOutput;
-                    break;
-                case 'genomeToFba':
-                    config = this.genomeToFbaConfig;
-                    command_builder = this.genomeToFbaCommand();
-                    this.result_handler = this.genomeToFbaCreateOutput;
-                    break;
-            }
-            var content = this._buildRunForm(config);
+            config = funcs.config;
+            command_builder = funcs.command_builder;
+
+            var content = this._buildRunForm(name, config);
             var cell_id = "kb-cell-" + this._cur_index;
+            console.log(content);
             cell.set_text("<div class='kb-cell-run' " + "id='" + cell_id + "'>" + 
                           "<h1>" + name + "</h1>" +
                           "<div class='kb-cell-params'>" +  
                           content + 
                           "</div>" +
                           "</div>");
+
             cell.rendered = false; // force a render
             cell.render();
             this.element = $("#" + cell_id);
-            var $frm = $('div.kb-cell-run form');
+            var $frm = $('div#' + cell_id + ' form');
             var submit_fn = this._bindRunButton();
             $frm.on("submit", submit_fn);
         },
@@ -225,6 +211,104 @@
                         'result_handler': this.plantsCreateOutput
                     }
                     break;
+
+                case 'Assemble Contigs':
+                    return {
+                        'config' : this.runAssemblyConfig,
+                        'command_builder' : this.runAssemblyCommand(),
+                        'result_handler' : this.runAssemblyCreateOutput,
+                    }
+                    break;
+
+                case 'Assemble Genome':
+                    return {
+                        'config' : this.assembleGenomeConfig,
+                        'command_builder' : this.assembleGenomeCommand(),
+                        'result_handler' : this.assembleGenomeCreateOutput,
+                    }
+                    break;
+
+                case 'Annotate Genome':
+                    return {
+                        'config' : this.annotateGenomeConfig,
+                        'command_builder' : this.annotateGenomeCommand(),
+                        'result_handler' : this.annotateGenomeCreateOutput,
+                    };
+                    break;
+
+                case 'View Genome Details':
+                    return {
+                        'config' : this.viewGenomeConfig,
+                        'command_builder' : this.viewGenomeCommand(),
+                        'result_handler' : this.viewGenomeCreateOutput,
+                    };
+                    break;
+
+                case 'Genome To Draft FBA Model':
+                    return {
+                        'config' : this.genomeToFbaConfig,
+                        'command_builder' : this.genomeToFbaCommand(),
+                        'result_handler' : this.genomeToFbaCreateOutput,
+                    };
+                    break;
+
+                case 'View FBA Model Details':
+                    return {
+                        'config' : this.viewFbaModelConfig,
+                        'command_builder' : this.viewFbaModelCommand(),
+                        'result_handler' : this.viewFbaModelCreateOutput,
+                    };
+                    break;
+
+                case 'Build Media':
+                    return {
+                        'config' : this.buildMediaConfig,
+                        'command_builder' : this.buildMediaCommand(),
+                        'result_handler' : this.buildMediaCreateOutput,
+                    };
+                    break;
+
+                case 'View Media':
+                    return {
+                        'config' : this.viewMediaConfig,
+                        'command_builder' : this.viewMediaCommand(),
+                        'result_handler' : this.viewMediaCreateOutput,
+                    };
+                    break;
+
+                case 'Run Flux Balance Analysis':
+                    return {
+                        'config' : this.runFbaConfig,
+                        'command_builder' : this.runFbaCommand(),
+                        'result_handler' : this.runFbaCreateOutput,
+                    };
+                    break;
+
+                case 'View FBA Results':
+                    return {
+                        'config' : this.viewFbaConfig,
+                        'command_builder' : this.viewFbaCommand(),
+                        'result_handler' : this.viewFbaCreateOutput,
+                    };
+                    break;
+
+                case 'Gapfill FBA Model':
+                    return {
+                        'config' : this.runGapfillConfig,
+                        'command_builder' : this.runGapfillCommand(),
+                        'result_handler' : this.runGapfillCreateOutput,
+                    };
+                    break;
+
+                case 'Integrate Gapfill Solution':
+                    console.log('Integrate Gapfill Solution');
+                    return {
+                        'config' : this.integrateGapfillConfig,
+                        'command_builder' : this.integrateGapfillCommand(),
+                        'result_handler' : this.runGapfillCreateOutput,
+                    };
+                    break;
+
                 default:
                     return {};
             }
@@ -334,30 +418,370 @@
 
         /* -------------- END: PLANTS ---------------------- */
 
+
+
         /* -------------- MICROBES ---------------- */
+
+        /* --------- Assemble Contigs from FASTA reads -----------*/
+        runAssemblyConfig: {
+            'Identifiers' : {
+                'Paired-End Files<br>(comma-delimited)': '',
+                'Single-End Files<br>(comma-delimited)': '',
+                'Sequence Files<br>(comma-delimited)': '',
+            },
+            'Assembly Params' : {
+                'Assemblers' : '',
+                'Reference' : '',
+                'Notes' : '',
+            },
+            'Output' : {
+                'Contig Set Name' : ''
+            }
+        },
+
+        runAssemblyCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "run_assembly", params);
+            };
+        },
+
+        runAssemblyCreateOutput: function(element, text) {
+            var jobId = "";
+            for (var i=0; i<5; i++) {
+                jobId += Math.floor((Math.random()*10));
+            }
+            var outText = "Your contig assembly job has been submitted successfully.<br/>" +
+                          "Your job ID is <b>job." + jobId + "</b><br/>" + 
+                          "This will likely take a few hours.<br/>" +
+                          "When complete, your ContigSet will have ID <b>" + text + "</b>";
+
+            element.append(outText);
+        },
+
+        /* ---------- Assemble Genome from Contigs ----------- */
+        assembleGenomeConfig: {
+            'Identifiers' : {
+                'Contig Set' : '',
+            },
+
+            'Output' : {
+                'New Genome' : '',
+            }
+
+        },
+
+        assembleGenomeCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "assemble_genome", params);
+            };
+        },
+
+        assembleGenomeCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+
+            var tableRow = function(a, b) {
+                return $("<tr>")
+                       .append("<td>" + a + "</td>")
+                       .append("<td>" + b + "</td>");
+            };
+
+            var $metaTable = $("<table>")
+                             .addClass("table table-striped table-bordered")
+                             .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+                             .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
+                             .append(tableRow("Scientific Name", data[10].scientific_name))
+                             .append(tableRow("Size", data[10].size))
+                             .append(tableRow("GC Content", (100*(data[10].gc)).toFixed(2) + "%"))
+                             .append(tableRow("Location", data[7]));
+
+            element.append($metaTable);
+
+        },
+
+        /* ---------- Annotate Assembled Genome ----------- */
+        annotateGenomeConfig: {
+            'Identifiers' : {
+                'Genome' : '',
+            },
+            'Output' : {
+                'New Genome ID (optional)': '',
+            },
+
+        },
+
+        annotateGenomeCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "annotate_genome", params);
+            };
+        },
+
+        annotateGenomeCreateOutput: function(element, text) {
+            element.append(text);
+        },
+
+        /* ---------- View Genome Details ----------- */
+        viewGenomeConfig: {
+            'Identifiers' : {
+                'Genome' : '',
+            },
+
+        },
+
+        viewGenomeCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "view_genome_details", params);
+            };
+        },
+
+        viewGenomeCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+
+            var tableRow = function(a, b) {
+                return $("<tr>")
+                       .append("<td>" + a + "</td>")
+                       .append("<td>" + b + "</td>");
+            };
+
+            var calcGC = function(gc, total) {
+                if (gc > 1)
+                    gc = gc/total;
+                return (100*gc).toFixed(2);
+            };
+
+            console.log(data);
+
+            var $metaTable = $("<table>")
+                             .addClass("table table-striped table-bordered")
+                             .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+                             .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
+                             .append(tableRow("Scientific Name", data[10].scientific_name))
+                             .append(tableRow("Size", data[10].size + " bp"))
+                             .append(tableRow("GC Content", calcGC(data[10].gc, data[10].size) + "%"))
+                             .append(tableRow("Number Features", data[10].number_features))
+                             .append(tableRow("Location", data[7]));
+
+            element.append($metaTable);
+
+        },
+
+        /* ------------ Genome to FBA Model ----------------- */ 
         genomeToFbaConfig: {
             'Identifiers': {
                 'Genome': '',
             },
+    // -m --model         Name to be provided for output model
+    // --genomews         Workspace where genome is located
+    // --templateid       ID of template model to use
+    // --templatews       Workspace with template model
+    // --core             Build core model
+    // -w --workspace     Reference default workspace
+    // -o --overwrite     Overwrite any existing model with same name
+    // -e --showerror     Set as 1 to show any errors in execution
+    // -v --verbose       Print verbose messages
+    // -? -h --help       Print this usage information
         },
 
         genomeToFbaCommand: function() {
             var self = this;
             return function(params) {
-                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "genome_to_fba", params);
-            }
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "genome_to_fba_model", params);
+            };
         },
 
         genomeToFbaCreateOutput: function(element, text) {
             var data = JSON.parse(text);
 
-            console.log("got to fba output");
-            console.log(element);
-//            element.html("Finished genome to fba");
             element.kbaseModelMetaNarrative({data: data});
+            element.off('click dblclick keydown keyup keypress focus');
+        },
+
+        /* ---------- View Model ----------- */
+        viewFbaModelConfig: {
+            'Identifiers': {
+                'Model': '',
+            },
+        },
+
+        viewFbaModelCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "view_fba_model", params);
+            };
+        },
+
+        viewFbaModelCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+
+            console.log(data);
+            element.kbaseModelTabs({modelsData: data});
+
+
             element.css({ margin: '-10px' });
             element.off('click dblclick keydown keyup keypress focus');
         },
+
+
+        /* --------- Build Media ------------ */
+        buildMediaConfig: {
+            'Identifiers' : {
+                'Base Media (optional)' : '',
+            },
+        },
+
+        buildMediaCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "build_media", params);
+            };
+        },
+
+        buildMediaCreateOutput: function(element, text) {
+            var data = null;
+            if (text !== "null") {
+                data = JSON.parse(text);
+            }
+
+            element.kbaseMediaEditorNarrative({ mediaData: data, viewOnly: false, editOnly: true, ws: this.ws_id, auth: this.ws_auth });
+
+        },
+
+        /* ---------- View Media ---------- */
+        viewMediaConfig: {
+            'Identifiers' : {
+                'Media' : '',
+            },
+        },
+
+        viewMediaCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", 
+                    "view_media", params);
+            };
+        },
+
+        viewMediaCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+            element.kbaseMediaEditorNarrative({ mediaData: data });
+        },
+
+
+        /* --------- Run Flux Balance Analysis --------------- */
+        runFbaConfig: {
+            'Identifiers' : {
+                'Model' : '',
+                'Media' : '',
+            },
+            'Misc' : {
+                'Notes' : '',
+            },
+        },
+
+        runFbaCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "run_fba", params);
+            };
+        },
+
+        runFbaCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+            element.kbaseFbaTabsNarrative({ fbaData: data });
+        },
+
+
+        /* ------------ View FBA Results ------------ */
+
+        viewFbaConfig: {
+            'Identifiers' : {
+                'FBA Result' : '',
+            },
+        },
+
+        viewFbaCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "view_fba", params);
+            };
+        },
+
+        viewFbaCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+            console.log(data); 
+            element.kbaseFbaTabsNarrative({ fbaData: data });
+        },
+
+        /* ------------ Gapfill FBA Model -------------- */
+        runGapfillConfig: {
+            'Identifiers' : {
+                'Model' : '',
+                'Media' : '',
+            },
+            'Solutions' : {
+                'Number to seek' : '1',
+            },
+            'Time' : {
+                'Per Solution (sec)' : '3600',
+                'Total Limit (sec)' : '3600'
+            }
+        },
+
+        runGapfillCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "run_gapfill", params);
+            };
+        },
+
+        runGapfillCreateOutput: function(element, text) {
+            var data = JSON.parse(text);
+            var jobId = data.id;
+            var totalTime = data.jobdata.postprocess_args[0].totalTimeLimit;
+            var totalTimeHrs = totalTime/3600;
+            var outModel = data.jobdata.postprocess_args[0].out_model;
+
+            var outputText = "<div>Your gapfill job has been successfully queued, with job ID: <b>" + jobId + "</b>.<br/>" +
+                             "This will take approximately " + totalTime + " seconds (" + totalTimeHrs + " hour" +
+                             (totalTimeHrs === 1 ? "" : "s") + ").<br/><br/>" +
+                             "Your gapfill solutions will be stored in model ID: <b>" + outModel + "</b>.</div>";
+
+            element.append(outputText);
+        },
+
+        /* ------------ Integrate Gapfill Solution ---------------- */
+        integrateGapfillConfig: {
+            'Identifiers' : {
+                'Model' : '',
+                'Gapfill' : '',
+            },
+            'Output' : {
+                'New Model (optional)' : ''
+            }
+        },
+
+        integrateGapfillCommand: function() {
+            var self = this;
+            return function(params) {
+                return self._buildRunCommand("biokbase.narrative.demo.microbes_workflow", "integrate_gapfill", params);
+            };
+        },
+
+        integrateGapfillCreateOutput: function(element, text) {
+
+        },
+
+
 
         /* --------------- END: MICROBES ----------------- */
 
@@ -366,12 +790,18 @@
          * Build 'run script' HTML form from
          * configuration data. See 
          */
-        _buildRunForm: function(cfg) {
+        _buildRunForm: function(name, cfg) {
+            console.log('_buildRunForm');
+            console.log(cfg);
+
+            var cls = "class='table'";
             var sbn = "style='border: none'";
+
             var text = "<form>" + 
-                       "<input type='hidden' name='kbfunc' value='plants' />" +
-                       "<table " + sbn + ">";
+                       "<input type='hidden' name='kbfunc' value='" + name + "' />" +
+                       "<table " + cls + ">";
             $.each(cfg, function(key, value) {
+
                 text += "<tr " + sbn + "><td " + sbn + ">" + key + "</td>";
                 $.each(value, function(key2, value2) { 
                     if (key2 == '') {
@@ -380,17 +810,20 @@
                     }
                     else {
                         text += "<td " + sbn + "><label>" + key2 + "</label>" + 
-                               "<input type='text' " + 
-                               "name='" + key + "." + key2 + "' " +
-                               "value='" + value2 + "'>"
-                               "</input></td>";
+                                "<input type='text' " + 
+                                "name='" + key + "." + key2 + "' " +
+                                "value='" + value2 + "'>"
+                                "</input></td>";
                     }
                 });
+
                 text += "</tr>";
             });
+
             text += "</table>" +
-                    "<input type='submit' value='Run' class='button'></input>" + 
+                    "<input type='submit' value='Run' class='button' style='margin-top:5px'></input>" + 
                     "</form>";
+
             return text;
         },
 

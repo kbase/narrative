@@ -19,7 +19,7 @@ For data in KBase workspace
     color: #ddd;
     font-family: OxygenRegular;
     font-size: 16px;
-    text-align: center;
+    /* text-align: center; */
     padding: 5px 5px 5px 10px;
 }
 .kb-header #kb-wsname {
@@ -88,7 +88,7 @@ For data in KBase workspace
 /*    height: 270px;*/
 }
 
-#kb-ws .kb-table table th {
+.kb-table table th {
     background-color: white;
     border: 1px solid gainsboro;
 }
@@ -97,24 +97,35 @@ For data in KBase workspace
     max-width: 80%;
 }
 
-#kb-ws .kb-table tbody tr {
+.kb-table tbody tr {
     border-bottom: 1px solid gainsboro;
 }
 
-#kb-ws .kb-table tbody tr td {
+.kb-table tbody tr td {
     max-height: 16px;
     padding: 5px;
     font-size: 1em;
 
 }
 
-#kb-ws .kb-table table tr:nth-child(odd) {
+.kb-table table tr:nth-child(odd) {
     background-color: #F7F7F7;
 }
 
-#kb-ws .kb-table table tr td:first-child {
+.kb-table table tr td:first-child {
     max-width: 80%;
     overflow-x: hidden;
+}
+
+/* row-selected */
+/* shade entire row */
+.kb-table table tr.row_selected {
+    background-color: #F4F5D6; /* more yellow: #FFEE66 */
+}
+/* underline name of object */
+#kb-ws .kb-table tr.row_selected td.sorting_1 {
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 #kb-ws .dataTables_filter { display: none; }
@@ -152,6 +163,7 @@ For data in KBase workspace
     margin-top: 15px;
     list-style-type: none;
 }
+
 #kb-obj ul.list-group li {
     display: inline-block;
     margin: 0;

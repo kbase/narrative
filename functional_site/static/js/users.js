@@ -3,6 +3,31 @@
     var workspaceClient = new workspaceService(workspaceURL);
     notLoggedIn();
 
+    // Function that sets a cookie compatible with the current narrative
+    // (it expects to find user_id and token in the cookie)
+    var set_cookie = function() {
+        var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
+        console.log( 'Setting kbase_session cookie');
+        $.cookie('kbase_session',
+                 'un=' + c.user_id
+                 + '|'
+                 + 'kbase_sessionid=' + c.kbase_sessionid
+                 + '|'
+                 + 'user_id=' + c.user_id
+                 + '|'
+                 + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+                 { path: '/',
+                   domain: 'kbase.us' });
+        $.cookie('kbase_session',
+                 'un=' + c.user_id
+                 + '|'
+                 + 'kbase_sessionid=' + c.kbase_sessionid
+                 + '|'
+                 + 'user_id=' + c.user_id
+                 + '|'
+                 + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+                 { path: '/'});
+    };
 
     $(function() {
       /*  $(document).on('loggedIn.kbase', function(event, token) {
@@ -21,16 +46,17 @@
             rePrompt: false,
 
             login_callback: function(args) {
-            	alert("callback call");
+		set_cookie();
                 loadPage();
             },
 
             logout_callback: function(args) {
+		$.removeCookie( 'kbase_session');
             	notLoggedIn();
-
             },
 
             prior_login_callback: function(args) {
+		set_cookie();
                 loadPage();
             },
         });
@@ -49,15 +75,16 @@
         			console.log(args);
         			if (args.success === 1) {
         				
-        				this.registerLogin(args);
-                        loadPage();
-	        			doneLoading();
-    	    			$("#login-widget").show();
-    	    		} else {
-    	    			$("#loading-indicator").hide();
-						$("#login_error").html(args.message);
-						$("#login_error").show();
-    	    		}
+        			    this.registerLogin(args);
+				    set_cookie();
+				    loadPage();
+	        		    doneLoading();
+    	    			    $("#login-widget").show();
+    	    			} else {
+    	    			    $("#loading-indicator").hide();
+				    $("#login_error").html(args.message);
+				    $("#login_error").show();
+    	    			}
         		}
         	);
         });

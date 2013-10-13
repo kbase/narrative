@@ -105,15 +105,16 @@
 		<script src="static/js/jquery-1.10.2.min.js"></script>
 		<script src="static/bootstrap-3.0.0/js/bootstrap.min.js"></script>
 		<script src="static/dataTables/1.9.4/js/jquery.dataTables.js"></script>
-        <script src="static/js/jquery.cookie.min.js"></script>
-        <script src="static/js/kbwidget.js"></script>
-        <script src="static/js/kbasePrompt.js"></script>
-        <script src="static/js/kbaseLogin.js"></script>
+    <script src="static/js/jquery.cookie.min.js"></script>
+    <script src="static/js/kbwidget.js"></script>
+    <script src="static/js/kbasePrompt.js"></script>
+    <script src="static/js/kbaseLogin.js"></script>
 		<script src="static/js/kbase.js"></script>
     <script src="static/js/underscore.js"></script>
     <script src="static/js/ICanHaz.min.js"></script>
     <script src="static/js/projects.js"></script>
     <script src="static/js/manage_projects.js"></script>
+    <script src="static/js/header.js"></script>
 
 
     <!-- HTML Templates -->

@@ -133,6 +133,7 @@
 		<script src="static/js/ICanHaz.min.js"></script>
         <script src="static/js/project_page.js"></script>
         <script src="static/js/projects.js"></script>
+        <script src="static/js/header.js"></script>
 
 		<!-- HTML Templates -->
 		<script id="narrative_table_rows" type="text/html">

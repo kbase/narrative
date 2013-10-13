@@ -105,7 +105,32 @@
             /* indices of displayed columns in result array */
             this.NAME_IDX = 0;
             this.TYPE_IDX = 1;
-            //this.$tbl.append(this.table);
+            // Add click handler for rows
+            var self = this;
+            $("#kb-ws .kb-table tbody tr").on("mouseover", function( e ) {
+                if ( $(this).hasClass('row_selected') ) {
+                    $(this).removeClass('row_selected');
+                }
+                else {
+                    $elem.$('tr.row_selected').removeClass('row_selected');
+                    $(this).addClass('row_selected');
+                }
+            });
+            var get_selected = function(tbl) {
+                return tbl.$('tr.row_selected');
+            }
+            $("#kb-ws .kb-table tbody tr").on("click", function( e ) {
+                if ( $(this).hasClass('row_selected') ) {
+                    var row = $(this)[0];
+                    //console.debug("obj",$(this));
+                    var name = row.children[0].textContent;
+                    var type = row.children[1].textContent;
+                    // populate and show info panel
+                    self.infoPanel(name, type, function(info) {
+                        info.modal();
+                    });
+                }
+            });
 			return this;
 		},
 
@@ -324,17 +349,6 @@
                             console.error("getting objects for workspace " + that.ws_id, err);
                             that.$loading.hide();
                             that.$errorMessage.show();
-                            /* XXX: put junk in there
-                            results = [ ];
-                            for (var i=0; i < 5; i++) {
-                                results.push(['luke' + i, 'Genome']);
-                                results.push(['leia' + i, 'Model']);
-                                results.push(['anakin' + i, 'Genome']);
-                                results.push(['amidala' + i, 'Model']);
-                            }
-                            that.updateResults(results);
-                            that.createTable();
-                            */
                         }
                     )
                     that.$loading.hide();
@@ -435,13 +449,31 @@
                 mdstring = mdstring + key + "=" + val + "\n";
             });
             console.log('notebook metadata = ' + mdstring);
-            this.tableData = [ ]; // clear array
+            // just columns shown
+            this.tableData = [ ];
+            // all data from table, keyed by object name + type
+            this.table_meta = { }; // *all* data from table
+            this.table_meta_versions = {}; /* all versions of selected objects, empty for now */
             // Extract selected columns from full result set
             var i1 = this.NAME_IDX, i2 = this.TYPE_IDX;
             for (var i=0; i < results.length; i++) {
-                this.tableData.push([results[i][i1], results[i][i2]]);
+                var name = results[i][i1], type = results[i][i2];
+                this.tableData.push([name, type]);
+                this.table_meta[this._item_key(name, type)] = results[i];
             }
             return this;
+        },
+
+        /**
+         * Get key for one row in the object table.
+         *
+         * @param name (string): object name
+         * @param type (string): object type
+         * @return (string) key
+         * @private
+         */
+        _item_key: function(name, type) {
+            return name + '/' + type;
         },
 
 		loggedIn: function(client, token) {

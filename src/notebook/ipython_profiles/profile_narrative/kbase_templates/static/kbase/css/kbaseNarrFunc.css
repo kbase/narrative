@@ -12,7 +12,6 @@
 
 /* Container for func list */
 .kb-function-body {
-    height: 150px;
     border: 1px solid #aaa;
     padding: 10px;
     overflow-y: auto;
@@ -89,6 +88,11 @@
 .kb-cell-run {
     z-index: auto;
     opacity: 1;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    padding: 5px;
 }
 .kb-cell-run h1 {
     font-family: 'Roboto';
@@ -101,18 +105,22 @@
 .kb-cell-run form input[type="submit"] {
     float: right;
     opacity: inherit;
+    margin-top: 5px;
 }
 .kb-cell-params table {
     border: none;
     margin-bottom: 10px;
     opacity: inherit;
+    margin-left: auto;
+    margin-right: auto;
 }
-.kb-cell-params tr,td {
+.kb-cell-params table > tr,td {
     border: none;
 }
 
 .kb-cell-params input {
     margin-left: 5px;
+    margin-top: 5px;
 }
 .kb-cell-params tr:nth-child(odd) {
     background-color: #eee;

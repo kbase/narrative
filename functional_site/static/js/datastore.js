@@ -11,11 +11,38 @@
             console.debug("logged out")
         });
 
+	// Function that sets a cookie compatible with the current narrative
+	// (it expects to find user_id and token in the cookie)
+	var set_cookie = function() {
+            var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
+            console.log( 'Setting kbase_session cookie');
+            $.cookie('kbase_session',
+                     'un=' + c.user_id
+                     + '|'
+                     + 'kbase_sessionid=' + c.kbase_sessionid
+                     + '|'
+                     + 'user_id=' + c.user_id
+                     + '|'
+                     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+                     { path: '/',
+                       domain: 'kbase.us' });
+            $.cookie('kbase_session',
+                     'un=' + c.user_id
+                     + '|'
+                     + 'kbase_sessionid=' + c.kbase_sessionid
+                     + '|'
+                     + 'user_id=' + c.user_id
+                     + '|'
+                     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+                     { path: '/'});
+	};
+
         var loginWidget = $("#login-widget").kbaseLogin({ 
             style: "narrative",
             rePrompt: false,
 
             login_callback: function(args) {
+		set_cookie();
                 loadFeed();
             },
 
@@ -24,6 +51,7 @@
             },
 
             prior_login_callback: function(args) {
+		set_cookie();
                 loadFeed();
             },
         });
@@ -45,76 +73,80 @@
 
     function loadNarratives() {
         $("#narratives_loading").show();
-        project.get_narratives({
-            callback: function(results) {
-                if (Object.keys(results).length > 0) {
-                    var data = { rows: []};
-                    var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+        //project.get_narratives({
+            //callback: function(results) {
+        getAllNarratives(function(results) {
+            var data = { rows: []};
+            var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+            console.debug("all narr (" + typeof results + ")",results);
 
-                    _.each(results, function(narrative){
-                        
-                        var name = narrative.id.replace(/_/g," ");
-                        var project_name = narrative.workspace.replace(/_/g," ");
+            _.each(Object.keys(results), function(objid) {
 
+                var narrative = results[objid];
+                console.debug("narrative",narrative);
 
-                        /*_.each(Object.keys(narrative), function(key) {
-                            console.log(key);
-                        });*/
-
-                        var moddate = narrative.moddate;
-                        moddate = moddate.replace(/T/g," ");
-
-                        var curdata = {
-                            "name": name,
-                            "narrative_id": narrative.id,
-                            "owner": narrative.owner,
-                            "date": moddate,
-                            "project_id": narrative.workspace,
-                            "project_name": project_name,
-                            "userId": userId
-                        };
-
-                        //get the users for the narrative, by the workspace id
-                        project.get_project_perms({
-                            project_id: narrative.workspace,
-                            callback: function(results) {
-                                var user_list = formatUsers(results);
-                                $("#"+narrative.workspace+"-"+narrative.id+"_users").html(user_list);
-                            }
-                        });
-
-                        
-                        data.rows.push(curdata);
-            
-                    });
-
-                    //populate the html template
-                    $("#narrative_table_header").show();
-                    var rows = ich.narrative_table_rows(data)
-                    $('#narrative_table_rows').append(rows);
-
-                    $("#narratives_loading").hide();
-
-                    //make into a datatable
-                    oTable3 = $('#narratives_table').dataTable( {
-                        "bLengthChange" : false,
-                        "iDisplayLength": 5,
-                            "sPaginationType" : "full_numbers",
-                            "aaSorting" : [[1, "asc"]],
-                            "aoColumnDefs" : [
-                            ]
-                    } );
+                var name = narrative.id.replace(/_/g," ");
+                var project_name = narrative.workspace.replace(/_/g," ");
 
 
-                } else {
-                    $("#narratives_loading").hide();
-                    $("#no_narratives").show();
+                /*_.each(Object.keys(narrative), function(key) {
+                    console.log(key);
+                });*/
 
-                }
+                var moddate = narrative.moddate;
+                moddate = moddate.replace(/T/g," ");
+
+                var curdata = {
+                    "name": name,
+                    "narrative_id": narrative.id,
+                    "owner": narrative.owner,
+                    "date": moddate,
+                    "project_id": narrative.workspace,
+                    "project_name": project_name,
+                    "userId": userId
+                };
+
+                //get the users for the narrative, by the workspace id
+                project.get_project_perms({
+                    project_id: narrative.workspace,
+                    callback: function(results) {
+                        var user_list = formatUsers(results);
+                        $("#"+narrative.workspace+"-"+narrative.id+"_users").html(user_list);
+                    }
+                });
+
                 
-            }
+                data.rows.push(curdata);
+    
+            });
+
+            //populate the html template
+            $("#narrative_table_header").show();
+            var rows = ich.narrative_table_rows(data)
+            $('#narrative_table_rows').append(rows);
+
+            $("#narratives_loading").hide();
+
+            //make into a datatable
+            oTable3 = $('#narratives_table').dataTable( {
+                "bLengthChange" : false,
+                "iDisplayLength": 5,
+                    "sPaginationType" : "full_numbers",
+                    "aaSorting" : [[1, "asc"]],
+                    "aoColumnDefs" : [
+                    ]
+            } );
+            // } else {
+            //     $("#narratives_loading").hide();
+            //     $("#no_narratives").show();
+
+            // }                            
+        },
+        function() {
+            $("#narratives_loading").hide();
+            $("#no_narratives").show();
         });
-    };
+    }
 
     function loadDatasets(token, userId, onlyOwned) {
 
@@ -358,6 +390,87 @@
         } 
         return users;
     }
+
+    /* ============== copied from users.js ================================ */
+    /* XXX: need a COMMON LIBRARY for these kinds of funcs */
+    /* XXX: I mean, seriously, cut and paste?? this is an abomination */
+
+    /**
+     * Get all objects in home workspace that satisfy 'params'.
+     *
+     * @return mapping, keyed by object id.
+     */
+    function getHomeWorkspaceObjects(params, callback) {
+        var home = _user_id() + '_home';
+        $.extend(params, {auth: _token(), workspace: home});
+        //console.debug("list_workspace_objects, params=", params);
+        project.ws_client.list_workspace_objects(params,
+            function(obj_list) {
+                var result = {};
+                //console.debug("Obj list=",obj_list);
+                $.each(obj_list, function(idx, val) {
+                    //console.debug("Home workspace narrative at " + idx + ":", val);
+                    var obj_meta = _ws_arr2obj(val);
+                    result[obj_meta.id] = obj_meta;
+                });
+                callback(result);
+            },
+            function() {
+                var args = [].slice.call(arguments);
+                console.warn("Error getting home workspace objects. ", args);
+                callback({});
+            }
+        );
+    };
+
+    /**
+     * Get all narratives for this user.
+     *
+     * @param show_results_cb - Called with object containing results.
+     * @param no_results_cb - Called if no results
+     */
+    function getAllNarratives(show_results_cb, no_results_cb) {
+        project.get_narratives({
+            callback: function(results) {
+                console.debug("Project narratives:", results);
+                // augment project narratives with user's home objects
+                getHomeWorkspaceObjects({type: project.narrative_type},
+                    function(home_narr) {
+                        $.extend(results, home_narr);
+                        console.debug("Project + home narratives:", results);
+                        // show combined results
+                        if (Object.keys(results).length > 0) {
+                            show_results_cb(results);
+                        }
+                        // no data? show that, too
+                        else {
+                            no_results_cb();
+                        }
+                    }
+                );
+            }
+        });        
+    }
+
+    /** Make a workspace array into a mapping */
+    function _ws_arr2obj(arr) {
+        var obj = {}, fld = project.obj_meta_fields;
+        for (i=0; i < fld.length; i++) {
+            obj[fld[i]] = arr[i];
+        }
+        return obj;
+    }
+
+        /** Get current user id */
+    function _user_id() {
+        return $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+    }
+    /** Get current token */
+    function _token() {
+        return $("#login-widget").kbaseLogin("token");
+    }
+
+    /* ==================================================================== */
 
 
 

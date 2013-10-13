@@ -141,6 +141,7 @@ For data in KBase workspace
 
 /* Object details window */
 #kb-obj {
+    height: 800px;
 }
 #kb-obj table {
     font-family: OxygenRegular, Arial, sans-serif;

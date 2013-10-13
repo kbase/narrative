@@ -1002,14 +1002,25 @@
                                     done = true; // partial line; wait for more data
                                 }
                             }
-                            // No progress marker on non-empty line => final output of program
+                            // No progress marker on non-empty line => final output of program?
                             else {
-                                // save the line
-                                result += line;
-                                // all but the last line should have \n appended
-                                if (index < lines.length - 1) {
-                                    result += "\n";
+                                // XXX: @ and # should probably be swapped in meaning
+                                if (line.match(/^@/)) {
+                                    // log lines starting with '@'
+                                    console.info("[KERNEL] " + line.substr(1, line.length).trim());
+                                    // consume data
+                                    offs += line.length;
                                 }
+                                else {
+                                    console.debug("Saving line: "+ line);
+                                    // save the line
+                                    result += line;
+                                    // all but the last line should have \n appended
+                                    if (index < lines.length - 1) {
+                                        result += "\n";
+                                    }
+                                }
+
                             }
                         }
                     }

@@ -136,6 +136,10 @@
 
         /* Convert object metadata from list to object */
         _meta2obj: function(m) {
+            var md;
+            if (m[10] != undefined && m[10].length > 0) {
+                eval("md = " + m[10] + ";");
+            }
             return {
                 'id': m[0], // an object_id
                 'type': m[1], //an object_type
@@ -147,7 +151,7 @@
                 'workspace': m[7], // a workspace_id string
                 'ref': m[8], // a workspace_ref string
                 'chsum': m[9], // a string
-                'metadata': m[10] // an object
+                'metadata': md // an object
             };
         },
 
@@ -254,28 +258,31 @@
             var $meta_elem = $('#kb-obj table.kb-metainfo');
             var body = $meta_elem.find('tbody')
             body.empty();
-            console.debug("Metadata:",data.metadata);
+            console.debug("Metadata:", data.metadata);
             if (data.metadata !== undefined && Object.keys(data.metadata).length > 0) {
                 $.each(data.metadata, function(key, value) {
+                    console.debug("MD key=" + key + ", value=",value);
                     // expect keys with '_' to mark sub-sections
-                    // XXX: untested since current workspace service only stores
-                    //      flat metadata (!?)
-                    // if (key.substr(0,1) == '_') {
-                    //     var pfx = key.substr(1, key.length);
-                    //     $.each(value, function(key2, value2) {
-                    //         var tr = body.append($('<tr>'));    
-                    //         var $prefix = $('<span>').addClass("text-muted").text(pfx + " ");
-                    //         tr.append($('<td>')
-                    //             .append($prefix)
-                    //             .text(key2));
-                    //         tr.append($('<td>').text(value2));
-                    //     });
-                    // }
-                    // else {
+                    if (key.substr(0,1) == '_') {
+                        var pfx = key.substr(1, key.length);
+                        console.debug("Prefix: " + pfx);
+                        $.each(value, function(key2, value2) {
+                            var tr = body.append($('<tr>'));    
+                            // key
+                            var td = $('<td>');
+                            var $prefix = $('<span>').addClass("text-muted").text(pfx + " ");
+                            td.append($prefix);
+                            td.append($('<span>').text(key2));
+                            tr.append(td);
+                            // value
+                            tr.append($('<td>').text(value2));
+                        });
+                    }
+                    else {
                         var tr = body.append($('<tr>'));    
                         tr.append($('<td>').text(key));
                         tr.append($('<td>').text(value));                        
-                    //}
+                    }
                 });
             }
             else {

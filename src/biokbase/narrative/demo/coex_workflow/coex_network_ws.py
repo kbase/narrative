@@ -33,8 +33,10 @@ from biokbase.OntologyService.Client import Ontology
 
 _log = logging.getLogger("coex_network")
 _log.setLevel(logging.DEBUG)
-_h = logging.StreamHandler()
-_h.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+# _h = logging.StreamHandler()
+_h = logging.StreamHandler(sys.stdout)
+# writing with '@' to stdout will result in messages in JS console
+_h.setFormatter(logging.Formatter("@ %(asctime)s [%(levelname)s] %(message)s"))
 _log.addHandler(_h)
 
 ## Exception classes
@@ -285,6 +287,10 @@ AWE_JOB = """
 def gnid(s):
     return s if s.startswith('kb|g.') else 'kb|g.' + s
 
+def nbconsole(x):
+    sys.stderr.write('@ ' + x + '\n')
+    sys.stderr.flush()
+
 ## MAIN ##
 
 def main(ont_id="GSE5622", gn_id='3899',
@@ -312,10 +318,11 @@ def main(ont_id="GSE5622", gn_id='3899',
     if command_params is None:
         command_params = {}
 
+    nbconsole("command_params={}, coex_args={}".format(command_params, coex_args))
+
     ##
     # 1. Get token
     ## 
-    _log.info("Get auth token")
     #aconf = {"username" :'kbasetest', "password" :'@Suite525'}
     #auth = Token(aconf)
     #token = 'un=kbasetest|tokenid=0ff5667c-2ae0-11e3-88f8-12313809f035|expiry=1412198758|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/105f50b4-2ae0-11e3-88f8-12313809f035|sig=a288a0e941120509d3ee1a8ce091160b71f0a61a0731ccf95cc7655266167c9b85b64356f8cec48d67164a55bec1f92074f09367f936e5dac1119744ff2d1c315174fa38285d4e3be612c9cbb83c66242f13a790610eef701e31cb9213d0c48304b9a68d40d3e8f77c8b67f8f97e4d1ec49de10f3c7c8648985354349fb8ea85';
@@ -325,8 +332,8 @@ def main(ont_id="GSE5622", gn_id='3899',
     ## 
     _num_done += 1
     print_progress("Get expression data", _num_done, total_work)
+    nbconsole("get expression data")
 
-    _log.info("Get expression data")
     #workspace_id = 'coexpr_test'
     edge_object_id = ont_id + ".g" + gn_id +".filtered.edge_net"
     clust_object_id = ont_id+ ".g" + gn_id +".filtered.clust_net"
@@ -350,17 +357,17 @@ def main(ont_id="GSE5622", gn_id='3899',
     _num_done += 1
     print_progress("Store expression in workspace", _num_done, total_work)
 
-    _log.info("Store expression data in workspace")
     wsc = workspaceService(URLS.workspace)
     try :
-        wsc.save_object({'id' : ont_id + ".g" + gn_id, 
-                  'type' : 'ExpressionDataSamplesMap', 
-                  'data' : sample_data, 'workspace' : workspace_id,
-                  'auth' : token})
+        obj = {'id' : ont_id + ".g" + gn_id, 
+                'type' : 'ExpressionDataSamplesMap', 
+                'workspace' : workspace_id,
+                'auth' : token}
+        nbconsole("Store expression data in workspace. params={}".format(obj))
+        obj['data'] = sample_data
+        wsc.save_object(obj)
     except Exception as err:
         raise WorkspaceException("Storing expression data", err)
-        #print "Err store error...\n"
-        #sys.exit(1)
 
     ##
     # 4. Download expression object from workspace
@@ -656,14 +663,16 @@ def main(ont_id="GSE5622", gn_id='3899',
     # 8.7 Store results object into workspace
     _num_done += 1
     print_progress("Store result object into workspace", _num_done, total_work)
-
+    meta_info = {'_params': command_params}
+    meta_str = json.dumps(meta_info)
+    nbconsole("store_result_obj metadata={}".format(meta_str))
     wsc.save_object({'id' : edge_object_id, 
                      'type' : 'Networks', 
                      'data' : net_object,
                      'workspace' : workspace_id,
                      'auth' : token,
                      'command': 'coex_network_ws',
-                     'metadata': str(command_params)});
+                     'metadata': meta_str});
 
     return edge_object_id
 

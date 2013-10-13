@@ -305,11 +305,6 @@ class="notebook_app"
             </div>
         </div>
     <div id="kb-function-help"></div>
-
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-
-
         
 <!--         <div id="data-pane" class="left-pane">
             <h3 class="pane-title">
@@ -353,18 +348,27 @@ class="notebook_app"
                             </tbody>
                         </table>
                     </div>
-                    <!-- Actual info about the object -->
-                    <h3>Description</h3>
-                    <!-- BS3 table -->
-                    <table class="table kb-info table-bordered table-condensed">
-                        <tbody>
-                        </tbody>
-                    </table>
-                    <h3>Metadata</h3>
-                    <table class="table kb-metainfo table-bordered table-condensed">
-                        <tbody>
-                        </tbody>
-                    </table>
+                    <!-- Tabs for info about obj -->
+                    <div>
+                        <ul class="nav nav-pills">
+                            <li><a href="#kb-info-table" data-toggle="tab">Description</a></li>
+                            <li><a href="#kb-metainfo-table" data-toggle="tab">Metadata</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="kb-info-table">
+                                <table class="kb-info table">
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane" id="kb-metainfo-table">
+                                <table class="kb-metainfo table">
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary kb-network">Insert visualization</button>

@@ -219,13 +219,15 @@
                     var version = row.children[0].textContent * 1;
                     // pick out instance that matches version
                     var info = _.reduce(objlist, function(memo, val) {
-                        console.debug(val.instance + " == " + version + "?");
                         return val.instance == version ? val : memo;
                     }, null);
+                    // populate and show description
                     if (info != null) {
-                        // populate and show description
-                        // XXX: when desc. is done, check for add-ability to narr.
                         self.descriptionPanel($("#kb-obj table.kb-info"), info);
+                    }
+                    else {
+                        // XXX: internal error
+                        alert("Object version " + version + " not found!");
                     }
                 }
             });
@@ -236,7 +238,9 @@
         descriptionPanel: function($elem, data) {
             console.log("Populate descriptionPanel desc=",data);
             var $footer = $('#kb-obj .modal-footer');
-            $footer.empty();
+            // remove old button bindings
+            $('#kb-obj .modal-footer button.btn').unbind();
+            $('#kb-obj .modal-footer button.btn').hide();
             var self = this;
             var body = $elem.find('tbody');
             body.empty();
@@ -252,15 +256,14 @@
         },
 
         addNetworkVisualization: function(data) {
-            console.debug("Add button for Networks data");
-            var oid = data.id;
+            var oid = data.id, oinst = data.instance;
             var $footer = $('#kb-obj .modal-footer');
-            var $btn = $footer.append($('<button>')
-                .attr('type',"button")
-                .addClass("btn btn-primary")
-                .text("Insert visualization"));
+            var $btn = $footer.find('button.kb-network');
+            $btn.show();
+            // add new button/binding
             var self = this;
             $btn.click(function(e) {
+                console.debug("creating vis. for object: " + oid + "." + oinst);
                 var cell = IPython.notebook.insert_cell_at_bottom('markdown');
                 // put div inside cell with an addr
                 var eid = self._uuidgen();
@@ -273,8 +276,8 @@
                 var $target = $('#' + eid);
                 $target.css({'margin': '-10px'});
                 $target.ForceDirectedNetwork({
-                    workspaceID: self.ws_id + "." + oid,
-                    token: self.ws_auth
+                    workspaceID: self.ws_id + "." + oid + "#" + oinst,
+                    token: self.ws_auth,
                 });
             });
         },

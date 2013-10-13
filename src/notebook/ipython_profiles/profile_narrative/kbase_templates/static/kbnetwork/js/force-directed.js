@@ -55,16 +55,19 @@
                 fetchAjax = self.exampleData();
             } else if (self.options.token) {
                 $.ajaxSetup({ cache: true });
-                var wsRegex = /^(\w+)\.(.+)/;
+                // parse into 3 parts: workspace <dot> objectid [<dot> version]
+                var wsRegex = /^(\w+)\.([^#]+)(?:#(.+))?/;
                 var wsid = wsRegex.exec(self.options.workspaceID);
                 if (wsid !== null && wsid[1] && wsid[2]) {
                     var kbws = new workspaceService(WS_URL);
-                    fetchAjax = kbws.get_object({
-                        auth: self.options.token,
-                        workspace: wsid[1],
-                        id: wsid[2],
-                        type: 'Networks'
-                    });
+                    var params = { auth: self.options.token,    // auth
+                        workspace: wsid[1], // workspace name
+                        id: wsid[2],        // object id
+                        type: 'Networks'};  // object type
+                    if (wsid[3] !== undefined) {
+                        params.instance = wsid[3]; // optional version
+                    }
+                    fetchAjax = kbws.get_object(params);
                 } else {
                     self.trigger("error", ["Cannot parse workspace ID " +
                         self.options.workspaceID

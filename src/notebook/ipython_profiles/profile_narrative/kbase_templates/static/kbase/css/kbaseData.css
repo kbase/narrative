@@ -172,5 +172,9 @@ For data in KBase workspace
     color: #0074C5;
     text-decoration: none;
 }
+/* by default, hide all buttons in footer */
+#kb-obj .modal-footer button {
+    display: none;
+}
 /* end: Object details window */
 

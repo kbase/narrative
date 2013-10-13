@@ -291,7 +291,7 @@ def main(ont_id="GSE5622", gn_id='3899',
          fltr_m='anova', fltr_n='100', fltr_p='0.00005',
          net_c='0.75',
          clust_c='hclust', clust_n='simple', clust_s='10',
-         token=None, workspace_id=None):
+         token=None, workspace_id=None, command_params=None):
     """Create a narrative for co-expression network workflow
 
     1. User uploads multiple files to shock and remembers shock node IDs
@@ -309,6 +309,8 @@ def main(ont_id="GSE5622", gn_id='3899',
     coex_args['coex_filter'] = "-n {}".format(fltr_n)
     coex_args['coex_net'] = "-c {}".format(net_c)
     coex_args['coex_cluster'] = "-s {}".format(clust_s)
+    if command_params is None:
+        command_params = {}
 
     ##
     # 1. Get token
@@ -332,7 +334,7 @@ def main(ont_id="GSE5622", gn_id='3899',
     clust_core_id = "ws//" +workspace_id+ "/" +clust_object_id
     edge_ds_id ="kb|netdataset." + edge_core_id; 
     clust_ds_id ="kb|netdataset." +clust_core_id; 
-    networks_id = ont_id+".g" + gn_id + ".filtered.network"
+    networks_id = ont_id + ".g" + gn_id + ".filtered.network"
 
 
     exprc = ExpressionServices(URLS.expression)
@@ -657,8 +659,11 @@ def main(ont_id="GSE5622", gn_id='3899',
 
     wsc.save_object({'id' : edge_object_id, 
                      'type' : 'Networks', 
-                     'data' : net_object, 'workspace' : workspace_id,
-                     'auth' : token});
+                     'data' : net_object,
+                     'workspace' : workspace_id,
+                     'auth' : token,
+                     'command': 'coex_network_ws',
+                     'metadata': str(command_params)});
 
     return edge_object_id
 
@@ -682,7 +687,7 @@ def run(params, quiet=True):
     }
     p.update(dict(token=os.environ['KB_AUTH_TOKEN'],
                   workspace_id=os.environ['KB_WORKSPACE_ID']))
-    obj_id = main(**p)
+    obj_id = main(command_params=params, **p)
     print(obj_id)
     return 0
 

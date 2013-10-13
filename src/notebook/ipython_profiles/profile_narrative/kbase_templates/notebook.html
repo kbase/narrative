@@ -233,9 +233,9 @@ class="notebook_app"
             </div>
             <div class="kb-function-body">
                 <ul>
-                    <li><a href="#" data-name="plants">Plants Co-expression</a>
+                    <li><a href="#" data-name="Plants Co-expression">Plants Co-expression</a>
                         <span data-name="Plants Co-expression" 
-                              data-help="KBase Coexpression network using dynamic visualization. Navigate among different experimental conditions, sets of genes and clusters over a variety of expression datasets from microarray to RNASeq available from microbes and plants"
+                              data-help="Calculate gene co-expression clusters and visualize results as a graph."
                               class="kb-function-help">?</span>
                     </li>
                     <li><a href="#" data-name="genomeToFba">Genome to FBA Model</a>
@@ -248,6 +248,7 @@ class="notebook_app"
         </div>
     <div id="kb-function-help"></div>
 
+<<<<<<< Updated upstream
 
 
         
@@ -267,6 +268,52 @@ class="notebook_app"
  -->    </div>
 </div>
 
+=======
+    <!-- 
+        Show details for 1 object in separate, modal, box 
+     -->
+    <div id="kb-obj" class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="object-info" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h2 class="modal-title">Object</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="kb-table">
+                        <!-- DataTables index of versions -->
+                        <h3>Versions</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Version</th>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Actual info about the object -->
+                    <h3>Description</h3>
+                    <!-- BS3 table -->
+                    <table class="table kb-info table-bordered table-condensed">
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <h3>Metadata</h3>
+                    <table class="table kb-metainfo table-bordered table-condensed">
+                        <tbody>
+                        </tbody>
+                    </table>                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary kb-network">Insert visualization</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 
 <div id='tooltip' class='ipython_tooltip' style='display:none'></div>
 

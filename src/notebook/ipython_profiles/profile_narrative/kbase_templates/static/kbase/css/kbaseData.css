@@ -24,7 +24,7 @@ For data in KBase workspace
 }
 .kb-header #kb-wsname {
     color: white;
-    margin-left: 0.25em;
+    margin-left: 20px;
     font-weight: 900;
 }
 
@@ -70,6 +70,16 @@ For data in KBase workspace
     margin-top: 25px;
 }
 /* end: upload pulldown */
+
+/* Refresh button */
+#kb-ws-refresh {
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    padding: 0px 6px;
+    overflow: hidden;
+}
+/* end: Refresh button */
 
 /* Data table */
 #kb-ws .kb-table table {
@@ -117,3 +127,53 @@ For data in KBase workspace
 .sorting_desc_disabled { background: url('../images/sort_desc_disabled.png') no-repeat center right; }
 
 /* end: data table */
+
+/* Object details window */
+#kb-obj {
+}
+#kb-obj table {
+    font-family: OxygenRegular, Arial, sans-serif;
+}
+#kb-obj table .kb-table table {
+    height: 200px;
+}
+
+#kb-obj .kb-table > h3 {
+    margin-top: -10px;
+}
+/* underline name of object */
+#kb-obj .kb-table tr.row_selected td {
+    text-decoration: underline;
+    cursor: pointer;
+}
+/* For pagination */
+#kb-obj ul.list-group {
+    display: block;
+    margin-top: 15px;
+    list-style-type: none;
+}
+#kb-obj ul.list-group li {
+    display: inline-block;
+    margin: 0;
+    padding: 0 5px;
+    color: #0074C5;
+    border-top: 1px solid #DDD;
+    text-align: center;
+}
+#kb-obj .list-group li {
+    border-right: 1px solid #DDD;
+    box-sizing: border-box;
+}
+#kb-obj .list-group li:first-child {
+    border-left: 1px solid #DDD;
+}
+#kb-obj .list-group a {
+    color: #0074C5;
+    text-decoration: none;
+}
+/* by default, hide all buttons in footer */
+#kb-obj .modal-footer button {
+    display: none;
+}
+/* end: Object details window */
+

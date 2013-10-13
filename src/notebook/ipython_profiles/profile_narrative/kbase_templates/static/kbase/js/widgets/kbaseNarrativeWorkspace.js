@@ -85,6 +85,22 @@
                         ws_parent: this};
             this.uploadWidget_dlg = $dlg //$dlg.kbaseUploadWidget;
             this.uploadWidget_opts = opts;
+            // Add a 'refresh' button, bound to this widget's render() function
+            var $refresh = $('<button>')
+                .addClass('btn btn-default btn-sm')
+                .attr({'type': 'button', 'id': 'kb-ws-refresh'});
+                //.text("Refresh");
+            // XXX: BS-3 glyphicons aren't working
+            //$refresh.append($('<span>').addClass("glyphicon glyphicon-refresh"));
+            $refresh.append($('<i>').addClass('icon-refresh'));
+            elem.append($refresh);
+            var self = this;
+            elem.on('click', function(e) {
+                console.debug("refresh.begin");
+                self.render();
+                console.debug("refresh.end");
+            });
+            // done
             console.debug('initControls.end');
             return this;
         },
@@ -199,7 +215,7 @@
                 // To add a new function, you need to define
                 // one JSON structure for params, and one function
                 // to build the actual command.
-                case 'plants':
+                case 'Plants Co-expression':
                     return {
                         // configuration for parameters
                         'config': this.plantsRunConfig,
@@ -233,6 +249,9 @@
                 });
                 var name = params['kbfunc'];
                 var funcs = self._getFunctionsForFunction(name);
+                if (self.result_handler === undefined) {
+                    self.result_handler = funcs.result_handler;                    
+                }
                 console.debug("Run fn(" + name + ") with params", params);
                 self._runner()(funcs.command_builder(params));
             });
@@ -240,12 +259,17 @@
 
         // Rebind all the run buttons to their original function
         rebindRunButtons: function() {
+            console.debug("rebindRunButtons.begin");
             var self = this;
-            $.each($('div.kb-cell-run form'), function(key, element) {
-                console.debug("rebind run button to element:", this);
+            $.each($('div.kb-cell-run'), function(key, element) {
+                self.element = $(element);
+                var $frm = self.element.find('form');
                 var submit_fn = self._bindRunButton();
-                $(element).on("submit", submit_fn);
+                $frm.off("submit"); // unbind old                
+                $frm.on("submit", submit_fn);
+                console.debug('rebound submit on', $frm);
             });
+            console.debug("rebindRunButtons.end");
         },
 
         /* -------------- PLANTS ---------------------- */
@@ -382,7 +406,8 @@
                 alert("Unable to run command: No active workspace!");
                 return "";
             }
-            code += "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n";  
+            code += "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n";
+            code += "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
             code += "params = " + this._pythonDict(params) + "\n";
             code += module + "." + cmd + "(params)" + "\n";
             console.debug("CODE:", code);
@@ -685,6 +710,9 @@
          */
 		render: function() {
             this.rebindRunButtons();
+            if (this.dataTableWidget !== undefined) {
+                this.dataTableWidget.render();
+            }
 			return this;
 		},
 

@@ -109,6 +109,192 @@
 			return this;
 		},
 
+        /* Convert object metadata from list to object */
+        _meta2obj: function(m) {
+            return {
+                'id': m[0], // an object_id
+                'type': m[1], //an object_type
+                'moddate': m[2].replace('T',' '), // a timestamp
+                'instance': m[3], // instance int
+                'command': m[4], // command string
+                'lastmodifier': m[5], // a username string
+                'owner': m[6], // a username string
+                'workspace': m[7], // a workspace_id string
+                'ref': m[8], // a workspace_ref string
+                'chsum': m[9], // a string
+                'metadata': m[10] // an object
+            };
+        },
+
+        infoPanel: function(name, type, callback) {
+            console.debug("infoPanel.begin");
+            // Load history for this obj
+            var key = this._item_key(name, type);
+            var meta = this._meta2obj(this.table_meta[key]);
+            var opts = {workspace: this.ws_id, auth: this.ws_auth, id: meta.id, type: meta.type};
+            //console.debug("get history, opts=",opts);
+            var self = this;
+            this.ws_client.object_history(opts,
+                function (results) {
+                    var $elem = $('#kb-obj');
+                    $elem.find(".modal-title").text(name);
+                    var objlist = _.map(results, self._meta2obj);
+                    var versions = _.map(objlist, function(m) {
+                            return [m.instance, m.moddate, m.lastmodifier]; 
+                    });
+                    self.infoTable(versions, objlist);
+                    callback($elem);
+                },
+                function () {
+                    alert("Failed to get info for '" + name + "'");
+                }
+            );
+        },
+
+        infoTable : function(data, objlist) {
+            console.debug("infotable for objects",objlist);
+            var t = $('#kb-obj .kb-table table').dataTable();
+            t.fnDestroy();
+            t.dataTable({
+                aaData: data,
+                aoColumns : [
+                    { sTitle: 'Version', sWidth: "8em", bSortable: true, },
+                    { sTitle: 'Date', sWidth: "15em", bSortable: true },
+                    { sTitle: 'User', sWidth: "20em", bSortable: false }
+                ],
+                aaSorting: [[0, 'desc']],
+                bAutoWidth: false,
+                bFilter: false,
+                bInfo: false,
+                bLengthChange: false,
+                bPaginate: true,
+                iDisplayLength: 5,
+                sPaginationType: "bootstrap"                
+            });
+            // Add click handler for rows
+            var self = this;
+            var _tr = "#kb-obj .kb-table tbody tr";
+            var $rows = $(_tr); 
+            $rows.on("mouseover", function( e ) {
+                if ( $(this).hasClass('row_selected') ) {
+                    $(this).removeClass('row_selected');
+                }
+                else {
+                    t.$('tr.row_selected').removeClass('row_selected');
+                    $(this).addClass('row_selected');
+                }
+            });
+            var get_selected = function(tbl) {
+                return tbl.$('tr.row_selected');
+            }
+            $rows.on("click", function( e ) {
+                if ( $(this).hasClass('row_selected') ) {
+                    var row = $(this)[0];
+                    var version = row.children[0].textContent * 1;
+                    // pick out instance that matches version
+                    var info = _.reduce(objlist, function(memo, val) {
+                        return val.instance == version ? val : memo;
+                    }, null);
+                    // populate and show description
+                    if (info != null) {
+                        self.descriptionPanel($("#kb-obj table.kb-info"), info);
+                    }
+                    else {
+                        // XXX: internal error
+                        alert("Object version " + version + " not found!");
+                    }
+                }
+            });
+            // Auto-select first row
+            $(_tr + ':first-of-type').mouseover().click();
+        },
+
+        descriptionPanel: function($elem, data) {
+            console.log("Populate descriptionPanel desc=",data);
+            var $footer = $('#kb-obj .modal-footer');
+            // remove old button bindings
+            $('#kb-obj .modal-footer button.btn').unbind();
+            $('#kb-obj .modal-footer button.btn').hide();
+            var self = this;
+            var body = $elem.find('tbody');
+            body.empty();
+            $.each(data, function(key, value) {
+                if (key != 'metadata') {
+                    var tr = body.append($('<tr>'));    
+                    tr.append($('<td>').text(key));
+                    tr.append($('<td>').text(value));
+                }
+            });
+            // Add metadata, if there is any
+            var $meta_elem = $('#kb-obj table.kb-metainfo');
+            var body = $meta_elem.find('tbody')
+            body.empty();
+            console.debug("Metadata:",data.metadata);
+            if (data.metadata !== undefined && Object.keys(data.metadata).length > 0) {
+                $.each(data.metadata, function(key, value) {
+                    // expect keys with '_' to mark sub-sections
+                    // XXX: untested since current workspace service only stores
+                    //      flat metadata (!?)
+                    // if (key.substr(0,1) == '_') {
+                    //     var pfx = key.substr(1, key.length);
+                    //     $.each(value, function(key2, value2) {
+                    //         var tr = body.append($('<tr>'));    
+                    //         var $prefix = $('<span>').addClass("text-muted").text(pfx + " ");
+                    //         tr.append($('<td>')
+                    //             .append($prefix)
+                    //             .text(key2));
+                    //         tr.append($('<td>').text(value2));
+                    //     });
+                    // }
+                    // else {
+                        var tr = body.append($('<tr>'));    
+                        tr.append($('<td>').text(key));
+                        tr.append($('<td>').text(value));                        
+                    //}
+                });
+            }
+            else {
+                body.append($('<tr>')).append($('<td>').text("No metadata"));
+            }
+            // XXX: hack! add button for viz if network
+            if (data.type == 'Networks') {
+                this.addNetworkVisualization(data);
+            }
+        },
+
+        addNetworkVisualization: function(data) {
+            var oid = data.id, oinst = data.instance;
+            var $footer = $('#kb-obj .modal-footer');
+            var $btn = $footer.find('button.kb-network');
+            $btn.show();
+            // add new button/binding
+            var self = this;
+            $btn.click(function(e) {
+                console.debug("creating vis. for object: " + oid + "." + oinst);
+                var cell = IPython.notebook.insert_cell_at_bottom('markdown');
+                // put div inside cell with an addr
+                var eid = self._uuidgen();
+                var content = "<div id='" + eid + "'></div>";
+                cell.set_text(content);
+                // re-render cell to make <div> appear
+                cell.rendered = false;
+                cell.render();
+                // slap network into div by addr
+                var $target = $('#' + eid);
+                $target.css({'margin': '-10px'});
+                $target.ForceDirectedNetwork({
+                    workspaceID: self.ws_id + "." + oid + "#" + oinst,
+                    token: self.ws_auth,
+                });
+            });
+        },
+
+        _uuidgen: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);});
+         },
+
         /**
          * Render the widget.
          * This fetches the list of data sets for the workspace.
@@ -126,11 +312,13 @@
                 var that = this;
                 this.setWs(function() {
                     var opts = {workspace: that.ws_id, auth: that.ws_auth};
+                    console.debug("list_workspace_objects.begin");
                     that.ws_client.list_workspace_objects(opts,
                         function(results) {
                             //console.log("Results: " + results);
                             that.updateResults(results);
                             that.createTable();
+                            console.debug("list_workspace_objects.end");
                         },
                         function(err) {
                             console.error("getting objects for workspace " + that.ws_id, err);

@@ -98,12 +98,12 @@ body {
 body{
     font-size: 14px;
 }
-@media screen and (max-width: 768px){
+/*@media screen and (max-width: 768px){
     body{font-size: 12px;}
 }
 @media screen and (max-width: 480px){
     body{font-size: 10px;}
-}
+}*/
 strong, b {
 	font-family: 'OxygenBold';
 	font-weight: normal;
@@ -155,14 +155,16 @@ header[role="banner"] {
 } 
 
 nav[role="navigation"] ul{
-    margin: 1.2em 0 .5em 0;
+    margin: .7em 0 .5em 0;
     text-align: center;
+    padding-left: 0px;
 }
 
 nav[role="navigation"] ul li {
     display: inline;
     margin: 0 .5em;
     vertical-align: middle;
+    line-height: 3em;
 }
 
 nav[role="navigation"] ul li a {
@@ -209,19 +211,19 @@ input#search_terms{
 }
 span#searchspan{
     display: inline-block;
-    width: 60%;
+    width: 55%;
 }
 @media screen and (max-width: 1170px){
-    span#searchspan{width: 50%;} 
-}
-@media screen and (max-width: 980px){
     span#searchspan{width: 40%;} 
 }
-@media screen and (max-width: 768px){
+@media screen and (max-width: 980px){
     span#searchspan{width: 30%;} 
 }
+@media screen and (max-width: 768px){
+    span#searchspan{width: 90%;} 
+}
 @media screen and (max-width: 590px){
-    span#searchspan{width: 60%;}   
+    span#searchspan{width: 90%;}   
 }
 #login-widget{
     padding: 1em 1em 0 0;
@@ -230,6 +232,7 @@ span#searchspan{
 #apps_menu{
     padding: 1em 0 0 0;
     margin: 0;
+    display: inline-block;
 }
 #apps_menu li{
     padding: 0;

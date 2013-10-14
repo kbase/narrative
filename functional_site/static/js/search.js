@@ -34,6 +34,7 @@ var expandedView = false;
 
 function GetUrlValue(VarSearch){
     var SearchString = window.location.search.substring(1);
+    SearchString = decodeURIComponent(SearchString);
     var VariableArray = SearchString.split('&');
     for(var i = 0; i < VariableArray.length; i++){
         var KeyValuePair = VariableArray[i].split('=');

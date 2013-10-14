@@ -32,7 +32,7 @@
                 <div class="col-sm-8">
                     <nav id="header_nav" role="navigation" class="row">
                         <ul>
-                            <li id="searchlabel"><a href="search.shtml">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>
+                            <li id="searchlabel"><a href="search.shtml">Search</a><span id="searchspan"><input type="text" class="form-control" name="alt_search_terms" id="alt_search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>
                             
                         </ul>
                     </nav>

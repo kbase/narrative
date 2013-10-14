@@ -196,7 +196,7 @@ nav[role="navigation"] ul li a {
 li#searchlabel a{
  }
 
-input#search_terms{
+input#search_terms, input#alt_search_terms{
     padding: .4em 1em;
     display: inline;
     border-color: #5c9531;

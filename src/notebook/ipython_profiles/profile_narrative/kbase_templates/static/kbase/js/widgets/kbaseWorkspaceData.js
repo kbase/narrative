@@ -317,9 +317,9 @@
 
         },
 
-        _addGenomeVisualization: function(data, $target) {
-            console.log(data);
-        },
+        // _addGenomeVisualization: function(data, $target) {
+        //     console.log(data);
+        // },
 
         _addMediaVisualization: function(data, $target) {
             $target.kbaseMediaEditorNarrative({
@@ -329,17 +329,17 @@
             });
         },
 
-        _addModelVisualization: function(data, $target) {
+        // _addModelVisualization: function(data, $target) {
 
-        },
+        // },
 
-        _addFBAVisualization: function(data, $target) {
+        // _addFBAVisualization: function(data, $target) {
 
-        },
+        // },
 
-        _addContigSetVisualization: function(data, $target) {
+        // _addContigSetVisualization: function(data, $target) {
 
-        },
+        // },
 
         // Just adds a simple table with ID, datatype, owner, and ws location for now.
         // Maybe something fancier later.

@@ -30,7 +30,7 @@ var app = angular.module('landing-pages',
             {templateUrl: 'views/ws-browser.html',
              controller: WSBrowser})
 
-        .when('/genomes/cs/:id',
+        .when('/genomes/CDS/:id',
             {templateUrl: 'views/objects/genome.html',
              controller: GenomeDetail})
         .when('/genomes/:ws',
@@ -123,10 +123,19 @@ var app = angular.module('landing-pages',
 
 
 app.run(function ($rootScope) {
-    $('#navigation').load('partials/nav.html', function(){	
+    $('#navigation').load('partials/nav_func.html', function(){	
 	    // sign in button
 	    $('#signin-button').kbaseLogin({style: 'text', 
-	        login_callback: reload_window, logout_callback: reload_window});
+            login_callback: function() {
+                set_cookie();
+            },
+            logout_callback: function() {
+                set_cookie();
+            }}
+        );
+	        // login_callback: function() {
+         //        set_cookie();
+         //    } reload_window, logout_callback: reload_window});
 
 	    $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
         $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
@@ -145,6 +154,31 @@ app.run(function ($rootScope) {
         removeCards();
     })
 });
+
+function set_cookie() {
+   var c = $("#signin-button").kbaseLogin('get_kbase_cookie');
+   console.log( 'Setting kbase_session cookie');
+   $.cookie('kbase_session',
+    'un=' + c.user_id
+    + '|'
+    + 'kbase_sessionid=' + c.kbase_sessionid
+    + '|'
+    + 'user_id=' + c.user_id
+    + '|'
+    + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+    { path: '/'});
+   $.cookie('kbase_session',
+    'un=' + c.user_id
+    + '|'
+    + 'kbase_sessionid=' + c.kbase_sessionid
+    + '|'
+    + 'user_id=' + c.user_id
+    + '|'
+    + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+    { path: '/',
+      domain: 'kbase.us' });
+
+};
 
 
 /*

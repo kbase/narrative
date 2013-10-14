@@ -1,0 +1,27 @@
+    <header id="header_banner" role="banner">
+        <div id="navrow" class="row">     
+            <div id="logo" class="col-sm-1">
+                <a href="http://www.kbase.us"><img src="assets/images/kbase_logo.png" alt="KBase User Home" /></a>
+            </div>
+            <div id="apps_menu" class="dropdown col-sm-1">
+              <button type="button" class="btn btn-default" data-toggle="dropdown" href="#" onclick="$('#apps_menu_items').toggle();">Apps <span class="caret"></span></button>
+              <ul class="dropdown-menu" role="menu" id="apps_menu_items">
+                <li role="presentation"><a role="menuitem" tabindex="-1" href="#"><a href="http://www.kbase.us/services/docs/invocation/Iris/iris.html">IRIS</a></li>
+                <li role="presentation"><a role="menuitem" tablindex="-1" href="#"><a href="http://140.221.84.142/browse.html">Workspace Browser</a></li>
+              </ul>
+            </div>
+            <div class="col-sm-8">
+                <nav id="header_nav" role="navigation">
+                    <ul>
+                        <li><a href="http://narrative.kbase.us/home.shtml">Home</a></li>
+                        <li><a href="http://narrative.kbase.us/datastore.shtml">My Stuff</a></li>
+                        <li id="searchlabel"><a href="http://narrative.kbase.us/search.shtml">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="col-sm-2">
+                <div id="signin-button" class="pull-right" />
+            </div>
+        </div>
+    </header>
+

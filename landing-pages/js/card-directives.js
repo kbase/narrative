@@ -43,7 +43,7 @@ angular.module('card-directives')
         return {
             link: function(scope, element, attrs) {
                 var prom = kbClient('ws', 'get_objectmeta',
-                            {type:'Model', id: scope.id, workspace: scope.ws});
+                            {type:'Model', id: scope.id, workspace: scope.ws, auth: scope.USER_TOKEN});
                 $.when(prom).done(function(data){
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseModelMeta", 
                         { title: 'Model Info',
@@ -57,7 +57,7 @@ angular.module('card-directives')
                 });
 
                 var prom = kbClient('fba', 'get_models',
-                            {models: [scope.id], workspaces: [scope.ws]});
+                            {models: [scope.id], workspaces: [scope.ws], auth: scope.USER_TOKEN});
                 $.when(prom).done(function(data) {
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseModelTabs", 
                         { modelsData: data,
@@ -101,7 +101,7 @@ angular.module('card-directives')
         return {
             link: function(scope, element, attrs) {
                 var prom = kbClient('ws', 'get_objectmeta',
-                            {type:'FBA', id: scope.id, workspace: scope.ws});
+                            {type:'FBA', id: scope.id, workspace: scope.ws, auth: scope.USER_TOKEN});
                 $.when(prom).done(function(data){
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaMeta", 
                         { title: 'Model Info',
@@ -116,7 +116,7 @@ angular.module('card-directives')
 
 
                 var prom = kbClient('fba', 'get_fbas',
-                            {fbas: [scope.id], workspaces: [scope.ws]})
+                            {fbas: [scope.id], workspaces: [scope.ws], auth: scope.USER_TOKEN})
                 $.when(prom).done(function(fbas_data) {
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaTabs", 
                         { title: 'FBA Details',
@@ -132,7 +132,7 @@ angular.module('card-directives')
                     var model_id = fbas_data[0].model;
 
                     var prom2 = kbClient('fba', 'get_models',
-                            {models: [model_id], workspaces: [model_ws]});
+                            {models: [model_id], workspaces: [model_ws], auth: scope.USER_TOKEN});
                     $.when(prom2).done(function(models_data){
                         $(element).KBaseCardLayoutManager().addNewCard("kbaseModelCore", 
                             { title: 'Central Carbon Core Metabolic Pathway',

@@ -33,8 +33,10 @@ from biokbase.OntologyService.Client import Ontology
 
 _log = logging.getLogger("coex_network")
 _log.setLevel(logging.DEBUG)
-_h = logging.StreamHandler()
-_h.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+# _h = logging.StreamHandler()
+_h = logging.StreamHandler(sys.stdout)
+# writing with '@' to stdout will result in messages in JS console
+_h.setFormatter(logging.Formatter("@ %(asctime)s [%(levelname)s] %(message)s"))
 _log.addHandler(_h)
 
 ## Exception classes
@@ -285,13 +287,17 @@ AWE_JOB = """
 def gnid(s):
     return s if s.startswith('kb|g.') else 'kb|g.' + s
 
+def nbconsole(x):
+    sys.stderr.write('@ ' + x + '\n')
+    sys.stderr.flush()
+
 ## MAIN ##
 
 def main(ont_id="GSE5622", gn_id='3899',
          fltr_m='anova', fltr_n='100', fltr_p='0.00005',
          net_c='0.75',
          clust_c='hclust', clust_n='simple', clust_s='10',
-         token=None, workspace_id=None):
+         token=None, workspace_id=None, command_params=None):
     """Create a narrative for co-expression network workflow
 
     1. User uploads multiple files to shock and remembers shock node IDs
@@ -309,11 +315,14 @@ def main(ont_id="GSE5622", gn_id='3899',
     coex_args['coex_filter'] = "-n {}".format(fltr_n)
     coex_args['coex_net'] = "-c {}".format(net_c)
     coex_args['coex_cluster'] = "-s {}".format(clust_s)
+    if command_params is None:
+        command_params = {}
+
+    nbconsole("command_params={}, coex_args={}".format(command_params, coex_args))
 
     ##
     # 1. Get token
     ## 
-    _log.info("Get auth token")
     #aconf = {"username" :'kbasetest', "password" :'@Suite525'}
     #auth = Token(aconf)
     #token = 'un=kbasetest|tokenid=0ff5667c-2ae0-11e3-88f8-12313809f035|expiry=1412198758|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/105f50b4-2ae0-11e3-88f8-12313809f035|sig=a288a0e941120509d3ee1a8ce091160b71f0a61a0731ccf95cc7655266167c9b85b64356f8cec48d67164a55bec1f92074f09367f936e5dac1119744ff2d1c315174fa38285d4e3be612c9cbb83c66242f13a790610eef701e31cb9213d0c48304b9a68d40d3e8f77c8b67f8f97e4d1ec49de10f3c7c8648985354349fb8ea85';
@@ -323,8 +332,8 @@ def main(ont_id="GSE5622", gn_id='3899',
     ## 
     _num_done += 1
     print_progress("Get expression data", _num_done, total_work)
+    nbconsole("get expression data")
 
-    _log.info("Get expression data")
     #workspace_id = 'coexpr_test'
     edge_object_id = ont_id + ".g" + gn_id +".filtered.edge_net"
     clust_object_id = ont_id+ ".g" + gn_id +".filtered.clust_net"
@@ -332,7 +341,7 @@ def main(ont_id="GSE5622", gn_id='3899',
     clust_core_id = "ws//" +workspace_id+ "/" +clust_object_id
     edge_ds_id ="kb|netdataset." + edge_core_id; 
     clust_ds_id ="kb|netdataset." +clust_core_id; 
-    networks_id = ont_id+".g" + gn_id + ".filtered.network"
+    networks_id = ont_id + ".g" + gn_id + ".filtered.network"
 
 
     exprc = ExpressionServices(URLS.expression)
@@ -348,17 +357,17 @@ def main(ont_id="GSE5622", gn_id='3899',
     _num_done += 1
     print_progress("Store expression in workspace", _num_done, total_work)
 
-    _log.info("Store expression data in workspace")
     wsc = workspaceService(URLS.workspace)
     try :
-        wsc.save_object({'id' : ont_id + ".g" + gn_id, 
-                  'type' : 'ExpressionDataSamplesMap', 
-                  'data' : sample_data, 'workspace' : workspace_id,
-                  'auth' : token})
+        obj = {'id' : ont_id + ".g" + gn_id, 
+                'type' : 'ExpressionDataSamplesMap', 
+                'workspace' : workspace_id,
+                'auth' : token}
+        nbconsole("Store expression data in workspace. params={}".format(obj))
+        obj['data'] = sample_data
+        wsc.save_object(obj)
     except Exception as err:
         raise WorkspaceException("Storing expression data", err)
-        #print "Err store error...\n"
-        #sys.exit(1)
 
     ##
     # 4. Download expression object from workspace
@@ -654,11 +663,16 @@ def main(ont_id="GSE5622", gn_id='3899',
     # 8.7 Store results object into workspace
     _num_done += 1
     print_progress("Store result object into workspace", _num_done, total_work)
-
+    meta_info = {'_params': command_params}
+    meta_str = json.dumps(meta_info)
+    nbconsole("store_result_obj metadata={}".format(meta_str))
     wsc.save_object({'id' : edge_object_id, 
                      'type' : 'Networks', 
-                     'data' : net_object, 'workspace' : workspace_id,
-                     'auth' : token});
+                     'data' : net_object,
+                     'workspace' : workspace_id,
+                     'auth' : token,
+                     'command': 'coex_network_ws',
+                     'metadata': meta_str});
 
     return edge_object_id
 
@@ -682,7 +696,7 @@ def run(params, quiet=True):
     }
     p.update(dict(token=os.environ['KB_AUTH_TOKEN'],
                   workspace_id=os.environ['KB_WORKSPACE_ID']))
-    obj_id = main(**p)
+    obj_id = main(command_params=params, **p)
     print(obj_id)
     return 0
 

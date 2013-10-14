@@ -331,7 +331,7 @@ class User:
                              headers = headers)
         profile = resp.json
         for attr,go_attr in self.top_attrs.items():
-            setattr( self, attr, profile.get( go_attr))
+            setattr( self, attr, profile.get( go_attr, None))
         # pull out the name field from the groups dict entries and put into groups
         setattr( self, 'groups', [ x['name'] for x in resp.json['groups']])
         if 'custom_fields' in profile:

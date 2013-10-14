@@ -24,7 +24,7 @@ For data in KBase workspace
 }
 .kb-header #kb-wsname {
     color: white;
-    margin-left: 0.25em;
+    margin-left: 20px;
     font-weight: 900;
 }
 
@@ -70,6 +70,16 @@ For data in KBase workspace
     margin-top: 25px;
 }
 /* end: upload pulldown */
+
+/* Refresh button */
+#kb-ws-refresh {
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    padding: 0px 6px;
+    overflow: hidden;
+}
+/* end: Refresh button */
 
 /* Data table */
 #kb-ws .kb-table table {
@@ -131,6 +141,7 @@ For data in KBase workspace
 
 /* Object details window */
 #kb-obj {
+    height: 800px;
 }
 #kb-obj table {
     font-family: OxygenRegular, Arial, sans-serif;
@@ -147,6 +158,7 @@ For data in KBase workspace
     text-decoration: underline;
     cursor: pointer;
 }
+/* For pagination */
 #kb-obj ul.list-group {
     display: block;
     margin-top: 15px;

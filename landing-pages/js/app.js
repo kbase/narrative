@@ -58,24 +58,27 @@ var app = angular.module('landing-pages',
              controller: ModelDetail})
         .when('/cards/models/:ws/:id', 
             {templateUrl: 'views/objects/modelcards.html',
-             controller: ModelDetailCards})        
+             controller: ModelDetailCards})
 
         .when('/media',
             {templateUrl: 'views/object-list.html',
-             controller: WSObjects})        
+             controller: WSObjects})
         .when('/media/:ws',
             {templateUrl: 'views/object-list.html',
              controller: WSObjects})
+        .when('/media/:ws/:id',
+            {templateUrl: 'views/objects/media.html',
+             controller: MediaDetail})
 
         .when('/fbas/:ws', 
             {templateUrl: 'views/object-list.html',
              controller: WSObjects})
-        .when('/fbas/:ws/:id', 
+        .when('/fbas/:ws/:id',
             {templateUrl: 'views/objects/fba.html',
              controller: FBADetail})
-        .when('/cards/fbas/:ws/:id', 
+        .when('/cards/fbas/:ws/:id',
             {templateUrl: 'views/objects/fbacards.html',
-             controller: FBADetailCards})        
+             controller: FBADetailCards})
 
         .when('/rxns', 
             {templateUrl: 'views/object-list.html',
@@ -142,6 +145,7 @@ app.run(function ($rootScope) {
     //  Here's a sort of hack to remove any cards when a view changes.
     //  There may be a better way to manage this.
     $rootScope.$on('$routeChangeSuccess', function() {
+        $('.popover').each(function() { $(this).remove() }); 
         removeCards();
     })
 });

@@ -39,10 +39,11 @@ angular.module('card-directives')
             }
         };
     })
-    .directive('modelcards', function($rootScope) {
+    .directive('modelcards', function($rootScope, $location) {
         return {
             link: function(scope, element, attrs) {
-                var prom = wsGet('objectMeta', 'Model', scope.ws, scope.id);
+                var prom = kbClient('ws', 'get_objectmeta',
+                            {type:'Model', id: scope.id, workspace: scope.ws});
                 $.when(prom).done(function(data){
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseModelMeta", 
                         { title: 'Model Info',
@@ -55,7 +56,8 @@ angular.module('card-directives')
                     });
                 });
 
-                var prom = fbaGet('Model', scope.ws, scope.id);
+                var prom = kbClient('fba', 'get_models',
+                            {models: [scope.id], workspaces: [scope.ws]});
                 $.when(prom).done(function(data) {
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseModelTabs", 
                         { modelsData: data,
@@ -76,17 +78,30 @@ angular.module('card-directives')
                         { my: "left+800 top+600",
                           at: "left bottom",
                           of: "#app"
-                    });                    
+                    });
+                    events();
                 });
 
+                function events() {
+                    $(document).on('rxnClick', function(e, data) {
+                        var url = '/rxns/'+data.ids;
+                        scope.$apply( $location.path(url) );
+                    });
+                    $(document).on('coreRxnClick', function(e, data) {
+                        console.log(data.ids)
+                        var url = '/rxns/'+data.ids.join('&');
+                        scope.$apply( $location.path(url) );
+                    });         
+                }
             }
         }
  
     })
-    .directive('fbacards', function($rootScope) {
+    .directive('fbacards', function($rootScope, $location) {
         return {
             link: function(scope, element, attrs) {
-                var prom = wsGet('objectMeta', 'FBA', scope.ws, scope.id);
+                var prom = kbClient('ws', 'get_objectmeta',
+                            {type:'FBA', id: scope.id, workspace: scope.ws});
                 $.when(prom).done(function(data){
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaMeta", 
                         { title: 'Model Info',
@@ -99,7 +114,9 @@ angular.module('card-directives')
                     });
                 });
 
-                var prom = fbaGet('FBA', scope.ws, scope.id);
+
+                var prom = kbClient('fba', 'get_fbas',
+                            {fbas: [scope.id], workspaces: [scope.ws]})
                 $.when(prom).done(function(fbas_data) {
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaTabs", 
                         { title: 'FBA Details',
@@ -114,7 +131,8 @@ angular.module('card-directives')
                     var model_ws = fbas_data[0].model_workspace;
                     var model_id = fbas_data[0].model;
 
-                    var prom2 = fbaGet('Model', model_ws, model_id);
+                    var prom2 = kbClient('fba', 'get_models',
+                            {models: [model_id], workspaces: [model_ws]});
                     $.when(prom2).done(function(models_data){
                         $(element).KBaseCardLayoutManager().addNewCard("kbaseModelCore", 
                             { title: 'Central Carbon Core Metabolic Pathway',
@@ -127,8 +145,24 @@ angular.module('card-directives')
                               at: "left bottom",
                               of: "#app"
                         });
+
+                        events();
                     });
                 });
+
+
+                function events() {
+                    $(document).on('rxnClick', function(e, data) {
+                        var url = '/rxns/'+data.ids;
+                        scope.$apply( $location.path(url) );
+                    });
+                    $(document).on('coreRxnClick', function(e, data) {
+                        console.log(data.ids)
+                        var url = '/rxns/'+data.ids.join('&');
+                        scope.$apply( $location.path(url) );
+                    });         
+                }
+
             }
         }
     })

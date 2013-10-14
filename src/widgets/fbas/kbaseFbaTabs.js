@@ -116,7 +116,7 @@ $.KBWidget({
             $('.rxn-click').unbind('click');
             $('.rxn-click').click(function() {
                 var rxn = [$(this).data('rxn')];
-                self.trigger('rxnClick', {rxns: rxn});
+                self.trigger('rxnClick', {ids: rxn});
             });            
         }
 

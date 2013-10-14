@@ -231,7 +231,7 @@ $.KBWidget({
           $('.model-rxn').unbind('click')
           $('.model-rxn').click(function(event){
                 var rxns = $(this).data('rxns').split(',');
-                self.trigger('rxnClick', {rxns: rxns});
+                self.trigger('coreRxnClick', {ids: rxns});
           })  
 
           return stage;
@@ -272,6 +272,7 @@ $.KBWidget({
                     if (Math.abs(flux) > flux_threshold) var has_flux = true;
                     if (orgs[kbid][0]) var org_name = orgs[kbid][0].org_name;
                     else var org_name = ''
+
                     $(rect.node).popover({content: tip,
                             title: org_name,
                             trigger: 'hover', html: true,

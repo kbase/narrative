@@ -70,7 +70,7 @@ $.KBWidget({
             $('.fba-click').unbind('click');
             $('.fba-click').click(function() {
                 var fba = $(this).data('fba');
-                self.trigger('fbaClick', {fba: fba});
+                self.trigger('fbaClick', {id: fba});
             });
         }
 

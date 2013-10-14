@@ -10,45 +10,56 @@
 
 angular.module('lp-directives', []);
 angular.module('lp-directives')
-    .directive('objectlist', function() {
+    .directive('objectlist', function($location) {
         return {
-            link: function(scope, element, attrs) {
+            link: function(scope, element, attr) {
                 if (scope.type == 'models') {
                     var ws = scope.ws ? scope.ws : "KBaseCDMModels";
 
-                    var panel = $(element).kbasePanel({title: 'KBase Models', 
+                    var p = $(element).kbasePanel({title: 'KBase Models', 
                                                        rightLabel: ws});
-                    panel.loading();
-                    var prom = wsGet('listWSObject', 'Model', ws);
+                    p.loading();
+                    var prom = kbClient('ws', 'list_workspace_objects',
+                                        {type: 'Model', workspace: ws})
                     $.when(prom).done(function(d){
-                        $(panel.body()).kbaseWSModelTable({ws: ws, data: d}); 
+                        $(p.body()).kbaseWSModelTable({ws: ws, data: d});
+                        $(document).on('modelClick', function(e, data) {
+                            var url = '/models/'+ws+'/'+data.id;
+                            scope.$apply( $location.path(url) );
+                        });
                     })
                 } else if (scope.type == 'media') {
                     var ws = scope.ws ? scope.ws : "KBaseMedia"; 
 
-                    var panel = $(element).kbasePanel({title: 'KBase Media', 
+                    var p = $(element).kbasePanel({title: 'KBase Media', 
                                                        rightLabel: ws});
-                    panel.loading();
-                    var prom = wsGet('listWSObject', 'Media', ws);
+                    p.loading();
+                    var prom = kbClient('ws', 'list_workspace_objects',
+                                        {type: 'Media', workspace: ws});
+
                     $.when(prom).done(function(d){
-                        $(element).kbaseWSMediaTable({ws: ws, data: d}); 
+                        $(element).kbaseWSMediaTable({ws: ws, data: d});
+                        $(document).on('mediaClick', function(e, data) {
+                            var url = '/media/'+ws+'/'+data.id;
+                            scope.$apply( $location.path(url) );
+                        });
                     })
                 } else if (scope.type == 'rxns') {
-                    var panel = $(element).kbasePanel({title: 'Biochemistry Reactions'});
-                    panel.loading();
+                    var p = $(element).kbasePanel({title: 'Biochemistry Reactions'});
+                    p.loading();
 
-                    var bioTable = $(panel.body()).kbaseBioRxnTable(); 
+                    var bioTable = $(p.body()).kbaseBioRxnTable(); 
 
-                    var prom = getBio('rxns', panel.body(), function(data) {
+                    var prom = getBio('rxns', p.body(), function(data) {
                         bioTable.loadTable(data);
                     });
                 } else if (scope.type == 'cpds') {
-                    var panel = $(element).kbasePanel({title: 'Biochemistry Compounds'});
-                    panel.loading();
+                    var p = $(element).kbasePanel({title: 'Biochemistry Compounds'});
+                    p.loading();
 
-                    var bioTable = $(panel.body()).kbaseBioCpdTable();
+                    var bioTable = $(p.body()).kbaseBioCpdTable();
 
-                    var prom = getBio('cpds', panel.body(), function(data) {
+                    var prom = getBio('cpds', p.body(), function(data) {
                         bioTable.loadTable(data);
                     });
                 }
@@ -64,14 +75,15 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = wsGet('objectMeta', 'Model', scope.ws, scope.id);
+                var prom = kbClient('ws', 'get_objectmeta',
+                            {type:'Model', id: scope.id, workspace: scope.ws});
                 $.when(prom).done(function(data){
                     $(p.body()).kbaseModelMeta({data: data});
                 })
             }
         };
     })
-    .directive('modeltabs', function() {
+    .directive('modeltabs', function($location) {
         return {
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Model Details', 
@@ -79,14 +91,19 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = fbaGet('Model', scope.ws, scope.id)
+                var prom = kbClient('fba', 'get_models',
+                            {models: [scope.id], workspaces: [scope.ws]});
                 $.when(prom).done(function(data){
                     $(p.body()).kbaseModelTabs({modelsData: data});
+                    $(document).on('rxnClick', function(e, data) {
+                        var url = '/rxns/'+data.ids;
+                        scope.$apply( $location.path(url) );
+                    });  
                 })
             }
         };
     })
-    .directive('modelcore', function() {
+    .directive('modelcore', function($location) {
         return {
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Core Metabolic Pathway', 
@@ -94,11 +111,17 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = fbaGet('Model', scope.ws, scope.id)
+                var prom = kbClient('fba', 'get_models',
+                            {models: [scope.id], workspaces: [scope.ws]})
                 $.when(prom).done(function(data) {
                     $(p.body()).kbaseModelCore({ids: [scope.id], 
                                                 workspaces : [scope.ws],
                                                 modelsData: data});
+                    $(document).on('coreRxnClick', function(e, data) {
+                        var url = '/rxns/'+data.ids.join('&');
+                        scope.$apply( $location.path(url) );
+                    });  
+
                 })
             }
         };
@@ -118,15 +141,15 @@ angular.module('lp-directives')
                                                rightLabel: scope.ws,
                                                subText: scope.id});
                 p.loading();
-
-                var prom = wsGet('objectMeta', 'FBA', scope.ws, scope.id);
+                var prom = kbClient('ws', 'get_objectmeta',
+                            {type:'FBA', id: scope.id, workspace: scope.ws});
                 $.when(prom).done(function(data){
-                    $(p.body()).kbaseFbaMeta({data: data});
-                })
+                    $(p.body()).kbaseFbaMeta({data: data});                    
+                });
             }
         };
     })
-    .directive('fbatabs', function() {
+    .directive('fbatabs', function($location) {
         return {
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'FBA Details', 
@@ -134,14 +157,19 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = fbaGet('FBA', scope.ws, scope.id)
+                var prom = kbClient('fba', 'get_fbas',
+                            {fbas: [scope.id], workspaces: [scope.ws]});
                 $.when(prom).done(function(data){
                     $(p.body()).kbaseFbaTabs({fbaData: data});
+                    $(document).on('rxnClick', function(e, data) {
+                        var url = '/rxns/'+data.ids;
+                        scope.$apply( $location.path(url) );
+                    });        
                 })
             }
         };
     })
-    .directive('fbacore', function() {
+    .directive('fbacore', function($location) {
         return {
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Core Metabolic Pathway', 
@@ -149,28 +177,54 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom1 = fbaGet('FBA', scope.ws, scope.id);
+                var prom1 = kbClient('fba', 'get_fbas',
+                            {fbas: [scope.id], workspaces: [scope.ws]});
                 $.when(prom1).done(function(fbas_data) {
                     var model_ws = fbas_data[0].model_workspace;
                     var model_id = fbas_data[0].model;
 
-                    var prom2 = fbaGet('Model', model_ws, model_id);
+                    var prom2 = kbClient('fba', 'get_models',
+                            {models: [model_id], workspaces: [model_ws]});
                     $.when(prom2).done(function(models_data){
                         $(p.body()).kbaseModelCore({ids: [scope.id], 
                                                     workspaces : [scope.ws],
                                                     modelsData: models_data,
                                                     fbasData: fbas_data});
+                        $(document).on('coreRxnClick', function(e, data) {
+                            var url = '/rxns/'+data.ids.join('&');
+                            scope.$apply( $location.path(url) );
+                        }); 
                     })
-
                 })
             }
         };
     })
 
+    .directive('mediadetail', function() {
+        return {
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'Core Metabolic Pathway', 
+                                               rightLabel: scope.ws,
+                                               subText: scope.id});
+                p.loading();
+
+                var prom = kbClient('fba', 'get_media',
+                        {medias: [scope.id], workspaces: [scope.ws]})
+                $.when(prom).done(function(data) {
+                    $(p.body()).kbaseMediaEditor({ids: [scope.id], 
+                                                workspaces : [scope.ws],
+                                                data: data});
+                })
+            }
+        };
+    })
+
+
     .directive('rxndetail', function() {
         return {
             link: function(scope, element, attrs) {
-                var prom = fbaGet('Rxn', '', scope.ids);
+                var prom = kbClient('fba', 'get_reactions',
+                            {reactions: scope.ids})
                 $.when(prom).done(function(data){
                     $(element).kbaseRxn({data: data, ids: scope.ids});
                 })
@@ -180,7 +234,8 @@ angular.module('lp-directives')
     .directive('cpddetail', function() {
         return {
             link: function(scope, element, attrs) {
-                var prom = fbaGet('Cpd', '', scope.ids);
+                var prom = kbClient('fba', 'get_compounds',
+                            {compounds: scope.ids})                
                 $.when(prom).done(function(data){
                     $(element).kbaseCpd({data: data, ids: scope.ids});
                 })
@@ -188,10 +243,7 @@ angular.module('lp-directives')
         };
     })
 
-    .directive('tabs', function() {
-        return {
-        }
-    })
+
     // Workspace browser widgets (directives)
     .directive('wsobjtable', function($rootScope) {
         return {

@@ -26,7 +26,7 @@ $.KBWidget({
         self.$elem.append(container);
 
         container.append('<p class="muted loader-rxn"> \
-                <img src="assets/img/ajax-loader.gif"> loading...</p>')
+                <img src="../../images/ajax-loader.gif"> loading...</p>')
 
         /** Cases:
          * 1. viewOnly
@@ -74,7 +74,9 @@ $.KBWidget({
             })
         }
         else {
-            mediaData = options.mediaData[0];
+            var mediaData = {};
+            if (options.mediaData)
+                mediaData = options.mediaData[0];
 
             if (editOnly)
                 media_view_editable(container, mediaData);
@@ -226,6 +228,14 @@ $.KBWidget({
                     maxflux[i] = $(maxfluxDivs[i]).val();
                 }
 
+                var plusCpd = $("#" + randId + "addCmpds").val();
+                if (plusCpd) {
+                    cmpds.push(plusCpd);
+                    conc.push($("#" + randId + "addConc").val());
+                    minflux.push($("#" + randId + "addMinFlux").val());
+                    maxflux.push($("#" + randId + "addMaxFlux").val());
+                }
+
                 // typedef structure {
                 //     media_id media;
                 //     workspace_id workspace;
@@ -259,10 +269,21 @@ $.KBWidget({
                 $savePanel.html("Saving...");
                 $savePanel.css({"display":"inline"});
 
-                var saveAJAX = fba.addmedia(newMedia);
-                $.when(saveAJAX).done(function(data){
-                    $savePanel.html("Done!");
-                });
+                fba.addmedia_async(newMedia,
+                    function(metadata) {
+                        $savePanel.html("Done!");
+                    },
+                    function(error) {
+                        $savePanel.css({"display":"none"});
+                        $errorPanel.html("Error while saving.");
+                        $errorPanel.css({"display":"inline"});
+                        console.log(error);                        
+                    });
+
+                // var saveAJAX = fba.addmedia_async(newMedia);
+                // $.when(saveAJAX).done(function(data){
+                //     $savePanel.html("Done!");
+                // });
                 // fba.addmedia(newMedia, function(metadata) {
                 // },
                 // function(error) {

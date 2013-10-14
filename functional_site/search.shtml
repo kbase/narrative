@@ -54,7 +54,7 @@
                         <div class="input-group col-xs-14 col-sm-9 col-md-9 col-lg-9">
                             <div class="input-group-btn">
                                 <button id="category-button" type="button" class="btn btn-inverse dropdown-toggle" data-toggle="dropdown">
-                                    All <span class="caret"></span>
+                                    Genomes <span class="caret"></span>
                                 </button>
                                 <ul id="category-preselect" class="dropdown-menu" role="menu">
                                 </ul>

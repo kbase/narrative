@@ -16,7 +16,7 @@ var fba_service = new fbaModelServices(fba_url);
 
 var numPageLinks = 10;
 
-var selectedCategory = null;
+var selectedCategory = "CSGenomes";
 var searchOptions;
 
 var defaultSearchOptions = {"general": {"itemsPerPage": 25},
@@ -166,7 +166,9 @@ $(window).load(function() {
     });
     
     // bring in all the category information for display and making search api calls
-    loadCategories(function () {
+    loadCategories(function () {        
+        preselectCategory("CSGenomes", "Genomes");
+    
         function GetUrlValue(VarSearch){
             var SearchString = window.location.search.substring(1);
             var VariableArray = SearchString.split('&');
@@ -310,6 +312,7 @@ function startSearch(queryString) {
     $("#page-links").empty();
     $("#result-set-list").empty();
 
+    getResults(null, searchOptions);
     getResults(selectedCategory, searchOptions);
 }
 
@@ -862,12 +865,12 @@ function displayCategories() {
     
     console.log(numCategories);
     
-    if (numCategories > 0) {
-        $("#filters").removeClass("hidden");
-    }
+    $("#filters").removeClass("hidden");
+    /*
     else {
         $("#no-categories").removeClass("hidden");
     }
+    */
 }
 
 

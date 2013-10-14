@@ -32,26 +32,12 @@ var token;
 var selectedWorkspace;
 var expandedView = false;
 
-function GetUrlValue(VarSearch){
-    var SearchString = window.location.search.substring(1);
-    var VariableArray = SearchString.split('&');
-    for(var i = 0; i < VariableArray.length; i++){
-        var KeyValuePair = VariableArray[i].split('=');
-        if(KeyValuePair[0] == VarSearch){
-            return KeyValuePair[1];
-        }
-    }
-}
 
 
 $(window).load(function() {
+    // create the login widget
+    //$("#login-area").kbaseLogin({style: "text"});
     $("#searchspan").hide();
-
-    var sentQuery = GetUrlValue('q');
-    if(sentQuery != "") {
-        $("#searchTextInput").val(sentQuery);
-        startSearch(sentQuery);
-    }
 
     //beginning of stuff copied from users.js
 
@@ -160,8 +146,10 @@ $(window).load(function() {
     //end of stuff copied from users.js
 
 
+    // turn on dropdown plugin functionality
     $('.dropdown-toggle').dropdown();
 
+    // handle users pressing enter after typing a search phrase
     $("#searchTextInput").on("keypress", function (evt) {
         if (evt.keyCode === 13) {
             var input = $.trim($('#searchTextInput')[0].value);
@@ -170,11 +158,35 @@ $(window).load(function() {
                 startSearch(input);
             }
         }
+    }).on("change", function (evt) {
+        var input = $.trim($('#searchTextInput')[0].value);
+        
+        if (input !== null && input !== '') {
+            startSearch(input);
+        }        
     });
     
+    // bring in all the category information for display and making search api calls
+    loadCategories(function () {
+        function GetUrlValue(VarSearch){
+            var SearchString = window.location.search.substring(1);
+            var VariableArray = SearchString.split('&');
+            for(var i = 0; i < VariableArray.length; i++){
+                var KeyValuePair = VariableArray[i].split('=');
+                if(KeyValuePair[0] == VarSearch){
+                    return KeyValuePair[1];
+                }
+            }
+        }
+
+        var sentQuery = GetUrlValue('q');
+        if (sentQuery !== '') {
+            $("#searchTextInput").val(sentQuery);
+            $("#searchTextInput").trigger("change");
+        }    
+    });
     
-    loadCategories();
-        
+    // enable functionality for the compact and expanded view buttons
     $('#toggle-expanded').find('input').change(function (event){
         if ($(this).attr('id') === 'compact') {
             $(".typedRecord-expanded").addClass("hidden");
@@ -185,6 +197,7 @@ $(window).load(function() {
     
         expandedView = !expandedView;
     });    
+    
 });
 
 
@@ -204,7 +217,7 @@ function initToken() {
 }
 
 
-function loadCategories() {
+function loadCategories(callback) {
     var search_api_url = "";
     var queryOptions = {};
 
@@ -219,7 +232,9 @@ function loadCategories() {
                     loadPreselectCategories(categoryInfo.structure[p], 0);
                 }                
             }
-        }                  
+        }
+        
+        callback();                  
     });
     
 }
@@ -271,6 +286,10 @@ function flattenCategories(resource) {
 
 
 function startSearch(queryString) {
+    $("#no-categories").addClass("hidden");
+
+    //console.log(queryString);
+
     if (queryString === null || queryString === '') {
         return;
     }
@@ -823,13 +842,33 @@ function displayCategories() {
             
             for (var i = 0; i < categoryInfo.structure[p].children.length; i++) {
                 //$("#categories").append("<div class='row'><h1><a data-toggle='collapse' id='" + categoryInfo.structure[p].children[i].label + "' class='category-link btn btn-link' style='padding-left:10px;font-size:18px;'>" + categoryInfo.structure[p].children[i].label  + "</a></h1></div>");    
-                showLeftCategories(p,p,categoryInfo.structure[p].children[i],1);
+                numCategories += showLeftCategories(p,p,categoryInfo.structure[p].children[i],1);
             }            
             
             $("#categories").append("</div>");
         }
     }
-    $("#filters").removeClass("hidden");
+    
+    //console.log(categoryCounts);
+
+    var numCategories = 0;
+    
+    for (var p in categoryCounts) {
+        console.log(p);
+        console.log(categoryCounts.p);
+        if (categoryCounts.hasOwnProperty(p) && categoryCounts[p] > 0) {            
+            numCategories += 1;
+        }
+    }
+    
+    console.log(numCategories);
+    
+    if (numCategories > 0) {
+        $("#filters").removeClass("hidden");
+    }
+    else {
+        $("#no-categories").removeClass("hidden");
+    }
 }
 
 
@@ -865,8 +904,7 @@ function showLeftCategories(ancestor, parent, categoryObject, nestingLevel) {
 
         $("#" + categoryObject.category).on("hide.bs.collapse", function() {
             $("." + categoryObject.category + "-children").collapse('hide');
-        });
-
+        });  
     }    
 
     // recurse for each child of this item
@@ -874,7 +912,7 @@ function showLeftCategories(ancestor, parent, categoryObject, nestingLevel) {
         for (var i = 0; i < categoryObject.children.length; i++) {
             showLeftCategories(ancestor, categoryObject.category, categoryObject.children[i], nestingLevel + 1);    
         }
-    }    
+    }  
 }
 
 
@@ -897,7 +935,7 @@ function getCount(options, category) {
     queryOptions["itemsPerPage"] = 0;
     queryOptions["category"] = category;
 
-    jQuery.ajax({
+    return jQuery.ajax({
         type: 'GET',
         contentType: 'application/json',
         url: search_api_url + "callback=?",
@@ -910,14 +948,10 @@ function getCount(options, category) {
             else {
                 categoryCounts[category] = 0;
             }
-            
-            displayCategories();
         },
         error: function (errorObject) {
             categoryCounts[category] = 0;
             numCounts += 1;
-            
-            displayCategories();
         }
     });
 }
@@ -931,22 +965,32 @@ function getResults(category, options) {
         var queryOptions = {'q': options["general"]['q']};
 
         try {
-            options["general"]["token"].substr(0,20);//?
+            // attempt to "use" the token string to see if it is valid, 
+            // if an exception is thrown don't copy the token string because it isn't valid
+            options["general"]["token"].substr(0,20);
             queryOptions["token"] = options["general"]["token"];
         }
         catch (e) {            
             //console.log(e);
         }
 
+        var deferredCalls = [];
+
         numCounts = 0;
         for (var i = 0; i < searchCategories.length; i++) {
             if (searchCategories[i].indexOf("WS") !== 0 || (searchCategories[i].indexOf("WS") === 0 && queryOptions.hasOwnProperty("token") && queryOptions.token !== null)) {
-                getCount(queryOptions, searchCategories[i]);
+                deferredCalls.push(getCount(queryOptions, searchCategories[i]));
             }
             else {
                 categoryCounts[category] = 0;
             }
         }
+
+        $.when.apply($, deferredCalls).done(function (){
+            console.log("All getCounts done.");
+            console.log(categoryCounts);
+            displayCategories();
+        });
 
         return;
     }
@@ -974,7 +1018,7 @@ function getResults(category, options) {
             }
         }    
     }
-    console.log(queryOptions);
+    //console.log(queryOptions);
     
     jQuery.ajax({
         type: 'GET',

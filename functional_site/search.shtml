@@ -22,27 +22,14 @@
         <!--#include virtual="header.html" -->
         <div class="container">
             <div class="row">                
+                <!--
                 <div class="col-xs-5 col-sm-3 col-md-3 col-lg-2">
                     <img src="http://kbase.us/themes/kbase/images/Kbase_Logo.png" class="img-responsive"/>                
                 </div>
-                <div class="input-group col-xs-12 col-sm-8 col-md-8 col-lg-8" style="margin-top:30px;">
-                    <div class="input-group-btn">
-                        <button id="category-button" type="button" class="btn btn-inverse dropdown-toggle" data-toggle="dropdown">
-                            All <span class="caret"></span>
-                        </button>
-                        <ul id="category-preselect" class="dropdown-menu" role="menu">
-                        </ul>
-                    </div>
-                    <input id="searchTextInput" class="form-control" type="text"/>
-                    <div class="input-group-btn">
-                        <button type="button" class="btn btn-search" id="searchButton" onclick="startSearch($.trim($('#searchTextInput')[0].value))">
-                            <span class="glyphicon glyphicon-search white"></span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="all-results" class="row">
-                <div id="filters" class="hidden panel panel-default col-xs-3 col-sm-2 col-md-2 col-lg-2">
+                -->
+                
+                
+                <div id="filters" class="panel panel-default col-xs-3 col-sm-2 col-md-2 col-lg-2">
                     <div id="tools" class="panel-body">
                         <div id='workspace-tools' class='btn-group btn-group-sm btn-group-md'>
                             <div class='btn-group btn-group-sm btn-group-md'>
@@ -60,52 +47,80 @@
                         </div>
                     </div>
                 </div>
-                <div id="search-results" class="hidden col-xs-14 col-sm-9 col-md-9 col-lg-9">                    
-                    <div id="result-set-header" class="row">
+
+
+                <div id="all-results" class="col-xs-14 col-sm-9 col-md-9 col-lg-9">                    
+                    <div class="row">                
+                        <div class="input-group col-xs-14 col-sm-9 col-md-9 col-lg-9">
+                            <div class="input-group-btn">
+                                <button id="category-button" type="button" class="btn btn-inverse dropdown-toggle" data-toggle="dropdown">
+                                    All <span class="caret"></span>
+                                </button>
+                                <ul id="category-preselect" class="dropdown-menu" role="menu">
+                                </ul>
+                            </div>
+                            <input id="searchTextInput" class="form-control" type="text"/>
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-search" id="searchButton" onclick="startSearch($.trim($('#searchTextInput')[0].value))">
+                                    <span class="glyphicon glyphicon-search white"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div id="no-categories" class="row hidden">
+                        <div class="alert alert-danger">
+                            <strong>No results found for any data type.</strong>
+                        </div>
+                    </div>
+
+                    <div id="search-results" class="hidden row space-left">
+                        <div id="result-set-header" class="row">
+                            <div class="row">
+                                <div id="result-position" class="col-xs-2 col-xs-offset-3 col-sm-2 col-sm-offset-3 col-md-2 col-md-offset-3 col-lg-2 col-lg-offset-3 nowrap"></div>
+                            </div>
+                            <div id="result-options" class="row">
+                                <form class="form-inline" role="form">
+                                    <div id="toggle-expanded" class="btn-group btn-group-xs col-xs-4" data-toggle="buttons">
+                                        <label class="btn btn-xs btn-info active">
+                                            <input type="radio" id="compact"></input>Compact View
+                                        </label>
+                                        <label class="btn btn-xs btn-info">
+                                            <input type="radio" id="expanded"></input>Expanded View
+                                        </label>
+                                    </div>
+                                    <div class="form-group col-xs-4">
+                                        <label id="result-per-page-label" for="result-per-page">Results per page</label>
+                                        <select id="result-per-page" class="input-xs" onchange="setResultsPerPage(selectedCategory,$(this)[0]['selectedOptions'][0].text)">
+                                            <option value="10">10</option>
+                                            <option value="25">25</option>
+                                            <option valus="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-xs-4">
+                                        <label id="result-sort-type-label" for="result-sort-type">Sorted by</label>
+                                        <select id="result-sort-type" class="input-xs" onchange="setSortType(selectedCategory,$(this)[0]['selectedOptions'][0].text)">
+                                            <option value="alphabetical">alphabetical</option>
+                                            <option value="relevance" selected="selected">relevance</option>
+                                        </select>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div id="result-set-area">                    
+                            <table id="result-set-list">
+                            </table>
+                            <div id="result-set-grid">
+                            </div>
+                        </div>
                         <div class="row">
-                            <div id="result-position" class="col-xs-2 col-xs-offset-3 col-sm-2 col-sm-offset-3 col-md-2 col-md-offset-3 col-lg-2 col-lg-offset-3 nowrap"></div>
-                        </div>
-                        <div id="result-options" class="row">
-                            <form class="form-inline" role="form">
-                                <div id="toggle-expanded" class="btn-group btn-group-xs col-xs-4" data-toggle="buttons">
-                                    <label class="btn btn-xs btn-info active">
-                                        <input type="radio" id="compact"></input>Compact View
-                                    </label>
-                                    <label class="btn btn-xs btn-info">
-                                        <input type="radio" id="expanded"></input>Expanded View
-                                    </label>
-                                </div>
-                                <div class="form-group col-xs-4">
-                                    <label id="result-per-page-label" for="result-per-page">Results per page</label>
-                                    <select id="result-per-page" class="input-xs" onchange="setResultsPerPage(selectedCategory,$(this)[0]['selectedOptions'][0].text)">
-                                        <option value="10">10</option>
-                                        <option value="25">25</option>
-                                        <option valus="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                </div>
-                                <div class="form-group col-xs-4">
-                                    <label id="result-sort-type-label" for="result-sort-type">Sorted by</label>
-                                    <select id="result-sort-type" class="input-xs" onchange="setSortType(selectedCategory,$(this)[0]['selectedOptions'][0].text)">
-                                        <option value="alphabetical">alphabetical</option>
-                                        <option value="relevance" selected="selected">relevance</option>
-                                    </select>
-                                </div>
-                            </form>
-                        </div>
+                            <div id="pagination-controls" style="text-align: center;">
+                                <ul class="pagination" id="page-links">
+                                </ul>                        
+                            </div>
+                        </div>                
                     </div>
-                    <div id="result-set-area">                    
-                        <table id="result-set-list">
-                        </table>
-                        <div id="result-set-grid">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div id="pagination-controls" style="text-align: center;">
-                            <ul class="pagination" id="page-links">
-                            </ul>                        
-                        </div>
-                    </div>                
                 </div>
             </div>
         </div>

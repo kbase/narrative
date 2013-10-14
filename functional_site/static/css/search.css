@@ -43,6 +43,13 @@ a.selected-category-link:visited { color: green; }
     padding-right: 0;
 }
 
+.alert {
+    text-align: center;
+}
+
+table {
+    margin-left: -15px;
+}
 
 td {
     border-spacing:0;
@@ -73,10 +80,6 @@ td {
     vertical-align: middle;
 }
 
-
-#all-results {
-    padding-top: 10px;
-}
 
 #filters {
     width: 220px;

@@ -50,7 +50,7 @@
         "features": ["CSFeatures","CSCRISPRSpacers","CSPlantLoci","CSPlantmRNAs","CSPromoters","CSProteinGenes","CSProteinBindingSites","CSPseudoGenes","CSRNAGenes",
                     "WSFeatures","WSCRISPRSpacers","WSPlantLoci","WSPlantmRNAs","WSPromoters","WSProteinGenes","WSProteinBindingSites","WSPseudoGenes","WSRNAGenes"]
         ,
-        "metagenomes": ["MGAll","MGShotguns","MGAmplicons","MGOthers"],
+        "metagenomes": ["MGAll","MGShotguns","MGAmplicons","MGMetatranscriptomes","MGOthers"],
         "public": ["CSGenomes","CSArchaea","CSBacteria","CSFungi","CSPlants","CSOtherEukaryotes","CSFeatures","CSCRISPRSpacers","CSPlantLoci","CSPlantmRNAs","CSPromoters","CSProteinGenes","CSProteinBindingSites","CSPseudoGenes","CSRNAGenes","MGAll","MGShotguns","MGAmplicons","MGOthers"],
         "private": ["WSGenomes","WSArchaea","WSBacteria","WSFungi","WSPlants","WSOtherEukaryotes","WSFeatures","WSCRISPRSpacers","WSPlantLoci","WSPlantmRNAs","WSPromoters","WSProteinGenes","WSProteinBindingSites","WSPseudoGenes","WSRNAGenes"]
     }

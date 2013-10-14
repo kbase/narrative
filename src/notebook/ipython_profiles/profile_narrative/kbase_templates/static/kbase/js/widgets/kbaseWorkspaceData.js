@@ -357,7 +357,6 @@
         },
 
         _addModelVisualization: function(data, $target) {
-
             var loading = $("<div>")
                           .addClass("loading")
                           .append("<img src='" + this.options.loadingImage + "' />Loading...");
@@ -376,9 +375,24 @@
                 });
         },
 
-        // _addFBAVisualization: function(data, $target) {
+        _addFBAVisualization: function(data, $target) {
+            var loading = $("<div>")
+                          .addClass("loading")
+                          .append("<img src='" + this.options.loadingImage + "' />Loading...");
+            $target.append(loading);
 
-        // },
+            var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
+            var modelAJAX = fba.get_fbas_async(
+                {
+                    fbas: [data.id], 
+                    workspaces: [this.ws_id], 
+                    auth: this.ws_auth
+                },
+                function(data) {
+                    $target.find(".loading").remove();
+                    $target.kbaseFbaTabsNarrative({ fbaData: data });
+                });
+        },
 
         // _addContigSetVisualization: function(data, $target) {
 

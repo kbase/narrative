@@ -16,6 +16,7 @@ $.KBWidget({
 
 
         var container = this.$elem;
+        container.append("<h4>Objective: " + data[0].objective + "</h4>");
 
         var tables = ['Reactions', 'Compounds'];
         var tableIds = [randId+'reaction', randId+'compound'];

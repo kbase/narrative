@@ -315,8 +315,8 @@ $.KBWidget({
                     type: 'unknown',
                     compounds: [cmpds],
                     concentrations: [conc],
-                    maxflux: [minflux],
-                    minflux: [maxflux]
+                    maxflux: [maxflux],
+                    minflux: [minflux]
 
                 };
                 container.append('<div id="save-to-ws"></div>')

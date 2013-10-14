@@ -33,7 +33,6 @@ var selectedWorkspace;
 var expandedView = false;
 
 
-
 $(window).load(function() {
     // create the login widget
     //$("#login-area").kbaseLogin({style: "text"});

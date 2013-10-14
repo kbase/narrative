@@ -3,7 +3,8 @@ $(function() {
         if (evt.keyCode === 13) {
             var input = $.trim($('#search_terms')[0].value);
             if (input !== null && input !== '') {
-	            var myUrl = "/search.shtml?q=" + encodeURIComponent(input);
+                var einput = encodeURIComponent(input);
+	            var myUrl = "/search.shtml?q=" + einput;
 		        window.location = myUrl;
             }
         }

@@ -193,11 +193,11 @@ li > a.disabled {
 .viewport-toolbox .dropdown-menu li {
     font-size: 85%;
 }
-.dropdown-menu {
+/*.dropdown-menu {
     max-height: 600px;
     overflow-y: scroll;
 }
-.popover p, .popover li {
+*/.popover p, .popover li {
     line-height: 20px;
 }
 .nav .popover { width: 300px; }

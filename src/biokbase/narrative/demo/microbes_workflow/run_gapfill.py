@@ -107,10 +107,14 @@ def run(params):
     } gapfill_model_params;
     """
 
-    fba_formulation = {
-        'media' : params['Identifiers.Media'],
-        'media_workspace' : workspace
-    }
+    fba_formulation = {}
+
+    media = params['Identifiers.Media']
+    if (media):
+        fba_formulation = {
+            'media' : params['Identifiers.Media'],
+            'media_workspace' : workspace
+        }
 
     gapfill_formulation = {
         'formulation' : fba_formulation,

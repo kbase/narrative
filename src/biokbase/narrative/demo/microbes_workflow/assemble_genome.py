@@ -54,6 +54,8 @@ def run(params):
         # -- params: genome to annotate.
     5. Return genome metadata (or something) to user.
     """
+    _num_done, total_work = 0, 5
+
 
     _num_done += 1
     print_progress("Parse Parameters", _num_done, total_work)

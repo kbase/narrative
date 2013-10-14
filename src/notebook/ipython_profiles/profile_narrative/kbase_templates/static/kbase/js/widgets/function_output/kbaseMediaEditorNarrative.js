@@ -5,7 +5,8 @@ $.KBWidget({
     version: "1.0.0",
     options: {
         viewOnly: true,
-        editOnly: false
+        editOnly: false,
+        mediaData: null,
     },
     init: function(options) {
         this._super(options);
@@ -40,16 +41,50 @@ $.KBWidget({
 
 
         var mediaData = [];
-        if (options.mediaData)
+        if (!options.mediaData && media) {
+
+            // fba.get_media({
+            //     medias: [media],
+            //     workspaces: [ws],
+            //     auth: token
+            // },
+            // function(data) {
+            //     media = data[0];
+            //     console.log("data returned");
+            //     console.log(data);
+
+            //     if (editOnly)
+            //         media_view_editable(container, media);
+            //     else
+            //         media_view(container, media);
+            // },
+            // function(error) {
+            //     console.debug(error);
+            // });
+
+
+
+            var mediaAJAX = fba.get_media({medias: [media], workspaces: [ws], auth: token});
+            $.when(mediaAJAX).done(function(data){
+                media = data[0]; // only 1 media right now
+                if (editOnly)
+                    media_view_editable(container, media);
+                else
+                    media_view(container, media);
+            })
+        }
+        else {
             mediaData = options.mediaData[0];
 
-        if (editOnly)
-            media_view_editable(container, mediaData);
-        else
-            media_view(container, mediaData);
+            if (editOnly)
+                media_view_editable(container, mediaData);
+            else
+                media_view(container, mediaData);
+        }
 
 
         function media_view(container, data) {
+            console.log("here");
             container.find('.loader-rxn').remove();
 
             container.append('<b>Name: </b>'+data.id+'&nbsp;&nbsp;&nbsp;<b>pH: </b>'+data.pH);

@@ -277,11 +277,13 @@
 
                 var type = data.type;
                 type = type.trim().replace(/\s+/g, "_");
+
+                console.debug('making viz for ' + type);
                 var typeVizFunction = "_add" + type + "Visualization";
                 if (!self[typeVizFunction])
                     typeVizFunction = "_addDefaultVisualization";
 
-                console.debug("creating vis. for object: " + oid + "." + oinst);
+//                console.debug("creating vis. for object: " + oid + "." + oinst);
                 var cell = IPython.notebook.insert_cell_at_bottom('markdown');
                 // put div inside cell with an addr
                 var eid = self._uuidgen();
@@ -309,14 +311,61 @@
             // var workspaceID = self.ws_id + "." + oid + "#" + oinst;
             // var token = self.ws_auth;
             $target.ForceDirectedNetwork({
-                workspaceID: self.ws_id + "." + oid + "#" + oinst,
-                token: self.ws_auth,
+                workspaceID: this.ws_id + "." + oid + "#" + oinst,
+                token: this.ws_auth,
             });
 
         },
 
+        _addGenomeVisualization: function(data, $target) {
+            console.log(data);
+        },
+
+        _addMediaVisualization: function(data, $target) {
+            $target.kbaseMediaEditorNarrative({
+                ws: this.ws_id,
+                auth: this.ws_auth,
+                id: data.id,
+            });
+        },
+
+        _addModelVisualization: function(data, $target) {
+
+        },
+
+        _addFBAVisualization: function(data, $target) {
+
+        },
+
+        _addContigSetVisualization: function(data, $target) {
+
+        },
+
+        // Just adds a simple table with ID, datatype, owner, and ws location for now.
+        // Maybe something fancier later.
         _addDefaultVisualization: function(data, $target) {
-            $target.append("HOT DOG");
+            var $metaTable = $("<table>")
+                             .addClass("table table-striped table-bordered")
+                             .css({"margin-left" : "auto", "margin-right" : "auto"});
+
+            var makeRow = function(a, b) {
+                var row = $("<tr>")
+                          .append("<td>" + a + "</td>")
+                          .append("<td>" + b + "</td>");
+
+                return row;
+            };
+
+            console.log(data);
+
+            $metaTable.append(makeRow("ID", data.id))
+                      .append(makeRow("Type", data.type))
+                      .append(makeRow("Owner", data.owner))
+                      .append(makeRow("Workspace", data.workspace));
+
+            $target.append("<h3>Data Object</h3>(No visualization available)")
+                   .append($metaTable);
+
         },
 
         // _addNetworkVisualization: function(data) {

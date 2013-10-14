@@ -148,7 +148,7 @@
                 'ref': m[8], // a workspace_ref string
                 'chsum': m[9], // a string
                 // XXX: need to do more with this one:
-                //'metadata': m[10] // an object
+                'metadata': m[10] // an object
             };
         },
 
@@ -245,9 +245,13 @@
             var body = $elem.find('tbody');
             body.empty();
             $.each(data, function(key, value) {
-                var tr = body.append($('<tr>'));                
-                tr.append($('<td>').text(key));
-                tr.append($('<td>').text(value));
+                // Skip the metadata field for now
+
+                if (key !== 'metadata') {
+                    var tr = body.append($('<tr>'));                
+                    tr.append($('<td>').text(key));
+                    tr.append($('<td>').text(value));
+                }
             });
             
             // XXX: hack! add button for viz if network
@@ -317,9 +321,32 @@
 
         },
 
-        // _addGenomeVisualization: function(data, $target) {
-        //     console.log(data);
-        // },
+        _addGenomeVisualization: function(data, $target) {
+            var tableRow = function(a, b) {
+                return $("<tr>")
+                       .append("<td>" + a + "</td>")
+                       .append("<td>" + b + "</td>");
+            };
+
+            var calcGC = function(gc, total) {
+                if (gc > 1)
+                    gc = gc/total;
+                return (100*gc).toFixed(2);
+            };
+
+            var $metaTable = $("<table>")
+                             .addClass("table table-striped table-bordered")
+                             .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+                             .append(tableRow("<b>ID</b>", "<b>" + data.id + "</b>"))
+                             .append(tableRow("Scientific Name", data.metadata.scientific_name))
+                             .append(tableRow("Size", data.metadata.size + " bp"))
+                             .append(tableRow("GC Content", calcGC(data.metadata.gc, data.metadata.size) + "%"))
+                             .append(tableRow("Number Features", data.metadata.number_features))
+                             .append(tableRow("Workspace", data.workspace));
+
+            $target.append("<h3>Genome</h3>")
+                   .append($metaTable);
+        },
 
         _addMediaVisualization: function(data, $target) {
             $target.kbaseMediaEditorNarrative({
@@ -329,9 +356,9 @@
             });
         },
 
-        // _addModelVisualization: function(data, $target) {
+        _addModelVisualization: function(data, $target) {
 
-        // },
+        },
 
         // _addFBAVisualization: function(data, $target) {
 

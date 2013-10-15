@@ -20,7 +20,7 @@
             data: {},
             auth: null,
             userId: null,
-            loadingImage: "../widgets/images/ajax-loader.gif",
+            loadingImage: "http://narrative.kbase.us/landing/widgets/images/ajax-loader.gif",
         },
         cardIndex: 0,
         cards: {},
@@ -578,7 +578,7 @@
             this.addNewCard("KBaseGenomeOverview", 
                 { 
                     genomeID: this.options.data.genomeID,
-                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                    loadingImage: this.options.loadingImage,
                     isInCard: true
                 },
                 {
@@ -591,7 +591,7 @@
             this.addNewCard("KBaseWikiDescription",
                 {
                     genomeID: this.options.data.genomeID,
-                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                    loadingImage: this.options.loadingImage,
                 },
                 {
                     my: "left top",
@@ -658,7 +658,7 @@
                         {
                             meme_run_result_id: this.options.data.meme_run_result_id,
                             workspace_id: this.options.data.workspace_id,
-                            loadingImage: "assets/img/ajax-loader.gif",
+                            loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
                         {
@@ -674,7 +674,7 @@
                         {
                             tomtom_run_result_id: this.options.data.meme_run_result_id,
                             workspace_id: this.options.data.workspace_id,
-                            loadingImage: "assets/img/ajax-loader.gif",
+                            loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
                         {
@@ -690,7 +690,7 @@
                         {
                             mast_run_result_id: this.options.data.meme_run_result_id,
                             workspace_id: this.options.data.workspace_id,
-                            loadingImage: "assets/img/ajax-loader.gif",
+                            loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
                         {
@@ -753,7 +753,7 @@
                 self.addNewCard("KBaseGeneOperon",
                 {
                     featureID: data.featureID,
-                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                    loadingImage: self.options.loadingImage,
                 },
                 {
                     my: "left top",
@@ -819,7 +819,7 @@
                     {
                         contig: data.contig,
                         showButtons: true,
-                        loadingImage: "../../widgets/images/ajax-loader.gif",
+                        loadingImage: self.options.loadingImage,
                         centerFeature: data.centerFeature
                     },
                     {
@@ -854,7 +854,7 @@
                 self.addNewCard("KBaseWikiDescription",
                     {
                         genomeID: data.genomeID,
-                        loadingImage: "../../widgets/images/ajax-loader.gif",
+                        loadingImage: self.options.loadingImage,
                     },
                     {
                         my: "left top",

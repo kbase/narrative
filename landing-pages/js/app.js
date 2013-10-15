@@ -128,7 +128,7 @@ var app = angular.module('landing-pages',
 app.run(function ($rootScope) {
     $('#navigation').load('partials/nav_func.html', function(){	
 	    // sign in button
-	    $('#signin-button').kbaseLogin({style: 'text', 
+	    $('#signin-button').kbaseLogin({style: 'narrative', 
             login_callback: function() {
                 set_cookie();
             },

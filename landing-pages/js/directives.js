@@ -203,7 +203,7 @@ angular.module('lp-directives')
     .directive('mediadetail', function() {
         return {
             link: function(scope, element, attrs) {
-                var p = $(element).kbasePanel({title: 'Core Metabolic Pathway', 
+                var p = $(element).kbasePanel({title: 'Media Details', 
                                                rightLabel: scope.ws,
                                                subText: scope.id});
                 p.loading();
@@ -218,8 +218,6 @@ angular.module('lp-directives')
             }
         };
     })
-
-
     .directive('rxndetail', function() {
         return {
             link: function(scope, element, attrs) {

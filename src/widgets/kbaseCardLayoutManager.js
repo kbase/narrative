@@ -117,7 +117,7 @@
                                          )
                                  );
 
-            var $loadingDiv = $("<div style='width: 100%; text-align: center; padding: 20px'><img src=" + this.options.loadingImage + "/><br/>Exporting data. This may take a moment...</div>");
+            var $loadingDiv = $("<div style='width: 100%; text-align: center; padding: 20px'><img src='" + this.options.loadingImage + "'/><br/>Exporting data. This may take a moment...</div>");
 
             var exportModal = {
                 modal: $modal,

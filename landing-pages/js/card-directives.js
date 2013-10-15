@@ -42,7 +42,7 @@ angular.module('card-directives')
     .directive('modelcards', function($rootScope, $location) {
         return {
             link: function(scope, element, attrs) {
-                var prom = kbClient('ws', 'get_objectmeta',
+                var prom = kb.req('ws', 'get_objectmeta',
                             {type:'Model', id: scope.id, workspace: scope.ws, auth: scope.USER_TOKEN});
                 $.when(prom).done(function(data){
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseModelMeta", 
@@ -56,7 +56,7 @@ angular.module('card-directives')
                     });
                 });
 
-                var prom = kbClient('fba', 'get_models',
+                var prom = kb.req('fba', 'get_models',
                             {models: [scope.id], workspaces: [scope.ws], auth: scope.USER_TOKEN});
                 $.when(prom).done(function(data) {
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseModelTabs", 
@@ -100,7 +100,7 @@ angular.module('card-directives')
     .directive('fbacards', function($rootScope, $location) {
         return {
             link: function(scope, element, attrs) {
-                var prom = kbClient('ws', 'get_objectmeta',
+                var prom = kb.req('ws', 'get_objectmeta',
                             {type:'FBA', id: scope.id, workspace: scope.ws, auth: scope.USER_TOKEN});
                 $.when(prom).done(function(data){
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaMeta", 
@@ -115,7 +115,7 @@ angular.module('card-directives')
                 });
 
 
-                var prom = kbClient('fba', 'get_fbas',
+                var prom = kb.req('fba', 'get_fbas',
                             {fbas: [scope.id], workspaces: [scope.ws], auth: scope.USER_TOKEN})
                 $.when(prom).done(function(fbas_data) {
                     $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaTabs", 
@@ -131,7 +131,7 @@ angular.module('card-directives')
                     var model_ws = fbas_data[0].model_workspace;
                     var model_id = fbas_data[0].model;
 
-                    var prom2 = kbClient('fba', 'get_models',
+                    var prom2 = kb.req('fba', 'get_models',
                             {models: [model_id], workspaces: [model_ws], auth: scope.USER_TOKEN});
                     $.when(prom2).done(function(models_data){
                         $(element).KBaseCardLayoutManager().addNewCard("kbaseModelCore", 
@@ -156,6 +156,10 @@ angular.module('card-directives')
                         var url = '/rxns/'+data.ids;
                         scope.$apply( $location.path(url) );
                     });
+                    $(document).on('cpdClick', function(e, data) {
+                        var url = '/cpds/'+data.ids;
+                        scope.$apply( $location.path(url) );
+                    });                      
                     $(document).on('coreRxnClick', function(e, data) {
                         console.log(data.ids)
                         var url = '/rxns/'+data.ids.join('&');

@@ -71,7 +71,7 @@ $.KBWidget({
         var fba = data[0];
 
         // rxn flux table
-        var dataDict = formatObjs(fba.reactionFluxes);
+        var dataDict = formatObjs(fba.reactionFluxes, 'rxn');
         var labels = ["id", "Flux", "lower", "upper", "min", "max", "basd","Equation"];
         var cols = getColumnsByLabel(labels);
         var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});               
@@ -81,7 +81,7 @@ $.KBWidget({
         var table = $('#reaction-table').dataTable(rxnTableSettings);
 
         // cpd flux table
-        var dataDict = formatObjs(fba.compoundFluxes);
+        var dataDict = formatObjs(fba.compoundFluxes, 'cpd');
         var labels = ["id", "Flux", "lower", "upper", "min", "max","Equation"];
         var cols = getColumnsByLabel(labels);
         var cpdTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});
@@ -91,16 +91,28 @@ $.KBWidget({
         var table = $('#compound-table').dataTable(cpdTableSettings);
 
  
-        function formatObjs(objs) {
+        function formatObjs(objs, type) {
             var fluxes = []
-            for (var i in objs) {
-                var obj = $.extend({}, objs[i]);
-                var rxn = obj[0].split('_')[0]
-                var compart = obj[0].split('_')[1]
-                obj[0] = '<a class="rxn-click" data-rxn="'+rxn+'">'
-                            +rxn+'</a> ('+compart+')';
-                fluxes.push(obj);
+            if (type == 'rxn') {
+                for (var i in objs) {
+                    var obj = $.extend({}, objs[i]);
+                    var rxn = obj[0].split('_')[0]
+                    var compart = obj[0].split('_')[1]
+                    obj[0] = '<a class="rxn-click" data-rxn="'+rxn+'">'
+                                +rxn+'</a> ('+compart+')';
+                    fluxes.push(obj);
+                }
+            } else if (type == 'cpd') {
+                for (var i in objs) {
+                    var obj = $.extend({}, objs[i]);
+                    var cpd = obj[0].split('_')[0]
+                    var compart = obj[0].split('_')[1]
+                    obj[0] = '<a class="cpd-click" data-cpd="'+cpd+'">'
+                                +cpd+'</a> ('+compart+')';
+                    fluxes.push(obj);
+                }                
             }
+
             return fluxes;
         }
 
@@ -118,6 +130,11 @@ $.KBWidget({
                 var rxn = [$(this).data('rxn')];
                 self.trigger('rxnClick', {ids: rxn});
             });            
+            $('.cpd-click').unbind('click');
+            $('.cpd-click').click(function() {
+                var cpd = [$(this).data('cpd')];
+                self.trigger('cpdClick', {ids: cpd});
+            });                        
         }
 
         //this._rewireIds(this.$elem, this);

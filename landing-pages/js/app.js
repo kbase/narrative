@@ -121,7 +121,6 @@ var app = angular.module('landing-pages',
 
         .otherwise({redirectTo: '/404'})
 
-
 }])
 
 
@@ -142,6 +141,9 @@ app.run(function ($rootScope) {
 
 	    $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
         $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+
+        // hack
+        global($rootScope.USER_ID, $rootScope.USER_TOKEN);
 
 	    // global state object to store state
 	    state = new State();
@@ -215,7 +217,11 @@ function removeCards() {
     //$("#genomes").KBaseCardLayoutManager("destroy");
 }
 
-
+function global(user_id, user_token) {
+    USER_ID = user_id;
+    USER_TOKEN = user_token;
+    kb = new kb(USER_TOKEN);
+}
 
 /***************************  END landing page stuff  ********************************/
 

@@ -19,7 +19,7 @@ angular.module('lp-directives')
                     var p = $(element).kbasePanel({title: 'KBase Models', 
                                                        rightLabel: ws});
                     p.loading();
-                    var prom = kbClient('ws', 'list_workspace_objects',
+                    var prom = kb.req('ws', 'list_workspace_objects',
                                         {type: 'Model', workspace: ws})
                     $.when(prom).done(function(d){
                         $(p.body()).kbaseWSModelTable({ws: ws, data: d});
@@ -34,7 +34,7 @@ angular.module('lp-directives')
                     var p = $(element).kbasePanel({title: 'KBase Media', 
                                                        rightLabel: ws});
                     p.loading();
-                    var prom = kbClient('ws', 'list_workspace_objects',
+                    var prom = kb.req('ws', 'list_workspace_objects',
                                         {type: 'Media', workspace: ws});
 
                     $.when(prom).done(function(d){
@@ -75,7 +75,7 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = kbClient('ws', 'get_objectmeta',
+                var prom = kb.req('ws', 'get_objectmeta',
                             {type:'Model', id: scope.id, workspace: scope.ws});
                 $.when(prom).done(function(data){
                     $(p.body()).kbaseModelMeta({data: data});
@@ -91,10 +91,10 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = kbClient('fba', 'get_models',
+                var prom = kb.req('fba', 'get_models',
                             {models: [scope.id], workspaces: [scope.ws]});
                 $.when(prom).done(function(data){
-                    $(p.body()).kbaseModelTabs({modelsData: data});
+                    $(p.body()).kbaseModelTabs({modelsData: data, api: kb.fbaAPI()});
                     $(document).on('rxnClick', function(e, data) {
                         var url = '/rxns/'+data.ids;
                         scope.$apply( $location.path(url) );
@@ -111,7 +111,7 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = kbClient('fba', 'get_models',
+                var prom = kb.req('fba', 'get_models',
                             {models: [scope.id], workspaces: [scope.ws]})
                 $.when(prom).done(function(data) {
                     $(p.body()).kbaseModelCore({ids: [scope.id], 
@@ -141,7 +141,7 @@ angular.module('lp-directives')
                                                rightLabel: scope.ws,
                                                subText: scope.id});
                 p.loading();
-                var prom = kbClient('ws', 'get_objectmeta',
+                var prom = kb.req('ws', 'get_objectmeta',
                             {type:'FBA', id: scope.id, workspace: scope.ws});
                 $.when(prom).done(function(data){
                     $(p.body()).kbaseFbaMeta({data: data});                    
@@ -157,7 +157,7 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = kbClient('fba', 'get_fbas',
+                var prom = kb.req('fba', 'get_fbas',
                             {fbas: [scope.id], workspaces: [scope.ws]});
                 $.when(prom).done(function(data){
                     $(p.body()).kbaseFbaTabs({fbaData: data});
@@ -165,6 +165,10 @@ angular.module('lp-directives')
                         var url = '/rxns/'+data.ids;
                         scope.$apply( $location.path(url) );
                     });        
+                    $(document).on('cpdClick', function(e, data) {
+                        var url = '/cpds/'+data.ids;
+                        scope.$apply( $location.path(url) );
+                    });                            
                 })
             }
         };
@@ -177,13 +181,13 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom1 = kbClient('fba', 'get_fbas',
+                var prom1 = kb.req('fba', 'get_fbas',
                             {fbas: [scope.id], workspaces: [scope.ws]});
                 $.when(prom1).done(function(fbas_data) {
                     var model_ws = fbas_data[0].model_workspace;
                     var model_id = fbas_data[0].model;
 
-                    var prom2 = kbClient('fba', 'get_models',
+                    var prom2 = kb.req('fba', 'get_models',
                             {models: [model_id], workspaces: [model_ws]});
                     $.when(prom2).done(function(models_data){
                         $(p.body()).kbaseModelCore({ids: [scope.id], 
@@ -208,7 +212,7 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = kbClient('fba', 'get_media',
+                var prom = kb.req('fba', 'get_media',
                         {medias: [scope.id], workspaces: [scope.ws]})
                 $.when(prom).done(function(data) {
                     $(p.body()).kbaseMediaEditor({ids: [scope.id], 
@@ -221,7 +225,7 @@ angular.module('lp-directives')
     .directive('rxndetail', function() {
         return {
             link: function(scope, element, attrs) {
-                var prom = kbClient('fba', 'get_reactions',
+                var prom = kb.req('fba', 'get_reactions',
                             {reactions: scope.ids})
                 $.when(prom).done(function(data){
                     $(element).kbaseRxn({data: data, ids: scope.ids});
@@ -232,7 +236,7 @@ angular.module('lp-directives')
     .directive('cpddetail', function() {
         return {
             link: function(scope, element, attrs) {
-                var prom = kbClient('fba', 'get_compounds',
+                var prom = kb.req('fba', 'get_compounds',
                             {compounds: scope.ids})                
                 $.when(prom).done(function(data){
                     $(element).kbaseCpd({data: data, ids: scope.ids});

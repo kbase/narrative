@@ -1,11 +1,7 @@
 
 
-// it would be really great if we had a restful service.
-var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-
-
 // This saves a request by service name, method, params, and promise
+// Todo: Make as module
 function Cache() {
     var cache = [];
 
@@ -31,28 +27,46 @@ function Cache() {
 
 var cache = new Cache();
 
-function kbClient(service, method, params) {
-    // see if api call has already been made
-    var data = cache.get(service, method, params);
+function kb(token) {
+    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/', USER_TOKEN);
+    var kbws = new workspaceService('http://kbase.us/services/workspace_service/', USER_TOKEN);
 
-    // return the promise ojbect if it has
-    if (data) return data.prom;
+    this.req = function(service, method, params) {
+        // see if api call has already been made
+        var data = cache.get(service, method, params);
 
-    // otherwise, make request
-    var prom = undefined;
-    if (service == 'fba') {
-        var prom = fba[method](params)
-    } else if (service == 'ws') {
-        var prom = kbws[method](params)
+        // return the promise ojbect if it has
+        if (data) return data.prom;
+
+        // otherwise, make request
+        var prom = undefined;
+        if (service == 'fba') {
+            var prom = fba[method](params)
+        } else if (service == 'ws') {
+            var prom = kbws[method](params)
+        }
+
+        // save the request and it's promise objct
+        cache.put(service, method, params, prom)
+        return prom;
     }
 
-    // save the request and it's promise objct
-    cache.put(service, method, params, prom)
-    return prom;
+    this.fbaAPI = function() {
+        return fba;
+    }
+
+    this.kbwsAPI = function() {
+        return kbws;
+    }
 }
 
 
+
+
 function getBio(type, loaderDiv, callback) {
+    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
+    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+
     // This is not cached yet; waiting to compare performanced.
     loaderDiv.append('<div class="progress">\
           <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 3%;">\

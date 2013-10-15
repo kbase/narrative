@@ -22,7 +22,7 @@ $.KBWidget({
         var workspaces = options.ws;
         var data = options.modelsData;
         var token = options.token;
-        var fba = options.api;
+        var fba = new fbaModelServices("http://kbase.us/services/fba_model_services"); //options.api;
 
 
         var container = this.$elem;

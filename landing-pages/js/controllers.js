@@ -49,6 +49,16 @@ function ModelDetailCards($scope, $routeParams) {
     $scope.id = $routeParams.id;
 }
 
+function MediaDetail($scope, $routeParams) {
+    $scope.ws = $routeParams.ws;
+    $scope.id = $routeParams.id;
+}
+
+function MediaDetailCards($scope, $routeParams) {
+    $scope.ws = $routeParams.ws;
+    $scope.id = $routeParams.id;
+}
+
 function FBADetail($scope, $routeParams) {
     $scope.ws = $routeParams.ws;
     $scope.id = $routeParams.id;
@@ -89,12 +99,8 @@ function CpdDetail($scope, $routeParams, $location) {
 
 
 function ScrollCtrl($scope, $location, $anchorScroll) {
-  $scope.gotoBottom = function (){
-    // set the location.hash to the id of
-    // the element you wish to scroll to.
-    $location.hash('bottom');
-    
-    // call $anchorScroll()
+  $scope.gotoAnchor = function (id){
+    $location.hash(id);
     $anchorScroll();
   }
 }

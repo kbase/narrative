@@ -8,25 +8,15 @@ $.KBWidget({
     init: function(options) {
         this._super(options);
         var self = this;
-        var token = options.auth;
         var media = options.id;
         var ws = options.ws;        
+        var data = options.data;
 
-        var fba = new fbaModelServices('http://140.221.85.73:4043');
-        var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-
-        var panel = self.$elem.kbasePanel({title: 'Media Info', subText: media})
-
-        var container = panel.body();
-        container.append('<p class="muted loader-rxn"> \
-                <img src="assets/img/ajax-loader.gif"> loading...</p>')
+        var container = this.$elem;
 
 
-        var mediaAJAX = fba.get_media({medias: [media], workspaces: [ws]})
-        $.when(mediaAJAX).done(function(data){
-            media = data[0]; // only 1 media right now
-            media_view(container, media);
-        })
+        media = data[0]; // only 1 media right now
+        media_view(container, media);
 
 
         function media_view(container, data) {

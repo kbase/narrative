@@ -21,6 +21,9 @@ $.KBWidget({
         var models = options.id;
         var workspaces = options.ws;
         var data = options.modelsData;
+        var token = options.token;
+        var fba = new fbaModelServices("http://kbase.us/services/fba_model_services"); //options.api;
+
 
         var container = this.$elem;
 
@@ -159,8 +162,8 @@ $.KBWidget({
             $('.rxn-click').unbind('click');
             $('.rxn-click').click(function() {
                 var rxn = [$(this).data('rxn')];
-                self.trigger('rxnClick', {rxns: rxn});
-            });            
+                self.trigger('rxnClick', {ids: rxn});
+            });
         }
 
 
@@ -294,22 +297,27 @@ $.KBWidget({
                             solList.append('<div> <a type="button" class="gap-sol"\
                                 data-toggle="collapse" data-target="#'+gapRef+solID.replace(/\./g,'_')+'" >'+
                                 solID+'</a> <span class="caret" style="vertical-align: middle;"></span>\
-                                <div class="radio inline gapfill-radio"> \
+                                 </div>');
+                            /*
+                            <div class="radio inline gapfill-radio"> \
                                     <input type="radio" name="gapfillRadios" id="gapfillRadio'+i+'" value="integrated" checked>\
                                 </div> <span class="label integrated-label">Integrated</span>\
                                     <button data-gapfill="'+gapRef+solID+'"\
                                      class="hide btn btn-primary btn-mini integrate-btn">Integrate</button> \
-                                 </div>');
+                            */
                         } else {
                             solList.append('<div> <a type="button" class="gap-sol"\
                                 data-toggle="collapse" data-target="#'+gapRef+solID.replace(/\./g,'_')+'" >'+
                                 solID+'</a> <span class="caret" style="vertical-align: middle;"></span>\
+                                </div>');
+
+                            /*
                                 <div class="radio inline gapfill-radio"> \
                                     <input type="radio" name="gapfillRadios" id="gapfillRadio'+i+'" value="unitegrated">\
                                 </div>\
                                 <button data-gapfill="'+gapRef+solID+'"\
                                  class="hide btn btn-primary btn-mini integrate-btn">Integrate</button> \
-                                </div>');
+                            */                            
                         }
 
                         var rxnAdditions = sol.reactionAdditions;
@@ -378,10 +386,11 @@ $.KBWidget({
                         })
                     })
 
-                   $('.gap-rxn').click(function(){ 
-                        var rxn = $(this).data('rxn');
-                        reaction_view([rxn]);
-                    });
+                    $('.gap-rxn').unbind('click');
+                    $('.gap-rxn').click(function() {
+                        var rxn = [$(this).data('rxn')];
+                        self.trigger('rxnClick', {ids: rxn});
+                    });            
 
                 });
 

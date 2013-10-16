@@ -1,92 +1,72 @@
 
 
-// it would be really great if we had a restful service.
-var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-
-
-// This caches promise objects by key
-// Could technically use angular's $cacheFactory for this instead.
+// This saves a request by service name, method, params, and promise
+// Todo: Make as module
 function Cache() {
-    var cache = {};
+    var cache = [];
 
-    this.get = function(key) {
-        if (cache[key]) {
-            return cache[key];
-        } else {
-            return undefined;
+    this.get = function(service, method, params) {
+        for (var i in cache) {
+            var obj = cache[i];
+            if (service != obj['service']) continue;
+            if (method != obj['method']) continue;
+            if ( angular.equals(obj['params'], params) ) return obj;
         }
+        return undefined;
     }
 
-    this.put = function(key, prom) {
-        var obj = {}
-        if (prom) obj['prom'] = prom;
-        cache[key] = obj;
+    this.put = function(service, method, params, prom) {
+        var obj = {};
+        obj['service'] = service;    
+        obj['method'] = method;
+        obj['prom'] = prom;
+        obj['params'] = params;
+        cache.push(obj);
     }
 }
 
-
-
-/*
- *  Helper function for making ajax requests.
- *  
- *  fbaGet() :  FBA service ajax calls
- *  wsGet()  :  Workspace service ajax calls
- *  getBio() :  Ajax calls related to getBioChemistry
- *              Fetching data related to the biochemistry often requires a 
- *              long time, so this includes a dynamic progress bar
-*/
 var cache = new Cache();
-function fbaGet(type, ws, id) {
-    var key = type+';'+ws+';'+id;
 
-    var data = cache.get(key);
+function kb(token) {
+    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/', USER_TOKEN);
+    var kbws = new workspaceService('http://kbase.us/services/workspace_service/', USER_TOKEN);
 
-    // if data is already being fetched, return promise;
-    if (data) return data.prom;
+    this.req = function(service, method, params) {
+        // see if api call has already been made
+        var data = cache.get(service, method, params);
 
-    var prom;
-    if (type == 'Model') {
-        prom = fba.get_models({models: [id],
-                               workspaces: [ws]});
-    } else if (type == 'FBA') {
-        prom = fba.get_fbas({fbas: [id], 
-                             workspaces: [ws]});
-    } else if (type == 'Media') {
+        // return the promise ojbect if it has
+        if (data) return data.prom;
 
-    } else if (type == 'Rxn') {
-        prom = fba.get_reactions({reactions: id});        
-    } else if (type == 'Cpd') {
-        prom = fba.get_compounds({compounds: id});        
+        // otherwise, make request
+        var prom = undefined;
+        if (service == 'fba') {
+            var prom = fba[method](params)
+        } else if (service == 'ws') {
+            var prom = kbws[method](params)
+        }
+
+        // save the request and it's promise objct
+        cache.put(service, method, params, prom)
+        return prom;
     }
 
-    cache.put(key, prom);
-    return prom;
-}
-
-function wsGet(method, type, ws, id) {
-    var key = method+';'+type+';'+ws+';'+id;
-
-    var data = cache.get(key);
-
-    // if data is already being fetched, return promise;
-    if (data) return data.prom;
-
-    var prom;
-    if (method == 'listWSObject') {
-        var prom = kbws.list_workspace_objects({workspace: ws, 
-                                                type: type});
-    } else if (method == 'objectMeta') {
-        var prom = kbws.get_objectmeta({type: type,
-                                        workspace: ws, 
-                                        id: id});
+    this.fbaAPI = function() {
+        return fba;
     }
 
-    cache.put(key, prom);
-    return prom;
+    this.kbwsAPI = function() {
+        return kbws;
+    }
 }
+
+
+
 
 function getBio(type, loaderDiv, callback) {
+    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
+    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+
     // This is not cached yet; waiting to compare performanced.
     loaderDiv.append('<div class="progress">\
           <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 3%;">\

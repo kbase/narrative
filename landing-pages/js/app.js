@@ -30,7 +30,7 @@ var app = angular.module('landing-pages',
             {templateUrl: 'views/ws-browser.html',
              controller: WSBrowser})
 
-        .when('/genomes/cs/:id',
+        .when('/genomes/CDS/:id',
             {templateUrl: 'views/objects/genome.html',
              controller: GenomeDetail})
         .when('/genomes/:ws',
@@ -58,24 +58,27 @@ var app = angular.module('landing-pages',
              controller: ModelDetail})
         .when('/cards/models/:ws/:id', 
             {templateUrl: 'views/objects/modelcards.html',
-             controller: ModelDetailCards})        
+             controller: ModelDetailCards})
 
         .when('/media',
             {templateUrl: 'views/object-list.html',
-             controller: WSObjects})        
+             controller: WSObjects})
         .when('/media/:ws',
             {templateUrl: 'views/object-list.html',
              controller: WSObjects})
+        .when('/media/:ws/:id',
+            {templateUrl: 'views/objects/media.html',
+             controller: MediaDetail})
 
         .when('/fbas/:ws', 
             {templateUrl: 'views/object-list.html',
              controller: WSObjects})
-        .when('/fbas/:ws/:id', 
+        .when('/fbas/:ws/:id',
             {templateUrl: 'views/objects/fba.html',
              controller: FBADetail})
-        .when('/cards/fbas/:ws/:id', 
+        .when('/cards/fbas/:ws/:id',
             {templateUrl: 'views/objects/fbacards.html',
-             controller: FBADetailCards})        
+             controller: FBADetailCards})
 
         .when('/rxns', 
             {templateUrl: 'views/object-list.html',
@@ -118,18 +121,29 @@ var app = angular.module('landing-pages',
 
         .otherwise({redirectTo: '/404'})
 
-
 }])
 
 
 app.run(function ($rootScope) {
-    $('#navigation').load('partials/nav.html', function(){	
+    $('#navigation').load('partials/nav_func.html', function(){	
 	    // sign in button
-	    $('#signin-button').kbaseLogin({style: 'text', 
-	        login_callback: reload_window, logout_callback: reload_window});
+	    $('#signin-button').kbaseLogin({style: 'narrative', 
+            login_callback: function() {
+                set_cookie();
+            },
+            logout_callback: function() {
+                set_cookie();
+            }}
+        );
+	        // login_callback: function() {
+         //        set_cookie();
+         //    } reload_window, logout_callback: reload_window});
 
 	    $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
         $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+
+        // hack
+        global($rootScope.USER_ID, $rootScope.USER_TOKEN);
 
 	    // global state object to store state
 	    state = new State();
@@ -142,9 +156,35 @@ app.run(function ($rootScope) {
     //  Here's a sort of hack to remove any cards when a view changes.
     //  There may be a better way to manage this.
     $rootScope.$on('$routeChangeSuccess', function() {
+        $('.popover').each(function() { $(this).remove() }); 
         removeCards();
     })
 });
+
+function set_cookie() {
+   var c = $("#signin-button").kbaseLogin('get_kbase_cookie');
+   console.log( 'Setting kbase_session cookie');
+   $.cookie('kbase_session',
+    'un=' + c.user_id
+    + '|'
+    + 'kbase_sessionid=' + c.kbase_sessionid
+    + '|'
+    + 'user_id=' + c.user_id
+    + '|'
+    + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+    { path: '/'});
+   $.cookie('kbase_session',
+    'un=' + c.user_id
+    + '|'
+    + 'kbase_sessionid=' + c.kbase_sessionid
+    + '|'
+    + 'user_id=' + c.user_id
+    + '|'
+    + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+    { path: '/',
+      domain: 'kbase.us' });
+
+};
 
 
 /*
@@ -177,7 +217,11 @@ function removeCards() {
     //$("#genomes").KBaseCardLayoutManager("destroy");
 }
 
-
+function global(user_id, user_token) {
+    USER_ID = user_id;
+    USER_TOKEN = user_token;
+    kb = new kb(USER_TOKEN);
+}
 
 /***************************  END landing page stuff  ********************************/
 

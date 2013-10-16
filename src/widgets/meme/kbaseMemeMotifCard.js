@@ -27,19 +27,16 @@
             var self = this;
             self.motif = this.options.motif;
             self.$elem.append($("<div />")
-                    .append("<h2>Motif " + self.motif.id + "</h2>"));
-
-            self.$elem.append($("<div />")
-                    .append($("<table/>").addClass("kbgo-table")
-                            .append($("<tr/>")
-                                    .append("<td>Motif description</td><td>" + self.motif.description + "</td>"))
-                            .append($("<tr/>")
-                                    .append("<td>Motif width</td><td>" + self.motif.width + "</td>"))
-                            .append($("<tr/>")
-                                    .append("<td>Number of sites</td><td>" + self.motif.sites.length + "</td>"))
-                            .append($("<tr/>")
-                                    .append("<td>Motif E-value</td><td>" + self.motif.evalue + "</td>"))
-                            ));
+						.append($("<table/>").addClass("kbgo-table")
+					    .append($("<tr/>")
+					    	.append("<td>Motif description</td><td>" + self.motif.description + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>Motif width</td><td>" + self.motif.width + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>Number of sites</td><td>" + self.motif.sites.length + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>Motif E-value</td><td>" + self.motif.evalue + "</td>"))
+			));
 
             //Logo 
 
@@ -52,7 +49,6 @@
             self.$elem.append($("<div />")
                     .attr("id", "motif-logo"))
                     .append(Logo(150, 300, sitesList));
-
 
             //Sites
             self.$elem.append($("<div />")
@@ -73,7 +69,7 @@
         getData: function() {
             return {
                 type: "MemeRunResult",
-                id: this.options.meme_run_result_id,
+                id: this.options.motif.id,
                 workspace: this.options.workspace_id,
                 title: "MEME Motif"
             };

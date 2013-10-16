@@ -186,28 +186,14 @@
 /*------------ MEME card styling -------------*/
 
 #motif-logo {
-  font: 10px sans-serif;
+        font: 8px sans-serif;
+        position: absolute;
+        top: 10px;
+        right: 10px;
 }
 
 .memelogo-axis path, .memelogo-axis line {
 	fill: none;
 	stroke: #000;
 	shape-rendering: crispEdges;
-}
-
-.memelogo-letter-A {
-	fill: green;
-	font-weight: bold;
-}
-.memelogo-letter-C {
-    fill: blue;
-    font-weight: bold;
-}
-.memelogo-letter-T {
-    fill: red;
-    font-weight: bold;
-}
-.memelogo-letter-G {
-    fill: gold;
-    font-weight: bold;
 }

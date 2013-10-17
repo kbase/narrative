@@ -72,63 +72,11 @@ angular.module('lp-directives')
             link: function(scope, element, attr) {
                 var ws = scope.ws ? scope.ws : "AKtest"; 
 
-                var p = $(element).kbasePanel({title: 'MemeRunResult', 
-                                                   rightLabel: ws});
-                p.loading();
-                var prom = kb.req('ws', 'list_workspace_objects',
-                                    {type: 'MemeRunResult', workspace: ws});
-
-                $.when(prom).done(function(d){
-                    $(element).kbaseMemeTable({ws: ws, data: d, type: 'MemeRunResult', tableId: 'meme-table2'});
-                    $(document).on('memeClick', function(e, data) {
-                        var url = '/meme/'+ws+'/'+data.id;
-                        scope.$apply( $location.path(url) );
-                    });
-                })
-            }
-            
-        };
-    })
-    .directive('tomtomlist', function($location) {
-        return {
-            link: function(scope, element, attr) {
-                var ws = scope.ws ? scope.ws : "AKtest"; 
-
-                var p = $(element).kbasePanel({title: 'TomtomRunResult', 
-                                                   rightLabel: ws});
-                p.loading();
-                var prom = kb.req('ws', 'list_workspace_objects',
-                                    {type: 'TomtomRunResult', workspace: ws});
-
-                $.when(prom).done(function(d){
-                    $(element).kbaseMemeTable({ws: ws, data: d, type: 'tomtomRunResult', tableId: 'tomtom-table2'});
-                    $(document).on('memeClick', function(e, data) {
-                        var url = '/meme/'+ws+'/'+data.id;
-                        scope.$apply( $location.path(url) );
-                    });
-                })
-            }
-            
-        };
-    })
-    .directive('mastlist', function($location) {
-        return {
-            link: function(scope, element, attr) {
-                var ws = scope.ws ? scope.ws : "AKtest"; 
-
-                var p = $(element).kbasePanel({title: 'MastRunResult', 
-                                                   rightLabel: ws});
-                p.loading();
-                var prom = kb.req('ws', 'list_workspace_objects',
-                                    {type: 'MastRunResult', workspace: ws});
-
-                $.when(prom).done(function(d){
-                    $(element).kbaseMemeTable({ws: ws, data: d, type: 'MastRunResult', tableId: 'mast-table2'});
-                    $(document).on('memeClick', function(e, data) {
-                        var url = '/meme/'+ws+'/'+data.id;
-                        scope.$apply( $location.path(url) );
-                    });
-                })
+                $(element).kbaseMemeTable({ws: ws});
+                $(document).on('memeClick', function(e, data) {
+                    var url = '/meme/'+ws+'/'+data.id;
+                    scope.$apply( $location.path(url) );
+                });
             }
             
         };

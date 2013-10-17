@@ -9,23 +9,10 @@ $.KBWidget({
         this._super(options);
         var self = this;        
         var ws = options.ws;
-        var title = options.title;
-        var data = options.data;
-        var type = options.type;
-        var tableId = options.tableId;
-        var panelTitle = '';
-        if (type === 'MemeRunResult'){
-            panelTitle = 'MEME run results';
-        } else if (type === 'TomtomRunResult'){
-            panelTitle = 'TOMTOM run results';
-        } else if (type === 'MastRunResult'){
-            panelTitle = 'MAST run results';
-        };
 
-        var panel = this.$elem.kbasePanel({title: panelTitle, 
+        var panel = this.$elem.kbasePanel({title: 'MEME service results', 
                                            rightLabel: ws});
         panel.loading();
-        var panel_body = panel.body();
 
         var tableSettings = {
             "fnDrawCallback": memeEvents,
@@ -36,21 +23,40 @@ $.KBWidget({
                 "sSearch": "Search all:"
             }
         };
+        
+        var prom = kb.req('ws', 'list_workspace_objects',
+                            {type: 'MemeRunResult', workspace: ws});
+        $.when(prom).done(function(d){
 
-        var dataList = formatObjs(data);
-        var labels = ["ID", "Type", "Modification time"];
-        var cols = getColumnsByLabel(labels);
-        tableSettings.aoColumns = cols;
-        panel_body.append('<table id="' + tableId + '" class="table table-striped table-bordered"></table>');
-        var table = $('#'+ tableId).dataTable(tableSettings);
-        table.fnAddData(dataList);
-/*
-        function ws_list(count) {
-            var ws = [];
-            for (var i=0; i < count; i++ ) { ws.push('AKtest'); }
-            return ws;
-        }
-*/
+            var dataListMeme = formatObjs(d);
+
+            var promT = kb.req('ws', 'list_workspace_objects',
+                            {type: 'TomtomRunResult', workspace: ws});
+
+            $.when(promT).done(function(d){
+                var dataListTomtom = formatObjs(d);
+
+                var promM = kb.req('ws', 'list_workspace_objects',
+                                {type: 'MastRunResult', workspace: ws});
+                $.when(promM).done(function(d){
+                    var dataListMast = formatObjs(d);
+
+                    var panel_body = panel.body();
+                    var labels = ["ID", "Type", "Modification time"];
+                    var cols = getColumnsByLabel(labels);
+                    tableSettings.aoColumns = cols;
+                    panel_body.append('<table id="meme-table2" class="table table-striped table-bordered"></table>');
+                    var table = $('#meme-table2').dataTable(tableSettings);
+
+                    table.fnAddData(dataListMeme);
+                    table.fnAddData(dataListTomtom);
+                    table.fnAddData(dataListMast);
+                })
+                
+            })
+
+        })
+
         function formatObjs(meme_meta) {
             var meme_list = [];
             for (var i in meme_meta) {

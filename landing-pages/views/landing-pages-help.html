@@ -206,12 +206,24 @@
 
         <div class="page-header"><h3 id="meme">MEME</h3></div>
         <h4>URLs</h4>
-            <a href="#/meme">#/meme</a> <span class="glyphicon glyphicon-unchecked"></span><br>
+            <a href="#/meme">#/meme</a> [ points to <span class="label label-primary">AKtest</span> ] 
+            <span class="glyphicon glyphicon-check"></span><br>
+
         <h5>Params</h5>        
+            #/meme/$workspaceId<br>
             #/meme/$workspaceId/$memeRunResultId<br>
             #/meme/$workspaceId/$tomtomRunResultId<br>
             #/meme/$workspaceId/$mastRunResultId<br>
         <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="meme">
+                #/meme/
+                <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+                </div>
+                <a class="btn btn-default api-url-submit">Go</a>
+                <span class="glyphicon glyphicon-check"></span>
+            </form>
             <form class="form-inline" role="form" type="meme">
               #/media/
               <div class="form-group">
@@ -223,7 +235,7 @@
                 <input class="form-control" id="input2" placeholder="Meme Run Result ID" value="kb|memerunresult.131">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
-                  <span class="glyphicon glyphicon-unchecked"></span>
+                  <span class="glyphicon glyphicon-check"></span>
             </form>
             <form class="form-inline" role="form" type="meme">
               #/media/
@@ -236,7 +248,7 @@
                 <input class="form-control" id="input2" placeholder="Tomtom Run Result ID" value="kb|tomtomrunresult.3">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
-                  <span class="glyphicon glyphicon-unchecked"></span>
+                  <span class="glyphicon glyphicon-check"></span>
             </form>
             <form class="form-inline" role="form" type="meme">
               #/media/
@@ -249,7 +261,7 @@
                 <input class="form-control" id="input2" placeholder="Mast Run Result ID" value="kb|mastrunresult.1">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
-                  <span class="glyphicon glyphicon-unchecked"></span>
+                  <span class="glyphicon glyphicon-check"></span>
             </form>
 
         <br><br>

@@ -97,9 +97,9 @@ var app = angular.module('landing-pages',
             {templateUrl: 'views/objects/cpd.html',
              controller: CpdDetail})           
 
-        .when('/meme',
-            {templateUrl: 'views/objects/meme.html',
-             controller: MemeDetail})
+        .when('/meme/:ws',
+            {templateUrl: 'views/meme-list.html',
+             controller: WSObjects})
         .when('/meme/:ws/:id',
             {templateUrl: 'views/objects/meme.html',
              controller: MemeDetail})

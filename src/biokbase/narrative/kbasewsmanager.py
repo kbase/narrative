@@ -61,6 +61,7 @@ class KBaseWSNotebookManager(NotebookManager):
         'description' : 'description of notebook',
         'data_dependencies' : { list of kbase id strings }
         'format' : self.node_format
+        'workspace' : the workspace that it was loaded from or saved to
     }
 
     This handler expects that on every request, the session attribute for an
@@ -222,6 +223,8 @@ class KBaseWSNotebookManager(NotebookManager):
         jsonnb = json.dumps(wsobj['data'])
         self.log.debug("jsonnb = %s" % jsonnb)
         nb = current.reads(jsonnb,u'json')
+        # Set the notebook metadata workspace to the workspace this came from
+        nb.metadata.ws_name = wsobj['metadata']['workspace']
         last_modified = dateutil.parser.parse(wsobj['metadata']['moddate'])
         return last_modified, nb
     
@@ -259,6 +262,8 @@ class KBaseWSNotebookManager(NotebookManager):
                 nb.metadata.description = ''
             if not hasattr(nb.metadata, 'data_dependencies'):
                 nb.metadata.data_dependencies = []
+            if not hasattr(nb.metadata, 'ws_name'):
+                nb.metadata.ws_name = homews
             nb.metadata.format = self.node_format
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
@@ -268,7 +273,7 @@ class KBaseWSNotebookManager(NotebookManager):
             wsobj = { 'id' : self._clean_id(nb.metadata.name),
                       'type' : self.ws_type,
                       'data' : nb,
-                      'workspace' : homews,
+                      'workspace' : nb.metadata.workspace,
                       'command' : '',
                       'metadata' : nb.metadata,
                       'auth' : token,

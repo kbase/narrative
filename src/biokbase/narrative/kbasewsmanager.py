@@ -253,9 +253,6 @@ class KBaseWSNotebookManager(NotebookManager):
                 notebook_id = self.new_notebook_id(new_name)
             if not hasattr(nb.metadata, 'creator'):
                 nb.metadata.creator = user_id
-            #if not hasattr(nb.metadata, 'id'):
-            #    m = self.ws_regex.match(notebook_id)
-            #    nb.metadata.id = m.group('objid')
             if not hasattr(nb.metadata, 'type'):
                 nb.metadata.type = 'Narrative'
             if not hasattr(nb.metadata, 'description'):
@@ -273,7 +270,7 @@ class KBaseWSNotebookManager(NotebookManager):
             wsobj = { 'id' : self._clean_id(nb.metadata.name),
                       'type' : self.ws_type,
                       'data' : nb,
-                      'workspace' : nb.metadata.workspace,
+                      'workspace' : nb.metadata.ws_name,
                       'command' : '',
                       'metadata' : nb.metadata,
                       'auth' : token,

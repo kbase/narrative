@@ -289,6 +289,13 @@
                 body.append($('<tr>')).append($('<td>').text("No metadata"));
             }
             // XXX: hack! add button for viz if network
+            if (data.type == 'Networks') {
+                this.addNetworkVisualization(data);
+            }
+            else {
+                body.append($('<tr>')).append($('<td>').text("No metadata"));
+            }
+            // XXX: hack! add button for viz if network
             // (slightly less of a hack now? --Bill)
             this.addVisualizationButton(data);
 

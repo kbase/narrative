@@ -190,6 +190,7 @@
     	} else {
     	    META_ws = project.ws_client.list_workspaces( { auth : token} );
     	    $.when( META_ws).then( function(result) {
+				       //console.log( "List workspaces = ", result);
     				       filter_wsobj( { res: result,
     						       callback : p.callback,
     						       perms: p.perms });
@@ -402,7 +403,7 @@
 		}
 	    },
 	    {});
-	console.log( user_by_perm);
+	//console.log( user_by_perm);
 	var by_perms_fn = Object.keys( user_by_perm).map(
 	    function(perm) {
 		return project.ws_client.set_workspace_permissions( {users: user_by_perm[perm],
@@ -413,9 +414,9 @@
 	    });
 	set_perm_fn = set_perm_fn.concat(by_perms_fn);
 	$.when.apply( set_perm_fn).then( function() {
-					     console.log( arguments);
+					     //console.log( arguments);
 					     var results = [].slice.call(arguments);
-					     console.log( results);
+					     //console.log( results);
 					     p.callback( results);
 					 },
 					 p.error_callback
@@ -439,6 +440,7 @@
     	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
     	
     	var all_my_narratives = function (project_ids) {
+	    console.log( "All project_ids: ", project_ids);
     	    var get_ws_narr = project_ids.map( function(ws_id) {
                 console.debug("project narratives: list for workspace=" + ws_id);
     		    return(project.ws_client.list_workspace_objects({

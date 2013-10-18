@@ -26,6 +26,11 @@ list_ws_obj_fields = ['id','type','moddate','instance','command',
                       'lastmodifier','owner','workspace','ref','chsum',
                       'metadata']
 
+# object type for a project tag object
+ws_tag_type = 'workspace_meta'
+
+# object name for project tag
+ws_tag = { 'project' : '_project' }
 
 def get_wsobj_meta( wsclient, token, objtype="Narrative", perm=None, ws=None ):
     """
@@ -92,19 +97,40 @@ def get_wsobj( wsclient, token, ws_id, objtype=None):
     res['metadata'] = dict(zip(list_ws_obj_fields, res['metadata']))
     return res
 
+# Tag a workspace as a project, if there is an error, let it propagate up
+def check_project_tag( wsclient, workspace, token):
+    try:
+        tag = wsclient.get_objectmeta( { 'auth' : token,
+                                         'workspace' : workspace,
+                                         'id' : ws_tag['project'],
+                                         'type' : ws_tag_type});
+    except biokbase.workspaceService.Client.ServerError, e:
+        # If it is a not found error, create it, otherwise reraise
+        if e.message.find('not found'):
+            ws_meta = wsclient.save_object( { 'workspace' : workspace,
+                                              'auth' : token,
+                                              'type' :ws_tag_type,
+                                              'id' : ws_tag['project'],
+                                              'data' : { 'description' : 'Tag! You\'re a project!'},
+                                              'metadata' : {},
+                                              'default_permission' : 'n'});
+        else:
+            raise e
+    return True
+
+
 def check_homews( wsclient, user_id, token):
     """
     Helper routine to make sure that the user's home workspace is built. Putting it here
     so that when/if it changes we only have a single place to change things.
     Takes a wsclient and token, will check for the existence of the home workspace and
-    create it if necessary. Will pass along any exceptions
+    create it if necessary. Will pass along any exceptions. Will also make sure that
+    it is tagged with a workspace_meta object named "_project"
     """
     try:
         homews = "%s_home" % user_id
         ws_meta = wsclient.get_workspacemeta( { 'auth' : token,
                                                 'workspace' : homews})
-        if ws_meta:
-            return homews
     except biokbase.workspaceService.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found'):
@@ -114,3 +140,8 @@ def check_homews( wsclient, user_id, token):
             return homews
         else:
             raise e
+    if ws_meta:
+        check_project_tag( wsclient, homews, token)
+        return homews
+    else:
+        raise Exception('Unable to find or create home workspace: %s' % homews)

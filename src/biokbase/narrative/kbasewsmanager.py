@@ -221,7 +221,7 @@ class KBaseWSNotebookManager(NotebookManager):
         except ws_util.BadWorkspaceID, e:
             raise web.HTTPError(500, u'Notebook % not found: %' % (notebook_id, e))
         jsonnb = json.dumps(wsobj['data'])
-        self.log.debug("jsonnb = %s" % jsonnb)
+        #self.log.debug("jsonnb = %s" % jsonnb)
         nb = current.reads(jsonnb,u'json')
         # Set the notebook metadata workspace to the workspace this came from
         nb.metadata.ws_name = wsobj['metadata']['workspace']

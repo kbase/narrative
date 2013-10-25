@@ -398,7 +398,8 @@
         /** 
          * Create the output of the demo in the area given by 'element'.
          */
-        plantsCreateOutput: function(element, text) {
+        //plantsCreateOutput: function(element, text) {
+        plantsCreateOutput: function(cell, text) {
             // Since we must be done running, allow Run button to work again
             this.rebindRunButtons();
             // Now create output
@@ -406,14 +407,28 @@
             var token = $("#login-widget").kbaseLogin("session","token");
             var full_id = this.ws_id + "." + oid;
             console.debug("ForceDirectedNetwork ID = "+full_id);
-            element.ForceDirectedNetwork({
-                workspaceID: this.ws_id + "." + oid,
-                token: token
-            });
-            // Make the element a little bigger
-            element.css({margin: '-10px'});
-            // Disable most actions on this element
-            element.off('click dblclick keydown keyup keypress focus');
+	    console.log(cell);
+	    // grab the old contents of the cell and append the
+	    // javascript call that pulls in the data and instantiates
+	    // the widget - do this in the cell HTML instead of in the
+	    // notebook code
+	    var uuid = this._uuidgen();
+
+	    var cell_text = ["<div id=\""+uuid+"\"></div>",
+			     "<script>",
+			     "$(\"#"+uuid+"\").ForceDirectedNetwork({",
+			     "    workspaceID: \"" + this.ws_id + "." + oid+"\",",
+			     "    token: \"" + token + "\"",
+			     "});",
+			     "// Make the element a little bigger",
+			     "$(\"#"+uuid+"\").css({margin: '-10px'});",
+			     "// Disable most actions on this element",
+			     "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
+			     "</script>"].join('\n');
+	    cell.cell.set_text(cell_text);
+            cell.cell.rendered = false; // force a render
+	    cell.cell.render();
+
         },
 
         /* -------------- END: PLANTS ---------------------- */
@@ -447,11 +462,12 @@
             };
         },
 
-        runAssemblyCreateOutput: function(element, text) {
+        runAssemblyCreateOutput: function(cell, text) {
             var jobId = "";
             for (var i=0; i<5; i++) {
                 jobId += Math.floor((Math.random()*10));
             }
+	    var element = $("#"+cell.eid);
             var outText = "Your contig assembly job has been submitted successfully.<br/>" +
                           "Your job ID is <b>job." + jobId + "</b><br/>" + 
                           "This will likely take a few hours.<br/>" +
@@ -480,8 +496,9 @@
             };
         },
 
-        assembleGenomeCreateOutput: function(element, text) {
+        assembleGenomeCreateOutput: function(cell, text) {
             var data = JSON.parse(text);
+	    var element = $("#"+cell.eid);
 
             var tableRow = function(a, b) {
                 return $("<tr>")
@@ -521,7 +538,8 @@
             };
         },
 
-        annotateGenomeCreateOutput: function(element, text) {
+        annotateGenomeCreateOutput: function(cell, text) {
+	    var element = $("#"+cell.eid);
             element.append(text);
         },
 
@@ -541,8 +559,9 @@
             };
         },
 
-        viewGenomeCreateOutput: function(element, text) {
+        viewGenomeCreateOutput: function(cell, text) {
             var data = JSON.parse(text);
+	    var element = $("#"+cell.eid);
 
             var tableRow = function(a, b) {
                 return $("<tr>")
@@ -597,8 +616,9 @@
             };
         },
 
-        genomeToFbaCreateOutput: function(element, text) {
+        genomeToFbaCreateOutput: function(cell, text) {
             var data = JSON.parse(text);
+	    var element = $("#"+cell.eid);
 
             element.kbaseModelMetaNarrative({data: data});
             element.off('click dblclick keydown keyup keypress focus');
@@ -619,8 +639,9 @@
             };
         },
 
-        viewFbaModelCreateOutput: function(element, text) {
+        viewFbaModelCreateOutput: function(cell, text) {
             var data = JSON.parse(text);
+	    var element = $("#"+cell.eid);
 
             console.log(data);
             element.kbaseModelTabs({modelsData: data});
@@ -646,7 +667,8 @@
             };
         },
 
-        buildMediaCreateOutput: function(element, text) {
+        buildMediaCreateOutput: function(cell, text) {
+	    var element = $("#"+cell.eid);
             var data = null;
             if (text !== "null") {
                 data = JSON.parse(text);
@@ -671,7 +693,8 @@
             };
         },
 
-        viewMediaCreateOutput: function(element, text) {
+        viewMediaCreateOutput: function(cell, text) {
+	    var element = $("#"+cell.eid);
             var data = JSON.parse(text);
             element.kbaseMediaEditorNarrative({ mediaData: data });
         },
@@ -695,7 +718,8 @@
             };
         },
 
-        runFbaCreateOutput: function(element, text) {
+        runFbaCreateOutput: function(cell, text) {
+	    var element = $("#"+cell.eid);
             var data = JSON.parse(text);
             element.kbaseFbaTabsNarrative({ fbaData: data });
         },
@@ -716,7 +740,8 @@
             };
         },
 
-        viewFbaCreateOutput: function(element, text) {
+        viewFbaCreateOutput: function(cell, text) {
+	    var element = $("#"+cell.eid);
             var data = JSON.parse(text);
             console.log(data); 
             element.kbaseFbaTabsNarrative({ fbaData: data });
@@ -744,7 +769,8 @@
             };
         },
 
-        runGapfillCreateOutput: function(element, text) {
+        runGapfillCreateOutput: function(cell, text) {
+	    var element = $("#"+cell.eid);
             var data = JSON.parse(text);
             var jobId = data.id;
             var totalTime = data.jobdata.postprocess_args[0].totalTimeLimit;
@@ -777,7 +803,8 @@
             };
         },
 
-        integrateGapfillCreateOutput: function(element, text) {
+        integrateGapfillCreateOutput: function(cell, text) {
+	    var element = $("#"+cell.eid);
 
         },
 
@@ -1030,8 +1057,11 @@
                     this._buf = this._buf.substr(offs, this._buf.length - offs);
                 }
                 if (result.length > 0) {
-                    var element = this._addOutputCell();
-                    this.result_handler(element, result);
+		    // stop using the dom element for output and use the IPython cell
+                    // var element = this._addOutputCell();
+                    // this.result_handler(element, result);
+		    var cell = this._addOutputCell();
+                    this.result_handler(cell, result);
                     this._buf = "";
                 }
             }
@@ -1082,7 +1112,9 @@
             cell.set_text(content);
             cell.rendered = false; // force a render
             cell.render();
-            return $('#' + eid);
+            // return $('#' + eid);
+            return({ cell: cell,
+		     eid: eid });
          },
 
         /** Not really used right now. */

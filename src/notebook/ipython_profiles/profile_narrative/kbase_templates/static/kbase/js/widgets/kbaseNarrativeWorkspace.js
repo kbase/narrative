@@ -383,6 +383,7 @@
                 '':'x'
             }
         },
+
         /**
          * Run plants demo on backend.
          * Closure is used to get proper context.
@@ -393,7 +394,7 @@
                 return self._buildRunCommand("biokbase.narrative.demo.coex_workflow",
                         "coex_network_ws", params);
                 
-            }
+            };
         },
         /** 
          * Create the output of the demo in the area given by 'element'.
@@ -407,7 +408,6 @@
             var token = $("#login-widget").kbaseLogin("session","token");
             var full_id = this.ws_id + "." + oid;
             console.debug("ForceDirectedNetwork ID = "+full_id);
-	    console.log(cell);
 	    // grab the old contents of the cell and append the
 	    // javascript call that pulls in the data and instantiates
 	    // the widget - do this in the cell HTML instead of in the
@@ -425,9 +425,9 @@
 			     "// Disable most actions on this element",
 			     "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
 			     "</script>"].join('\n');
-	    cell.cell.set_text(cell_text);
-            cell.cell.rendered = false; // force a render
-	    cell.cell.render();
+	    cell.set_text(cell_text);
+            cell.rendered = false; // force a render
+	    cell.render();
 
         },
 
@@ -467,13 +467,14 @@
             for (var i=0; i<5; i++) {
                 jobId += Math.floor((Math.random()*10));
             }
-	    var element = $("#"+cell.eid);
             var outText = "Your contig assembly job has been submitted successfully.<br/>" +
                           "Your job ID is <b>job." + jobId + "</b><br/>" + 
                           "This will likely take a few hours.<br/>" +
                           "When complete, your ContigSet will have ID <b>" + text + "</b>";
 
-            element.append(outText);
+            cell.set_text(outText);
+            cell.rendered = false; // force a render
+	    cell.render();
         },
 
         /* ---------- Assemble Genome from Contigs ----------- */
@@ -498,7 +499,6 @@
 
         assembleGenomeCreateOutput: function(cell, text) {
             var data = JSON.parse(text);
-	    var element = $("#"+cell.eid);
 
             var tableRow = function(a, b) {
                 return $("<tr>")
@@ -515,7 +515,10 @@
                              .append(tableRow("GC Content", (100*(data[10].gc)).toFixed(2) + "%"))
                              .append(tableRow("Location", data[7]));
 
-            element.append($metaTable);
+            // element.append($metaTable);
+            cell.set_text($metaTable);
+            cell.rendered = false; // force a render
+	    cell.render();
 
         },
 
@@ -539,8 +542,9 @@
         },
 
         annotateGenomeCreateOutput: function(cell, text) {
-	    var element = $("#"+cell.eid);
-            element.append(text);
+            cell.set_text(text);
+            cell.rendered = false; // force a render
+	    cell.render();
         },
 
         /* ---------- View Genome Details ----------- */
@@ -561,7 +565,6 @@
 
         viewGenomeCreateOutput: function(cell, text) {
             var data = JSON.parse(text);
-	    var element = $("#"+cell.eid);
 
             var tableRow = function(a, b) {
                 return $("<tr>")
@@ -575,8 +578,6 @@
                 return (100*gc).toFixed(2);
             };
 
-            console.log(data);
-
             var $metaTable = $("<table>")
                              .addClass("table table-striped table-bordered")
                              .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
@@ -587,7 +588,9 @@
                              .append(tableRow("Number Features", data[10].number_features))
                              .append(tableRow("Location", data[7]));
 
-            element.append($metaTable);
+            cell.set_text($("<p>").append($metaTable).html());
+            cell.rendered = false; // force a render
+	    cell.render();
 
         },
 
@@ -617,11 +620,22 @@
         },
 
         genomeToFbaCreateOutput: function(cell, text) {
-            var data = JSON.parse(text);
-	    var element = $("#"+cell.eid);
+	    var uuid = this._uuidgen();
 
-            element.kbaseModelMetaNarrative({data: data});
-            element.off('click dblclick keydown keyup keypress focus');
+	    var cell_text = ["<div id=\""+uuid+"\"></div>",
+			     "<script>",
+			     "$(\"#"+uuid+"\").kbaseModelMetaNarrative({",
+			     "    data: " + text,
+			     "});",
+			     "// Disable most actions on this element",
+			     "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
+			     "</script>"].join('\n');
+	    cell.set_text(cell_text);
+            cell.rendered = false; // force a render
+	    cell.render();
+
+            // element.kbaseModelMetaNarrative({data: data});
+            // element.off('click dblclick keydown keyup keypress focus');
         },
 
         /* ---------- View Model ----------- */
@@ -640,15 +654,20 @@
         },
 
         viewFbaModelCreateOutput: function(cell, text) {
-            var data = JSON.parse(text);
-	    var element = $("#"+cell.eid);
+	    var uuid = this._uuidgen();
+	    var cell_text = ["<div id=\""+uuid+"\"></div>",
+			     "<script>",
+			     "$(\"#"+uuid+"\").kbaseModelTabs({",
+			     "    modelsData: " + text,
+			     "});",
+			     "$(\"#"+uuid+"\").css({ margin: '-10px' });",
+			     "// Disable most actions on this element",
+			     "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
+			     "</script>"].join('\n');
+	    cell.set_text(cell_text);
+            cell.rendered = false; // force a render
+	    cell.render();
 
-            console.log(data);
-            element.kbaseModelTabs({modelsData: data});
-
-
-            element.css({ margin: '-10px' });
-            element.off('click dblclick keydown keyup keypress focus');
         },
 
 
@@ -668,13 +687,20 @@
         },
 
         buildMediaCreateOutput: function(cell, text) {
-	    var element = $("#"+cell.eid);
-            var data = null;
-            if (text !== "null") {
-                data = JSON.parse(text);
-            }
-
-            element.kbaseMediaEditorNarrative({ mediaData: data, viewOnly: false, editOnly: true, ws: this.ws_id, auth: this.ws_auth });
+	    var uuid = this._uuidgen();
+	    var cell_text = ["<div id=\""+uuid+"\"></div>",
+			     "<script>",
+			     "$(\"#"+uuid+"\").kbaseMediaEditorNarrative({",
+			     "    modelsData: " + text,
+			     "    viewOnly: false,",
+			     "    editOnly: true,",
+			     "    ws: \"" + this.ws_id + "\",",
+			     "    auth: \"" + this.ws_auth + "\",",
+			     "});",
+			     "</script>"].join('\n');
+	    cell.set_text(cell_text);
+            cell.rendered = false; // force a render
+	    cell.render();
 
         },
 
@@ -694,9 +720,17 @@
         },
 
         viewMediaCreateOutput: function(cell, text) {
-	    var element = $("#"+cell.eid);
-            var data = JSON.parse(text);
-            element.kbaseMediaEditorNarrative({ mediaData: data });
+	    var uuid = this._uuidgen();
+	    var cell_text = ["<div id=\""+uuid+"\"></div>",
+			     "<script>",
+			     "$(\"#"+uuid+"\").kbaseMediaEditorNarrative({",
+			     "    mediaData: " + text,
+			     "});",
+			     "</script>"].join('\n');
+	    cell.set_text(cell_text);
+            cell.rendered = false; // force a render
+	    cell.render();
+
         },
 
 
@@ -719,9 +753,17 @@
         },
 
         runFbaCreateOutput: function(cell, text) {
-	    var element = $("#"+cell.eid);
-            var data = JSON.parse(text);
-            element.kbaseFbaTabsNarrative({ fbaData: data });
+	    var uuid = this._uuidgen();
+	    var cell_text = ["<div id=\""+uuid+"\"></div>",
+			     "<script>",
+			     "$(\"#"+uuid+"\").kbaseFbaTabsNarrative({",
+			     "    fbaData: " + text,
+			     "});",
+			     "</script>"].join('\n');
+	    cell.set_text(cell_text);
+            cell.rendered = false; // force a render
+	    cell.render();
+
         },
 
 
@@ -741,10 +783,16 @@
         },
 
         viewFbaCreateOutput: function(cell, text) {
-	    var element = $("#"+cell.eid);
-            var data = JSON.parse(text);
-            console.log(data); 
-            element.kbaseFbaTabsNarrative({ fbaData: data });
+	    var uuid = this._uuidgen();
+	    var cell_text = ["<div id=\""+uuid+"\"></div>",
+			     "<script>",
+			     "$(\"#"+uuid+"\").kbaseFbaTabsNarrative({",
+			     "    fbaData: " + text,
+			     "});",
+			     "</script>"].join('\n');
+	    cell.set_text(cell_text);
+            cell.rendered = false; // force a render
+	    cell.render();
         },
 
         /* ------------ Gapfill FBA Model -------------- */
@@ -770,7 +818,6 @@
         },
 
         runGapfillCreateOutput: function(cell, text) {
-	    var element = $("#"+cell.eid);
             var data = JSON.parse(text);
             var jobId = data.id;
             var totalTime = data.jobdata.postprocess_args[0].totalTimeLimit;
@@ -781,8 +828,10 @@
                              "This will take approximately " + totalTime + " seconds (" + totalTimeHrs + " hour" +
                              (totalTimeHrs === 1 ? "" : "s") + ").<br/><br/>" +
                              "Your gapfill solutions will be stored in model ID: <b>" + outModel + "</b>.</div>";
+	    cell.set_text(outputText);
+            cell.rendered = false; // force a render
+	    cell.render();
 
-            element.append(outputText);
         },
 
         /* ------------ Integrate Gapfill Solution ---------------- */
@@ -804,7 +853,9 @@
         },
 
         integrateGapfillCreateOutput: function(cell, text) {
-	    var element = $("#"+cell.eid);
+	    cell.set_text(text);
+            cell.rendered = false; // force a render
+	    cell.render();
 
         },
 
@@ -1107,14 +1158,8 @@
          _addOutputCell: function() {
             var nb = IPython.notebook;
             var cell = nb.insert_cell_at_bottom('markdown');
-            eid = this._uuidgen();
-            var content = "<div id='" + eid + "'></div>";
-            cell.set_text(content);
-            cell.rendered = false; // force a render
-            cell.render();
             // return $('#' + eid);
-            return({ cell: cell,
-		     eid: eid });
+            return( cell );
          },
 
         /** Not really used right now. */

@@ -25,14 +25,17 @@ function Cache() {
     }
 }
 
-var cache = new Cache();
 
 function kb(token) {
     var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/', USER_TOKEN);
     var kbws = new workspaceService('http://kbase.us/services/workspace_service/', USER_TOKEN);
 
+    var cache = new Cache();    
+
     this.req = function(service, method, params) {
-        // see if api call has already been made
+        if (!params) var params = {};
+
+        // see if api call has already been made        
         var data = cache.get(service, method, params);
 
         // return the promise ojbect if it has
@@ -41,9 +44,9 @@ function kb(token) {
         // otherwise, make request
         var prom = undefined;
         if (service == 'fba') {
-            var prom = fba[method](params)
+            var prom = fba[method](params);
         } else if (service == 'ws') {
-            var prom = kbws[method](params)
+            var prom = kbws[method](params);
         }
 
         // save the request and it's promise objct

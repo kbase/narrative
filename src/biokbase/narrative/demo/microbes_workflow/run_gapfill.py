@@ -121,13 +121,15 @@ def run(params):
         'num_solutions' : int(params['Solutions.Number to seek']),
     }
 
+    total_time = int(params['Time.Total Limit (sec)'].strip())
+
     gapfill_params = {
         'model' : params['Identifiers.Model'],
         'model_workspace' : workspace,
         'formulation' : gapfill_formulation,
         'workspace' : workspace,
         'timePerSolution' : int(params['Time.Per Solution (sec)']),
-        'totalTimeLimit' : int(params['Time.Total Limit (sec)']),
+        'totalTimeLimit' : total_time,
         'auth' : token
     }
 
@@ -138,8 +140,20 @@ def run(params):
 
     _num_done += 1
     print_progress("Return job statement", _num_done, total_work)
+
+    job_id = job_data['id'].strip()
+    total_time_hrs = total_time / 3600
+    hour_suffix = ""
+    if (total_time_hrs is not 1):
+        hour_suffix = "s"
+
+    output_text = ("Your gapfill job has been successfully queued, with job ID: <b>" + str(job_data['id']) + "</b>.<br/>"
+                   "This will take approximately " + str(total_time_hrs) + " hour" + str(hour_suffix) + ".<br/><br/>"
+                   "Your gapfill solutions will be stored in model ID: <b>" + str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip()) + "</b>.")
+
+    print "append($(\"<div>" + output_text + "</div>\"));"
     
-    print json.dumps(job_data)
+    # print json.dumps(job_data)
     return "Done!"
 
 if __name__ == '__main__':

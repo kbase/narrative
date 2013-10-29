@@ -52,7 +52,8 @@ def run(params):
     _num_done += 1
     print_progress("Render results", _num_done, total_work)
 
-    print json.dumps(metadata)
+    print "kbaseModelMetaNarrative({data: " + json.dumps(metadata) + " });"
+    # print json.dumps(metadata)
     return metadata
 
 if __name__ == '__main__':

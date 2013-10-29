@@ -59,7 +59,17 @@ def run(params):
     _num_done += 1
     print_progress("Render job information", _num_done, total_work)
 
-    print contig_file
+    import random
+    job_id = ""
+    for i in range(0, 5):
+        job_id += str(random.randint(0, 10))
+
+    out_text = ("Your contig assembly job has been submitted successfully.<br/>"
+                "Your job ID is <b>job." + job_id + "</b><br/>"
+                "This will likely take a few hours.<br/>" +
+                "When complete, your ContigSet will have ID <b>" + contig_file + "</b>")
+
+    print "append($(\"<div>" + out_text + "</div>\"));"
 
     return 0
 

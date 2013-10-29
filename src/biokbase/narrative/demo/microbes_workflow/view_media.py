@@ -56,7 +56,7 @@ def run(params):
     _num_done += 1
     print_progress("Render Media", _num_done, total_work)
 
-    print json.dumps(media_list)
+    print "kbaseMediaEditorNarrative({ mediaData: " + json.dumps(media_list) + " });"
     return 0
 
 if __name__ == '__main__':

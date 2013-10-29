@@ -6,7 +6,7 @@
  * like the CDS and local files.
  *
  * Options:
-*    workspaceURL - the location of the workspace service (default points to existing deployed service)
+ *    workspaceURL - the location of the workspace service (default points to existing deployed service)
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    tableElem - HTML element container for the data table
  *    controlsElem - HTML element container for the controls (search/add)
@@ -194,6 +194,9 @@
             $frm.on("submit", submit_fn);
         },
 
+
+
+
          // yes, I know - ugh.
         _getFunctionsForFunction: function(name) {
             console.debug("Find custom functions for: " + name);
@@ -208,7 +211,7 @@
                         // function to build the code which is executed
                         'command_builder': this.plantsRunCommand(),
                         // function to handle the result data
-                        'result_handler': this.plantsCreateOutput
+                        // 'result_handler': this.plantsCreateOutput
                     }
                     break;
 
@@ -216,7 +219,7 @@
                     return {
                         'config' : this.runAssemblyConfig,
                         'command_builder' : this.runAssemblyCommand(),
-                        'result_handler' : this.runAssemblyCreateOutput,
+                        // 'result_handler' : this.runAssemblyCreateOutput,
                     }
                     break;
 
@@ -224,7 +227,7 @@
                     return {
                         'config' : this.assembleGenomeConfig,
                         'command_builder' : this.assembleGenomeCommand(),
-                        'result_handler' : this.assembleGenomeCreateOutput,
+                        // 'result_handler' : this.assembleGenomeCreateOutput,
                     }
                     break;
 
@@ -232,15 +235,16 @@
                     return {
                         'config' : this.annotateGenomeConfig,
                         'command_builder' : this.annotateGenomeCommand(),
-                        'result_handler' : this.annotateGenomeCreateOutput,
+                        // 'result_handler' : this.annotateGenomeCreateOutput,
                     };
                     break;
 
                 case 'View Genome Details':
                     return {
+//                        this.viewGenomeRuntimeConfig,
                         'config' : this.viewGenomeConfig,
                         'command_builder' : this.viewGenomeCommand(),
-                        'result_handler' : this.viewGenomeCreateOutput,
+                        // 'result_handler' : this.viewGenomeCreateOutput,
                     };
                     break;
 
@@ -248,7 +252,7 @@
                     return {
                         'config' : this.genomeToFbaConfig,
                         'command_builder' : this.genomeToFbaCommand(),
-                        'result_handler' : this.genomeToFbaCreateOutput,
+                        // 'result_handler' : this.genomeToFbaCreateOutput,
                     };
                     break;
 
@@ -256,7 +260,7 @@
                     return {
                         'config' : this.viewFbaModelConfig,
                         'command_builder' : this.viewFbaModelCommand(),
-                        'result_handler' : this.viewFbaModelCreateOutput,
+                        // 'result_handler' : this.viewFbaModelCreateOutput,
                     };
                     break;
 
@@ -264,7 +268,7 @@
                     return {
                         'config' : this.buildMediaConfig,
                         'command_builder' : this.buildMediaCommand(),
-                        'result_handler' : this.buildMediaCreateOutput,
+                        // 'result_handler' : this.buildMediaCreateOutput,
                     };
                     break;
 
@@ -272,7 +276,7 @@
                     return {
                         'config' : this.viewMediaConfig,
                         'command_builder' : this.viewMediaCommand(),
-                        'result_handler' : this.viewMediaCreateOutput,
+                        // 'result_handler' : this.viewMediaCreateOutput,
                     };
                     break;
 
@@ -280,7 +284,7 @@
                     return {
                         'config' : this.runFbaConfig,
                         'command_builder' : this.runFbaCommand(),
-                        'result_handler' : this.runFbaCreateOutput,
+                        // 'result_handler' : this.runFbaCreateOutput,
                     };
                     break;
 
@@ -288,7 +292,7 @@
                     return {
                         'config' : this.viewFbaConfig,
                         'command_builder' : this.viewFbaCommand(),
-                        'result_handler' : this.viewFbaCreateOutput,
+                        // 'result_handler' : this.viewFbaCreateOutput,
                     };
                     break;
 
@@ -296,16 +300,15 @@
                     return {
                         'config' : this.runGapfillConfig,
                         'command_builder' : this.runGapfillCommand(),
-                        'result_handler' : this.runGapfillCreateOutput,
+                        // 'result_handler' : this.runGapfillCreateOutput,
                     };
                     break;
 
                 case 'Integrate Gapfill Solution':
-                    console.log('Integrate Gapfill Solution');
                     return {
                         'config' : this.integrateGapfillConfig,
                         'command_builder' : this.integrateGapfillCommand(),
-                        'result_handler' : this.runGapfillCreateOutput,
+                        // 'result_handler' : this.runGapfillCreateOutput,
                     };
                     break;
 
@@ -323,6 +326,7 @@
                 $.each($(this)[0], function(key, field) {
                     var full_name = field.name;
                     var value = field.value;
+
                     //console.debug("field " + key + ": " + full_name + "=" + value);
                     switch(full_name) {
                         case "":
@@ -332,10 +336,14 @@
                     }
                 });
                 var name = params['kbfunc'];
+
                 var funcs = self._getFunctionsForFunction(name);
-                if (self.result_handler === undefined) {
-                    self.result_handler = funcs.result_handler;                    
-                }
+                // if (self.result_handler === undefined && funcs.result_handler) {
+                //     self.result_handler = funcs.result_handler;
+                // }
+                // if (!funcs.result_handler) {
+                //     self.result_handler = self.handleResults
+                // }
                 console.debug("Run fn(" + name + ") with params", params);
                 self._runner()(funcs.command_builder(params));
             });
@@ -544,11 +552,27 @@
         },
 
         /* ---------- View Genome Details ----------- */
+
         viewGenomeConfig: {
             'Identifiers' : {
                 'Genome' : '',
-            },
+            }
+        },
 
+        viewGenomeRuntimeConfig: {
+            'params' : {
+                'Identifiers' : {
+                    'Genome' : '',
+                }
+            },
+            'command' : {
+                'module' : 'biokbase.narrative.demo.microbes_workflow',
+                'function' : 'view_genome_details'
+            },
+            'output' : {
+                'path' : '',  //not used now - might need for integrating Require.js
+                'widget' : 'GenomeView'
+            }
         },
 
         viewGenomeCommand: function() {
@@ -561,33 +585,50 @@
 
         viewGenomeCreateOutput: function(cell, text) {
             var data = JSON.parse(text);
-	    var element = $("#"+cell.eid);
+    	    var element = $("#"+cell.eid);
 
-            var tableRow = function(a, b) {
-                return $("<tr>")
-                       .append("<td>" + a + "</td>")
-                       .append("<td>" + b + "</td>");
-            };
 
-            var calcGC = function(gc, total) {
-                if (gc > 1)
-                    gc = gc/total;
-                return (100*gc).toFixed(2);
-            };
+            var uuid = this._uuidgen();
 
-            console.log(data);
+            var cell_text = ["<div id=\""+uuid+"\"></div>",
+                     "<script>",
+                     "$(\"#"+uuid+"\").GenomeView({",
+                     "data: " + text + "",
+                     "});",
+                     "// Make the element a little bigger",
+                     "$(\"#"+uuid+"\").css({margin: '-10px'});",
+                     "// Disable most actions on this element",
+                     "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
+                     "</script>"].join('\n');
+            cell.cell.set_text(cell_text);
+                cell.cell.rendered = false; // force a render
+            cell.cell.render();
 
-            var $metaTable = $("<table>")
-                             .addClass("table table-striped table-bordered")
-                             .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
-                             .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
-                             .append(tableRow("Scientific Name", data[10].scientific_name))
-                             .append(tableRow("Size", data[10].size + " bp"))
-                             .append(tableRow("GC Content", calcGC(data[10].gc, data[10].size) + "%"))
-                             .append(tableRow("Number Features", data[10].number_features))
-                             .append(tableRow("Location", data[7]));
+            // var tableRow = function(a, b) {
+            //     return $("<tr>")
+            //            .append("<td>" + a + "</td>")
+            //            .append("<td>" + b + "</td>");
+            // };
 
-            element.append($metaTable);
+            // var calcGC = function(gc, total) {
+            //     if (gc > 1)
+            //         gc = gc/total;
+            //     return (100*gc).toFixed(2);
+            // };
+
+            // console.log(data);
+
+            // var $metaTable = $("<table>")
+            //                  .addClass("table table-striped table-bordered")
+            //                  .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+            //                  .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
+            //                  .append(tableRow("Scientific Name", data[10].scientific_name))
+            //                  .append(tableRow("Size", data[10].size + " bp"))
+            //                  .append(tableRow("GC Content", calcGC(data[10].gc, data[10].size) + "%"))
+            //                  .append(tableRow("Number Features", data[10].number_features))
+            //                  .append(tableRow("Location", data[7]));
+
+            // element.append($metaTable);
 
         },
 
@@ -883,7 +924,7 @@
                 // @@ code cell
                 var nb = IPython.notebook;
                 self.code_cell = nb.insert_cell_at_bottom('code');
-                self.code_cell.element.css("display", "none");
+//                self.code_cell.element.css("display", "none");
                 var callbacks = {
                     'execute_reply': $.proxy(self._handle_execute_reply, self),
                     //'output': $.proxy(self.output_area.handle_output, self.output_area),
@@ -1005,6 +1046,7 @@
                 var lines = this._buf.split("\n");
                 var offs = 0, done = false, self = this;
                 var result = "";
+                console.debug(content);
                 $.each(lines, function(index, line) {
                     if (!done) {
                         if (line.length == 0) {
@@ -1057,12 +1099,28 @@
                     this._buf = this._buf.substr(offs, this._buf.length - offs);
                 }
                 if (result.length > 0) {
-		    // stop using the dom element for output and use the IPython cell
+                    // stop using the dom element for output and use the IPython cell
                     // var element = this._addOutputCell();
                     // this.result_handler(element, result);
-		    var cell = this._addOutputCell();
-                    this.result_handler(cell, result);
-                    this._buf = "";
+                    var cell = this._addOutputCell();
+
+                    var uuid = this._uuidgen();
+
+                    var cell_text = ["<div id=\""+uuid+"\"></div>",
+                             "<script>",
+                             "$(\"#"+uuid+"\")." + result + 
+                             "// Make the element a little bigger",
+                             "$(\"#"+uuid+"\").css({margin: '-10px'});",
+                             "// Disable most actions on this element",
+                             "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
+                             "</script>"].join('\n');
+                    cell.cell.set_text(cell_text);
+                    cell.cell.rendered = false; // force a render
+                    cell.cell.render();
+
+
+//                    this.result_handler(cell, result);
+//                    this._buf = "";
                 }
             }
         },
@@ -1235,11 +1293,11 @@
          *
          * @private
          */
-         _uuidgen: function() {
+        _uuidgen: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);});
-         }
+        }
 	});
 
 })( jQuery );

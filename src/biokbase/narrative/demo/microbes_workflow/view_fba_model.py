@@ -57,7 +57,7 @@ def run(params):
 
     _num_done += 1
     print_progress("Render FBA Model", _num_done, total_work)
-    print json.dumps(model)
+    print "kbaseModelTabs({ modelsData: " + json.dumps(model) + " });"
     return 'Done'
 
 if __name__ == '__main__':

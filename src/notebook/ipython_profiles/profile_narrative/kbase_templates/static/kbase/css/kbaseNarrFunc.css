@@ -22,6 +22,8 @@
 /* List of functions */
 .kb-function-body {
     padding: 0;
+    height: 300px;
+    overflow: auto;
     /*border: 0;*/
 }
 .kb-function-body ul {

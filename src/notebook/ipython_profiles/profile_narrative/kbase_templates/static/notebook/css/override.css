@@ -3,7 +3,7 @@ This is only required when different pages style the same element differently. T
 a hack to deal with our current css styles and no new styling should be added in this file.*/
 
 body.notebook_app {
-	overflow-y: auto;
+	overflow-y: hidden;
 	height: 950px;
 }
 

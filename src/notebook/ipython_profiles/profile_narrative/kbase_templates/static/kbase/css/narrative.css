@@ -32,7 +32,7 @@ body{
 	font: 1.375em 'OxygenRegular', Arial, sans-serif;
 	color: #333333;
 	background-color: #fff;
-	width: 1170px;
+	/*width: 1170px;*/
 }
 
 /* header styling */
@@ -49,14 +49,14 @@ header[role="banner"] {
 	-moz-box-shadow: inset 0 0 2px #c2c2c2;
 	-webkit-box-shadow: inset 0 0 2px #c2c2c2;
 	box-shadow: inset 0 0 2px #c2c2c2; */
-    position: relative;
+    position: fixed;
     top: 0;
     width: 100%;
     background-color: #fff;
     border-bottom: 1px solid #E0E0E0;
-    -webkit-box-shadow: 0 1px 10px rgba(0,0,0,.1);
+    /*-webkit-box-shadow: 0 1px 10px rgba(0,0,0,.1);
     -moz-box-shadow: 0 1px 10px rgba(0,0,0,.1);
-    box-shadow: 0 1px 10px rgba(0,0,0,.1);
+    box-shadow: 0 1px 10px rgba(0,0,0,.1);*/
     z-index: 999;
 
 }
@@ -124,7 +124,8 @@ nav[role="navigation"] input[type="text"] {
 */
 nav[role="navigation"] ul{
     margin: 1.2em 0 .5em 0;
-    text-align: center;
+    /*text-align: center;*/
+    padding-left: 0;
 }
 
 nav[role="navigation"] ul li {
@@ -164,6 +165,10 @@ input#search_terms{
     background-size: 22px; 
     background-repeat:no-repeat;
     background-position:right center; 
+    border-top-left-radius: 0px;
+	border-top-right-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom-left-radius: 0px;
 }
 span#searchspan{
     display: inline-block;
@@ -207,6 +212,8 @@ span#searchspan{
 }
 
 #narrative-title {
+	position: fixed;
+	top: 115px;
 	padding-left: 24px;
 	padding-bottom: 10px;
 	margin: 10px 0; 
@@ -326,7 +333,8 @@ nav ul li.selected {
 
 /* container for the left and center panes */
 #main-container {
-	width: 1170px;
+	/*width: 1170px; */
+	width: 100%;
 	position: absolute;
 	top: 57px;
 }
@@ -334,10 +342,10 @@ nav ul li.selected {
 
 /* center pane */
 #content-column {
-	float: right;
-	width: 878px;
-	position: relative;
+	/*float: left; */
+	max-width: 1170px;
 	height: 100%;
+	margin-left: 300px;
 }
 
 #workspace {
@@ -369,12 +377,18 @@ nav ul li.selected {
 
 /* left pane styling */
 #left-column {
-    float: left;
-    width: 289px; /*Width of left column*/
+    /*float: left;
+    width: 289px; 
     padding: 0px 1px;
 	height: 100%;
 	border-right: 1px solid #AAA;
 	overflow-y: auto;
+	*/
+	width: 289px;
+	position: fixed;
+	left: 10px;
+	bottom: 0;
+	top: 96px;
 }
 
 #data-panel {
@@ -696,6 +710,8 @@ p span.notification{
 
 /* Fixes to bring toolbars up to Bootstrap 3 */
 #maintoolbar {
+	position: fixed;
+	top: 100px;
 	min-height: 0;
 	border: none !important;
 	background-image: none !important;
@@ -704,9 +720,56 @@ p span.notification{
 	box-shadow: none;
 }
 
+#menubar {
+	position: fixed;
+	width: 100%;
+	top: 60px;
+}
+
 #menubar .navbar .container {
 	padding-left: 0;
 	padding-right: 0;
 }
 
+/* some more bootstrap hacks */
+.navbar {
+	min-height: 0;
+	background-image: none;
+	background-color: #f8f8f8;
+}
+.navbar-nav>li>a {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
 
+.btn-default {
+	background-image: none;
+	background-color: #f8f8f8;
+}
+
+.btn-group {
+	margin-right: 5px;
+}
+
+#menus {
+	padding-left: 0px;
+}
+
+#ipython-main-app {
+	position: fixed;
+	bottom: 0;
+	top: 175px;
+	right: 5px;
+	left: 315px;
+}
+
+#menubar .navbar  {
+	width: 100%;
+}
+
+div#notebook_panel {
+-webkit-box-shadow: 0 -1px 0px rgba(0, 0, 0, 0.1);
+-moz-box-shadow: 0 -1px 0px rgba(0, 0, 0, 0.1);
+box-shadow: 0 -1px 0px rgba(0, 0, 0, 0.1);
+border-left: 1px solid #f2f2f2;
+}

@@ -261,14 +261,14 @@ angular.module('lp-directives')
 
 
     // Workspace browser widgets (directives)
-    .directive('wsobjtable', function($rootScope) {
+    .directive('wsobjtable-old', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
                 $rootScope.objectTable = $(element).kbaseWSObjectTable({auth: scope.USER_TOKEN});
             }
         };
     })
-    .directive('wsselector', function($rootScope) {
+    .directive('wsselector-old', function($rootScope) {
         return {
             link: function(scope, element, attrs, routeParams) {
                 var wsSelector = $(element).kbaseWSSelector({userToken: scope.USER_TOKEN,

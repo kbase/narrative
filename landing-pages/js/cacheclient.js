@@ -22,6 +22,7 @@ function Cache() {
         obj['prom'] = prom;
         obj['params'] = params;
         cache.push(obj);
+        console.log('cache', cache)
     }
 }
 
@@ -44,8 +45,10 @@ function kb(token) {
         // otherwise, make request
         var prom = undefined;
         if (service == 'fba') {
+            console.log('Making request:', 'fba.'+method+'('+JSON.stringify(params)+')');
             var prom = fba[method](params);
         } else if (service == 'ws') {
+            console.log('Making request:', 'kbws.'+method+'('+JSON.stringify(params)+')');            
             var prom = kbws[method](params);
         }
 

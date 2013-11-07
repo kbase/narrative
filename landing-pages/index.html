@@ -10,8 +10,9 @@
 
         <link rel="stylesheet" type="text/css" href="assets/css/dataTables.bootstrap.css" />
         <link rel="stylesheet" type="text/css" href="assets/css/ws-browser.css" />
+        <!--<link rel="stylesheet" type="text/css" href="assets/css/scroll.css" />-->
         <link rel="stylesheet" type="text/css" href="assets/css/landing-pages.css" />
-        <link rel="stylesheet" type="text/css" href="assets/css/kbase_stylesheet.css" />
+        <!--<link rel="stylesheet" type="text/css" href="assets/css/kbase_stylesheet.css" />-->
 
         <!-- KBase widget css -->
         <link rel="stylesheet" type="text/css" href="../widgets/css/kbaseLandingPageCard.css" />
@@ -25,7 +26,9 @@
         <script src="assets/js/dataTables.bootstrap.js"></script>
 
         <script src="assets/js/jquery.cookie.min.js"></script>
-        <script src="assets/js/viz/raphael-min.js"></script> 
+        <script src="assets/js/viz/raphael-min.js"></script>
+        <!--<script src="assets/js/jquery.jscrollpane.min.js"></script>
+        <script src="assets/js/jquery.mousewheel.js"></script>-->
 
         <!-- KBase client library javascript -->
         <script src="assets/js/kbclient/kbase.js"></script>
@@ -101,6 +104,7 @@
         <!-- End Meme widgets -->
 
         <!-- Iris widgets -->
+        <!--
         <link href="http://www.kbase.us/services/docs/invocation/Iris/jquery/external/font-awesome/css/font-awesome.min.css">
         <script src='../src/widgets/kbaseAuthenticatedWidget.js'></script>
         <script src='../src/widgets/kbaseButtonControls.js'></script>
@@ -120,25 +124,30 @@
         <script src='../src/widgets/kbaseIrisTutorial.js'></script>
         <script src="http://www.kbase.us/services/docs/invocation/lib/InvocationService.js" 
         type="text/javascript" charset="utf-8"></script>
+        -->
         <!-- End Iris widgets -->
 
         <!-- application -->
         <script src="lib/angular/angular.js"></script>
+        <script src="js/angular-ui-router.js"></script> 
         <script src="js/app.js"></script>
         <script src="js/directives.js"></script>
-        <script src="js/card-directives.js"></script>          
+        <script src="js/card-directives.js"></script>
+        <script src="js/mv-directives.js"></script>
         <script src="js/controllers.js"></script>
         <script src="js/cacheclient.js"></script>
         <script src="assets/js/header.js"></script>
 
         <!-- this is an experiemental inclusion of iris -->
-        <script src="js/iris-directives.js"></script>
+        <!--<script src="js/iris-directives.js"></script>-->
         <!--<script src="landing-pages.js"></script>-->
     </head>
 
     <body>
+
         <div id="navigation"></div>
-        <div id="app" class="wrapper" ng-view></div>
+        <div id="app" class="wrapper" ui-view></div>
+
     </body>
 
 </html>

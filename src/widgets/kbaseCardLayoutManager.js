@@ -705,6 +705,23 @@
         	};
         },
         
+        showBambiCards: function() {
+            	this.addNewCard("KBaseBambiRunResultCard",
+                        {
+                            bambi_run_result_id: this.options.data.bambi_run_result_id,
+                            workspace_id: this.options.data.workspace_id,
+                            loadingImage: this.options.loadingImage,
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        },
+
         /**
          * Registers all events that this manager should know about.
          * Also makes a list of all registered events, stored in this.registeredEvents[], so they
@@ -985,6 +1002,68 @@
                     }
                 );
             });
+
+            /**
+             * Event: showBambiMotif
+             * -------------------
+             * Adds new BAMBI Motif card.
+             */
+            $(document).on("showBambiMotif", function(event, data) {
+                self.addNewCard("KBaseBambiMotifCard",
+                    {
+                        motif: data.motif,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+800 bottom",
+                        of: "#app"
+                    }
+                );
+            });
+            
+            /**
+             * Event: showBambiRunParameters
+             * -------------------
+             * Adds card with BAMBI run parameters.
+             */
+
+            $(document).on("showBambiRunParameters", function(event, data) {
+                self.addNewCard("KBaseBambiRunParametersCard",
+                    {
+                        collection: data.collection,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left bottom+480",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showBambiRawOutput
+             * -------------------
+             * Adds card with raw Bambi output.
+             */
+            $(document).on("showBambiRawOutput", function(event, data) {
+                self.addNewCard("KBaseBambiRawOutputCard",
+                    {
+                        memeOutput: data.bambiOutput,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "center top",
+                        at: "center bottom",
+                        of: "#app"
+                    }
+                );
+            });            
+            
             
             $(document).on("helloClick", function(event, data) {
                 window.alert(data.message);

@@ -10,7 +10,7 @@
             loadingImage: "assets/img/ajax-loader.gif",
             title: "BAMBI Run Result Overview",
             isInCard: false,
-            width: 400
+            width: 450
         },
 
         workspaceURL: "https://kbase.us/services/workspace",

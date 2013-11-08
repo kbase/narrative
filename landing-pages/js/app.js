@@ -107,9 +107,9 @@ var app = angular.module('landing-pages',
             {templateUrl: 'views/objects/meme.html',
              controller: MemeDetail})
 
-        .when('/meme/:ws/:id',
+        .when('/bambi/:ws/:id',
             {templateUrl: 'views/objects/bambi.html',
-             controller: MemeDetail})
+             controller: BambiDetail})
         
         .when('/iris', 
             {templateUrl: 'views/iris.html',

@@ -531,6 +531,13 @@
             return [];
         },
 
+        _exportBambiRunResult: function(data, workspace) {
+            this.dbg("Exporting BAMBI run result");
+            this.dbg(data);
+
+            return [];
+        },
+
         /**
          * Toggles the data manager div
          */
@@ -561,6 +568,8 @@
                 this.showGenomeCards();
             else if (this.options.template.toLowerCase() === "meme")
                 this.showMemeCards();
+            else if (this.options.template.toLowerCase() === "bambi")
+                this.showBambiCards();
             else if (this.options.template.toLowerCase() === "gene")
                 this.showGeneCards();
             else if (this.options.template.toLowerCase() === "model")
@@ -742,7 +751,10 @@
                                      "showMemeRawOutput", 
                                      "showTomtomHits", 
                                      "showTomtomRunParameters", 
-                                     "showMastHits"];
+                                     "showMastHits",
+                                     "showBambiMotif",
+                                     "showBambiRunParameters", 
+                                     "showBambiRawOutput"];
 
             /**
              * Event: showDomains
@@ -1052,7 +1064,7 @@
             $(document).on("showBambiRawOutput", function(event, data) {
                 self.addNewCard("KBaseBambiRawOutputCard",
                     {
-                        memeOutput: data.bambiOutput,
+                        raw_output: data.raw_output,
                         showButtons: true,
                         centerFeature: data.centerFeature
                     },

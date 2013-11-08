@@ -7,7 +7,8 @@
         options: {
             title: "BAMBI raw output",
             isInCard: false,
-            width: 800
+            width: 800,
+            height: 800
         },
 
 //        workspaceURL: "https://kbase.us/services/workspace",

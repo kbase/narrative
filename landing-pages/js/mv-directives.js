@@ -15,6 +15,7 @@ angular.module('mv-directives')
             link: function(scope, element, attrs) {
                 var ws = scope.ws;
                 var ids = scope.ids;
+                console.log('argumenets', ws, ids)
 
                 if (!ids) return;
 
@@ -22,18 +23,22 @@ angular.module('mv-directives')
                 var prom1 = kb.req('fba', 'get_fbas',
                             {fbas: ids, workspaces: ws});
                 $(element).loading('loading fba...');
-                $.when(prom1).done(function(fbas_data) {
-                    var model_ws = fbas_data[0].model_workspace;
-                    var model_id = fbas_data[0].model;
+                $.when(prom1).done(function(fbas) {
+                    var model_ws = [];
+                    var model_ids = [];
+                    for (var i in fbas) {
+                        model_ws.push(fbas[i].model_workspace);
+                        model_ids.push(fbas[i].model);
+                    }                    
 
                     var prom2 = kb.req('fba', 'get_models',
-                            {models: [model_id], workspaces: [model_ws]});
+                            {models: model_ids, workspaces: model_ws});
                     $(element).loading('loading model...');
-                    $.when(prom2).done(function(models_data){
+                    $.when(prom2).done(function(models){
                         $(element).kbaseModelCore({ids: ids, 
                                                     workspaces: ws,
-                                                    modelsData: models_data,
-                                                    fbasData: fbas_data});
+                                                    modelsData: models,
+                                                    fbasData: fbas});
                         $(element).rmLoading();
 
                         $(document).on('coreRxnClick', function(e, data) {
@@ -83,8 +88,6 @@ angular.module('mv-directives')
 
 
                 $scope.$watch('selectedObjs', function() {
-                    console.log('saw change')
-                    console.log($scope.selectedObjs)        
                     // update url strings
                     $scope.ws = [];
                     $scope.ids = [];
@@ -102,8 +105,10 @@ angular.module('mv-directives')
                         $('.show-objs').addClass('active');
                         $scope.showSelectedObjs();
                     }
-                    
-                    $location.search({ws: $scope.ws_param , ids: $scope.ids_param})
+
+                    $location.search({selected_ws: $scope.selected_ws,
+                                      ws: $scope.ws_param, 
+                                      ids: $scope.ids_param});
 
                 }, true); 
 
@@ -205,17 +210,18 @@ angular.module('mv-directives')
                             }
 
                         });
- 
-
                     });
 
                     // event for selecting a workspace on the sidebar
                     $('.select-ws').click(function() {
                         var ws = $(this).data('ws');
-                        console.log('clicked workspcae')
-                        $('.select-ws').removeClass('selected-ws')
-                        $(this).addClass('selected-ws')
-                        scope.$apply( $location.path('/mv/objtable/'+ws+'/') );
+                        $('.select-ws').removeClass('selected-ws');
+                        $(this).addClass('selected-ws');
+                        scope.$apply( $location.path('/mv/objtable/').search(
+                            {selected_ws: ws,
+                             ws: scope.ws_param, 
+                             ids: scope.ids_param}) );
+
                     });
 
 
@@ -246,7 +252,7 @@ angular.module('mv-directives')
 
                 var tableSettings = {
                     "sPaginationType": "full_numbers",
-                    "iDisplayLength": 5,
+                    "iDisplayLength": 10,
                     "aaData": [],
                     "fnDrawCallback": events,
                   "aoColumns": [
@@ -382,13 +388,12 @@ angular.module('mv-directives')
                             {models: model_ids, workspaces: model_ws});
                     $(element).loading('loading model...');
                     $.when(prom2).done(function(models){
-                        console.log(fbas, models)
+
                         $(element).rmLoading()
                         var org_names = [];
                         for (var i in models) {
                             org_names.push(models[i].name)
                         }                        
-                        console.log('orgnames', org_names)
                         
                         all_rxns = union_of_rxns(models);
                         all_rxns.sort();
@@ -398,9 +403,6 @@ angular.module('mv-directives')
                         var res = order_orgs_by_count(rows, org_names);
                         rows = res.rows;
                         org_names = res.org_names;
-                        console.log('orgnames2', org_names)
-
-
 
                         heatmap_d3(all_rxns, org_names, rows);
                     });
@@ -469,8 +471,6 @@ angular.module('mv-directives')
                         }
                         if (!match) model_fbas.push([]);            
                     }
-
-                    console.log('model_fbas', model_fbas, model_fbas.length)
 
                     var rows = [];
                     for (var i in models) {
@@ -547,13 +547,17 @@ angular.module('mv-directives')
                             if (rows[i][k].color == g_present_color) count++;
                         }
 
+                        //var done;
                         for (var j in lens){
                             var opt_len = lens[j];
                             if (count == opt_len) {
                                 rows_ordered.push(rows[i]);
                                 orgs_ordered.push(orgs[i]+'  ('+count+' reactions)')
+
+                                break;
                             }
                         }
+
                     }
                     return {'org_names':orgs_ordered, 'rows':rows_ordered};
                 }
@@ -655,10 +659,8 @@ angular.module('mv-directives')
                 }
 
                 function get_genome_id(ws_id) {
-                    console.log('workspace_id', ws_id)
                     var pos = ws_id.indexOf('.');
                     var g_id = ws_id.slice(0, ws_id.indexOf('.', pos+1));
-                    console.log('gid', g_id)
                     return g_id;
                 }
 
@@ -719,8 +721,6 @@ angular.module('mv-directives')
             }
         }
     })
-
-
 
 
 

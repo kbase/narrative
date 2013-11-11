@@ -19,18 +19,32 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $('.mv-tabs li').removeClass('active')
     $('.'+tab+'-tab').addClass('active')
 
+
+    var q_string = $location.search();
+
     // set selected workspace.
     // this is only used for the objtable tab right now
-    $scope.selected_ws = $stateParams.selected_ws;
-    console.log($scope.selected_ws)
+    //$scope.selected_ws = q_string.selected_ws;
+    //$scope.selected_ws = q_string.selected_ws ? q_string.selected_ws :
+    //                    $stateParams.selected_ws;
+    $scope.selected_ws = q_string.selected_ws ? q_string.selected_ws : "KBaseFBA";
+
 
     // set workspaces and ids.
-    var q_string = $location.search();
     $scope.ws_param = q_string.ws;
     $scope.ids_param = q_string.ids;
     $scope.ws = q_string.ws ? q_string.ws.split('+') : '';
     $scope.ids = q_string.ids ? q_string.ids.split('+') : '';
 
+    // show tabs if there are objects selected
+    if ($scope.ids.length > 0) {
+        $('.core-tab').removeClass('hide');
+        $('.heatmap-tab').removeClass('hide');
+        //$scope.showSelectedObjs();
+    } else {
+        $('.core-tab').addClass('hide')        
+        $('.heatmap-tab').addClass('hide')
+    }
 
     // events for workspace and selected object sidebar
     $('.show-ws').unbind('click');
@@ -48,6 +62,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
     });
 
+    // define some functions for the navigation of the left sidebar
     $scope.showSelectedObjs = function() {
         $('.wsselector').toggle('slide', {
                                 direction: 'left',
@@ -71,7 +86,9 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                                     }
         });
     }
-    
+
+
+
 
     // removes items from the selected objects view
     $scope.removeItem = function(index){
@@ -90,7 +107,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 
-.controller('MVHelp', function($scope, $routeParams, $location) {
+.controller('MVHelp', function($scope, $stateParams, $location) {
 
     // Fixme: move out of controller
     $('.api-url-submit').click(function() {
@@ -107,10 +124,11 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 
-function GenomeDetail($scope, $routeParams) {
-    $scope.params = {'genomeID': $routeParams.id,
-                     'workspaceID': $routeParams.ws}
-}
+.controller('GenomeDetail', function($scope, $stateParams) {
+
+    $scope.params = {'genomeID': $stateParams.id,
+                     'workspaceID': $stateParams.ws}
+})
 
 function MemeDetail($scope, $routeParams) {
     $scope.params = {'meme_run_result_id': $routeParams.id,

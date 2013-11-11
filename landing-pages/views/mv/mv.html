@@ -1,10 +1,10 @@
 
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-3 mv-sidebar">
         <div class="btn-toolbar" role="toolbar">
             <div class="btn-group btn-group-sm side-bar-switch">
                 <button type="button" class="btn btn-default active show-ws">Workspaces</button>
-                <button type="button" class="btn btn-default show-objs">Objects</button>
+                <button type="button" class="btn btn-default show-objs">Objects ({{selectedObjs.length}})</button>
             </div>
         </div>
 
@@ -13,9 +13,9 @@
     </div>
     <div class="col-md-9">
         <ul class="nav nav-tabs mv-tabs">
-            <li class="objtable-tab active"><a ui-sref="mv.objtable({ selected_ws: selected_ws})">Selection</a></li>
-            <li class="core-tab"><a ui-sref="mv.core({ ws: ws_param, ids: ids_param})">Core</a></li>
-            <li class="heatmap-tab"><a ui-sref="mv.heatmap({ ws: ws_param, ids: ids_param})">Heatmap</a></li>
+            <li class="objtable-tab active"><a ui-sref="mv.objtable({ selected_ws: selected_ws, ws: ws_param, ids: ids_param})">Selection</a></li>
+            <li class="core-tab hide"><a ui-sref="mv.core({selected_ws: selected_ws, ws: ws_param, ids: ids_param})">Core</a></li>
+            <li class="heatmap-tab hide"><a ui-sref="mv.heatmap({selected_ws: selected_ws, ws: ws_param, ids: ids_param})">Heatmap</a></li>
             <!--<li><a ui-sref="#/mv/maps/{{ws}}/{{ids}}">Maps</a></li>
             <li><a ui-sref="#/mv/heatmap/{{ws}}/{{ids}}">Heatmap</a></li>
             <li><a ui-sref="#/mv/reactions/{{ws}}/{{ids}}">Reactions</a></li>
@@ -29,9 +29,9 @@
         <div class="tab-view" ui-view>
 
         <div ng-show="!selected_ws">
-            <span class="text-danger">No Objects Selected</span>
+            <span class="text-danger">No Workspace Selected</span>
             <br>
-            <small>Please select a workspace from the left to select to select FBA objects</small>
+            <small>Please select a workspace from the left.  You will be able to FBA objects for analysis</small>
         </div>
 
         </div>

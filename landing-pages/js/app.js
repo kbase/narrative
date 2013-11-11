@@ -29,17 +29,19 @@ var app = angular.module('landing-pages',
           url: "/mv/",
           templateUrl: 'views/mv/mv.html',
           controller: 'ModelViewer'
-        })    
+        })   
+        
         .state('mv.objtable', {
-          url: "objtable/:selected_ws/",
+          url: "objtable/?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
           controller: 'ModelViewer'
         })
+        /*
         .state('mv.objtable.selectedobjs', {
-          url: "/:ws/:ids/",
+          url: "?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
           controller: 'ModelViewer'
-        })        
+        })*/       
         .state('mv.core', {
             url: "core/?ws&ids",
             templateUrl: 'views/mv/core.html',
@@ -73,15 +75,11 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/objects/model.html',
              controller: ModelDetail})
 
-
-
     $stateProvider
         .state('modelcards', {
              url: '/cards/models/:ws/:id',
              templateUrl: 'views/objects/modelcards.html',
              controller: ModelDetailCards})
-
-{}
 
     $stateProvider
         .state('fbasbyws', {
@@ -103,23 +101,25 @@ var app = angular.module('landing-pages',
             {url: '/mv-help',
              templateUrl: 'views/mv/mv-help.html',
              controller: 'MVHelp'})
-        /*
-        .when('/mv/', 
-            {templateUrl: 'views/mv.html',
-             controller: ModelViewer})
 
-        .when('/mv/:tab', 
-            {templateUrl: 'views/mv.html',
-             controller: ModelViewer})
 
-        .when('/mv/:tab/:ws/:ids', 
-            {templateUrl: 'views/mv.html',
-             controller: ModelViewer})
+    $stateProvider
+        .state('genomes',
+            {url: '/genomes/CDS/:id',
+             templateUrl: 'views/objects/genome.html',
+             controller: 'GenomeDetail'})
 
-        .when('/mv/mv-help',
-            {templateUrl: 'views/mv-help.html',
-             controller: MVHelp})
-        */
+    $stateProvider
+        .state('genomesbyws',
+            {url: '/genomes/:ws',
+             templateUrl: 'views/objects/genome.html',
+             controller: 'GenomeDetail'})
+
+    $stateProvider
+        .state('genomesbyid',
+            {url: '/genomes/:ws/:id',
+             templateUrl: 'views/objects/genome.html',
+             controller: 'GenomeDetail'})
 
     /*
 

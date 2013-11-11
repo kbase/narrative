@@ -24,7 +24,7 @@ $.KBWidget({
         var fbas_data = options.fbasData;
 
         var container = this.$elem
-        container.append('<div id="core-model"></div>');
+        container.html('<div id="core-model"></div>');
 
             var flux_threshold = 0.001;
         var heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
@@ -60,14 +60,14 @@ $.KBWidget({
             for (var i in models) {
                 org_names.push(models[i].name)
             }
-
+            console.log('MODELS!,', models)
             // Adding data structures to core data or each organism
             for (var i in core) {
                 var obj = core[i];
                 obj['kbids'] = {};
                 for (var j in kbids) {
                     kbid = kbids[j];
-                    var kb_gid = get_genome_id(kbid);
+                    var kb_gid = fba_data[j].id;//get_genome_id(kbid);
                     obj.kbids[kb_gid] = [];
                 }
             }
@@ -78,7 +78,7 @@ $.KBWidget({
 
                 var model_fba = [];
                 for (var k in fba_data) {
-                    if (get_genome_id(fba_data[k].id) == get_genome_id(model.id) ) {
+                    if (fba_data[k].model == model.id ) {
                         model_fba = fba_data[k];
                     }
                 }
@@ -110,7 +110,9 @@ $.KBWidget({
                             }
                         }
 
-                        obj.kbids[get_genome_id(model.id)].push(dict);
+                        //obj.kbids[get_genome_id(model.id)].push(dict);
+                        console.log('fba_data!', fba_data)
+                        obj.kbids[fba_data[n].id].push(dict);
                     }
                 }
             }

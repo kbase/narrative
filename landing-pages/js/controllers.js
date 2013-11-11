@@ -27,7 +27,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     //$scope.selected_ws = q_string.selected_ws;
     //$scope.selected_ws = q_string.selected_ws ? q_string.selected_ws :
     //                    $stateParams.selected_ws;
-    $scope.selected_ws = q_string.selected_ws ? q_string.selected_ws : "KBaseFBA";
+    $scope.selected_ws = q_string.selected_ws;
 
 
     // set workspaces and ids.

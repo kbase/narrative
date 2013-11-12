@@ -589,34 +589,34 @@
 
         viewGenomeCreateOutput: function(cell, text) {
             var data = JSON.parse(text);
-<<<<<<< HEAD
+// <<<<<<< HEAD
 
-            var tableRow = function(a, b) {
-                return $("<tr>")
-                       .append("<td>" + a + "</td>")
-                       .append("<td>" + b + "</td>");
-            };
+//             var tableRow = function(a, b) {
+//                 return $("<tr>")
+//                        .append("<td>" + a + "</td>")
+//                        .append("<td>" + b + "</td>");
+//             };
 
-            var calcGC = function(gc, total) {
-                if (gc > 1)
-                    gc = gc/total;
-                return (100*gc).toFixed(2);
-            };
+//             var calcGC = function(gc, total) {
+//                 if (gc > 1)
+//                     gc = gc/total;
+//                 return (100*gc).toFixed(2);
+//             };
 
-            var $metaTable = $("<table>")
-                             .addClass("table table-striped table-bordered")
-                             .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
-                             .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
-                             .append(tableRow("Scientific Name", data[10].scientific_name))
-                             .append(tableRow("Size", data[10].size + " bp"))
-                             .append(tableRow("GC Content", calcGC(data[10].gc, data[10].size) + "%"))
-                             .append(tableRow("Number Features", data[10].number_features))
-                             .append(tableRow("Location", data[7]));
+//             var $metaTable = $("<table>")
+//                              .addClass("table table-striped table-bordered")
+//                              .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+//                              .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
+//                              .append(tableRow("Scientific Name", data[10].scientific_name))
+//                              .append(tableRow("Size", data[10].size + " bp"))
+//                              .append(tableRow("GC Content", calcGC(data[10].gc, data[10].size) + "%"))
+//                              .append(tableRow("Number Features", data[10].number_features))
+//                              .append(tableRow("Location", data[7]));
 
-            cell.set_text($("<p>").append($metaTable).html());
-            cell.rendered = false; // force a render
-	    cell.render();
-=======
+//             cell.set_text($("<p>").append($metaTable).html());
+//             cell.rendered = false; // force a render
+// 	    cell.render();
+// =======
     	    var element = $("#"+cell.eid);
 
 
@@ -661,7 +661,7 @@
             //                  .append(tableRow("Location", data[7]));
 
             // element.append($metaTable);
->>>>>>> dev-rewidget
+//>>>>>>> dev-rewidget
 
         },
 
@@ -1185,6 +1185,7 @@
                     // this.result_handler(element, result);
                     var cell = this._addOutputCell();
 
+                    console.log(cell);
                     var uuid = this._uuidgen();
 
                     var cell_text = ["<div id=\""+uuid+"\"></div>",
@@ -1195,13 +1196,10 @@
                              "// Disable most actions on this element",
                              "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
                              "</script>"].join('\n');
-                    cell.cell.set_text(cell_text);
-                    cell.cell.rendered = false; // force a render
-                    cell.cell.render();
+                    cell.set_text(cell_text);
+                    cell.rendered = false; // force a render
+                    cell.render();
 
-
-//                    this.result_handler(cell, result);
-//                    this._buf = "";
                 }
             }
         },

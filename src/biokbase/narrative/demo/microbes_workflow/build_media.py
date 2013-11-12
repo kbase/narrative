@@ -62,12 +62,12 @@ def run(params):
         _num_done += 1
         print_progress("Render Media", _num_done, total_work)
 
-        print "kbaseMediaEditorNarrative({ mediaData: " + json.dumps(media_list) + ", viewOnly: false, editOnly: true, ws: this.ws_id, auth: this.ws_auth });"
+        print "kbaseMediaEditorNarrative({ mediaData: " + json.dumps(media_list) + ", viewOnly: false, editOnly: true, ws: '" + workspace + "', auth: '" + token + "' });"
 
         # print json.dumps(media_list)
         return 0
 
-    print "null"
+    print "kbaseMediaEditorNarrative({ viewOnly: false, editOnly: true, ws: '" + workspace + "', auth: '" + token + "' });"
     return 0
 
 if __name__ == '__main__':

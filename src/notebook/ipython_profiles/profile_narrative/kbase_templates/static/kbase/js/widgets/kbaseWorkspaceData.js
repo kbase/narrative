@@ -78,8 +78,16 @@
                 this.table.fnDestroy();
             }
             var $elem = this.$tbl.find('table');
+            var result_data = [];
+            $.each(this.tableData, function( index, obj ) {
+
+                if ((obj[1] != "Narrative") && (obj[1] != "workspace_meta")) {
+                    result_data.push(obj);
+                }
+            });
+            //this.tableData = result_data;
             this.table = $elem.dataTable( {
-                aaData : this.tableData,
+                aaData : result_data,
                 aoColumns : [
                     /* Name */{
                       sTitle: 'Name',
@@ -126,9 +134,9 @@
                     var name = row.children[0].textContent;
                     var type = row.children[1].textContent;
                     // populate and show info panel
-                    self.infoPanel(name, type, function(info) {
-                        info.modal();
-                    });
+                    //self.infoPanel(name, type, function(info) {
+                    //    info.modal();
+                    //});
                 }
             });
 			return this;

@@ -96,11 +96,13 @@ def run(params):
     if (out_genome):
         genome = out_genome
 
-    job_return = "Annotation job submitted successfully!<br/>" + job_info[1] + "<br/>"
-    job_return += "This job will take approximately an hour.<br/>"
-    job_return += "Your annotated genome will have ID: <b>" + genome + "</b><br/>"
+    job_id = job_info[1].strip()
 
-    print job_return
+    job_return = ("Annotation job submitted successfully!<br/>" + job_id + "<br/>"
+                  "This job will take approximately an hour.<br/>"
+                  "Your annotated genome will have ID: <b>" + genome + "</b><br/>")
+
+    print "append($(\"<div>" + job_return + "</div>\"));"
     return 0
 
 if __name__ == '__main__':

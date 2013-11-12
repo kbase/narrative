@@ -93,7 +93,7 @@ def run(params):
     # 5. Pass it forward to the client.
     _num_done += 1
     print_progress("Rendering Genome Information", _num_done, total_work)
-    print json.dumps(genome_meta)
+    print "GenomeView({ data: " + json.dumps(genome_meta) + " });"
 
 if __name__ == '__main__':
     sys.exit(main())

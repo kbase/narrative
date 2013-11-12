@@ -133,7 +133,7 @@ def run(params):
     _num_done += 1
     print_progress("Render FBA Results", _num_done, total_work)
 
-    print json.dumps(fba_result)
+    print "kbaseFbaTabsNarrative({ fbaData: " + json.dumps(fba_result) + " });"
 
     return "Done!"
 

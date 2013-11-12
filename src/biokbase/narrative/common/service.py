@@ -80,7 +80,18 @@ class VersionNumber(TraitType):
                 maj, minor, patch = v.groups()
                 return (int(maj), int(minor), patch)
         self.error(obj, value)
-    
+
+class ParameterSchema(TraitType):
+    """A trait for a JSON schema describing inputs to Services, or
+    outputs they produce. See http://json-schema.org/
+
+    """
+
+    default_value = "{}"
+    info_text = 'a JSON schema describing a set of parameters for a Service, or output from a Service'
+
+    def validate(self, obj, value):
+        raise NotImplemented()
 
 class Lifecycle(object):
     """Interface that defines the lifecycle events of a service,
@@ -117,11 +128,19 @@ class Service(HasTraits, Lifecycle):
 
     #: Name of the service; should be short identifier
     name = Unicode()
+
     #: Description of the service
     desc = Unicode()
+
     #: Version number of the service, see :class:`VersionNumber` for format
     version = VersionNumber()
+
+    #: A schema describing the inputs allowed for the service.
+    input_schema = ParameterSchema()
     
+    #: A schema describing the outputs that the service will provide upon commpletion.
+    output_schema = ParameterSchema()
+
     def __init__(self):
         self.status = Status(lifecycle=self)
         self.start, self.done, self.error = (self._status.start, self._status.done,
@@ -149,7 +168,6 @@ class Service(HasTraits, Lifecycle):
         :rtype: ServiceResult
         """
         raise NotImplemented()
-
 
 class Status(object):
     """Contains the current status of a running process.

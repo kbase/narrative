@@ -1,5 +1,5 @@
 """
-KBase narrative service/function API.
+KBase narrative service and method API.
 
 The main class defined here is :class:`Service`, but
 for running in the IPython notebook, services should inherit from :class:`IpService`, which implements communication channels to the front-end and remote KBase registries.
@@ -18,6 +18,7 @@ Sample usage::
             self.name = "groovalicious"
             self.desc = "This service makes me want to dance"
             self.version = (1,0,1)
+        
         
         def run(self, params):
             # do the work of the service.
@@ -82,37 +83,8 @@ class VersionNumber(TraitType):
         self.error(obj, value)
     
 
-class Lifecycle(object):
-    """Interface that defines the lifecycle events of a service,
-    in terms of callbacks. These callbacks will be used by the 
-    :class:`IpService` to communicate with the IPython kernel,
-    but they can also be extended to perform service-specific actions.    
-    """
-    def __init__(self, parent):
-        self.parent = parent
-        
-    def on_start(self):
-        """Called before execution starts"""
-        pass
-        
-    def on_stage(self, num):
-        """Called for stage changes"""
-        pass
-        
-    def on_done(self):
-        """Called on successful completion"""
-        pass
-        
-    def on_error(self, code, msg):
-        """Called on fatal error"""
-        pass
-        
-class Service(HasTraits, Lifecycle):
+class Service(HasTraits):
     """Base Service class.
-
-    Defines standard attributes, a run() method, and
-    a status property. For behavior/usage of the status property,
-    see :class:`Status`.
     """
 
     #: Name of the service; should be short identifier
@@ -121,37 +93,8 @@ class Service(HasTraits, Lifecycle):
     desc = Unicode()
     #: Version number of the service, see :class:`VersionNumber` for format
     version = VersionNumber()
-    
-    def __init__(self):
-        self.status = Status(lifecycle=self)
-        self.start, self.done, self.error = (self._status.start, self._status.done,
-                                             self._status.error)
-    def execute(self, params):
-        """Wrapper for running the service. Subclasses
-        should not redefine this unless they know what they are doing;
-        instead override :meth:`run` in this class.
-        """
-        self.start()
-        result = []
-        try:
-            result = self.run(params)
-            self.done()
-        except Exception, err:
-            self.error(-1, "Fatal: {}".format(err))
-        return result
 
-    def run(self, params):
-        """Actually run the service.
-        
-        :param params: Dictionary of parameters, form is up to service to define
-        :type params: dict
-        :result: A result object
-        :rtype: ServiceResult
-        """
-        raise NotImplemented()
-
-
-class Status(object):
+class LifecycleSubject(object):
     """Contains the current status of a running process.
     
     The basic model is that a process is in a 'stage', which is
@@ -160,50 +103,56 @@ class Status(object):
     change as long as the invariants 0 <= stage <= num_stages
     and 1 <= num_stages hold. Note that 0 is a special stage number
     meaning 'not yet started'.
-    
-    Uses a Lifecycle instance to provide callbacks for
-    state changes.
-    """
-    def __init__(self, stages=1, lifecycle=None):
+        """
+    def __init__(self, stages=1):
         if not isinstance(stages, int) or stages < 1:
             raise ValueError("Number of stages ({}) must be > 0".format(stages))
-        if lifecycle is None:
-            self._lc = Lifecycle(self)   # no-op obj
-        else:
-            self._lc = lifecycle
         self._stages = stages
         self._stage = 0
         self._done = False
+        self.obs = []
         
-    def start(self):
-        """Start the process.
-        Sets stage to 1 and calls :method:`Lifecycle.on_start()`.
-        Idempotent.
-        """
-        if self._stage == 0 and not self._done:
-            self._lc.on_start()
-            self._stage = 1
+    def register(self, observer):
+        self.obs.append(observers)
+        
+    def _event(self, name, *args):
+        if name in events:
+            for obs in self.obs:
+                getattr(obs, name)(*args)
+
+    ## Events
 
     def advance(self):
         """Increments stage."""
         if not self._done:
             self.stage = self.stage + 1
+            self._event('stage', self._stage, self._stages)
+
+    def started(self):
+        """Start the process.
+        Sets stage to 1.
+        Idempotent.
+        """
+        if self._stage == 0 and not self._done:
+            self._stage = 1
+        self._event('started')
+        self._event('stage', self._stage, self._stages)
 
     def done(self):
         """Done with process.
         Calls :method:`Lifecycle.on_done()`.
         Idempotent."""
         if not self._done:
-            self._lc.on_done()
             self._done = True
+            self._event('done')
         
     def error(self, code, msg):
         """Done with process due to an error.
         Calls :method:`Lifecycle.on_error()`.
         Idempotent."""
         if not self._done:
-            self._lc.on_error(code, msg)
             self._done = True
+            self._event('error', code, msg)
 
     # get/set 'stage' property
     
@@ -221,9 +170,9 @@ class Status(object):
             raise ValueError("stage ({}) must be <= num. stages ({})"
                              .format(value, self._stages))
         self._stage = value
-        self._lc.on_stage(self._stage)
+        self._event('stage', self._stage, self._stages)
         
-    # get/set 'stages' property
+    # get/set 'stages' (number of stages) property
 
     @property
     def stages(self):
@@ -240,6 +189,108 @@ class Status(object):
                              .format(value, self._stage))
         self._stages = value
 
+
+class LifecycleObserver(object):
+    """Interface that defines the lifecycle events of a service,
+    in terms of callbacks. These callbacks will be used by the 
+    :class:`IpService` to communicate with the IPython kernel,
+    but they can also be extended to perform service-specific actions.    
+    """
+    def started(self):
+        """Called before execution starts"""
+        pass
+        
+    def stage(self, num, total):
+        """Called for stage changes"""
+        pass
+        
+    def done(self):
+        """Called on successful completion"""
+        pass
+        
+    def error(self, code, msg):
+        """Called on fatal error"""
+        pass
+
+
+class ServiceMethodHistory(LifecycleObserver):
+    
+    XXX: make this only one per service/method combination,
+    XXX: so it is really a history..
+    
+    def __init__(self, method, max_save=1000):
+        self._method = method
+        self._t = [None, None]
+        self._dur = -1
+        
+    def get_durations(self):
+        This should return a list of tuples
+          (start_time, duration, (params))
+
+    def started(self):
+        """Called before execution starts"""
+        self._t[0] = time.time()
+        
+    def done(self):
+        """Called on successful completion"""
+        self._t[1] = time.time()
+    
+    def error(self, code, msg):
+        """Called on fatal error"""
+        pass
+
+
+
+class ServiceMethod(HasTraits, LifecycleSubject):
+    """A method of a service.
+    
+    Defines standard attributes, a run() method, and
+    a status property. For behavior/usage of the status property,
+    see :class:`Status`.
+    """
+    def __init__(self, service):
+        """Constructor.
+        
+        :param service: Parent service
+        :type service: Service
+        """
+        LifecycleSubject.__init__(self)
+        self.service = service
+        self._history = ServiceMethodHistory()
+        self.register(self._history)
+
+    def execute(self, params):
+        """Wrapper for running the service. Subclasses
+        should not redefine this unless they know what they are doing;
+        instead override :meth:`run` in this class.
+        """
+        self.event('started')
+        result = []
+        try:
+            result = self.run(params)
+            self.event('done')
+        except Exception, err:
+            self.event('error', -1, "Fatal: {}".format(err))
+        return result
+
+    def run(self, params):
+        """Actually run the service method.
+        
+        :param params: Dictionary of parameters, form is up to method to define
+        :type params: dict
+        :result: A result object
+        :rtype: Result
+        """
+        raise NotImplemented()
+
+
+    def estimate_runtime(self, params):
+        """Based on history and params, estimate runtime for service.
+        
+        """
+        return -1  # no @!$%# idea
+        
+        
 ##################################################################################
 
 class IpService(Service):

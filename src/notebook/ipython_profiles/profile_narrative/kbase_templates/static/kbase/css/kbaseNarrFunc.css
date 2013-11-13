@@ -59,12 +59,15 @@
     color: white;
     padding: 0 3px;
     float: right;
+    cursor: pointer;
+
 }
 #kb-function-help {
     position: absolute;
     top: 400px;
     left: 300px;
     z-index: 99;
+    cursor: pointer;
 }
 
 #kb-function-help h1 {

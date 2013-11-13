@@ -99,7 +99,6 @@
     });
 
     function notLoggedIn() {
-    	console.log("got here");
     	$("#header_banner").hide();
     	$("#alt_banner").show();
      	$("#login-widget").hide();
@@ -266,11 +265,10 @@
 					});
 					results.reverse();
 					
-					//populate the data structure for the template
+                    //populate the data structure for the template
 					var count = 0;
 					_.every(projectresults, function(project_id){
-
-						var name = project_id.id.replace(/_/g," ");
+                        var name = project_id.id.substr(project_id.id.lastIndexOf("_") + 1);
 
 						data.rows.push({
                             "name": name,
@@ -320,9 +318,12 @@
         //no spaces allowed in narrative name
         name = name.replace(/ /g,"_");
         name = name.replace(/\W/g,"");
+
+        if(name == "") name = "Untitled";
         
+        var UserId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
         if (project_id === "") {
-            project_id = undefined;
+            project_id = UserId + "_home";
         }
 
         //create the new narrative in ws
@@ -331,9 +332,10 @@
             project_id: project_id,
             callback: function(results) {
                 console.log("narrative created.");
+                var project_name = project_id.substr(project_id.lastIndexOf("_") + 1);
                 //redirect to the narrative page
                 var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
-                window.location.href = "http://narrative.kbase.us/narratives/"+userId+"/"+project_id+"."+name;
+                window.location.href = "http://127.0.0.1:8888/"+userId+"_"+project_name+"."+name;
             }
         }); 
     });

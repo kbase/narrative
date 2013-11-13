@@ -78,6 +78,8 @@
                 this.table.fnDestroy();
             }
             var $elem = this.$tbl.find('table');
+
+            //filter out the narrative and workspace meta files
             var result_data = [];
             $.each(this.tableData, function( index, obj ) {
 
@@ -94,12 +96,24 @@
                       bSortable: true,
                       bSearchable: true
                               },
-                    /* Type */ {
+                    /*Type */  {
                         sTitle: 'Type',
                         bSortable: true,
                         bSearchable: true
-                    },
+                    }, 
                 ],
+                aoColumnDefs: [
+                        {
+                            "bVisible": false, 
+                            "aTargets": [ 1 ] 
+                        },
+                        {                            
+                             mRender: function ( data, type, row ) {
+                                return data + "<span class='kb-function-help'>?</span>";
+                            },
+                            "aTargets": [ 0 ] 
+                        }
+                    ],
                 oSearch: {sSearch: ''},
                 aaSorting: [[0, 'asc'], [1, 'asc']],
                 //bFilter: false,
@@ -110,6 +124,7 @@
                 bScrollCollapse: true,
                 sScrollY: '270px'
             });
+            var oTable = this.table;
             /* indices of displayed columns in result array */
             this.NAME_IDX = 0;
             this.TYPE_IDX = 1;
@@ -129,15 +144,39 @@
             }
             $("#kb-ws .kb-table tbody tr").on("click", function( e ) {
                 if ( $(this).hasClass('row_selected') ) {
+                    var aPos = oTable.fnGetPosition( this );
+                    var aData = oTable.fnGetData( aPos );
+                    var type = aData[1];
+
+                    console.log(this);
                     var row = $(this)[0];
                     //console.debug("obj",$(this));
                     var name = row.children[0].textContent;
-                    var type = row.children[1].textContent;
+                    //var type = row.children[1].textContent;
                     // populate and show info panel
                     //self.infoPanel(name, type, function(info) {
                     //    info.modal();
                     //});
                 }
+            });
+            $("#kb-ws .kb-table tbody tr span").on("click", function( e ) {
+                //if ( $(this).hasClass('row_selected') ) {
+                    var row = $(this).parent().parent();
+                    var aPos = oTable.fnGetPosition( $(row)[0] );
+                    // Get the data array for this row
+                    var aData = oTable.fnGetData( aPos );
+                    var type = aData[1];
+
+                    //console.debug("obj",$(this));
+                    var name = $(row).children()[0].textContent;
+                    //var type = $(row).children()[1].textContent;
+                    // populate and show info panel
+                    var name2 = name.replace("?","");
+
+                    self.infoPanel(name2, type, function(info) {
+                        info.modal();
+                    });
+                //}
             });
 			return this;
 		},
@@ -224,6 +263,7 @@
             var get_selected = function(tbl) {
                 return tbl.$('tr.row_selected');
             }
+
             $rows.on("click", function( e ) {
                 if ( $(this).hasClass('row_selected') ) {
                     var row = $(this)[0];
@@ -660,6 +700,7 @@
          * @private
          */
         _item_key: function(name, type) {
+
             return name + '/' + type;
         },
 

@@ -694,10 +694,15 @@ def run(params, quiet=True):
         #'clust_c': params['Cluster.-c']
         'clust_s': params['Cluster.Number of modules']
     }
-    p.update(dict(token=os.environ['KB_AUTH_TOKEN'],
-                  workspace_id=os.environ['KB_WORKSPACE_ID']))
+
+    workspace_id = os.environ['KB_WORKSPACE_ID']
+    token = os.environ['KB_AUTH_TOKEN']
+    p.update(dict(token=token,
+                  workspace_id=workspace_id))
     obj_id = main(command_params=params, **p)
-    print(obj_id)
+#    print(obj_id)
+
+    print "ForceDirectedNetwork({ workspaceID: '" + workspace_id + "." + obj_id + "', token: '" + token + "' });"
     return 0
 
 if __name__ == '__main__':

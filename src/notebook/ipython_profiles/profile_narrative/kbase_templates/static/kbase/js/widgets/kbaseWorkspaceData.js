@@ -20,6 +20,8 @@
         $loading: null,
         isLoggedIn: false,
         ws_auth: null,
+        // The set of all data currently loaded into the widget
+        loadedData: {},
 		options: {
 			loadingImage: "../../images/ajax-loader.gif",
 			notLoggedInMsg: "Please log in to view a workspace.",
@@ -535,6 +537,43 @@
             }
             return this;
 		},
+
+        /**
+         * Returns the set of currently loaded data objects from the workspace.
+         * These are returned as ______
+         *
+         * If 'type' is a string, then it returns only objects matching that
+         * object type (this is case-sensitive!).
+         * 
+         * If 'type' is an array, then it returns only objects matching all of
+         * those types.
+         *
+         * Returns data like this:
+         * { 
+         *   type1 : [ [metadata1], [metadata2], ... ],
+         *   type2 : [ [metadata3], [metadata4], ... ]
+         * }
+         * @returns a list of data objects
+         */
+        getLoadedData: function(type) {
+            if (!type || type.length === 0)
+                return this.loadedData;
+
+            var dataSet = {};
+            if (typeof type === 'string') {
+                type = [type];
+            }
+            if (Object.prototype.toString.call(type) === '[object Array]') {
+                for (var i=0; i<type.length; i++) {
+                    var dataType = type[i];
+                    if (this.loadedData[dataType])
+                        dataSet[dataType] = this.loadedData[dataType];
+                }
+            }
+
+            return dataSet;
+        },
+
         /**
          * Set or create workspace
          *
@@ -623,6 +662,21 @@
          * @returns this
          */
         updateResults: function(results) {
+            /* Store the current set of loaded metadata as:
+             * { 
+             *    type1 : [ [metadata1], [metadata2], [metadata3], ... ],
+             *    type2 : [ [metadata4], [metadata5], [metadata6], ... ]
+             * }
+             */
+            this.loadedData = {};
+            for (var i=0; i<results.length; i++) {
+                var type = results[i][1];
+                if (!this.loadedData[type])
+                    this.loadedData[type] = [];
+                this.loadedData[type].push(results[i]);
+            }
+            console.log(this.loadedData);
+
             var mdstring = '';
             $.each(IPython.notebook.metadata, function(key, val) {
                 mdstring = mdstring + key + "=" + val + "\n";

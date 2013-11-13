@@ -167,6 +167,7 @@
             this.kernel = nb.kernel; // stash current kernel
             var cell = nb.insert_cell_at_bottom('markdown');
             this._cur_index = nb.ncells() - 1; // stash cell's index
+
             var command_builder = undefined;
             var config = {};
             var runner = this._runner(); 
@@ -178,7 +179,6 @@
 
             var content = this._buildRunForm(name, config);
             var cell_id = "kb-cell-" + this._cur_index;
-            console.log(content);
             cell.set_text("<div class='kb-cell-run' " + "id='" + cell_id + "'>" + 
                           "<h1>" + name + "</h1>" +
                           "<div class='kb-cell-params'>" +  
@@ -241,7 +241,6 @@
 
                 case 'View Genome Details':
                     return {
-//                        this.viewGenomeRuntimeConfig,
                         'config' : this.viewGenomeConfig,
                         'command_builder' : this.viewGenomeCommand(),
                         // 'result_handler' : this.viewGenomeCreateOutput,
@@ -338,12 +337,7 @@
                 var name = params['kbfunc'];
 
                 var funcs = self._getFunctionsForFunction(name);
-                // if (self.result_handler === undefined && funcs.result_handler) {
-                //     self.result_handler = funcs.result_handler;
-                // }
-                // if (!funcs.result_handler) {
-                //     self.result_handler = self.handleResults
-                // }
+
                 console.debug("Run fn(" + name + ") with params", params);
                 self._runner()(funcs.command_builder(params));
             });
@@ -369,26 +363,81 @@
          * Input data for plants demo.
          */
         plantsRunConfig: {
-            'Identifiers': {
-                'Genome': '3899',
-                //'Ontology': 'PO:0001016'
-                'Ontology': 'GSE5622'
+            params : {
+                'Identifiers' : [
+                    {
+                        name: 'Genome',
+                        type: '',
+                        default: '3899'
+                    },
+                    {
+                        name: 'Ontology',
+                        type: '',
+                        default: 'GSE5622'
+                    },
+                ],
+                'Filter' : [
+                    {
+                        name: '-n',
+                        type: '',
+                        default: '100'
+                    },
+                    {
+                        name: '',
+                        type: '',
+                        default: 'x'
+                    }
+                ],
+                'Network' : [
+                    {
+                        name: 'Pearson cutoff',
+                        type: '',
+                        default: '0.50'
+                    },
+                    {
+                        name: '',
+                        type: '',
+                        default: 'x'
+                    }
+                ],
+                'Cluster' : [
+                    {
+                        name: 'Number of modules',
+                        type: '',
+                        default: '5'
+                    },
+                    {
+                        name: '',
+                        type: '',
+                        default: ''
+                    }
+                ]
+            
+            // 'Identifiers': {
+            //     'Genome': '3899',
+            //     //'Ontology': 'PO:0001016'
+            //     'Ontology': 'GSE5622'
+            // },
+            // 'Filter': {
+            //     //'-m': 'anova',
+            //     '-n': '100',
+            //     //'p-value': '0.00005',
+            //     '':'x',
+            // },
+            // 'Network': {
+            //     'Pearson cutoff': '0.50',
+            //     '':'x'
+            // },
+            // 'Cluster': {
+            //     //'-c': 'hclust',
+            //     //'-n': 'simple'
+            //     'Number of modules': '5',
+            //     '':'x'
             },
-            'Filter': {
-                //'-m': 'anova',
-                '-n': '100',
-                //'p-value': '0.00005',
-                '':'x',
-            },
-            'Network': {
-                'Pearson cutoff': '0.50',
-                '':'x'
-            },
-            'Cluster': {
-                //'-c': 'hclust',
-                //'-n': 'simple'
-                'Number of modules': '5',
-                '':'x'
+
+            command: {
+                'module' : 'biokbase.narrative.demo.coex_workflow',
+                'function' : 'coex_network_ws'
             }
         },
 
@@ -408,36 +457,36 @@
          * Create the output of the demo in the area given by 'element'.
          */
         //plantsCreateOutput: function(element, text) {
-        plantsCreateOutput: function(cell, text) {
-            // Since we must be done running, allow Run button to work again
-            this.rebindRunButtons();
-            // Now create output
-            var oid = text.trim();
-            var token = $("#login-widget").kbaseLogin("session","token");
-            var full_id = this.ws_id + "." + oid;
-            console.debug("ForceDirectedNetwork ID = "+full_id);
-	    // grab the old contents of the cell and append the
-	    // javascript call that pulls in the data and instantiates
-	    // the widget - do this in the cell HTML instead of in the
-	    // notebook code
-	    var uuid = this._uuidgen();
+     //    plantsCreateOutput: function(cell, text) {
+     //        // Since we must be done running, allow Run button to work again
+     //        this.rebindRunButtons();
+     //        // Now create output
+     //        var oid = text.trim();
+     //        var token = $("#login-widget").kbaseLogin("session","token");
+     //        var full_id = this.ws_id + "." + oid;
+     //        console.debug("ForceDirectedNetwork ID = "+full_id);
+	    // // grab the old contents of the cell and append the
+	    // // javascript call that pulls in the data and instantiates
+	    // // the widget - do this in the cell HTML instead of in the
+	    // // notebook code
+	    // var uuid = this._uuidgen();
 
-	    var cell_text = ["<div id=\""+uuid+"\"></div>",
-			     "<script>",
-			     "$(\"#"+uuid+"\").ForceDirectedNetwork({",
-			     "    workspaceID: \"" + this.ws_id + "." + oid+"\",",
-			     "    token: \"" + token + "\"",
-			     "});",
-			     "// Make the element a little bigger",
-			     "$(\"#"+uuid+"\").css({margin: '-10px'});",
-			     "// Disable most actions on this element",
-			     "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
-			     "</script>"].join('\n');
-	    cell.set_text(cell_text);
-            cell.rendered = false; // force a render
-	    cell.render();
+	    // var cell_text = ["<div id=\""+uuid+"\"></div>",
+			  //    "<script>",
+			  //    "$(\"#"+uuid+"\").ForceDirectedNetwork({",
+			  //    "    workspaceID: \"" + this.ws_id + "." + oid+"\",",
+			  //    "    token: \"" + token + "\"",
+			  //    "});",
+			  //    "// Make the element a little bigger",
+			  //    "$(\"#"+uuid+"\").css({margin: '-10px'});",
+			  //    "// Disable most actions on this element",
+			  //    "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
+			  //    "</script>"].join('\n');
+	    // cell.set_text(cell_text);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
 
-        },
+     //    },
 
         /* -------------- END: PLANTS ---------------------- */
 
@@ -447,18 +496,44 @@
 
         /* --------- Assemble Contigs from FASTA reads -----------*/
         runAssemblyConfig: {
-            'Identifiers' : {
-                'Paired-End Files<br>(comma-delimited)': '',
-                'Single-End Files<br>(comma-delimited)': '',
-                'Sequence Files<br>(comma-delimited)': '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Paired-End Files<br>(comma-delimited)',
+                    },
+                    {
+                        name: 'Single-End Files<br>(comma-delimited)',
+                    },
+                    {
+                        name: 'Sequence Files<br>(comma-delimited)',
+                    },
+                ],
+                'Assembly Params': [
+                    {
+                        name: 'Assemblers',
+                    },
+                    {
+                        name: 'Reference',
+                    },
+                    {
+                        name: 'Notes',
+                    }
+                ],
+                'Output': [
+                    {
+                        name: 'Contig Set Name'
+                    },
+                    {
+                        name: '',
+                    },
+                    {
+                        name: '',
+                    }
+                ]
             },
-            'Assembly Params' : {
-                'Assemblers' : '',
-                'Reference' : '',
-                'Notes' : '',
-            },
-            'Output' : {
-                'Contig Set Name' : ''
+            command: {
+                'module' : 'biokbase.narrative.demo.microbes_workflow',
+                'function' : 'run_assembly'
             }
         },
 
@@ -470,31 +545,40 @@
             };
         },
 
-        runAssemblyCreateOutput: function(cell, text) {
-            var jobId = "";
-            for (var i=0; i<5; i++) {
-                jobId += Math.floor((Math.random()*10));
-            }
-            var outText = "Your contig assembly job has been submitted successfully.<br/>" +
-                          "Your job ID is <b>job." + jobId + "</b><br/>" + 
-                          "This will likely take a few hours.<br/>" +
-                          "When complete, your ContigSet will have ID <b>" + text + "</b>";
+     //    runAssemblyCreateOutput: function(cell, text) {
+     //        var jobId = "";
+     //        for (var i=0; i<5; i++) {
+     //            jobId += Math.floor((Math.random()*10));
+     //        }
+     //        var outText = "Your contig assembly job has been submitted successfully.<br/>" +
+     //                      "Your job ID is <b>job." + jobId + "</b><br/>" + 
+     //                      "This will likely take a few hours.<br/>" +
+     //                      "When complete, your ContigSet will have ID <b>" + text + "</b>";
 
-            cell.set_text(outText);
-            cell.rendered = false; // force a render
-	    cell.render();
-        },
+     //        cell.set_text(outText);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
+     //    },
 
         /* ---------- Assemble Genome from Contigs ----------- */
         assembleGenomeConfig: {
-            'Identifiers' : {
-                'Contig Set' : '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Contig Set',
+                        type: 'ContigSet'
+                    },
+                ],
+                'Output' : [
+                    {
+                        name: 'New Genome',
+                    }
+                ]
             },
-
-            'Output' : {
-                'New Genome' : '',
+            command: {
+                'module' : 'biokbase.narrative.demo.microbes_workflow',
+                'function' : 'assemble_genome'
             }
-
         },
 
         assembleGenomeCommand: function() {
@@ -505,40 +589,50 @@
             };
         },
 
-        assembleGenomeCreateOutput: function(cell, text) {
-            var data = JSON.parse(text);
+     //    assembleGenomeCreateOutput: function(cell, text) {
+     //        var data = JSON.parse(text);
 
-            var tableRow = function(a, b) {
-                return $("<tr>")
-                       .append("<td>" + a + "</td>")
-                       .append("<td>" + b + "</td>");
-            };
+     //        var tableRow = function(a, b) {
+     //            return $("<tr>")
+     //                   .append("<td>" + a + "</td>")
+     //                   .append("<td>" + b + "</td>");
+     //        };
 
-            var $metaTable = $("<table>")
-                             .addClass("table table-striped table-bordered")
-                             .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
-                             .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
-                             .append(tableRow("Scientific Name", data[10].scientific_name))
-                             .append(tableRow("Size", data[10].size))
-                             .append(tableRow("GC Content", (100*(data[10].gc)).toFixed(2) + "%"))
-                             .append(tableRow("Location", data[7]));
+     //        var $metaTable = $("<table>")
+     //                         .addClass("table table-striped table-bordered")
+     //                         .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+     //                         .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
+     //                         .append(tableRow("Scientific Name", data[10].scientific_name))
+     //                         .append(tableRow("Size", data[10].size))
+     //                         .append(tableRow("GC Content", (100*(data[10].gc)).toFixed(2) + "%"))
+     //                         .append(tableRow("Location", data[7]));
 
-            // element.append($metaTable);
-            cell.set_text($metaTable);
-            cell.rendered = false; // force a render
-	    cell.render();
+     //        // element.append($metaTable);
+     //        cell.set_text($metaTable);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
 
-        },
+     //    },
 
         /* ---------- Annotate Assembled Genome ----------- */
         annotateGenomeConfig: {
-            'Identifiers' : {
-                'Genome' : '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Genome',
+                        type: 'Genome'
+                    }
+                ],
+                'Output' : [
+                    {
+                        name: 'New Genome ID (optional)',
+                    }
+                ]
             },
-            'Output' : {
-                'New Genome ID (optional)': '',
-            },
-
+            command: {
+                'module' : 'biokbase.narrative.demo.microbes_workflow',
+                'function' : 'assemble_genome'
+            }
         },
 
         annotateGenomeCommand: function() {
@@ -549,34 +643,37 @@
             };
         },
 
-        annotateGenomeCreateOutput: function(cell, text) {
-            cell.set_text(text);
-            cell.rendered = false; // force a render
-	    cell.render();
-        },
+     //    annotateGenomeCreateOutput: function(cell, text) {
+     //        cell.set_text(text);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
+     //    },
 
         /* ---------- View Genome Details ----------- */
 
-        viewGenomeConfig: {
-            'Identifiers' : {
-                'Genome' : '',
-            }
-        },
+        // viewGenomeConfig: {
+        //     'Identifiers' : {
+        //         'Genome' : {
+        //             'type' : 'Genome',
+        //             'default' : '',
+        //         }
+        //     }
+        // },
 
-        viewGenomeRuntimeConfig: {
+        viewGenomeConfig: {
             'params' : {
-                'Identifiers' : {
-                    'Genome' : '',
-                }
+                'Identifiers' : [
+                    {
+                        name: 'Genome',
+                        type: 'Genome',
+                        default: ''
+                    },
+                ]
             },
             'command' : {
                 'module' : 'biokbase.narrative.demo.microbes_workflow',
                 'function' : 'view_genome_details'
             },
-            'output' : {
-                'path' : '',  //not used now - might need for integrating Require.js
-                'widget' : 'GenomeView'
-            }
         },
 
         viewGenomeCommand: function() {
@@ -587,88 +684,69 @@
             };
         },
 
-        viewGenomeCreateOutput: function(cell, text) {
-            var data = JSON.parse(text);
-// <<<<<<< HEAD
-
-//             var tableRow = function(a, b) {
-//                 return $("<tr>")
-//                        .append("<td>" + a + "</td>")
-//                        .append("<td>" + b + "</td>");
-//             };
-
-//             var calcGC = function(gc, total) {
-//                 if (gc > 1)
-//                     gc = gc/total;
-//                 return (100*gc).toFixed(2);
-//             };
-
-//             var $metaTable = $("<table>")
-//                              .addClass("table table-striped table-bordered")
-//                              .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
-//                              .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
-//                              .append(tableRow("Scientific Name", data[10].scientific_name))
-//                              .append(tableRow("Size", data[10].size + " bp"))
-//                              .append(tableRow("GC Content", calcGC(data[10].gc, data[10].size) + "%"))
-//                              .append(tableRow("Number Features", data[10].number_features))
-//                              .append(tableRow("Location", data[7]));
-
-//             cell.set_text($("<p>").append($metaTable).html());
-//             cell.rendered = false; // force a render
-// 	    cell.render();
-// =======
-    	    var element = $("#"+cell.eid);
+//         viewGenomeCreateOutput: function(cell, text) {
+//             var data = JSON.parse(text);
+//     	    var element = $("#"+cell.eid);
 
 
-            var uuid = this._uuidgen();
+//             var uuid = this._uuidgen();
 
-            var cell_text = ["<div id=\""+uuid+"\"></div>",
-                     "<script>",
-                     "$(\"#"+uuid+"\").GenomeView({",
-                     "data: " + text + "",
-                     "});",
-                     "// Make the element a little bigger",
-                     "$(\"#"+uuid+"\").css({margin: '-10px'});",
-                     "// Disable most actions on this element",
-                     "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
-                     "</script>"].join('\n');
-            cell.cell.set_text(cell_text);
-                cell.cell.rendered = false; // force a render
-            cell.cell.render();
+//             var cell_text = ["<div id=\""+uuid+"\"></div>",
+//                      "<script>",
+//                      "$(\"#"+uuid+"\").GenomeView({",
+//                      "data: " + text + "",
+//                      "});",
+//                      "// Make the element a little bigger",
+//                      "$(\"#"+uuid+"\").css({margin: '-10px'});",
+//                      "// Disable most actions on this element",
+//                      "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
+//                      "</script>"].join('\n');
+//             cell.cell.set_text(cell_text);
+//                 cell.cell.rendered = false; // force a render
+//             cell.cell.render();
 
-            // var tableRow = function(a, b) {
-            //     return $("<tr>")
-            //            .append("<td>" + a + "</td>")
-            //            .append("<td>" + b + "</td>");
-            // };
+//             // var tableRow = function(a, b) {
+//             //     return $("<tr>")
+//             //            .append("<td>" + a + "</td>")
+//             //            .append("<td>" + b + "</td>");
+//             // };
 
-            // var calcGC = function(gc, total) {
-            //     if (gc > 1)
-            //         gc = gc/total;
-            //     return (100*gc).toFixed(2);
-            // };
+//             // var calcGC = function(gc, total) {
+//             //     if (gc > 1)
+//             //         gc = gc/total;
+//             //     return (100*gc).toFixed(2);
+//             // };
 
-            // console.log(data);
+//             // console.log(data);
 
-            // var $metaTable = $("<table>")
-            //                  .addClass("table table-striped table-bordered")
-            //                  .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
-            //                  .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
-            //                  .append(tableRow("Scientific Name", data[10].scientific_name))
-            //                  .append(tableRow("Size", data[10].size + " bp"))
-            //                  .append(tableRow("GC Content", calcGC(data[10].gc, data[10].size) + "%"))
-            //                  .append(tableRow("Number Features", data[10].number_features))
-            //                  .append(tableRow("Location", data[7]));
+//             // var $metaTable = $("<table>")
+//             //                  .addClass("table table-striped table-bordered")
+//             //                  .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+//             //                  .append(tableRow("<b>ID</b>", "<b>" + data[0] + "</b>"))
+//             //                  .append(tableRow("Scientific Name", data[10].scientific_name))
+//             //                  .append(tableRow("Size", data[10].size + " bp"))
+//             //                  .append(tableRow("GC Content", calcGC(data[10].gc, data[10].size) + "%"))
+//             //                  .append(tableRow("Number Features", data[10].number_features))
+//             //                  .append(tableRow("Location", data[7]));
 
-            // element.append($metaTable);
-//>>>>>>> dev-rewidget
+//             // element.append($metaTable);
+// //>>>>>>> dev-rewidget
 
-        },
+//         },
 
         /* ------------ Genome to FBA Model ----------------- */ 
         genomeToFbaConfig: {
-            'Identifiers': {
-                'Genome': '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Genome',
+                        type: 'Genome'
+                    },
+                ]
+            },
+            command: {
+                module: 'biokbase.narrative.demo.microbes_workflow',
+                function: 'genome_to_fba_model'
             },
     // -m --model         Name to be provided for output model
     // --genomews         Workspace where genome is located
@@ -690,30 +768,39 @@
             };
         },
 
-        genomeToFbaCreateOutput: function(cell, text) {
-	    var uuid = this._uuidgen();
+     //    genomeToFbaCreateOutput: function(cell, text) {
+	    // var uuid = this._uuidgen();
 
-	    var cell_text = ["<div id=\""+uuid+"\"></div>",
-			     "<script>",
-			     "$(\"#"+uuid+"\").kbaseModelMetaNarrative({",
-			     "    data: " + text,
-			     "});",
-			     "// Disable most actions on this element",
-			     "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
-			     "</script>"].join('\n');
-	    cell.set_text(cell_text);
-            cell.rendered = false; // force a render
-	    cell.render();
+	    // var cell_text = ["<div id=\""+uuid+"\"></div>",
+			  //    "<script>",
+			  //    "$(\"#"+uuid+"\").kbaseModelMetaNarrative({",
+			  //    "    data: " + text,
+			  //    "});",
+			  //    "// Disable most actions on this element",
+			  //    "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
+			  //    "</script>"].join('\n');
+	    // cell.set_text(cell_text);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
 
-            // element.kbaseModelMetaNarrative({data: data});
-            // element.off('click dblclick keydown keyup keypress focus');
-        },
+     //        // element.kbaseModelMetaNarrative({data: data});
+     //        // element.off('click dblclick keydown keyup keypress focus');
+     //    },
 
         /* ---------- View Model ----------- */
         viewFbaModelConfig: {
-            'Identifiers': {
-                'Model': '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Model',
+                        type: 'Model'
+                    }
+                ]
             },
+            command: {
+                module: 'biokbase.narrative.demo.microbes_workflow',
+                function: 'view_fba_model'
+            }
         },
 
         viewFbaModelCommand: function() {
@@ -724,29 +811,39 @@
             };
         },
 
-        viewFbaModelCreateOutput: function(cell, text) {
-	    var uuid = this._uuidgen();
-	    var cell_text = ["<div id=\""+uuid+"\"></div>",
-			     "<script>",
-			     "$(\"#"+uuid+"\").kbaseModelTabs({",
-			     "    modelsData: " + text,
-			     "});",
-			     "$(\"#"+uuid+"\").css({ margin: '-10px' });",
-			     "// Disable most actions on this element",
-			     "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
-			     "</script>"].join('\n');
-	    cell.set_text(cell_text);
-            cell.rendered = false; // force a render
-	    cell.render();
+     //    viewFbaModelCreateOutput: function(cell, text) {
+	    // var uuid = this._uuidgen();
+	    // var cell_text = ["<div id=\""+uuid+"\"></div>",
+			  //    "<script>",
+			  //    "$(\"#"+uuid+"\").kbaseModelTabs({",
+			  //    "    modelsData: " + text,
+			  //    "});",
+			  //    "$(\"#"+uuid+"\").css({ margin: '-10px' });",
+			  //    "// Disable most actions on this element",
+			  //    "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
+			  //    "</script>"].join('\n');
+	    // cell.set_text(cell_text);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
 
-        },
+     //    },
 
 
         /* --------- Build Media ------------ */
         buildMediaConfig: {
-            'Identifiers' : {
-                'Base Media (optional)' : '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Base Media (optional)',
+                        type: 'Media',
+                        default: 'None'
+                    },
+                ],
             },
+            command: {
+                module: 'biokbase.narrative.demo.microbes_workflow',
+                function: 'build_media'
+            }
         },
 
         buildMediaCommand: function() {
@@ -757,29 +854,38 @@
             };
         },
 
-        buildMediaCreateOutput: function(cell, text) {
-	    var uuid = this._uuidgen();
-	    var cell_text = ["<div id=\""+uuid+"\"></div>",
-			     "<script>",
-			     "$(\"#"+uuid+"\").kbaseMediaEditorNarrative({",
-			     "    modelsData: " + text,
-			     "    viewOnly: false,",
-			     "    editOnly: true,",
-			     "    ws: \"" + this.ws_id + "\",",
-			     "    auth: \"" + this.ws_auth + "\",",
-			     "});",
-			     "</script>"].join('\n');
-	    cell.set_text(cell_text);
-            cell.rendered = false; // force a render
-	    cell.render();
+     //    buildMediaCreateOutput: function(cell, text) {
+	    // var uuid = this._uuidgen();
+	    // var cell_text = ["<div id=\""+uuid+"\"></div>",
+			  //    "<script>",
+			  //    "$(\"#"+uuid+"\").kbaseMediaEditorNarrative({",
+			  //    "    modelsData: " + text,
+			  //    "    viewOnly: false,",
+			  //    "    editOnly: true,",
+			  //    "    ws: \"" + this.ws_id + "\",",
+			  //    "    auth: \"" + this.ws_auth + "\",",
+			  //    "});",
+			  //    "</script>"].join('\n');
+	    // cell.set_text(cell_text);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
 
-        },
+     //    },
 
         /* ---------- View Media ---------- */
         viewMediaConfig: {
-            'Identifiers' : {
-                'Media' : '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Media',
+                        type: 'Media',
+                    }
+                ]
             },
+            command: {
+                module: 'biokbase.narrative.demo.microbes_workflow',
+                function: 'view_media'
+            }
         },
 
         viewMediaCommand: function() {
@@ -790,29 +896,44 @@
             };
         },
 
-        viewMediaCreateOutput: function(cell, text) {
-	    var uuid = this._uuidgen();
-	    var cell_text = ["<div id=\""+uuid+"\"></div>",
-			     "<script>",
-			     "$(\"#"+uuid+"\").kbaseMediaEditorNarrative({",
-			     "    mediaData: " + text,
-			     "});",
-			     "</script>"].join('\n');
-	    cell.set_text(cell_text);
-            cell.rendered = false; // force a render
-	    cell.render();
+     //    viewMediaCreateOutput: function(cell, text) {
+	    // var uuid = this._uuidgen();
+	    // var cell_text = ["<div id=\""+uuid+"\"></div>",
+			  //    "<script>",
+			  //    "$(\"#"+uuid+"\").kbaseMediaEditorNarrative({",
+			  //    "    mediaData: " + text,
+			  //    "});",
+			  //    "</script>"].join('\n');
+	    // cell.set_text(cell_text);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
 
-        },
+     //    },
 
 
         /* --------- Run Flux Balance Analysis --------------- */
         runFbaConfig: {
-            'Identifiers' : {
-                'Model' : '',
-                'Media' : '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Model',
+                        type: 'Model'
+                    },
+                    {
+                        name: 'Media',
+                        type: 'Media'
+                    }
+                ],
+                'Misc' : [
+                    {
+                        name: 'Notes',
+                        type: '',
+                    }
+                ],
             },
-            'Misc' : {
-                'Notes' : '',
+            command: {
+                module: 'biokbase.narrative.demo.microbes_workflow',
+                command: 'run_fba'
             },
         },
 
@@ -823,27 +944,36 @@
             };
         },
 
-        runFbaCreateOutput: function(cell, text) {
-	    var uuid = this._uuidgen();
-	    var cell_text = ["<div id=\""+uuid+"\"></div>",
-			     "<script>",
-			     "$(\"#"+uuid+"\").kbaseFbaTabsNarrative({",
-			     "    fbaData: " + text,
-			     "});",
-			     "</script>"].join('\n');
-	    cell.set_text(cell_text);
-            cell.rendered = false; // force a render
-	    cell.render();
+     //    runFbaCreateOutput: function(cell, text) {
+	    // var uuid = this._uuidgen();
+	    // var cell_text = ["<div id=\""+uuid+"\"></div>",
+			  //    "<script>",
+			  //    "$(\"#"+uuid+"\").kbaseFbaTabsNarrative({",
+			  //    "    fbaData: " + text,
+			  //    "});",
+			  //    "</script>"].join('\n');
+	    // cell.set_text(cell_text);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
 
-        },
+     //    },
 
 
         /* ------------ View FBA Results ------------ */
 
         viewFbaConfig: {
-            'Identifiers' : {
-                'FBA Result' : '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'FBA Result',
+                        type: 'FBA'
+                    }
+                ]
             },
+            command: {
+                module: 'biokbase.narrative.demo.microbes_workflow',
+                function: 'view_fba'
+            }
         },
 
         viewFbaCommand: function() {
@@ -853,32 +983,58 @@
             };
         },
 
-        viewFbaCreateOutput: function(cell, text) {
-	    var uuid = this._uuidgen();
-	    var cell_text = ["<div id=\""+uuid+"\"></div>",
-			     "<script>",
-			     "$(\"#"+uuid+"\").kbaseFbaTabsNarrative({",
-			     "    fbaData: " + text,
-			     "});",
-			     "</script>"].join('\n');
-	    cell.set_text(cell_text);
-            cell.rendered = false; // force a render
-	    cell.render();
-        },
+     //    viewFbaCreateOutput: function(cell, text) {
+	    // var uuid = this._uuidgen();
+	    // var cell_text = ["<div id=\""+uuid+"\"></div>",
+			  //    "<script>",
+			  //    "$(\"#"+uuid+"\").kbaseFbaTabsNarrative({",
+			  //    "    fbaData: " + text,
+			  //    "});",
+			  //    "</script>"].join('\n');
+	    // cell.set_text(cell_text);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
+     //    },
 
         /* ------------ Gapfill FBA Model -------------- */
         runGapfillConfig: {
-            'Identifiers' : {
-                'Model' : '',
-                'Media' : '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Model',
+                        type: 'Model',                        
+                    },
+                    {
+                        name: 'Media',
+                        type: 'Media',
+                    }
+                ],
+
+                'Solutions' : [
+                    {
+                        name: 'Number to seek',
+                        type: '',
+                        default: '1',
+                    }
+                ],
+
+                'Time' : [
+                    {
+                        name: 'Per Solution (sec)',
+                        type: '',
+                        default: '3600',
+                    },
+                    {
+                        name: 'Total Limit (sec)',
+                        type: '',
+                        default: '3600'
+                    }
+                ],
             },
-            'Solutions' : {
-                'Number to seek' : '1',
+            command: {
+                module: 'biokbase.narrative.demo.microbes_workflow',
+                function: 'run_gapfill'
             },
-            'Time' : {
-                'Per Solution (sec)' : '3600',
-                'Total Limit (sec)' : '3600'
-            }
         },
 
         runGapfillCommand: function() {
@@ -888,31 +1044,44 @@
             };
         },
 
-        runGapfillCreateOutput: function(cell, text) {
-            var data = JSON.parse(text);
-            var jobId = data.id;
-            var totalTime = data.jobdata.postprocess_args[0].totalTimeLimit;
-            var totalTimeHrs = totalTime/3600;
-            var outModel = data.jobdata.postprocess_args[0].out_model;
+     //    runGapfillCreateOutput: function(cell, text) {
+     //        var data = JSON.parse(text);
+     //        var jobId = data.id;
+     //        var totalTime = data.jobdata.postprocess_args[0].totalTimeLimit;
+     //        var totalTimeHrs = totalTime/3600;
+     //        var outModel = data.jobdata.postprocess_args[0].out_model;
 
-            var outputText = "<div>Your gapfill job has been successfully queued, with job ID: <b>" + jobId + "</b>.<br/>" +
-                             "This will take approximately " + totalTime + " seconds (" + totalTimeHrs + " hour" +
-                             (totalTimeHrs === 1 ? "" : "s") + ").<br/><br/>" +
-                             "Your gapfill solutions will be stored in model ID: <b>" + outModel + "</b>.</div>";
-	    cell.set_text(outputText);
-            cell.rendered = false; // force a render
-	    cell.render();
+     //        var outputText = "<div>Your gapfill job has been successfully queued, with job ID: <b>" + jobId + "</b>.<br/>" +
+     //                         "This will take approximately " + totalTime + " seconds (" + totalTimeHrs + " hour" +
+     //                         (totalTimeHrs === 1 ? "" : "s") + ").<br/><br/>" +
+     //                         "Your gapfill solutions will be stored in model ID: <b>" + outModel + "</b>.</div>";
+	    // cell.set_text(outputText);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
 
-        },
+     //    },
 
         /* ------------ Integrate Gapfill Solution ---------------- */
         integrateGapfillConfig: {
-            'Identifiers' : {
-                'Model' : '',
-                'Gapfill' : '',
+            params: {
+                'Identifiers' : [
+                    {
+                        name: 'Model',
+                        type: 'Model',
+                    },
+                    {
+                        name: 'Gapfill',
+                    },
+                ],
+                'Output' : [
+                    {
+                        name: 'New Model (optional)'
+                    },
+                ],
             },
-            'Output' : {
-                'New Model (optional)' : ''
+            command: {
+                module: 'biokbase.narrative.demo.microbes_workflow',
+                function: 'integrate_gapfill'
             }
         },
 
@@ -923,12 +1092,12 @@
             };
         },
 
-        integrateGapfillCreateOutput: function(cell, text) {
-	    cell.set_text(text);
-            cell.rendered = false; // force a render
-	    cell.render();
+     //    integrateGapfillCreateOutput: function(cell, text) {
+	    // cell.set_text(text);
+     //        cell.rendered = false; // force a render
+	    // cell.render();
 
-        },
+     //    },
 
 
 
@@ -940,8 +1109,28 @@
          * configuration data. See 
          */
         _buildRunForm: function(name, cfg) {
+
+            /**
+             * Use cfg.params, like this:
+             *
+             *  viewGenomeRuntimeConfig: {
+             *    'params' : {
+             *      'Identifiers' : [
+             *        {
+             *           'name' : 'Genome',
+             *           'type' : 'Genome',
+             *           'default' : '',
+             *        },
+             *      ]
+             *    },
+             *    'command' : {
+             *      'module' : 'biokbase.narrative.demo.microbes_workflow',
+             *      'function' : 'view_genome_details'
+             *    },
+             *  }
+             */
+
             console.log('_buildRunForm');
-            console.log(cfg);
 
             var cls = "class='table'";
             var sbn = "style='border: none'";
@@ -949,20 +1138,58 @@
             var text = "<form>" + 
                        "<input type='hidden' name='kbfunc' value='" + name + "' />" +
                        "<table " + cls + ">";
-            $.each(cfg, function(key, value) {
 
-                text += "<tr " + sbn + "><td " + sbn + ">" + key + "</td>";
-                $.each(value, function(key2, value2) { 
-                    if (key2 == '') {
+            var self = this;
+            $.each(cfg.params, function(category, paramList) {
+                text += "<tr " + sbn + "><td " + sbn + ">" + category + "</td>";
+                $.each(paramList, function(idx, param) {
+                    /* param is an object with these expected fields:
+                     * {
+                     *    name : <name of the parameter>
+                     *    type : <type of parameter object - if left blank, a text input is used>
+                     *    default: <default value>
+                     * }
+                     */
+
+                    // if we don't have a name, it's a blank field.
+                    if (!param.name || param.name.length === 0) {
                         // this cell intentionally left blank
                         text += "<td " + sbn + ">&nbsp;</td>";
                     }
-                    else {
-                        text += "<td " + sbn + "><label>" + key2 + "</label>" + 
+
+                    // if we don't have a type (or it's blank), use a text field.
+                    else if (!param.type || param.type.length === 0) {
+                        // add a text input.
+                        text += "<td " + sbn + "><label>" + param.name + "</label>" + 
                                 "<input type='text' " + 
-                                "name='" + key + "." + key2 + "' " +
-                                "value='" + value2 + "'>"
+                                "name='" + category + "." + param.name + "' " +
+                                "value='" + (param.default ? param.default : '') + "'>"
                                 "</input></td>";
+                    }
+
+                    // if we have a type, get the list of objects of that type
+                    // from the workspace.
+                    else {
+                        // if there's a type, add the list of available objects
+                        // by type.
+                        // if none, insert a static message? TODO.
+
+                        var objectList = self.dataTableWidget.getLoadedData(param.type)[param.type];
+                        objectList.sort(function(a, b) { 
+                            if (a[0] < b[0]) 
+                                return -1;
+                            if (a[0] > b[0])
+                                return 1;
+                            return 0;
+                        });
+                        text += "<td " + sbn + ">" + 
+                                "<label>" + param.name + "</label>" +
+                                "<select name='" + category + "." + param.name + "'>";
+
+                        for (var i=0; i<objectList.length; i++) {
+                            text += "<option value='" + objectList[i][0] + "'>" + objectList[i][0] + "</option>";
+                        }
+                        text += "</select></td>";
                     }
                 });
 

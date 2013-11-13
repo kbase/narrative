@@ -191,7 +191,10 @@
             this.element = $("#" + cell_id);
             var $frm = $('div#' + cell_id + ' form');
             var submit_fn = this._bindRunButton();
-            $frm.on("submit", submit_fn);
+	    var cell_idx = this._cur_index;
+            $frm.on("submit", ".btn-primary", submit_fn);
+            $("#" + cell_id + " input[value='Delete']").click(this._bindDeleteButton(cell_id));
+	    $("#"+cell_id+" .table input")[0].focus();
         },
 
          // yes, I know - ugh.
@@ -292,7 +295,7 @@
                     };
                     break;
 
-                case 'Gapfill FBA Model':
+               case 'Gapfill FBA Model':
                     return {
                         'config' : this.runGapfillConfig,
                         'command_builder' : this.runGapfillCommand(),
@@ -313,6 +316,16 @@
                     return {};
             }
         },
+
+        _bindDeleteButton: function() {
+	    var self = this;
+	    return( function(event) {
+		    event.preventDefault();
+		    var idx = IPython.notebook.get_selected_index();
+		    IPython.notebook.delete_cell(idx);
+		    console.log("Deleted cell at index " + idx);
+		    });
+	},
 
         _bindRunButton: function() {
             var self = this;
@@ -345,15 +358,33 @@
         rebindRunButtons: function() {
             console.debug("rebindRunButtons.begin");
             var self = this;
-            $.each($('div.kb-cell-run'), function(key, element) {
-                self.element = $(element);
-                var $frm = self.element.find('form');
-                var submit_fn = self._bindRunButton();
-                $frm.off("submit"); // unbind old                
-                $frm.on("submit", submit_fn);
-                console.debug('rebound submit on', $frm);
-            });
-            console.debug("rebindRunButtons.end");
+	    // Rewrite the following to iterate using the IPython cell
+	    // based methods instead of DOM objects
+            //$.each($('div.kb-cell-run'), function(key, element) {
+            //    self.element = $(element);
+            //    var $frm = self.element.find('form');
+            //    var submit_fn = self._bindRunButton();
+            //    $frm.off("submit"); // unbind old                
+            //    $frm.on("submit", submit_fn);
+            //    console.debug('rebound submit on', $frm);
+            //});
+	    var cell_elem = IPython.notebook.get_cell_elements();
+            $.each(cell_elem, function(cell_idx, cell_contents) {
+		       console.debug('Examining cell ', cell_idx);
+		       $.each( $(cell_contents).find('div.kb-cell-run'), function( key,element) {
+				   self.element = $(element);
+				   var $frm = self.element.find('form');
+				   var submit_fn = self._bindRunButton();
+				   $frm.off("submit"); // unbind old                
+				   $frm.on("submit", submit_fn);
+				   console.debug('rebound submit button');
+				   $frm.find("input[value='Delete']").unbind('click');
+				   $frm.find("input[value='Delete']").click(self._bindDeleteButton(cell_idx));
+				   console.debug('rebound Delete button');
+
+			       });
+		   });
+	    console.debug("rebindRunButtons.end");
         },
 
         /* -------------- PLANTS ---------------------- */
@@ -899,7 +930,10 @@
             });
 
             text += "</table>" +
-                    "<input type='submit' value='Run' class='button' style='margin-top:5px'></input>" + 
+		    "<div class='buttons'>" +
+                    "<input type='button' value='Delete' class='btn btn-warning' style='margin-top:5px'></input>" +
+                    "<input type='submit' value='Run' class='btn btn-primary' style='margin-top:5px'></input>" + 
+		    "</div>" +
                     "</form>";
 
             return text;

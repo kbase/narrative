@@ -165,7 +165,7 @@
             console.debug("adding cell for " + name);
             var nb = IPython.notebook;
             this.kernel = nb.kernel; // stash current kernel
-            var cell = nb.insert_cell_at_bottom('markdown');
+            var cell = nb.insert_cell_below('markdown');
             this._cur_index = nb.ncells() - 1; // stash cell's index
             var command_builder = undefined;
             var config = {};
@@ -967,8 +967,8 @@
             return function(code) {
                 // @@ code cell
                 var nb = IPython.notebook;
-                self.code_cell = nb.insert_cell_at_bottom('code');
-                self.code_cell.element.css("display", "none");
+                self.code_cell = nb.insert_cell_below('code');
+                // self.code_cell.element.css("display", "none");
                 var callbacks = {
                     'execute_reply': $.proxy(self._handle_execute_reply, self),
                     //'output': $.proxy(self.output_area.handle_output, self.output_area),
@@ -1190,8 +1190,8 @@
          * @return id of <div> inside cell where content can be placed
          */
          _addOutputCell: function() {
-            var nb = IPython.notebook;
-            var cell = nb.insert_cell_at_bottom('markdown');
+           var nb = IPython.notebook;
+            var cell = nb.insert_cell_below('markdown');
             // return $('#' + eid);
             return( cell );
          },

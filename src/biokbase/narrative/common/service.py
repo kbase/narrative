@@ -1,34 +1,9 @@
 """
 KBase narrative service and method API.
 
-The main class defined here is :class:`Service`, but
-for running in the IPython notebook, services should inherit from :class:`IpService`, which implements communication channels to the front-end and remote KBase registries.
+The main classes defined here are :class:`Service` and :class:`ServiceMethod`.
 
-Subclasses should override the constructor to provide service metadata,
-and the run() method to perform the desired work.
-
-Sample usage::
-
-    from biokbase.common.service import Service
-
-    class TaxiService(Service):
-    
-        def __init__(self):
-            Service.__init__(self)
-            self.name = "groovalicious"
-            self.desc = "This service makes me want to dance"
-            self.version = (1,0,1)
-
-    class PickUp(ServiceMethod):
-        
-        def run(self, params):
-            # do the work of the service.
-            print("hello, world!")
-            # at appropriate points, update status:
-            self.status.advance()
-            # on exit, status will be automatically updated again
-            return ['list', 'of', 1, 'or', 'more', 'values']
-
+See :function:`example` for an example of usage.
 """
 __author__ = ["Dan Gunter <dkgunter@lbl.gov>", "William Riehl <wjriehl@lbl.gov>"]
 __version__ = "0.0.1"
@@ -59,7 +34,46 @@ _log.addHandler(_h)
 
 ## Globals
 
-## Classes and functions
+## Exceptions
+
+
+class ServiceError(Exception):
+    """Base class for Service errors.
+    Should not normally be instantiated directly.
+    """
+
+    def __init__(self, errmsg):
+        Exception.__init__(self, errmsg)
+        self._info = {
+            'severity': 'FATAL',
+            'type': self.__class__.__name__
+        }
+
+    def add_info(self, k, v):
+        self._info[k] = v
+
+    def as_json(self):
+        return json.dumps(self._info)
+
+
+class ServiceMethodError(ServiceError):
+    """Base class for all ServiceMethod errors"""
+
+    def __init__(self, method, errmsg):
+        msg = "in ServiceMethod '{}': {}".format(method.name, errmsg)
+        ServiceError.__init__(self, msg)
+        self.add_info('method_name', method.name)
+
+
+class ServiceMethodParameterError(ServiceMethodError):
+    """Bad parameter for ServiceMethod."""
+
+    def __init__(self, method, errmsg):
+        msg = "bad parameter: " + errmsg
+        ServiceMethodError.__init__(self, method, msg)
+        self.add_info('details', errmsg)
+
+## Custom traits
 
 
 class VersionNumber(trt.TraitType):
@@ -86,6 +100,9 @@ class VersionNumber(trt.TraitType):
                 return (int(maj), int(minor), patch)
         self.error(obj, value)
     
+
+## Service classes
+
 
 class Service(trt.HasTraits):
     """Base Service class.
@@ -337,7 +354,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         :param fn: Function object to run
         :param params: Tuple() of traits
 
-        :raise: ValueError, if function signature does not match
+        :raise: ServiceMethodParameterError, if function signature does not match
         """
         self.run = fn
         self.name = fn.__name__
@@ -347,12 +364,12 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
 
     def _validate(self, p):
         if len(p) != len(self.params):
-            raise ValueError("Wrong number of arguments. got={} wanted={}".format(len(p), len(self.params)))
+            raise ServiceMethodParameterError(self, "Wrong number of arguments. got={} wanted={}".format(len(p), len(self.params)))
         for obj, spec in zip(p, self.params):
             try:
                 spec.validate(spec, obj)
             except trt.TraitError, err:
-                raise ValueError("Argument type error: {}".format(err))
+                raise ServiceMethodParameterError(self, "Argument type error: {}".format(err))
 
     def as_json(self):
         d = {
@@ -378,7 +395,7 @@ class Person(trt.Unicode):
 
 
 def example():
-    service = Service(name="taxicab", desc="yellow cab", version="0.0.1-alpha")
+    service = Service(name="taxicab", desc="Yellow Cab taxi service", version="0.0.1-alpha")
     method = ServiceMethod(service, name="pickup", desc="Pick up people in a taxi")
     method.set_func(pick_up_people,
                     (trt.Int(1, desc="number of people"), trt.Unicode("", desc="Pick up location"),
@@ -391,13 +408,13 @@ def example():
     #
     try:
         method.execute(1)
-    except ValueError, err:
-        print("as expected, validation failed: {}".format(err))
+    except ServiceMethodParameterError, err:
+        print("as expected, validation failed:\n{}".format(err.as_json()))
     #
     try:
         method.execute(1, "here", 3.14, "me")
-    except ValueError, err:
-        print("as expected, validation failed: {}".format(err))
+    except ServiceMethodParameterError, err:
+        print("as expected, validation failed:\n{}".format(err.as_json()))
     #
     method.execute(1, "here", "there", "dang")
     print("it worked!")

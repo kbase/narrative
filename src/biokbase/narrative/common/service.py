@@ -459,47 +459,52 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
 #############################################################################
 
 
-def pick_up_people(method, num, where_from, where_to, who):
-    method.stages = 3
-    if num < 1:
-        raise ValueError("Can't pick up less than one person ({})".format(num))
-    print("{} called for {:d} people to be driven from {} to {}".format(who, num, where_from, where_to))
-    time.sleep(2)
-    method.advance()
-    print("picking up {} and {:d} other bozos at {}".format(who, num-1, where_from))
-    time.sleep(2)
-    method.advance()
-    print("dropping off {} and {:d} other bozos at {}".format(who, num-1, where_to))
-    return [num]
-
-
-class Person(trt.Unicode):
-    default_value = "Joe Schmoe"
-    info_text = 'the name of a person'
-
-    def validate(self, obj, value):
-        trt.Unicode.validate(self, obj, value)
-
-
 def example():
+
+    # New data type for a Person
+    class Person(trt.Unicode):
+        default_value = "Joe Schmoe"
+        info_text = 'the name of a person'
+
+        def validate(self, obj, value):
+            trt.Unicode.validate(self, obj, value)
+
+    # Function that does the work of the "pickup" method
+    def pick_up_people(method, num, where_from, where_to, who):
+        method.stages = 3
+        if num < 1:
+            raise ValueError("Can't pick up less than one person ({})".format(num))
+        print("{} called for {:d} people to be driven from {} to {}".format(who, num, where_from, where_to))
+        time.sleep(2)
+        method.advance()
+        print("picking up {} and {:d} other bozos at {}".format(who, num - 1, where_from))
+        time.sleep(2)
+        method.advance()
+        print("dropping off {} and {:d} other bozos at {}".format(who, num - 1, where_to))
+        return [num]
+
+    # Create a new service
     service = Service(name="taxicab", desc="Yellow Cab taxi service", version="0.0.1-alpha")
+    # Create and initialize a method in the service
     method = ServiceMethod(service, name="pickup", desc="Pick up people in a taxi")
     method.set_func(pick_up_people,
                     (trt.Int(1, desc="number of people"), trt.Unicode("", desc="Pick up location"),
                      trt.Unicode("", desc="main drop off location"),
                      Person("", desc="Person who called the taxi")))
     service.add(method)
-    service.add(ServiceMethod(service, name="circle", desc="Drive around in circles"))
-    #
+
+    # An example of parameter validation
     hdr = lambda s: "\n### " + s + " ###\n"
     print(hdr("Bad parameters"))
     r = method(1)
     assert(r is None)
 
+    # An example of function error
     print(hdr("Function error"))
     r = method(0, "here", "there", "me")
     assert (r is None)
 
+    # The "happy path" example
     print(hdr("Success"))
     r = method(3, "Berkeley", "San Francisco", "Willie Brown")
     assert(r is not None)

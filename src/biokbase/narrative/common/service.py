@@ -355,6 +355,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
     to run the service. Call the class instance like a function
     to execute the service in its wrapped mode.
 
+    Note that for services to be able to chain their results forward to
+    the next called service, a method _must_ return a value.
+
     Example usage::
 
         >>> svc = Service()
@@ -374,6 +377,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
     desc = trt.Unicode()
     #: Parameters of method, a Tuple of traits
     params = trt.Tuple()
+    #: Output of the method, a Tuple of traits
+    output = trt.Tuple()
 
     def __init__(self, parent, status_class=LifecycleHistory, **meta):
         """Constructor.
@@ -425,7 +430,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             self.error(-1, ServiceMethodError(self, err))
         return result
 
-    def set_func(self, fn, params):
+    def set_func(self, fn, params, output):
         """Set the main function to run.
 
         :param fn: Function object to run
@@ -438,6 +443,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         for i, p in enumerate(params):
             p.name = "param{:d}".format(i)
         self.params = params
+        for i, p in enumerate(output):
+            p.name = "output{:d}".format(i)
+        self.output = output
 
     def _validate(self, p):
         if len(p) != len(self.params):
@@ -452,7 +460,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         d = {
             'name': self.name,
             'desc': self.desc,
-            'params': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.params]
+            'params': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.params],
+            'output': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.output]
         }
         return d
 
@@ -490,7 +499,8 @@ def example():
     method.set_func(pick_up_people,
                     (trt.Int(1, desc="number of people"), trt.Unicode("", desc="Pick up location"),
                      trt.Unicode("", desc="main drop off location"),
-                     Person("", desc="Person who called the taxi")))
+                     Person("", desc="Person who called the taxi")),
+                    tuple([trt.Int([],desc="Number of people dropped off")]))
     service.add(method)
 
     # An example of parameter validation
@@ -503,6 +513,10 @@ def example():
     print(hdr("Function error"))
     r = method(0, "here", "there", "me")
     assert (r is None)
+
+    # An example of dumping out the service method metadata as JSON
+    print(hdr("Metadata"))
+    print method.as_json()
 
     # The "happy path" example
     print(hdr("Success"))

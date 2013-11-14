@@ -59,12 +59,15 @@
     color: white;
     padding: 0 3px;
     float: right;
+    cursor: pointer;
+
 }
 #kb-function-help {
     position: absolute;
     top: 400px;
     left: 300px;
     z-index: 99;
+    cursor: pointer;
 }
 
 #kb-function-help h1 {
@@ -107,8 +110,12 @@
     opacity: inherit;
 }
 .kb-cell-run form input[type="submit"] {
-    float: right;
+#    float: right;
     opacity: inherit;
+    margin-top: 5px;
+}
+.kb-cell-run form .buttons {
+    float: right;
     margin-top: 5px;
 }
 .kb-cell-params table {

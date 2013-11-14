@@ -170,7 +170,7 @@
 		
 		<script id="recent_narratives" type="text/html">
 		{{#rows}}
-		<li><a href="http://narrative.kbase.us/narratives/{{userId}}/{{project_id}}.{{narrative_id}}">{{name}}</a></li>		
+		<li><a href="http://127.0.0.1:8888/{{project_id}}.{{narrative_id}}">{{name}}</a></li>		
 		{{/rows}}
 		</script>
 

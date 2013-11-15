@@ -41,7 +41,7 @@ var IPython = (function (IPython) {
     // }
 
     LayoutManager.prototype.app_height = function() {
-        return 758;
+        return 630;
     }
 
     LayoutManager.prototype.do_resize = function () {

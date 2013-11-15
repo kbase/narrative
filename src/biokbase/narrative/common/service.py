@@ -465,6 +465,27 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         }
         return d
 
+    trt_2_jschema = { 'a unicode string' : 'string',
+                      'an int' : 'integer',
+                      'a list or None' : 'array',
+                      'a set or None' : 'array',
+                      'a tuple or None' : 'array',
+                      'a dict or None' : 'object',
+                      'a float' : 'number',
+                      'a boolean' : 'boolean'}
+                             
+    def as_json_schema(self):
+        d = {
+            'title': self.name,
+            'type': 'object',
+            'description': self.desc,
+            'properties' : {
+                'parameters': { p.name : {  'type': self.trt_2_jschema.get(p.info_text,'object'), 'description' : p.get_metadata('desc')} for p in self.params },
+            },
+            'returns': { p.name : { 'type' : self.trt_2_jschema.get(p.info_text,'object'), 'description' : p.get_metadata('desc')} for p in self.output}
+        }
+        return d
+
 #############################################################################
 
 
@@ -514,9 +535,14 @@ def example():
     r = method(0, "here", "there", "me")
     assert (r is None)
 
+    from pprint import pformat
     # An example of dumping out the service method metadata as JSON
     print(hdr("Metadata"))
-    print method.as_json()
+    print pformat(method.as_json())
+
+    # An example of dumping out the service method metadata as JSON
+    print(hdr("JSON Schema Metadata"))
+    print pformat(method.as_json_schema())
 
     # The "happy path" example
     print(hdr("Success"))

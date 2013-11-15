@@ -335,7 +335,7 @@
                 var project_name = project_id.substr(project_id.lastIndexOf("_") + 1);
                 //redirect to the narrative page
                 var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
-                window.location.href = "http://127.0.0.1:8888/"+userId+"_"+project_name+"."+name;
+                window.location.href = "http://narrative.kbase.us/"+userId+"_"+project_name+"."+name;
             }
         }); 
     });

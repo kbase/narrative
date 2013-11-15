@@ -34,6 +34,11 @@ function MemeDetail($scope, $routeParams) {
                      'workspace_id': $routeParams.ws}
 }
 
+function BambiDetail($scope, $routeParams) {
+    $scope.params = {'bambi_run_result_id': $routeParams.id,
+                     'workspace_id': $routeParams.ws}
+}
+
 function GeneDetail($scope, $routeParams) {
     $scope.params = {'geneID': $routeParams.id,
                      'workspaceID': $routeParams.ws}

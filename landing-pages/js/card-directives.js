@@ -39,6 +39,16 @@ angular.module('card-directives')
             }
         };
     })
+    .directive('bambicards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "bambi", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
     .directive('modelcards', function($rootScope, $location) {
         return {
             link: function(scope, element, attrs) {

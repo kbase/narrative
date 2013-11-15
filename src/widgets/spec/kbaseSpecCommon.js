@@ -1,5 +1,4 @@
-//var newWorkspaceServiceUrlForSpec = 'http://140.221.84.170:7058/';
-var newWorkspaceServiceUrlForSpec = 'http://Romans-MacBook-Pro-4.local:9999/';
+var newWorkspaceServiceUrlForSpec = 'http://140.221.84.170:7058/';
 
 function replaceMarkedTypeLinksInSpec(curModule, specText, aClass) {
     var patt = /#[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+-[0-9]+\.[0-9]+#/;

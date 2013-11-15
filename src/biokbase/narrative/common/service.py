@@ -75,6 +75,17 @@ class ServiceMethodParameterError(ServiceMethodError):
         ServiceMethodError.__init__(self, method, msg)
         self.add_info('details', errmsg)
 
+## Utility functions / classes
+
+
+def is_sequence(arg):
+    """Returns True only if input acts like a sequence, but does
+    not act like a string.
+    """
+    return (not hasattr(arg, "strip") and
+            hasattr(arg, "__getitem__") or
+            hasattr(arg, "__iter__"))
+
 ## Custom traits
 
 
@@ -326,6 +337,20 @@ class LifecyclePrinter(LifecycleObserver):
     * P - progress ; rest of line is '<num>/<num>' meaning current/total
     * E - error ; rest of line is JSON object with key/vals about the error.
           For details see the :class:`ServiceError` subclasses.
+
+    Example:
+
+    >>> subj = LifecycleSubject(stages=3)
+    >>> lpr = LifecyclePrinter()
+    >>> subj.register(lpr)
+    >>> subj.started([])
+    @@S
+    @@P1/3
+    >>> subj.advance()
+    @@P2/3
+    >>> subj.done()
+    @@D
+
     """
     #: Special prefixes for output to stdout
     #: that indicates the status of the process.
@@ -358,16 +383,19 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
     Note that for services to be able to chain their results forward to
     the next called service, a method _must_ return a value.
 
-    Example usage::
+    Example usage:
 
-        >>> svc = Service()
-        >>> def multiply(a,b): return a*b
-        >>> meth = ServiceMethod(svc)
-        >>> meth.set_func(multiply)
-        >>> c = meth(9, 8)
-        >>> c
-        72
-
+    >>> svc = Service()
+    >>> def multiply(m, a,b): return a*b
+    >>> meth = ServiceMethod(svc, quiet=True)
+    >>> meth.set_func(multiply, (trt.CFloat(), trt.CFloat()), (trt.Float(),))
+    >>> c = meth(9, 8)[0]
+    >>> c
+    72
+    >>> # validation catches bad args, function isn't called
+    >>> c = meth("strawberry", "alarmclock")
+    >>> print(c)
+    None
 
     """
 
@@ -378,9 +406,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
     #: Parameters of method, a Tuple of traits
     params = trt.Tuple()
     #: Output of the method, a Tuple of traits
-    output = trt.Tuple()
+    outputs = trt.Tuple()
 
-    def __init__(self, parent, status_class=LifecycleHistory, **meta):
+    def __init__(self, parent, status_class=LifecycleHistory, quiet=False, **meta):
         """Constructor.
 
         :param Service parent: The Service that this method belongs to
@@ -388,26 +416,38 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
                              and use by default for status queries.
                              Other observers can be used with :meth:`register`.
         :type status_class: type
+        :param bool quiet: If True, don't add the printed output
         :param meta: Other key/value pairs to set as traits of the method.
         """
         LifecycleSubject.__init__(self)
         self._parent = parent
         self._history = status_class(self)
         self.register(self._history)
-        self.register(LifecyclePrinter())  # sends status back to front-end
+        if not quiet:
+            self.register(LifecyclePrinter())  # sends status back to front-end
         # set traits from 'meta', if present
         for key, val in meta.iteritems():
             if hasattr(self, key):
                 setattr(self, key, val)
 
-    def estimated_runtime(self, params=()):
-        """Calculate estimated runtime, for the given parameters.
+    def set_func(self, fn, params, outputs):
+        """Set the main function to run.
 
-        :param tuple params: List of parameter values
-        :return: Runtime, in seconds. Use -1 for "unknown"
-        :rtype: double
+        :param fn: Function object to run
+        :param params: tuple of traits describing input parameters
+        :param outputs: tuple of traits, describing the output value(s)
+
+        :raise: ServiceMethodParameterError, if function signature does not match
         """
-        return self._history.estimated_runtime(params)
+        self.run = fn
+        self.name = fn.__name__
+        for i, p in enumerate(params):
+            p.name = "param{:d}".format(i)
+        self.params = params
+        for i, o in enumerate(outputs):
+            o.name = "output{:d}".format(i)
+        self.outputs = outputs
+        self._one_output_ok = len(outputs) == 1
 
     def __call__(self, *params):
         """Run the method when the class instance is called like
@@ -420,9 +460,13 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         result = None
         self.reset()
         try:
-            self._validate(params)
+            self._validate(params, self.params)
             self.started(params)
-            result = self.run(self, *params)
+            tmpresult = self.run(self, *params)
+            if self._one_output_ok and not is_sequence(tmpresult):
+                tmpresult = (tmpresult,)
+            self._validate(tmpresult, self.outputs)
+            result = tmpresult
             self.done()
         except ServiceMethodError, err:
             self.error(-2, err)
@@ -430,38 +474,31 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             self.error(-1, ServiceMethodError(self, err))
         return result
 
-    def set_func(self, fn, params, output):
-        """Set the main function to run.
-
-        :param fn: Function object to run
-        :param params: Tuple() of traits
-
-        :raise: ServiceMethodParameterError, if function signature does not match
-        """
-        self.run = fn
-        self.name = fn.__name__
-        for i, p in enumerate(params):
-            p.name = "param{:d}".format(i)
-        self.params = params
-        for i, p in enumerate(output):
-            p.name = "output{:d}".format(i)
-        self.output = output
-
-    def _validate(self, p):
-        if len(p) != len(self.params):
-            raise ServiceMethodParameterError(self, "Wrong number of arguments. got={} wanted={}".format(len(p), len(self.params)))
-        for obj, spec in zip(p, self.params):
+    def _validate(self, values, specs):
+        if len(values) != len(specs):
+            raise ServiceMethodParameterError(self, "Wrong number of arguments. got={} wanted={}"
+                                              .format(len(values), len(specs)))
+        for val, spec in zip(values, specs):
             try:
-                spec.validate(spec, obj)
+                spec.validate(spec, val)
             except trt.TraitError, err:
                 raise ServiceMethodParameterError(self, "Argument type error: {}".format(err))
+
+    def estimated_runtime(self, params=()):
+        """Calculate estimated runtime, for the given parameters.
+
+        :param tuple params: List of parameter values
+        :return: Runtime, in seconds. Use -1 for "unknown"
+        :rtype: double
+        """
+        return self._history.estimated_runtime(params)
 
     def as_json(self):
         d = {
             'name': self.name,
             'desc': self.desc,
             'params': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.params],
-            'output': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.output]
+            'outputs': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.outputs]
         }
         return d
 
@@ -483,14 +520,20 @@ def example():
         method.stages = 3
         if num < 1:
             raise ValueError("Can't pick up less than one person ({})".format(num))
+        if num == 99:
+            return 1, 2, 3
         print("{} called for {:d} people to be driven from {} to {}".format(who, num, where_from, where_to))
-        time.sleep(2)
+        time.sleep(0.5)
         method.advance()
         print("picking up {} and {:d} other bozos at {}".format(who, num - 1, where_from))
-        time.sleep(2)
+        time.sleep(0.5)
         method.advance()
         print("dropping off {} and {:d} other bozos at {}".format(who, num - 1, where_to))
-        return [num]
+        # for one return value, a list/tuple is optional
+        if num < 5:
+            return num
+        else:
+            return [num]
 
     # Create a new service
     service = Service(name="taxicab", desc="Yellow Cab taxi service", version="0.0.1-alpha")
@@ -500,7 +543,7 @@ def example():
                     (trt.Int(1, desc="number of people"), trt.Unicode("", desc="Pick up location"),
                      trt.Unicode("", desc="main drop off location"),
                      Person("", desc="Person who called the taxi")),
-                    tuple([trt.Int([],desc="Number of people dropped off")]))
+                    (trt.Int([], desc="Number of people dropped off"),))
     service.add(method)
 
     # An example of parameter validation
@@ -514,14 +557,23 @@ def example():
     r = method(0, "here", "there", "me")
     assert (r is None)
 
+    # Failure, bad output
+    print(hdr("Bad output type"))
+    r = method(99, "here", "there", "me")
+    assert (r is None)
+
     # An example of dumping out the service method metadata as JSON
     print(hdr("Metadata"))
     print method.as_json()
 
     # The "happy path" example
-    print(hdr("Success"))
+    print(hdr("Success 1"))
     r = method(3, "Berkeley", "San Francisco", "Willie Brown")
     assert(r is not None)
+    print(hdr("Success 1"))
+    r = method(9, "Dubuque", "Tallahassee", "Cthulhu")
+    assert (r is not None)
+
 
 if __name__ == '__main__':
     example()

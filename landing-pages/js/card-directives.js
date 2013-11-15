@@ -170,4 +170,12 @@ angular.module('card-directives')
             }
         }
     })
+    .directive('speccards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "spec", 
+                                                   data: scope.params});
+            }
+        };
+    })
 

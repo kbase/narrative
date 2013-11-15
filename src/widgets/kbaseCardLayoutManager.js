@@ -565,6 +565,8 @@
                 this.showGeneCards();
             else if (this.options.template.toLowerCase() === "model")
                 this.showModelCards();
+            else if (this.options.template.toLowerCase() === "spec")
+                this.showSpecCards();
             else {
                 // throw an error for an unknown template. modal dialog, maybe?
             }
@@ -706,6 +708,33 @@
         },
         
         /**
+         * Template for showing spec-document elements cards.
+         */
+        showSpecCards: function() {
+        	var cardName = 'KBaseSpecUnknownCard';
+        	if (this.options.data.kind === "storage") {
+        		cardName = 'KBaseSpecStorageCard';
+        	} else if (this.options.data.kind === "module") {
+        		cardName = 'KBaseSpecModuleCard';
+        	} else if (this.options.data.kind === "type") {
+        		cardName = 'KBaseSpecTypeCard';
+        	} else if (this.options.data.kind === "function") {
+        		cardName = 'KBaseSpecFunctionCard';
+        	}        		
+            this.addNewCard(cardName,
+                        {
+                            id: this.options.data.id
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	return this;
+        },
+
+        /**
          * Registers all events that this manager should know about.
          * Also makes a list of all registered events, stored in this.registeredEvents[], so they
          * can be unregistered.
@@ -720,6 +749,7 @@
                                      "showDomains", 
                                      "showOperons", 
                                      "showBiochemistry", 
+                                     "showSpecElement", 
                                      "showMemeMotif", 
                                      "showMemeRunParameters", 
                                      "showMemeRawOutput", 
@@ -986,6 +1016,33 @@
                 );
             });
             
+            /**
+             * Event: showSpecElement
+             * ------------------
+             * Adds new KBaseSpec[Storage|Module|Type|Function]Card card.
+             */
+            $(document).on("showSpecElement", function(event, data) {
+            	var cardName = 'KBaseSpecUnknownCard';
+            	if (data.kind === "storage") {
+            		cardName = 'KBaseSpecStorageCard';
+            	} else if (data.kind === "module") {
+            		cardName = 'KBaseSpecModuleCard';
+            	} else if (data.kind === "type") {
+            		cardName = 'KBaseSpecTypeCard';
+            	} else if (data.kind === "function") {
+            		cardName = 'KBaseSpecFunctionCard';
+            	}
+                self.addNewCard(cardName,
+                {
+                    id: data.id
+                },
+                {
+                    my: "left top",
+                    at: "center",
+                    of: data.event
+                });
+            });
+
             $(document).on("helloClick", function(event, data) {
                 window.alert(data.message);
             })

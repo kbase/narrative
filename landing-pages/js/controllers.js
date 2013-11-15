@@ -105,4 +105,10 @@ function ScrollCtrl($scope, $location, $anchorScroll) {
   }
 }
 
+function SpecDetail($scope, $routeParams) {
+	$scope.params = {
+		'kind' : $routeParams.kind,
+		'id' : $routeParams.id
+	};
+}
 

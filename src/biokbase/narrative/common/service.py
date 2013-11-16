@@ -72,12 +72,19 @@ class ServiceMethodError(ServiceError):
         ServiceError.__init__(self, msg)
         self.add_info('method_name', method.name)
 
-
 class ServiceMethodParameterError(ServiceMethodError):
     """Bad parameter for ServiceMethod."""
 
     def __init__(self, method, errmsg):
         msg = "bad parameter: " + errmsg
+        ServiceMethodError.__init__(self, method, msg)
+        self.add_info('details', errmsg)
+
+class ServiceRegistryFormatError(ServiceMethodError):
+    """Bad format for Service Registry."""
+
+    def __init__(self, method, errmsg):
+        msg = "bad registry format: " + errmsg
         ServiceMethodError.__init__(self, method, msg)
         self.add_info('details', errmsg)
 
@@ -148,7 +155,12 @@ def get_func_info(fn):
 
 class Service(trt.HasTraits):
     """Base Service class.
+    The class attribute __all__ should give us a dictionary of all the
+    services that are instances, with the key as the service name,
+    and the value being a reference to the instance
     """
+
+    __all__ = dict()
 
     #: Name of the service; should be short identifier
     name = trt.Unicode()
@@ -156,6 +168,16 @@ class Service(trt.HasTraits):
     desc = trt.Unicode()
     #: Version number of the service, see :class:`VersionNumber` for format
     version = kbtypes.VersionNumber()
+
+    @classmethod
+    def registry( cls, format='json' ):
+        if format == 'json':
+            res = { name : inst.as_json() for name, inst in cls.__all__.iteritems() }
+        elif format == 'json_schema':
+            res = { name : inst.as_json_schema() for name, inst in cls.__all__.iteritems() }
+        else:
+            raise ServiceRegistryFormatError( self, "Unknown format type: " + format);
+        return res
 
     def __init__(self, **meta):
         trt.HasTraits.__init__(self)
@@ -165,6 +187,10 @@ class Service(trt.HasTraits):
                 setattr(self, key, val)
         # list of all methods
         self.methods = []
+        # register the new instance so long as the service was
+        # properly declared with a name
+        if 'name' in meta:
+            self.__class__.__all__[meta['name']] = self
 
     def add_method(self, method=None, **kw):
         """Add one :class:`ServiceMethod`
@@ -195,6 +221,15 @@ class Service(trt.HasTraits):
             'desc': self.desc,
             'version': self.version,
             'methods': [m.as_json() for m in self.methods]
+        }
+        return d
+
+    def as_json_schema(self):
+        d = {
+            'name': self.name,
+            'desc': self.desc,
+            'version': self.version,
+            'methods': [m.as_json_schema() for m in self.methods]
         }
         return d
 
@@ -648,7 +683,11 @@ def example():
                     (trt.Int([], desc="Number of people dropped off"),))
     service.add_method(method)
 
+    # Create a new service that actually does nothing
+    service2 = Service(name="useless", desc="just taking up space in the registry", version="0.0.1-alpha")
+    
     hdr = lambda s: "\n### " + s + " ###\n"
+
     from pprint import pformat
     # An example of dumping out the service method metadata as JSON
     print(hdr("Metadata"))
@@ -661,6 +700,19 @@ def example():
     # An example of dumping out the service method metadata as JSON
     print(hdr("JSON Schema Metadata (json.dumps()"))
     print method.as_json_schema_dumps()
+
+    # An example of showing all registered services
+    print(hdr("Contents of Service.__all__ attribute for service directory"))
+    print pformat(Service.__all__)
+
+    # An example of using the registry class method
+    print(hdr("Output of the class method Service.registry()"))
+    print pformat(Service.registry())
+
+
+    # An example of using the registry class method
+    print(hdr("Output of the class method Service.registry('json_schema') for json_schema output"))
+    print pformat(Service.registry('json_schema'))
 
     # An example of parameter validation
     print(hdr("Bad parameters"))

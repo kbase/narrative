@@ -523,10 +523,10 @@
 
                 var callbacks = {
                     'execute_reply' : function(content) { self._handle_execute_reply(cell, content); },
-                    'output' : function(msg_type, content) { self._handle_output(cell, msg_type, content); }, //console.log('output'); console.log(cell); },
-                    'clear_output' : function(content) { console.log('clear_output'); console.log(cell); },
-                    'set_next_input' : function(text) { console.log('text'); console.log(cell); },
-                    'input_request' : function(content) { console.log('input_request'); console.log(cell); },
+                    'output' : function(msg_type, content) { self._handle_output(cell, msg_type, content); },
+                    'clear_output' : function(content) { self._handle_clear_output(cell, content); },
+                    'set_next_input' : function(text) { self._handle_set_next_input(cell, text); },
+                    'input_request' : function(content) { self._handle_input_request(cell, content); },
                 };
 
                 var code = self._buildRunCommand(command.module, command.function, params);
@@ -594,7 +594,7 @@
          * @method _handle_set_next_input
          * @private
          */
-        _handle_set_next_input: function (text) {
+        _handle_set_next_input: function (cell, text) {
             var data = {'cell': this, 'text': text}
             $([IPython.events]).trigger('set_next_input.Notebook', data);
         },
@@ -602,7 +602,7 @@
          * @method _handle_input_request
          * @private
          */
-        _handle_input_request: function (content) {
+        _handle_input_request: function (cell, content) {
             console.log("handle input request called");
             return;
             //this.output_area.append_raw_input(content);
@@ -611,7 +611,7 @@
          * @method _handle_clear_output
          * @private
          */
-        _handle_clear_output: function (content) {
+        _handle_clear_output: function (cell, content) {
             console.debug("handle clear ouput called");
             return;
             //this.clear_output(content.stdout, content.stderr, content.other);

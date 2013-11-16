@@ -686,6 +686,9 @@
                     // stop using the dom element for output and use the IPython cell
                     // var element = this._addOutputCell();
                     // this.result_handler(element, result);
+                    if (this.dataTableWidget)
+                        this.dataTableWidget.render();
+
                     var outputCell = this._addOutputCell(IPython.notebook.find_cell_index(cell));
 
                     var uuid = this._uuidgen();

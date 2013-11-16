@@ -152,3 +152,8 @@
 .kb-cell-progress.running {
     display: block;
 }
+
+.kb-cell-progressbar {
+    width: 400px;
+    height: 20px;
+}

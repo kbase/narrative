@@ -70,9 +70,10 @@
             	////////////////////////////// Spec-file Tab //////////////////////////////
             	var specText = $('<div/>').text(data.spec).html();
             	$('#'+pref+'spec').append(
-            			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre>' + specText + '</pre></div>'
+            			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + '</pre></div>'
             	);
-
+            	prettyPrint();
+            	
             	////////////////////////////// Types Tab //////////////////////////////
             	$('#'+pref+'types').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'types-table" \
                 		class="table table-bordered table-striped" style="width: 100%;"/>');

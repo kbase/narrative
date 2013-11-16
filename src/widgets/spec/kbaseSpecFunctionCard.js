@@ -85,7 +85,7 @@
                 var specText = $('<div/>').text(data.spec_def).html();
                 specText = replaceMarkedTypeLinksInSpec(moduleName, specText, pref+'links-click');
             	$('#'+pref+'spec').append(
-            			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre style="height:95%;">' + specText + "</pre></div>"
+            			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + "</pre></div>"
             	);
                 $('.'+pref+'links-click').click(function() {
                     var aTypeId = $(this).data('typeid');
@@ -96,6 +96,7 @@
                     			event: event
                     		});
                 });
+            	prettyPrint();
             	
             	////////////////////////////// Sub-types Tab //////////////////////////////
             	$('#'+pref+'subs').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'subs-table" \

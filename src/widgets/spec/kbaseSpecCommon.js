@@ -1,4 +1,28 @@
 var newWorkspaceServiceUrlForSpec = 'http://140.221.84.170:7058/';
+//var newWorkspaceServiceUrlForSpec = 'http://Romans-MacBook-Pro-4.local:9999/';
+
+PR['registerLangHandler'](
+	    PR['createSimpleLexer'](
+	        [
+	         // Whitespace
+	         [PR['PR_PLAIN'],       /^[\t\n\r \xA0]+/, null, '\t\n\r \xA0'],
+	         // A double or single quoted, possibly multi-line, string.
+	         [PR['PR_STRING'],      /^(?:"(?:[^\"\\]|\\.)*"|'(?:[^\'\\]|\\.)*')/, null,
+	          '"\'']
+	        ],
+	        [
+	         [PR['PR_COMMENT'], /^(?:\/\*[\s\S]*?(?:\*\/|$))/],
+	         [PR['PR_KEYWORD'], /^\b(?:module|typedef|funcdef|authentication|returns)\b/, null],
+	         // A number is a hex integer literal, a decimal real literal, or in
+	         // scientific notation.
+	         [PR['PR_LITERAL'],
+	          /^\b(?:string|int|float|UnspecifiedObject|list|mapping|structure|tuple)\b/],
+	         // An identifier
+	         [PR['PR_PLAIN'], /^[a-z_][\w-]*/i],
+	         // A run of punctuation
+	         [PR['PR_PUNCTUATION'], /^[^\w\t\n\r \xA0\"\'][^\w\t\n\r \xA0+\-\"\']*/]
+	        ]),
+	    ['spec']);
 
 function replaceMarkedTypeLinksInSpec(curModule, specText, aClass) {
     var patt = /#[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+-[0-9]+\.[0-9]+#/;

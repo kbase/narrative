@@ -39,3 +39,6 @@ class VersionNumber(TraitType):
 
 class Genome(Unicode):
     pass
+
+class Media(Unicode):
+    pass

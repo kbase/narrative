@@ -150,14 +150,41 @@ def get_func_info(fn):
         r_output = return_['type'](desc=return_['desc'])
     return r_params, r_output
 
+## Registry
+
+_services = {}
+
+
+def register(name, svc):
+    """Register a service.
+
+    :param str name: Service name
+    :param Service svc: Service object
+    """
+    _services[name] = svc
+
+
+def get_all(as_json=False, as_json_schema=False):
+    """Get all services, as objects (default) as JSON, or as JSON schema.
+
+    :param bool as_json: If True, return JSON instead of objects. Supersedes as_json_schema.
+    :param bool as_json_schema: If True, return JSON schema instead of objects.
+    :return: dict of {service name : Service object or JSON}
+    """
+    if as_json or as_json_schema:
+        if as_json:
+            res = {name: inst.as_json() for name, inst in _services.iteritems()}
+        else:
+            res = {name: inst.as_json_schema() for name, inst in _services.iteritems()}
+        return res
+    else:
+        return _services[:]
+
 ## Service classes
 
 
 class Service(trt.HasTraits):
     """Base Service class.
-    The class attribute __all__ should give us a dictionary of all the
-    services that are instances, with the key as the service name,
-    and the value being a reference to the instance
     """
 
     __all__ = dict()
@@ -168,16 +195,6 @@ class Service(trt.HasTraits):
     desc = trt.Unicode()
     #: Version number of the service, see :class:`VersionNumber` for format
     version = kbtypes.VersionNumber()
-
-    @classmethod
-    def registry( cls, format='json' ):
-        if format == 'json':
-            res = { name : inst.as_json() for name, inst in cls.__all__.iteritems() }
-        elif format == 'json_schema':
-            res = { name : inst.as_json_schema() for name, inst in cls.__all__.iteritems() }
-        else:
-            raise ServiceRegistryFormatError( self, "Unknown format type: " + format);
-        return res
 
     def __init__(self, **meta):
         trt.HasTraits.__init__(self)
@@ -615,24 +632,26 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         }
         return d
 
-    trt_2_jschema = { 'a unicode string' : 'string',
-                      'an int' : 'integer',
-                      'a list or None' : 'array',
-                      'a set or None' : 'array',
-                      'a tuple or None' : 'array',
-                      'a dict or None' : 'object',
-                      'a float' : 'number',
-                      'a boolean' : 'boolean'}
+    trt_2_jschema = {'a unicode string': 'string',
+                     'an int': 'integer',
+                     'a list or None': 'array',
+                     'a set or None': 'array',
+                     'a tuple or None': 'array',
+                     'a dict or None': 'object',
+                     'a float': 'number',
+                     'a boolean': 'boolean'}
                              
     def as_json_schema(self):
         d = {
             'title': self.name,
             'type': 'object',
             'description': self.desc,
-            'properties' : {
-                'parameters': { p.name : {  'type': self.trt_2_jschema.get(p.info_text,'object'), 'description' : p.get_metadata('desc')} for p in self.params },
+            'properties': {
+                'parameters': {p.name: {'type': self.trt_2_jschema.get(p.info_text, 'object'),
+                                        'description': p.get_metadata('desc')} for p in self.params},
             },
-            'returns': { p.name : { 'type' : self.trt_2_jschema.get(p.info_text,'object'), 'description' : p.get_metadata('desc')} for p in self.outputs}
+            'returns': {p.name: {'type': self.trt_2_jschema.get(p.info_text, 'object'),
+                                 'description': p.get_metadata('desc')} for p in self.outputs}
         }
         return d
 

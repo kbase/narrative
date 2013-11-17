@@ -40,6 +40,7 @@ _log.addHandler(_h)
 class URLS:
     workspace = "http://kbase.us/services/workspace"
     invocation = "https://kbase.us/services/invocation"
+    fba = "https://kbase.us/services/fba_model_services"
 
 ## Exceptions
 
@@ -62,6 +63,10 @@ class ServiceError(Exception):
 
     def as_json(self):
         return json.dumps(self._info)
+
+
+class DuplicateServiceError(ServiceError):
+    pass
 
 
 class ServiceMethodError(ServiceError):
@@ -158,16 +163,40 @@ _services = {}
 def register_service(svc, name=None):
     """Register a service.
 
+    This will fail if there is already a service registered by that name.
+    If you want to replace a service, you must call :func:`unregister_service`
+    and then this method.
+
     :param Service svc: Service object
     :param str name: Service name. If not present, use `svc.name`.
+    :return: None
+    :raise: DuplicateServiceError, if service already is registered
     """
     if name is None:
         name = svc.name
+    if name in _services:
+        raise DuplicateServiceError(name)
     _services[name] = svc
 
 
+def unregister_service(svc=None, name=None):
+    """Unregister a service.
+
+    :param Service svc: Service object. If not present, use `name`.
+    :param str name: Service name. If not present, use `svc.name`.
+    :raise: ValueError if bad arguments, KeyError if service not found
+    """
+    if name is None:
+        if svc is None:
+            raise ValueError("Service object or name required")
+        name = svc.name
+        if name is None:
+            raise ValueError("Service object has no name")
+    del _services[name]
+
+
 def get_service(name):
-    """Get a service by name.
+    """Get a registered service by name.
 
     :param str name: Service name
     :return: The service, or None
@@ -177,7 +206,7 @@ def get_service(name):
 
 
 def get_all_services(as_json=False, as_json_schema=False):
-    """Get all services, as objects (default) as JSON, or as JSON schema.
+    """Get all registered services, as objects (default) as JSON, or as JSON schema.
 
     :param bool as_json: If True, return JSON instead of objects. Supersedes as_json_schema.
     :param bool as_json_schema: If True, return JSON schema instead of objects.
@@ -185,12 +214,11 @@ def get_all_services(as_json=False, as_json_schema=False):
     """
     if as_json or as_json_schema:
         if as_json:
-            res = {name: inst.as_json() for name, inst in _services.iteritems()}
+            return {name: inst.as_json() for name, inst in _services.iteritems()}
         else:
-            res = {name: inst.as_json_schema() for name, inst in _services.iteritems()}
-        return res
+            return {name: inst.as_json_schema() for name, inst in _services.iteritems()}
     else:
-        return _services[:]
+        return _services.copy()
 
 ## Service classes
 

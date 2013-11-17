@@ -22,6 +22,7 @@ import random
 from biokbase.narrative.common import service
 from biokbase.workspaceService.Client import workspaceService
 from biokbase.InvocationService.Client import InvocationService
+from biokbase.fbaModelServices.Client import fbaModelServices
 
 ## Globals
 
@@ -31,6 +32,7 @@ VERSION = (0, 0, 1)
 svc = service.Service(name="microbes", desc="Demo workflow microbes service", version=VERSION)
 
 quiet = svc.quiet
+
 
 def _annotate_genome(meth, genome, out_genome):
     """This starts a job that might run for an hour or longer.
@@ -75,7 +77,8 @@ def _annotate_genome(meth, genome, out_genome):
 # Add method to service
 annotate_genome = svc.add_method(name="AnnotateGenome", func=_annotate_genome)
 
-def assemble_genome(meth, contig_file, out_genome):
+
+def _assemble_genome(meth, contig_file, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
 
@@ -124,4 +127,42 @@ def assemble_genome(meth, contig_file, out_genome):
     return out_genome
 
 # Add method to service
-svc.add_method(name="AssembleGenome", func=assemble_genome)
+assemble_genome = svc.add_method(name="AssembleGenome", func=_assemble_genome)
+
+
+def _build_media(meth, base_media):
+    """Build media
+
+    :param base_media: Base media type
+    :type base_media: kbtypes.Media
+    :return: JSON of medias
+    :rtype: kbtypes.Media
+    """
+    meth.stages = 2
+
+    meth.advance("Init")
+    fba = fbaModelServices(service.URLS.fba)
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    base_media = base_media.strip().replace(' ', '_')
+
+    meth.advance("Fetch Base Media")
+    if base_media:
+        meth.stages += 1
+        media_params = {
+            'medias': [base_media],
+            'workspaces': [workspace],
+            'auth': token
+        }
+        media_list = fba.get_media(media_params)
+        meth.advance("Render Media")
+        result = json.dumps(media_list)
+    else:
+        result = ""
+    return result
+
+# Add method to service
+build_media = svc.add_method(name="BuildMedia", func=_build_media)
+
+# Register the (complete) service, so clients can find it
+service.register_service(svc)

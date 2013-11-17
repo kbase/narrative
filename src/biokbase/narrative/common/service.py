@@ -19,7 +19,7 @@ import time
 # Third-party
 import IPython.utils.traitlets as trt
 # Local
-from . import kbtypes
+from biokbase.narrative.common import kbtypes
 
 ## Logging boilerplate
 
@@ -155,16 +155,28 @@ def get_func_info(fn):
 _services = {}
 
 
-def register(name, svc):
+def register_service(svc, name=None):
     """Register a service.
 
-    :param str name: Service name
     :param Service svc: Service object
+    :param str name: Service name. If not present, use `svc.name`.
     """
+    if name is None:
+        name = svc.name
     _services[name] = svc
 
 
-def get_all(as_json=False, as_json_schema=False):
+def get_service(name):
+    """Get a service by name.
+
+    :param str name: Service name
+    :return: The service, or None
+    :rtype: Service
+    """
+    return _services.get(name, None)
+
+
+def get_all_services(as_json=False, as_json_schema=False):
     """Get all services, as objects (default) as JSON, or as JSON schema.
 
     :param bool as_json: If True, return JSON instead of objects. Supersedes as_json_schema.
@@ -224,6 +236,20 @@ class Service(trt.HasTraits):
             method = ServiceMethod(**kw)
         self.methods.append(method)
         return method
+
+    def get_method(self, name):
+        """Get a service method, by name.
+
+        :param str name: Method name
+        :return: Method or None
+        :rtype: ServiceMethod
+        """
+        for m in self.methods:
+            print("check vs {}".format(m.name))
+            if m.name == name:
+                return m
+        print("didn't find {}".format(name))
+        return None
 
     def quiet(self, value=True):
         """Make all methods quiet.
@@ -563,7 +589,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
                 ValueError, if None is given for a param
         """
         self.run = fn
-        self.name = fn.__name__
+        if self.name is None:
+            self.name = fn.__name__
         for i, p in enumerate(params):
             if p is None:
                 raise ValueError("None is not allowed for a parameter type")
@@ -623,13 +650,15 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         """
         return self._history.estimated_runtime(params)
 
-    def as_json(self):
+    def as_json(self, formatted=False, **kw):
         d = {
             'name': self.name,
             'desc': self.desc,
             'params': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.params],
             'outputs': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.outputs]
         }
+        if formatted:
+            return json.dumps(d, **kw)
         return d
 
     trt_2_jschema = {'a unicode string': 'string',
@@ -641,7 +670,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
                      'a float': 'number',
                      'a boolean': 'boolean'}
                              
-    def as_json_schema(self):
+    def as_json_schema(self, formatted=False, **kw):
         d = {
             'title': self.name,
             'type': 'object',
@@ -653,6 +682,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             'returns': {p.name: {'type': self.trt_2_jschema.get(p.info_text, 'object'),
                                  'description': p.get_metadata('desc')} for p in self.outputs}
         }
+        if formatted:
+            return json.dumps(d, **kw)
         return d
 
     def as_json_schema_dumps(self):
@@ -701,37 +732,32 @@ def example():
                      Person("", desc="Person who called the taxi")),
                     (trt.Int([], desc="Number of people dropped off"),))
     service.add_method(method)
+    # Register service
+    register_service(service)
 
-    # Create a new service that actually does nothing
-    service2 = Service(name="useless", desc="just taking up space in the registry", version="0.0.1-alpha")
-    
     hdr = lambda s: "\n### " + s + " ###\n"
+
+    ################
+
+    # pretend we need to retrieve the method
+    method = get_service("taxicab").get_method("pickup")
 
     from pprint import pformat
     # An example of dumping out the service method metadata as JSON
-    print(hdr("Metadata"))
-    print pformat(method.as_json())
+    print(hdr("JSON metadata"))
+    print(method.as_json())
+
+    # An example of dumping out the service method metadata as JSON
+    print(hdr("JSON Metadata"))
+    print(method.as_json(formatted=True, indent=2))
 
     # An example of dumping out the service method metadata as JSON
     print(hdr("JSON Schema Metadata"))
-    print pformat(method.as_json_schema())
-
-    # An example of dumping out the service method metadata as JSON
-    print(hdr("JSON Schema Metadata (json.dumps()"))
-    print method.as_json_schema_dumps()
+    print(method.as_json_schema(formatted=True, indent=2))
 
     # An example of showing all registered services
-    print(hdr("Contents of Service.__all__ attribute for service directory"))
-    print pformat(Service.__all__)
-
-    # An example of using the registry class method
-    print(hdr("Output of the class method Service.registry()"))
-    print pformat(Service.registry())
-
-
-    # An example of using the registry class method
-    print(hdr("Output of the class method Service.registry('json_schema') for json_schema output"))
-    print pformat(Service.registry('json_schema'))
+    print(hdr("All registered service schema"))
+    print(get_all_services(as_json_schema=True))
 
     # An example of parameter validation
     print(hdr("Bad parameters"))

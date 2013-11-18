@@ -7,7 +7,10 @@ import sys
 import ez_setup
 ez_setup.use_setuptools()
 from setuptools import setup, find_packages
+# added command classes
+from biokbase.narrative.common.util import BuildDocumentation
 
+# Parse "long" description from the README
 readme_text = open("README.md").read()
 m = re.search("##\s*Description\s*([^#]+)", readme_text, flags=re.M)
 if not m:
@@ -15,6 +18,7 @@ if not m:
     sys.exit(1)
 long_desc = m.groups()[0].strip()
 
+# Do the setup
 setup(
     name="biokbase",
     packages=find_packages(),
@@ -41,4 +45,7 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
     ext_modules=[],
+    cmdclass = {
+        "doc": BuildDocumentation,
+    },
 )

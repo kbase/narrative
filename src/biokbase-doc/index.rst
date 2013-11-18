@@ -12,7 +12,7 @@ Contents:
    :maxdepth: 2
 
    service
-
+   microbes
 
 Indices and tables
 ==================

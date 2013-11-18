@@ -750,6 +750,9 @@ def example():
         else:
             return [num]
 
+    # Service creation
+    # =================
+
     # Create a new service
     service = Service(name="taxicab", desc="Yellow Cab taxi service", version="0.0.1-alpha")
     # Create and initialize a method in the service
@@ -765,44 +768,42 @@ def example():
 
     hdr = lambda s: "\n### " + s + " ###\n"
 
-    ################
+    # Service usage
+    # ==============
 
-    # pretend we need to retrieve the method
+    # Registry
+    # --------
+    # (pretend this is the start of a new module)
+    # a. Show all registered services
+    print(hdr("All registered service schema"))
+    print(get_all_services(as_json_schema=True))
+    # b. get service/method from registry
     method = get_service("taxicab").get_method("pickup")
 
-    from pprint import pformat
-    # An example of dumping out the service method metadata as JSON
+    # JSON metadata
+    # -------------
     print(hdr("JSON metadata"))
     print(method.as_json())
-
-    # An example of dumping out the service method metadata as JSON
     print(hdr("JSON Metadata"))
     print(method.as_json(formatted=True, indent=2))
-
-    # An example of dumping out the service method metadata as JSON
     print(hdr("JSON Schema Metadata"))
     print(method.as_json_schema(formatted=True, indent=2))
 
-    # An example of showing all registered services
-    print(hdr("All registered service schema"))
-    print(get_all_services(as_json_schema=True))
-
-    # An example of parameter validation
+    # Validation
+    # ----------
     print(hdr("Bad parameters"))
     r = method(1)
     assert(r is None)
-
-    # An example of function error
     print(hdr("Function error"))
     r = method(0, "here", "there", "me")
     assert (r is None)
-
     # Failure, bad output
     print(hdr("Bad output type"))
     r = method(99, "here", "there", "me")
     assert (r is None)
 
-    # The "happy path" example
+    # Successful run
+    # --------------
     print(hdr("Success 1"))
     r = method(3, "Berkeley", "San Francisco", "Willie Brown")
     assert(r is not None)

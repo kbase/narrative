@@ -1,7 +1,7 @@
 Narrative Service Python API
 ================================
 
-.. currentmodule:: biokbase.narrative.common.service
+.. currentmodule:: biokbase.narrative.common
 
 .. contents::
 
@@ -52,6 +52,8 @@ API Documentation
 ------------------
 
 .. automodule:: biokbase.narrative.common.service
+
+.. currentmodule:: biokbase.narrative.common.service
 
 Here is a simple usage example.
 
@@ -108,10 +110,6 @@ See the :func:`example` for a usage example.
     :members: set_func, __call__, estimated_runtime,
               started, advance, done, error
 
-Version numbers are their own data type.
-
-.. autoclass:: VersionNumber(number)
-
 Lifecycle events
 ^^^^^^^^^^^^^^^^^
 
@@ -138,3 +136,11 @@ the current status back to the front end.
 
 .. autoclass:: LifecyclePrinter
     :members:
+
+Types
+^^^^^
+KBase data types are represented with classes in the `kbtypes` module.
+
+.. automodule:: biokbase.narrative.common.kbtypes
+    :members:
+

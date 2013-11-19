@@ -74,7 +74,6 @@ def _annotate_genome(meth, genome, out_genome):
 
     return out_genome
 
-# Add method to service
 annotate_genome = svc.add_method(name="AnnotateGenome", func=_annotate_genome)
 
 

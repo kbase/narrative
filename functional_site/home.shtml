@@ -170,7 +170,7 @@
 		
 		<script id="recent_narratives" type="text/html">
 		{{#rows}}
-		<li><a href="http://narrative.kbase.us/narratives/{{userId}}/{{project_id}}.{{narrative_id}}">{{name}}</a></li>		
+		<li><a href="http://narrative.kbase.us/{{project_id}}.{{narrative_id}}">{{name}}</a></li>		
 		{{/rows}}
 		</script>
 

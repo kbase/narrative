@@ -353,10 +353,13 @@
         //no spaces allowed in narrative name
         name = name.replace(/ /g,"_");
         name = name.replace(/\W/g,"");
+
+        if(name == "") name = "Untitled";
         
         if (project_id === "") {
             project_id = undefined;
         }
+
 
         //create the new narrative in ws
         project.new_narrative({
@@ -365,9 +368,10 @@
             callback: function(results) {
                 //redirect to the narrative page
                 var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
-                window.location.href = "http://narrative.kbase.us/narratives/"+userId+"/"+project_id+"."+name;
+                window.location.href = "http://narrative.kbase.us/"+userId+"_"+project_id+"."+name;
             }
         }); 
+        
     });
 
     //formats a hash of user params to a user list

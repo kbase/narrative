@@ -4,15 +4,17 @@
  /* Header for panel */
  .kb-function-header {
     padding: 10px 0;
-    color: #fff;
+    color: #0064b6;
     font-weight: bold;
-    background-color: #099;
+    background-color: #b6e9f8;
     text-align: center;
+   /* border-radius: 4px; */
+    margin-bottom: 3px;
 }
 
 /* Container for func list */
 .kb-function-body {
-    border: 1px solid #aaa;
+    border: 1px solid #dddddd;
     padding: 10px;
     overflow-y: auto;
 }
@@ -20,7 +22,9 @@
 /* List of functions */
 .kb-function-body {
     padding: 0;
-    border: 0;
+    height: 300px;
+    overflow: auto;
+    /*border: 0;*/
 }
 .kb-function-body ul {
     list-style-type: none;
@@ -51,16 +55,19 @@
 /* Help on a function */
 .kb-function-help {
     font-family: Arial sans-serif;
-    background-color: #B5D811;
+    background-color: #c1da31;
     color: white;
     padding: 0 3px;
     float: right;
+    cursor: pointer;
+
 }
 #kb-function-help {
     position: absolute;
     top: 400px;
     left: 300px;
     z-index: 99;
+    cursor: pointer;
 }
 
 #kb-function-help h1 {
@@ -103,8 +110,12 @@
     opacity: inherit;
 }
 .kb-cell-run form input[type="submit"] {
-    float: right;
+#    float: right;
     opacity: inherit;
+    margin-top: 5px;
+}
+.kb-cell-run form .buttons {
+    float: right;
     margin-top: 5px;
 }
 .kb-cell-params table {

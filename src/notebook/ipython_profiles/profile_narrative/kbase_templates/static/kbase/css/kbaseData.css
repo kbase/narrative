@@ -14,16 +14,20 @@ For data in KBase workspace
 
 /* header area */
 #kb-ws .kb-header {
-    background-color: #008988;
+    background-color: #b6e9f8;
     width: 100%;
     color: #ddd;
     font-family: OxygenRegular;
     font-size: 16px;
     /* text-align: center; */
     padding: 5px 5px 5px 10px;
+
+   /* border-top-left-radius: 4px;
+    border-top-right-radius: 4px; */
+
 }
 .kb-header #kb-wsname {
-    color: white;
+    color: #0064b6;
     margin-left: 20px;
     font-weight: 900;
 }
@@ -31,8 +35,11 @@ For data in KBase workspace
 #kb-ws .kb-controls {
     width: 100%;
     height: 30px;
-    background-color: #008988;
+    background-color: #b6e9f8;
     padding-left: 3px;
+   /* border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px; */
+    margin-bottom: 3px;
 }
 
 /* little search icon next to text field */
@@ -60,7 +67,7 @@ For data in KBase workspace
     width: 40px;
     font-size: 100%;
     overflow-x: hidden;
-    color: white;
+    color: #0064b6;
     font-family: OxygenMonoRegular;
     text-decoration-line: underline;
     text-decoration-color: #f5f5f5;

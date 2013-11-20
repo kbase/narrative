@@ -33,7 +33,6 @@ svc = service.Service(name="microbes", desc="Demo workflow microbes service", ve
 
 quiet = svc.quiet
 
-
 def _annotate_genome(meth, genome, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
@@ -75,7 +74,6 @@ def _annotate_genome(meth, genome, out_genome):
     return out_genome
 
 annotate_genome = svc.add_method(name="AnnotateGenome", func=_annotate_genome)
-
 
 def _assemble_genome(meth, contig_file, out_genome):
     """This starts a job that might run for an hour or longer.

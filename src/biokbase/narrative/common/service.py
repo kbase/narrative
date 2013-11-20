@@ -50,33 +50,6 @@ class ServiceError(Exception):
     Should not normally be instantiated directly.
     """
 
-<<<<<<< HEAD
-    default_value = "0.0.0"
-    info_text = 'a version tuple (2,0,"1-rc3") or string "2.0.1rc3"'
-
-    def validate(self, obj, value):
-        if isinstance(value, tuple):
-            if len(tuple) == 3:
-                return value
-        elif isinstance(value, basestring):
-            v = re.match('([0-9]+)\.([0-9+])\.([0-9].*)', value)
-            if v is not None:
-                maj, minor, patch = v.groups()
-                return (int(maj), int(minor), patch)
-        self.error(obj, value)
-
-class ParameterSchema(TraitType):
-    """A trait for a JSON schema describing inputs to Services, or
-    outputs they produce. See http://json-schema.org/
-
-    """
-
-    default_value = "{}"
-    info_text = 'a JSON schema describing a set of parameters for a Service, or output from a Service'
-
-    def validate(self, obj, value):
-        raise NotImplemented()
-=======
     def __init__(self, errmsg):
         Exception.__init__(self, errmsg)
         self._info = {
@@ -84,7 +57,6 @@ class ParameterSchema(TraitType):
             'type': self.__class__.__name__,
             'msg': str(errmsg)
         }
->>>>>>> 2fae895aec0d4ad9066a362f24811cc90562db85
 
     def add_info(self, k, v):
         self._info[k] = v
@@ -258,45 +230,11 @@ class Service(trt.HasTraits):
     __all__ = dict()
 
     #: Name of the service; should be short identifier
-<<<<<<< HEAD
-    name = Unicode()
-
-    #: Description of the service
-    desc = Unicode()
-
-    #: Version number of the service, see :class:`VersionNumber` for format
-    version = VersionNumber()
-
-    #: A schema describing the inputs allowed for the service.
-    input_schema = ParameterSchema()
-    
-    #: A schema describing the outputs that the service will provide upon commpletion.
-    output_schema = ParameterSchema()
-
-    def __init__(self):
-        self.status = Status(lifecycle=self)
-        self.start, self.done, self.error = (self._status.start, self._status.done,
-                                             self._status.error)
-    def execute(self, params):
-        """Wrapper for running the service. Subclasses
-        should not redefine this unless they know what they are doing;
-        instead override :meth:`run` in this class.
-        """
-        self.start()
-        result = []
-        try:
-            result = self.run(params)
-            self.done()
-        except Exception, err:
-            self.error(-1, "Fatal: {}".format(err))
-        return result
-=======
     name = trt.Unicode()
     #: Description of the service
     desc = trt.Unicode()
     #: Version number of the service, see :class:`VersionNumber` for format
     version = kbtypes.VersionNumber()
->>>>>>> 2fae895aec0d4ad9066a362f24811cc90562db85
 
     def __init__(self, **meta):
         trt.HasTraits.__init__(self)
@@ -348,9 +286,6 @@ class Service(trt.HasTraits):
         for m in self.methods:
             m.quiet(value)
 
-<<<<<<< HEAD
-class Status(object):
-=======
     def as_json(self):
         d = {
             'name': self.name,
@@ -371,7 +306,6 @@ class Status(object):
 
 
 class LifecycleSubject(object):
->>>>>>> 2fae895aec0d4ad9066a362f24811cc90562db85
     """Contains the current status of a running process.
     
     The basic model is that a process is in a 'stage', which is

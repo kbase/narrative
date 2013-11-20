@@ -1,0 +1,11 @@
+nose>=1.1.2
+pyzmq>=2.2
+python-qt
+pygments>=1.6
+tornado>=2.4.1
+pycrypto>=2.6
+rsa>=3.1.2
+pyasn1>=0.1.7
+httplib2>=0.8
+requests>=2.0
+pyyaml>=3.10

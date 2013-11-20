@@ -253,7 +253,7 @@
             callback: function(results) {
                 //redirect to the narrative page
                 var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
-                window.location.href = "http://127.0.0.1:8888/"+project_id+"."+name;
+                window.location.href = "http://narrative.kbase.us/"+project_id+"."+name;
             }
         }); 
     });

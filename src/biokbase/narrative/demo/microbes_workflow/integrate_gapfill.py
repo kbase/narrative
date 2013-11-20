@@ -58,7 +58,7 @@ def run(params):
 
     new_model = params['New model (optional)']
     new_model = new_model.strip()
-    if (new_model)
+    if (new_model):
         integrate_params['out_model'] = new_model
 
     # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);

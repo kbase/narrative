@@ -1,16 +1,13 @@
 __version__ = '0.1'
 
 ## Imports
-import json
 import os
-import logging
 import sys
-import time
-import uuid
 
 # KBase packages
 from biokbase.workspaceService.Client import workspaceService
 from biokbase.InvocationService.Client import InvocationService
+from biokbase.narrative.common import service
 
 class URLS:
     workspace= "http://kbase.us/services/workspace"

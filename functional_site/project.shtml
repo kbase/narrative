@@ -140,7 +140,7 @@
 		{{#rows}}
 		<tr>
 			<td><input type="checkbox"></td>
-			<td><a href="http://127.0.0.1:8888/{{project_id}}.{{narrative_id}}">{{name}}</a></td>
+			<td><a href="http://narrative.kbase.us/{{project_id}}.{{narrative_id}}">{{name}}</a></td>
 			<td>{{owner}}</td>
 			<td>{{project_name}}</td>
 			<td>{{date}}</td>

@@ -1,33 +1,37 @@
+"""
+Installer for KBase narrative Python libraries
+"""
 import os
+import re
+import sys
 import ez_setup
 ez_setup.use_setuptools()
 from setuptools import setup, find_packages
+# added command classes
+from biokbase.narrative.common.util import BuildDocumentation
 
-with open("README.md") as f:
-    long_desc_lines = []
-    for line in f:
-        if line.strip().startswith('#'):
-            for line2 in f:
-                if line2.strip().startswith('#'):
-                    break
-                long_desc_lines.append(line2.strip())
-            break
-    long_desc = ' '.join(long_desc_lines)
+# Parse "long" description from the README
+readme_text = open("README.md").read()
+m = re.search("##\s*Description\s*([^#]+)", readme_text, flags=re.M)
+if not m:
+    print("Error getting description from README.md")
+    sys.exit(1)
+long_desc = m.groups()[0].strip()
 
+# Do the setup
 setup(
     name="biokbase",
     packages=find_packages(),
     version="0.0.1",
-    install_requires=["requests>=1.0", "pyyaml>=3.1",
-                      "rsa", "pyasn1", "paramiko", "pycrypto"],
+    install_requires=[s.strip() for s in open("requirements.txt")],
     extras_require={},
     package_data={"": ["*.json"]},
-    author="Steve Chan, Dan Gunter",
-    author_email="sychan@lbl.gov, dkgunter@lbl.gov",
-    maintainer="Steve Chan, Dan Gunter",
+    author="Steve Chan, Dan Gunter, William Riehl",
+    author_email="sychan@lbl.gov, dkgunter@lbl.gov, wjriehl@lbl.gov",
+    maintainer="Dan Gunter",
     url="https://kbase.us/",
     license="Other",
-    description="Source code for IPython/Python KBase narrative UI.",
+    description="KBase Python API",
     long_description=long_desc,
     keywords=["kbase", "narrative", "UI"],
     classifiers=[
@@ -41,5 +45,7 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
     ext_modules=[],
-    #scripts=[os.path.join("scripts", f) for f in os.listdir("scripts")]
+    cmdclass = {
+        "doc": BuildDocumentation,
+    },
 )

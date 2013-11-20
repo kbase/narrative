@@ -67,7 +67,7 @@ $.KBWidget({
                 obj['kbids'] = {};
                 for (var j in kbids) {
                     kbid = kbids[j];
-                    var kb_gid = fba_data[j].id;//get_genome_id(kbid);
+                    var kb_gid = models[j].id; //get_genome_id(kbid);
                     obj.kbids[kb_gid] = [];
                 }
             }
@@ -110,9 +110,7 @@ $.KBWidget({
                             }
                         }
 
-                        //obj.kbids[get_genome_id(model.id)].push(dict);
-                        console.log('fba_data!', fba_data)
-                        obj.kbids[fba_data[n].id].push(dict);
+                        obj.kbids[model.id].push(dict);
                     }
                 }
             }

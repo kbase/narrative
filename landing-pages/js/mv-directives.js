@@ -20,6 +20,48 @@ angular.module('mv-directives')
                 if (!ids) return;
 
                 // make requests and display core model diagram
+                $(element).loading('loading fba...');
+                var proms = [];
+                for (var i in ids) {
+                    var id = ids[i];
+                    var ws_i = ws[i];
+
+                    var prom = kb.req('fba', 'get_fbas',
+                                {fbas: [id], workspaces: [ws_i]});
+                    proms.push(prom);
+                }
+
+                $.when.apply($, proms).done(function(){
+                    var fbas = [].concat.apply([], arguments);
+
+                    var proms2 = []
+                    for (var i in fbas){
+                        var model_ws = fbas[i].model_workspace;
+                        var model_id = fbas[i].model
+                        var prom = kb.req('fba', 'get_models',
+                                {models: [model_id], workspaces: [model_ws]});
+                        proms2.push(prom)
+                    }
+                    $(element).loading('loading model...');
+                    $.when.apply($, proms2).done(function() {
+                        var models = [].concat.apply([], arguments);
+
+                        $(element).kbaseModelCore({ids: ids, 
+                                                    workspaces: ws,
+                                                    modelsData: models,
+                                                    fbasData: fbas});
+                        $(element).rmLoading();
+
+                        $(document).on('coreRxnClick', function(e, data) {
+                            $('.popover').each(function() { $(this).remove() });                             
+                            var url = '/rxns/'+data.ids.join('&');
+                            scope.$apply( $location.path(url) );
+                        });  
+                    })
+
+
+                })
+                /*
                 var prom1 = kb.req('fba', 'get_fbas',
                             {fbas: ids, workspaces: ws});
                 $(element).loading('loading fba...');
@@ -35,6 +77,7 @@ angular.module('mv-directives')
                             {models: model_ids, workspaces: model_ws});
                     $(element).loading('loading model...');
                     $.when(prom2).done(function(models){
+
                         $(element).kbaseModelCore({ids: ids, 
                                                     workspaces: ws,
                                                     modelsData: models,
@@ -47,8 +90,9 @@ angular.module('mv-directives')
                             scope.$apply( $location.path(url) );
                         });  
                     })
-
                 })
+                */
+
             }
         };
     })
@@ -85,9 +129,8 @@ angular.module('mv-directives')
                     $scope.selectedObjs.push(entry)
                 }
 
-
-
                 $scope.$watch('selectedObjs', function() {
+
                     // update url strings
                     $scope.ws = [];
                     $scope.ids = [];
@@ -99,16 +142,16 @@ angular.module('mv-directives')
                     $scope.ws_param =  $scope.ws.join('+');
                     $scope.ids_param =  $scope.ids.join('+');
 
+                    $location.search({selected_ws: $scope.selected_ws,
+                      ws: $scope.ws_param, 
+                      ids: $scope.ids_param});
+
                     // show object selection sidebar
                     if (!$('.selectedobjs').is(':visible')) {
                         $('.side-bar-switch').children('button').removeClass('active');            
                         $('.show-objs').addClass('active');
                         $scope.showSelectedObjs();
                     }
-
-                    $location.search({selected_ws: $scope.selected_ws,
-                                      ws: $scope.ws_param, 
-                                      ids: $scope.ids_param});
 
                 }, true); 
 
@@ -373,21 +416,32 @@ angular.module('mv-directives')
                 var gene_stroke = '#777';
                 var g_present_color = '#8bc7e5';
 
-                var prom1 = kb.req('fba', 'get_fbas',
-                            {fbas: ids, workspaces: ws});
                 $(element).loading('loading fba...');
-                $.when(prom1).done(function(fbas) {
-                    var model_ws = [];
-                    var model_ids = [];
-                    for (var i in fbas) {
-                        model_ws.push(fbas[i].model_workspace);
-                        model_ids.push(fbas[i].model);
-                    }
+                var proms = [];
+                for (var i in ids) {
+                    var id = ids[i];
+                    var ws_i = ws[i];
 
-                    var prom2 = kb.req('fba', 'get_models',
-                            {models: model_ids, workspaces: model_ws});
+                    var prom = kb.req('fba', 'get_fbas',
+                                {fbas: [id], workspaces: [ws_i]});
+                    proms.push(prom);
+                }
+
+                $.when.apply($, proms).done(function(){
+                    var fbas = [].concat.apply([], arguments);
+
+                    var proms2 = []
+                    for (var i in fbas){
+                        var model_ws = fbas[i].model_workspace;
+                        var model_id = fbas[i].model
+                        var prom = kb.req('fba', 'get_models',
+                                {models: [model_id], workspaces: [model_ws]});
+                        proms2.push(prom)
+                    }
                     $(element).loading('loading model...');
-                    $.when(prom2).done(function(models){
+                    $.when.apply($, proms2).done(function() {
+                        var models = [].concat.apply([], arguments);
+
 
                         $(element).rmLoading()
                         var org_names = [];

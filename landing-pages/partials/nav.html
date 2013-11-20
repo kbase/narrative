@@ -1,53 +1,13 @@
 
 
-<div class="navbar navbar-inverse navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
+<div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
     <a href="http://www.kbase.us/labs/" class="pull-left">
-        <img id="logo" src="assets/img/labs_icon.png" width="46">
+        <img id="logo" src="assets/img/kbase_logo.png" width="46">
     </a>
-
-    <form class="navbar-form pull-left input-group" id="kbase-search-box" action="http://www.kbase.us/services/search/process" method="POST">
-        <input type="text" class="form-control" name="keyword" placeholder="Search KBase">
-        <div class="input-group-btn">
-            <button type="Submit" class="btn btn-default " tabindex="-1">Search</button>
-            <button type="button" class="btn btn-default btn-group dropdown-toggle"
-            data-toggle="dropdown" tabindex="-1" style="height: 34px;">
-                <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu pull-right">
-                <li><a href="#">Genomes</a></li>
-                <li><a href="#">Models</a></li>
-                <li><a href="#">fba</a></li>
-                <li><a href="#">blah</a></li>
-                <li><a href="#">priceless!</a></li>
-            </ul>
-        </div>
-    </form>    
+    <a class="navbar-brand" href="#">Object View</a>
 
     <ul class="nav navbar-nav">
         <!--
-        <li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Apps <b class="caret"></b></a>
-                <ul class="dropdown-menu">                     
-                    <li>
-                        <a href="http://www.kbase.us/services/docs/invocation/Iris/iris.html">
-                        <img src="http://kbase.us/files/8013/4333/3409/iris_icon.png" alt="iris icon" width="25" height="25"> IRIS</a>
-                    </li>
-                    <li>
-                        <a href="http://140.221.84.128/#models?ws=KBaseFBA">
-                      <img src="http://kbase.us/files/6313/6148/9465/model_icon.png" alt="Model Viewer Icon" height="25" width="25"> Model Viewer</a>
-                    </li>
-                    <li>
-                        <a href="http://140.221.84.217:7040/glamm/">
-                        <img src="http://kbase.us/files/6713/4333/3405/glamm_icon.png" alt="glamm icon" height="25"> GLAMM</a>
-                    </li>
-                    <li class="divider"></li>
-                    <li>
-                        <a href="#/seq-search">Sequence Search</a>
-                    </li>
-                </ul>
-            </li>
-        </li>-->
         <li class="active">
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Data <b class="caret"></b></a>
@@ -61,20 +21,14 @@
                 </ul>
             </li>
         </li>
-        <!--<li><a href="#/workspace-browser">Workspaces</a></li>-->
+        -->
     </ul>
 
     <div id="signin-button" class="pull-right"></div>
     <ul class="nav navbar-nav pull-right">
-        <li class="">
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                    <li><a href="#/landing-pages-help">Landing Page Documentation</a></li>        
-                </ul>
-            </li>
+        <li class="dropdown help-dropdown">
         </li>
     </ul>
-    <a id="selected-workspace" class="label label-primary pull-right" href="#/workspace-browser">No Workspace</a>
+    <!--<a id="selected-workspace" class="label label-primary pull-right" href="#/workspace-browser">No Workspace</a>-->
 
 </div> <!-- end navbar -->

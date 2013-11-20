@@ -16,8 +16,8 @@
 app.controller('ModelViewer', function($scope, $stateParams, $location) {
     // style active tab
     var tab = $location.path().split('/')[2];
-    $('.mv-tabs li').removeClass('active')
-    $('.'+tab+'-tab').addClass('active')
+    $('.mv-tabs li').removeClass('active');
+    $('.'+tab+'-tab').addClass('active');
 
 
     var q_string = $location.search();
@@ -27,7 +27,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     //$scope.selected_ws = q_string.selected_ws;
     //$scope.selected_ws = q_string.selected_ws ? q_string.selected_ws :
     //                    $stateParams.selected_ws;
-    $scope.selected_ws = q_string.selected_ws;
+    $scope.selected_ws = q_string.selected_ws ? q_string.selected_ws : false;
 
 
     // set workspaces and ids.
@@ -40,10 +40,9 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     if ($scope.ids.length > 0) {
         $('.core-tab').removeClass('hide');
         $('.heatmap-tab').removeClass('hide');
-        //$scope.showSelectedObjs();
     } else {
-        $('.core-tab').addClass('hide')        
-        $('.heatmap-tab').addClass('hide')
+        $('.core-tab').addClass('hide');
+        $('.heatmap-tab').addClass('hide');
     }
 
     // events for workspace and selected object sidebar
@@ -67,7 +66,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
         $('.wsselector').toggle('slide', {
                                 direction: 'left',
                                 duration: 'fast',
-                                complete: function() {
+                                    complete: function() {
                                     $('.selectedobjs').toggle('slide', {
                                         direction: 'left',
                                         duration: 'fast'});
@@ -103,7 +102,14 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 })
 
+.controller('RxnDetail', function($scope, $stateParams) {
+    $scope.ids = $stateParams.ids.split('&');
+})
 
+
+.controller('CpdDetail', function($scope, $stateParams) {
+    $scope.ids = $stateParams.ids.split('&');
+})
 
 
 
@@ -122,25 +128,35 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 
 
-
-
 .controller('GenomeDetail', function($scope, $stateParams) {
 
     $scope.params = {'genomeID': $stateParams.id,
                      'workspaceID': $stateParams.ws}
 })
 
-function MemeDetail($scope, $routeParams) {
-    $scope.params = {'meme_run_result_id': $routeParams.id,
-                     'workspace_id': $routeParams.ws}
+
+.controller('MediaDetail', function($scope, $stateParams) {
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+})
+
+.controller('ModelDetailCards', function($scope, $stateParams) {
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+})  
+
+
+function MemeDetail($scope, $stateParams) {
+    $scope.params = {'meme_run_result_id': $stateParams.id,
+                     'workspace_id': $stateParams.ws}
 }
 
-function BambiDetail($scope, $routeParams) {
+function BambiDetail($scope, $stateParams) {
     $scope.params = {'bambi_run_result_id': $routeParams.id,
                      'workspace_id': $routeParams.ws}
 }
 
-function GeneDetail($scope, $routeParams) {
+function GeneDetail($scope, $stateParams) {
     $scope.params = {'geneID': $routeParams.id,
                      'workspaceID': $routeParams.ws}
 }
@@ -155,15 +171,6 @@ function ModelDetailCards($scope, $stateParams) {
     $scope.id = $stateParams.id;
 }
 
-function MediaDetail($scope, $routeParams) {
-    $scope.ws = $routeParams.ws;
-    $scope.id = $routeParams.id;
-}
-
-function MediaDetailCards($scope, $routeParams) {
-    $scope.ws = $routeParams.ws;
-    $scope.id = $routeParams.id;
-}
 
 function FBADetail($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
@@ -174,7 +181,7 @@ function FBADetailCards($scope, $stateParams) {
     $scope.id = $stateParams.id;
 }
 
-function LPHelp($scope, $routeParams, $location) {
+function LPHelp($scope, $stateParams, $location) {
     // Fixme: move out of controller
     $('.api-url-submit').click(function() {
         var form = $(this).parents('form');
@@ -187,23 +194,14 @@ function LPHelp($scope, $routeParams, $location) {
     });
 }
 
-function WSObjects($scope, $routeParams, $location) {
+function WSObjects($scope, $stateParams, $location) {
     var type = $location.path().match(/\/\w*\/*/g)[0]
              .replace('/','').replace('/','');
 
     $scope.type = type;
-    $scope.ws = $routeParams.ws;
+    $scope.ws = $stateParams.ws;
 }
 
-function RxnDetail($scope, $routeParams, $location) {
-
-    //$scope.ids = $routeParams.test.split('&');
-    $scope.ids = ['rxn00001', 'rxn00002'];
-}
-
-function CpdDetail($scope, $routeParams, $location) {
-    $scope.ids = $routeParams.ids.split('&');
-}
 
 
 function ScrollCtrl($scope, $location, $anchorScroll) {

@@ -54,12 +54,28 @@ var app = angular.module('landing-pages',
         })
 
     $stateProvider
-        .state('rxns', {
-            url: "/rxns/:test",
+        .state('rxns',
+            {url:'/rxns', 
+             templateUrl: 'views/object-list.html',
+             controller: 'WSObjects'}) 
+        .state('rxnsids', {
+            url: "/rxns/:ids",
             templateUrl: 'views/objects/rxn.html',
-            controller: RxnDetail
+            controller: 'RxnDetail'
         })
 
+
+
+    $stateProvider
+        .state('cpds',
+            {url:'/cpds', 
+             templateUrl: 'views/object-list.html',
+             controller: 'WSObjects'})   
+        .state('cpdsids',
+            {url:'/cpds/:ids', 
+             templateUrl: 'views/objects/cpd.html',
+             controller: 'CpdDetail'
+         })       
 
     $stateProvider
         .state('models', {
@@ -95,6 +111,19 @@ var app = angular.module('landing-pages',
                 templateUrl: 'views/objects/fbacards.html',
                 controller: FBADetailCards})
 
+    $stateProvider
+        .state('media',
+            {url:'/media',
+            templateUrl: 'views/object-list.html',
+             controller: 'WSObjects'})
+        .state('mediabyws',
+            {url:'/media/:ws',
+             templateUrl: 'views/object-list.html',
+             controller: 'WSObjects'})
+        .state('mediabyid',
+            {url:'/media/:ws/:id',
+             templateUrl: 'views/objects/media.html',
+             controller: 'MediaDetail'})
 
     $stateProvider
         .state('mvhelp',
@@ -120,6 +149,40 @@ var app = angular.module('landing-pages',
             {url: '/genomes/:ws/:id',
              templateUrl: 'views/objects/genome.html',
              controller: 'GenomeDetail'})
+
+    
+
+
+    $stateProvider
+        .state('meme',
+            {url:'/meme',
+             templateUrl: 'views/meme-list.html',
+             controller: 'WSObjects'})
+        .state('memebyws',
+            {url: '/meme/:ws',
+             templateUrl: 'views/meme-list.html',
+             controller: 'WSObjects'})
+        .state('memebyid',
+            {url: '/meme/:ws/:id',
+             templateUrl: 'views/objects/meme.html',
+             controller: 'MemeDetail'})
+
+
+
+    $stateProvider
+        .state('landing-pages-help',
+            {url: '/landing-pages-help',
+             templateUrl: 'views/landing-pages-help.html',
+             controller: LPHelp})
+
+    $urlRouterProvider.when('', '/landing-pages-help');
+
+    $stateProvider
+        .state('otherwise', 
+            {url: '*path', 
+             templateUrl : 'views/404.html'})
+
+
 
     /*
 
@@ -234,16 +297,25 @@ var app = angular.module('landing-pages',
 }])
 
 
+
+LPDROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
+                 <ul class="dropdown-menu"> \
+                 <li><a href="#/landing-pages-help">Landing Page Documentation</a></li> \
+              </ul>';
+
 app.run(function ($rootScope, $location) {
     // use partials nav_func.html for narrative/functional website look
     // Fixme: this should be a template, loaded with ui-router the same way
     // as the rest of the app.
-    $('#navigation').load('partials/nav-mv.html', function(){ 
+    $('#navigation').load('partials/nav.html', function(){
         // sign in button
         $('#signin-button').kbaseLogin({style: 'narrative', 
                                         login_callback: login_change,
                                         logout_callback: login_change
                                        });
+
+        console.log('load')
+        $('.help-dropdown').html(LPDROPDOWN)
 
         $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
         $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
@@ -262,17 +334,16 @@ app.run(function ($rootScope, $location) {
 
 
     // here's a workaround so that ui-router doesn't remove query strings.
+    
     $rootScope.$on('$stateChangeStart',
     function (event, toState, toParams, fromState, fromParams) {
-        //save location.search so we can add it back after transition is done
         this.locationSearch = $location.search();
     });
     $rootScope.$on('$stateChangeSuccess',
     function (event, toState, toParams, fromState, fromParams) {
-        //restore all query string parameters back to $location.search
         $location.search(this.locationSearch);
     });
-
+    
 
     //  Here's a sort of hack to remove any cards when a view changes.
     //  There may be a better way to manage this.

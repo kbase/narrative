@@ -5,45 +5,37 @@ __author__ = 'Me Myself <me@my.org>'
 __date__ = 'MM/DD/YYYY'
 
 ## Imports
-# Stdlib
-# Local
-from biokbase.narrative.common import service, kbtypes
+
+from biokbase.narrative.common.service import init_service, method, finalize_service
+from biokbase.narrative.common import kbtypes
 
 ## Globals
 
 VERSION = (0, 0, 1)
+NAME = "MyExampleService"
 
 # Create containing service
-svc = service.Service(name="__SERVICE_NAME__", desc="_DESCRIPTION_", version=VERSION)
-
-# Uncomment to eliminate output during debugging, but
-# leave on for actually running in Narrative
-# quiet = svc.quiet
+init_service(name=NAME, desc="This is an example", version=VERSION)
 
 # Define one service
 
-def _my_service_function(meth, param1, param2, et, cetera):
-    """PUT DESCRIPTION HERE
+@method(name="MyExampleFunction")
+def _my_service_function(meth, param1, param2):
+    """This is an example function.
 
-    :param param1: DESCRIPTION OF PARAMETER
-    :type param1: kbtypes.TYPE_OF_PARAMETER
-    .. ETCETERA ..
-    :return: DESCRIPTION OF RETURN TYPE
-    :rtype: kbtypes.TYPE_OF_RETURN_VALUE
+    :param param1: Input Genome
+    :type param1: kbtypes.Genome
+    :param param2: Some text
+    :type param2: kbtypes.Unicode
+    :return: Workspace object ID
+    :rtype: kbtypes.Unicode
     """
-    meth.stages = 99  # for reporting progress
-    
+    meth.stages = 1  # for reporting progress
     result = None
-    
-    # IMPLEMENTATION GOES HERE
-    
-    return result
 
-my_service_function = svc.add_method(name="__FUNCTION_NAME__", func=_my_service_function)
+    meth.advance("Hit it and quit")
 
-# Repeat from "Define one service" to here, for each function
+    return "bogus_workspace_id"
 
 ## Finalization
-
-# Register the (complete) service, so clients can find it
-service.register_service(svc)
+finalize_service()

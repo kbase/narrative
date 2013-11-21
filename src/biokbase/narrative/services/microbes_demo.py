@@ -1,14 +1,5 @@
 """
 Demo microbes service and methods
-
-Sample usage:
-
->>> from biokbase.narrative.demo.microbes_workflow import microbes
->>> microbes.quiet(True) # turn off status output
->>> genome = "123abc"
->>> ann_genome = microbes.annotate_genome(genome, None)
->>> asm_genome = microbes.assemble_genome(ann_genome, None)
-
 """
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 __date__ = '11/15/13'
@@ -19,7 +10,7 @@ import json
 import os
 import random
 # Local
-from biokbase.narrative.common import service
+from biokbase.narrative.common.service import init_service, method, finalize_service
 from biokbase.workspaceService.Client import workspaceService
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.fbaModelServices.Client import fbaModelServices
@@ -27,12 +18,13 @@ from biokbase.fbaModelServices.Client import fbaModelServices
 ## Globals
 
 VERSION = (0, 0, 1)
+NAME = "microbes"
 
-# Create containing service
-svc = service.Service(name="microbes", desc="Demo workflow microbes service", version=VERSION)
+# Initialize
+init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
-quiet = svc.quiet
 
+@method(name="AnnotateGenome")
 def _annotate_genome(meth, genome, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
@@ -73,8 +65,8 @@ def _annotate_genome(meth, genome, out_genome):
 
     return out_genome
 
-annotate_genome = svc.add_method(name="AnnotateGenome", func=_annotate_genome)
 
+@method(name="AssembleGenome")
 def _assemble_genome(meth, contig_file, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
@@ -123,10 +115,8 @@ def _assemble_genome(meth, contig_file, out_genome):
 
     return out_genome
 
-# Add method to service
-assemble_genome = svc.add_method(name="AssembleGenome", func=_assemble_genome)
 
-
+@method(name="BuildMedia")
 def _build_media(meth, base_media):
     """Build media
 
@@ -158,8 +148,5 @@ def _build_media(meth, base_media):
         result = ""
     return result
 
-# Add method to service
-build_media = svc.add_method(name="BuildMedia", func=_build_media)
-
-# Register the (complete) service, so clients can find it
-service.register_service(svc)
+# Finalize (registers service)
+finalize_service()

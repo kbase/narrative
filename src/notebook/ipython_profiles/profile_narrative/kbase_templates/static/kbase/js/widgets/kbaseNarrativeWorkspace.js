@@ -16,20 +16,27 @@
     $.KBWidget({
         name: "kbaseNarrativeWorkspace", 
         parent: "kbaseWidget",
-		version: "1.0.0",
-		uploadWidget: 'x',
+        version: "1.0.0",
+        uploadWidget: 'x',
         dataTableWidget: 'y',
-		options: {
-            workspaceURL: "https://www.kbase.us/services/workspace",            
-			loadingImage: "",
+        options: {
+            workspaceURL: "https://www.kbase.us/services/workspace",
+            loadingImage: "",
             tableElem: null,
             controlsElem: null
-		},
+        },
         ws_client: null,
         ws_id: null,
 
-		init: function(options) {
-			this._super(options);
+        init: function(options) {
+            this._super(options);
+
+            var self = this;
+            $([IPython.events]).on('notebook_loaded.Notebook', function() {
+                self.rebindRunButtons();
+            });
+
+
             this.initDataTable(options.tableElem);
             this.initControls(options.controlsElem);
             // bind search to data table
@@ -42,8 +49,8 @@
             });
             this.initFuncs();
             this.render();
-			return this;
-		},
+            return this;
+        },
         
         /**
          * Initialize controls at top of workspace view.
@@ -366,7 +373,7 @@
             // Rewrite the following to iterate using the IPython cell
             // based methods instead of DOM objects
 
-    	    var cells = IPython.notebook.get_cells();
+            var cells = IPython.notebook.get_cells();
             console.log(cells);
 
             // not using $.each because its namespacing kinda screws things up.
@@ -375,7 +382,7 @@
                 var cellType = cell.metadata['kb-cell'];
                 if (cellType) {
                     this._removeCellEditFunction(cell);
-                    if (cellType === 'function') {
+                    if (cellType == 'function') {
                         this._bindActionButtons(cell);
                     }
                 }                
@@ -841,13 +848,13 @@
          *
          * @returns this
          */
-		render: function() {
+        render: function() {
             this.rebindRunButtons();
             if (this.dataTableWidget !== undefined) {
                 this.dataTableWidget.render();
             }
-			return this;
-		},
+            return this;
+        },
 
         /**
          * Log in to all the widgets.
@@ -855,7 +862,7 @@
          * @param token
          * @returns this
          */
-		loggedIn: function(token) {
+        loggedIn: function(token) {
             this.ws_client = new workspaceService(this.options.workspaceURL);
             this.ws_auth = token;
             var un = token.match(/un=[\w_]+|/);
@@ -867,7 +874,7 @@
             this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
             //this.uploadWidget.createDialog(); -- redundant
             this.render();
-		},
+        },
 
         /**
          * Log out from all the widgets.
@@ -875,10 +882,10 @@
          * @param token
          * @returns this
          */
-		loggedOut: function(token) {
+        loggedOut: function(token) {
             this.dataTableWidget.loggedOut(token);
             this.ws_client = null, this.ws_auth = null;
-		},
+        },
 
         /**
          * Initialize the logger
@@ -1264,6 +1271,6 @@
 
 
 
-	});
+    });
 
 })( jQuery );

@@ -39,7 +39,6 @@
      * main function.
      */
     $(function() {
-
         kbaseConnecting();
 
         $(document).on('loggedIn.kbase', function(event, token) {
@@ -56,10 +55,15 @@
             console.debug("Authorization token found");
             kbaseConnected();
         }
+
+        $([IPython.events]).on('notebook_loaded.Notebook', function() {
+            IPython.notebook.set_autosave_interval(300);
+        });
+
     });
 
 })( jQuery );
 
 // Some additional JS code that we need to run unreleated to the workspace widget
 // Set the autosave interval to 5 minutes
-setTimeout( function() {IPython.notebook.set_autosave_interval(300);},2000);
+//setTimeout( function() {IPython.notebook.set_autosave_interval(300);},2000);

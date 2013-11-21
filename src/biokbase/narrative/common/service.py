@@ -335,7 +335,7 @@ class Service(trt.HasTraits):
         :rtype: ServiceMethod
         """
         for m in self.methods:
-            print("check vs {}".format(m.name))
+            #print("check vs {}".format(m.name))
             if m.name == name:
                 return m
         print("didn't find {}".format(name))
@@ -782,6 +782,64 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
 
     def as_json_schema_dumps(self):
         return json.dumps(self.as_json_schema())
+
+
+## Simplified, decorator-based, workflow
+
+_curr_service = None
+
+
+def init_service(**kw):
+    """Call this first, to create & set service.
+
+    All arguments must be keywords. See :class:`Service` and
+    :method:`Service.__init__`.
+    """
+    global _curr_service
+    _curr_service = Service(**kw)
+
+
+def configure_service(**kw):
+    """Set service attributes given in input keywords.
+
+    :raise: AttributeError if there is no such attribute,
+            ValueError if service is not initialized
+    """
+    if _curr_service is None:
+        raise ValueError("Attempt to configure service before init_service()")
+    for key, value in kw.iteritems():
+        setattr(_curr_service, key, value)
+
+
+def method(name=None):
+    """Decorator function for creating new services.
+
+    Example usage::
+        init_service(name="MyService", ...)
+
+        # ..later..
+
+        @service_method(name="MyMethod")
+        def my_service(method, arg1, ...):
+           # do whatever you do
+    """
+    if _curr_service is None:
+        raise ValueError("Attempt to call @method decorator before init_service()")
+
+    def wrap(fn, name=name):
+        if name is None:
+            name = fn.__name__
+        wrapped_fn = _curr_service.add_method(name=name, func=fn)
+        return wrapped_fn
+    return wrap
+
+
+def finalize_service():
+    """Call this last, to finalize and register the service.
+    """
+    global _curr_service
+    register_service(_curr_service)
+    _curr_service = None  # reset to un-initialized
 
 #############################################################################
 

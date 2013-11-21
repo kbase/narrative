@@ -6,6 +6,7 @@ KBase Services Python API
 **Contents**
 
 * :ref:`intro`
+* :ref:`quickstart`
 * :ref:`api`
 * :ref:`api-examples`
 
@@ -53,6 +54,71 @@ intermediate progress indications. Thus, the minimal requirements of service met
 We have specified these requirements in a Python class, :class:`Service`, whose documentation is below.
 Items marked with a `*` in the above list are not yet (fully) implemented in this code.
 
+.. _quickstart:
+
+Quickstart
+----------
+
+To a large extent the goal of the API is to make most of the API
+details irrelevant to most users. Wrapping your existing functions
+as a "service" that can be used by the Narrative will normally involve only
+the following steps (for existing Python scripts):
+
+#. Start a new Python module, which here we will call `my_service.py`, using the skeleton in `narrative/common/service_skeleton.py` as a starting point::
+
+    $ mkdir narrative/cp narrative/common/service_skeleton.py narrative/services/my_service.py
+
+#. Add a few lines to `my_service.py` to set the service version and create a Service object::
+
+    from biokbase.narrative.common import service
+    from biokbase.narrative.common import kbtypes
+    VERSION = (0, 0, 1)
+    # Create containing service
+    svc = service.Service(name="my stuff", desc="Genotype to phenotype: solved!", version=VERSION)
+    
+#. For each function, import or include inline the function implementation, modified very
+   slightly to report progress to the Narrative::
+   
+       def my_function_implementation(method, param1, param2):
+           # tell Narrative how many stages are in here
+           method.stages = 3
+           # tell Narrative we are starting a new stage
+           method.advance("MeetAndGreet")
+           print("hello, world")
+           # starting a new stage
+           method.advance("Compute")
+           result = param1 * param2 * 3.1415
+           # starting a new stage
+           method.advance("Announce")
+           print("All done")
+           # simply return result value
+           return result
+       
+#. Add to the function a docstring (standard Python top-of-function comment) that
+   contains a specific form of reStructured text markup indicating parameter types and return types::
+
+    def my_function_implementation(method, param1, param2):
+        """Implement my function, with a great deal of vim and vigor.
+        
+        :param param1: A multiplicand
+        :type param1: kbtypes.Double
+        :param param2: Another multiplicand
+        :type param2: kbtypes.Double
+        :result: The product of the parameters and pi
+        :rtype: kbtypes.Double
+        """
+        method.stages = 3 
+        .. rest of implementation, as shown above ..
+
+#. Add one line after each function to add the fully wrapped function to the overall service::
+
+    my_function = svc.add_method(name="MyFunction", func=my_function_implementation)
+    
+#. At the bottom of the file, 1 line of code to register the Service as a whole for the Narrative to discover it::
+   
+    service.register_service(svc)
+   
+That's it! Steps 3-5 are repeated for each function in the service.
 
 .. _api:
 
@@ -63,6 +129,7 @@ API Documentation
 
 This section documents the KBase narrative service and method API.
 These modules are all under `biokbase.narrative` in the biokbase Python package.
+
 The API is broken down into several functional areas:
 
 #. :ref:`registry-api`  - Finding services and methods
@@ -121,7 +188,7 @@ KBase data types are represented with classes in the `kbtypes` module.
 Exceptions
 ^^^^^^^^^^
 
-.. automodule:: biokbase.narrative.common.service
+.. currentmodule:: biokbase.narrative.common.service
 
 .. autoclass:: ServiceError
 
@@ -140,7 +207,7 @@ classes, but they are designed to be extensible. Since :class:`ServiceMethod` in
 :class:`LifecycleSubject`, new observers that take actions based on events can be added
 at any time. The base classes are below.
 
-.. automodule:: biokbase.narrative.common.service
+.. currentmodule:: biokbase.narrative.common.service
 
 .. autoclass:: LifecycleSubject
     :members:

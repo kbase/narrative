@@ -22,17 +22,10 @@
         console.debug("kbaseConnected!");
         $('#main-container').removeClass('pause');
         $('#kb-ws-guard').removeClass('pause').css("display", "none");
-        if (narr_ws == null) {
-            var $ws = $('#kb-ws');
-            narr_ws = $ws
-                .kbaseNarrativeWorkspace({
-                  loadingImage: "/static/kbase/images/ajax-loader.gif",
-                  controlsElem: $ws.find('.kb-controls'),
-                  tableElem: $ws.find('.kb-table')
-            });
+        if (narr_ws) {
+            var token = $("#login-widget").kbaseLogin("session", "token");
+            narr_ws.loggedIn(token);
         }
-        var token = $("#login-widget").kbaseLogin("session", "token");
-        narr_ws.loggedIn(token);
     };
     
     /**
@@ -58,6 +51,17 @@
 
         $([IPython.events]).on('notebook_loaded.Notebook', function() {
             IPython.notebook.set_autosave_interval(300);
+            if (narr_ws == null) {
+                var $ws = $('#kb-ws');
+                narr_ws = $ws
+                    .kbaseNarrativeWorkspace({
+                      loadingImage: "/static/kbase/images/ajax-loader.gif",
+                      controlsElem: $ws.find('.kb-controls'),
+                      tableElem: $ws.find('.kb-table')
+                });
+            }
+            if (token)
+                narr_ws.loggedIn(token);
         });
 
     });

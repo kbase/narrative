@@ -369,6 +369,9 @@
          * @public
          */
         rebindRunButtons: function() {
+            if (!(IPython && IPython.notebook))
+                return;
+            
             console.debug("rebindRunButtons.begin");
             // Rewrite the following to iterate using the IPython cell
             // based methods instead of DOM objects

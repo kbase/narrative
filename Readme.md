@@ -9,7 +9,18 @@ and standard KBase makefile targets are in the works.
 
 The ipython narrative is a "profile" of the ipython notebook. The setup and instructions are run using the Python [virtualenv](https://pypi.python.org/pypi/virtualenv) module. If you haven't ever used this module, you should take some time to go familiarize yourself with it now.
 
-All the python dependencies for the notebook are in the bootstrap module under bootstrap/kb_python_runtime/python-pip-list-narrative. If you get that file and run "pip install -r python-pip-list-narrative" it should install all the necessary python module dependencies to run the notebook.
+An important caveat for your python environment is that you have Python 2.7 installed and that the version of pip that is run is matched to that python 2.7 installation. Because pip is not installed by default, it is possible to upgrade python, while still having a version of pip that only updates the libraries for a previous version of python. If you do not have a 2.7 version of pip, you an usually use something like easy_install-2.7 to update pip.
+
+Most of the python dependencies for the notebook are in the bootstrap module under bootstrap/kb_python_runtime/python-pip-list-narrative.
+There are some dependencies that are better installed as packages, scipy and numpy. They can either be installed using dpkg, or for MacOS
+users they can be downloaded from http://sourceforge.net/projects/numpy/files/NumPy/ and
+http://sourceforge.net/projects/scipy/files/scipy/
+
+Download those files and then checkout the bootstrap repo and run this command:
+
+pip install -r bootstrap/kb_python_runtime/python-pip-list-narrative
+
+it should install all the necessary python module dependencies to run the notebook.
 
 ## Current instructions
 

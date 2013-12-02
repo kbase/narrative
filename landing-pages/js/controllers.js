@@ -88,6 +88,50 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 
+                $scope.selectedObjs = []
+
+                for (var i in $scope.ws) {
+                    var found;
+                    var entry = {ws: $scope.ws[i], id: $scope.ids[i]};
+
+                    for (var j in $scope.selectedObjs) {
+                        if (angular.equals($scope.selectedObjs[j], entry)) {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (found) continue;
+                    
+                    $scope.selectedObjs.push(entry)
+                }
+
+                $scope.$watch('selectedObjs', function() {
+
+                    // update url strings
+                    $scope.ws = [];
+                    $scope.ids = [];
+                    for (var i in $scope.selectedObjs) {
+                        var obj = $scope.selectedObjs[i];
+                         $scope.ws.push(obj.ws);
+                         $scope.ids.push(obj.id);  
+                    }
+                    $scope.ws_param =  $scope.ws.join('+');
+                    $scope.ids_param =  $scope.ids.join('+');
+
+                    $location.search({selected_ws: $scope.selected_ws,
+                      ws: $scope.ws_param, 
+                      ids: $scope.ids_param});
+
+                    // show object selection sidebar
+                    if (!$('.selectedobjs').is(':visible')) {
+                        $('.side-bar-switch').children('button').removeClass('active');            
+                        $('.show-objs').addClass('active');
+                        $scope.showSelectedObjs();
+                    }
+                    console.log($scope.selectedObjs)
+                }, true); 
+
 
     // removes items from the selected objects view
     $scope.removeItem = function(index){

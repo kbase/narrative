@@ -1,0 +1,10 @@
+apt-get install lua5.1
+apt-get install luarocks
+apt-get install liblua5.1-0
+apt-get install liblua5.1-0-dev
+apt-get install liblua5.1-json
+apt-get install liblua5.1-lpeg2
+luarocks install luasocket
+luarocks install luajson
+luarocks install penlight
+luarocks install lua-spore

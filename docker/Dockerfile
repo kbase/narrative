@@ -22,7 +22,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update
 # There are a bunch of packages that are related to kernel operation
 # which we can't upgrade within a container. Mark them for "hold" before
 # running the upgrade
-RUN DEBIAN_FRONTEND=noninteractive apt-mark hold udev initscripts plymouth initramfs-tools
+RUN DEBIAN_FRONTEND=noninteractive apt-mark hold udev initscripts plymouth initramfs-tools procps busybox-initramfs
 RUN DEBIAN_FRONTEND=noninteractive apt-get -f upgrade -y
 
 # Install the stuff we actually need
@@ -49,8 +49,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libssl-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libreadline-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libxml2-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libxslt1-dev
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-lxml
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-sklearn
 
 # Clone in the python bootstrap and run it
 ADD ./bootstrap/kb_python_runtime /mini-bootstrap/kb_python_runtime

@@ -237,6 +237,12 @@ class Service(trt.HasTraits):
     version = kbtypes.VersionNumber()
 
     def __init__(self, **meta):
+        """Initialize a Service instance.
+
+        :param meta: Metadata keywords to set as attributes on the instance.
+                     Special keywords are `name`, `desc`, and `version` (see
+                     documentation for each).
+        """
         trt.HasTraits.__init__(self)
         # set traits from 'meta', if present
         for key, val in meta.iteritems():
@@ -727,7 +733,7 @@ def init_service(**kw):
     """Call this first, to create & set service.
 
     All arguments must be keywords. See :class:`Service` and
-    :method:`Service.__init__`.
+    :meth:`Service.__init__`.
     """
     global _curr_service
     _curr_service = Service(**kw)
@@ -749,13 +755,9 @@ def method(name=None):
     """Decorator function for creating new services.
 
     Example usage::
-        init_service(name="MyService", ...)
-
-        # ..later..
-
         @service_method(name="MyMethod")
         def my_service(method, arg1, ...):
-           # do whatever you do
+           # service functionality
     """
     if _curr_service is None:
         raise ValueError("Attempt to call @method decorator before init_service()")

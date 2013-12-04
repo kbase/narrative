@@ -39,6 +39,16 @@ angular.module('card-directives')
             }
         };
     })
+    .directive('cmonkeycards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "cmonkey", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
     .directive('bambicards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {

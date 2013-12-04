@@ -196,8 +196,13 @@ function MemeDetail($scope, $stateParams) {
 }
 
 function BambiDetail($scope, $stateParams) {
-    $scope.params = {'bambi_run_result_id': $routeParams.id,
-                     'workspace_id': $routeParams.ws}
+    $scope.params = {'bambi_run_result_id': $stateParams.id,
+                     'workspace_id': $stateParams.ws}
+}
+
+function CmonkeyDetail($scope, $stateParams) {
+    $scope.params = {'cmonkey_run_result_id': $stateParams.id,
+                     'workspace_id': $stateParams.ws}
 }
 
 function GeneDetail($scope, $stateParams) {

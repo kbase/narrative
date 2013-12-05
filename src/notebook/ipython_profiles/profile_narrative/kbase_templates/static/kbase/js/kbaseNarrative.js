@@ -49,20 +49,25 @@
             kbaseConnected();
         }
 
-        $([IPython.events]).on('notebook_loaded.Notebook', function() {
-            IPython.notebook.set_autosave_interval(300);
+        $([IPython.events]).on('status_idle.Kernel', function() {
             if (narr_ws == null) {
-                var $ws = $('#kb-ws');
-                narr_ws = $ws
-                    .kbaseNarrativeWorkspace({
-                      loadingImage: "/static/kbase/images/ajax-loader.gif",
-                      controlsElem: $ws.find('.kb-controls'),
-                      tableElem: $ws.find('.kb-table')
-                });
+                IPython.notebook.set_autosave_interval(300);
+                if (narr_ws == null) {
+                    var $ws = $('#kb-ws');
+                    narr_ws = $ws
+                        .kbaseNarrativeWorkspace({
+                          loadingImage: "/static/kbase/images/ajax-loader.gif",
+                          controlsElem: $ws.find('.kb-controls'),
+                          tableElem: $ws.find('.kb-table')
+                    });
+                }
+                if (token)
+                    narr_ws.loggedIn(token);
             }
-            if (token)
-                narr_ws.loggedIn(token);
         });
+
+        // $([IPython.events]).on('notebook_loaded.Notebook', function() {
+        // });
 
     });
 

@@ -10,6 +10,7 @@ import json
 import os
 import random
 # Local
+import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
 from biokbase.workspaceService.Client import workspaceService
 from biokbase.InvocationService.Client import InvocationService
@@ -117,9 +118,11 @@ def _assemble_genome(meth, contig_file, out_genome):
 
 
 @method(name="BuildMedia")
-def _build_media(meth, base_media):
+def _build_media(meth, workspace, base_media):
     """Build media
 
+    :param workspace: Workspace name string
+    :type workspace: kbtypes.Unicode
     :param base_media: Base media type
     :type base_media: kbtypes.Media
     :return: JSON of medias
@@ -130,7 +133,7 @@ def _build_media(meth, base_media):
     meth.advance("Init")
     fba = fbaModelServices(service.URLS.fba)
     token = os.environ['KB_AUTH_TOKEN']
-    workspace = os.environ['KB_WORKSPACE_ID']
+#    workspace = os.environ['KB_WORKSPACE_ID']
     base_media = base_media.strip().replace(' ', '_')
 
     meth.advance("Fetch Base Media")

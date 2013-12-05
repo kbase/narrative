@@ -566,13 +566,13 @@
                 var that = this;
                 this.setWs(function() {
                     var opts = {workspace: that.ws_id, auth: that.ws_auth};
-                    console.debug("list_workspace_objects.begin");
+//                    console.debug("list_workspace_objects.begin");
                     that.ws_client.list_workspace_objects(opts,
                         function(results) {
                             //console.log("Results: " + results);
                             that.updateResults(results);
                             that.createTable();
-                            console.debug("list_workspace_objects.end");
+//                            console.debug("list_workspace_objects.end");
                         },
                         function(err) {
                             console.error("getting objects for workspace " + that.ws_id, err);
@@ -723,13 +723,13 @@
                     this.loadedData[type] = [];
                 this.loadedData[type].push(results[i]);
             }
-            console.log(this.loadedData);
+//            console.log(this.loadedData);
 
             var mdstring = '';
             $.each(IPython.notebook.metadata, function(key, val) {
                 mdstring = mdstring + key + "=" + val + "\n";
             });
-            console.log('notebook metadata = ' + mdstring);
+//            console.log('notebook metadata = ' + mdstring);
             // just columns shown
             this.tableData = [ ];
             // all data from table, keyed by object name + type

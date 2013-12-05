@@ -16,16 +16,11 @@
 .kb-function-body {
     border: 1px solid #dddddd;
     padding: 10px;
+    padding: 0;
+    height: 300px;
     overflow-y: auto;
 }
 
-/* List of functions */
-.kb-function-body {
-    padding: 0;
-    height: 300px;
-    overflow: auto;
-    /*border: 0;*/
-}
 .kb-function-body ul {
     list-style-type: none;
     margin: 0;
@@ -60,14 +55,42 @@
     padding: 0 3px;
     float: right;
     cursor: pointer;
-
 }
+
+.kb-function-help-popup {
+    position: absolute;
+    top: 0px;
+    left: 300px;
+    z-index: 99;
+    cursor: pointer;
+    width: 250px;    
+}
+
+.kb-function-help-popup h1 {
+    margin: 0;
+    margin-top: -10px;
+    padding: 0;
+    font-size: 110%;
+    color: #3076A2;
+}
+
+.kb-function-help-popup h2 {
+    margin: 10px 0 -10px 0;
+    padding-top: 5px;
+    font-size: 80%;
+    color: #999;
+    font-style: italic;
+    text-align: right;
+    font-weight: 100;
+}
+
 #kb-function-help {
     position: absolute;
     top: 400px;
     left: 300px;
     z-index: 99;
     cursor: pointer;
+    width: 250px;
 }
 
 #kb-function-help h1 {
@@ -84,7 +107,6 @@
     font-size: 80%;
     color: #999;
     font-style: italic;
-    width: 100%
     text-align: right;
     font-weight: 100;
 }

@@ -10,6 +10,10 @@
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    tableElem - HTML element container for the data table
  *    controlsElem - HTML element container for the controls (search/add)
+ *
+ * @author Bill Riehl <wjriehl@lbl.gov>
+ * @author Dan Gunter <dkgunter@lbl.gov>
+ * @public
  */
 
 (function( $, undefined ) {
@@ -27,6 +31,7 @@
         },
         ws_client: null,
         ws_id: null,
+        loadingImage: "../images/ajax-loader.gif",
 
         init: function(options) {
             this._super(options);
@@ -36,6 +41,19 @@
                 self.rebindRunButtons();
             });
 
+            $(document).on('function_clicked.Narrative', function(event, data) {
+                console.debug("function clicked!");
+                console.debug(event);
+                console.debug(data);
+            });
+
+            $(document).on('function_help.Narrative', function(event, data) {
+                console.debug('help clicked!');
+                console.debug(event);
+                console.debug(data);
+            })
+
+            $("#function-test").kbaseNarrativeFunctionPanel({});
 
             this.initDataTable(options.tableElem);
             this.initControls(options.controlsElem);
@@ -109,7 +127,7 @@
                 console.debug("refresh.end");
             });
             // done
-            console.debug('initControls.end');
+
             return this;
         },
 
@@ -131,7 +149,6 @@
          * Set up interactive features of the function-list panel.
          */
         initFuncs: function() {
-            console.debug("initFuncs.start");
             var env = this;
             $('.kb-function-body ul li').each(function(index) {
                 var $anchor = $(this).find('a');
@@ -158,9 +175,50 @@
                     $elt.show();
                 });
             });
+
+            // // Command to load and fetch all functions from the kernel
+            // var fetchFunctionsCommand = "import biokbase.narrative.services.microbes_demo\n" + 
+            //                             "print biokbase.narrative.common.service.get_all_services(as_json_schema=True)\n";
+
+            // // We really only need the 'output' callback here.
+            // var callbacks = {
+            //     'output' : function(msg_type, content) { 
+            //         if (msg_type === "stream") {
+            //             var buffer = content.data;
+            //             var lines = buffer.split("\n");
+            //             var offs = 0, 
+            //                 done = false, 
+            //                 self = this,
+            //                 result = "";
+            //             $.each(lines, function(index, line) {
+            //                 if (!done) {
+            //                     if (line.length == 0) {
+            //                         offs += 1; // blank line, move offset
+            //                     }
+            //                     else {
+            //                         // No progress marker on non-empty line => final output of program?
+            //                         result += line;
+            //                         // all but the last line should have \n appended
+            //                         if (index < lines.length - 1) {
+            //                             result += "\n";
+            //                         }
+            //                     }
+            //                 }
+            //             });
+            //             if (result.length > 0) {
+            //                 var serviceSet = JSON.parse(result);
+            //                 console.debug(serviceSet);
+            //             }
+            //         }
+            //     },
+            // };
+
+            // var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
         },
 
         /**
+         * @method addCellForFunction
+         * @param {String} name - the registered name of the function to make a new cell for
          * Add a new IPython notebook cell for a given function.
          *
          * The name of the function comes from the 'data-name'

@@ -214,9 +214,9 @@ def get_all_services(as_json=False, as_json_schema=False):
     """
     if as_json or as_json_schema:
         if as_json:
-            return {name: inst.as_json() for name, inst in _services.iteritems()}
+            return json.dumps({name: inst.as_json() for name, inst in _services.iteritems()})
         else:
-            return {name: inst.as_json_schema() for name, inst in _services.iteritems()}
+            return json.dumps({name: inst.as_json_schema() for name, inst in _services.iteritems()})
     else:
         return _services.copy()
 

@@ -26,33 +26,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-mark hold udev initscripts plymouth initr
 RUN DEBIAN_FRONTEND=noninteractive apt-get -f upgrade -y
 
 # Install the stuff we actually need
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-base
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-modules
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-base perl-modules make
 # Maybe this will get all the necessary dependencies!
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y ipython-notebook
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-matplotlib
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libcairo2-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y texlive-latex-base
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y texlive-fonts-recommended
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y curl
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y git-core
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libzmq-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libreadline6-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-numpy
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-scipy
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-setuptools
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libssl-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libreadline-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libxml2-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libxslt1-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-lxml
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4 python-pip python-setuptools ipython-notebook python-matplotlib python-dev python-scipy python-numpy python-lxml python-sklearn python-sympy python-pandas
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev libcairo2-dev texlive-latex-base texlive-fonts-recommended curl git-core libzmq-dev libreadline6-dev libreadline-dev libssl-dev libxml2-dev libxslt1-dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-sklearn
 
 # Clone in the python bootstrap and run it
 ADD ./bootstrap/kb_python_runtime /mini-bootstrap/kb_python_runtime

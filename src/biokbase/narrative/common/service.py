@@ -754,10 +754,11 @@ def configure_service(**kw):
 def method(name=None):
     """Decorator function for creating new services.
 
-    Example usage::
-        @service_method(name="MyMethod")
-        def my_service(method, arg1, ...):
-           # service functionality
+    Example usage:
+    
+        @method(name="MyMethod")
+        def my_service(method, arg1, arg2, etc.):
+           ...method body...
     """
     if _curr_service is None:
         raise ValueError("Attempt to call @method decorator before init_service()")
@@ -766,6 +767,9 @@ def method(name=None):
         if name is None:
             name = fn.__name__
         wrapped_fn = _curr_service.add_method(name=name, func=fn)
+        # copy docstring from original fn to wrapped fn, so that
+        # interactive help, autodoc, etc. will show the 'real' docs.
+        wrapped_fn.__doc__ = fn.__doc__
         return wrapped_fn
     return wrap
 

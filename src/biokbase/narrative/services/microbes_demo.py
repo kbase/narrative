@@ -25,7 +25,7 @@ init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
 
 @method(name="AnnotateGenome")
-def _annotate_genome(meth, genome, out_genome):
+def annotate_genome(meth, genome, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
 
@@ -67,7 +67,7 @@ def _annotate_genome(meth, genome, out_genome):
 
 
 @method(name="AssembleGenome")
-def _assemble_genome(meth, contig_file, out_genome):
+def assemble_genome(meth, contig_file, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
 
@@ -117,7 +117,7 @@ def _assemble_genome(meth, contig_file, out_genome):
 
 
 @method(name="BuildMedia")
-def _build_media(meth, base_media):
+def build_media(meth, base_media):
     """Build media
 
     :param base_media: Base media type

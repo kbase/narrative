@@ -1,5 +1,6 @@
 local M = {}
 local Spore = require('Spore')
+local json = require('json')
 
 -- For creating new containers the config object must contain certain fields
 -- Example config contains:
@@ -11,14 +12,14 @@ local function config()
 		    AttachStdin = false,
 		    AttachStdout = false,
 		    AttachStderr = false,
-		    PortSpecs = {},
+		    PortSpecs = json.util.null,
 		    Privileged = false,
 		    Tty = false,
 		    OpenStdin = false,
 		    StdinOnce = false,
-		    Env = {},
+		    Env = json.util.null,
 		    Cmd = {'/bin/bash'},
-		    Dns = {},
+		    Dns = json.util.null,
 		    Image = "base",
 		    Volumes = {},
 		    VolumesFrom = "",
@@ -36,7 +37,7 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 					     200,
 					     204
 					  ],
-					  "formats" : "json",
+					  "formats" : ["json"],
 					  "methods" : {
 					     "list_containers" : { 
 						"path" : "/containers/json",
@@ -66,9 +67,7 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 					     "create_container" : { 
 						"path" : "/containers/create",
 						"method" : "POST",
-						"required_params" : [
-						   "config"
-						],
+						"required_payload" : true,
 					     },
 					     "start_container" : { 
 						"path" : "/containers/:id/stop",
@@ -166,6 +165,8 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 					     },
 					  }
 				       }]]
+client:enable 'Format.JSON'
+
 M.client = client
 --[[
 local pretty = require('pl.pretty')

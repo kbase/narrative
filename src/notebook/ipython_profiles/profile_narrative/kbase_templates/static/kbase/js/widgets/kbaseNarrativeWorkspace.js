@@ -188,7 +188,10 @@
 
             var cell = IPython.notebook.insert_cell_below('markdown');
             // make this a function input cell, as opposed to an output cell
-            cell.metadata['kb-cell'] = this.FUNCTION_CELL;
+            cell.metadata['kb-cell'] = {
+                'type' : this.FUNCTION_CELL,
+                'method' : method
+            }
 
             // THIS IS WRONG! FIX THIS LATER!
             // But it should work for now... nothing broke up to this point, right?
@@ -201,11 +204,16 @@
             var cellContent;
 
             if (this.validateMethod(method)) {
+                // This is the list of parameters for the given method
                 var inputs = this.buildFunctionInputs(method, cellId);
+
+                // These are the 'delete' and 'run' buttons for the cell
                 var buttons = "<div class='buttons pull-right' style='margin-top:10px'>" +
                                   "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-warning'>Delete</button> " +
                                   "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary'>Run</button>" + 
                               "</div>";
+
+                // The progress bar remains hidden until invoked by running the cell
                 var progressBar = "<div id='kb-func-progress' style='display:none;'>" +
                                     "<div class='progress progress-striped active kb-cell-progressbar'>" +
                                         "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
@@ -214,9 +222,10 @@
                                     "<p class='text-success'/>" +
                                   "</div>";
 
+                // Bringing it all together...
                 cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
                                   "<h1>" + method.title + "</h1>" +
-                                  "<div class='kb-cell-params'>" +  
+                                  "<div>" +  
                                       inputs +
                                       buttons + 
                                   "</div>" +
@@ -231,8 +240,8 @@
             cell.rendered = false;
             cell.render();
 
-//            this._removeCellEditFunction(cell);
-            this._bindActionButtons(cell);
+            this.removeCellEditFunction(cell);
+            this.bindActionButtons(cell);
         },
 
         /**
@@ -244,8 +253,8 @@
         buildFunctionInputs: function(method, cellId) {
             var inputDiv = "<div class='kb-cell-params'><table class='table'>";
             var params = method.properties.parameters;
-            for (var p in params) {
-                console.log(p);
+            for (var i=0; i<Object.keys(params).length; i++) {
+                var p = 'param' + i;
                 inputDiv += "<tr style='border:none'>" + 
                                 "<td style='border:none'>" + p + "</td>" + 
                                 "<td style='border:none'><input type='text' name='" + p + "' value=''></input></td>" +
@@ -297,82 +306,143 @@
          * attribute in the HTML that is hard-coded into notebook.html
          * under $('div.kb-function-body ul').
          */
-        addCellForFunction: function(name) {
-            var env = this;
-            var nb = IPython.notebook;
-            this.kernel = nb.kernel; // stash current kernel
-            var cell = nb.insert_cell_below('markdown');
+        // addCellForFunction: function(name) {
+        //     var env = this;
+        //     var nb = IPython.notebook;
+        //     this.kernel = nb.kernel; // stash current kernel
+        //     var cell = nb.insert_cell_below('markdown');
 
-            cell.metadata['kb-cell'] = 'function';
+        //     cell.metadata['kb-cell'] = 'function';
 
-            this._cur_index = nb.ncells() - 1; // stash cell's index
+        //     this._cur_index = nb.ncells() - 1; // stash cell's index
 
-            var config = this._getFunctionConfig(name);
-            var content = this._buildRunForm(name, config);
-            var cell_id = "kb-cell-" + this._cur_index;
+        //     var config = this._getFunctionConfig(name);
+        //     var content = this._buildRunForm(name, config);
+        //     var cell_id = "kb-cell-" + this._cur_index;
 
-            // add buttons
-            content += "<div class='buttons pull-right' style='margin-top:10px'>" +
-                           "<button id='" + cell_id + "-delete' type='button' value='Delete' class='btn btn-warning'>Delete</button> " +
-                           "<button id='" + cell_id + "-run' type='button' value='Run' class='btn btn-primary'>Run</button>" + 
-                       "</div>";
+        //     // add buttons
+        //     content += "<div class='buttons pull-right' style='margin-top:10px'>" +
+        //                    "<button id='" + cell_id + "-delete' type='button' value='Delete' class='btn btn-warning'>Delete</button> " +
+        //                    "<button id='" + cell_id + "-run' type='button' value='Run' class='btn btn-primary'>Run</button>" + 
+        //                "</div>";
 
-            // build progress bar and message (initially display:none)
-            var progressBar = "<div id='kb-func-progress' style='display:none;'>" +
-                                "<div class='progress progress-striped active kb-cell-progressbar'>" +
-                                    "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
-                                    "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
-                                "</div>" +
-                                "<p class='text-success'/>" +
-                              "</div>";
+        //     // build progress bar and message (initially display:none)
+        //     var progressBar = "<div id='kb-func-progress' style='display:none;'>" +
+        //                         "<div class='progress progress-striped active kb-cell-progressbar'>" +
+        //                             "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
+        //                             "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
+        //                         "</div>" +
+        //                         "<p class='text-success'/>" +
+        //                       "</div>";
 
-            cell.set_text("<div class='kb-cell-run' " + "id='" + cell_id + "'>" + 
-                              "<h1>" + name + "</h1>" +
-                              "<div class='kb-cell-params'>" +  
-                                  content + 
-                              "</div>" +
-                              progressBar +
-                          "</div>");
+        //     cell.set_text("<div class='kb-cell-run' " + "id='" + cell_id + "'>" + 
+        //                       "<h1>" + name + "</h1>" +
+        //                       "<div class='kb-cell-params'>" +  
+        //                           content + 
+        //                       "</div>" +
+        //                       progressBar +
+        //                   "</div>");
 
-            cell.rendered = false; // force a render
-            cell.render();
+        //     cell.rendered = false; // force a render
+        //     cell.render();
 
-            this._removeCellEditFunction(cell);
-            this._bindActionButtons(cell);
-        },
+        //     this._removeCellEditFunction(cell);
+        //     this._bindActionButtons(cell);
+        // },
 
         /**
-         * @method _removeCellEditFunction
+         * @method removeCellEditFunction
          * Removes the ability to edit a markdown cell by double-clicking or pressing Enter.
          * Handy for dealing with KBase function or output cells.
          * @param cell - the cell to modify.
          * @private
          */
-        _removeCellEditFunction: function(cell) {
+        removeCellEditFunction: function(cell) {
             // remove its double-click and return functions. sneaky!
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
         },
 
         /**
-         * @method _bindActionButtons
+         * @method bindActionButtons
          * Binds the action (delete and run) buttons of a function cell.
          * This requires the cell to have {'kb-cell' : 'function'} in its metadata, otherwise it's ignored.
          * @param cell - the IPython Notebook cell with buttons to be bound.
          * @private
          */
-        _bindActionButtons: function(cell) {
+        bindActionButtons: function(cell) {
             // get the cell.
             // look for the two buttons.
             // bind them to the right actions.
-            if (!cell.metadata || !cell.metadata['kb-cell'] || cell.metadata['kb-cell'] !== this.FUNCTION_CELL)
+            if (!cell.metadata || !cell.metadata['kb-cell'] || cell.metadata['kb-cell']['type'] !== this.FUNCTION_CELL)
                 return;
 
             $(cell.element).find(".buttons [id*=delete]").off('click');
-            $(cell.element).find(".buttons [id*=delete]").click(this._bindDeleteButton());
+            $(cell.element).find(".buttons [id*=delete]").click(this.bindDeleteButton());
             $(cell.element).find(".buttons [id*=run]").off('click');
-            $(cell.element).find(".buttons [id*=run]").click(this._bindRunButton());
+            $(cell.element).find(".buttons [id*=run]").click(this.bindRunButton());
         },
+
+        /**
+         * @method bindRunButton
+         * @private
+         */
+        bindRunButton: function() {
+            var self = this;
+            return (
+                function(event) {
+                    event.preventDefault();
+                    var cell = IPython.notebook.get_selected_cell();
+                    var paramList = [];
+                    $(cell.element).find("[name^=param]").filter(":input").each(function(key, field) {
+                        console.log(field.name + "=" + field.value);
+                        paramList.push(field.value);
+                    });
+                    var method = cell.metadata['kb-cell'].method;
+                    console.log('clicked method:');
+                    console.log(method);
+
+
+                    self.runCell()(cell, method.service, method.title, paramList);
+                }
+            );
+        },
+
+
+        /**
+         * @method _bindRunButton
+         * @private
+         */
+        // _bindRunButton: function() {
+        //     var self = this;
+        //     return (
+        //         function(event) {
+        //             event.preventDefault();
+        //             var params = {};
+        //             // extract params from form
+        //             var cell = IPython.notebook.get_selected_cell();
+
+        //              Each function cell has a form, containing inputs.
+        //              * The selector below finds all children of the form, and filters them down to
+        //              * just "form inputs" - input, select, textarea, text, etc.
+        //              * the ':input' filter is a special jQuery thingy that lets this happen.
+                     
+        //             $(cell.element).find("form *").filter(":input").each(function(key, field) {
+        //                 if (field.name && field.name.length > 0)
+        //                     params[field.name] = field.value;
+        //             });
+
+        //             // Build the IPython function call.
+        //             var name = params['kbfunc'];
+        //             var command = self._getFunctionConfig(name).command;
+
+        //             console.debug("Run fn(" + name + ") with params", params);
+        //             self._runner()(cell, command, params);
+        //         }
+        //     );
+        // },
+
+
 
         /**
          * @method _getFunctionConfig
@@ -381,83 +451,82 @@
          * @private
          * @return the configuration for a function from its name.
          */
-        _getFunctionConfig: function(name) {
-            switch(name) {
-                case 'Plants Co-expression':
-                    return this.plantsRunConfig;
-                    break;
+        // _getFunctionConfig: function(name) {
+        //     switch(name) {
+        //         case 'Plants Co-expression':
+        //             return this.plantsRunConfig;
+        //             break;
 
-                case 'Assemble Contigs':
-                    return this.runAssemblyConfig;
-                    break;
+        //         case 'Assemble Contigs':
+        //             return this.runAssemblyConfig;
+        //             break;
 
-                case 'Assemble Genome':
-                    return this.assembleGenomeConfig;
-                    break;
+        //         case 'Assemble Genome':
+        //             return this.assembleGenomeConfig;
+        //             break;
 
-                case 'Annotate Genome':
-                    return this.annotateGenomeConfig;
-                    break;
+        //         case 'Annotate Genome':
+        //             return this.annotateGenomeConfig;
+        //             break;
 
-                case 'View Genome Details':
-                    return this.viewGenomeConfig;
-                    break;
+        //         case 'View Genome Details':
+        //             return this.viewGenomeConfig;
+        //             break;
 
-                case 'Genome To Draft FBA Model':
-                    return this.genomeToFbaConfig;
-                    break;
+        //         case 'Genome To Draft FBA Model':
+        //             return this.genomeToFbaConfig;
+        //             break;
 
-                case 'View FBA Model Details':
-                    return this.viewFbaModelConfig;
-                    break;
+        //         case 'View FBA Model Details':
+        //             return this.viewFbaModelConfig;
+        //             break;
 
-                case 'Build Media':
-                    return this.buildMediaConfig;
-                    break;
+        //         case 'Build Media':
+        //             return this.buildMediaConfig;
+        //             break;
 
-                case 'View Media':
-                    return this.viewMediaConfig;
-                    break;
+        //         case 'View Media':
+        //             return this.viewMediaConfig;
+        //             break;
 
-                case 'Run Flux Balance Analysis':
-                    return this.runFbaConfig;
-                    break;
+        //         case 'Run Flux Balance Analysis':
+        //             return this.runFbaConfig;
+        //             break;
 
-                case 'View FBA Results':
-                    return this.viewFbaConfig;
-                    break;
+        //         case 'View FBA Results':
+        //             return this.viewFbaConfig;
+        //             break;
 
-               case 'Gapfill FBA Model':
-                    return this.runGapfillConfig;
-                    break;
+        //        case 'Gapfill FBA Model':
+        //             return this.runGapfillConfig;
+        //             break;
 
-                case 'Integrate Gapfill Solution':
-                    return this.integrateGapfillConfig;
-                    break;
+        //         case 'Integrate Gapfill Solution':
+        //             return this.integrateGapfillConfig;
+        //             break;
 
-                default:
-                    return { params : {}, command : {module: '', function: ''}};
-            }
-        },
+        //         default:
+        //             return { params : {}, command : {module: '', function: ''}};
+        //     }
+        // },
 
         /**
-         * @method _bindDeleteButton
+         * @method bindDeleteButton
          * @private
          */
-        _bindDeleteButton: function() {
+        bindDeleteButton: function() {
             var self = this;
             return( 
                 function(event) {
                     event.preventDefault();
                     var idx = IPython.notebook.get_selected_index();
-                    console.log("deleting selected cell: " + idx);
                     IPython.notebook.delete_cell(idx);
                 }
             );
         },
 
         /**
-         * @method _bindRunButton
+         * @method bindRunButton
          * @private
          */
         _bindRunButton: function() {
@@ -506,18 +575,17 @@
             // based methods instead of DOM objects
 
             var cells = IPython.notebook.get_cells();
-            console.log(cells);
 
             // not using $.each because its namespacing kinda screws things up.
             for (var i=0; i<cells.length; i++) {
                 var cell = cells[i];
                 var cellType = cell.metadata['kb-cell'];
                 if (cellType) {
-                    this._removeCellEditFunction(cell);
-                    if (cellType == this.FUNCTION_CELL) {
-                        this._bindActionButtons(cell);
+                    this.removeCellEditFunction(cell);
+                    if (cellType.type == this.FUNCTION_CELL) {
+                        this.bindActionButtons(cell);
                     }
-                }                
+                }
             }
         },
 
@@ -526,97 +594,97 @@
          * Build 'run script' HTML form from
          * configuration data. See 
          */
-        _buildRunForm: function(name, cfg) {
+        // _buildRunForm: function(name, cfg) {
 
-            /**
-             * Use cfg.params, like this:
-             *
-             *  viewGenomeRuntimeConfig: {
-             *    'params' : {
-             *      'Identifiers' : [
-             *        {
-             *           'name' : 'Genome',
-             *           'type' : 'Genome',
-             *           'default' : '',
-             *        },
-             *      ]
-             *    },
-             *    'command' : {
-             *      'module' : 'biokbase.narrative.demo.microbes_workflow',
-             *      'function' : 'view_genome_details'
-             *    },
-             *  }
-             */
+        //     /**
+        //      * Use cfg.params, like this:
+        //      *
+        //      *  viewGenomeRuntimeConfig: {
+        //      *    'params' : {
+        //      *      'Identifiers' : [
+        //      *        {
+        //      *           'name' : 'Genome',
+        //      *           'type' : 'Genome',
+        //      *           'default' : '',
+        //      *        },
+        //      *      ]
+        //      *    },
+        //      *    'command' : {
+        //      *      'module' : 'biokbase.narrative.demo.microbes_workflow',
+        //      *      'function' : 'view_genome_details'
+        //      *    },
+        //      *  }
+        //      */
 
-            var cls = "class='table'";
-            var sbn = "style='border: none'";
+        //     var cls = "class='table'";
+        //     var sbn = "style='border: none'";
 
-            var text = "<form>" + 
-                       "<input type='hidden' name='kbfunc' value='" + name + "' />" +
-                       "<table " + cls + ">";
+        //     var text = "<form>" + 
+        //                "<input type='hidden' name='kbfunc' value='" + name + "' />" +
+        //                "<table " + cls + ">";
 
-            var self = this;
-            $.each(cfg.params, function(category, paramList) {
-                text += "<tr " + sbn + "><td " + sbn + ">" + category + "</td>";
-                $.each(paramList, function(idx, param) {
-                    /* param is an object with these expected fields:
-                     * {
-                     *    name : <name of the parameter>
-                     *    type : <type of parameter object - if left blank, a text input is used>
-                     *    default: <default value>
-                     * }
-                     */
+        //     var self = this;
+        //     $.each(cfg.params, function(category, paramList) {
+        //         text += "<tr " + sbn + "><td " + sbn + ">" + category + "</td>";
+        //         $.each(paramList, function(idx, param) {
+        //             /* param is an object with these expected fields:
+        //              * {
+        //              *    name : <name of the parameter>
+        //              *    type : <type of parameter object - if left blank, a text input is used>
+        //              *    default: <default value>
+        //              * }
+        //              */
 
-                    // if we don't have a name, it's a blank field.
-                    if (!param.name || param.name.length === 0) {
-                        // this cell intentionally left blank
-                        text += "<td " + sbn + ">&nbsp;</td>";
-                    }
+        //             // if we don't have a name, it's a blank field.
+        //             if (!param.name || param.name.length === 0) {
+        //                 // this cell intentionally left blank
+        //                 text += "<td " + sbn + ">&nbsp;</td>";
+        //             }
 
-                    // if we don't have a type (or it's blank), use a text field.
-                    else if (!param.type || param.type.length === 0) {
-                        // add a text input.
-                        text += "<td " + sbn + "><label>" + param.name + "</label>" + 
-                                "<input type='text' " + 
-                                "name='" + category + "." + param.name + "' " +
-                                "value='" + (param.default ? param.default : '') + "'>"
-                                "</input></td>";
-                    }
+        //             // if we don't have a type (or it's blank), use a text field.
+        //             else if (!param.type || param.type.length === 0) {
+        //                 // add a text input.
+        //                 text += "<td " + sbn + "><label>" + param.name + "</label>" + 
+        //                         "<input type='text' " + 
+        //                         "name='" + category + "." + param.name + "' " +
+        //                         "value='" + (param.default ? param.default : '') + "'>"
+        //                         "</input></td>";
+        //             }
 
-                    // if we have a type, get the list of objects of that type
-                    // from the workspace.
-                    else {
-                        // if there's a type, add the list of available objects
-                        // by type.
-                        // if none, insert a static message? TODO.
+        //             // if we have a type, get the list of objects of that type
+        //             // from the workspace.
+        //             else {
+        //                 // if there's a type, add the list of available objects
+        //                 // by type.
+        //                 // if none, insert a static message? TODO.
 
-                        var objectList = self.dataTableWidget.getLoadedData(param.type)[param.type];
-                        objectList.sort(function(a, b) { 
-                            if (a[0] < b[0]) 
-                                return -1;
-                            if (a[0] > b[0])
-                                return 1;
-                            return 0;
-                        });
-                        text += "<td " + sbn + ">" + 
-                                "<label>" + param.name + "</label>" +
-                                "<select name='" + category + "." + param.name + "'>";
+        //                 var objectList = self.dataTableWidget.getLoadedData(param.type)[param.type];
+        //                 objectList.sort(function(a, b) { 
+        //                     if (a[0] < b[0]) 
+        //                         return -1;
+        //                     if (a[0] > b[0])
+        //                         return 1;
+        //                     return 0;
+        //                 });
+        //                 text += "<td " + sbn + ">" + 
+        //                         "<label>" + param.name + "</label>" +
+        //                         "<select name='" + category + "." + param.name + "'>";
 
-                        for (var i=0; i<objectList.length; i++) {
-                            text += "<option value='" + objectList[i][0] + "'>" + objectList[i][0] + "</option>";
-                        }
-                        text += "</select></td>";
-                    }
-                });
+        //                 for (var i=0; i<objectList.length; i++) {
+        //                     text += "<option value='" + objectList[i][0] + "'>" + objectList[i][0] + "</option>";
+        //                 }
+        //                 text += "</select></td>";
+        //             }
+        //         });
 
-                text += "</tr>";
-            });
+        //         text += "</tr>";
+        //     });
 
-            text += "</table>" +
-                    "</form>";
+        //     text += "</table>" +
+        //             "</form>";
 
-            return text;
-        },
+        //     return text;
+        // },
 
         /**
          * Re-usable utility function to build the code block to run something.
@@ -676,6 +744,63 @@
                 $(cell.element).find("#kb-func-progress").css({"display":"block"});
                 var msgid = nb.kernel.execute(code, callbacks, {silent: true});
             };
+        },
+
+        /**
+         * Run a function cell
+         * The cell should contain all the information it needs to run.
+         *
+         * @param {Object} cell - the cell that needs to be run
+         * @param {}
+         * @private
+         */
+        runCell: function() {
+            var self = this;
+            return function(cell, service, method, params) {
+                var nb = IPython.notebook;
+                var currentIndex = nb.get_selected_index();
+                var codeCell = nb.insert_cell_below('code', currentIndex);
+                codeCell.element.css('display', 'none');
+
+                var callbacks = {
+                    'execute_reply' : function(content) {},
+                    'output' : function(msgType, content) {},
+                    'clear_output' : function(content) {},
+                    'set_next_input' : function(text) {},
+                    'input_request' : function(content) {}
+                };
+
+                var code = self.buildRunCommand(service, method, params);
+                codeCell.set_text(code);
+                codeCell.output_area.clear_output(true, true, true);
+                codeCell.set_input_prompt('*');
+                console.debug('Running function: ' + service + '.' + method);
+
+                self._resetProgress(cell);
+                $(cell.element).find('#kb-func-progress').css({'display': 'block'});
+                nb.kernel.execute(code, callbacks, {silent: true});
+            };
+        },
+
+        /**
+         * Stitches together the command needed to run a method in the IPython kernel.
+         * It is assumed that params is a list, with all values in the right order.
+         * @param {String} service - the registered service name
+         * @param {String} method - the registered method name
+         * @param {Array} params - a list of parameter values
+         * @returns {String} the constructed IPython kernel command
+         * @private
+         */
+        buildRunCommand: function(service, method, params) {
+            var cmd = "import biokbase.narrative.common.service as Service\n" +
+                      "method = Service.get_service('" + service + "').get_method('" + method + "')\n" +
+                      "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
+                      "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
+
+            var paramList = params.map(function(p) { return '"' + p + '"'; });
+            cmd += "method(" + paramList + ")";
+            console.debug(cmd);
+            return cmd;
         },
 
         /**

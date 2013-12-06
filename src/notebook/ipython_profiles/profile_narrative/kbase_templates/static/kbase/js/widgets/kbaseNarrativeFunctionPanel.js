@@ -9,7 +9,6 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-
 (function( $, undefined ) {
     $.KBWidget({
         name: 'kbaseNarrativeFunctionPanel', 
@@ -65,11 +64,12 @@
             this.$elem.append(this.$errorPanel);
 
             // The help element should be outside of the panel itself, so it can be manipulated separately.
+            // It should hide itself when clicked.
             var self = this;
             this.$helpPanel = $('<div>')
                               .addClass('kb-function-help-popup alert alert-info')
                               .hide()
-                              .click(function(event) { console.log(event); self.$helpPanel.hide() });
+                              .click(function(event) { self.$helpPanel.hide(); });
 
             this.$elem.append(this.$helpPanel);
             this.refresh();
@@ -178,6 +178,12 @@
                                      );
         },
 
+        /**
+         * Shows a popup panel with a description of the clicked method.
+         * @param {object} method - the method containing a title and 
+         * description for populating the popup.
+         * @private
+         */
         showHelpPopup: function(method) {
             this.$helpPanel.empty();
             this.$helpPanel.append($('<h1>').append(method.title + ' Help'))

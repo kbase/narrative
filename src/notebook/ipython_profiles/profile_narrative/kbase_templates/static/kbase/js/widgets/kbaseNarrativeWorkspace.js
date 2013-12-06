@@ -21,42 +21,40 @@
         name: "kbaseNarrativeWorkspace", 
         parent: "kbaseWidget",
         version: "1.0.0",
-        uploadWidget: 'x',
-        dataTableWidget: 'y',
         options: {
             workspaceURL: "https://www.kbase.us/services/workspace",
-            loadingImage: "",
+            loadingImage: "../images/ajax-loader.gif",
             tableElem: null,
             controlsElem: null
         },
         ws_client: null,
         ws_id: null,
-        loadingImage: "../images/ajax-loader.gif",
+        FUNCTION_CELL: "function_input",
 
         init: function(options) {
             this._super(options);
 
             var self = this;
+            // Whenever the notebook gets loaded, it should rebind things.
+            // This *should* only happen once, but I'm putting it here anyway.
             $([IPython.events]).on('notebook_loaded.Notebook', function() {
                 self.rebindRunButtons();
             });
 
-            $(document).on('function_clicked.Narrative', function(event, data) {
-                console.debug("function clicked!");
-                console.debug(event);
-                console.debug(data);
+            // When a user clicks on a function, this event gets fired with
+            // method information. This builds a function cell out of that method
+            // and inserts it in the right place.
+            $(document).on('function_clicked.Narrative', function(event, method) {
+                self.buildFunctionCell(method);
             });
 
-            $(document).on('function_help.Narrative', function(event, data) {
-                console.debug('help clicked!');
-                console.debug(event);
-                console.debug(data);
-            })
-
+            // Build the list of available functions.
             $("#function-test").kbaseNarrativeFunctionPanel({});
 
+            // Initialize the data table.
             this.initDataTable(options.tableElem);
             this.initControls(options.controlsElem);
+
             // bind search to data table
             $search_inp = options.controlsElem.find(':input');
             var that = this;
@@ -65,7 +63,10 @@
                 tbl.fnFilter($search_inp.val());
                 tbl.fnDraw();
             });
+
+            // **DEPRECATED** Initializes controls.
             this.initFuncs();
+
             this.render();
             return this;
         },
@@ -175,45 +176,116 @@
                     $elt.show();
                 });
             });
+        },
 
-            // // Command to load and fetch all functions from the kernel
-            // var fetchFunctionsCommand = "import biokbase.narrative.services.microbes_demo\n" + 
-            //                             "print biokbase.narrative.common.service.get_all_services(as_json_schema=True)\n";
+        /**
+         * @method buildFunctionCell
+         * @param {Object} method - the JSON schema version of the method to invoke. This will
+         * include a list of parameters and outputs.
+         */
+        buildFunctionCell: function(method) {
+            console.log(method);
 
-            // // We really only need the 'output' callback here.
-            // var callbacks = {
-            //     'output' : function(msg_type, content) { 
-            //         if (msg_type === "stream") {
-            //             var buffer = content.data;
-            //             var lines = buffer.split("\n");
-            //             var offs = 0, 
-            //                 done = false, 
-            //                 self = this,
-            //                 result = "";
-            //             $.each(lines, function(index, line) {
-            //                 if (!done) {
-            //                     if (line.length == 0) {
-            //                         offs += 1; // blank line, move offset
-            //                     }
-            //                     else {
-            //                         // No progress marker on non-empty line => final output of program?
-            //                         result += line;
-            //                         // all but the last line should have \n appended
-            //                         if (index < lines.length - 1) {
-            //                             result += "\n";
-            //                         }
-            //                     }
-            //                 }
-            //             });
-            //             if (result.length > 0) {
-            //                 var serviceSet = JSON.parse(result);
-            //                 console.debug(serviceSet);
-            //             }
-            //         }
-            //     },
-            // };
+            var cell = IPython.notebook.insert_cell_below('markdown');
+            // make this a function input cell, as opposed to an output cell
+            cell.metadata['kb-cell'] = this.FUNCTION_CELL;
 
-            // var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
+            // THIS IS WRONG! FIX THIS LATER!
+            // But it should work for now... nothing broke up to this point, right?
+            var cellIndex = IPython.notebook.ncells() - 1;
+            var cellId = 'kb-cell-' + cellIndex;
+
+            // The various components are HTML STRINGS, not jQuery objects.
+            // This is because the cell expects a text input, not a jQuery input.
+            // Yeah, I know it's ugly, but that's how it goes.
+            var cellContent;
+
+            if (this.validateMethod(method)) {
+                var inputs = this.buildFunctionInputs(method, cellId);
+                var buttons = "<div class='buttons pull-right' style='margin-top:10px'>" +
+                                  "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-warning'>Delete</button> " +
+                                  "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary'>Run</button>" + 
+                              "</div>";
+                var progressBar = "<div id='kb-func-progress' style='display:none;'>" +
+                                    "<div class='progress progress-striped active kb-cell-progressbar'>" +
+                                        "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
+                                        "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
+                                    "</div>" +
+                                    "<p class='text-success'/>" +
+                                  "</div>";
+
+                cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
+                                  "<h1>" + method.title + "</h1>" +
+                                  "<div class='kb-cell-params'>" +  
+                                      inputs +
+                                      buttons + 
+                                  "</div>" +
+                                  progressBar +
+                              "</div>";
+            }
+            else {
+                cellContent = "Error - the selected method is invalid.";
+            }
+            cell.set_text(cellContent);
+
+            cell.rendered = false;
+            cell.render();
+
+//            this._removeCellEditFunction(cell);
+            this._bindActionButtons(cell);
+        },
+
+        /**
+         * Builds the input div for a function cell, based on the given method object.
+         * @param {Object} method - the method being constructed around.
+         * @returns {String} an HTML string describing the available parameters for the cell.
+         * @private
+         */
+        buildFunctionInputs: function(method, cellId) {
+            var inputDiv = "<div class='kb-cell-params'><table class='table'>";
+            var params = method.properties.parameters;
+            for (var p in params) {
+                console.log(p);
+                inputDiv += "<tr style='border:none'>" + 
+                                "<td style='border:none'>" + p + "</td>" + 
+                                "<td style='border:none'><input type='text' name='" + p + "' value=''></input></td>" +
+                                "<td style='border:none'>" + params[p].description + "</td>" +
+                            "</tr>";
+            }
+            inputDiv += "</table></div>";
+
+            return inputDiv;
+        },
+
+        /**
+         * Checks if the given method object has a minimally valid structure.
+         * Each method needs the following properties:
+         * title - string, the title of the method (required non-empty)
+         * service - string, the service where the method came from (required non-empty)
+         * description - string, the description of the method
+         * properties - object, contains parameters for the method
+         * properties.parameters - object, essentially a list of parameters for the method
+         *
+         * @param {object} method - the method to validate
+         * @private
+         */
+        validateMethod: function(method) {
+            // if no title, return false
+            if (!method.hasOwnProperty('title') || method.title.length == 0)
+                return false;
+
+            // if no service, return false
+            if (!method.hasOwnProperty('service') || method.service.length == 0)
+                return false;
+
+            // if no properties, or it's not an object, return false
+            if (!method.hasOwnProperty('properties') || typeof method.properties !== 'object')
+                return false;
+
+            if (!method.properties.hasOwnProperty('parameters') || typeof method.properties.parameters !== 'object')
+                return false;
+
+            return true;
         },
 
         /**
@@ -293,7 +365,7 @@
             // get the cell.
             // look for the two buttons.
             // bind them to the right actions.
-            if (!cell.metadata || !cell.metadata['kb-cell'] || cell.metadata['kb-cell'] !== 'function')
+            if (!cell.metadata || !cell.metadata['kb-cell'] || cell.metadata['kb-cell'] !== this.FUNCTION_CELL)
                 return;
 
             $(cell.element).find(".buttons [id*=delete]").off('click');
@@ -430,7 +502,6 @@
             if (!(IPython && IPython.notebook))
                 return;
             
-            console.debug("rebindRunButtons.begin");
             // Rewrite the following to iterate using the IPython cell
             // based methods instead of DOM objects
 
@@ -443,13 +514,11 @@
                 var cellType = cell.metadata['kb-cell'];
                 if (cellType) {
                     this._removeCellEditFunction(cell);
-                    if (cellType == 'function') {
+                    if (cellType == this.FUNCTION_CELL) {
                         this._bindActionButtons(cell);
                     }
                 }                
             }
-
-            console.debug("rebindRunButtons.end");
         },
 
 

@@ -68,7 +68,7 @@
         },
         getData: function() {
             return {
-                type: "MemeRunResult",
+                type: "MemeMotif",
                 id: this.options.motif.id,
                 workspace: this.options.workspace_id,
                 title: "MEME Motif"

@@ -65,13 +65,13 @@
 					self.$elem.append($dropdown);
 					self.$elem.append($("<button class='btn btn-default'>Show Motif</button>")
 	                	.on("click", 
-	                    	function(event) {
-								$(self.$elem.selector + " > select option:selected").each(function() {
-    //                      	console.log(event);
-								self.trigger("showMemeMotif", { motif: self.collection.data.motifs[$(this).attr("id")], event: event });
-	                        });
-	                    })
-	                );
+                                    function(event) {
+					$(self.$elem.selector + " > select option:selected").each(function() {
+                                          console.log(event);
+                                            self.trigger("showMemeMotif", { motif: self.collection.data.motifs[$(this).attr("id")], event: event });
+                                        });
+                                    })
+                                );
 						
 					self.$elem.append($("<span />").append("<br><button class='btn btn-default'>Show MEME run parameters</button>")
 	                	.on("click", 

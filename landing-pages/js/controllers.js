@@ -190,21 +190,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })  
 
 
-function MemeDetail($scope, $stateParams) {
-    $scope.params = {'meme_run_result_id': $stateParams.id,
-                     'workspace_id': $stateParams.ws}
-}
-
-function BambiDetail($scope, $stateParams) {
-    $scope.params = {'bambi_run_result_id': $stateParams.id,
-                     'workspace_id': $stateParams.ws}
-}
-
-function CmonkeyDetail($scope, $stateParams) {
-    $scope.params = {'cmonkey_run_result_id': $stateParams.id,
-                     'workspace_id': $stateParams.ws}
-}
-
 function GeneDetail($scope, $stateParams) {
     $scope.params = {'geneID': $routeParams.id,
                      'workspaceID': $routeParams.ws}
@@ -230,6 +215,22 @@ function FBADetailCards($scope, $stateParams) {
     $scope.id = $stateParams.id;
 }
 
+function BambiDetail($scope, $stateParams) {
+    $scope.params = {'bambi_run_result_id': $stateParams.id,
+                     'workspace_id': $stateParams.ws};
+}
+
+function CmonkeyDetail($scope, $stateParams) {
+    $scope.params = {'cmonkey_run_result_id': $stateParams.id,
+                     'workspace_id': $stateParams.ws};
+}
+
+function MemeDetail($scope, $stateParams) {
+    $scope.params = {'meme_run_result_id': $stateParams.id,
+                     'workspace_id': $stateParams.ws};
+}
+
+
 function LPHelp($scope, $stateParams, $location) {
     // Fixme: move out of controller
     $('.api-url-submit').click(function() {
@@ -244,7 +245,7 @@ function LPHelp($scope, $stateParams, $location) {
 }
 
 function WSObjects($scope, $stateParams, $location) {
-    var type = $location.path().match(/\/\w*\/*/g)[0]
+    var type = $location.path().match(/\/\w*\//g)[0]
              .replace('/','').replace('/','');
 
     $scope.type = type;

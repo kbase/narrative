@@ -84,35 +84,35 @@ var app = angular.module('landing-pages',
         .state('models', {
              url: '/models',
              templateUrl: 'views/object-list.html',
-             controller: WSObjects})  
+             controller: 'WSObjects'})  
         .state('modelsbyws', {
              url: '/models/:ws',
              templateUrl: 'views/object-list.html',
-             controller: WSObjects})
+             controller: 'WSObjects'})
         .state('modelbyid', {
              url: '/models/:ws/:id',
              templateUrl: 'views/objects/model.html',
-             controller: ModelDetail})
+             controller: 'ModelDetail'})
 
     $stateProvider
         .state('modelcards', {
              url: '/cards/models/:ws/:id',
              templateUrl: 'views/objects/modelcards.html',
-             controller: ModelDetailCards})
+             controller: 'ModelDetailCards'})
 
     $stateProvider
         .state('fbasbyws', {
                 url:'/fbas/:ws', 
                 templateUrl: 'views/object-list.html',
-                controller: WSObjects})
+                controller: 'WSObjects'})
         .state('fbabyid', {
                 url: '/fbas/:ws/:id',
                 templateUrl: 'views/objects/fba.html',
-                controller: FBADetail})
+                controller: 'FBADetail'})
         .state('fbacards', {
                 url: '/cards/fbas/:ws/:id',
                 templateUrl: 'views/objects/fbacards.html',
-                controller: FBADetailCards})
+                controller: 'FBADetailCards'})
 
     $stateProvider
         .state('media',
@@ -153,8 +153,6 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/objects/genome.html',
              controller: 'GenomeDetail'})
 
-    
-
 
     $stateProvider
         .state('meme',
@@ -170,7 +168,17 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/objects/meme.html',
              controller: 'MemeDetail'})
 
-
+    $stateProvider
+        .state('spec',
+            {url: '/spec/:kind/:id',
+             templateUrl: 'views/objects/spec.html',
+             controller: 'SpecDetail'})
+        
+    $stateProvider
+        .state('bambi',
+            {url: '/bambi/:ws/:id',
+             templateUrl: 'views/objects/bambi.html',
+             controller: 'BambiDetail'})
 
     $stateProvider
         .state('landing-pages-help',
@@ -337,8 +345,7 @@ app.run(function ($rootScope, $location) {
 
 
     // here's a workaround so that ui-router doesn't remove query strings.
-    
-    $rootScope.$on('$stateChangeStart',
+    /*$rootScope.$on('$stateChangeStart',
     function (event, toState, toParams, fromState, fromParams) {
         this.locationSearch = $location.search();
     });
@@ -346,12 +353,11 @@ app.run(function ($rootScope, $location) {
     function (event, toState, toParams, fromState, fromParams) {
         $location.search(this.locationSearch);
     });
-    
+    */
 
     //  Here's a sort of hack to remove any cards when a view changes.
     //  There may be a better way to manage this.
     $rootScope.$on('$stateChangeSuccess', function() {
-        //$('.popover').each(function() { $(this).remove() }); 
         removeCards();
     })
 });

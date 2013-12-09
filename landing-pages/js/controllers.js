@@ -86,51 +86,53 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
         });
     }
 
+    // model for storing selected objects
+    $scope.selectedObjs = []
 
+    // add objects from urls
+    for (var i in $scope.ws) {
+        var found;
+        var entry = {ws: $scope.ws[i], id: $scope.ids[i]};
 
-                $scope.selectedObjs = []
+        for (var j in $scope.selectedObjs) {
+            if (angular.equals($scope.selectedObjs[j], entry)) {
+                found = true;
+                break;
+            }
+        }
 
-                for (var i in $scope.ws) {
-                    var found;
-                    var entry = {ws: $scope.ws[i], id: $scope.ids[i]};
+        if (found) continue;
+        
+        $scope.selectedObjs.push(entry)
+    }
 
-                    for (var j in $scope.selectedObjs) {
-                        if (angular.equals($scope.selectedObjs[j], entry)) {
-                            found = true;
-                            break;
-                        }
-                    }
+    $scope.$watch('selectedObjs', function() {
+        console.log('watched')
+        // update url strings
+        $scope.ws = [];
+        $scope.ids = [];
+        for (var i in $scope.selectedObjs) {
+            var obj = $scope.selectedObjs[i];
+             $scope.ws.push(obj.ws);
+             $scope.ids.push(obj.id);  
+        }
+        $scope.ws_param =  $scope.ws.join('+');
+        $scope.ids_param =  $scope.ids.join('+');
 
-                    if (found) continue;
-                    
-                    $scope.selectedObjs.push(entry)
-                }
+        $location.search({selected_ws: $scope.selected_ws,
+          ws: $scope.ws_param, 
+          ids: $scope.ids_param});
 
-                $scope.$watch('selectedObjs', function() {
+        // show object selection sidebar
+        /*
+        if (!$('.selectedobjs').is(':visible')) {
+            $('.side-bar-switch').children('button').removeClass('active');            
+            $('.show-objs').addClass('active');
+            $scope.showSelectedObjs();
+        }
+        */
 
-                    // update url strings
-                    $scope.ws = [];
-                    $scope.ids = [];
-                    for (var i in $scope.selectedObjs) {
-                        var obj = $scope.selectedObjs[i];
-                         $scope.ws.push(obj.ws);
-                         $scope.ids.push(obj.id);  
-                    }
-                    $scope.ws_param =  $scope.ws.join('+');
-                    $scope.ids_param =  $scope.ids.join('+');
-
-                    $location.search({selected_ws: $scope.selected_ws,
-                      ws: $scope.ws_param, 
-                      ids: $scope.ids_param});
-
-                    // show object selection sidebar
-                    if (!$('.selectedobjs').is(':visible')) {
-                        $('.side-bar-switch').children('button').removeClass('active');            
-                        $('.show-objs').addClass('active');
-                        $scope.showSelectedObjs();
-                    }
-                    console.log($scope.selectedObjs)
-                }, true); 
+    }, true); 
 
 
     // removes items from the selected objects view
@@ -143,7 +145,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 .controller('Selector', function($scope, $location) {
 
-
 })
 
 .controller('RxnDetail', function($scope, $stateParams) {
@@ -155,10 +156,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.ids = $stateParams.ids.split('&');
 })
 
-
-
 .controller('MVHelp', function($scope, $stateParams, $location) {
-
     // Fixme: move out of controller
     $('.api-url-submit').click(function() {
         var form = $(this).parents('form');
@@ -173,11 +171,9 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 .controller('GenomeDetail', function($scope, $stateParams) {
-
     $scope.params = {'genomeID': $stateParams.id,
                      'workspaceID': $stateParams.ws}
 })
-
 
 .controller('MediaDetail', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
@@ -189,41 +185,57 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.id = $stateParams.id;
 })  
 
-
-function MemeDetail($scope, $stateParams) {
+.controller('MemeDetail', function($scope, $stateParams) {
     $scope.params = {'meme_run_result_id': $stateParams.id,
                      'workspace_id': $stateParams.ws}
-}
+})
 
-function BambiDetail($scope, $stateParams) {
-    $scope.params = {'bambi_run_result_id': $routeParams.id,
-                     'workspace_id': $routeParams.ws}
-}
+.controller('BambiDetail', function($scope, $stateParams) {
+    $scope.params = {'bambi_run_result_id': $stateParams.id,
+                     'workspace_id': $stateParams.ws}
+})
 
-function GeneDetail($scope, $stateParams) {
-    $scope.params = {'geneID': $routeParams.id,
-                     'workspaceID': $routeParams.ws}
-}
+.controller('SpecDetail', function($scope, $stateParams) {
+    $scope.params = {
+        'kind' : $stateParams.kind,
+        'id' : $stateParams.id
+    };
+})
 
-function ModelDetail($scope, $stateParams) {
+
+.controller('GeneDetail', function($scope, $stateParams) {
+    $scope.params = {'geneID': $stateParams.id,
+                     'workspaceID': $stateParams.ws}
+})
+
+.controller('ModelDetail', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
-}
+})
 
-function ModelDetailCards($scope, $stateParams) {
+.controller('ModelDetailCards', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
-}
+})
 
-
-function FBADetail($scope, $stateParams) {
+.controller('FBADetail', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
-}
-function FBADetailCards($scope, $stateParams) {
+})
+
+.controller('FBADetailCards', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
-}
+})
+
+.controller('WSObjects', function($scope, $stateParams, $location) {
+    var type = $location.path().match(/\/\w*\/*/g)[0]
+             .replace('/','').replace('/','');
+
+    $scope.type = type;
+    $scope.ws = $stateParams.ws;
+})
+
 
 function LPHelp($scope, $stateParams, $location) {
     // Fixme: move out of controller
@@ -238,15 +250,6 @@ function LPHelp($scope, $stateParams, $location) {
     });
 }
 
-function WSObjects($scope, $stateParams, $location) {
-    var type = $location.path().match(/\/\w*\/*/g)[0]
-             .replace('/','').replace('/','');
-
-    $scope.type = type;
-    $scope.ws = $stateParams.ws;
-}
-
-
 
 function ScrollCtrl($scope, $location, $anchorScroll) {
   $scope.gotoAnchor = function (id){
@@ -255,11 +258,5 @@ function ScrollCtrl($scope, $location, $anchorScroll) {
   }
 }
 
-function SpecDetail($scope, $routeParams) {
-	$scope.params = {
-		'kind' : $routeParams.kind,
-		'id' : $routeParams.id
-	};
-}
 
 

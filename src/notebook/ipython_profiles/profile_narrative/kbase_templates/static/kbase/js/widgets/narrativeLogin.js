@@ -40,6 +40,12 @@
 		     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
 		     { path: '/',
 		       domain: 'kbase.us' });
+	    $(document).trigger('cookie_set.kbase');
+	};
+
+	var clear_cookie = function() {
+	    console.log( 'Clearing kbase_session cookie');
+	    $.removeCookie('kbase_session',{ path: '/', domain: 'kbase.us' });
 
 	};
 
@@ -105,6 +111,7 @@
         });
 
         if (loginWidget.token() === undefined) {
+	    clear_cookie();
             // include hiding div.
             loginWidget.openDialog();
         }

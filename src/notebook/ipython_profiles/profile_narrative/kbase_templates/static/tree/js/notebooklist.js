@@ -45,6 +45,11 @@ var IPython = (function (IPython) {
             that.handelFilesUpload(event,'drop');
             return false;
         });
+	/* Bind handlers to login/logout that set/clear tokens and reloads the notebook list */
+	$(document).on('cookie_set.kbase', function(event, token) {
+			   console.log('Loading notebook list for ',$("#login-widget").kbaseLogin("session", "user_id") );
+			   that.load_list();
+	});
     };
 
     NotebookList.prototype.handelFilesUpload =  function(event, dropOrForm) {
@@ -88,7 +93,7 @@ var IPython = (function (IPython) {
     NotebookList.prototype.load_list = function () {
         var that = this;
 	var token = $("#login-widget").kbaseLogin("session", "token");
-	console.log( "Token = ", token)
+	console.log( "Reloading notebook list")
         var settings = {
             processData : false,
             cache : false,
@@ -256,8 +261,8 @@ var IPython = (function (IPython) {
                 });
                 return false;
             });
-        item.find(".item_buttons").html("").append(delete_button);
-    };
+        item.find(".item_buttons").html("").append(delete_button); 
+   };
 
 
     NotebookList.prototype.add_upload_button = function (item) {

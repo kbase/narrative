@@ -31,14 +31,14 @@ $(document).ready(function () {
         if($('.upload_button').length == 0)
         {
             IPython.notebook_list.load_list();
-            IPython.cluster_list.load_list();
+            //IPython.cluster_list.load_list();
         }
         if (!interval_id){
             interval_id = setInterval(function(){
                     if($('.upload_button').length == 0)
                     {
                         IPython.notebook_list.load_list();
-                        IPython.cluster_list.load_list();
+                        //IPython.cluster_list.load_list();
                     }
                 }, time_refresh*1000);
             }
@@ -60,7 +60,7 @@ $(document).ready(function () {
     });
 
     // finally start it, it will refresh immediately
-    enable_autorefresh();
+    // enable_autorefresh();
 
     IPython.page.show();
     

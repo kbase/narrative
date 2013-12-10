@@ -25,7 +25,7 @@ data-base-kernel-url={{base_kernel_url}}
         <div id="tabs" class="tabbable">
             <ul class="nav nav-tabs" id="tabs">
                 <li class="active"><a href="#notebooks" data-toggle="tab">Notebooks</a></li>
-                <li><a href="#clusters" data-toggle="tab">Clusters</a></li>
+                <!-- <li><a href="#clusters" data-toggle="tab">Clusters</a></li> -->
             </ul>
 
             <div class="tab-content">
@@ -47,16 +47,18 @@ data-base-kernel-url={{base_kernel_url}}
                   <div id="notebook_list_header" class="row list_header">
                       <div id="project_name">
                         <ul class="breadcrumb">
+			  <!--
                             {% for component in project_component %}
                                 <li>{{component}} <span>/</span></li>
                             {% endfor %}
+			  -->
                         </ul>
                       </div>
                   </div>
                 </div>
             </div>
 
-            <div id="clusters" class="tab-pane">
+            <div id="clusters" class="tab-pane hidden">
 
                 <div id="cluster_toolbar">
                     <span id="cluster_list_info">IPython parallel computing clusters</span>

@@ -197,8 +197,8 @@ class Token:
                 self.get()
             except AuthCredentialsNeeded:
                 pass
-            except Exception, e:
-                raise e
+            #except Exception, e:
+            #    raise e
         elif os.environ.get(tokenenv):
             self.token = os.environ[tokenenv]
         elif defattr and not kwargs.get('ignore_kbase_config'):
@@ -329,11 +329,11 @@ class User:
         headers = { 'Authorization' : 'Globus-Goauthtoken ' + self.token }
         resp = requests.get( AuthSvcHost+"users/" + self.authToken.user_id, params = p,
                              headers = headers)
-        profile = resp.json
+        profile = resp.json()
         for attr,go_attr in self.top_attrs.items():
             setattr( self, attr, profile.get( go_attr, None))
         # pull out the name field from the groups dict entries and put into groups
-        setattr( self, 'groups', [ x['name'] for x in resp.json['groups']])
+        setattr( self, 'groups', [ x['name'] for x in resp.json()['groups']])
         if 'custom_fields' in profile:
             for attr in profile['custom_fields'].keys():
                 setattr( self, attr, profile['custom_fields'][attr])

@@ -136,7 +136,7 @@ class NexusClient(object):
         url_parts = ('https', self.server, '/goauth/authorize', query_params, None)
         url = urlparse.urlunsplit(url_parts)
         response = requests.get(url, headers=headers, verify=self.verify_ssl)
-        return response.json
+        return response.json()
 
 
     def sshagent_get_request_token(self, username, client_id, keyname):
@@ -155,7 +155,7 @@ class NexusClient(object):
         url_parts = ('https', self.server, '/goauth/authorize', query_params, None)
         url = urlparse.urlunsplit(url_parts)
         response = requests.get(url, headers=headers, verify=self.verify_ssl)
-        return response.json
+        return response.json()
 
     def request_client_credential(self, client_id, password=None):
         """
@@ -188,7 +188,7 @@ class NexusClient(object):
             response = requests.post(url, data={'grant_type': 'client_credentials','client_id' : client_id }, auth = (client_id, password), verify=self.verify_ssl)
         else:
             raise Exception( "Password and legitimate user_key_file required")
-        return response.json
+        return response.json()
 
     def request_client_credential_sshagent(self, client_id=None, agent_keyname = None):
         """
@@ -220,7 +220,7 @@ class NexusClient(object):
             response = requests.post(url, data={'grant_type': 'client_credentials'}, headers=headers, verify=self.verify_ssl)
         else:
             raise Exception('Requires client_id and ssh agent_keyname as parameters or as part of initial config to authenticate credential request')
-        return response.json
+        return response.json()
 
     def get_user_using_access_token(self, access_token):
         access_token_dict = dict(field.split('=') for field in access_token.split('|'))
@@ -232,5 +232,5 @@ class NexusClient(object):
             "Content-Type": "application/json"
         }
         response = requests.get(url, headers=headers, verify=self.verify_ssl)
-        assert(response.status_code == requests.codes.ok)
-        return response.json
+        assert(response.status_code == requests.codes['ok'])
+        return response.json()

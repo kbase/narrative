@@ -2,7 +2,7 @@ TOP_DIR = ../..
 DEPLOY_RUNTIME ?= /kb/runtime
 TARGET ?= /kb/deployment
 SERVICE_SPEC =
-SERVICE_NAME =
+SERVICE_NAME = narrative
 REPO_NAME = narrative
 SERVICE_PORT = 8090
 
@@ -11,7 +11,7 @@ KB_DEPLOYMENT_CONFIG ?= $(ROOT_DEV_MODULE_DIR)/deploy.cfg
 
 #include $(TOP_DIR)/tools/Makefile.common
 #include $(TOP_DIR)/tools/Makefile.common.rules
-SERVICE_DIR = /kb/deployment/services/$(SERVICE_NAME)
+SERVICE_DIR ?= $(TARGET)/services/$(SERVICE_NAME)
 PID_FILE = $(SERVICE_DIR)/service.pid
 LOG_FILE = $(SERVICE_DIR)/log/uwsgi.log
 ERR_LOG_FILE = $(SERVICE_DIR)/log/error.log
@@ -29,6 +29,9 @@ SRC_PERL = $(wildcard scripts/*.pl)
 CLIENT_TESTS = $(wildcard test/client-tests/*.t)
 SCRIPT_TESTS = $(wildcard test/script-tests/*.t)
 SERVER_TESTS = $(wildcard test/server-tests/*.t)
+
+# Installer script
+INSTALLER = ./install.sh
 
 # This is a very client-centric view of release engineering.
 # We assume our primary product for the community is the client
@@ -196,7 +199,6 @@ deploy-client: deploy-libs deploy-scripts deploy-docs
 # individual API functions and aggregated sets of API functions.
 
 deploy-libs: build-libs
-	rsync --exclude '*.bak*' -arv lib/. $(TARGET)/lib/.
 
 # Deploying scripts needs some special care. They need to run
 # in a certain runtime environment. Users should not have
@@ -222,16 +224,6 @@ deploy-libs: build-libs
 # script is known. 
 
 deploy-scripts:
-	export KB_TOP=$(TARGET); \
-	export KB_RUNTIME=$(DEPLOY_RUNTIME); \
-	export KB_PERL_PATH=$(TARGET)/lib bash ; \
-	for src in $(SRC_PERL) ; do \
-		basefile=`basename $$src`; \
-		base=`basename $$src .pl`; \
-		echo install $$src $$base ; \
-		cp $$src $(TARGET)/plbin ; \
-		$(WRAP_PERL_SCRIPT) "$(TARGET)/plbin/$$basefile" $(TARGET)/bin/$$base ; \
-	done
 
 # Deploying a service refers to to deploying the capability
 # to run a service. Becuase service code is often deployed 
@@ -242,33 +234,10 @@ deploy-scripts:
 deploy-service: deploy-service-libs deploy-service-scripts
 
 deploy-service-libs:
-	mkdir -p $(TARGET)/lib/biokbase/$(SERVICE_NAME)
-	touch $(TARGET)/lib/biokbase/__init__.py
-	rsync -arv --exclude adapter  $(TOP_DIR)/modules/$(REPO_NAME)/service/lib/biokbase/$(SERVICE_NAME)/* $(TARGET)/lib/biokbase/$(SERVICE_NAME)/.
-	mkdir -p $(SERVICE_DIR)
-	echo "deployed service for $(SERVICE_NAME)."
 
 deploy-service-scripts:	
-	# Create the start script (should be a better way to do this...)
-	echo '#!/bin/sh' > $(SERVICE_DIR)/start_service
-	echo "echo starting $(SERVICE_NAME) service." >> $(SERVICE_DIR)/start_service
-	echo 'export PYTHONPATH=$(TARGET)/lib:$$PYTHONPATH' >> $(SERVICE_DIR)/start_service
-	echo 'export KB_DEPLOYMENT_CONFIG=$(KB_DEPLOYMENT_CONFIG)' >> $(SERVICE_DIR)/start_service
-	echo 'export KB_SERVICE_NAME=$(SERVICE_NAME)' >> $(SERVICE_DIR)/start_service
-	echo " " >> $(SERVICE_DIR)/start_service
-	echo "echo $(SERVICE_NAME) service is listening on port $(SERVICE_PORT).\n" >> $(SERVICE_DIR)/start_service
-	
-	# Create the stop script (should be a better way to do this...)
-	echo '#!/bin/sh' > $(SERVICE_DIR)/stop_service
-	echo "echo trying to stop $(SERVICE_NAME) service." >> $(SERVICE_DIR)/stop_service
-	echo "if [ ! -f $(PID_FILE) ] ; then " >> $(SERVICE_DIR)/stop_service
-	echo "\techo \"No pid file: $(PID_FILE) found for service $(SERVICE_NAME).\"\n\texit 1\nfi" >> $(SERVICE_DIR)/stop_service
-	echo " " >> $(SERVICE_DIR)/stop_service
-	
-	# Actually run the deployment of these scripts
-	chmod +x $(SERVICE_DIR)/*
-	mkdir -p $(SERVICE_DIR)/log
-
+	echo `pwd`
+	$(INSTALLER) -p $(SERVICE_DIR) -v narrative
 
 # Deploying docs here refers to the deployment of documentation
 # of the API. We'll include a description of deploying documentation
@@ -283,8 +252,10 @@ deploy-docs: build-docs
 # that is provided to the compile_typespec command. The
 # compile_typespec command is called in the build-libs target.
 
-build-docs: compile-docs
-	pod2html --infile=lib/Bio/KBase/$(SERVICE_NAME)/Client.pm --outfile=docs/$(SERVICE_NAME).html
+build-docs:
+	cd src && export PYTHONPATH=`pwd` && python2.7 setup.py doc
+	-mkdir docs
+	cp -R src/biokbase-doc/_build/html/* docs/
 
 # Use the compile-docs target if you want to unlink the generation of
 # the docs from the generation of the libs. Not recommended, but there
@@ -303,8 +274,6 @@ compile-docs: build-libs
 # target depends on the compiled libs.
 
 build-libs:
-	virtualenv narrative
-	pip install ipython
 
 clean:
 	#nothing yet

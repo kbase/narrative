@@ -14,7 +14,8 @@ from biokbase.narrative.common import kbtypes
 VERSION = (0, 0, 1)
 NAME = "MyExampleService"
 
-# Create containing service
+# Initialization
+
 init_service(name=NAME, desc="This is an example", version=VERSION)
 
 # Define one service
@@ -37,5 +38,6 @@ def _my_service_function(meth, param1, param2):
 
     return "bogus_workspace_id"
 
-## Finalization
+# Finalization
+
 finalize_service()

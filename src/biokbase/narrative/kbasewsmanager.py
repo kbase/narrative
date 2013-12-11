@@ -178,17 +178,17 @@ class KBaseWSNotebookManager(NotebookManager):
         except KeyError:
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
-        self.log.error("notebook_exists(%s) = %s"%(notebook_id,exists))
+        self.log.debug("notebook_exists(%s) = %s"%(notebook_id,exists))
         if not exists:
             # The notebook doesn't exist among the notebooks we've loaded, lets see
             # if it exists at all in the workspace service
-            self.log.error("Checking other workspace")
+            self.log.debug("Checking other workspace")
             m = self.ws_regex.match(notebook_id)
             if not m:
                 return False
-            self.log.error("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
+            self.log.debug("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
             objmeta = ws_util.get_wsobj_meta( self.wsclient, token, ws=m.group('wsid'))
-            self.log.error("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
+            self.log.debug("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
             if "kb|ws.%s" % notebook_id in objmeta:
                 self.mapping[notebook_id] = notebook_id
                 return True
@@ -226,6 +226,7 @@ class KBaseWSNotebookManager(NotebookManager):
         # Set the notebook metadata workspace to the workspace this came from
         nb.metadata.ws_name = wsobj['metadata']['workspace']
         last_modified = dateutil.parser.parse(wsobj['metadata']['moddate'])
+        self.log.debug("Notebook successfully read" )
         return last_modified, nb
     
     def write_notebook_object(self, nb, notebook_id=None):
@@ -279,7 +280,7 @@ class KBaseWSNotebookManager(NotebookManager):
                       'retrieveFromURL': 0,
                       'asHash' :  0
                     }
-            self.log.debug("calling save_object with %s" % wsobj)
+            self.log.debug("calling save_object")
             res = self.wsclient.save_object( wsobj)
             self.log.debug("save_object returned %s" % res)
         except Exception as e:

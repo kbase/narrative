@@ -10,6 +10,7 @@ import json
 import os
 import random
 # Local
+import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
 from biokbase.workspaceService.Client import workspaceService
 from biokbase.InvocationService.Client import InvocationService
@@ -24,15 +25,17 @@ NAME = "microbes"
 init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
 
-@method(name="AnnotateGenome")
-def annotate_genome(meth, genome, out_genome):
+@method(name="Annotate Genome")
+def _annotate_genome(meth, genome, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
 
     :param genome: Source genome ID
     :type genome: kbtypes.Genome
+    :ui_name genome: Genome ID
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly.
     :type out_genome: kbtypes.Genome
+    :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
     :rtype: kbtypes.Genome
     """
@@ -59,22 +62,21 @@ def annotate_genome(meth, genome, out_genome):
     meth.advance("Rendering Job Information")
     job_info = res_list[0]
 
-    print("<br/>".join(["Annotation job submitted successfully!", job_info[1],
-                        "This job will take approximately an hour.",
-                        "Your annotated genome will have ID: <b>" + out_genome + "</b>", ""]))
+    return json.dumps({ 'output': "<br/>".join(["Annotation job submitted successfully!", job_info[1],
+                         "This job will take approximately an hour.",
+                         "Your annotated genome will have ID: <b>" + out_genome + "</b>", ""]) })
 
-    return out_genome
-
-
-@method(name="AssembleGenome")
-def assemble_genome(meth, contig_file, out_genome):
+@method(name="Assemble Genome from Reads")
+def _assemble_genome(meth, contig_file, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
 
     :param contig_file: A FASTA file with contig data
     :type contig_file: kbtypes.Unicode
+    :ui_name contig_file: Contig File ID
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly.
     :type out_genome: kbtypes.Genome
+    :ui_name out_genome: Output Genome ID
     :return: Assembled output genome ID
     :rtype: kbtypes.Genome
     """
@@ -111,19 +113,19 @@ def assemble_genome(meth, contig_file, out_genome):
 
     # 5. Pass it forward to the client.
     meth.advance("Rendering Genome Information")
-    print(json.dumps(genome_meta))
+    return json.dumps(genome_meta)
 
-    return out_genome
-
-
-@method(name="BuildMedia")
-def build_media(meth, base_media):
+@method(name="Build Media")
+def _build_media(meth, base_media):
     """Build media
 
     :param base_media: Base media type
     :type base_media: kbtypes.Media
+    :ui_name base_media: Media ID
     :return: JSON of medias
     :rtype: kbtypes.Media
+    :output_widget: kbaseMediaEditorNarrative
+    :embed: True
     """
     meth.stages = 2
 
@@ -134,6 +136,7 @@ def build_media(meth, base_media):
     base_media = base_media.strip().replace(' ', '_')
 
     meth.advance("Fetch Base Media")
+    result = { 'viewOnly': False, 'editOnly': True, 'ws': workspace, 'auth': token }
     if base_media:
         meth.stages += 1
         media_params = {
@@ -143,10 +146,9 @@ def build_media(meth, base_media):
         }
         media_list = fba.get_media(media_params)
         meth.advance("Render Media")
-        result = json.dumps(media_list)
-    else:
-        result = ""
-    return result
+        result['mediaData'] = media_list
+
+    return json.dumps(result)
 
 # Finalize (registers service)
 finalize_service()

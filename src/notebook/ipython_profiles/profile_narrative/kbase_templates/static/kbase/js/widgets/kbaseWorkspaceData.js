@@ -9,8 +9,8 @@
 (function( $, undefined ) {
 
 	$.KBWidget({
-        name: "kbaseWorkspaceDataWidget", 
-        parent: "kbaseWidget",
+        name: "kbaseWorkspaceData", 
+        parent: "kbaseAuthenticatedWidget",
 		version: "1.0.0",
 		ws_client: null,
 		table: null,
@@ -25,6 +25,7 @@
 		options: {
 			loadingImage: "../../images/ajax-loader.gif",
 			notLoggedInMsg: "Please log in to view a workspace.",
+            workspaceURL: "http://kbase.us/services/workspace",
             container: null,
             ws_id: null
 		},
@@ -40,6 +41,39 @@
                 .createMessages()
                 .createLoading()
                 .render();
+
+            $(document).on(
+                'dataLoadedQuery.Narrative', $.proxy(function (e, params, callback) {
+                    var objList = this.getLoadedData(params);
+                    if (callback) {
+                        callback(objList);
+                    }
+                },
+                this)
+            );
+
+            $(document).on(
+                'updateData.Narrative', $.proxy(function(e) {
+                    this.render();
+                },
+                this )
+            );
+
+            return this;
+        },
+
+        loggedInCallback: function(event, auth) {
+            this.ws_auth = auth.token;
+            this.ws_client = new workspaceService(this.options.workspaceURL);
+            this.isLoggedIn = true;
+            this.render();
+            return this;
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.ws_auth = null;
+            this.isLoggedIn = false;
+            this.render();
             return this;
         },
 
@@ -564,15 +598,13 @@
             else {
                 this.$loading.show();
                 var that = this;
+
                 this.setWs(function() {
                     var opts = {workspace: that.ws_id, auth: that.ws_auth};
-                    console.debug("list_workspace_objects.begin");
                     that.ws_client.list_workspace_objects(opts,
                         function(results) {
-                            //console.log("Results: " + results);
                             that.updateResults(results);
                             that.createTable();
-                            console.debug("list_workspace_objects.end");
                         },
                         function(err) {
                             console.error("getting objects for workspace " + that.ws_id, err);
@@ -723,13 +755,13 @@
                     this.loadedData[type] = [];
                 this.loadedData[type].push(results[i]);
             }
-            console.log(this.loadedData);
+//            console.log(this.loadedData);
 
             var mdstring = '';
             $.each(IPython.notebook.metadata, function(key, val) {
                 mdstring = mdstring + key + "=" + val + "\n";
             });
-            console.log('notebook metadata = ' + mdstring);
+//            console.log('notebook metadata = ' + mdstring);
             // just columns shown
             this.tableData = [ ];
             // all data from table, keyed by object name + type
@@ -741,6 +773,14 @@
                 var name = results[i][i1], type = results[i][i2];
                 this.tableData.push([name, type]);
                 this.table_meta[this._item_key(name, type)] = results[i];
+            }
+
+            var cells = IPython.notebook.get_cells();
+            for (var i=0; i<cells.length; i++) {
+                if (cells[i].cell_type === "markdown") {
+                    cells[i].rendered = false;
+                    cells[i].render();
+                }
             }
             return this;
         },
@@ -758,19 +798,20 @@
             return name + '/' + type;
         },
 
-		loggedIn: function(client, token) {
-            console.debug("WorkspaceData.loggedIn");
-            this.ws_client = client, this.ws_auth = token;
-            this.isLoggedIn = true;
-            this.render();
-            return this;
-		},
+		// loggedIn: function(client, token) {
+  //           console.debug("WorkspaceData.loggedIn");
+  //           this.ws_client = new workspaceService(this.options.workspaceURL);
+  //           this.ws_auth = token;
+  //           this.isLoggedIn = true;
+  //           this.render();
+  //           return this;
+		// },
 
-		loggedOut: function(e, args) {
-            this.isLoggedIn = false;
-            this.render();
-            return this;
-        },
+		// loggedOut: function(e, args) {
+  //           this.isLoggedIn = false;
+  //           this.render();
+  //           return this;
+  //       },
 
         clearTable: function() {
 			if (this.table) {

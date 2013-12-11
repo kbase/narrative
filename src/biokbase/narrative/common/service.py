@@ -125,11 +125,13 @@ def get_func_info(fn):
     param_order = []
     for line in doc.split("\n"):
         line = line.strip()
+        # :param
         if line.startswith(":param"):
             _, name, desc = line.split(":", 2)
             name = name[6:].strip()  # skip 'param '
             params[name] = {'desc': desc.strip()}
             param_order.append(name)
+        # :type (of parameter, should be in kbtypes)
         elif line.startswith(":type"):
             _, name, desc = line.split(":", 2)
             name = name[5:].strip()  # skip 'type '
@@ -137,23 +139,60 @@ def get_func_info(fn):
                 raise ValueError("'type' without 'param' for {}".format(name))
             typeobj = eval(desc.strip())
             params[name]['type'] = typeobj
+
+        # :ui_name (of parameter) - the name that should be displayed in the user interface
+        elif line.startswith(":ui_name"):
+            _, name, ui_name = line.split(":", 2)
+            name = name[8:].strip()  # skip 'ui_name '
+            if not name in params:
+                raise ValueError("'ui_name' without 'param' for {}".format(name))
+            ui_name = ui_name.strip()
+            params[name]['ui_name'] = ui_name
+
+        # :return - name of thing to return
         elif line.startswith(":return"):
             _1, _2, desc = line.split(":", 2)
             return_['desc'] = desc
+
+        # :rtype - type of thing to return
         elif line.startswith(":rtype"):
             _1, _2, desc = line.split(":", 2)
             typeobj = eval(desc.strip())
             return_['type'] = typeobj
+
+        # :input_widget - the default visualization widget for this method. 
+        # Should be the name as it's invoked in Javascript.
+        elif line.startswith(":input_widget"):
+            _1, _2, widget = line.split(":", 2)
+            return_['input_widget'] = widget.strip()
+
+        # :output_widget - the visualization widget for this method. 
+        # Should be the name as it's invoked in Javascript.
+        elif line.startswith(":output_widget"):
+            _1, _2, widget = line.split(":", 2)
+            return_['output_widget'] = widget.strip()
+
+        # :embed - True if the widget should be automatically embedded.
+        # so, probably always True, but not necessarily
+        elif line.startswith(":embed"):
+            _1, _2, embed = line.split(":", 2)
+            embed = eval(embed.strip())
+            return_['embed_widget'] = embed
     r_params = []
+    vis_info = {'input_widget' : None,
+                'output_widget' : None,
+                'embed_widget' : True }
     for i, name in enumerate(param_order):
         type_ = params[name]['type']
         desc = params[name]['desc']
-        r_params.append(type_(desc=desc))
+        ui_name = params[name]['ui_name']
+        r_params.append(type_(desc=desc, ui_name=ui_name))
     if return_ is None:
         r_output = None
     else:
         r_output = return_['type'](desc=return_['desc'])
-    return r_params, r_output
+        vis_info = dict(vis_info.items() + return_.items())
+    return r_params, r_output, vis_info
 
 ## Registry
 
@@ -214,9 +253,9 @@ def get_all_services(as_json=False, as_json_schema=False):
     """
     if as_json or as_json_schema:
         if as_json:
-            return {name: inst.as_json() for name, inst in _services.iteritems()}
+            return json.dumps({name: inst.as_json() for name, inst in _services.iteritems()})
         else:
-            return {name: inst.as_json_schema() for name, inst in _services.iteritems()}
+            return json.dumps({name: inst.as_json_schema() for name, inst in _services.iteritems()})
     else:
         return _services.copy()
 
@@ -569,6 +608,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
     #: Output of the method, a Tuple of traits
     outputs = trt.Tuple()
 
+
     def __init__(self, status_class=LifecycleHistory, quiet=False,
                  func=None, **meta):
         """Constructor.
@@ -594,8 +634,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         # docstring, if function is given
         if func is not None:
             self.desc = get_func_desc(func)
-            params, output = get_func_info(func)
-            self.set_func(func, tuple(params), (output,))
+            params, output, vis_info = get_func_info(func)
+            self.set_func(func, tuple(params), (output,), vis_info)
 
     def quiet(self, value=True):
         """Control printing of status messages.
@@ -609,7 +649,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
                 self._lpr = LifecyclePrinter()
                 self.register(self._lpr)
 
-    def set_func(self, fn, params, outputs):
+    def set_func(self, fn, params, outputs, vis_info):
         """Set the main function to run, and its metadata.
         Although params and outputs are normally traits or
         subclasses of traits defined in kbtypes, the value
@@ -618,6 +658,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         :param fn: Function object to run
         :param params: tuple of traits describing input parameters
         :param outputs: tuple of traits, describing the output value(s)
+        :param vis_info: dict of 'widget' and 'embed_widget', with the name 
+        of the default widget and whether it should automatically be shown
+        'embed' defaults to True
 
         :raise: ServiceMethodParameterError, if function signature does not match
                 ValueError, if None is given for a param
@@ -625,13 +668,32 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         self.run = fn
         if self.name is None:
             self.name = fn.__name__
+
+        # Handle parameters
         for i, p in enumerate(params):
             if p is None:
                 raise ValueError("None is not allowed for a parameter type")
             p.name = "param{:d}".format(i)
         self.params = params
+
+        # Handle outputs
         for i, o in enumerate(outputs):
             o.name = "output{:d}".format(i)
+
+        # Set widget name
+        self.input_widget = None
+        if 'input_widget' in vis_info and vis_info['input_widget'] is not None:
+            self.input_widget = vis_info['input_widget']
+
+        self.output_widget = None
+        if 'output_widget' in vis_info and vis_info['output_widget'] is not None:
+            self.output_widget = vis_info['output_widget']
+
+        # Set embed_widget
+        self.embed_widget = True
+        if 'embed' in vis_info and vis_info['embed_widget'] is not None:
+            self.embed_widget = vis_info['embed_widget']
+
         self.outputs = outputs
         self._one_output_ok = len(outputs) == 1
 
@@ -658,6 +720,16 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             self.error(-2, err)
         except Exception, err:
             self.error(-1, ServiceMethodError(self, err))
+
+        # output object contains:
+        # data
+        # default widget name
+        # whether it should automatically embed the result or not
+        output_obj = {'data' : result,
+                      'widget' : self.output_widget, 
+                      'embed' : self.embed_widget}
+
+        sys.stdout.write(json.dumps(output_obj))
         return result
 
     def _validate(self, values, specs):
@@ -688,8 +760,10 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         d = {
             'name': self.name,
             'desc': self.desc,
-            'params': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.params],
-            'outputs': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.outputs]
+            'input_widget': self.input_widget,
+            'output_widget': self.output_widget,
+            'params': [(p.name, p.get_metadata('ui_name'), str(p), p.get_metadata('desc')) for p in self.params],
+            'outputs': [(p.name, str(p), p.get_metadata('desc')) for p in self.outputs]
         }
         if formatted:
             return json.dumps(d, **kw)
@@ -710,10 +784,12 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             'type': 'object',
             'description': self.desc,
             'properties': {
-                'parameters': {p.name: {'type': self.trt_2_jschema.get(p.info_text, 'object'),
-                                        'description': p.get_metadata('desc')} for p in self.params},
+                'parameters': {p.name: {'type': self.trt_2_jschema.get(p.info(), str(p)),
+                                        'description': p.get_metadata('desc'),
+                                        'ui_name': p.get_metadata('ui_name')} for p in self.params},
+                'widgets': { 'input': self.input_widget, 'output': self.output_widget },
             },
-            'returns': {p.name: {'type': self.trt_2_jschema.get(p.info_text, 'object'),
+            'returns': {p.name: {'type': self.trt_2_jschema.get(p.info(), str(p)),
                                  'description': p.get_metadata('desc')} for p in self.outputs}
         }
         if formatted:

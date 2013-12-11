@@ -1,4 +1,9 @@
 node_modules/
+nbproject/
 dist/kbase.js
 dist/kbase.min.js
 dist/docs
+.project
+.externalToolBuilders/
+.settings/
+/nbproject/private/

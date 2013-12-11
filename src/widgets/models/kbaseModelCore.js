@@ -5,24 +5,28 @@ $.KBWidget({
     version: "1.0.0",
     options: {
     },
+
+    getData: function() {
+        return {
+            id: this.options.ids,
+            workspace: this.options.workspaces,
+            title: this.options.title,
+            type: "Model"
+        }
+    },
+
     init: function(options) {
         this._super(options);
         var self = this;
         var models = options.ids;
         var workspaces = options.workspaces;
-        var token = options.auth;
+        var models_data = options.modelsData;
+        var fbas_data = options.fbasData;
 
-        var panel = this.$elem.kbasePanel({title: 'Model Info', 
-                                           rightLabel: workspaces[0],
-                                           subText: models[0],
-                                           body: '<div id="core-model"></div>'});
-        panel.loading();
-        var panel_body = panel.body();
+        var container = this.$elem
+        container.html('<div id="core-model"></div>');
 
-        var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-        var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-
-        var flux_threshold = 0.001;
+            var flux_threshold = 0.001;
         var heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
         var neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00'];
         var gapfill_color = '#f000ff';
@@ -42,30 +46,28 @@ $.KBWidget({
 
         function draw_core_model(kbids) {
             var graph_AJAX = $.getJSON('assets/data/core.json');
-            var modelAJAX = fba.get_models({models: models, workspaces: workspaces, auth: token});
-            //var fbaAJAX = fba.get_fbas({fbas: fbas_to_retrieve, workspaces: ws, auth: token});  
 
-            $.when(graph_AJAX, modelAJAX).done(function(core_data, models_data){
-                var core = join_model_to_core(core_data[0], models_data, kbids);
+            $.when(graph_AJAX).done(function(core_data){
+                var core = join_model_to_core(core_data, models_data, kbids, fbas_data);
                 var stage = core_model(core, true);
-                panel.rmLoading();
             });
         }
 
         // Fixme: This looks a little worse than it is, but can be refactored.
         function join_model_to_core(core, models, kbids, fba_data) {
+
             var org_names = [];
             for (var i in models) {
                 org_names.push(models[i].name)
             }
-
+            console.log('MODELS!,', models)
             // Adding data structures to core data or each organism
             for (var i in core) {
                 var obj = core[i];
                 obj['kbids'] = {};
                 for (var j in kbids) {
                     kbid = kbids[j];
-                    var kb_gid = get_genome_id(kbid);
+                    var kb_gid = models[j].id; //get_genome_id(kbid);
                     obj.kbids[kb_gid] = [];
                 }
             }
@@ -76,7 +78,7 @@ $.KBWidget({
 
                 var model_fba = [];
                 for (var k in fba_data) {
-                    if (get_genome_id(fba_data[k].id) == get_genome_id(model.id) ) {
+                    if (fba_data[k].model == model.id ) {
                         model_fba = fba_data[k];
                     }
                 }
@@ -108,7 +110,7 @@ $.KBWidget({
                             }
                         }
 
-                        obj.kbids[get_genome_id(model.id)].push(dict);
+                        obj.kbids[model.id].push(dict);
                     }
                 }
             }
@@ -229,7 +231,7 @@ $.KBWidget({
           $('.model-rxn').unbind('click')
           $('.model-rxn').click(function(event){
                 var rxns = $(this).data('rxns').split(',');
-                self.trigger('rxnClick', {rxns: rxns});
+                self.trigger('coreRxnClick', {ids: rxns});
           })  
 
           return stage;
@@ -270,14 +272,11 @@ $.KBWidget({
                     if (Math.abs(flux) > flux_threshold) var has_flux = true;
                     if (orgs[kbid][0]) var org_name = orgs[kbid][0].org_name;
                     else var org_name = ''
+
                     $(rect.node).popover({content: tip,
                             title: org_name,
                             trigger: 'hover', html: true,
                             container: 'body', placement: 'bottom'});
-
-                    //$(rect.node).click(function() {
-                    //    window.open('http://140.221.92.12/genome_info/showGenome.html?id='+kbid)
-                    //});
 
                     //var rect = this.rect(x+(i*offset), y, offset, r_height)
 

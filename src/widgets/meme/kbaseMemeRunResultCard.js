@@ -7,7 +7,7 @@
         options: {
             meme_run_result_id: null,
             workspace_id: null,
-            loadingImage: "../../../widgets/images/ajax-loader.gif",
+            loadingImage: "assets/img/ajax-loader.gif",
             title: "MEME Run Result Overview",
             isInCard: false,
             width: 400
@@ -39,60 +39,57 @@
              * Fields to show:
              * ID
              * Timestamp
-             * Run parameters
              * Number of motifs
              */
             var self = this;
-            var memeAJAX = this.workspaceClient.get_object({"id" : this.options.meme_run_result_id, "type" : "MemeRunResult", "workspace": this.options.workspace_id});
+            this.workspaceClient.get_object({"id" : this.options.meme_run_result_id, "type" : "MemeRunResult", "workspace": this.options.workspace_id}, 
+		    	function(data){
+					self.collection = data;
+					rawOutput = self.collection.data.raw_output;
+					var d = new Date(parseInt(self.collection.data.timestamp));
+					var creationMonth = d.getMonth()+1;
+					self.$elem.append("<h3>MEME Run Info</h3>");
+			        self.$elem.append($("<div />").
+					append($("<table/>").addClass("kbgo-table")
+					    .append($("<tr/>").append("<td>ID</td><td>" + self.collection.data.id + "</td>"))
+					    .append($("<tr/>").append("<td>Created: </td><td>" + creationMonth +"/"+ d.getDate() +"/"+ d.getFullYear() +" "+ d.getHours() +":"+ d.getMinutes() +":"+ d.getSeconds() + "</td>"))
+						.append($("<tr/>").append("<td>Number of motifs</td><td>" + self.collection.data.motifs.length + "</td>"))
+					));
+					self.$elem.append("<h3>View motifs</h3>");
 
-	    	$.when(memeAJAX).done(function(data){
-				self.collection = data;
-				rawOutput = self.collection.data.raw_output;
-				var d = new Date(parseInt(self.collection.data.timestamp));
-				var creationMonth = d.getMonth()+1;
-				self.$elem.append("<h3>MEME Run Info</h3>");
-		        self.$elem.append($("<div />").
-				append($("<table/>").addClass("kbgo-table")
-				    .append($("<tr/>").append("<td>ID</td><td>" + self.collection.data.id + "</td>"))
-				    .append($("<tr/>").append("<td>Created: </td><td>" + creationMonth +"/"+ d.getDate() +"/"+ d.getFullYear() +" "+ d.getHours() +":"+ d.getMinutes() +":"+ d.getSeconds() + "</td>"))
-					.append($("<tr/>").append("<td>Number of motifs</td><td>" + self.collection.data.nmotifs + "</td>"))
-				));
-				self.$elem.append("<h3>View motifs</h3>");
-
-				var $dropdown = $("<select />");
-				for (var motif in self.collection.data.motifs) {
-					rawOutput+=self.collection.data.motifs[motif].raw_output;
-					$dropdown.append("<option id='" + motif + "'> Motif " + self.collection.data.motifs[motif].id + " ("+ self.collection.data.motifs[motif].sites.length +" sites)</option>");
-				}
-				self.$elem.append($dropdown);
-				self.$elem.append($("<button class='btn btn-default'>Show Motif</button>")
-                	.on("click", 
-                    	function(event) {
-							$(self.$elem.selector + " > select option:selected").each(function() {
+					var $dropdown = $("<select />");
+					for (var motif in self.collection.data.motifs) {
+						rawOutput+=self.collection.data.motifs[motif].raw_output;
+						$dropdown.append("<option id='" + motif + "'> Motif " + self.collection.data.motifs[motif].id + " ("+ self.collection.data.motifs[motif].sites.length +" sites)</option>");
+					}
+					self.$elem.append($dropdown);
+					self.$elem.append($("<button class='btn btn-default'>Show Motif</button>")
+	                	.on("click", 
+	                    	function(event) {
+								$(self.$elem.selector + " > select option:selected").each(function() {
     //                      	console.log(event);
-							self.trigger("showMemeMotif", { motif: self.collection.data.motifs[$(this).attr("id")], event: event });
-                        })
-                    })
-                );
-					
-//				self.$elem.append("<h1>MEME Run Parameters</h1>");
-				
-				self.$elem.append($("<span />").append("<br><button class='btn btn-default'>Show MEME run parameters</button>")
-                	.on("click", 
-                    	function(event) {
-							self.trigger("showMemeRunParameters", { collection: self.collection, event: event });
-                    })
-                );
-              
-				self.$elem.append($("<span />").append("<br><button class='btn btn-default'>Show MEME raw output</button>")
-                	.on("click", 
-                    	function(event) {
-							self.trigger("showMemeRawOutput", { memeOutput: rawOutput, event: event });
-                    })
-                );
-              
-				
-		    });
+								self.trigger("showMemeMotif", { motif: self.collection.data.motifs[$(this).attr("id")], event: event });
+	                        });
+	                    })
+	                );
+						
+					self.$elem.append($("<span />").append("<br><button class='btn btn-default'>Show MEME run parameters</button>")
+	                	.on("click", 
+	                    	function(event) {
+								self.trigger("showMemeRunParameters", { collection: self.collection, event: event });
+	                    })
+	                );
+	              
+					self.$elem.append($("<span />").append("<br><button class='btn btn-default'>Show MEME raw output</button>")
+	                	.on("click", 
+	                    	function(event) {
+								self.trigger("showMemeRawOutput", { memeOutput: rawOutput, event: event });
+	                    })
+	                );
+			    },
+
+			    self.rpcError
+		    );
             this.hideMessage();
             return this;
         },
@@ -102,7 +99,8 @@
             return {
                 type: "MemeRunResult",
                 id: this.options.meme_run_result_id,
-                workspace: this.options.workspace_id
+                workspace: this.options.workspace_id,
+                title: "MEME Run Result Overview"
             };
         },
 

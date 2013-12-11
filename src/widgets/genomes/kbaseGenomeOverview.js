@@ -52,7 +52,22 @@
              * # RNA feats
              * Taxonomy
              */
+
             var self = this;
+            this.$elem.append($("<button />")
+                              .addClass("btn btn-primary")
+                              .append("Show Description")
+                              .on("click", 
+                                  function(event) {
+                                      self.trigger("showGenomeDescription", 
+                                          {
+                                              genomeID: self.options.genomeID,
+                                              workspaceID: self.options.workspaceID,
+                                              event: event
+                                          }
+                                      );
+                                    })
+                              );
             this.entityClient.get_entity_Genome([this.options.genomeID],
                 ['id', 'scientific_name', 'domain', 'complete', 'dna_size', 'source_id', 
                  'contigs', 'gc_content', 'pegs', 'rnas'],
@@ -63,7 +78,7 @@
 
                     var $infoTable = $("<div />")  // should probably be styled somehow. Bootstrapish?
                                      .append($("<table/>")
-                                             .addClass("kbgo-table")
+                                             .addClass("table table-bordered table-striped")
                                              .append($("<tr/>")
                                                      .append("<td>ID</td><td>" + genome.id + "</td>")
                                                     )
@@ -114,28 +129,27 @@
                                         }
 
                                         self.$elem.append($dropdown);
-                                        self.$elem.append($("<button class='btn btn-default'>Show Contig</button>")
+                                        self.$elem.append($("<button class='btn btn-primary'>Show Contig</button>")
                                                           .on("click", 
                                                               function(event) {
                                                                   $(self.$elem.selector + " > select option:selected").each(function() {
-    //                                                                  console.log(event);
                                                                       self.trigger("showContig", { contig: $(this).attr("id"), event: event });
                                                                   })
                                                               })
                                         );
                                     },
 
-                                    self.rpcError
+                                    self.clientError
                                 );
                             },
 
-                            self.rpcError
+                            self.clientError
                         );
                     }
 
                 },
 
-                self.rpcError
+                self.clientError
             );
 
             this.hideMessage();
@@ -163,8 +177,7 @@
             this.$messagePane.empty();
         },
 
-        rpcError: function(error) {
-            console.log("An error occurred: " + error);
+        clientError: function(error) {
         }
 
     });

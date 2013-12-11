@@ -5,20 +5,27 @@ $.KBWidget({
     version: "1.0.0",
     options: {
     },
+
+    getData: function() {
+        return {
+            id: this.options.id,
+            type: "Model",
+            workspace: this.options.ws,
+            title: this.options.title
+        };
+    },
+
     init: function(options) {
         this._super(options);
         var self = this;        
-        var models = options.ids;
-        var workspaces = options.workspaces;
-        var token = options.auth;
+        var models = options.id;
+        var workspaces = options.ws;
+        var data = options.modelsData;
+        var token = options.token;
+        var fba = new fbaModelServices("http://kbase.us/services/fba_model_services"); //options.api;
 
-        var panel = this.$elem.kbasePanel({title: 'Model Details', 
-                                           rightLabel: workspaces[0],
-                                           subText: models[0]});
-        var panel_body = panel.body();
 
-        var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-        var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+        var container = this.$elem;
 
         var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfill', 'Gapgen'];
         var tableIds = ['reaction', 'compound', 'compartment', 'biomass', 'gapfill', 'gapgen'];
@@ -33,7 +40,7 @@ $.KBWidget({
         }
 
         // add tabs
-        panel_body.append(tabs);
+        container.append(tabs);
 
         var tab_pane = $('<div id="tab-content" class="tab-content">')
         // add table views (don't hide first one)
@@ -50,7 +57,7 @@ $.KBWidget({
             tab_pane.append(tableDiv);
         }
 
-        panel_body.append(tab_pane)
+        container.append(tab_pane)
 
         // event for showing tabs
         $('#table-tabs a').click(function (e) {
@@ -67,87 +74,79 @@ $.KBWidget({
             }
         }
 
-        var models_AJAX = fba.get_models({models: models, workspaces: workspaces});
-        $('.tab-pane').not('#overview').append('<p class="muted loader-tables"> \
-                                  <img src="assets/img/ajax-loader.gif"> loading...</p>')
-        $.when(models_AJAX).done(function(data){
-            model = data[0];
-            console.log(model)
 
-            // compartment table
-            var dataDict = model.compartments;
-            var keys = ["id", "index", "name", "pH", "potential"];
-            var labels = ["id", "index", "name", "pH", "potential"];
-            var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = cols;
-            var table = $('#compartment-table').dataTable(tableSettings);
-            table.fnAddData(dataDict);
+        model = data[0];
 
-            // reaction table
-            var dataDict = formatRxnObjs(model.reactions);
+        // compartment table
+        var dataDict = model.compartments;
+        var keys = ["id", "index", "name", "pH", "potential"];
+        var labels = ["id", "index", "name", "pH", "potential"];
+        var cols = getColumns(keys, labels);
+        tableSettings.aoColumns = cols;
+        var table = $('#compartment-table').dataTable(tableSettings);
+        table.fnAddData(dataDict);
 
-            var keys = ["reaction", "definition",
-                        "features","name"];
-            var labels = ["reaction", "equation",
-                        "features","name"];
-            var cols = getColumns(keys, labels);
-            var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
-            rxnTableSettings.aoColumns = cols;
-            var table = $('#reaction-table').dataTable(rxnTableSettings);
-            table.fnAddData(dataDict);
+        // reaction table
+        var dataDict = formatRxnObjs(model.reactions);
 
-            // compound table
-            var dataDict = model.compounds;
-            var keys = ["compartment", "compound", "name"];
-            var labels = ["compartment", "compound", "name"];
-            var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = cols;
-            var table = $('#compound-table').dataTable(tableSettings);
-            table.fnAddData(dataDict);
+        var keys = ["reaction", "definition",
+                    "features","name"];
+        var labels = ["reaction", "equation",
+                    "features","name"];
+        var cols = getColumns(keys, labels);
+        var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
+        rxnTableSettings.aoColumns = cols;
+        var table = $('#reaction-table').dataTable(rxnTableSettings);
+        table.fnAddData(dataDict);
 
-            // biomass table
-            var dataDict = model.biomasses;
-            var keys = ["definition", "id", "name"];
-            var labels = ["definition", "id", "name"];
-            var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = cols;
-            var table = $('#biomass-table').dataTable(tableSettings);
-            table.fnAddData(dataDict);
+        // compound table
+        var dataDict = model.compounds;
+        var keys = ["compartment", "compound", "name"];
+        var labels = ["compartment", "compound", "name"];
+        var cols = getColumns(keys, labels);
+        tableSettings.aoColumns = cols;
+        var table = $('#compound-table').dataTable(tableSettings);
+        table.fnAddData(dataDict);
 
-            // gapfilling table
-            /*
-            var dataDict = model.integrated_gapfillings;
-            console.log(dataDict)
-            var keys = ["id", "index", "name", "pH","potential"];
-            var labels = ["id", "index", "name", "pH","potential"];
-            var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = cols;
-            var table = $('#gapfill-table').dataTable(tableSettings);
-            */
-            gapFillTable(data);
+        // biomass table
+        var dataDict = model.biomasses;
+        var keys = ["definition", "id", "name"];
+        var labels = ["definition", "id", "name"];
+        var cols = getColumns(keys, labels);
+        tableSettings.aoColumns = cols;
+        var table = $('#biomass-table').dataTable(tableSettings);
+        table.fnAddData(dataDict);
 
-            // gapgen table
-            var model_gapgen = model.gapgen;
-            var keys = ["id", "index", "name", "pH","potential"];
-            var labels = ["id", "index", "name", "pH","potential"];
-            var cols = getColumns(keys, labels);
-            tableSettings.aoColumns = cols;
-            var table = $('#gapgen-table').dataTable(tableSettings);
-    
-            $('.loader-tables').remove();
-        })
+        // gapfilling table
+        /*
+        var dataDict = model.integrated_gapfillings;
+        console.log(dataDict)
+        var keys = ["id", "index", "name", "pH","potential"];
+        var labels = ["id", "index", "name", "pH","potential"];
+        var cols = getColumns(keys, labels);
+        tableSettings.aoColumns = cols;
+        var table = $('#gapfill-table').dataTable(tableSettings);
+        */
+        gapFillTable(data);
 
-
-
+        // gapgen table
+        var model_gapgen = model.gapgen;
+        var keys = ["id", "index", "name", "pH","potential"];
+        var labels = ["id", "index", "name", "pH","potential"];
+        var cols = getColumns(keys, labels);
+        tableSettings.aoColumns = cols;
+        var table = $('#gapgen-table').dataTable(tableSettings);
 
         function formatRxnObjs(rxnObjs) {
+            var rxn_objs = []
             for (var i in rxnObjs) {
-                var rxn = rxnObjs[i];
+                var rxn = $.extend({}, rxnObjs[i] );
                 rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'
                             +rxn.reaction+'</a> ('+rxn.compartment+')'
                 rxn.features = rxn.features.join('<br>')
+                rxn_objs.push(rxn)
             }
-            return rxnObjs
+            return rxn_objs;
         }
 
         function getColumns(keys, labels) {
@@ -163,8 +162,8 @@ $.KBWidget({
             $('.rxn-click').unbind('click');
             $('.rxn-click').click(function() {
                 var rxn = [$(this).data('rxn')];
-                self.trigger('rxnClick', {rxns: rxn});
-            });            
+                self.trigger('rxnClick', {ids: rxn});
+            });
         }
 
 
@@ -248,7 +247,6 @@ $.KBWidget({
                     var gapfills = unIntGapfills.concat(intGapfills)                    
                 }
                 var gapfills = intGapfills;
-                console.log(gapfills)
 
                 init_data.aaData = gapfills;
                 initTable();
@@ -299,22 +297,27 @@ $.KBWidget({
                             solList.append('<div> <a type="button" class="gap-sol"\
                                 data-toggle="collapse" data-target="#'+gapRef+solID.replace(/\./g,'_')+'" >'+
                                 solID+'</a> <span class="caret" style="vertical-align: middle;"></span>\
-                                <div class="radio inline gapfill-radio"> \
+                                 </div>');
+                            /*
+                            <div class="radio inline gapfill-radio"> \
                                     <input type="radio" name="gapfillRadios" id="gapfillRadio'+i+'" value="integrated" checked>\
                                 </div> <span class="label integrated-label">Integrated</span>\
                                     <button data-gapfill="'+gapRef+solID+'"\
                                      class="hide btn btn-primary btn-mini integrate-btn">Integrate</button> \
-                                 </div>');
+                            */
                         } else {
                             solList.append('<div> <a type="button" class="gap-sol"\
                                 data-toggle="collapse" data-target="#'+gapRef+solID.replace(/\./g,'_')+'" >'+
                                 solID+'</a> <span class="caret" style="vertical-align: middle;"></span>\
+                                </div>');
+
+                            /*
                                 <div class="radio inline gapfill-radio"> \
                                     <input type="radio" name="gapfillRadios" id="gapfillRadio'+i+'" value="unitegrated">\
                                 </div>\
                                 <button data-gapfill="'+gapRef+solID+'"\
                                  class="hide btn btn-primary btn-mini integrate-btn">Integrate</button> \
-                                </div>');
+                            */                            
                         }
 
                         var rxnAdditions = sol.reactionAdditions;
@@ -383,10 +386,11 @@ $.KBWidget({
                         })
                     })
 
-                   $('.gap-rxn').click(function(){ 
-                        var rxn = $(this).data('rxn');
-                        reaction_view([rxn]);
-                    });
+                    $('.gap-rxn').unbind('click');
+                    $('.gap-rxn').click(function() {
+                        var rxn = [$(this).data('rxn')];
+                        self.trigger('rxnClick', {ids: rxn});
+                    });            
 
                 });
 

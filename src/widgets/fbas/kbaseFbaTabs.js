@@ -5,30 +5,25 @@ $.KBWidget({
     version: "1.0.0",
     options: {
     },
+    getData: function() {
+        return {
+            id: this.options.ids,
+            workspace: this.options.workspaces,
+            title: this.options.title,
+            type: "FBA"
+        }
+    },
     init: function(options) {
         this._super(options);
         var self = this;        
         var fbas = options.ids;
         var workspaces = options.workspaces;
-        var token = options.auth;
+        var data = options.fbaData;
 
-        this.$elem.append('<div id="kbase-fba-tabs" class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <h4 class="panel-title">FBA Details</h4>'
-                                     +fbas[0]+
-                                    '<span class="label label-primary pull-right">'+workspaces[0]+'</span><br>\
-                                </div>\
-                                <div class="panel-body"></div>\
-                           </div>');
+        var container = this.$elem;
 
-
-        var container = $('#kbase-fba-tabs .panel-body');
-
-        var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-        //var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-
-        var tables = ['Reactions', 'Compounds']
-        var tableIds = ['reaction', 'compound']
+        var tables = ['Reactions', 'Compounds'];
+        var tableIds = ['reaction', 'compound'];
 
         // build tabs
         var tabs = $('<ul id="table-tabs" class="nav nav-tabs"> \
@@ -36,7 +31,7 @@ $.KBWidget({
                         <a href="#'+tableIds[0]+'" data-toggle="tab" >'+tables[0]+'</a> \
                       </li></ul>')
         for (var i=1; i<tableIds.length; i++) {
-            tabs.append('<li><a href="#'+tableIds[i]+'" data-toggle="tab">'+tables[i]+'</a></li>')
+            tabs.append('<li><a href="#'+tableIds[i]+'" data-toggle="tab">'+tables[i]+'</a></li>');
         }
 
         // add tabs
@@ -67,53 +62,58 @@ $.KBWidget({
 
         var tableSettings = {
             "sPaginationType": "full_numbers",
-            "iDisplayLength": 10,
+            "iDisplayLength": 5,
             "oLanguage": {
                 "sSearch": "Search all:"
             }
         }
 
-        var fbaAJAX = fba.get_fbas({fbas: fbas, workspaces: workspaces});
-        $('.tab-pane').append('<p class="muted loader-tables"> \
-                                  <img src="assets/img/ajax-loader.gif"> loading...</p>')
-        $.when(fbaAJAX).done(function(data){
-            console.log(data)
-            var fba = data[0];
-            console.log(fba)
+        var fba = data[0];
 
-            // rxn flux table
-            var dataDict = formatObjs(fba.reactionFluxes);
-            var labels = ["id", "Flux", "lower", "upper", "min", "max", "basd","Equation"];
-            var cols = getColumnsByLabel(labels);
-            var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});               
-            rxnTableSettings.aoColumns = cols;
-            rxnTableSettings.aaData = dataDict;
-            container.append('<table id="reaction-table" class="table table-striped table-bordered"></table>')            
-            var table = $('#reaction-table').dataTable(rxnTableSettings);
-    
-            // cpd flux table
-            var dataDict = formatObjs(fba.compoundFluxes);
-            var labels = ["id", "Flux", "lower", "upper", "min", "max","Equation"];
-            var cols = getColumnsByLabel(labels);
-            var cpdTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});               
-            cpdTableSettings.aoColumns = cols;
-            cpdTableSettings.aaData = dataDict;
-            container.append('<table id="compound-table" class="table table-striped table-bordered"></table>')            
-            var table = $('#compound-table').dataTable(cpdTableSettings);
+        // rxn flux table
+        var dataDict = formatObjs(fba.reactionFluxes, 'rxn');
+        var labels = ["id", "Flux", "lower", "upper", "min", "max", "basd","Equation"];
+        var cols = getColumnsByLabel(labels);
+        var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});               
+        rxnTableSettings.aoColumns = cols;
+        rxnTableSettings.aaData = dataDict;
+        container.append('<table id="reaction-table" class="table table-striped table-bordered"></table>');           
+        var table = $('#reaction-table').dataTable(rxnTableSettings);
 
-            $('.loader-tables').remove();
-        })
+        // cpd flux table
+        var dataDict = formatObjs(fba.compoundFluxes, 'cpd');
+        var labels = ["id", "Flux", "lower", "upper", "min", "max","Equation"];
+        var cols = getColumnsByLabel(labels);
+        var cpdTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});
+        cpdTableSettings.aoColumns = cols;
+        cpdTableSettings.aaData = dataDict;
+        container.append('<table id="compound-table" class="table table-striped table-bordered"></table>');
+        var table = $('#compound-table').dataTable(cpdTableSettings);
 
-
-        function formatObjs(objs) {
-            for (var i in objs) {
-                var obj = objs[i];
-                var rxn = obj[0].split('_')[0]
-                var compart = obj[0].split('_')[1]
-                obj[0] = '<a class="rxn-click" data-rxn="'+rxn+'">'
-                            +rxn+'</a> ('+compart+')'
+ 
+        function formatObjs(objs, type) {
+            var fluxes = []
+            if (type == 'rxn') {
+                for (var i in objs) {
+                    var obj = $.extend({}, objs[i]);
+                    var rxn = obj[0].split('_')[0]
+                    var compart = obj[0].split('_')[1]
+                    obj[0] = '<a class="rxn-click" data-rxn="'+rxn+'">'
+                                +rxn+'</a> ('+compart+')';
+                    fluxes.push(obj);
+                }
+            } else if (type == 'cpd') {
+                for (var i in objs) {
+                    var obj = $.extend({}, objs[i]);
+                    var cpd = obj[0].split('_')[0]
+                    var compart = obj[0].split('_')[1]
+                    obj[0] = '<a class="cpd-click" data-cpd="'+cpd+'">'
+                                +cpd+'</a> ('+compart+')';
+                    fluxes.push(obj);
+                }                
             }
-            return objs;
+
+            return fluxes;
         }
 
         function getColumnsByLabel(labels) {
@@ -128,8 +128,13 @@ $.KBWidget({
             $('.rxn-click').unbind('click');
             $('.rxn-click').click(function() {
                 var rxn = [$(this).data('rxn')];
-                self.trigger('rxnClick', {rxns: rxn});
+                self.trigger('rxnClick', {ids: rxn});
             });            
+            $('.cpd-click').unbind('click');
+            $('.cpd-click').click(function() {
+                var cpd = [$(this).data('cpd')];
+                self.trigger('cpdClick', {ids: cpd});
+            });                        
         }
 
         //this._rewireIds(this.$elem, this);

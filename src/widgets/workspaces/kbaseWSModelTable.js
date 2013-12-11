@@ -8,17 +8,10 @@ $.KBWidget({
     init: function(options) {
         this._super(options);
         var self = this;        
-        var token = options.auth;
-        var ws = options.ws
+        var ws = options.ws;
+        var data = options.data;
 
-
-        var panel = this.$elem.kbasePanel({title: 'Model Info', 
-                                           rightLabel: ws});
-        panel.loading();
-        var panel_body = panel.body();
-
-        var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-        var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+        var container = this.$elem;
 
         var tableSettings = {
             "fnDrawCallback": modelEvents,
@@ -30,26 +23,24 @@ $.KBWidget({
             }
         }
 
-        var wsAJAX = kbws.list_workspace_objects({workspace: ws, type: "Model", auth: token})
-        $.when(wsAJAX).done(function(data){
-            var dataList = formatObjs(data);
-            var labels = ["id", "Type", "Modified", "Command", "Something?", "Owner"];
-            var cols = getColumnsByLabel(labels);
-            tableSettings.aoColumns = cols;
-            panel_body.append('<table id="rxn-table" class="table table-striped table-bordered"></table>');
-            var table = $('#rxn-table').dataTable(tableSettings);
-            table.fnAddData(dataList);
+        var dataList = formatObjs(data);
+        var labels = ["id", "Type", "Modified", "Command", "Something?", "Owner"];
+        var cols = getColumnsByLabel(labels);
+        tableSettings.aoColumns = cols;
+        container.append('<table id="rxn-table" class="table table-striped table-bordered"></table>');
+        var table = $('#rxn-table').dataTable(tableSettings);
+        table.fnAddData(dataList);
 
-            panel.rmLoading();
-        });
 
         function formatObjs(models) {
+            var mdls = [];
             for (var i in models) {
-                var model = models[i];
+                var model = models[i].slice();
                 model[0] = '<a class="model-click" data-model="'+model[0]+'">'
                             +model[0]+'</a>'
+                mdls.push(model);
             }
-            return models;
+            return mdls;
         }
 
         function getColumnsByLabel(labels) {
@@ -64,7 +55,7 @@ $.KBWidget({
             $('.model-click').unbind('click');
             $('.model-click').click(function() {
                 var model = $(this).data('model');
-                self.trigger('modelClick', {model: model});
+                self.trigger('modelClick', {id: model});
             });
         }
 

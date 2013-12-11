@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html >
 <head>
-    <meta charset="charset=utf-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Widget Gallery</title>
+    <link rel="stylesheet" href="../css/font-awesome.css" type="text/css" media="screen" charset="utf-8">
+    <link rel="stylesheet" href="../css/jquery-ui.css" type="text/css" media="screen" charset="utf-8">
     <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" media="screen" charset="utf-8">
+    <link rel="stylesheet" href="../css/datavis.css" type="text/css" media="screen" charset="utf-8">
     <style type="text/css" media="screen">
     body { padding-top: 20px; }    
     .widget {
@@ -13,6 +16,7 @@
         padding: 5px;
         margin-bottom: 30px;
     }
+    .btn-pad > input { padding: 0; }
     </style>
 </head>
 <body>
@@ -30,7 +34,7 @@
     
     <script type="text/x-handlebars" data-template-name="index">
     {{#each widget in model}}
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div class="widget" data-widget-name="{{unbound widget}}">
             <h5>{{widget}}</h5>
             <p>Widget placholder</p>
@@ -41,9 +45,11 @@
     
     <script src="../js/jquery.js"></script>
     <script src="../js/jquery-ui.js"></script>
+    <script src="../js/bootstrap.js"></script>
     <script src="../js/handlebars.js"></script>
     <script src="../js/ember.js"></script>
     <script src="../js/kbase.js"></script>
+    <script src="../js/datavis.js"></script>
     <script src="../js/gallery.js"></script>
 
     <script type="text/javascript" charset="utf-8">

@@ -5,6 +5,15 @@ $.KBWidget({
     version: "1.0.0",
     options: {
     },
+    getData: function() {
+        return {
+            id: this.options.id,
+            ws: this.options.workspace,
+            title: this.option.title,
+            type: "Model"
+        }
+    },
+    
     init: function(options) {
         var self = this;
         this._super(options);
@@ -24,8 +33,8 @@ $.KBWidget({
                     </a>\
                     <a href="http://140.221.84.128/#models?tab=model-selection&kbids='+
                     id+'&ws='+ws+'" target="_blank">Add to Model Viewer</a>');
-        panel_body.append('<br><br>')
-        panel_body.append('<a href="#/run-fba/'+ws+'/'+id+'">Run FBA</a> <span class="glyphicon glyphicon-arrow-right"></span>')
+        //panel_body.append('<br><br>')
+        //panel_body.append('<a href="#/run-fba/'+ws+'/'+id+'">Run FBA</a> <span class="glyphicon glyphicon-arrow-right"></span>')
 
         return this;
 

@@ -50,8 +50,9 @@
         getData: function() {
             return {
                 type: "MemeRunResult",
-                id: this.options.meme_run_result_id,
-                workspace: this.options.workspace_id
+//                id: this.options.meme_run_result_id,
+                workspace: this.options.workspace_id,
+                title: "MEME raw output"
             };
         },
 

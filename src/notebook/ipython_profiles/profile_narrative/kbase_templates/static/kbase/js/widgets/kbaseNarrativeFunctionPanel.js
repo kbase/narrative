@@ -185,6 +185,7 @@
          * @private
          */
         showHelpPopup: function(method) {
+            console.log(method);
             this.$helpPanel.empty();
             this.$helpPanel.append($('<h1>').append(method.title + ' Help'))
                            .append(method.description)

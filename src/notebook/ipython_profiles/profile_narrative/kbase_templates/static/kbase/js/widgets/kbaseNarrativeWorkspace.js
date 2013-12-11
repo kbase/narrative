@@ -256,7 +256,7 @@
             for (var i=0; i<Object.keys(params).length; i++) {
                 var p = 'param' + i;
                 inputDiv += "<tr style='border:none'>" + 
-                                "<td style='border:none'>" + p + "</td>" + 
+                                "<td style='border:none'>" + params[p].ui_name + "</td>" + 
                                 "<td style='border:none'><input type='text' name='" + p + "' value=''></input></td>" +
                                 "<td style='border:none'>" + params[p].description + "</td>" +
                             "</tr>";
@@ -296,59 +296,6 @@
 
             return true;
         },
-
-        /**
-         * @method addCellForFunction
-         * @param {String} name - the registered name of the function to make a new cell for
-         * Add a new IPython notebook cell for a given function.
-         *
-         * The name of the function comes from the 'data-name'
-         * attribute in the HTML that is hard-coded into notebook.html
-         * under $('div.kb-function-body ul').
-         */
-        // addCellForFunction: function(name) {
-        //     var env = this;
-        //     var nb = IPython.notebook;
-        //     this.kernel = nb.kernel; // stash current kernel
-        //     var cell = nb.insert_cell_below('markdown');
-
-        //     cell.metadata['kb-cell'] = 'function';
-
-        //     this._cur_index = nb.ncells() - 1; // stash cell's index
-
-        //     var config = this._getFunctionConfig(name);
-        //     var content = this._buildRunForm(name, config);
-        //     var cell_id = "kb-cell-" + this._cur_index;
-
-        //     // add buttons
-        //     content += "<div class='buttons pull-right' style='margin-top:10px'>" +
-        //                    "<button id='" + cell_id + "-delete' type='button' value='Delete' class='btn btn-warning'>Delete</button> " +
-        //                    "<button id='" + cell_id + "-run' type='button' value='Run' class='btn btn-primary'>Run</button>" + 
-        //                "</div>";
-
-        //     // build progress bar and message (initially display:none)
-        //     var progressBar = "<div id='kb-func-progress' style='display:none;'>" +
-        //                         "<div class='progress progress-striped active kb-cell-progressbar'>" +
-        //                             "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
-        //                             "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
-        //                         "</div>" +
-        //                         "<p class='text-success'/>" +
-        //                       "</div>";
-
-        //     cell.set_text("<div class='kb-cell-run' " + "id='" + cell_id + "'>" + 
-        //                       "<h1>" + name + "</h1>" +
-        //                       "<div class='kb-cell-params'>" +  
-        //                           content + 
-        //                       "</div>" +
-        //                       progressBar +
-        //                   "</div>");
-
-        //     cell.rendered = false; // force a render
-        //     cell.render();
-
-        //     this._removeCellEditFunction(cell);
-        //     this._bindActionButtons(cell);
-        // },
 
         /**
          * @method removeCellEditFunction
@@ -408,108 +355,6 @@
             );
         },
 
-
-        /**
-         * @method _bindRunButton
-         * @private
-         */
-        // _bindRunButton: function() {
-        //     var self = this;
-        //     return (
-        //         function(event) {
-        //             event.preventDefault();
-        //             var params = {};
-        //             // extract params from form
-        //             var cell = IPython.notebook.get_selected_cell();
-
-        //              Each function cell has a form, containing inputs.
-        //              * The selector below finds all children of the form, and filters them down to
-        //              * just "form inputs" - input, select, textarea, text, etc.
-        //              * the ':input' filter is a special jQuery thingy that lets this happen.
-                     
-        //             $(cell.element).find("form *").filter(":input").each(function(key, field) {
-        //                 if (field.name && field.name.length > 0)
-        //                     params[field.name] = field.value;
-        //             });
-
-        //             // Build the IPython function call.
-        //             var name = params['kbfunc'];
-        //             var command = self._getFunctionConfig(name).command;
-
-        //             console.debug("Run fn(" + name + ") with params", params);
-        //             self._runner()(cell, command, params);
-        //         }
-        //     );
-        // },
-
-
-
-        /**
-         * @method _getFunctionConfig
-         * Yeah, I know. It's still ugly as sin. This all needs to be moved into a Kernel query that happens
-         * on startup. But for now, it's functional.
-         * @private
-         * @return the configuration for a function from its name.
-         */
-        // _getFunctionConfig: function(name) {
-        //     switch(name) {
-        //         case 'Plants Co-expression':
-        //             return this.plantsRunConfig;
-        //             break;
-
-        //         case 'Assemble Contigs':
-        //             return this.runAssemblyConfig;
-        //             break;
-
-        //         case 'Assemble Genome':
-        //             return this.assembleGenomeConfig;
-        //             break;
-
-        //         case 'Annotate Genome':
-        //             return this.annotateGenomeConfig;
-        //             break;
-
-        //         case 'View Genome Details':
-        //             return this.viewGenomeConfig;
-        //             break;
-
-        //         case 'Genome To Draft FBA Model':
-        //             return this.genomeToFbaConfig;
-        //             break;
-
-        //         case 'View FBA Model Details':
-        //             return this.viewFbaModelConfig;
-        //             break;
-
-        //         case 'Build Media':
-        //             return this.buildMediaConfig;
-        //             break;
-
-        //         case 'View Media':
-        //             return this.viewMediaConfig;
-        //             break;
-
-        //         case 'Run Flux Balance Analysis':
-        //             return this.runFbaConfig;
-        //             break;
-
-        //         case 'View FBA Results':
-        //             return this.viewFbaConfig;
-        //             break;
-
-        //        case 'Gapfill FBA Model':
-        //             return this.runGapfillConfig;
-        //             break;
-
-        //         case 'Integrate Gapfill Solution':
-        //             return this.integrateGapfillConfig;
-        //             break;
-
-        //         default:
-        //             return { params : {}, command : {module: '', function: ''}};
-        //     }
-        // },
-
         /**
          * @method bindDeleteButton
          * @private
@@ -521,39 +366,6 @@
                     event.preventDefault();
                     var idx = IPython.notebook.get_selected_index();
                     IPython.notebook.delete_cell(idx);
-                }
-            );
-        },
-
-        /**
-         * @method bindRunButton
-         * @private
-         */
-        _bindRunButton: function() {
-            var self = this;
-            return (
-                function(event) {
-                    event.preventDefault();
-                    var params = {};
-                    // extract params from form
-                    var cell = IPython.notebook.get_selected_cell();
-
-                    /* Each function cell has a form, containing inputs.
-                     * The selector below finds all children of the form, and filters them down to
-                     * just "form inputs" - input, select, textarea, text, etc.
-                     * the ':input' filter is a special jQuery thingy that lets this happen.
-                     */
-                    $(cell.element).find("form *").filter(":input").each(function(key, field) {
-                        if (field.name && field.name.length > 0)
-                            params[field.name] = field.value;
-                    });
-
-                    // Build the IPython function call.
-                    var name = params['kbfunc'];
-                    var command = self._getFunctionConfig(name).command;
-
-                    console.debug("Run fn(" + name + ") with params", params);
-                    self._runner()(cell, command, params);
                 }
             );
         },
@@ -589,163 +401,6 @@
             }
         },
 
-
-        /**
-         * Build 'run script' HTML form from
-         * configuration data. See 
-         */
-        // _buildRunForm: function(name, cfg) {
-
-        //     /**
-        //      * Use cfg.params, like this:
-        //      *
-        //      *  viewGenomeRuntimeConfig: {
-        //      *    'params' : {
-        //      *      'Identifiers' : [
-        //      *        {
-        //      *           'name' : 'Genome',
-        //      *           'type' : 'Genome',
-        //      *           'default' : '',
-        //      *        },
-        //      *      ]
-        //      *    },
-        //      *    'command' : {
-        //      *      'module' : 'biokbase.narrative.demo.microbes_workflow',
-        //      *      'function' : 'view_genome_details'
-        //      *    },
-        //      *  }
-        //      */
-
-        //     var cls = "class='table'";
-        //     var sbn = "style='border: none'";
-
-        //     var text = "<form>" + 
-        //                "<input type='hidden' name='kbfunc' value='" + name + "' />" +
-        //                "<table " + cls + ">";
-
-        //     var self = this;
-        //     $.each(cfg.params, function(category, paramList) {
-        //         text += "<tr " + sbn + "><td " + sbn + ">" + category + "</td>";
-        //         $.each(paramList, function(idx, param) {
-        //             /* param is an object with these expected fields:
-        //              * {
-        //              *    name : <name of the parameter>
-        //              *    type : <type of parameter object - if left blank, a text input is used>
-        //              *    default: <default value>
-        //              * }
-        //              */
-
-        //             // if we don't have a name, it's a blank field.
-        //             if (!param.name || param.name.length === 0) {
-        //                 // this cell intentionally left blank
-        //                 text += "<td " + sbn + ">&nbsp;</td>";
-        //             }
-
-        //             // if we don't have a type (or it's blank), use a text field.
-        //             else if (!param.type || param.type.length === 0) {
-        //                 // add a text input.
-        //                 text += "<td " + sbn + "><label>" + param.name + "</label>" + 
-        //                         "<input type='text' " + 
-        //                         "name='" + category + "." + param.name + "' " +
-        //                         "value='" + (param.default ? param.default : '') + "'>"
-        //                         "</input></td>";
-        //             }
-
-        //             // if we have a type, get the list of objects of that type
-        //             // from the workspace.
-        //             else {
-        //                 // if there's a type, add the list of available objects
-        //                 // by type.
-        //                 // if none, insert a static message? TODO.
-
-        //                 var objectList = self.dataTableWidget.getLoadedData(param.type)[param.type];
-        //                 objectList.sort(function(a, b) { 
-        //                     if (a[0] < b[0]) 
-        //                         return -1;
-        //                     if (a[0] > b[0])
-        //                         return 1;
-        //                     return 0;
-        //                 });
-        //                 text += "<td " + sbn + ">" + 
-        //                         "<label>" + param.name + "</label>" +
-        //                         "<select name='" + category + "." + param.name + "'>";
-
-        //                 for (var i=0; i<objectList.length; i++) {
-        //                     text += "<option value='" + objectList[i][0] + "'>" + objectList[i][0] + "</option>";
-        //                 }
-        //                 text += "</select></td>";
-        //             }
-        //         });
-
-        //         text += "</tr>";
-        //     });
-
-        //     text += "</table>" +
-        //             "</form>";
-
-        //     return text;
-        // },
-
-        /**
-         * Re-usable utility function to build the code block to run something.
-         * From a Python package and module name, and a set of params as a Javascript object,
-         * it builds a string of Python code that will invoke the command.
-         * 
-         * @return a String containing a Python command from the package, module, and passed parameters.
-         * @private
-         */
-        _buildRunCommand: function(pkg, module, params) {
-            var cmd = "run";
-            var code = "from " + pkg + " import " + module + "\n";
-            code += "reload(" + module + ")\n"; // in case it changed
-            // hack to add in workspace id
-            if (this.ws_id === null) {
-                alert("Unable to run command: No active workspace!");
-                return "";
-            }
-            code += "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n";
-            code += "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
-            code += "params = " + this._pythonDict(params) + "\n";
-            code += module + "." + cmd + "(params)" + "\n";
-            return code;
-        },
-
-        /**
-         * Return a generic command runner.
-         * This runner takes all its information from the passed in cell, command, and parameters to the
-         * enclosed, return function.
-         * 
-         * @private
-         * @return a function that takes in cell, command, and parameters for the command.
-         */
-        _runner: function() {
-            var self = this;
-            return function(cell, command, params) {
-                var nb = IPython.notebook;
-                var currentIndex = nb.get_selected_index();
-                var codeCell = nb.insert_cell_below('code', currentIndex);
-                codeCell.element.css("display", "none");
-
-                var callbacks = {
-                    'execute_reply' : function(content) { self._handle_execute_reply(cell, content); },
-                    'output' : function(msg_type, content) { self._handle_output(cell, msg_type, content); },
-                    'clear_output' : function(content) { self._handle_clear_output(cell, content); },
-                    'set_next_input' : function(text) { self._handle_set_next_input(cell, text); },
-                    'input_request' : function(content) { self._handle_input_request(cell, content); },
-                };
-
-                var code = self._buildRunCommand(command.module, command.function, params);
-                codeCell.set_text(code);
-                codeCell.output_area.clear_output(true, true, true);
-                codeCell.set_input_prompt('*');
-                console.log("Running function: " + command.function);
-
-                self._resetProgress(cell);
-                $(cell.element).find("#kb-func-progress").css({"display":"block"});
-                var msgid = nb.kernel.execute(code, callbacks, {silent: true});
-            };
-        },
-
         /**
          * Run a function cell
          * The cell should contain all the information it needs to run.
@@ -763,11 +418,11 @@
                 codeCell.element.css('display', 'none');
 
                 var callbacks = {
-                    'execute_reply' : function(content) {},
-                    'output' : function(msgType, content) {},
-                    'clear_output' : function(content) {},
-                    'set_next_input' : function(text) {},
-                    'input_request' : function(content) {}
+                    'execute_reply' : function(content) { self.handleExecuteReply(cell, content); },
+                    'output' : function(msgType, content) { self.handleOutput(cell, msgType, content); },
+                    'clear_output' : function(content) { self.handleClearOutput(cell, content); },
+                    'set_next_input' : function(text) { self.handleSetNextInput(cell, content); },
+                    'input_request' : function(content) { self.handleInputRequest(cell, content); },
                 };
 
                 var code = self.buildRunCommand(service, method, params);
@@ -776,7 +431,6 @@
                 codeCell.set_input_prompt('*');
                 console.debug('Running function: ' + service + '.' + method);
 
-                self._resetProgress(cell);
                 $(cell.element).find('#kb-func-progress').css({'display': 'block'});
                 nb.kernel.execute(code, callbacks, {silent: true});
             };
@@ -846,9 +500,9 @@
          * @method _handle_execute_reply
          * @private
          */
-        _handle_execute_reply: function (cell, content) {
+        handleExecuteReply: function (cell, content) {
             console.debug("Done running the function", content);
-            this._showProgress(cell, "DONE", 0, 0);
+            this.showCellProgress(cell, "DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
         },
@@ -856,7 +510,7 @@
          * @method _handle_set_next_input
          * @private
          */
-        _handle_set_next_input: function (cell, text) {
+        handleSetNextInput: function (cell, text) {
             var data = {'cell': this, 'text': text}
             $([IPython.events]).trigger('set_next_input.Notebook', data);
         },
@@ -864,7 +518,7 @@
          * @method _handle_input_request
          * @private
          */
-        _handle_input_request: function (cell, content) {
+        handleInputRequest: function (cell, content) {
             console.log("handle input request called");
             return;
             //this.output_area.append_raw_input(content);
@@ -873,8 +527,8 @@
          * @method _handle_clear_output
          * @private
          */
-        _handle_clear_output: function (cell, content) {
-            console.debug("handle clear ouput called");
+        handleClearOutput: function (cell, content) {
+            console.debug("handle clear output called");
             return;
             //this.clear_output(content.stdout, content.stderr, content.other);
         },
@@ -882,45 +536,56 @@
         /**
          * @method _handle_output
          */
-        _handle_output: function (cell, msg_type, content) {
+        handleOutput: function (cell, msgType, content) {
             // copied from outputarea.js
-            console.debug("_handle_output got (" + msg_type + ") " + content);
             var buffer = "";
-            if (msg_type === "stream") {
+            if (msgType === "stream") {
                 buffer += content.data;
                 var lines = buffer.split("\n");
                 var offs = 0, 
                     done = false, 
                     self = this,
                     result = "";
+
                 $.each(lines, function(index, line) {
                     if (!done) {
                         if (line.length == 0) {
                             offs += 1; // blank line, move offset
                         }
                         else {
-                            // 1st char hash is marker for progress line
-                            var progress = line.match(/^#/);
-                            // Found progress marker
-                            if (progress) {
-                                var items = line.substr(1, line.length - 1).split(",");
-                                // expect: .p,name-of-thing,done,total
-                                if (items.length == 3) {
-                                    self._showProgress(cell, items[0], items[1], items[2]);
-                                    // will trim buffer to remove this
-                                    offs += line.length; 
-                                    if (index < lines.length - 1) {
-                                        offs += 1; // +1 for newline char
-                                    }
+                            // look for @@S, @@P, @@D, or @@E
+                            var matches = line.match(/^@@([SPDE])(.*)/);
+                            if (matches) { // if we got one
+                                if (matches[1] === 'S') {
+                                    // if we're starting, init the progress bar.
                                 }
-                                else {
-                                    done = true; // partial line; wait for more data
+                                else if (matches[1] === 'D') {
+                                    // were done, so hide the progress bar (wait like a second or two?)
+                                    self.resetProgress(cell);
+                                }
+                                else if (matches[1] === 'P') {
+                                    // progress! capture the progress info and pass it along.
+                                    var progressInfo = matches[2].split(',');
+                                    if (progressInfo.length == 3) {
+                                        self.showCellProgress(cell, progressInfo[0], progressInfo[1], progressInfo[2]);
+                                        offs += line.length;
+                                        if (index < lines.length - 1)
+                                            offs += 1;
+                                    }
+                                    else
+                                        done = true;
+                                }
+                                else if (matches[1] === 'E') {
+                                    // Error!
+                                    var errorJson = matches[2];
+                                    self.createOutputCell(cell, 'kbaseNarrativeError({error: ' + errorJson + '})');
+                                    console.debug("Narrative error: " + errorJson);
                                 }
                             }
                             // No progress marker on non-empty line => final output of program?
                             else {
                                 // XXX: @ and # should probably be swapped in meaning
-                                if (line.match(/^@/)) {
+                                if (line.match(/^#/)) {
                                     // log lines starting with '@'
                                     console.info("[KERNEL] " + line.substr(1, line.length).trim());
                                     // consume data
@@ -935,7 +600,6 @@
                                         result += "\n";
                                     }
                                 }
-
                             }
                         }
                     }
@@ -945,39 +609,43 @@
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
-                    // stop using the dom element for output and use the IPython cell
-                    // var element = this._addOutputCell();
-                    // this.result_handler(element, result);
-                    if (this.dataTableWidget)
-                        this.dataTableWidget.render();
-
-                    var outputCell = this._addOutputCell(IPython.notebook.find_cell_index(cell));
-
-                    var uuid = this._uuidgen();
-
-                    var cellText = ["<div id=\""+uuid+"\"></div>",
-                             "<script>",
-                             "$(\"#"+uuid+"\")." + result + 
-                             "// Make the element a little bigger",
-                             "$(\"#"+uuid+"\").css({margin: '-10px'});",
-                             "// Disable most actions on this element",
-                             "$(\"#"+uuid+"\").off('click dblclick keydown keyup keypress focus');",
-                             "</script>"].join('\n');
-                    outputCell.set_text(cellText);
-                    outputCell.rendered = false; // force a render
-                    outputCell.render();
-
+                    this.createOutputCell(result);
                 }
             }
         },
 
+        createOutputCell: function(cell, result) {
+            // stop using the dom element for output and use the IPython cell
+
+            // update the datatable widget
+            if (this.dataTableWidget)
+                this.dataTableWidget.render();
+
+            var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell));
+
+            var uuid = this.uuidgen();
+
+            var cellText = ['<div id="'+uuid+'"></div>',
+                            '<script>',
+                            '$("#'+uuid+'").' + result, 
+                            // Make the element a little bigger,
+                            '$("#'+uuid+'").css({margin: "-10px"});',
+                            // Disable most actions on this element'
+                            '$("#'+uuid+'").off("click dblclick keydown keyup keypress focus");',
+                            '</script>'].join('\n');
+            console.log(cellText);
+            outputCell.set_text(cellText);
+            outputCell.rendered = false; // force a render
+            outputCell.render();
+        },
+
         /**
-         * @method _resetProgress
+         * @method resetProgress
          * @private
          * Resets the progress bar in the given cell to not show any progress or progress message.
          * @param cell - the IPython notebook cell to reset.
          */
-        _resetProgress: function(cell) {
+        resetProgress: function(cell) {
             var $progressBar = $(cell.element).find("#kb-func-progress .kb-cell-progressbar .progress-bar");
             $progressBar.css('width', '0%');
 
@@ -986,7 +654,7 @@
         },
 
         /**
-         * @method _showProgress
+         * @method showCellProgress
          *
          * Shows current progress in a running IPython function.
          * @param cell - the cell being run
@@ -996,8 +664,7 @@
          *
          * @private
          */
-        _showProgress: function(cell, name, done, total) {
-            console.debug("Progress: '" + name + "': " + done + " / " + total);
+        showCellProgress: function(cell, name, done, total) {
             var percentDone = 0;
 
             var $progressBar = $(cell.element).find("#kb-func-progress .kb-cell-progressbar .progress-bar");
@@ -1026,12 +693,12 @@
          * @private
          * @return id of <div> inside cell where content can be placed
          */
-        _addOutputCell: function(currentIndex) {
+        addOutputCell: function(currentIndex) {
             var nb = IPython.notebook;
             var cell = nb.insert_cell_below('markdown', currentIndex);
 
             cell.metadata['kb-cell'] = 'output';
-            this._removeCellEditFunction(cell);
+            this.removeCellEditFunction(cell);
 
             return( cell );
         },
@@ -1154,7 +821,7 @@
          *
          * @private
          */
-        _uuidgen: function() {
+        uuidgen: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);});

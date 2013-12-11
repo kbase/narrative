@@ -25,15 +25,17 @@ NAME = "microbes"
 init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
 
-@method(name="AnnotateGenome")
+@method(name="Annotate Genome")
 def _annotate_genome(meth, genome, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
 
     :param genome: Source genome ID
     :type genome: kbtypes.Genome
+    :ui_name genome: Genome ID
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly.
     :type out_genome: kbtypes.Genome
+    :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
     :rtype: kbtypes.Genome
     """
@@ -67,15 +69,17 @@ def _annotate_genome(meth, genome, out_genome):
     return out_genome
 
 
-@method(name="AssembleGenome")
+@method(name="Assemble Genome from Reads")
 def _assemble_genome(meth, contig_file, out_genome):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space.
 
     :param contig_file: A FASTA file with contig data
     :type contig_file: kbtypes.Unicode
+    :ui_name contig_file: Contig File ID
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly.
     :type out_genome: kbtypes.Genome
+    :ui_name out_genome: Output Genome ID
     :return: Assembled output genome ID
     :rtype: kbtypes.Genome
     """
@@ -117,23 +121,24 @@ def _assemble_genome(meth, contig_file, out_genome):
     return out_genome
 
 
-@method(name="BuildMedia")
-def _build_media(meth, workspace, base_media):
+@method(name="Build Media")
+def _build_media(meth, base_media):
     """Build media
 
-    :param workspace: Workspace name string
-    :type workspace: kbtypes.Unicode
     :param base_media: Base media type
     :type base_media: kbtypes.Media
+    :ui_name base_media: Media ID
     :return: JSON of medias
     :rtype: kbtypes.Media
+    :widget: kbaseMediaBuilderNarrative
+    :embed: True
     """
     meth.stages = 2
 
     meth.advance("Init")
     fba = fbaModelServices(service.URLS.fba)
     token = os.environ['KB_AUTH_TOKEN']
-#    workspace = os.environ['KB_WORKSPACE_ID']
+    workspace = os.environ['KB_WORKSPACE_ID']
     base_media = base_media.strip().replace(' ', '_')
 
     meth.advance("Fetch Base Media")
@@ -149,6 +154,7 @@ def _build_media(meth, workspace, base_media):
         result = json.dumps(media_list)
     else:
         result = ""
+
     return result
 
 # Finalize (registers service)

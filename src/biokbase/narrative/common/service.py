@@ -125,11 +125,13 @@ def get_func_info(fn):
     param_order = []
     for line in doc.split("\n"):
         line = line.strip()
+        # :param
         if line.startswith(":param"):
             _, name, desc = line.split(":", 2)
             name = name[6:].strip()  # skip 'param '
             params[name] = {'desc': desc.strip()}
             param_order.append(name)
+        # :type (of parameter, should be in kbtypes)
         elif line.startswith(":type"):
             _, name, desc = line.split(":", 2)
             name = name[5:].strip()  # skip 'type '
@@ -137,18 +139,45 @@ def get_func_info(fn):
                 raise ValueError("'type' without 'param' for {}".format(name))
             typeobj = eval(desc.strip())
             params[name]['type'] = typeobj
+
+        # :ui_name (of parameter) - the name that should be displayed in the user interface
+        elif line.startswith(":ui_name"):
+            _, name, ui_name = line.split(":", 2)
+            name = name[8:].strip()  # skip 'ui_name '
+            if not name in params:
+                raise ValueError("'ui_name' without 'param' for {}".format(name))
+            ui_name = ui_name.strip()
+            params[name]['ui_name'] = ui_name
+
+        # :return - name of thing to return
         elif line.startswith(":return"):
             _1, _2, desc = line.split(":", 2)
             return_['desc'] = desc
+
+        # :rtype - type of thing to return
         elif line.startswith(":rtype"):
             _1, _2, desc = line.split(":", 2)
             typeobj = eval(desc.strip())
             return_['type'] = typeobj
+
+        # :widget - the default visualization widget for this method. 
+        # Should be the name as it's invoked in Javascript.
+        elif line.startswith(":widget"):
+            _1, _2, widget = line.split(":", 2)
+            return_['default_widget'] = widget
+
+        # :embed - True if the widget should be automatically embedded.
+        # so, probably always True, but not necessarily
+        elif line.startswith(":embed"):
+            _1, _2, embed = line.split(":", 2)
+            embed = eval(embed.strip())
+            return_['embed'] = embed
     r_params = []
     for i, name in enumerate(param_order):
         type_ = params[name]['type']
         desc = params[name]['desc']
-        r_params.append(type_(desc=desc))
+        ui_name = params[name]['ui_name']
+        r_params.append(type_(desc=desc, ui_name=ui_name))
     if return_ is None:
         r_output = None
     else:
@@ -652,6 +681,16 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             self.error(-2, err)
         except Exception, err:
             self.error(-1, ServiceMethodError(self, err))
+
+        # output object contains:
+        # data
+        # default widget name
+        # whether it should automatically embed the result or not
+        output_obj = {'data' : result, 
+                      'widget' : self.default_widget, 
+                      'embed' : self.embed_widget}
+
+        sys.stdout.write(json.dumps(output_obj))
         return result
 
     def _validate(self, values, specs):
@@ -682,7 +721,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         d = {
             'name': self.name,
             'desc': self.desc,
-            'params': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.params],
+            'params': [(p.name, p.get_metadata('ui_name'), p.info_text, p.get_metadata('desc')) for p in self.params],
             'outputs': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.outputs]
         }
         if formatted:
@@ -704,8 +743,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             'type': 'object',
             'description': self.desc,
             'properties': {
-                'parameters': {p.name: {'type': self.trt_2_jschema.get(p.info_text, 'object'),
-                                        'description': p.get_metadata('desc')} for p in self.params},
+                'parameters': {p.name: {'type': self.trt_2_jschema.get(p.info_text, p.info()),
+                                        'description': p.get_metadata('desc'),
+                                        'ui_name': p.get_metadata('ui_name')} for p in self.params},
             },
             'returns': {p.name: {'type': self.trt_2_jschema.get(p.info_text, 'object'),
                                  'description': p.get_metadata('desc')} for p in self.outputs}

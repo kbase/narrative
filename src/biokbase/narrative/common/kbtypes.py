@@ -38,7 +38,7 @@ class VersionNumber(TraitType):
 
 
 class Genome(Unicode):
-    pass
+    info_text = 'KBaseGenome'
 
 class Media(Unicode):
-    pass
+    info_text = 'KBaseMedia'

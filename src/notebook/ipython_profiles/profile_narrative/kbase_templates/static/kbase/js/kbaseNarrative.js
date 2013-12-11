@@ -51,7 +51,6 @@
 
         $([IPython.events]).on('status_idle.Kernel', function() {
             if (narr_ws == null) {
-                IPython.notebook.set_autosave_interval(300);
                 if (narr_ws == null) {
                     var $ws = $('#kb-ws');
                     narr_ws = $ws
@@ -65,9 +64,6 @@
                     narr_ws.loggedIn(token);
             }
         });
-
-        // $([IPython.events]).on('notebook_loaded.Notebook', function() {
-        // });
 
     });
 

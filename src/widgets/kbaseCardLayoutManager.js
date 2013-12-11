@@ -20,7 +20,7 @@
             data: {},
             auth: null,
             userId: null,
-            loadingImage: "../widgets/images/ajax-loader.gif",
+            loadingImage: "http://narrative.kbase.us/landing/widgets/images/ajax-loader.gif",
         },
         cardIndex: 0,
         cards: {},
@@ -117,7 +117,7 @@
                                          )
                                  );
 
-            var $loadingDiv = $("<div style='width: 100%; text-align: center; padding: 20px'><img src=" + this.options.loadingImage + "/><br/>Exporting data. This may take a moment...</div>");
+            var $loadingDiv = $("<div style='width: 100%; text-align: center; padding: 20px'><img src='" + this.options.loadingImage + "'/><br/>Exporting data. This may take a moment...</div>");
 
             var exportModal = {
                 modal: $modal,
@@ -531,6 +531,13 @@
             return [];
         },
 
+        _exportBambiRunResult: function(data, workspace) {
+            this.dbg("Exporting BAMBI run result");
+            this.dbg(data);
+
+            return [];
+        },
+
         /**
          * Toggles the data manager div
          */
@@ -561,10 +568,14 @@
                 this.showGenomeCards();
             else if (this.options.template.toLowerCase() === "meme")
                 this.showMemeCards();
+            else if (this.options.template.toLowerCase() === "bambi")
+                this.showBambiCards();
             else if (this.options.template.toLowerCase() === "gene")
                 this.showGeneCards();
             else if (this.options.template.toLowerCase() === "model")
                 this.showModelCards();
+            else if (this.options.template.toLowerCase() === "spec")
+                this.showSpecCards();
             else {
                 // throw an error for an unknown template. modal dialog, maybe?
             }
@@ -578,7 +589,7 @@
             this.addNewCard("KBaseGenomeOverview", 
                 { 
                     genomeID: this.options.data.genomeID,
-                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                    loadingImage: this.options.loadingImage,
                     isInCard: true
                 },
                 {
@@ -591,7 +602,7 @@
             this.addNewCard("KBaseWikiDescription",
                 {
                     genomeID: this.options.data.genomeID,
-                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                    loadingImage: this.options.loadingImage,
                 },
                 {
                     my: "left top",
@@ -658,7 +669,7 @@
                         {
                             meme_run_result_id: this.options.data.meme_run_result_id,
                             workspace_id: this.options.data.workspace_id,
-                            loadingImage: "assets/img/ajax-loader.gif",
+                            loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
                         {
@@ -674,7 +685,7 @@
                         {
                             tomtom_run_result_id: this.options.data.meme_run_result_id,
                             workspace_id: this.options.data.workspace_id,
-                            loadingImage: "assets/img/ajax-loader.gif",
+                            loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
                         {
@@ -690,7 +701,7 @@
                         {
                             mast_run_result_id: this.options.data.meme_run_result_id,
                             workspace_id: this.options.data.workspace_id,
-                            loadingImage: "assets/img/ajax-loader.gif",
+                            loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
                         {
@@ -705,6 +716,50 @@
         	};
         },
         
+        showBambiCards: function() {
+            	this.addNewCard("KBaseBambiRunResultCard",
+                        {
+                            bambi_run_result_id: this.options.data.bambi_run_result_id,
+                            workspace_id: this.options.data.workspace_id,
+                            loadingImage: this.options.loadingImage,
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        },
+
+        /**
+         * Template for showing spec-document elements cards.
+         */
+        showSpecCards: function() {
+        	var cardName = 'KBaseSpecUnknownCard';
+        	if (this.options.data.kind === "storage") {
+        		cardName = 'KBaseSpecStorageCard';
+        	} else if (this.options.data.kind === "module") {
+        		cardName = 'KBaseSpecModuleCard';
+        	} else if (this.options.data.kind === "type") {
+        		cardName = 'KBaseSpecTypeCard';
+        	} else if (this.options.data.kind === "function") {
+        		cardName = 'KBaseSpecFunctionCard';
+        	}        		
+            this.addNewCard(cardName,
+                        {
+                            id: this.options.data.id
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	return this;
+        },
+
         /**
          * Registers all events that this manager should know about.
          * Also makes a list of all registered events, stored in this.registeredEvents[], so they
@@ -720,12 +775,16 @@
                                      "showDomains", 
                                      "showOperons", 
                                      "showBiochemistry", 
+                                     "showSpecElement", 
                                      "showMemeMotif", 
                                      "showMemeRunParameters", 
                                      "showMemeRawOutput", 
                                      "showTomtomHits", 
                                      "showTomtomRunParameters", 
-                                     "showMastHits"];
+                                     "showMastHits",
+                                     "showBambiMotif",
+                                     "showBambiRunParameters", 
+                                     "showBambiRawOutput"];
 
             /**
              * Event: showDomains
@@ -753,7 +812,7 @@
                 self.addNewCard("KBaseGeneOperon",
                 {
                     featureID: data.featureID,
-                    loadingImage: "../../widgets/images/ajax-loader.gif",
+                    loadingImage: self.options.loadingImage,
                 },
                 {
                     my: "left top",
@@ -819,7 +878,7 @@
                     {
                         contig: data.contig,
                         showButtons: true,
-                        loadingImage: "../../widgets/images/ajax-loader.gif",
+                        loadingImage: self.options.loadingImage,
                         centerFeature: data.centerFeature
                     },
                     {
@@ -854,7 +913,7 @@
                 self.addNewCard("KBaseWikiDescription",
                     {
                         genomeID: data.genomeID,
-                        loadingImage: "../../widgets/images/ajax-loader.gif",
+                        loadingImage: self.options.loadingImage,
                     },
                     {
                         my: "left top",
@@ -985,7 +1044,96 @@
                     }
                 );
             });
+
+            /**
+             * Event: showBambiMotif
+             * -------------------
+             * Adds new BAMBI Motif card.
+             */
+            $(document).on("showBambiMotif", function(event, data) {
+                self.addNewCard("KBaseBambiMotifCard",
+                    {
+                        motif: data.motif,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+800 bottom",
+                        of: "#app"
+                    }
+                );
+            });
             
+            /**
+             * Event: showBambiRunParameters
+             * -------------------
+             * Adds card with BAMBI run parameters.
+             */
+
+            $(document).on("showBambiRunParameters", function(event, data) {
+                self.addNewCard("KBaseBambiRunParametersCard",
+                    {
+                        collection: data.collection,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left bottom+480",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showBambiRawOutput
+             * -------------------
+             * Adds card with raw Bambi output.
+             */
+            $(document).on("showBambiRawOutput", function(event, data) {
+                self.addNewCard("KBaseBambiRawOutputCard",
+                    {
+                        raw_output: data.raw_output,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "center top",
+                        at: "center bottom",
+                        of: "#app"
+                    }
+                );
+            });            
+            
+            
+            /**
+             * Event: showSpecElement
+             * ------------------
+             * Adds new KBaseSpec[Storage|Module|Type|Function]Card card.
+             */
+            $(document).on("showSpecElement", function(event, data) {
+            	var cardName = 'KBaseSpecUnknownCard';
+            	if (data.kind === "storage") {
+            		cardName = 'KBaseSpecStorageCard';
+            	} else if (data.kind === "module") {
+            		cardName = 'KBaseSpecModuleCard';
+            	} else if (data.kind === "type") {
+            		cardName = 'KBaseSpecTypeCard';
+            	} else if (data.kind === "function") {
+            		cardName = 'KBaseSpecFunctionCard';
+            	}
+                self.addNewCard(cardName,
+                {
+                    id: data.id
+                },
+                {
+                    my: "left top",
+                    at: "center",
+                    of: data.event
+                });
+            });
+
             $(document).on("helloClick", function(event, data) {
                 window.alert(data.message);
             })

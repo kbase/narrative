@@ -42,7 +42,6 @@ $.KBWidget({
         }
 
         function formatObjs(media_meta) {
-            console.log(media_meta)
             var media_list = [];
             for (var i in media_meta) {
                 var media = media_meta[i].slice();
@@ -65,7 +64,7 @@ $.KBWidget({
             $('.media-click').unbind('click');
             $('.media-click').click(function() {
                 var media = $(this).data('media');
-                self.trigger('mediaClick', {media: media});
+                self.trigger('mediaClick', {id: media});
             });
 
             $('.select-ws').unbind('click');

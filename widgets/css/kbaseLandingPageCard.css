@@ -47,7 +47,7 @@
 .kblpc-control-box {
 	position: absolute;
 	right: 0px;
-	top: 50px;
+	top: 61px;
 	width: 300px;
 }
 
@@ -183,5 +183,17 @@
 	border: 1px solid #aaa !important;
 }
 
+/*------------ MEME card styling -------------*/
 
+#motif-logo {
+        font: 8px sans-serif;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+}
 
+.memelogo-axis path, .memelogo-axis line {
+	fill: none;
+	stroke: #000;
+	shape-rendering: crispEdges;
+}

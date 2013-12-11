@@ -4,21 +4,21 @@
 <div data-spy="scroll" data-target="#navbar-example">
 <div class="row">
     <div class="col-md-2">
-        <ul class="nav nav-pills nav-stacked">
-            <li class="disabled"><a href="#" class="">Genomes</a></li>
-            <li class="disabled"><a href="./#organisms">Organisms</a></li>
-            <li class="disabled"><a href="./#reactions">Reactions</a></li>
-            <li class="disabled"><a href="./#compounds">Compounds</a></li>
-            <li class="disabled"><a href="#_media" class="">Media</a></li>
-            <li class="disabled"><a href="#models" class="">Models</a></li>
-            <li class="disabled"><a href="#fbas" class="">FBAs</a></li>
+        <ul class="nav nav-pills nav-stacked" id="navbar" ng-controller="ScrollCtrl" style="position:fixed;">
+            <li><a ng-click="gotoAnchor('genomes')">Genomes</a></li>
+            <li><a ng-click="gotoAnchor('reactions')">Reactions</a></li>
+            <li><a ng-click="gotoAnchor('compounds')">Compounds</a></li>
+            <li><a ng-click="gotoAnchor('media')">Media</a></li>
+            <li><a ng-click="gotoAnchor('models')">Models</a></li>
+            <li><a ng-click="gotoAnchor('fbas')">FBAs</a></li>
+            <li><a ng-click="gotoAnchor('meme')">MEME</a></li>
         </ul>
     </div>
     <div class="col-md-10">
 
-        <div class="page-header"><h3>Genomes</h3></div>
+        <div class="page-header"><h3 id="genomes">Genomes</h3></div>
         <h4>URLs</h4>
-        <a href="#/gnomes">#/genomes</a> <span class="glyphicon glyphicon-unchecked"></span><br>
+        <a href="#/genomes">#/genomes</a> <span class="glyphicon glyphicon-unchecked"></span><br>
         <h5>Params</h5>
             #/genomes/cs/$genomeID <br>
             #/genomes/$workspaceID/$genomeID <br>            
@@ -44,12 +44,9 @@
             </div>              
             <a class="btn btn-default api-url-submit">Go</a>
             <span class="glyphicon glyphicon-unchecked"></span>
-        </form>            
+        </form>
 
-        <!--<div class="page-header"><h3>Organisms</h3></div>
-        <h4>URLs</h4>-->
-
-        <div class="page-header"><h3>Reactions</h3></div>
+        <div class="page-header"><h3 id="reactions">Reactions</h3></div>
         <h4>URLs</h4>
         <a href="#/rxns">#/rxns</a> <span class="glyphicon glyphicon-check"></span><br>
         <h5>Params</h5>        
@@ -66,7 +63,7 @@
         </form>
 
 
-        <div class="page-header"><h3>Compounds</h3></div>
+        <div class="page-header"><h3 id="compounds">Compounds</h3></div>
         <h4>URLs</h4>
             <a href="#/cpds">#/cpds</a> <span class="glyphicon glyphicon-check"></span><br>
         <h5>Params</h5>
@@ -83,7 +80,7 @@
             </form>
 
 
-        <div name="media" class="page-header"><h3>Media</h3></div>
+        <div name="media" class="page-header"><h3 id="media">Media</h3></div>
         <h4>URLs</h4>
             <a href="#/media">#/media</a>  [ points to <span class="label label-primary">KBaseMedia</span> ]
             <span class="glyphicon glyphicon-check"></span> <br>
@@ -115,8 +112,7 @@
             </form>
 
 
-
-        <div class="page-header"><h3>Models</h3></div>
+        <div class="page-header"><h3 id="models">Models</h3></div>
         <h4>URLs</h4>
             <a href="#/models">#/models</a> [ points to <span class="label label-primary">KBaseCDMModels</span> ] 
             <span class="glyphicon glyphicon-check"></span><br>
@@ -163,7 +159,7 @@
 
 
 
-        <div class="page-header"><h3>FBA</h3></div>
+        <div class="page-header"><h3 id="fbas">FBA</h3></div>
         <h4>URLs</h4>        
             <a href="#/fbas">#/fbas</a>
             <span class="glyphicon glyphicon-check"></span>
@@ -208,29 +204,93 @@
             <span class="glyphicon glyphicon-check"></span>              
         </form>
 
-        <div class="page-header"><h3>MEME</h3></div>
+        <div class="page-header"><h3 id="meme">MEME</h3></div>
         <h4>URLs</h4>
-            <a href="#/meme">#/meme</a> <span class="glyphicon glyphicon-unchecked"></span><br>
+            <a href="#/meme">#/meme</a> [ points to <span class="label label-primary">AKtest</span> ] 
+            <span class="glyphicon glyphicon-check"></span><br>
+
         <h5>Params</h5>        
+            #/meme/$workspaceId<br>
             #/meme/$workspaceId/$memeRunResultId<br>
+            #/meme/$workspaceId/$tomtomRunResultId<br>
+            #/meme/$workspaceId/$mastRunResultId<br>
         <h5>Examples</h5>        
             <form class="form-inline" role="form" type="meme">
-              #/media/
+                #/meme/
+                <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+                </div>
+                <a class="btn btn-default api-url-submit">Go</a>
+                <span class="glyphicon glyphicon-check"></span>
+            </form>
+            <form class="form-inline" role="form" type="meme">
+              #/meme/
               <div class="form-group">
                 <label class="sr-only" for="input1">workspace</label>
                 <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">meme_run_result</label>
-                <input class="form-control" id="input2" placeholder="Meme Run Result ID" value="kb|memerunresult.131">
+                <input class="form-control" id="input2" placeholder="Meme Run Result ID" value="kb|memerunresult.202">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
-                  <span class="glyphicon glyphicon-unchecked"></span>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+            <form class="form-inline" role="form" type="meme">
+              #/meme/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">tomtom_run_result</label>
+                <input class="form-control" id="input2" placeholder="Tomtom Run Result ID" value="kb|tomtomrunresult.3">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+            <form class="form-inline" role="form" type="meme">
+              #/meme/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">mast_run_result</label>
+                <input class="form-control" id="input2" placeholder="Mast Run Result ID" value="kb|mastrunresult.1">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="bambi">BAMBI</h3></div>
+        <h4>URLs</h4>
+            #/bambi
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/bambi/$workspaceId/$bambiRunResultId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="bambi">
+              #/bambi/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">bambi_run_result</label>
+                <input class="form-control" id="input2" placeholder="Bambi Run Result ID" value="kb|bambirunresult.4">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
             </form>
 
         <br><br>
         </div>
-    </div>
+
+
+</div>
 
 
 </div>

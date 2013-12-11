@@ -24,9 +24,9 @@ $.KBWidget({
         var fbas_data = options.fbasData;
 
         var container = this.$elem
-        container.append('<div id="core-model"></div>');
+        container.html('<div id="core-model"></div>');
 
-        var flux_threshold = 0.001;
+            var flux_threshold = 0.001;
         var heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
         var neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00'];
         var gapfill_color = '#f000ff';
@@ -60,14 +60,14 @@ $.KBWidget({
             for (var i in models) {
                 org_names.push(models[i].name)
             }
-
+            console.log('MODELS!,', models)
             // Adding data structures to core data or each organism
             for (var i in core) {
                 var obj = core[i];
                 obj['kbids'] = {};
                 for (var j in kbids) {
                     kbid = kbids[j];
-                    var kb_gid = get_genome_id(kbid);
+                    var kb_gid = models[j].id; //get_genome_id(kbid);
                     obj.kbids[kb_gid] = [];
                 }
             }
@@ -78,7 +78,7 @@ $.KBWidget({
 
                 var model_fba = [];
                 for (var k in fba_data) {
-                    if (get_genome_id(fba_data[k].id) == get_genome_id(model.id) ) {
+                    if (fba_data[k].model == model.id ) {
                         model_fba = fba_data[k];
                     }
                 }
@@ -110,7 +110,7 @@ $.KBWidget({
                             }
                         }
 
-                        obj.kbids[get_genome_id(model.id)].push(dict);
+                        obj.kbids[model.id].push(dict);
                     }
                 }
             }
@@ -231,7 +231,7 @@ $.KBWidget({
           $('.model-rxn').unbind('click')
           $('.model-rxn').click(function(event){
                 var rxns = $(this).data('rxns').split(',');
-                self.trigger('rxnClick', {rxns: rxns});
+                self.trigger('coreRxnClick', {ids: rxns});
           })  
 
           return stage;
@@ -272,6 +272,7 @@ $.KBWidget({
                     if (Math.abs(flux) > flux_threshold) var has_flux = true;
                     if (orgs[kbid][0]) var org_name = orgs[kbid][0].org_name;
                     else var org_name = ''
+
                     $(rect.node).popover({content: tip,
                             title: org_name,
                             trigger: 'hover', html: true,

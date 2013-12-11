@@ -55,7 +55,7 @@ $.KBWidget({
             $('.model-click').unbind('click');
             $('.model-click').click(function() {
                 var model = $(this).data('model');
-                self.trigger('modelClick', {model: model});
+                self.trigger('modelClick', {id: model});
             });
         }
 

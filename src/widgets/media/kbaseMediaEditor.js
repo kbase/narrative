@@ -8,26 +8,13 @@ $.KBWidget({
     init: function(options) {
         this._super(options);
         var self = this;
-        var token = options.auth;
-        var media = options.id;
-        var ws = options.ws;        
-
-        var fba = new fbaModelServices('http://140.221.85.73:4043');
-        var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-
-        var panel = self.$elem.kbasePanel({title: 'Media Info', subText: media})
-
-        var container = panel.body();
-        container.append('<p class="muted loader-rxn"> \
-                <img src="assets/img/ajax-loader.gif"> loading...</p>')
-
-
-        var mediaAJAX = fba.get_media({medias: [media], workspaces: [ws]})
-        $.when(mediaAJAX).done(function(data){
-            media = data[0]; // only 1 media right now
-            media_view(container, media);
-        })
-
+        var media = options.ids[0];
+        var ws = options.workspaces[0];        
+        var mediadata = options.data[0];
+        var container = this.$elem;
+        var fbaserv = new fbaModelServices('http://140.221.85.73:4043/');
+        
+        media_view(container, mediadata);
 
         function media_view(container, data) {
             $('.loader-rxn').remove();
@@ -39,7 +26,7 @@ $.KBWidget({
            
             table.append('<tr><th>Compound</th><th>Concentration</th><th>min_flux</th><th>max_flux</th></tr>')
             for (var i in data.media_compounds) {
-                table.append('<tr><td>'+data.media_compounds[i].name+'</td>\
+                table.append('<tr><td>"'+data.media_compounds[i].name+'"</td>\
                     <td>'+data.media_compounds[i].concentration+'</td>\
                     <td>'+data.media_compounds[i].min_flux+'</td>\
                     <td>'+data.media_compounds[i].max_flux+'</td></tr>');
@@ -63,7 +50,7 @@ $.KBWidget({
            
             table.append('<tr><th>Compound</th><th>Concentration</th><th>min_flux</th><th>max_flux</th><th>Delete/Add</th></tr>')
             for (var i in data.media_compounds) {
-                table.append('<tr><td><input id="cmpds'+i+'" class="form-control" value='+data.media_compounds[i].name+'></input></td>\
+                table.append('<tr><td><input id="cmpds'+i+'" class="form-control" value="'+data.media_compounds[i].name+'"></input></td>\
                     <td><input id="conc'+i+'" class="form-control" value='+data.media_compounds[i].concentration+'></input></td>\
                     <td><input id="minflux'+i+'" class="form-control" value='+data.media_compounds[i].min_flux+'></input></td>\
                     <td><input id="maxflux'+i+'" class="form-control" value='+data.media_compounds[i].max_flux+'></input></td>\
@@ -118,61 +105,48 @@ $.KBWidget({
             $('.save-to-ws-btn').click(function() {
                 //var media_id=data.id;
                 //var name=data.id;
-                var cmpds = $('[id^=cmpds]');
-                var conc = $('[id^=conc]');
-                var minflux = $('[id^=minflux]');
-                var maxflux = $('[id^=maxflux]');
-                var newmedia = {
-                    media: 'testSave',
-                    workspace: 'jko',
-                    name: 'testSave',
+                var cmpds = [];
+                var conc = [];
+                var minflux = [];
+                var maxflux = [];
+                var compounds = $('[id^=cmpds]');
+                var concentrations = $('[id^=conc]');
+                var minfluxes = $('[id^=minflux]');
+                var maxfluxes = $('[id^=maxflux]');
+                for (var i=0;i < compounds.length; i++) {
+                	cmpds.push(compounds[i].value);
+                	conc.push(concentrations[i].value);
+                	minflux.push(minfluxes[i].value);
+                	maxflux.push(maxfluxes[i].value);
+                }
+                //var test = $('#save-to-ws').kbaseSimpleWSSelect({defaultWS:ws, auth: token});
+                //test.show();
+				var newmedia = {
+                    wsid: media,
+                    ws: ws,
+                    name: mediadata.name,
                     isDefined: 0,
                     isMinimal: 0,
                     type: 'unknown',
-                    compounds: [cmpds],
-                    concentrations: [conc],
-                    maxflux: [minflux],
-                    minflux: [maxflux]
-
+					media_compounds: []
                 };
-
-                container.append('<div id="save-to-ws"></div>')
-                var test = $('#save-to-ws').kbaseSimpleWSSelect({defaultWS:ws, auth: token});
-                test.show();
-
-
-                self.trigger('saveToWSClick', newmedia);
-            });
-        }
-/*
-        function saveEditedMedia(workspace) {
-            console.log('saving?')
-            var media_id=data.id;
-            var name=data.id;
-            var cmpds = $('[id^=cmpds]');
-            var conc = $('[id^=conc]');
-            var minflux = $('[id^=minflux]');
-            var maxflux = $('[id^=maxflux]');
-
-
-            fba.addmedia({
-                media: media_id,
-                workspace: workspace,
-                name: name,
-                isDefined: 0,
-                isMinimal: 0,
-                type: 'unknown',
-                compounds: [cmpds],
-                concentrations: [concentrations],
-                maxflux: [minflux],
-                minflux: [maxflux]
+				for (var i=0;i < compounds.length; i++) {
+                	if (cmpds[i]) {
+                		newmedia.media_compounds.push({
+                			name: cmpds[i],
+                			concentrations: conc[i],
+                			min_flux: minflux[i],
+                			max_flux: maxflux[i]          	
+                		});
+                	}
+            	}
+				var output = saveMedia(newmedia);
+				//container.append('<div id="save-to-ws"><p>Media successfully saved - '+output[0]+'!</p></div>');
+                //self.trigger('saveToWSClick', newmedia);
             });
         }
 
-        function saveMedia(workspace, data) {
-            var media_id=data.id;
-            var name=data.id;
-
+        function saveMedia(data) {
             var cmpds =[];
             var conc =[];
             var minflux =[];
@@ -183,51 +157,33 @@ $.KBWidget({
                 minflux.push(data.media_compounds[i].min_flux);
                 maxflux.push(data.media_compounds[i].max_flux);
             }
-
-            fba.addmedia({
-                media: media_id,
-                workspace: workspace,
-                name: name,
-                isDefined: 0,
-                isMinimal: 0,
-                type: 'unknown',
-                compounds: [cmpds],
-                concentrations: [concentrations],
-                maxflux: [minflux],
-                minflux: [maxflux]
+            var ajax = fbaserv.addmedia({
+                media: data.wsid,
+                workspace: data.ws,
+                name: data.name,
+                isDefined: data.isDefined,
+                isMinimal: data.isMinimal,
+                type: data.type,
+                compounds: cmpds,
+                concentrations: conc,
+                maxflux: maxflux,
+                minflux: minflux
+            });
+            self.$elem.append('<div id="save-media-loader"><p><img src="assets/img/ajax-loader.gif"> loading...</p></div>');
+            $.when(ajax).done(function(data){
+                var element = $('[id^=save-media-loader]');
+                element[0].innerHTML = "<p>Media successfully saved!</p>";
+            });
+            $.when(ajax).fail(function(data){
+                var array = data.error.message.split('_ERROR_');
+                var element = $('[id^=save-media-loader]');
+                if (array[1]) {
+                	element[0].innerHTML = "<p>Media save failed with error: "+array[1]+"</p>";
+                } else {
+                	element[0].innerHTML = "<p>Media save failed!</p>"
+                }
             });
         }
-*/
-
-
-        /*function saveMedia(workspace, data) {
-            var media_id=data.id;
-            var name=data.id;
-
-            var cmpds =[];
-            var conc =[];
-            var minflux =[];
-            var maxflux =[];
-            for (var i in data.media_compounds) {
-                cmpds.push(data.media_compounds[i].name);
-                conc.push(data.media_compounds[i].concentrations);
-                minflux.push(data.media_compounds[i].min_flux);
-                maxflux.push(data.media_compounds[i].max_flux);
-            }
-
-            fba.addmedia({
-                media: media_id,
-                workspace: workspace,
-                name: name,
-                isDefined: 0,
-                isMinimal: 0,
-                type: 'unknown',
-                compounds: [cmpds],
-                concentrations: [concentrations],
-                maxflux: [minflux],
-                minflux: [maxflux]
-            });
-        }*/
   
         function get_genome_id(ws_id) {
             var pos = ws_id.indexOf('.');

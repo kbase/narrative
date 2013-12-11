@@ -30,6 +30,8 @@
         ws_client: null,
         ws_id: null,
         FUNCTION_CELL: "function_input",
+        defaultOutputWidget: "kbaseDefaultNarrativeOutput",
+        defaultInputWidget: "kbaseDefaultNarrativeInput",
 
         init: function(options) {
             this._super(options);
@@ -196,7 +198,7 @@
             // THIS IS WRONG! FIX THIS LATER!
             // But it should work for now... nothing broke up to this point, right?
             var cellIndex = IPython.notebook.ncells() - 1;
-            var cellId = 'kb-cell-' + cellIndex;
+            var cellId = 'kb-cell-' + cellIndex + "-" + this.uuidgen();
 
             // The various components are HTML STRINGS, not jQuery objects.
             // This is because the cell expects a text input, not a jQuery input.
@@ -205,7 +207,12 @@
 
             if (this.validateMethod(method)) {
                 // This is the list of parameters for the given method
-                var inputs = this.buildFunctionInputs(method, cellId);
+//                var inputs = this.buildFunctionInputs(method, cellId);
+                var inputWidget = this.defaultInputWidget;
+                if (method.properties.widgets.input_widget)
+                    inputWidget = method.properties.widgets.input_widget;
+
+                var inputDiv = "<div id='inputs'></div>";
 
                 // These are the 'delete' and 'run' buttons for the cell
                 var buttons = "<div class='buttons pull-right' style='margin-top:10px'>" +
@@ -226,11 +233,14 @@
                 cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
                                   "<h1>" + method.title + "</h1>" +
                                   "<div>" +  
-                                      inputs +
+                                      inputDiv +
                                       buttons + 
                                   "</div>" +
                                   progressBar +
-                              "</div>";
+                              "</div>\n" + 
+                              "<script>" + 
+                              "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" + JSON.stringify(method) + "'});" +
+                              "</script>";
             }
             else {
                 cellContent = "Error - the selected method is invalid.";
@@ -251,6 +261,9 @@
          * @private
          */
         buildFunctionInputs: function(method, cellId) {
+
+
+
             var inputDiv = "<div class='kb-cell-params'><table class='table'>";
             var params = method.properties.parameters;
             for (var i=0; i<Object.keys(params).length; i++) {
@@ -609,25 +622,45 @@
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
-                    this.createOutputCell(result);
+                    this.createOutputCell(cell, result);
                 }
             }
         },
 
+        /**
+         * Result is an object with this structure:
+         * widget - the widget to use (if null, then use kbaseDefaultNarrativeOutput)
+         * data - the object to be passed in to the widget
+         * embed - if true, then embed the widget and render it.
+         */
         createOutputCell: function(cell, result) {
-            // stop using the dom element for output and use the IPython cell
-
             // update the datatable widget
             if (this.dataTableWidget)
                 this.dataTableWidget.render();
 
-            var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell));
+            console.log(result);
 
+            result = JSON.parse(result);
+            console.log(result);
+
+            if (!result.embed) {
+                //do something.
+                return;
+            }
+
+            var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell));
             var uuid = this.uuidgen();
+
+            // set up the widget line
+            var widgetInvoker = "";
+            if (result.widget && result.widget.length > 0)
+                widgetInvoker = result.widget + "(" + result.data + ");";
+            else
+                widgetInvoker = this.defaultOutputWidget + "({'data' : " + result.data + "});";
 
             var cellText = ['<div id="'+uuid+'"></div>',
                             '<script>',
-                            '$("#'+uuid+'").' + result, 
+                            '$("#'+uuid+'").' + widgetInvoker, 
                             // Make the element a little bigger,
                             '$("#'+uuid+'").css({margin: "-10px"});',
                             // Disable most actions on this element'
@@ -761,8 +794,6 @@
             }
         },
 
-
-
         /* ------------------------------------------------------ */
 
         /**
@@ -828,367 +859,367 @@
         },
 
 
-        /***********************************************
-         *********** FUNCTION CONFIGURATIONS ***********
-         ***********************************************/
+        // /***********************************************
+        //  *********** FUNCTION CONFIGURATIONS ***********
+        //  ***********************************************/
 
-        /* -------------- PLANTS ---------------------- */
-        /** 
-         * Input data for plants demo.
-         */
-        plantsRunConfig: {
-            params : {
-                'Identifiers' : [
-                    {
-                        name: 'Genome',
-                        type: '',
-                        default: '3899'
-                    },
-                    {
-                        name: 'Ontology',
-                        type: '',
-                        default: 'GSE5622'
-                    },
-                ],
-                'Filter' : [
-                    {
-                        name: '-n',
-                        type: '',
-                        default: '100'
-                    },
-                    {
-                        name: '',
-                        type: '',
-                        default: 'x'
-                    }
-                ],
-                'Network' : [
-                    {
-                        name: 'Pearson cutoff',
-                        type: '',
-                        default: '0.50'
-                    },
-                    {
-                        name: '',
-                        type: '',
-                        default: 'x'
-                    }
-                ],
-                'Cluster' : [
-                    {
-                        name: 'Number of modules',
-                        type: '',
-                        default: '5'
-                    },
-                    {
-                        name: '',
-                        type: '',
-                        default: ''
-                    }
-                ]
-            },
-            command: {
-                'module' : 'biokbase.narrative.demo.coex_workflow',
-                'function' : 'coex_network_ws'
-            }
-        },
-
-
-        /* -------------- END: PLANTS ---------------------- */
-
-
-
-        /* -------------- MICROBES ---------------- */
-
-        /* --------- Assemble Contigs from FASTA reads -----------*/
-        runAssemblyConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Paired-End Files<br>(comma-delimited)',
-                    },
-                    {
-                        name: 'Single-End Files<br>(comma-delimited)',
-                    },
-                    {
-                        name: 'Sequence Files<br>(comma-delimited)',
-                    },
-                ],
-                'Assembly Params': [
-                    {
-                        name: 'Assemblers',
-                    },
-                    {
-                        name: 'Reference',
-                    },
-                    {
-                        name: 'Notes',
-                    }
-                ],
-                'Output': [
-                    {
-                        name: 'Contig Set Name'
-                    },
-                    {
-                        name: '',
-                    },
-                    {
-                        name: '',
-                    }
-                ]
-            },
-            command: {
-                'module' : 'biokbase.narrative.demo.microbes_workflow',
-                'function' : 'run_assembly'
-            }
-        },
-
-        /* ---------- Assemble Genome from Contigs ----------- */
-        assembleGenomeConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Contig Set',
-                        type: 'ContigSet'
-                    },
-                ],
-                'Output' : [
-                    {
-                        name: 'New Genome',
-                    }
-                ]
-            },
-            command: {
-                'module' : 'biokbase.narrative.demo.microbes_workflow',
-                'function' : 'assemble_genome'
-            }
-        },
-
-        /* ---------- Annotate Assembled Genome ----------- */
-        annotateGenomeConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Genome',
-                        type: 'Genome'
-                    }
-                ],
-                'Output' : [
-                    {
-                        name: 'New Genome ID (optional)',
-                    }
-                ]
-            },
-            command: {
-                'module' : 'biokbase.narrative.demo.microbes_workflow',
-                'function' : 'assemble_genome'
-            }
-        },
-
-
-        /* ---------- View Genome Details ----------- */
-
-        // viewGenomeConfig: {
-        //     'Identifiers' : {
-        //         'Genome' : {
-        //             'type' : 'Genome',
-        //             'default' : '',
-        //         }
+        // /* -------------- PLANTS ---------------------- */
+        // /** 
+        //  * Input data for plants demo.
+        //  */
+        // plantsRunConfig: {
+        //     params : {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Genome',
+        //                 type: '',
+        //                 default: '3899'
+        //             },
+        //             {
+        //                 name: 'Ontology',
+        //                 type: '',
+        //                 default: 'GSE5622'
+        //             },
+        //         ],
+        //         'Filter' : [
+        //             {
+        //                 name: '-n',
+        //                 type: '',
+        //                 default: '100'
+        //             },
+        //             {
+        //                 name: '',
+        //                 type: '',
+        //                 default: 'x'
+        //             }
+        //         ],
+        //         'Network' : [
+        //             {
+        //                 name: 'Pearson cutoff',
+        //                 type: '',
+        //                 default: '0.50'
+        //             },
+        //             {
+        //                 name: '',
+        //                 type: '',
+        //                 default: 'x'
+        //             }
+        //         ],
+        //         'Cluster' : [
+        //             {
+        //                 name: 'Number of modules',
+        //                 type: '',
+        //                 default: '5'
+        //             },
+        //             {
+        //                 name: '',
+        //                 type: '',
+        //                 default: ''
+        //             }
+        //         ]
+        //     },
+        //     command: {
+        //         'module' : 'biokbase.narrative.demo.coex_workflow',
+        //         'function' : 'coex_network_ws'
         //     }
         // },
 
-        viewGenomeConfig: {
-            'params' : {
-                'Identifiers' : [
-                    {
-                        name: 'Genome',
-                        type: 'Genome',
-                        default: ''
-                    },
-                ]
-            },
-            'command' : {
-                'module' : 'biokbase.narrative.demo.microbes_workflow',
-                'function' : 'view_genome_details'
-            },
-        },
 
-        /* ------------ Genome to FBA Model ----------------- */ 
-        genomeToFbaConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Genome',
-                        type: 'Genome'
-                    },
-                ]
-            },
-            command: {
-                module: 'biokbase.narrative.demo.microbes_workflow',
-                function: 'genome_to_fba_model'
-            },
-        },
+        // /* -------------- END: PLANTS ---------------------- */
 
 
-        /* ---------- View Model ----------- */
-        viewFbaModelConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Model',
-                        type: 'Model'
-                    }
-                ]
-            },
-            command: {
-                module: 'biokbase.narrative.demo.microbes_workflow',
-                function: 'view_fba_model'
-            }
-        },
 
-        /* --------- Build Media ------------ */
-        buildMediaConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Base Media (optional)',
-                        type: 'Media',
-                        default: 'None'
-                    },
-                ],
-            },
-            command: {
-                module: 'biokbase.narrative.demo.microbes_workflow',
-                function: 'build_media'
-            }
-        },
+        // /* -------------- MICROBES ---------------- */
 
-        /* ---------- View Media ---------- */
-        viewMediaConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Media',
-                        type: 'Media',
-                    }
-                ]
-            },
-            command: {
-                module: 'biokbase.narrative.demo.microbes_workflow',
-                function: 'view_media'
-            }
-        },
+        // /* --------- Assemble Contigs from FASTA reads -----------*/
+        // runAssemblyConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Paired-End Files<br>(comma-delimited)',
+        //             },
+        //             {
+        //                 name: 'Single-End Files<br>(comma-delimited)',
+        //             },
+        //             {
+        //                 name: 'Sequence Files<br>(comma-delimited)',
+        //             },
+        //         ],
+        //         'Assembly Params': [
+        //             {
+        //                 name: 'Assemblers',
+        //             },
+        //             {
+        //                 name: 'Reference',
+        //             },
+        //             {
+        //                 name: 'Notes',
+        //             }
+        //         ],
+        //         'Output': [
+        //             {
+        //                 name: 'Contig Set Name'
+        //             },
+        //             {
+        //                 name: '',
+        //             },
+        //             {
+        //                 name: '',
+        //             }
+        //         ]
+        //     },
+        //     command: {
+        //         'module' : 'biokbase.narrative.demo.microbes_workflow',
+        //         'function' : 'run_assembly'
+        //     }
+        // },
 
-        /* --------- Run Flux Balance Analysis --------------- */
-        runFbaConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Model',
-                        type: 'Model'
-                    },
-                    {
-                        name: 'Media',
-                        type: 'Media'
-                    }
-                ],
-                'Misc' : [
-                    {
-                        name: 'Notes',
-                        type: '',
-                    }
-                ],
-            },
-            command: {
-                module: 'biokbase.narrative.demo.microbes_workflow',
-                function: 'run_fba'
-            },
-        },
+        // /* ---------- Assemble Genome from Contigs ----------- */
+        // assembleGenomeConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Contig Set',
+        //                 type: 'ContigSet'
+        //             },
+        //         ],
+        //         'Output' : [
+        //             {
+        //                 name: 'New Genome',
+        //             }
+        //         ]
+        //     },
+        //     command: {
+        //         'module' : 'biokbase.narrative.demo.microbes_workflow',
+        //         'function' : 'assemble_genome'
+        //     }
+        // },
+
+        // /* ---------- Annotate Assembled Genome ----------- */
+        // annotateGenomeConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Genome',
+        //                 type: 'Genome'
+        //             }
+        //         ],
+        //         'Output' : [
+        //             {
+        //                 name: 'New Genome ID (optional)',
+        //             }
+        //         ]
+        //     },
+        //     command: {
+        //         'module' : 'biokbase.narrative.demo.microbes_workflow',
+        //         'function' : 'assemble_genome'
+        //     }
+        // },
 
 
-        /* ------------ View FBA Results ------------ */
+        // /* ---------- View Genome Details ----------- */
 
-        viewFbaConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'FBA Result',
-                        type: 'FBA'
-                    }
-                ]
-            },
-            command: {
-                module: 'biokbase.narrative.demo.microbes_workflow',
-                function: 'view_fba'
-            }
-        },
+        // // viewGenomeConfig: {
+        // //     'Identifiers' : {
+        // //         'Genome' : {
+        // //             'type' : 'Genome',
+        // //             'default' : '',
+        // //         }
+        // //     }
+        // // },
 
-        /* ------------ Gapfill FBA Model -------------- */
-        runGapfillConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Model',
-                        type: 'Model',                        
-                    },
-                    {
-                        name: 'Media',
-                        type: 'Media',
-                    }
-                ],
+        // viewGenomeConfig: {
+        //     'params' : {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Genome',
+        //                 type: 'Genome',
+        //                 default: ''
+        //             },
+        //         ]
+        //     },
+        //     'command' : {
+        //         'module' : 'biokbase.narrative.demo.microbes_workflow',
+        //         'function' : 'view_genome_details'
+        //     },
+        // },
 
-                'Solutions' : [
-                    {
-                        name: 'Number to seek',
-                        type: '',
-                        default: '1',
-                    }
-                ],
+        // /* ------------ Genome to FBA Model ----------------- */ 
+        // genomeToFbaConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Genome',
+        //                 type: 'Genome'
+        //             },
+        //         ]
+        //     },
+        //     command: {
+        //         module: 'biokbase.narrative.demo.microbes_workflow',
+        //         function: 'genome_to_fba_model'
+        //     },
+        // },
 
-                'Time' : [
-                    {
-                        name: 'Per Solution (sec)',
-                        type: '',
-                        default: '3600',
-                    },
-                    {
-                        name: 'Total Limit (sec)',
-                        type: '',
-                        default: '3600'
-                    }
-                ],
-            },
-            command: {
-                module: 'biokbase.narrative.demo.microbes_workflow',
-                function: 'run_gapfill'
-            },
-        },
 
-        /* ------------ Integrate Gapfill Solution ---------------- */
-        integrateGapfillConfig: {
-            params: {
-                'Identifiers' : [
-                    {
-                        name: 'Model',
-                        type: 'Model',
-                    },
-                    {
-                        name: 'Gapfill',
-                    },
-                ],
-                'Output' : [
-                    {
-                        name: 'New Model (optional)'
-                    },
-                ],
-            },
-            command: {
-                module: 'biokbase.narrative.demo.microbes_workflow',
-                function: 'integrate_gapfill'
-            }
-        },
+        // /* ---------- View Model ----------- */
+        // viewFbaModelConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Model',
+        //                 type: 'Model'
+        //             }
+        //         ]
+        //     },
+        //     command: {
+        //         module: 'biokbase.narrative.demo.microbes_workflow',
+        //         function: 'view_fba_model'
+        //     }
+        // },
 
-        /* --------------- END: MICROBES ----------------- */
+        // /* --------- Build Media ------------ */
+        // buildMediaConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Base Media (optional)',
+        //                 type: 'Media',
+        //                 default: 'None'
+        //             },
+        //         ],
+        //     },
+        //     command: {
+        //         module: 'biokbase.narrative.demo.microbes_workflow',
+        //         function: 'build_media'
+        //     }
+        // },
+
+        // /* ---------- View Media ---------- */
+        // viewMediaConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Media',
+        //                 type: 'Media',
+        //             }
+        //         ]
+        //     },
+        //     command: {
+        //         module: 'biokbase.narrative.demo.microbes_workflow',
+        //         function: 'view_media'
+        //     }
+        // },
+
+        // /* --------- Run Flux Balance Analysis --------------- */
+        // runFbaConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Model',
+        //                 type: 'Model'
+        //             },
+        //             {
+        //                 name: 'Media',
+        //                 type: 'Media'
+        //             }
+        //         ],
+        //         'Misc' : [
+        //             {
+        //                 name: 'Notes',
+        //                 type: '',
+        //             }
+        //         ],
+        //     },
+        //     command: {
+        //         module: 'biokbase.narrative.demo.microbes_workflow',
+        //         function: 'run_fba'
+        //     },
+        // },
+
+
+        // /* ------------ View FBA Results ------------ */
+
+        // viewFbaConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'FBA Result',
+        //                 type: 'FBA'
+        //             }
+        //         ]
+        //     },
+        //     command: {
+        //         module: 'biokbase.narrative.demo.microbes_workflow',
+        //         function: 'view_fba'
+        //     }
+        // },
+
+        // /* ------------ Gapfill FBA Model -------------- */
+        // runGapfillConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Model',
+        //                 type: 'Model',                        
+        //             },
+        //             {
+        //                 name: 'Media',
+        //                 type: 'Media',
+        //             }
+        //         ],
+
+        //         'Solutions' : [
+        //             {
+        //                 name: 'Number to seek',
+        //                 type: '',
+        //                 default: '1',
+        //             }
+        //         ],
+
+        //         'Time' : [
+        //             {
+        //                 name: 'Per Solution (sec)',
+        //                 type: '',
+        //                 default: '3600',
+        //             },
+        //             {
+        //                 name: 'Total Limit (sec)',
+        //                 type: '',
+        //                 default: '3600'
+        //             }
+        //         ],
+        //     },
+        //     command: {
+        //         module: 'biokbase.narrative.demo.microbes_workflow',
+        //         function: 'run_gapfill'
+        //     },
+        // },
+
+        // /* ------------ Integrate Gapfill Solution ---------------- */
+        // integrateGapfillConfig: {
+        //     params: {
+        //         'Identifiers' : [
+        //             {
+        //                 name: 'Model',
+        //                 type: 'Model',
+        //             },
+        //             {
+        //                 name: 'Gapfill',
+        //             },
+        //         ],
+        //         'Output' : [
+        //             {
+        //                 name: 'New Model (optional)'
+        //             },
+        //         ],
+        //     },
+        //     command: {
+        //         module: 'biokbase.narrative.demo.microbes_workflow',
+        //         function: 'integrate_gapfill'
+        //     }
+        // },
+
+        // /* --------------- END: MICROBES ----------------- */
 
 
 

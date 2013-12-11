@@ -40,6 +40,19 @@
                 .createMessages()
                 .createLoading()
                 .render();
+
+            $(document).on(
+                'dataLoadedQuery.Narrative', $.proxy(function (e, params, callback) {
+                    var objList = this.getLoadedData(params);
+                    console.log(objList);
+                    if (callback) {
+                        callback(objList);
+                    }
+                },
+                this)
+            );
+
+
             return this;
         },
 

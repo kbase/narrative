@@ -62,12 +62,9 @@ def _annotate_genome(meth, genome, out_genome):
     meth.advance("Rendering Job Information")
     job_info = res_list[0]
 
-    print("<br/>".join(["Annotation job submitted successfully!", job_info[1],
-                        "This job will take approximately an hour.",
-                        "Your annotated genome will have ID: <b>" + out_genome + "</b>", ""]))
-
-    return out_genome
-
+    return json.dumps({ 'output': "<br/>".join(["Annotation job submitted successfully!", job_info[1],
+                         "This job will take approximately an hour.",
+                         "Your annotated genome will have ID: <b>" + out_genome + "</b>", ""]) })
 
 @method(name="Assemble Genome from Reads")
 def _assemble_genome(meth, contig_file, out_genome):
@@ -116,10 +113,7 @@ def _assemble_genome(meth, contig_file, out_genome):
 
     # 5. Pass it forward to the client.
     meth.advance("Rendering Genome Information")
-    print(json.dumps(genome_meta))
-
-    return out_genome
-
+    return json.dumps(genome_meta)
 
 @method(name="Build Media")
 def _build_media(meth, base_media):
@@ -130,7 +124,7 @@ def _build_media(meth, base_media):
     :ui_name base_media: Media ID
     :return: JSON of medias
     :rtype: kbtypes.Media
-    :widget: kbaseMediaBuilderNarrative
+    :output_widget: kbaseMediaEditorNarrative
     :embed: True
     """
     meth.stages = 2
@@ -142,6 +136,7 @@ def _build_media(meth, base_media):
     base_media = base_media.strip().replace(' ', '_')
 
     meth.advance("Fetch Base Media")
+    result = { 'viewOnly': False, 'editOnly': True, 'ws': workspace, 'auth': token }
     if base_media:
         meth.stages += 1
         media_params = {
@@ -151,11 +146,9 @@ def _build_media(meth, base_media):
         }
         media_list = fba.get_media(media_params)
         meth.advance("Render Media")
-        result = json.dumps(media_list)
-    else:
-        result = ""
+        result['mediaData'] = media_list
 
-    return result
+    return json.dumps(result)
 
 # Finalize (registers service)
 finalize_service()

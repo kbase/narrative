@@ -59,6 +59,7 @@
                           controlsElem: $ws.find('.kb-controls'),
                           tableElem: $ws.find('.kb-table')
                     });
+                    $('#kb-ws').find('.kb-table').kbaseWorkspaceData({container: $('#kb-ws').find('.kb-table')});
                 }
                 if (token)
                     narr_ws.loggedIn(token);

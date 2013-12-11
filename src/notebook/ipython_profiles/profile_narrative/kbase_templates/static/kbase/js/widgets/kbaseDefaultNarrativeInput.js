@@ -49,7 +49,7 @@
                         var p = params[pid];
 
                         var input = "";
-                        console.log(objects);
+//                        console.log(objects);
                         if (objects[p.type] && objects[p.type].length > 0) {
                             var objList = objects[p.type];
                             objList.sort(function(a, b) {

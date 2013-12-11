@@ -54,7 +54,7 @@
             $("#function-test").kbaseNarrativeFunctionPanel({});
 
             // Initialize the data table.
-            this.initDataTable(options.tableElem);
+//            this.initDataTable(options.tableElem);
             this.initControls(options.controlsElem);
 
             // bind search to data table
@@ -140,13 +140,13 @@
          * @param elem Data table parent element
          * @returns this
          */
-        initDataTable: function(elem) {
-            this.dataTableWidget = elem.kbaseWorkspaceDataWidget({
-                loadingImage: this.options.loadingImage,
-                container: elem
-             });
-            return this;
-        },
+        // initDataTable: function(elem) {
+        //     this.dataTableWidget = elem.kbaseWorkspaceDataWidget({
+        //         loadingImage: this.options.loadingImage,
+        //         container: elem
+        //      });
+        //     return this;
+        // },
 
         /**
          * Set up interactive features of the function-list panel.
@@ -261,9 +261,6 @@
          * @private
          */
         buildFunctionInputs: function(method, cellId) {
-
-
-
             var inputDiv = "<div class='kb-cell-params'><table class='table'>";
             var params = method.properties.parameters;
             for (var i=0; i<Object.keys(params).length; i++) {
@@ -635,8 +632,8 @@
          */
         createOutputCell: function(cell, result) {
             // update the datatable widget
-            if (this.dataTableWidget)
-                this.dataTableWidget.render();
+//            if (this.dataTableWidget)
+//                this.dataTableWidget.render();
 
             console.log(result);
 
@@ -803,9 +800,10 @@
          */
         render: function() {
             this.rebindRunButtons();
-            if (this.dataTableWidget !== undefined) {
-                this.dataTableWidget.render();
-            }
+            // if (this.dataTableWidget !== undefined) {
+            //     this.dataTableWidget.render();
+            // }
+            this.trigger('updateData.Narrative');
             return this;
         },
 
@@ -821,7 +819,7 @@
             var un = token.match(/un=[\w_]+|/);
             this.ws_user = un[0].substr(3, un[0].length - 3);
             // grab ws_id to give to, e.g., upload widget
-            this.ws_id = this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
+//            this.ws_id = this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
             this.workspace("id", this.ws_id); // add to global accessor
             // create/refresh the upload dialog, which needs login to populate types
             this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);

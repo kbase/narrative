@@ -952,9 +952,5 @@ def example():
     assert (r is not None)
 
 
-# load all modules in services dir (see services/__init__.py),
-# which will register themselves on import
-from biokbase.narrative.services import *
-
 if __name__ == '__main__':
     example()

@@ -756,6 +756,22 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         """
         return self._history.estimated_runtime(params)
 
+    ## Utility functions
+
+    @property
+    def token(self):
+        """Authorization token passed in from front-end.
+        """
+        return os.environ['KB_AUTH_TOKEN']
+
+    @property
+    def workspace_id(self):
+        """Workspace ID passed in from front-end.
+        """
+        return os.environ['KB_WORKSPACE_ID']
+
+    ## JSON serialization
+
     def as_json(self, formatted=False, **kw):
         d = {
             'name': self.name,

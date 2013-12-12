@@ -397,9 +397,6 @@
                         paramList.push(field.value);
                     });
                     var method = cell.metadata['kb-cell'].method;
-                    console.log('clicked method:');
-                    console.log(method);
-
 
                     self.runCell()(cell, method.service, method.title, paramList);
                 }
@@ -480,7 +477,7 @@
                 codeCell.set_text(code);
                 codeCell.output_area.clear_output(true, true, true);
                 codeCell.set_input_prompt('*');
-                console.debug('Running function: ' + service + '.' + method);
+//                console.debug('Running function: ' + service + '.' + method);
 
                 $(cell.element).find('#kb-func-progress').css({'display': 'block'});
                 nb.kernel.execute(code, callbacks, {silent: true});
@@ -504,7 +501,7 @@
 
             var paramList = params.map(function(p) { return '"' + p + '"'; });
             cmd += "method(" + paramList + ")";
-            console.debug(cmd);
+//            console.debug(cmd);
             return cmd;
         },
 
@@ -629,28 +626,32 @@
                                 else if (matches[1] === 'E') {
                                     // Error!
                                     var errorJson = matches[2];
-                                    self.createOutputCell(cell, 'kbaseNarrativeError({error: ' + errorJson + '})');
-                                    console.debug("Narrative error: " + errorJson);
+//                                    self.createOutputCell(cell, 'kbaseNarrativeError({error: ' + errorJson + '})');
+                                    self.dbg("Narrative error: " + errorJson);
+                                }
+                                else if (matches[1] === 'G') {
+                                    // Debug statement.
+                                    var debug = matches[2];
+                                    self.dbg("[KERNEL] " + debug);
                                 }
                             }
                             // No progress marker on non-empty line => final output of program?
                             else {
                                 // XXX: @ and # should probably be swapped in meaning
-                                if (line.match(/^#/)) {
-                                    // log lines starting with '@'
-                                    console.info("[KERNEL] " + line.substr(1, line.length).trim());
-                                    // consume data
-                                    offs += line.length;
-                                }
-                                else {
-                                    console.debug("Saving line: "+ line);
+                                // if (line.match(/^#/)) {
+                                //     // log lines starting with '@'
+                                //     console.info("[KERNEL] " + line.substr(1, line.length).trim());
+                                //     // consume data
+                                //     offs += line.length;
+                                // }
+                                // else {
                                     // save the line
                                     result += line;
                                     // all but the last line should have \n appended
                                     if (index < lines.length - 1) {
                                         result += "\n";
                                     }
-                                }
+                                // }
                             }
                         }
                     }
@@ -672,13 +673,9 @@
          * embed - if true, then embed the widget and render it.
          */
         createOutputCell: function(cell, result) {
-            // update the datatable widget
-//            if (this.dataTableWidget)
-//                this.dataTableWidget.render();
+            if (typeof result === 'string')
+                result = JSON.parse(result);
 
-            console.log(result);
-
-            result = JSON.parse(result);
             console.log(result);
 
             if (!result.embed) {

@@ -124,7 +124,6 @@ def _build_media(meth, base_media):
     :ui_name base_media: Media ID
     :return: JSON of medias
     :rtype: kbtypes.Media
-    :output_widget: kbaseMediaEditorNarrative
     :embed: True
     """
     meth.stages = 2

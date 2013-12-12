@@ -87,8 +87,8 @@
             this.showLoadingMessage();
 
             // Command to load and fetch all functions from the kernel
-            var fetchFunctionsCommand = 'import biokbase.narrative.services.microbes_demo\n' + 
-                                        'print biokbase.narrative.common.service.get_all_services(as_json_schema=True)\n';
+            var fetchFunctionsCommand = 'import biokbase.narrative.common.service_root as root\n' + 
+                                        'print root.service.get_all_services(as_json_schema=True)\n';
 
             var self = this;
             // We really only need the 'output' callback here.
@@ -111,6 +111,7 @@
          */
         parseKernelResponse: function(msgType, content) {
             // if it's not a datastream, display some kind of error, and return.
+            console.debug(content);
             if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the function list.');
                 return;

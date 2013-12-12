@@ -52,6 +52,7 @@
         $([IPython.events]).on('status_idle.Kernel', function() {
             if (narr_ws == null) {
                 if (narr_ws == null) {
+                    $('#kb-ws').find('.kb-table').kbaseWorkspaceData({container: $('#kb-ws').find('.kb-table')});
                     var $ws = $('#kb-ws');
                     narr_ws = $ws
                         .kbaseNarrativeWorkspace({
@@ -59,7 +60,6 @@
                           controlsElem: $ws.find('.kb-controls'),
                           tableElem: $ws.find('.kb-table')
                     });
-                    $('#kb-ws').find('.kb-table').kbaseWorkspaceData({container: $('#kb-ws').find('.kb-table')});
                 }
                 if (token)
                     narr_ws.loggedIn(token);

@@ -55,7 +55,6 @@
          * It's useful to put default values here.
          */
         options: {
-            stubString: 'This is a stub!',
             data: null,
         },
 
@@ -87,10 +86,29 @@
          * that's just a style thing. You can do whatever the widget requires.
          */
         render: function() {
-            this.$elem.append(
-                $('<div>')
-                .append(this.options.data)
-            );
+            var s = this.options.data;
+            if (typeof s != 'string') {
+                s = JSON.stringify(s, undefined, 2);
+                s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+                    function (match) {
+                        var cls = 'number';
+                        if (/^"/.test(match)) {
+                            if (/:$/.test(match)) {
+                                cls = 'key';
+                            } else {
+                                cls = 'string';
+                            }
+                        } else if (/true|false/.test(match)) {
+                            cls = 'boolean';
+                        } else if (/null/.test(match)) {
+                            cls = 'null';
+                        }
+                        return '<span class="' + cls + '">' + match + '</span>';
+                    }
+                );
+            }
+            this.$elem.append($('<pre>').append(s));
 
             return this;
         },

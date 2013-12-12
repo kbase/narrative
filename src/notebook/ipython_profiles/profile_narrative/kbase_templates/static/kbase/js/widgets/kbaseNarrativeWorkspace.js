@@ -11,6 +11,9 @@
  *    tableElem - HTML element container for the data table
  *    controlsElem - HTML element container for the controls (search/add)
  *
+ * Triggers events:
+ * updateData.Narrative - when any externally represented data should be updated.
+ * 
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
@@ -40,15 +43,23 @@
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
             $([IPython.events]).on('notebook_loaded.Notebook', function() {
-                self.rebindRunButtons();
+                self.rebindActionButtons();
             });
 
-            $(document).on('workspaceUpdate.Narrative', 
+            $(document).on('workspaceUpdated.Narrative', 
                 $.proxy(function(e, ws_id) {
-                    console.log("updating workspace id");
                     console.log(ws_id);
                     this.ws_id = ws_id;
                 }, 
+                this)
+            );
+
+            $(document).on('dataUpdated.Narrative', 
+                $.proxy(function(event) {
+                    if (IPython && IPython.notebook) {
+                        this.renderFunctionInputs();
+                    }
+                },
                 this)
             );
 
@@ -264,6 +275,27 @@
         },
 
         /**
+         * Refreshes any function inputs to sync with workspace data.
+         * Since this re-renders the cell, it must rebind all buttons, too.
+         * Kind of annoying, but it should run quickly enough.
+         * @private
+         */
+        renderFunctionInputs: function() {
+            if (IPython && IPython.notebook) {
+                var cells = IPython.notebook.get_cells();
+                for (var i=0; i<cells.length; i++) {
+                    var cell = cells[i];
+                    if (cell.metadata && cell.metadata['kb-cell'] && cell.metadata['kb-cell']['type'] == this.FUNCTION_CELL) {
+                        cell.rendered = false;
+                        cell.render();
+                        this.bindActionButtons(cell);
+                    }
+                }
+            }
+        },
+
+
+        /**
          * Builds the input div for a function cell, based on the given method object.
          * @param {Object} method - the method being constructed around.
          * @returns {String} an HTML string describing the available parameters for the cell.
@@ -390,7 +422,7 @@
         },
 
         /**
-         * @method rebindRunButtons
+         * @method rebindActionButtons
          * Rebinds all the run buttons to their original function.
          * This iterates over all cells, looking for a 'kb-cell' field in its metadata.
          * If it finds it, it removes the double-click and keyboard-enter abilities from the cell.
@@ -398,7 +430,7 @@
          *
          * @public
          */
-        rebindRunButtons: function() {
+        rebindActionButtons: function() {
             if (!(IPython && IPython.notebook))
                 return;
             
@@ -808,7 +840,7 @@
          * @returns this
          */
         render: function() {
-            this.rebindRunButtons();
+            this.rebindActionButtons();
             // if (this.dataTableWidget !== undefined) {
             //     this.dataTableWidget.render();
             // }

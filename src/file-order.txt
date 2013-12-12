@@ -13,7 +13,7 @@
 ./widgets/jquery.kbase.ws-selector.js
 ./widgets/kbaseAuthenticatedWidget.js
 ./widgets/kbaseButtonControls.js
-./widgets/kbaseCardManager.js
+# ./widgets/kbaseCardManager.js
 ./widgets/kbaseDataBrowser.js
 ./widgets/kbaseDeletePrompt.js
 ./widgets/kbaseErrorPrompt.js

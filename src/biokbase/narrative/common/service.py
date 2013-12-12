@@ -725,9 +725,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         # data
         # default widget name
         # whether it should automatically embed the result or not
-        output_obj = { 'data' : result,
-                       'widget' : self.output_widget, 
-                       'embed' : self.embed_widget }
+        output_obj = {'data': result,
+                      'widget': self.output_widget,
+                      'embed': self.embed_widget}
 
         sys.stdout.write(json.dumps(output_obj))
         return result

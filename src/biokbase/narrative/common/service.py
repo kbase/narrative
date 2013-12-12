@@ -73,9 +73,10 @@ class ServiceMethodError(ServiceError):
     """Base class for all ServiceMethod errors"""
 
     def __init__(self, method, errmsg):
-        msg = "in ServiceMethod '{}': {}".format(method.name, errmsg)
+        msg = "in function '{}': {}".format(method.name, errmsg)
         ServiceError.__init__(self, msg)
         self.add_info('method_name', method.name)
+
 
 class ServiceMethodParameterError(ServiceMethodError):
     """Bad parameter for ServiceMethod."""
@@ -84,6 +85,7 @@ class ServiceMethodParameterError(ServiceMethodError):
         msg = "bad parameter: " + errmsg
         ServiceMethodError.__init__(self, method, msg)
         self.add_info('details', errmsg)
+
 
 class ServiceRegistryFormatError(ServiceMethodError):
     """Bad format for Service Registry."""
@@ -716,9 +718,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             self._validate(tmpresult, self.outputs)
             result = tmpresult
             self.done()
-        except ServiceMethodError, err:
+        except ServiceMethodError as err:
             self.error(-2, err)
-        except Exception, err:
+        except Exception as err:
             self.error(-1, ServiceMethodError(self, err))
 
         # output object contains:

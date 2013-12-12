@@ -138,7 +138,7 @@ def maf(meth, maf=0.05, object_id=None):
     :param maf: DESCRIPTION NEEDED
     :type maf: kbtypes.Numeric
     :param object_id: Workspace object ID for DESCRIPTION NEEDED
-    :type object_id: kbtypes.Unicode
+    :type object_id: kbtypes.WorkspaceObjectId
     :return: Number of jobs that were run
     :rtype: kbtypes.Numeric
     """

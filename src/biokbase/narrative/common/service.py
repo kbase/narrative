@@ -179,13 +179,13 @@ def get_func_info(fn):
             embed = eval(embed.strip())
             return_['embed_widget'] = embed
     r_params = []
-    vis_info = {'input_widget' : None,
-                'output_widget' : None,
-                'embed_widget' : True }
+    vis_info = {'input_widget': None,
+                'output_widget': None,
+                'embed_widget': True}
     for i, name in enumerate(param_order):
         type_ = params[name]['type']
         desc = params[name]['desc']
-        ui_name = params[name]['ui_name']
+        ui_name = params[name].get('ui_name', name)  # use parameter name if no ui_name is given
         r_params.append(type_(desc=desc, ui_name=ui_name))
     if return_ is None:
         r_output = None

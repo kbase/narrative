@@ -5,10 +5,11 @@ __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 __date__ = '11/15/13'
 
 ## Imports
+import json
 import re
 # Third-party
-from IPython.utils.traitlets import TraitType, TraitError
-from IPython.utils.traitlets import Unicode
+from IPython.utils.traitlets import HasTraits, TraitType, TraitError
+from IPython.utils import traitlets as tls
 
 
 class TypeMeta(object):
@@ -19,6 +20,23 @@ class TypeMeta(object):
         """Return name of class.
         """
         return self.__class__.__name__
+
+
+class JsonTraits(HasTraits, TypeMeta):
+    """Trait container that can serialize as JSON.
+    Replacement for HasTraits.
+    """
+    def as_json(self):
+        """Return all traits in dict.
+        """
+        d = {}
+        for a, t in self.traits().iteritems():
+            val = getattr(self, a)
+            if hasattr(val, 'as_json'):
+                d[a] = val.as_json()
+            else:
+                d[a] = val
+        return d
 
 
 #: Our alias for type errors
@@ -73,11 +91,53 @@ class VersionNumber(TraitType, TypeMeta):
         self.error(obj, value)
 
 
-class Genome(Unicode, TypeMeta):
+class Genome(tls.Unicode, TypeMeta):
     info_text = "a genome"
-    pass
 
 
-class Media(Unicode, TypeMeta):
+class Media(tls.Unicode, TypeMeta):
     info_text = "some media"
-    pass
+
+
+class Numeric(tls.Float, TypeMeta):
+    info_text = "a number"
+
+
+class Integer(tls.Integer, TypeMeta):
+    info_text = "an integer"
+
+
+class Unicode(tls.Unicode, TypeMeta):
+    info_text = "a unicode string"
+
+
+class WorkspaceObjectId(tls.Unicode, TypeMeta):
+    info_text = "identifier for a workspace object"
+
+# Plants / GWAS
+
+
+class VariationDataProperties(JsonTraits):
+    info_text = "Variation data properties"
+
+    num_snps = Numeric(0, desc="Number of SNPs")
+    num_individuals = Integer(0, desc="Number of individuals")
+    snp_effect_annotation = tls.Unicode("", desc="Flag for SNP annotation: yes or no")
+    individual_names = tls.List(tls.Unicode)
+
+
+class VariationDataset(JsonTraits):
+    info_text = "Variation dataset"
+
+    name = tls.Unicode("no name", desc="Name")
+    description = tls.Unicode("none", desc="Description")
+    file_format = tls.Unicode("vcf", desc="File format")
+    comments = tls.Unicode("", desc="Comments")
+    kbase_genome_id = tls.Unicode("", desc="Genome identifier")
+    kbase_genome_name = tls.Unicode("", desc="Genome name")
+    shock_node_id = tls.Unicode("", desc="Shock node ID")
+    properties = tls.Instance(VariationDataProperties, ())
+    command_used = tls.Unicode("unspecified", desc= "Command")
+
+    def __repr__(self):
+        return json.dumps(self.as_json())

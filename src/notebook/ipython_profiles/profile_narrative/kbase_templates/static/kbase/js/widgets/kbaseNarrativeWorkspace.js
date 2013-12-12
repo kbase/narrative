@@ -43,6 +43,15 @@
                 self.rebindRunButtons();
             });
 
+            $(document).on('workspaceUpdate.Narrative', 
+                $.proxy(function(e, ws_id) {
+                    console.log("updating workspace id");
+                    console.log(ws_id);
+                    this.ws_id = ws_id;
+                }, 
+                this)
+            );
+
             // When a user clicks on a function, this event gets fired with
             // method information. This builds a function cell out of that method
             // and inserts it in the right place.
@@ -819,7 +828,8 @@
             var un = token.match(/un=[\w_]+|/);
             this.ws_user = un[0].substr(3, un[0].length - 3);
             // grab ws_id to give to, e.g., upload widget
-//            this.ws_id = this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
+
+            //this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
             this.workspace("id", this.ws_id); // add to global accessor
             // create/refresh the upload dialog, which needs login to populate types
             this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);

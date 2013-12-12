@@ -43,7 +43,7 @@
                 .render();
 
             $(document).on(
-                'dataLoadedQuery.Narrative', $.proxy(function (e, params, callback) {
+                'dataLoadedQuery.Narrative', $.proxy(function(e, params, callback) {
                     var objList = this.getLoadedData(params);
                     if (callback) {
                         callback(objList);
@@ -55,6 +55,15 @@
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
                     this.render();
+                },
+                this )
+            );
+
+            $(document).on(
+                'queryWorkspace.Narrative', $.proxy(function(e, callback) {
+                    if (callback) {
+                        callback(this.ws_id);
+                    }
                 },
                 this )
             );
@@ -688,6 +697,7 @@
                     console.error("Cannot get/create workspace: " + name, err);
                 });
             this.ws_id = name;
+            this.trigger('workspaceUpdate.Narrative', this.ws_id);
             // Set the title of the UI element showing the data
             //$('#kb-wsname').text(name);
             

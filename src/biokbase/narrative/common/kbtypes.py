@@ -8,7 +8,7 @@ __date__ = '11/15/13'
 import re
 # Third-party
 from IPython.utils.traitlets import TraitType, TraitError
-from IPython.utils.traitlets import Unicode
+from IPython.utils.traitlets import Unicode, Float
 
 
 class TypeMeta(object):
@@ -75,9 +75,11 @@ class VersionNumber(TraitType, TypeMeta):
 
 class Genome(Unicode, TypeMeta):
     info_text = "a genome"
-    pass
 
 
 class Media(Unicode, TypeMeta):
     info_text = "some media"
-    pass
+
+
+class Numeric(Float, TypeMeta):
+    info_text = "a number"

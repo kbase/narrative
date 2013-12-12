@@ -109,6 +109,12 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 # Other KBase
 from biokbase.GWAS.Client import GWAS
 
+## Exceptions
+
+
+class GWASException(Exception):
+    pass
+
 ## Globals
 
 VERSION = (0, 0, 1)
@@ -148,10 +154,12 @@ def maf(meth, maf=0.05, object_id=None):
     gc = GWAS(URLS.gwas, token=meth.token)
 
     meth.advance("submit job to filter VCF")
-    jid = gc.filter_vcf(maf, meth.workspace_id, object_id)
+    try:
+        jid = gc.filter_vcf(meth.workspace_id, object_id, maf)
+    except Exception as err:
+        raise GWASException("submit job failed: {}".format(err))
     if not jid:
-        meth.error("submit job failed")
-        return 0
+        raise GWASException(2, "submit job failed, no job id")
 
     meth.advance("run VCF")
     completed, njobs = 0, _job_count(jid)

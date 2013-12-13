@@ -29,7 +29,7 @@ function onContigClick(data) {
             var self = this;
             
             //var wsUrl = 'http://140.221.84.170:7058/';								// WS2
-            var wsUrl = 'http://kbase.us/services/workspace/';
+            var wsUrl = "http://kbase.us/services/workspace/";
             var container = this.$elem;
             container.append('<p class="muted loader-table">It\'s loading...</p>');
 

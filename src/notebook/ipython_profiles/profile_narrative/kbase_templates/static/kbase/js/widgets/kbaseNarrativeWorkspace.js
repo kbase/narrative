@@ -32,10 +32,17 @@
         },
         ws_client: null,
         ws_id: null,
-        FUNCTION_CELL: "function_input",
         defaultOutputWidget: "kbaseDefaultNarrativeOutput",
         defaultInputWidget: "kbaseDefaultNarrativeInput",
         errorWidget: "kbaseNarrativeError",
+
+        // constants.
+        KB_CELL: 'kb-cell',
+        KB_TYPE: 'type',
+        KB_FUNCTION_CELL: 'function_input',
+        KB_OUTPUT_CELL: 'function_output',
+        KB_ERROR_CELL: 'kb_error',
+        KB_CODE_CELL: 'kb_code',
 
         init: function(options) {
             this._super(options);
@@ -43,9 +50,11 @@
             var self = this;
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
-            $([IPython.events]).on('notebook_loaded.Notebook', function() {
-                self.rebindActionButtons();
-            });
+
+            $([IPython.events]).on('notebook_loaded.Notebook', $.proxy(function() {
+                this.rebindActionButtons();
+                this.hideGeneratedCodeCells();
+            }), this);
 
             $(document).on('workspaceUpdated.Narrative', 
                 $.proxy(function(e, ws_id) {
@@ -211,10 +220,7 @@
 
             var cell = IPython.notebook.insert_cell_below('markdown');
             // make this a function input cell, as opposed to an output cell
-            cell.metadata['kb-cell'] = {
-                'type' : this.FUNCTION_CELL,
-                'method' : method
-            }
+            this.setFunctionCell(cell, method);
 
             // THIS IS WRONG! FIX THIS LATER!
             // But it should work for now... nothing broke up to this point, right?
@@ -286,7 +292,8 @@
                 var cells = IPython.notebook.get_cells();
                 for (var i=0; i<cells.length; i++) {
                     var cell = cells[i];
-                    if (cell.metadata && cell.metadata['kb-cell'] && cell.metadata['kb-cell']['type'] == this.FUNCTION_CELL) {
+                    if (this.isFunctionCell(cell)) {
+//                    if (cell.metadata && cell.metadata['kb-cell'] && cell.metadata['kb-cell']['type'] == this.FUNCTION_CELL) {
                         cell.rendered = false;
                         cell.render();
                         this.bindActionButtons(cell);
@@ -373,13 +380,66 @@
             // get the cell.
             // look for the two buttons.
             // bind them to the right actions.
-            if (!cell.metadata || !cell.metadata['kb-cell'] || cell.metadata['kb-cell']['type'] !== this.FUNCTION_CELL)
-                return;
+            if (this.isFunctionCell(cell)) {
+                $(cell.element).find(".buttons [id*=delete]").off('click');
+                $(cell.element).find(".buttons [id*=delete]").click(this.bindDeleteButton());
+                $(cell.element).find(".buttons [id*=run]").off('click');
+                $(cell.element).find(".buttons [id*=run]").click(this.bindRunButton());
+            }
+        },
 
-            $(cell.element).find(".buttons [id*=delete]").off('click');
-            $(cell.element).find(".buttons [id*=delete]").click(this.bindDeleteButton());
-            $(cell.element).find(".buttons [id*=run]").off('click');
-            $(cell.element).find(".buttons [id*=run]").click(this.bindRunButton());
+        /**
+         * Once the notebook is loaded, all code cells with generated code
+         * (e.g. the placeholder, provenance cells) should be hidden.
+         * At least for now.
+         * So this function does that.
+         * @private
+         */
+        hideGeneratedCodeCells: function() {
+            var cells = IPython.notebook.get_cells();
+            for (var i=0; i<cells.length; i++) {
+                var cell = cells[i];
+                if (this.isFunctionCodeCell(cell))
+                    cell.element.css('display', 'none');
+            }
+        },
+
+        isFunctionCell: function(cell) {
+            return this.checkCellType(cell, this.KB_FUNCTION_CELL);
+        },
+
+        setFunctionCell: function(cell, method) {
+            var cellInfo = {}
+            cellInfo[this.KB_TYPE] = this.KB_FUNCTION_CELL;
+            cellInfo['method'] = method;
+
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
+
+        isOutputCell: function(cell) {
+            return this.checkCellType(cell, this.KB_OUTPUT_CELL);
+        },
+
+        setOutputCell: function(cell) {
+            var cellInfo = {};
+            cellInfo[this.KB_TYPE] = this.KB_OUTPUT_CELL;
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
+
+        isFunctionCodeCell: function(cell) {
+            return this.checkCellType(cell, this.KB_CODE_CELL);
+        },
+
+        setCodeCell: function(cell) {
+            var cellInfo = {};
+            cellInfo[this.KB_TYPE] = this.KB_CODE_CELL;
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
+
+        checkCellType: function(cell, type) {
+            return cell.metadata &&
+                   cell.metadata[this.KB_CELL] &&
+                   cell.metadata[this.KB_CELL][this.KB_TYPE] === type;
         },
 
         /**
@@ -397,7 +457,7 @@
                         console.log(field.name + "=" + field.value);
                         paramList.push(field.value);
                     });
-                    var method = cell.metadata['kb-cell'].method;
+                    var method = cell.metadata[self.KB_CELL].method;
 
                     self.runCell()(cell, method.service, method.title, paramList);
                 }
@@ -440,10 +500,10 @@
             // not using $.each because its namespacing kinda screws things up.
             for (var i=0; i<cells.length; i++) {
                 var cell = cells[i];
-                var cellType = cell.metadata['kb-cell'];
+                var cellType = cell.metadata[this.KB_CELL];
                 if (cellType) {
                     this.removeCellEditFunction(cell);
-                    if (cellType.type == this.FUNCTION_CELL) {
+                    if (this.isFunctionCell(cell)) { //cellType[this.KB_TYPE] == this.FUNCTION_CELL) {
                         this.bindActionButtons(cell);
                     }
                 }
@@ -464,6 +524,7 @@
                 var nb = IPython.notebook;
                 var currentIndex = nb.get_selected_index();
                 var codeCell = nb.insert_cell_below('code', currentIndex);
+                self.setCodeCell(codeCell);
                 codeCell.element.css('display', 'none');
 
                 var callbacks = {
@@ -849,9 +910,7 @@
          */
         render: function() {
             this.rebindActionButtons();
-            // if (this.dataTableWidget !== undefined) {
-            //     this.dataTableWidget.render();
-            // }
+            this.hideGeneratedCodeCells();
             this.trigger('updateData.Narrative');
             return this;
         },

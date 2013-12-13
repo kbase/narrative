@@ -76,7 +76,9 @@
             this.$elem.append('Sorry, an error occurred<br>')
                       .append('In method: ' + this.options.error.method_name + '<br>')
                       .append('of type: ' + this.options.error.type + '<br>')
-                      .append('severity: ' + this.options.error.severity + '<br>');
+                      .append('severity: ' + this.options.error.severity + '<br>')
+                      .append('Error Message: ')
+                      .append($('<pre>').append(this.options.error.msg));
             return this;
         },
     });

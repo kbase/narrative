@@ -5,6 +5,10 @@
  *    ws_id - the name of the workspace to show in this widget
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    notLoggedInMsg - a string to put in the middle of the widget when not logged in.
+ *
+ * Triggers events:
+ * dataUpdated.Narrative - when the loaded data table gets updated.
+ * workspaceUpdated.Narrative - when the current workspace ID gets updated
  */
 (function( $, undefined ) {
 
@@ -55,15 +59,6 @@
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
                     this.render();
-                },
-                this )
-            );
-
-            $(document).on(
-                'queryWorkspace.Narrative', $.proxy(function(e, callback) {
-                    if (callback) {
-                        callback(this.ws_id);
-                    }
                 },
                 this )
             );
@@ -697,7 +692,7 @@
                     console.error("Cannot get/create workspace: " + name, err);
                 });
             this.ws_id = name;
-            this.trigger('workspaceUpdate.Narrative', this.ws_id);
+            this.trigger('workspaceUpdated.Narrative', this.ws_id);
             // Set the title of the UI element showing the data
             //$('#kb-wsname').text(name);
             
@@ -785,14 +780,7 @@
                 this.table_meta[this._item_key(name, type)] = results[i];
             }
 
-            var cells = IPython.notebook.get_cells();
-            for (var i=0; i<cells.length; i++) {
-                if (cells[i].cell_type === "markdown") {
-                    cells[i].rendered = false;
-                    cells[i].render();
-                }
-            }
-            return this;
+            this.trigger('dataUpdated.Narrative');
         },
 
         /**

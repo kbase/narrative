@@ -604,8 +604,8 @@
                             offs += 1; // blank line, move offset
                         }
                         else {
-                            // look for @@S, @@P, @@D, or @@E
-                            var matches = line.match(/^@@([SPDE])(.*)/);
+                            // look for @@S, @@P, @@D, @@G, or @@E
+                            var matches = line.match(/^@@([SPDGE])(.*)/);
                             if (matches) { // if we got one
                                 if (matches[1] === 'S') {
                                     // if we're starting, init the progress bar.
@@ -632,6 +632,10 @@
                                     self.createOutputCell(cell, 'kbaseNarrativeError({error: ' + errorJson + '})');
                                     console.debug("Narrative error: " + errorJson);
                                 }
+                                else if (matches[1] == 'G') {
+                                    // Debugging message, just repeat to console
+                                    console.debug('[APP-DBG]', matches[2]);
+                                }
                             }
                             // No progress marker on non-empty line => final output of program?
                             else {
@@ -643,7 +647,7 @@
                                     offs += line.length;
                                 }
                                 else {
-                                    console.debug("Saving line: "+ line);
+                                    //console.debug("Saving line: "+ line);
                                     // save the line
                                     result += line;
                                     // all but the last line should have \n appended

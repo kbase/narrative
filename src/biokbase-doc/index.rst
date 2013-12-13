@@ -11,8 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   service
-   microbes
+   functions
+   functions-tut
 
 Indices and tables
 ==================

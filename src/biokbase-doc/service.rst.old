@@ -1,0 +1,255 @@
+KBase Services Python API
+==========================
+
+.. currentmodule:: biokbase.narrative.common
+
+**Contents**
+
+* :ref:`intro`
+* :ref:`quickstart`
+* :ref:`api`
+* :ref:`api-examples`
+
+.. _intro:
+
+Introduction
+-------------
+
+This describes the Python API for KBase services, for the Narrative UI.
+This API is invoked by the KBase Narrative
+engine back-end to run *all* the services that are exposed as functions for the narrative API.
+Therefore, all KBase services must use this API in order to be used by the Narrative.
+
+First, a couple of terms:
+
+_`service`
+    A group of related service methods
+
+_`method` *or* _`service method`
+    A parameterized function, optionally returning a result.
+
+**Requirements**
+
+Each `service method`_ should be self-describing, and long-running services
+(which, in terms of interactive operation, is most of them) should provide
+intermediate progress indications. Thus, the minimal requirements of service methods are:
+
+- service metadata
+    - version [x.y.z]
+    - name
+    - description
+    - list of parameters
+    - list of outputs `*`
+    - status
+- parameter metadata
+    - name
+    - type
+    - description
+- output metadata `*`
+    - [name], type, description
+    - [name] may be replaced by position in a list
+- status
+    - success/failure
+    - if failure, then an exception with named fields will be returned
+
+We have specified these requirements in a Python class, :class:`Service`, whose documentation is below.
+Items marked with a `*` in the above list are not yet (fully) implemented in this code.
+
+.. _quickstart:
+
+Quickstart
+----------
+
+To a large extent the goal of the API is to make most of the API
+details irrelevant to most users. Wrapping your existing functions
+as a "service" that can be used by the Narrative will normally involve only
+the following steps (for existing Python scripts):
+
+#. Start a new Python module, which here we will call `my_service.py`, using the skeleton in `narrative/common/service_skeleton.py` as a starting point::
+
+    $ mkdir narrative/
+    $ cp narrative/common/service_skeleton.py narrative/services/my_service.py
+
+#. Modify the NAME and VERSION lines in the skeleton, and the description in ``init``,
+   to create a Service object::
+
+    from biokbase.narrative.common.service import init_service, method, finalize_service
+    from biokbase.narrative.common import kbtypes
+
+    VERSION = (0, 0, 1)
+    NAME = "MyExampleService"
+
+    init_service(name=NAME, desc="This is an example", version=VERSION)
+    
+#. For each function, wrap the function implementation with a ``@method`` decorator, as shown 
+   in the example function.
+   Add a first argument to each function, which will be passed a method object::
+
+    @method(name="MyExampleFunction")
+    def _my_service_function(meth, param1, param2):
+        ...function body goes here...
+
+#. Add to the function a docstring (standard Python top-of-function comment) that
+   contains a specific form of reStructured text markup indicating parameter types and return types::
+
+    @method(name="MyExampleFunction")
+    def _my_service_function(meth, param1, param2):
+        """This is an example function.
+
+        :param param1: Input Genome
+        :type param1: kbtypes.Genome
+        :param param2: Some text
+        :type param2: kbtypes.Unicode
+        :return: Workspace object ID
+        :rtype: kbtypes.Unicode
+        """
+        meth.stages = 1  # for reporting progress
+        result = None
+        meth.advance("Only this one stage")
+        return "result"
+    
+#. At the bottom of the file, 1 line of code to finalize the Service, which registers it 
+   for the Narrative to discover it::
+
+    finalize_service()
+   
+   
+That's it! Steps 3-4 are repeated for each function in the service.
+
+.. _api:
+
+API Documentation
+------------------
+
+.. currentmodule:: biokbase.narrative.common.service
+
+This section documents the KBase narrative service and method API.
+These modules are all under `biokbase.narrative` in the biokbase Python package.
+
+The API is broken down into several functional areas:
+
+#. :ref:`high-level-api` - Creating new methods using the ``@method`` decorator, interacting with the service API through ``init()`` and ``finalize()``.
+#. :ref:`registry-api`  - Finding services and methods
+#. :ref:`services-api` - Classes for KBase services and service methods
+#. :ref:`types-api` - Classes for KBase types
+#. :ref:`exceptions-api` - Exception hierarchy
+#. :ref:`lifecycle-api` - Extensible actions for method state transitions
+
+See :ref:`api-examples` for an example of API usage. You can run the example code yourself by executing the
+`service.py` module as a script, e.g.::
+
+    python -m biokbase.narrative.common.service
+
+The output from this example will contain, in addition to the output from the `print()` statements,
+lines beginning with `@@` that have status information.
+These lines are generated by the :class:`LifecyclePrinter` instance that is automatically
+created and added to each service.
+
+.. _high-level-api:
+
+High-Level API
+^^^^^^^^^^^^^^
+
+As described in the :ref:`quickstart`, the high-level API allows you to write a new KBase narrative service with minimum fuss. All you need to do is initialize, wrap each method with the ``@method`` decorator, then finalize.
+
+.. autofunction:: init_service
+
+.. autofunction:: finalize_service
+
+Method Decorator
+~~~~~~~~~~~~~~~~~
+
+Each service method needs to be decorated with the ``@method`` decorator.
+
+.. autofunction:: method
+
+.. _registry-api:
+
+
+
+Registry
+^^^^^^^^
+
+.. autofunction:: register_service
+
+.. _services-api:
+
+Services
+^^^^^^^^
+
+The two classes that new service methods will need to instantiate are
+the :class:`Service` (one per group of methods) and :class:`ServiceMethod`.
+See the :func:`example` for a usage example.
+
+.. automodule:: biokbase.narrative.common.service
+
+.. autoclass:: Service
+    :members: name, desc, version, __init__
+
+.. autoclass:: ServiceMethod
+    :members: set_func, __call__, estimated_runtime,
+              started, advance, done, error
+
+.. _types-api:
+
+Types
+^^^^^
+KBase data types are represented with classes in the `kbtypes` module.
+
+.. automodule:: biokbase.narrative.common.kbtypes
+    :members:
+
+.. _exceptions-api:
+
+Exceptions
+^^^^^^^^^^
+
+.. currentmodule:: biokbase.narrative.common.service
+
+.. autoclass:: ServiceError
+
+.. autoclass:: ServiceMethodError
+
+.. autoclass:: ServiceMethodParameterError
+
+.. _lifecycle-api:
+
+Lifecycle events
+^^^^^^^^^^^^^^^^^
+
+The lifecycle events for the service method execution, i.e. from start to done or error,
+are coded with the subject/observer pattern. Most people won't need to do anything with these
+classes, but they are designed to be extensible. Since :class:`ServiceMethod` inherits from
+:class:`LifecycleSubject`, new observers that take actions based on events can be added
+at any time. The base classes are below.
+
+.. currentmodule:: biokbase.narrative.common.service
+
+.. autoclass:: LifecycleSubject
+    :members:
+
+.. autoclass:: LifecycleObserver
+    :members:
+
+Built-in observers for lifecycle events
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The two default observers are for history of the timings, and communicating
+the current status back to the front end.
+
+.. autoclass:: LifecycleHistory
+    :members:
+
+.. autoclass:: LifecyclePrinter
+    :members:
+
+.. _api-examples:
+
+Examples
+--------
+
+Below is the source code showing usage of many of the API calls.
+
+.. literalinclude:: ../biokbase/narrative/common/service.py
+    :pyobject: example
+

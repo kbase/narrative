@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    functions
+   functions-quick
    functions-tut
 
 Indices and tables

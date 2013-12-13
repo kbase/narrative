@@ -1,6 +1,15 @@
 Building Narrative Functions Tutorial
 ======================================
 
+What this document is
+    This document gives a brief tutorial on how to wrap a function or script into the narrative,
+    and link it to interactive visualization widgets.
+    For an even briefer summary, see the :doc:`Quickstart </functions-quick>`, and for API details
+    consult the :doc:`API reference </functions>`.
+
+What this document is **not**
+    A tutorial on how to make widgets or use the KBase API. This assumes that you’re at least passably familiar with the KBase widget API and the Python version of the KBase service API. This also isn’t a tutorial on how to get the Narrative working. The Readme in the root of the Narrative repo should help with that.
+
 **Contents**
 
 * :ref:`overview`
@@ -9,11 +18,6 @@ Building Narrative Functions Tutorial
 * :ref:`output widgets`
 * :ref:`locations`
 
-What this document is
-    A brief tutorial on how to wrap a function or script into the narrative, and link it to interactive visualization widgets.
-
-What this document is **not**
-    A tutorial on how to make widgets or use the KBase API. This assumes that you’re at least passably familiar with the KBase widget API and the Python version of the KBase service API. This also isn’t a tutorial on how to get the Narrative working. The Readme in the root of the Narrative repo should help with that.
 
 A little background
     The KBase Narrative is built on the `IPython notebook`_ technology. To quote that page:

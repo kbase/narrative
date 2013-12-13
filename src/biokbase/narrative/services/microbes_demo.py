@@ -38,11 +38,12 @@ def _annotate_genome(meth, genome, out_genome):
     :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
     :rtype: kbtypes.Genome
+    :output_widget: GenomeAnnotation
     """
     meth.stages = 3  # for reporting progress
 
     inv_lines = 100
-    #token = os.environ['KB_AUTH_TOKEN']
+    token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
 
     if not out_genome:
@@ -62,9 +63,10 @@ def _annotate_genome(meth, genome, out_genome):
     meth.advance("Rendering Job Information")
     job_info = res_list[0]
 
-    return json.dumps({ 'output': "<br/>".join(["Annotation job submitted successfully!", job_info[1],
-                         "This job will take approximately an hour.",
-                         "Your annotated genome will have ID: <b>" + out_genome + "</b>", ""]) })
+    return json.dumps({'ws_name': workspace, 'ws_id': out_genome, 'token': token})
+    #{ 'output': "<br/>".join(["Annotation job submitted successfully!", #job_info[1],
+    #                     "This job will take approximately an hour.",
+    #                     "Your annotated genome will have ID: <b>" + out_genome + "</b>", ""]) })
 
 @method(name="Assemble Genome from Reads")
 def _assemble_genome(meth, contig_file, out_genome):

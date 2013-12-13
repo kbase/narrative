@@ -102,6 +102,15 @@ class Media(tls.Unicode, TypeMeta):
 class Numeric(tls.Float, TypeMeta):
     info_text = "a number"
 
+    def validate(self, obj, value):
+        """Silently coerce strings to numbers.
+        """
+        if isinstance(value, basestring):
+            try:
+                value = float(value)
+            except ValueError:
+                self.error(obj, value)
+        return value
 
 class Integer(tls.Integer, TypeMeta):
     info_text = "an integer"

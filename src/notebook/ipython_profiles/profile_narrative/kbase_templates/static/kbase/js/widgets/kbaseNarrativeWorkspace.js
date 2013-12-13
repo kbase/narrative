@@ -32,9 +32,17 @@
         },
         ws_client: null,
         ws_id: null,
-        FUNCTION_CELL: "function_input",
         defaultOutputWidget: "kbaseDefaultNarrativeOutput",
         defaultInputWidget: "kbaseDefaultNarrativeInput",
+        errorWidget: "kbaseNarrativeError",
+
+        // constants.
+        KB_CELL: 'kb-cell',
+        KB_TYPE: 'type',
+        KB_FUNCTION_CELL: 'function_input',
+        KB_OUTPUT_CELL: 'function_output',
+        KB_ERROR_CELL: 'kb_error',
+        KB_CODE_CELL: 'kb_code',
 
         init: function(options) {
             this._super(options);
@@ -42,9 +50,11 @@
             var self = this;
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
-            $([IPython.events]).on('notebook_loaded.Notebook', function() {
-                self.rebindActionButtons();
-            });
+
+            $([IPython.events]).on('notebook_loaded.Notebook', $.proxy(function() {
+                this.rebindActionButtons();
+                this.hideGeneratedCodeCells();
+            }), this);
 
             $(document).on('workspaceUpdated.Narrative', 
                 $.proxy(function(e, ws_id) {
@@ -210,10 +220,7 @@
 
             var cell = IPython.notebook.insert_cell_below('markdown');
             // make this a function input cell, as opposed to an output cell
-            cell.metadata['kb-cell'] = {
-                'type' : this.FUNCTION_CELL,
-                'method' : method
-            }
+            this.setFunctionCell(cell, method);
 
             // THIS IS WRONG! FIX THIS LATER!
             // But it should work for now... nothing broke up to this point, right?
@@ -285,7 +292,8 @@
                 var cells = IPython.notebook.get_cells();
                 for (var i=0; i<cells.length; i++) {
                     var cell = cells[i];
-                    if (cell.metadata && cell.metadata['kb-cell'] && cell.metadata['kb-cell']['type'] == this.FUNCTION_CELL) {
+                    if (this.isFunctionCell(cell)) {
+//                    if (cell.metadata && cell.metadata['kb-cell'] && cell.metadata['kb-cell']['type'] == this.FUNCTION_CELL) {
                         cell.rendered = false;
                         cell.render();
                         this.bindActionButtons(cell);
@@ -372,13 +380,66 @@
             // get the cell.
             // look for the two buttons.
             // bind them to the right actions.
-            if (!cell.metadata || !cell.metadata['kb-cell'] || cell.metadata['kb-cell']['type'] !== this.FUNCTION_CELL)
-                return;
+            if (this.isFunctionCell(cell)) {
+                $(cell.element).find(".buttons [id*=delete]").off('click');
+                $(cell.element).find(".buttons [id*=delete]").click(this.bindDeleteButton());
+                $(cell.element).find(".buttons [id*=run]").off('click');
+                $(cell.element).find(".buttons [id*=run]").click(this.bindRunButton());
+            }
+        },
 
-            $(cell.element).find(".buttons [id*=delete]").off('click');
-            $(cell.element).find(".buttons [id*=delete]").click(this.bindDeleteButton());
-            $(cell.element).find(".buttons [id*=run]").off('click');
-            $(cell.element).find(".buttons [id*=run]").click(this.bindRunButton());
+        /**
+         * Once the notebook is loaded, all code cells with generated code
+         * (e.g. the placeholder, provenance cells) should be hidden.
+         * At least for now.
+         * So this function does that.
+         * @private
+         */
+        hideGeneratedCodeCells: function() {
+            var cells = IPython.notebook.get_cells();
+            for (var i=0; i<cells.length; i++) {
+                var cell = cells[i];
+                if (this.isFunctionCodeCell(cell))
+                    cell.element.css('display', 'none');
+            }
+        },
+
+        isFunctionCell: function(cell) {
+            return this.checkCellType(cell, this.KB_FUNCTION_CELL);
+        },
+
+        setFunctionCell: function(cell, method) {
+            var cellInfo = {}
+            cellInfo[this.KB_TYPE] = this.KB_FUNCTION_CELL;
+            cellInfo['method'] = method;
+
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
+
+        isOutputCell: function(cell) {
+            return this.checkCellType(cell, this.KB_OUTPUT_CELL);
+        },
+
+        setOutputCell: function(cell) {
+            var cellInfo = {};
+            cellInfo[this.KB_TYPE] = this.KB_OUTPUT_CELL;
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
+
+        isFunctionCodeCell: function(cell) {
+            return this.checkCellType(cell, this.KB_CODE_CELL);
+        },
+
+        setCodeCell: function(cell) {
+            var cellInfo = {};
+            cellInfo[this.KB_TYPE] = this.KB_CODE_CELL;
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
+
+        checkCellType: function(cell, type) {
+            return cell.metadata &&
+                   cell.metadata[this.KB_CELL] &&
+                   cell.metadata[this.KB_CELL][this.KB_TYPE] === type;
         },
 
         /**
@@ -396,10 +457,7 @@
                         console.log(field.name + "=" + field.value);
                         paramList.push(field.value);
                     });
-                    var method = cell.metadata['kb-cell'].method;
-                    console.log('clicked method:');
-                    console.log(method);
-
+                    var method = cell.metadata[self.KB_CELL].method;
 
                     self.runCell()(cell, method.service, method.title, paramList);
                 }
@@ -442,10 +500,10 @@
             // not using $.each because its namespacing kinda screws things up.
             for (var i=0; i<cells.length; i++) {
                 var cell = cells[i];
-                var cellType = cell.metadata['kb-cell'];
+                var cellType = cell.metadata[this.KB_CELL];
                 if (cellType) {
                     this.removeCellEditFunction(cell);
-                    if (cellType.type == this.FUNCTION_CELL) {
+                    if (this.isFunctionCell(cell)) { //cellType[this.KB_TYPE] == this.FUNCTION_CELL) {
                         this.bindActionButtons(cell);
                     }
                 }
@@ -466,6 +524,7 @@
                 var nb = IPython.notebook;
                 var currentIndex = nb.get_selected_index();
                 var codeCell = nb.insert_cell_below('code', currentIndex);
+                self.setCodeCell(codeCell);
                 codeCell.element.css('display', 'none');
 
                 var callbacks = {
@@ -480,7 +539,7 @@
                 codeCell.set_text(code);
                 codeCell.output_area.clear_output(true, true, true);
                 codeCell.set_input_prompt('*');
-                console.debug('Running function: ' + service + '.' + method);
+//                console.debug('Running function: ' + service + '.' + method);
 
                 $(cell.element).find('#kb-func-progress').css({'display': 'block'});
                 nb.kernel.execute(code, callbacks, {silent: true});
@@ -504,7 +563,7 @@
 
             var paramList = params.map(function(p) { return '"' + p + '"'; });
             cmd += "method(" + paramList + ")";
-            console.debug(cmd);
+//            console.debug(cmd);
             return cmd;
         },
 
@@ -629,28 +688,33 @@
                                 else if (matches[1] === 'E') {
                                     // Error!
                                     var errorJson = matches[2];
-                                    self.createOutputCell(cell, 'kbaseNarrativeError({error: ' + errorJson + '})');
-                                    console.debug("Narrative error: " + errorJson);
+                                    self.createErrorCell(cell, errorJson);
+//                                    self.createOutputCell(cell, 'kbaseNarrativeError({error: ' + errorJson + '})');
+                                    self.dbg("Narrative error: " + errorJson);
+                                }
+                                else if (matches[1] === 'G') {
+                                    // Debug statement.
+                                    var debug = matches[2];
+                                    self.dbg("[KERNEL] " + debug);
                                 }
                             }
                             // No progress marker on non-empty line => final output of program?
                             else {
                                 // XXX: @ and # should probably be swapped in meaning
-                                if (line.match(/^#/)) {
-                                    // log lines starting with '@'
-                                    console.info("[KERNEL] " + line.substr(1, line.length).trim());
-                                    // consume data
-                                    offs += line.length;
-                                }
-                                else {
-                                    console.debug("Saving line: "+ line);
+                                // if (line.match(/^#/)) {
+                                //     // log lines starting with '@'
+                                //     console.info("[KERNEL] " + line.substr(1, line.length).trim());
+                                //     // consume data
+                                //     offs += line.length;
+                                // }
+                                // else {
                                     // save the line
                                     result += line;
                                     // all but the last line should have \n appended
                                     if (index < lines.length - 1) {
                                         result += "\n";
                                     }
-                                }
+                                // }
                             }
                         }
                     }
@@ -665,6 +729,15 @@
             }
         },
 
+        createErrorCell: function(cell, errorJson) {
+            var error = {
+                'widget': this.errorWidget,
+                'data': '{"error": ' + errorJson + "}",
+                'embed': true
+            };
+            this.createOutputCell(cell, error);
+        },
+
         /**
          * Result is an object with this structure:
          * widget - the widget to use (if null, then use kbaseDefaultNarrativeOutput)
@@ -672,13 +745,9 @@
          * embed - if true, then embed the widget and render it.
          */
         createOutputCell: function(cell, result) {
-            // update the datatable widget
-//            if (this.dataTableWidget)
-//                this.dataTableWidget.render();
+            if (typeof result === 'string')
+                result = JSON.parse(result);
 
-            console.log(result);
-
-            result = JSON.parse(result);
             console.log(result);
 
             if (!result.embed) {
@@ -841,9 +910,7 @@
          */
         render: function() {
             this.rebindActionButtons();
-            // if (this.dataTableWidget !== undefined) {
-            //     this.dataTableWidget.render();
-            // }
+            this.hideGeneratedCodeCells();
             this.trigger('updateData.Narrative');
             return this;
         },
@@ -897,373 +964,6 @@
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);});
         },
-
-
-        // /***********************************************
-        //  *********** FUNCTION CONFIGURATIONS ***********
-        //  ***********************************************/
-
-        // /* -------------- PLANTS ---------------------- */
-        // /** 
-        //  * Input data for plants demo.
-        //  */
-        // plantsRunConfig: {
-        //     params : {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Genome',
-        //                 type: '',
-        //                 default: '3899'
-        //             },
-        //             {
-        //                 name: 'Ontology',
-        //                 type: '',
-        //                 default: 'GSE5622'
-        //             },
-        //         ],
-        //         'Filter' : [
-        //             {
-        //                 name: '-n',
-        //                 type: '',
-        //                 default: '100'
-        //             },
-        //             {
-        //                 name: '',
-        //                 type: '',
-        //                 default: 'x'
-        //             }
-        //         ],
-        //         'Network' : [
-        //             {
-        //                 name: 'Pearson cutoff',
-        //                 type: '',
-        //                 default: '0.50'
-        //             },
-        //             {
-        //                 name: '',
-        //                 type: '',
-        //                 default: 'x'
-        //             }
-        //         ],
-        //         'Cluster' : [
-        //             {
-        //                 name: 'Number of modules',
-        //                 type: '',
-        //                 default: '5'
-        //             },
-        //             {
-        //                 name: '',
-        //                 type: '',
-        //                 default: ''
-        //             }
-        //         ]
-        //     },
-        //     command: {
-        //         'module' : 'biokbase.narrative.demo.coex_workflow',
-        //         'function' : 'coex_network_ws'
-        //     }
-        // },
-
-
-        // /* -------------- END: PLANTS ---------------------- */
-
-
-
-        // /* -------------- MICROBES ---------------- */
-
-        // /* --------- Assemble Contigs from FASTA reads -----------*/
-        // runAssemblyConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Paired-End Files<br>(comma-delimited)',
-        //             },
-        //             {
-        //                 name: 'Single-End Files<br>(comma-delimited)',
-        //             },
-        //             {
-        //                 name: 'Sequence Files<br>(comma-delimited)',
-        //             },
-        //         ],
-        //         'Assembly Params': [
-        //             {
-        //                 name: 'Assemblers',
-        //             },
-        //             {
-        //                 name: 'Reference',
-        //             },
-        //             {
-        //                 name: 'Notes',
-        //             }
-        //         ],
-        //         'Output': [
-        //             {
-        //                 name: 'Contig Set Name'
-        //             },
-        //             {
-        //                 name: '',
-        //             },
-        //             {
-        //                 name: '',
-        //             }
-        //         ]
-        //     },
-        //     command: {
-        //         'module' : 'biokbase.narrative.demo.microbes_workflow',
-        //         'function' : 'run_assembly'
-        //     }
-        // },
-
-        // /* ---------- Assemble Genome from Contigs ----------- */
-        // assembleGenomeConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Contig Set',
-        //                 type: 'ContigSet'
-        //             },
-        //         ],
-        //         'Output' : [
-        //             {
-        //                 name: 'New Genome',
-        //             }
-        //         ]
-        //     },
-        //     command: {
-        //         'module' : 'biokbase.narrative.demo.microbes_workflow',
-        //         'function' : 'assemble_genome'
-        //     }
-        // },
-
-        // /* ---------- Annotate Assembled Genome ----------- */
-        // annotateGenomeConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Genome',
-        //                 type: 'Genome'
-        //             }
-        //         ],
-        //         'Output' : [
-        //             {
-        //                 name: 'New Genome ID (optional)',
-        //             }
-        //         ]
-        //     },
-        //     command: {
-        //         'module' : 'biokbase.narrative.demo.microbes_workflow',
-        //         'function' : 'assemble_genome'
-        //     }
-        // },
-
-
-        // /* ---------- View Genome Details ----------- */
-
-        // // viewGenomeConfig: {
-        // //     'Identifiers' : {
-        // //         'Genome' : {
-        // //             'type' : 'Genome',
-        // //             'default' : '',
-        // //         }
-        // //     }
-        // // },
-
-        // viewGenomeConfig: {
-        //     'params' : {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Genome',
-        //                 type: 'Genome',
-        //                 default: ''
-        //             },
-        //         ]
-        //     },
-        //     'command' : {
-        //         'module' : 'biokbase.narrative.demo.microbes_workflow',
-        //         'function' : 'view_genome_details'
-        //     },
-        // },
-
-        // /* ------------ Genome to FBA Model ----------------- */ 
-        // genomeToFbaConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Genome',
-        //                 type: 'Genome'
-        //             },
-        //         ]
-        //     },
-        //     command: {
-        //         module: 'biokbase.narrative.demo.microbes_workflow',
-        //         function: 'genome_to_fba_model'
-        //     },
-        // },
-
-
-        // /* ---------- View Model ----------- */
-        // viewFbaModelConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Model',
-        //                 type: 'Model'
-        //             }
-        //         ]
-        //     },
-        //     command: {
-        //         module: 'biokbase.narrative.demo.microbes_workflow',
-        //         function: 'view_fba_model'
-        //     }
-        // },
-
-        // /* --------- Build Media ------------ */
-        // buildMediaConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Base Media (optional)',
-        //                 type: 'Media',
-        //                 default: 'None'
-        //             },
-        //         ],
-        //     },
-        //     command: {
-        //         module: 'biokbase.narrative.demo.microbes_workflow',
-        //         function: 'build_media'
-        //     }
-        // },
-
-        // /* ---------- View Media ---------- */
-        // viewMediaConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Media',
-        //                 type: 'Media',
-        //             }
-        //         ]
-        //     },
-        //     command: {
-        //         module: 'biokbase.narrative.demo.microbes_workflow',
-        //         function: 'view_media'
-        //     }
-        // },
-
-        // /* --------- Run Flux Balance Analysis --------------- */
-        // runFbaConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Model',
-        //                 type: 'Model'
-        //             },
-        //             {
-        //                 name: 'Media',
-        //                 type: 'Media'
-        //             }
-        //         ],
-        //         'Misc' : [
-        //             {
-        //                 name: 'Notes',
-        //                 type: '',
-        //             }
-        //         ],
-        //     },
-        //     command: {
-        //         module: 'biokbase.narrative.demo.microbes_workflow',
-        //         function: 'run_fba'
-        //     },
-        // },
-
-
-        // /* ------------ View FBA Results ------------ */
-
-        // viewFbaConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'FBA Result',
-        //                 type: 'FBA'
-        //             }
-        //         ]
-        //     },
-        //     command: {
-        //         module: 'biokbase.narrative.demo.microbes_workflow',
-        //         function: 'view_fba'
-        //     }
-        // },
-
-        // /* ------------ Gapfill FBA Model -------------- */
-        // runGapfillConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Model',
-        //                 type: 'Model',                        
-        //             },
-        //             {
-        //                 name: 'Media',
-        //                 type: 'Media',
-        //             }
-        //         ],
-
-        //         'Solutions' : [
-        //             {
-        //                 name: 'Number to seek',
-        //                 type: '',
-        //                 default: '1',
-        //             }
-        //         ],
-
-        //         'Time' : [
-        //             {
-        //                 name: 'Per Solution (sec)',
-        //                 type: '',
-        //                 default: '3600',
-        //             },
-        //             {
-        //                 name: 'Total Limit (sec)',
-        //                 type: '',
-        //                 default: '3600'
-        //             }
-        //         ],
-        //     },
-        //     command: {
-        //         module: 'biokbase.narrative.demo.microbes_workflow',
-        //         function: 'run_gapfill'
-        //     },
-        // },
-
-        // /* ------------ Integrate Gapfill Solution ---------------- */
-        // integrateGapfillConfig: {
-        //     params: {
-        //         'Identifiers' : [
-        //             {
-        //                 name: 'Model',
-        //                 type: 'Model',
-        //             },
-        //             {
-        //                 name: 'Gapfill',
-        //             },
-        //         ],
-        //         'Output' : [
-        //             {
-        //                 name: 'New Model (optional)'
-        //             },
-        //         ],
-        //     },
-        //     command: {
-        //         module: 'biokbase.narrative.demo.microbes_workflow',
-        //         function: 'integrate_gapfill'
-        //     }
-        // },
-
-        // /* --------------- END: MICROBES ----------------- */
-
-
-
-
     });
 
 })( jQuery );

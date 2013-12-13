@@ -35,6 +35,7 @@
         FUNCTION_CELL: "function_input",
         defaultOutputWidget: "kbaseDefaultNarrativeOutput",
         defaultInputWidget: "kbaseDefaultNarrativeInput",
+        errorWidget: "kbaseNarrativeError",
 
         init: function(options) {
             this._super(options);
@@ -626,6 +627,7 @@
                                 else if (matches[1] === 'E') {
                                     // Error!
                                     var errorJson = matches[2];
+                                    self.createErrorCell(cell, errorJson);
 //                                    self.createOutputCell(cell, 'kbaseNarrativeError({error: ' + errorJson + '})');
                                     self.dbg("Narrative error: " + errorJson);
                                 }
@@ -664,6 +666,15 @@
                     this.createOutputCell(cell, result);
                 }
             }
+        },
+
+        createErrorCell: function(cell, errorJson) {
+            var error = {
+                'widget': this.errorWidget,
+                'data': '{"error": ' + errorJson + "}",
+                'embed': true
+            };
+            this.createOutputCell(cell, error);
         },
 
         /**

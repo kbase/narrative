@@ -4,7 +4,7 @@
 # any changes made here will be overwritten
 #
 # Passes on URLError, timeout, and BadStatusLine exceptions.
-#     See: 
+#     See:
 #     http://docs.python.org/2/library/urllib2.html
 #     http://docs.python.org/2/library/httplib.html
 #
@@ -16,81 +16,101 @@ except ImportError:
     import sys
     sys.path.append('simplejson-2.3.3')
     import simplejson as json
-    
-import urllib2, httplib, urlparse, random, base64, httplib2
+
+import urllib2
+import httplib
+import urlparse
+import random
+import base64
+import httplib2
 from urllib2 import URLError, HTTPError
 from ConfigParser import ConfigParser
 import os
 
 _CT = 'content-type'
 _AJ = 'application/json'
-_URL_SCHEME = frozenset(['http', 'https']) 
+_URL_SCHEME = frozenset(['http', 'https'])
 
-# This is bandaid helper function until we get a full
-# KBase python auth client released
-def _get_token( user_id, password,
-                auth_svc="https://nexus.api.globusonline.org/goauth/token?grant_type=client_credentials"):
-    h = httplib2.Http( disable_ssl_certificate_validation=True)
-    
-    auth = base64.encodestring( user_id + ':' + password )
-    headers = { 'Authorization' : 'Basic ' + auth }
-    
+
+def _get_token(user_id, password,
+               auth_svc='https://nexus.api.globusonline.org/goauth/token?' +
+                        'grant_type=client_credentials'):
+    # This is bandaid helper function until we get a full
+    # KBase python auth client released
+    h = httplib2.Http(disable_ssl_certificate_validation=True)
+
+    auth = base64.encodestring(user_id + ':' + password)
+    headers = {'Authorization': 'Basic ' + auth}
+
     h.add_credentials(user_id, password)
     h.follow_all_redirects = True
     url = auth_svc
-    
+
     resp, content = h.request(url, 'GET', headers=headers)
     status = int(resp['status'])
-    if status>=200 and status<=299:
+    if status >= 200 and status <= 299:
         tok = json.loads(content)
-    elif status == 403: 
-        raise Exception( "Authentication failed: Bad user_id/password combination %s:%s" % (user_id, password))
+    elif status == 403:
+        raise Exception('Authentication failed: Bad user_id/password ' +
+                        'combination %s:%s' % (user_id, password))
     else:
         raise Exception(str(resp))
-        
+
     return tok['access_token']
 
-# Another bandaid to read in the ~/.authrc file if one is present
-def _read_rcfile( file=os.environ['HOME']+"/.authrc"):
+
+def _read_rcfile(file=os.environ['HOME'] + '/.authrc'):  # @ReservedAssignment
+    # Another bandaid to read in the ~/.authrc file if one is present
     authdata = None
-    if os.path.exists( file):
+    if os.path.exists(file):
         try:
-            with open( file ) as authrc:
-                rawdata = json.load( authrc)
+            with open(file) as authrc:
+                rawdata = json.load(authrc)
                 # strip down whatever we read to only what is legit
-                authdata = { x : rawdata.get(x) for x in ( 'user_id', 'token',
-                                                           'client_secret', 'keyfile',
-                                                           'keyfile_passphrase','password')}
+                authdata = {x: rawdata.get(x) for x in (
+                    'user_id', 'token', 'client_secret', 'keyfile',
+                    'keyfile_passphrase', 'password')}
         except Exception, e:
             print "Error while reading authrc file %s: %s" % (file, e)
     return authdata
 
-# Another bandaid to read in the ~/.kbase_config file if one is present
-def _read_inifile( file=os.environ.get('KB_DEPLOYMENT_CONFIG',os.environ['HOME']+"/.kbase_config")):
+
+def _read_inifile(file=os.environ.get(  # @ReservedAssignment
+                      'KB_DEPLOYMENT_CONFIG', os.environ['HOME'] +
+                      '/.kbase_config')):
+    # Another bandaid to read in the ~/.kbase_config file if one is present
     authdata = None
-    if os.path.exists( file):
+    if os.path.exists(file):
         try:
             config = ConfigParser()
             config.read(file)
             # strip down whatever we read to only what is legit
-            authdata = { x : config.get('authentication',x) if config.has_option('authentication',x) else None for x in
-                         ( 'user_id', 'token','client_secret', 'keyfile','keyfile_passphrase','password') }
+            authdata = {x: config.get('authentication', x)
+                        if config.has_option('authentication', x)
+                        else None for x in
+                           ('user_id', 'token', 'client_secret',
+                            'keyfile', 'keyfile_passphrase', 'password')}
         except Exception, e:
             print "Error while reading INI file %s: %s" % (file, e)
     return authdata
 
+
 class ServerError(Exception):
 
-    def __init__(self, name, code, message):
+    def __init__(self, name, code, message, data=None, error=None):
         self.name = name
         self.code = code
         self.message = '' if message is None else message
+        self.data = data or error or ''
+        # data = JSON RPC 2.0, error = 1.1
 
     def __str__(self):
-        return self.name + ': ' + str(self.code) + '. ' + self.message
-        
+        return self.name + ': ' + str(self.code) + '. ' + self.message + \
+            '\n' + self.data
+
+
 class JSONObjectEncoder(json.JSONEncoder):
-  
+
     def default(self, obj):
         if isinstance(obj, set):
             return list(obj)
@@ -98,12 +118,13 @@ class JSONObjectEncoder(json.JSONEncoder):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 
-class workspaceService:
 
-    def __init__(self, url = None, timeout = 30 * 60, user_id = None, 
-                 password = None, token = None, ignore_authrc = False):
+class workspaceService(object):
+
+    def __init__(self, url=None, timeout=30 * 60, user_id=None,
+                 password=None, token=None, ignore_authrc=False):
         if url is None:
-            raise ValueError('A url is required')
+            url = 'http://kbase.us/services/workspace/'
         scheme, _, _, _, _, _ = urlparse.urlparse(url)
         if scheme not in _URL_SCHEME:
             raise ValueError(url + " isn't a valid http url")
@@ -114,7 +135,7 @@ class workspaceService:
         if token is not None:
             self._headers['AUTHORIZATION'] = token
         elif user_id is not None and password is not None:
-            self._headers['AUTHORIZATION'] = _get_token( user_id, password)
+            self._headers['AUTHORIZATION'] = _get_token(user_id, password)
         elif 'KB_AUTH_TOKEN' in os.environ:
             self._headers['AUTHORIZATION'] = os.environ.get('KB_AUTH_TOKEN')
         elif not ignore_authrc:
@@ -124,39 +145,41 @@ class workspaceService:
             if authdata is not None:
                 if authdata.get('token') is not None:
                     self._headers['AUTHORIZATION'] = authdata['token']
-                elif authdata.get('user_id') is not None and authdata.get('password') is not None:
-                    self._headers['AUTHORIZATION'] = _get_token( authdata['user_id'],authdata['password'] )
+                elif(authdata.get('user_id') is not None
+                     and authdata.get('password') is not None):
+                    self._headers['AUTHORIZATION'] = _get_token(
+                        authdata['user_id'], authdata['password'])
         if self.timeout < 1:
             raise ValueError('Timeout value must be at least 1 second')
 
     def load_media_from_bio(self, params):
 
-        arg_hash = { 'method': 'workspaceService.load_media_from_bio',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.load_media_from_bio',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -166,32 +189,32 @@ class workspaceService:
 
     def import_bio(self, params):
 
-        arg_hash = { 'method': 'workspaceService.import_bio',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.import_bio',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -201,32 +224,32 @@ class workspaceService:
 
     def import_map(self, params):
 
-        arg_hash = { 'method': 'workspaceService.import_map',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.import_map',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -236,32 +259,32 @@ class workspaceService:
 
     def save_object(self, params):
 
-        arg_hash = { 'method': 'workspaceService.save_object',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.save_object',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -271,32 +294,32 @@ class workspaceService:
 
     def delete_object(self, params):
 
-        arg_hash = { 'method': 'workspaceService.delete_object',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.delete_object',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -306,32 +329,32 @@ class workspaceService:
 
     def delete_object_permanently(self, params):
 
-        arg_hash = { 'method': 'workspaceService.delete_object_permanently',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.delete_object_permanently',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -341,32 +364,32 @@ class workspaceService:
 
     def get_object(self, params):
 
-        arg_hash = { 'method': 'workspaceService.get_object',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_object',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -376,32 +399,32 @@ class workspaceService:
 
     def get_objects(self, params):
 
-        arg_hash = { 'method': 'workspaceService.get_objects',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_objects',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -411,32 +434,32 @@ class workspaceService:
 
     def get_object_by_ref(self, params):
 
-        arg_hash = { 'method': 'workspaceService.get_object_by_ref',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_object_by_ref',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -446,32 +469,32 @@ class workspaceService:
 
     def save_object_by_ref(self, params):
 
-        arg_hash = { 'method': 'workspaceService.save_object_by_ref',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.save_object_by_ref',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -481,32 +504,32 @@ class workspaceService:
 
     def get_objectmeta(self, params):
 
-        arg_hash = { 'method': 'workspaceService.get_objectmeta',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_objectmeta',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -516,32 +539,32 @@ class workspaceService:
 
     def get_objectmeta_by_ref(self, params):
 
-        arg_hash = { 'method': 'workspaceService.get_objectmeta_by_ref',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_objectmeta_by_ref',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -551,32 +574,32 @@ class workspaceService:
 
     def revert_object(self, params):
 
-        arg_hash = { 'method': 'workspaceService.revert_object',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.revert_object',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -586,32 +609,32 @@ class workspaceService:
 
     def copy_object(self, params):
 
-        arg_hash = { 'method': 'workspaceService.copy_object',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.copy_object',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -621,32 +644,32 @@ class workspaceService:
 
     def move_object(self, params):
 
-        arg_hash = { 'method': 'workspaceService.move_object',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.move_object',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -656,32 +679,32 @@ class workspaceService:
 
     def has_object(self, params):
 
-        arg_hash = { 'method': 'workspaceService.has_object',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.has_object',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -691,32 +714,32 @@ class workspaceService:
 
     def object_history(self, params):
 
-        arg_hash = { 'method': 'workspaceService.object_history',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.object_history',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -726,32 +749,32 @@ class workspaceService:
 
     def create_workspace(self, params):
 
-        arg_hash = { 'method': 'workspaceService.create_workspace',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.create_workspace',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -761,32 +784,32 @@ class workspaceService:
 
     def get_workspacemeta(self, params):
 
-        arg_hash = { 'method': 'workspaceService.get_workspacemeta',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_workspacemeta',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -796,32 +819,32 @@ class workspaceService:
 
     def get_workspacepermissions(self, params):
 
-        arg_hash = { 'method': 'workspaceService.get_workspacepermissions',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_workspacepermissions',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -831,32 +854,32 @@ class workspaceService:
 
     def delete_workspace(self, params):
 
-        arg_hash = { 'method': 'workspaceService.delete_workspace',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.delete_workspace',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -866,32 +889,32 @@ class workspaceService:
 
     def clone_workspace(self, params):
 
-        arg_hash = { 'method': 'workspaceService.clone_workspace',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.clone_workspace',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -901,32 +924,32 @@ class workspaceService:
 
     def list_workspaces(self, params):
 
-        arg_hash = { 'method': 'workspaceService.list_workspaces',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.list_workspaces',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -936,32 +959,32 @@ class workspaceService:
 
     def list_workspace_objects(self, params):
 
-        arg_hash = { 'method': 'workspaceService.list_workspace_objects',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.list_workspace_objects',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -971,32 +994,32 @@ class workspaceService:
 
     def set_global_workspace_permissions(self, params):
 
-        arg_hash = { 'method': 'workspaceService.set_global_workspace_permissions',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.set_global_workspace_permissions',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1006,32 +1029,32 @@ class workspaceService:
 
     def set_workspace_permissions(self, params):
 
-        arg_hash = { 'method': 'workspaceService.set_workspace_permissions',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.set_workspace_permissions',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1041,32 +1064,32 @@ class workspaceService:
 
     def get_user_settings(self, params):
 
-        arg_hash = { 'method': 'workspaceService.get_user_settings',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_user_settings',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1076,32 +1099,32 @@ class workspaceService:
 
     def set_user_settings(self, params):
 
-        arg_hash = { 'method': 'workspaceService.set_user_settings',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.set_user_settings',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1111,32 +1134,32 @@ class workspaceService:
 
     def queue_job(self, params):
 
-        arg_hash = { 'method': 'workspaceService.queue_job',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.queue_job',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1146,32 +1169,32 @@ class workspaceService:
 
     def set_job_status(self, params):
 
-        arg_hash = { 'method': 'workspaceService.set_job_status',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.set_job_status',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1181,32 +1204,32 @@ class workspaceService:
 
     def get_jobs(self, params):
 
-        arg_hash = { 'method': 'workspaceService.get_jobs',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_jobs',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1214,34 +1237,34 @@ class workspaceService:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def get_types(self, ):
+    def get_types(self):
 
-        arg_hash = { 'method': 'workspaceService.get_types',
-                     'params': [],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.get_types',
+                    'params': [],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1251,32 +1274,32 @@ class workspaceService:
 
     def add_type(self, params):
 
-        arg_hash = { 'method': 'workspaceService.add_type',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.add_type',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1286,32 +1309,32 @@ class workspaceService:
 
     def remove_type(self, params):
 
-        arg_hash = { 'method': 'workspaceService.remove_type',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.remove_type',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1321,38 +1344,35 @@ class workspaceService:
 
     def patch(self, params):
 
-        arg_hash = { 'method': 'workspaceService.patch',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'workspaceService.patch',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
             return resp['result'][0]
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
-
-
-

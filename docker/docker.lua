@@ -35,11 +35,12 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 					  "version" : '0.1.0',
 					  "expected_status" : [
 					     200,
+					     201,
 					     204
 					  ],
 					  "formats" : ["json"],
 					  "methods" : {
-					     "list_containers" : { 
+					     "containers" : { 
 						"path" : "/containers/json",
 						"method" : "GET",
 						"optional_params" : [
@@ -49,6 +50,13 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 						   'before',
 						   'size'
 						]
+					     },
+					     "create_container" : { 
+						"path" : "/containers/create",
+						"method" : "POST",
+						"optional_params" : [
+						   'name'],
+						"required_payload" : true,
 					     },
 					     "inspect_container" : { 
 						"path" : "/containers/:id/json",
@@ -64,20 +72,13 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 						   "id"
 						],
 					     },
-					     "create_container" : { 
-						"path" : "/containers/create",
-						"method" : "POST",
-						"required_payload" : true,
-					     },
 					     "start_container" : { 
-						"path" : "/containers/:id/stop",
+						"path" : "/containers/:id/start",
 						"method" : "POST",
 						"required_params" : [
 						   "id"
 						],
-						"optional_params" : [
-						   'hostConfig',
-						]
+						"optional_payload" : true,
 					     },
 					     "stop_container" : { 
 						"path" : "/containers/:id/stop",
@@ -93,28 +94,21 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 						   "id"
 						],
 					     },
-					     "kill_container" : { 
+					     "kill" : { 
 						"path" : "/containers/:id/kill",
 						"method" : "POST",
 						"required_params" : [
 						   "id"
 						],
 					     },
-					     "delete_container" : { 
-						"path" : "/containers/:id/kill",
-						"method" : "GET",
+					     "remove_container" : { 
+						"path" : "/containers/:id",
+						"method" : "DELETE",
 						"required_params" : [
 						   "id"
 						],
 					     },
-					     "kill_container" : { 
-						"path" : "/containers/:id/kill",
-						"method" : "GET",
-						"required_params" : [
-						   "id"
-						],
-					     },
-					     "list_processes_container" : { 
+					     "top" : { 
 						"path" : "/containers/:id/top",
 						"method" : "GET",
 						"required_params" : [
@@ -124,7 +118,7 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 						   'ps_args',
 						   ]
 					     },
-					     "list_images" : { 
+					     "images" : { 
 						"path" : "/images/json",
 						"method" : "GET",
 						"optional_params" : [

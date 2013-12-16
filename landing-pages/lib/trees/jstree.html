@@ -1,0 +1,50 @@
+<html>
+<head>
+<!--[if IE]><script src="excanvas.js"></script><![endif]-->
+<title>Jstree</title>
+<script language="JavaScript" src="knhx.js"></script>
+<script type="text/javascript">
+function show_example() {  }
+function toggle_usage() {
+	var z = document.getElementById("toggle-usage");
+	var x = document.getElementById("usage");
+	if (z.value == "Show Description") {
+		x.style.display = "block";
+		z.value = "Hide Description";
+	} else {
+		x.style.display = "none";
+		z.value = "Show Description";
+	}
+}
+</script>
+<style type="text/css">
+<!--
+	#canvas { border: 1px solid #000; }
+	body { font: 12px "Lucida Grande", "Lucida Sans Unicode", Arial, sans-serif; }
+	textarea { font: 100% "consolas", "Andale Mono", Monaco, Courier, monospace; border: 1px solid; }
+--></style>
+</head>
+<body onLoad="knhx_init('canvas', 'nhx');">
+<h1>Editor for Phylogenetic Trees <input type="button" id="toggle-usage"
+value="Show Description" onClick="toggle_usage();"></h1>
+
+
+<p><b>Input:</b> <input type="button" value="Example"
+onClick="document.getElementById('nhx').value=document.getElementById('nhx-ex').value;kn_actions.plot_str();">
+<input type="button" value="Select" onClick="document.getElementById('nhx').select()">
+<input type="button" value="Clear" onClick="document.getElementById('nhx').value=''">
+&nbsp;&nbsp;&nbsp;
+<input id="url" size="40" value="http://www.treefam.org/cgi-bin/getdata.pl?ac=TF105088&f=clean.nhx">
+<input type="button" value="Connect" onClick="xss_query(document.getElementById('url').value);">
+&nbsp;&nbsp;&nbsp;
+<span id="n_leaves" style="color: gray;"></span>
+<span id="runtime" style="color: gray;"></span>
+</p>
+
+<textarea id="nhx" rows="22" cols="120" wrap="off" style="overflow-x: hidden;"></textarea>
+<hr color="#cccccc" noShade SIZE="1">
+<canvas id="canvas" width="800" height="100"></canvas>
+<br>
+
+</body>
+</html>

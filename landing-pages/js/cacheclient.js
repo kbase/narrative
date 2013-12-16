@@ -27,9 +27,9 @@ function Cache() {
 }
 
 
-function kb(token) {
-    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/', USER_TOKEN);
-    var kbws = new workspaceService('http://kbase.us/services/workspace_service/', USER_TOKEN);
+function KBCacheClient(token) {
+    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/', token);
+    var kbws = new workspaceService('http://kbase.us/services/workspace_service/', token);
 
     var cache = new Cache();    
 

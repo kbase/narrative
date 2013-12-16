@@ -2,13 +2,8 @@
 
 /*  Controllers
  *
- *  These are the glue between models and views.
- *  The scope is global for these right now.  These should be modules
- *  or even services in the future.  
- *
+ *  These are the 'glue' between models and views.
  *  See: http://docs.angularjs.org/guide/dev_guide.mvc.understanding_controller
- *
- *
  *
 */
 
@@ -86,59 +81,15 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
         });
     }
 
-    // model for storing selected objects
-    $scope.selectedObjs = []
-
-    // add objects from urls
-    for (var i in $scope.ws) {
-        var found;
-        var entry = {ws: $scope.ws[i], id: $scope.ids[i]};
-
-        for (var j in $scope.selectedObjs) {
-            if (angular.equals($scope.selectedObjs[j], entry)) {
-                found = true;
-                break;
-            }
-        }
-
-        if (found) continue;
-        
-        $scope.selectedObjs.push(entry)
-    }
-
-    $scope.$watch('selectedObjs', function() {
-        console.log('watched')
-        // update url strings
-        $scope.ws = [];
-        $scope.ids = [];
-        for (var i in $scope.selectedObjs) {
-            var obj = $scope.selectedObjs[i];
-             $scope.ws.push(obj.ws);
-             $scope.ids.push(obj.id);  
-        }
-        $scope.ws_param =  $scope.ws.join('+');
-        $scope.ids_param =  $scope.ids.join('+');
-
-        $location.search({selected_ws: $scope.selected_ws,
-          ws: $scope.ws_param, 
-          ids: $scope.ids_param});
-
-        // show object selection sidebar
-        /*
-        if (!$('.selectedobjs').is(':visible')) {
-            $('.side-bar-switch').children('button').removeClass('active');            
-            $('.show-objs').addClass('active');
-            $scope.showSelectedObjs();
-        }
-        */
-
-    }, true); 
-
+    console.log('called controller')
+ 
 
     // removes items from the selected objects view
     $scope.removeItem = function(index){
         $scope.selectedObjs.splice(index, 1);
     }
+
+    console.log('tab', tab)
 
 })
 
@@ -235,6 +186,18 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.type = type;
     $scope.ws = $stateParams.ws;
 })
+
+.controller('Trees', function($scope, $stateParams, $location) {
+    console.log('in tree controller')
+
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+
+
+
+})
+
+
 
 
 function LPHelp($scope, $stateParams, $location) {

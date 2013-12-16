@@ -20,7 +20,7 @@
 
 
 var app = angular.module('landing-pages', 
-    ['lp-directives', 'card-directives', 'mv-directives', 'ui.router'])
+    ['lp-directives', 'card-directives', 'mv-directives', 'trees-directives', 'ui.router'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
 
@@ -32,8 +32,7 @@ var app = angular.module('landing-pages',
           url: "/mv/",
           templateUrl: 'views/mv/mv.html',
           controller: 'ModelViewer'
-        })   
-        
+        })
         .state('mv.objtable', {
           url: "objtable/?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
@@ -54,6 +53,18 @@ var app = angular.module('landing-pages',
             url: "heatmap/?ws&ids",
             templateUrl: 'views/mv/heatmap.html',
             controller: 'ModelViewer'
+        })
+        .state('mv.tree', {
+            url: "tree/?ws&ids",
+            templateUrl: 'views/mv/tree.html',
+            controller: 'ModelViewer'
+        })        
+
+    $stateProvider
+        .state('trees', {
+          url: "/trees/",
+          templateUrl: 'views/trees/trees.html',
+          controller: 'Trees'
         })
 
     $stateProvider
@@ -173,7 +184,7 @@ var app = angular.module('landing-pages',
             {url: '/spec/:kind/:id',
              templateUrl: 'views/objects/spec.html',
              controller: 'SpecDetail'})
-        
+
     $stateProvider
         .state('bambi',
             {url: '/bambi/:ws/:id',
@@ -193,118 +204,6 @@ var app = angular.module('landing-pages',
             {url: '*path', 
              templateUrl : 'views/404.html'})
 
-
-
-    /*
-
-    $routeProvider
-        .when('/workspace-browser', 
-            {templateUrl: 'views/ws-browser.html',
-             controller: WSBrowser})
-
-        .when('/genomes/CDS/:id',
-            {templateUrl: 'views/objects/genome.html',
-             controller: GenomeDetail})
-        .when('/genomes/:ws',
-            {templateUrl: 'views/objects/genome.html',
-             controller: GenomeDetail})
-        .when('/genomes/:ws/:id',
-            {templateUrl: 'views/objects/genome.html',
-             controller: GenomeDetail})
-
-        .when('/genes/CDS/:id',
-            {templateUrl: 'views/objects/gene.html',
-             controller: GeneDetail })
-        .when('/genes/:ws/:id',
-            {templateUrl: 'views/objects/gene.html',
-             controller: GeneDetail })
-
-        .when('/models',
-            {templateUrl: 'views/object-list.html',
-             controller: WSObjects})        
-        .when('/models/:ws',
-            {templateUrl: 'views/object-list.html',
-             controller: WSObjects})
-        .when('/models/:ws/:id', 
-            {templateUrl: 'views/objects/model.html',
-             controller: ModelDetail})
-        .when('/cards/models/:ws/:id', 
-            {templateUrl: 'views/objects/modelcards.html',
-             controller: ModelDetailCards})
-
-        .when('/media',
-            {templateUrl: 'views/object-list.html',
-             controller: WSObjects})
-        .when('/media/:ws',
-            {templateUrl: 'views/object-list.html',
-             controller: WSObjects})
-        .when('/media/:ws/:id',
-            {templateUrl: 'views/objects/media.html',
-             controller: MediaDetail})
-
-        .when('/fbas/:ws', 
-            {templateUrl: 'views/object-list.html',
-             controller: WSObjects})
-        .when('/fbas/:ws/:id',
-            {templateUrl: 'views/objects/fba.html',
-             controller: FBADetail})
-        .when('/cards/fbas/:ws/:id',
-            {templateUrl: 'views/objects/fbacards.html',
-             controller: FBADetailCards})
-
-        .when('/rxns', 
-            {templateUrl: 'views/object-list.html',
-             controller: WSObjects})
-        .when('/rxns/:ids', 
-            {templateUrl: 'views/objects/rxn.html',
-             controller: RxnDetail}) 
-        .when('/rxns/:ws/:ids', 
-            {templateUrl: 'views/objects/coming-soon.html',
-             controller: RxnDetail})
-
-        .when('/cpds', 
-            {templateUrl: 'views/object-list.html',
-             controller: WSObjects})
-        .when('/cpds/:ids', 
-            {templateUrl: 'views/objects/cpd.html',
-             controller: CpdDetail})           
-
-        .when('/meme',
-            {templateUrl: 'views/meme-list.html',
-             controller: WSObjects})
-        .when('/meme/:ws',
-            {templateUrl: 'views/meme-list.html',
-             controller: WSObjects})
-        .when('/meme/:ws/:id',
-            {templateUrl: 'views/objects/meme.html',
-             controller: MemeDetail})
-
-        .when('/spec/:kind/:id',
-            {templateUrl: 'views/objects/spec.html',
-             controller: SpecDetail})
-
-        .when('/bambi/:ws/:id',
-            {templateUrl: 'views/objects/bambi.html',
-             controller: BambiDetail})
-        
-        .when('/iris', 
-            {templateUrl: 'views/iris.html',
-             controller: IRIS})   
-
-        .when('/landing-pages-help',
-            {templateUrl: 'views/landing-pages-help.html',
-             controller: LPHelp})
-
-        .when('/404',
-            {templateUrl: 'views/404.html'})
-
-        .when('/',
-            {templateUrl: 'views/landing-pages-help.html',
-             controller: LPHelp})
-        */
-
-//        .otherwise({redirectTo: '/404'})
-
 }])
 
 
@@ -314,35 +213,31 @@ LPDROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b
                  <li><a href="#/landing-pages-help">Landing Page Documentation</a></li> \
               </ul>';
 
+
 app.run(function ($rootScope, $location) {
     // use partials nav_func.html for narrative/functional website look
     // Fixme: this should be a template, loaded with ui-router the same way
     // as the rest of the app.
+
     $('#navigation').load('partials/nav.html', function(){
-        // sign in button
-        $('#signin-button').kbaseLogin({style: 'narrative', 
-                                        login_callback: login_change,
-                                        logout_callback: login_change
-                                       });
-
-        console.log('load')
-        $('.help-dropdown').html(LPDROPDOWN)
-
-        $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-        $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
-
-        // hack
-        USER_ID = $rootScope.USER_ID;
-        USER_TOKEN = $rootScope.USER_TOKEN;
-        kb = new kb(USER_TOKEN);
-
-        // global state object to store state
-        state = new State();
-
-        // set the currently selected workspace.
-        set_selected_workspace();
+        navbar_cb();
     });
 
+    $rootScope.$on('$stateChangeStart',
+        function (event, toState, toParams, fromState, fromParams) {
+            console.log(toState)
+            if (toState.name == 'trees') {
+                $('#navigation').load('partials/nav-trees.html', navbar_cb);
+            } else if (toState.name == 'mv') {
+                $('#navigation').load('partials/nav-mv.html', navbar_cb);
+            }
+        });
+
+    //  Here's a sort of hack to remove any cards when a view changes.
+    //  There may be a better way to manage this.
+    $rootScope.$on('$stateChangeSuccess', function() {
+        removeCards();
+    })
 
     // here's a workaround so that ui-router doesn't remove query strings.
     /*$rootScope.$on('$stateChangeStart',
@@ -350,16 +245,38 @@ app.run(function ($rootScope, $location) {
         this.locationSearch = $location.search();
     });
     $rootScope.$on('$stateChangeSuccess',
-    function (event, toState, toParams, fromState, fromParams) {
-        $location.search(this.locationSearch);
-    });
+        function (event, toState, toParams, fromState, fromParams) {
+            $location.search(this.locationSearch);
+        });
     */
 
-    //  Here's a sort of hack to remove any cards when a view changes.
-    //  There may be a better way to manage this.
-    $rootScope.$on('$stateChangeSuccess', function() {
-        removeCards();
-    })
+    function navbar_cb() {
+        // sign in button
+        $('#signin-button').kbaseLogin({login_callback: login_change,
+                                        logout_callback: login_change});
+
+        $('#signin-button').css('padding', '0');  // This is Jim's fault.
+
+
+        console.log('load')
+        $('.help-dropdown').html(LPDROPDOWN);
+
+        $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+        $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+
+        // hack
+        USER_ID = $rootScope.USER_ID;
+        USER_TOKEN = $rootScope.USER_TOKEN;
+        kb = new KBCacheClient(USER_TOKEN);
+
+        // global state object to store state
+        state = new State();
+
+        // set the currently selected workspace.
+        set_selected_workspace();
+
+    }
+
 });
 
 

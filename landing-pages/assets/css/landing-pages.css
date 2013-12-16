@@ -39,10 +39,8 @@ text-decoration: none;
 
 
 #signin-button {
-    /* Note: don't put styling in javascript, Jim*/
-    padding: 7px 0 0 0 !important; 
-    /*padding: 15px 15px 7px 10px !important; */
-    margin: 0 7px 0 0;
+
+    margin: 15px 7px 0 0;
 }
 
 #signin-button a {
@@ -66,11 +64,11 @@ text-decoration: none;
     margin: 2px 10px 0 10px;
 }
 
-
-table {  /* what's this about */
+/*
+table {  
     font-size: 14px;
 }
-
+*/
 .media-info-modal {
     width: 800px;
 }

@@ -31,7 +31,7 @@ end
 M.config = config
 
 local client = Spore.new_from_string [[{ "name" : "docker remote api",
-					  "base_url" : 'http://127.0.0.1:65000',
+					  "base_url" : 'https://127.0.0.1:65000',
 					  "version" : '0.1.0',
 					  "expected_status" : [
 					     200,
@@ -159,8 +159,7 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 					     },
 					  }
 				       }]]
-client:enable 'Format.JSON'
-
+client:enable('Format.JSON')
 M.client = client
 --[[
 local pretty = require('pl.pretty')

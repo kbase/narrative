@@ -218,7 +218,7 @@ def _build_media(meth, base_media):
     return json.dumps(result)
 
 @method(name="Run Flux Balance Analysis")
-def _run_fba(meth, fba_model_id, media_id):
+def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     """Run Flux Balance Analysis on a metabolic model.
 
     :param fba_model_id: the FBA model you wish to run
@@ -227,16 +227,20 @@ def _run_fba(meth, fba_model_id, media_id):
     :param media_id: the media condition in which to run FBA
     :type media_id: kbtypes.Media
     :ui_name media_id: Media
+    
+    :param fba_result_id: select a name for the FBA result object (optional)
+    :type fba_result_id: kbtypes.Unicode
+    :ui_name fba_result_id: Output FBA Result Name
+    
     :return: something 
     :rtype: kbtypes.Unicode
     """
-    
     
     """
     :output_widget: kbaseFbaResultViewer
     """
     
-    meth.stages = 3
+    meth.stages = 2
     meth.advance("Setting up FBA parameters")
     
     #grab token and workspace info, setup the client
@@ -245,6 +249,47 @@ def _run_fba(meth, fba_model_id, media_id):
     fbaClient = fbaModelServices(service.URLS.fba)
     
     # setup the parameters
+    """
+    typedef structure {
+        fbamodel_id model;
+        workspace_id model_workspace;
+        FBAFormulation formulation;
+        bool fva;
+        bool simulateko;
+        bool minimizeflux;
+        bool findminmedia;
+        string notes;
+        fba_id fba;
+        workspace_id workspace;
+        string auth;
+        bool overwrite;
+        bool add_to_model;
+    } runfba_params;
+
+    typedef structure {
+        media_id media;
+        list<compound_id> additionalcpds;
+        prommodel_id prommodel;
+        workspace_id prommodel_workspace;
+        workspace_id media_workspace;
+        float objfraction;
+        bool allreversible;
+        bool maximizeObjective;
+        list<term> objectiveTerms;
+        list<feature_id> geneko;
+        list<reaction_id> rxnko;
+        list<bound> bounds;
+        list<constraint> constraints;
+        mapping<string,float> uptakelim;
+        float defaultmaxflux;
+        float defaultminuptake;
+        float defaultmaxuptake;
+        bool simplethermoconst;
+        bool thermoconst;
+        bool nothermoerror;
+        bool minthermoerror;
+    } FBAFormulation;
+    """
     fba_formulation = {
         'media' : media_id,
         'media_workspace' : workspaceName,
@@ -257,22 +302,24 @@ def _run_fba(meth, fba_model_id, media_id):
         'notes' : "ran from the narrative",
         'auth': token,
     }
+    fba_result_id = fba_result_id.strip()
+    if fba_result_id:
+        fba_params['fba'] = fba_result_id
 
     
     meth.advance("Running FBA")
-    #result_meta = fbaClient.runfba(fba_params)
+    result_meta = fbaClient.runfba(fba_params)
+    generated_fba_id = result_meta[0]
     
+    #meth.advance("Retrieving FBA results")
+    #get_fbas_params = {
+    #    'fbas' : ['MyGenome.fbamdl.1.fba.0'],
+    #    'workspaces' : [workspaceName],
+    #    'auth' : token
+    #}
+    #results = fbaClient.get_fbas(get_fbas_params)
     
-    meth.advance("Retrieving FBA results")
-    get_fbas_params = {
-        'fbas' : ['MyGenome.fbamdl.1.fba.0'],
-        'workspaces' : [workspaceName],
-        'auth' : token
-    }
-    results = fbaClient.get_fbas(get_fbas_params)
-    
-    
-    return json.dumps({ "results":results })
+    return json.dumps({ "output":result_meta })
 
 @method(name="Gapfill FBA Model")
 def _gapfill_fba(meth, fba_model_id):

@@ -17,7 +17,13 @@
 # Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
 ##
 
-init_by_lua 'cjson = require "cjson"';
+lua_package_path "/home/vagrant/dockerstuff/narrative/docker/?;/home/vagrant/dockerstuff/narrative/docker/?.lua;;";
+init_by_lua '
+    json = require("json")
+    docker = require("docker")
+    nlaunch = require("notelauncher")
+    proxymgr = require("proxy_mgr")
+';
 
 lua_shared_dict proxy_map 1m;
 
@@ -31,20 +37,12 @@ server {
 	# Make site accessible from http://localhost/
 	server_name localhost;
 
-	#location / {
+	location / {
 		# First attempt to serve request as file, then
 		# as directory, then fall back to index.html
-	#	try_files $uri $uri/ /index.html;
+		try_files $uri $uri/ /index.html;
 		# Uncomment to enable naxsi on this location
 		# include /etc/nginx/naxsi.rules
-	#}
-
-
-	location /doc/ {
-		alias /usr/share/doc/;
-		autoindex on;
-		allow 127.0.0.1;
-		deny all;
 	}
 
 	# Dynamic proxy manager
@@ -53,58 +51,54 @@ server {
 	     allow 127.0.0.1;
 
 	     set $uri_base '/proxymgr';
-	     content_by_lua_file /etc/nginx/sites-available/proxy_mgr.lua;
+	     content_by_lua 'proxymgr:set_proxy()';
 
 	}
 
 	location /narrative/ {
-
 	     default_type 'text/plain';
- 
-             set $target '';
-
+  	     set $target '';
              access_by_lua '
-	     		    ngx.log( ngx.ERR, "In /narrative/ handler")
-			    local proxy_key = string.match(ngx.var.uri,"/narrative/([%w_-]+)")
-   			    if proxy_key then
-   	     		        local proxy_map = ngx.shared.proxy_map
-      			        local target, flags = proxy_map:get(proxy_key)
-      				if target == nil then
-				    ngx.log( ngx.ERR, "Bad proxy key:" .. proxy_key)
-				    ngx.exit(ngx.HTTP_NOT_FOUND)
-      				else
-			            ngx.var.target = target
-				    ngx.log( ngx.ERR, "Redirect to " .. ngx.var.target )
-      				end
-			    else
-			        ngx.log( ngx.ERR, "No proxy key given")
-				ngx.exit(ngx.HTTP_NOT_FOUND)
-			    end
-			    ';
+	     		   proxymgr:use_proxy()
+	     ';
 
-              proxy_set_header X-Forwarded-Host $host;
-	      proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-Server $host;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-	      proxy_set_header Host $http_host;
-	      proxy_set_header X-NginX-Proxy true;
-              proxy_pass http://$target;
-              proxy_redirect off;
-	      proxy_http_version 1.1;
-      	      proxy_set_header Upgrade $http_upgrade;
-      	      proxy_set_header Connection "upgrade";
-      	      proxy_read_timeout 86400;
-        }
-
-        location /jiffylab/ {
-              proxy_set_header X-Forwarded-Host $host;
-              proxy_set_header X-Forwarded-Server $host;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_pass http://127.0.0.1:5000/;
-              proxy_redirect off;
+	     proxy_set_header X-Forwarded-Host $host;
+	     proxy_set_header X-Real-IP $remote_addr;
+             proxy_set_header X-Forwarded-Server $host;
+             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	     proxy_set_header Host $http_host;
+	     proxy_set_header X-NginX-Proxy true;
+             proxy_pass http://$target;
+             proxy_redirect off;
+	     proxy_http_version 1.1;
+      	     proxy_set_header Upgrade $http_upgrade;
+      	     proxy_set_header Connection "upgrade";
+      	     proxy_read_timeout 86400;
         }
 
 }
+
+# Proxy	for the nginx remote api
+server {
+        listen 127.0.0.1:65000;
+	ssl on;
+	ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
+	ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+
+	ssl_session_timeout 5m;
+
+	ssl_protocols SSLv3 TLSv1;
+	ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv3:+EXP;
+	ssl_prefer_server_ciphers on;
+
+        server_name docker_remote;
+	# auth_basic_user_file /etc/nginx/htpasswd;
+        location / {
+            proxy_pass http://unix:/var/run/docker.sock:/;
+	#    auth_basic 'private';
+        }
+}
+
 
 
 # another virtual host using mix of IP-, name-, and port-based configuration

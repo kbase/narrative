@@ -16,6 +16,7 @@ local M={}
 local key_regex = "[%w_%-%.]+"
 local val_regex = "[%w_%-:%.]+"
 
+-- This function is used to implement the rest interface
 local function set_proxy()
    local uri_key_rx = ngx.var.uri_base.."/("..key_regex ..")"
    local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
@@ -145,5 +146,25 @@ local function set_proxy()
    end
 end
 
+local function use_proxy()
+   ngx.log( ngx.ERR, "In /narrative/ handler")
+   local proxy_key = string.match(ngx.var.uri,"/narrative/([%w_-]+)")
+   if proxy_key then
+      local proxy_map = ngx.shared.proxy_map
+      local target, flags = proxy_map:get(proxy_key)
+      if target == nil then
+	 ngx.log( ngx.ERR, "Bad proxy key:" .. proxy_key)
+	 ngx.exit(ngx.HTTP_NOT_FOUND)
+      else
+	 ngx.var.target = target
+	 ngx.log( ngx.ERR, "Redirect to " .. ngx.var.target )
+      end
+   else
+      ngx.log( ngx.ERR, "No proxy key given")
+      ngx.exit(ngx.HTTP_NOT_FOUND)
+   end
+end
+
 M.set_proxy = set_proxy
+M.use_proxy = use_proxy
 return M

@@ -132,20 +132,55 @@ def _annotate_genome(meth, genome, out_genome):
                          "This job will take approximately an hour.",
                          "Your annotated genome will have ID: <b>" + out_genome + "</b>", ""]) })
 
-@method(name="Genome to Draft FBA Model")
+@method(name="Build an FBA Model for a Genome")
 def _genome_to_fba_model(meth, genome_id, fba_model_id):
-    """Temp text
+    """Given an annotated Genome, build a draft flux balance analysis model.
 
-    :param genome_id: Source genome ID
+    :param genome_id: Source genome name
     :type genome_id: kbtypes.Genome
-    :ui_name genome_id: Genome ID
-    :param fba_model_id: ID of the generated FBA Model (optional)
-    :type fba_model_id: kbtypes.Model
-    :ui_name fba_model_id: Output FBA Model ID
+    :ui_name genome_id: Genome Name
+    :param fba_model_id: select a name for the generated FBA Model (optional)
+    :type fba_model_id: kbtypes.Unicode
+    :ui_name fba_model_id: Output FBA Model Name
     :return: Generated FBA Model ID
     :rtype: kbtypes.Model
     """
-    return json.dumps({ 'output' : "FBA Model stub" })
+    
+    meth.stages = 3  # for reporting progress
+    meth.advance("Starting")
+    meth.advance("Building your new FBA model")
+    
+    #grab token and workspace info, setup the client
+    token, workspaceName = meth.token, meth.workspace_id
+    fbaClient = fbaModelServices(service.URLS.fba)
+    
+    # create the model object
+    build_fba_params = {
+        'genome': genome_id,
+        'workspace': workspaceName,
+        'auth': token,
+    }
+    fba_meta_data = fbaClient.genome_to_fbamodel(build_fba_params)
+    generated_model_id = fba_meta_data[0]
+    
+    #rename the object if requested
+    meth.advance("Saving the new model data object")
+    fba_model_id = fba_model_id.strip()
+    if fba_model_id:
+        wsClient  = workspaceService(service.URLS.workspace)
+        move_obj_params = {
+            'new_id':fba_model_id,
+            'new_workspace':workspaceName,
+            'source_id':generated_model_id,
+            'type':'Model',
+            'source_workspace':workspaceName,
+            'auth':token
+        }
+        fba_meta_data = wsClient.move_object(move_obj_params)
+    
+    return json.dumps({ 'output' : fba_meta_data })
+
+
 
 @method(name="Build Media")
 def _build_media(meth, base_media):
@@ -183,22 +218,61 @@ def _build_media(meth, base_media):
     return json.dumps(result)
 
 @method(name="Run Flux Balance Analysis")
-def _run_fba(meth, fba_model_id, media_id, fba_result_id):
-    """Run FBA on a model.
+def _run_fba(meth, fba_model_id, media_id):
+    """Run Flux Balance Analysis on a metabolic model.
 
-    :param fba_model_id: an FBA model
+    :param fba_model_id: the FBA model you wish to run
     :type fba_model_id: kbtypes.Model
-    :ui_name fba_model_id: FBA Model ID
-    :param media_id: a Media set
+    :ui_name fba_model_id: FBA Model
+    :param media_id: the media condition in which to run FBA
     :type media_id: kbtypes.Media
-    :ui_name media_id: Media ID
-    :param fba_result_id: an FBA result
-    :type fba_result_id: kbtypes.FBAResult
-    :ui_name fba_result_id: FBA Result ID
+    :ui_name media_id: Media
     :return: something 
     :rtype: kbtypes.Unicode
     """
-    return json.dumps({ 'output' : "Run FBA stub" })
+    
+    
+    """
+    :output_widget: kbaseFbaResultViewer
+    """
+    
+    meth.stages = 3
+    meth.advance("Setting up FBA parameters")
+    
+    #grab token and workspace info, setup the client
+    token, workspaceName = meth.token, meth.workspace_id;
+    
+    fbaClient = fbaModelServices(service.URLS.fba)
+    
+    # setup the parameters
+    fba_formulation = {
+        'media' : media_id,
+        'media_workspace' : workspaceName,
+    }
+    fba_params = {
+        'model' : fba_model_id,
+        'model_workspace' : workspaceName,
+        'formulation' : fba_formulation,
+        'workspace' : workspaceName,
+        'notes' : "ran from the narrative",
+        'auth': token,
+    }
+
+    
+    meth.advance("Running FBA")
+    #result_meta = fbaClient.runfba(fba_params)
+    
+    
+    meth.advance("Retrieving FBA results")
+    get_fbas_params = {
+        'fbas' : ['MyGenome.fbamdl.1.fba.0'],
+        'workspaces' : [workspaceName],
+        'auth' : token
+    }
+    results = fbaClient.get_fbas(get_fbas_params)
+    
+    
+    return json.dumps({ "results":results })
 
 @method(name="Gapfill FBA Model")
 def _gapfill_fba(meth, fba_model_id):
@@ -260,6 +334,48 @@ def _reconcile_phenotype(meth, fba_model_id, phenotype_id):
     """
 
     return json.dumps({ 'output' : "Reconcile Phenotype stub" })
+
+
+
+#
+#@method(name="Edit Data")
+#def _edit_data(meth, obj_name, type):
+#    """Edit data in your workspace.
+#    :param object_name: name of the data object
+#    :type object_id: kbtypes.WorkspaceObjectId
+#    :ui_name object_id: Data Name
+#    :param type: type of the data object
+#    :type type: kbtypes.Unicode
+#    :ui_name type: Data Type
+#    :return: something 
+#    :rtype: kbtypes.Unicode
+#    """
+#    
+#    
+#    """
+#    :output_widget: kbaseFbaResultViewer
+#    """
+#    
+#    meth.stages = 3
+#    meth.advance("Setting up FBA parameters")
+#    
+#    #grab token and workspace info, setup the client
+#    token, workspaceName = meth.token, meth.workspace_id;
+#    
+#    wsClient = workspaceService(service.URLS.workspace)
+#    get_obj_params = {
+#        'auth' : token,
+#        ''
+#    }
+#    objData = wsClient.get_object();
+#    
+#    return json.dumps({ "obj":objData })
+#
+#
+
+
+
+
 
 # Finalize (registers service)
 finalize_service()

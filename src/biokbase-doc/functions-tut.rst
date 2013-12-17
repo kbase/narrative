@@ -8,7 +8,7 @@ What this document is
     consult the :doc:`API reference </functions>`.
 
 What this document is **not**
-    A tutorial on how to make widgets or use the KBase API. This assumes that you’re at least passably familiar with the KBase widget API and the Python version of the KBase service API. This also isn’t a tutorial on how to get the Narrative working. The Readme in the root of the Narrative repo should help with that.
+    A tutorial on how to make widgets or use the KBase API. This assumes that you’re at least passably familiar with the KBase widget API and the Python version of the KBase service API. This also isn’t a tutorial on how to get the Narrative working. Steve's slides and the Readme in the root of the Narrative repo should help with that.
 
 **Contents**
 
@@ -58,6 +58,9 @@ Note that for your service to be loaded, it must be stored with a unique name in
     
 directory.
 
+Each Narrative service requires most of the pieces in service_skeleton.py. It should start with a docstring describing the service, (__author__ and __date__ are optional). It should import, at the minimum, biokbase.narrative.common.service and biokbase.narrative.common.kbtypes. And it should define a global VERSION variable (with three numerical elements to represent Semantic Versioning), and NAME variable.
+
+
 .. _wrapping functions:
 
 Wrapping Functions
@@ -96,9 +99,8 @@ As you proceed to different stages, you can communicate to the user what’s hap
 
 Useful functions and variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The old method was:
 
-Auth Tokens
+Auth Tokens and Workspace IDs:
 You can fetch the current authorization token 
 and the current workspace from the ``method`` passed as the first
 argument to your wrapped function::
@@ -173,26 +175,75 @@ Widget
     
     This is the name of the widget you want your generated output to be fed in to. Note that this is the same name as the widget is invoked via Javascript, NOT its file name (in most cases they should be the same). E.g., if you make a call like ``$(“#myTarget”).kbaseOutputWidget()``, then ``kbaseOutputWidget`` should go here.
 
-    Alternately, there is a default output widget that just prints the output on the screen, and might be useful for
-    debugging your method before getting into the details of widget development.
+    Alternately, there is a default output widget that just prints the output on the screen in a formatted JSON pretty-print kind of way, 
+    and might be useful for debugging your method before getting into the details of widget development.
 
-    .. note:: The default widget is ugly as sin and a little bit of a work in progress. This document will be updated when it’s a little better.
 
 Function Output
 ^^^^^^^^^^^^^^^
 
 Your function links its output directly into a widget. That is, whatever format your widget requires should be the format of your returned data, wrapped into JSON.
 
-Most (all?) KBase widgets take in a Javascript object as input, so you could build a Python dictionary out of your return data, then just return json.dumps(output), and that’ll get formatted into the output widget by the UI side.
+All widgets are expected to consume a JSON object as input. Consider how you instantiate a widget. It looks something like this, right?
+**[Javascript code]**:: javascript
 
-.. note:: An example will be added here soon [#f1]_.
+    $(“#myTarget”).kbaseOutputWidget(
+        { 
+            objectId: “myObjectId”, 
+            otherInputs : {...} 
+        }
+    );
+
+The return line from your function, then, should look like this:
+**[Python code]**:: 
+
+    result = { “objectID” : “myObjectId”, “otherInputs” : {...} }
+    return json.dumps(result)
+
+This will then send to your output widget the inputs that you expect to see.
+
 
 .. _output widgets:
 
 Linking to Output Widgets
 -------------------------
 
-TBD
+As detailed above, you need to do three things to link your function to an output widget.
+* Put your widget’s name in the ``:output_widget:`` docstring tag.
+* Format your function’s output to be a stringified JSON dump.
+* Plug your widget’s declaration into notebook.html
+
+For that third step, until we get the require.js handles and a CDN for the widget code in place, just copy your output widget code (ugh, I know…) to 
+
+    *<narrative_root>*/src/notebook/ipython_profiles/profile_narrative/kbase_templates/static/kbase/js/widgets/function_output
+
+and link them to the narrative with the following templated HTML script tag:
+:: html
+
+<script src=”{{ static_url(“kbase/js/widgets/function_output/YOUR_WIDGET_HERE.js”) }}” type=”text/javascript” charset=”utf-8”></script>
+
+The static_url() command just routes the page to 
+
+    *<narrative_root>*/src/notebook/ipython_profiles/profile_narrative/kbase_templates/static
+
+And that’s it! The output from your new function should load up in the narrative.
+
+
+
+.. _loading narrative:
+
+Loading into your narrative instance
+------------------------------------
+
+If you’re developing locally in some branch of the narrative repo (you probably are), you’ll need to update your virtual environment with any backend changes and restart the narrative before any changes will become active. To update your instance, do the following.
+
+#. If you haven't 'activated' the virtual environment, do so from a prompt:
+   $ source ./<venv-root>/bin/activate
+#. From *<narrative_root>*/src, run the following to update:
+   $ python setup.py install || abort
+#. Restart your narrative as usual:
+   $ run_notebook.sh notebook
+   
 
 .. _locations:
 

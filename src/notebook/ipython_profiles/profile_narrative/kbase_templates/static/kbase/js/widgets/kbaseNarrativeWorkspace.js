@@ -663,8 +663,8 @@
                             offs += 1; // blank line, move offset
                         }
                         else {
-                            // look for @@S, @@P, @@D, or @@E
-                            var matches = line.match(/^@@([SPDE])(.*)/);
+                            // look for @@S, @@P, @@D, @@G, or @@E
+                            var matches = line.match(/^@@([SPDGE])(.*)/);
                             if (matches) { // if we got one
                                 if (matches[1] === 'S') {
                                     // if we're starting, init the progress bar.
@@ -697,24 +697,19 @@
                                     var debug = matches[2];
                                     self.dbg("[KERNEL] " + debug);
                                 }
+                                else if (matches[1] == 'G') {
+                                    // Debugging message, just repeat to console
+                                    console.debug('[APP-DBG]', matches[2]);
+                                }
                             }
                             // No progress marker on non-empty line => final output of program?
                             else {
-                                // XXX: @ and # should probably be swapped in meaning
-                                // if (line.match(/^#/)) {
-                                //     // log lines starting with '@'
-                                //     console.info("[KERNEL] " + line.substr(1, line.length).trim());
-                                //     // consume data
-                                //     offs += line.length;
-                                // }
-                                // else {
                                     // save the line
                                     result += line;
                                     // all but the last line should have \n appended
                                     if (index < lines.length - 1) {
                                         result += "\n";
                                     }
-                                // }
                             }
                         }
                     }

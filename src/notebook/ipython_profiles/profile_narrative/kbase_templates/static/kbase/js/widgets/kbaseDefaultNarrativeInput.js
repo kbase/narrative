@@ -6,20 +6,15 @@
 (function( $, undefined ) {
     $.KBWidget({
         name: "kbaseDefaultNarrativeInput", 
-        parent: "kbaseWidget",
+        parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
-            method: null,
         },
 
         init: function(options) {
             this._super(options);
 
-            // expects the method as a JSON string
-            if (this.options.method)
-                this.options.method = JSON.parse(this.options.method);
-            
             this.render();
             return this;
         },
@@ -49,7 +44,6 @@
                         var p = params[pid];
 
                         var input = "";
-//                        console.log(objects);
                         if (objects[p.type] && objects[p.type].length > 0) {
                             var objList = objects[p.type];
                             objList.sort(function(a, b) {
@@ -81,6 +75,16 @@
                 },
                 this
             )]);
+        },
+
+        getParameters: function() {
+            var paramList = [];
+
+            $(this.$elem).find("[name^=param]").filter(":input").each(function(key, field) {
+                paramList.push(field.value);
+            });
+
+            return paramList;
         },
     });
 

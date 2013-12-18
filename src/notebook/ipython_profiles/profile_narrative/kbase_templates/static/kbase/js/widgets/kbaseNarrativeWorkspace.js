@@ -452,11 +452,14 @@
                 function(event) {
                     event.preventDefault();
                     var cell = IPython.notebook.get_selected_cell();
-                    var paramList = [];
-                    $(cell.element).find("[name^=param]").filter(":input").each(function(key, field) {
-                        console.log(field.name + "=" + field.value);
-                        paramList.push(field.value);
-                    });
+//                    var paramList = [];
+                    var inputWidget = cell.metadata[self.KB_CELL].method.properties.widgets.input || self.defaultInputWidget;
+                    var paramList = $(cell.element)[inputWidget]('getParameters');
+
+                    // $(cell.element).find("[name^=param]").filter(":input").each(function(key, field) {
+                    //     console.log(field.name + "=" + field.value);
+                    //     paramList.push(field.value);
+                    // });
                     var method = cell.metadata[self.KB_CELL].method;
 
                     self.runCell()(cell, method.service, method.title, paramList);
@@ -539,7 +542,6 @@
                 codeCell.set_text(code);
                 codeCell.output_area.clear_output(true, true, true);
                 codeCell.set_input_prompt('*');
-//                console.debug('Running function: ' + service + '.' + method);
 
                 $(cell.element).find('#kb-func-progress').css({'display': 'block'});
                 nb.kernel.execute(code, callbacks, {silent: true});
@@ -563,7 +565,6 @@
 
             var paramList = params.map(function(p) { return '"' + p + '"'; });
             cmd += "method(" + paramList + ")";
-//            console.debug(cmd);
             return cmd;
         },
 
@@ -666,15 +667,15 @@
                             // look for @@S, @@P, @@D, or @@E
                             var matches = line.match(/^@@([SPDE])(.*)/);
                             if (matches) { // if we got one
+                                // if we're starting, init the progress bar.
                                 if (matches[1] === 'S') {
-                                    // if we're starting, init the progress bar.
                                 }
+                                // were done, so hide the progress bar (wait like a second or two?)
                                 else if (matches[1] === 'D') {
-                                    // were done, so hide the progress bar (wait like a second or two?)
                                     self.resetProgress(cell);
                                 }
+                                // progress! capture the progress info and pass it along.
                                 else if (matches[1] === 'P') {
-                                    // progress! capture the progress info and pass it along.
                                     var progressInfo = matches[2].split(',');
                                     if (progressInfo.length == 3) {
                                         self.showCellProgress(cell, progressInfo[0], progressInfo[1], progressInfo[2]);
@@ -685,36 +686,25 @@
                                     else
                                         done = true;
                                 }
+                                // Error! From the error, create an error cell.
                                 else if (matches[1] === 'E') {
-                                    // Error!
                                     var errorJson = matches[2];
                                     self.createErrorCell(cell, errorJson);
-//                                    self.createOutputCell(cell, 'kbaseNarrativeError({error: ' + errorJson + '})');
                                     self.dbg("Narrative error: " + errorJson);
                                 }
+                                // Debug statement. Forward this into the console.
                                 else if (matches[1] === 'G') {
-                                    // Debug statement.
                                     var debug = matches[2];
                                     self.dbg("[KERNEL] " + debug);
                                 }
                             }
-                            // No progress marker on non-empty line => final output of program?
+                            // No progress marker on non-empty line => treat as final output of program.
                             else {
-                                // XXX: @ and # should probably be swapped in meaning
-                                // if (line.match(/^#/)) {
-                                //     // log lines starting with '@'
-                                //     console.info("[KERNEL] " + line.substr(1, line.length).trim());
-                                //     // consume data
-                                //     offs += line.length;
-                                // }
-                                // else {
-                                    // save the line
-                                    result += line;
-                                    // all but the last line should have \n appended
-                                    if (index < lines.length - 1) {
-                                        result += "\n";
-                                    }
-                                // }
+                                result += line;
+                                // all but the last line should have \n appended
+                                if (index < lines.length - 1) {
+                                    result += "\n";
+                                }
                             }
                         }
                     }
@@ -729,6 +719,9 @@
             }
         },
 
+        /**
+         * Creates an error cell and populates it with the JSON error object.
+         */
         createErrorCell: function(cell, errorJson) {
             var error = {
                 'widget': this.errorWidget,

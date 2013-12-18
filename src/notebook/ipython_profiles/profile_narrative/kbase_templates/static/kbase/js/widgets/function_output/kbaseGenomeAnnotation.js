@@ -11,6 +11,8 @@ function onContigClick(data) {
 		contigClickListener(data);
 }
 
+var timer = null;
+
 (function( $, undefined ) {
     $.KBWidget({
         name: "GenomeAnnotation",
@@ -20,21 +22,24 @@ function onContigClick(data) {
             ws_id: null,
             ws_name: null,
             token: null,
-            user_id: null,
+            job_id: null,
             width: 1150
         },
 
         init: function(options) {
             this._super(options);
             var self = this;
-            
+        	var pref = (new Date()).getTime();
+
             //var wsUrl = 'http://140.221.84.170:7058/';								// WS2
             var wsUrl = "http://kbase.us/services/workspace/";
             var container = this.$elem;
-            container.append('<p class="muted loader-table">It\'s loading...</p>');
 
             //var kbws = new Workspace(wsUrl);											// WS2
             var kbws = new workspaceService(wsUrl);
+            
+            var ready = function() {
+            
             //var request = [{workspace: options.ws_name, objid: options.ws_id}];		// WS2
             var request = {auth: options.token, workspace: options.ws_name, id: options.ws_id, type: 'Genome'};
             //kbws.get_objects(request, function(data) {								// WS2
@@ -53,7 +58,6 @@ function onContigClick(data) {
                 }
             	//var gnm = data[0].data;
             	var gnm = data.data;
-            	var pref = (new Date()).getTime();
             	var tabPane = $('<div id="'+pref+'tab-content">');
             	container.append(tabPane);
                 tabPane.kbaseTabs({canDelete : true, tabs : []});
@@ -280,8 +284,36 @@ function onContigClick(data) {
                 container.append('<p>[Error] ' + data.error.message + '</p>');
                 return;
             });            	
-
+            };
             
+            var panel = $('<div class="loader-table"/>');
+            container.append(panel);
+            var table = $('<table class="table table-striped table-bordered" \
+                    style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
+            panel.append(table);
+            table.append('<tr><td>Job was created with id</td><td>'+options.job_id+'</td></tr>');
+            table.append('<tr><td>Genome will have the id</td><td>'+options.ws_id+'</td></tr>');
+            table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
+            var timeLst = function(event) {
+            	kbws.get_jobs({auth: options.token, jobids: [options.job_id]}, function(data) {
+            		var status = data[0]['status'];
+            		if (status === 'done') {
+            			clearInterval(timer);
+            			ready();
+            		} else {
+            			var tdElem = $('#'+pref+'job');
+            			tdElem.html(status);
+            			if (status === 'error') {
+                			clearInterval(timer);
+            			}
+            		}
+            	}, function(data) {
+            		alert("Error: " + data.error.message)
+            	});
+            };
+            timeLst();
+            timer = setInterval(timeLst, 5000);
+            		
             return this;
         },
         

@@ -71,13 +71,13 @@
                 }
                 overviewTable.append('<tr><td>Module version(s)</td><td>'+moduleLinks+'</td></tr>');
             	overviewTable.append('<tr><td>Description</td><td><textarea style="width:100%;" cols="2" rows="7" readonly>'+data.description+'</textarea></td></tr>');
-                $('.'+pref+'modver-click').click(function() {
+                $('.'+pref+'modver-click').click(function(e) {
                     var moduleId = $(this).data('moduleid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "module", 
                     			id : moduleId,
-                    			event: event
+                    			event: e
                     		});
                 });
             	
@@ -87,13 +87,13 @@
             	$('#'+pref+'spec').append(
             			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + "</pre></div>"
             	);
-                $('.'+pref+'links-click').click(function() {
+                $('.'+pref+'links-click').click(function(e) {
                     var aTypeId = $(this).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
                     			id : aTypeId,
-                    			event: event
+                    			event: e
                     		});
                 });
             	prettyPrint();
@@ -120,13 +120,13 @@
                     };
                 var subsTable = $('#'+pref+'subs-table').dataTable(subsSettings);
                 subsTable.fnAddData(subsData);
-                $('.'+pref+'subs-click').click(function() {
+                $('.'+pref+'subs-click').click(function(e) {
                     var aTypeId = $(this).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
                     			id : aTypeId,
-                    			event: event
+                    			event: e
                     		});
                 });
             	
@@ -157,13 +157,13 @@
                     };
                 var versTable = $('#'+pref+'vers-table').dataTable(versSettings);
                 versTable.fnAddData(versData);
-                $('.'+pref+'vers-click').click(function() {
+                $('.'+pref+'vers-click').click(function(e) {
                     var aFuncId = $(this).data('funcid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "function", 
                     			id : aFuncId,
-                    			event: event
+                    			event: e
                     		});
                 });
 

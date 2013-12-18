@@ -95,13 +95,13 @@
                     };
                 var typesTable = $('#'+pref+'types-table').dataTable(typesSettings);
                 typesTable.fnAddData(typesData);
-                $('.'+pref+'types-click').click(function() {
+                $('.'+pref+'types-click').click(function(e) {
                     var typeId = $(this).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
                     			id : typeId,
-                    			event: event
+                    			event: e
                     		});
                 });
 
@@ -127,13 +127,13 @@
                     };
                 var funcsTable = $('#'+pref+'funcs-table').dataTable(funcsSettings);
                 funcsTable.fnAddData(funcsData);
-                $('.'+pref+'funcs-click').click(function() {
+                $('.'+pref+'funcs-click').click(function(e) {
                     var funcId = $(this).data('funcid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "function", 
                     			id : funcId,
-                    			event: event
+                    			event: e
                     		});
                 });
 
@@ -158,13 +158,13 @@
                     };
                 var incsTable = $('#'+pref+'incs-table').dataTable(incsSettings);
                 incsTable.fnAddData(incsData);
-                $('.'+pref+'incs-click').click(function() {
+                $('.'+pref+'incs-click').click(function(e) {
                     var incId = $(this).data('incid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "module", 
                     			id : incId,
-                    			event: event
+                    			event: e
                     		});
                 });
 
@@ -198,13 +198,13 @@
                         };
                     var versTable = $('#'+pref+'vers-table').dataTable(versSettings);
                     versTable.fnAddData(versData);
-                    $('.'+pref+'vers-click').click(function() {
+                    $('.'+pref+'vers-click').click(function(e) {
                         var modId = $(this).data('verid');
                         self.trigger('showSpecElement', 
                         		{
                         			kind: "module", 
                         			id : modId,
-                        			event: event
+                        			event: e
                         		});
                     });
 

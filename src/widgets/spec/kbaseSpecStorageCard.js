@@ -36,13 +36,13 @@
                     };
                 var table = $('#'+pref+'module-table').dataTable(tableSettings);
                 table.fnAddData(dataList);
-                $('.'+pref+'module-click').click(function() {
+                $('.'+pref+'module-click').click(function(e) {
                     var module = $(this).data('module');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "module", 
                     			id : module,
-                    			event: event
+                    			event: e
                     		});
                 });
             }, function(data) {

@@ -321,16 +321,17 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     
     return json.dumps({ "output":result_meta })
 
-@method(name="Gapfill FBA Model")
+@method(name="Gapfill an FBA Model")
 def _gapfill_fba(meth, fba_model_id):
     """Run Gapfilling on an FBA Model
 
-    :param fba_model_id: an FBA Model
+    :param fba_model_id: the FBA Model to gapfill
     :type fba_model_id: kbtypes.Model
-    :ui_name fba_model_id: FBA Model ID
+    :ui_name fba_model_id: FBA Model
     :return: job ID string
     :rtype: kbtypes.Unicode
     """
+
 
     return json.dumps({ 'output' : "Gapfill FBA stub" })
 

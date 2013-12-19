@@ -405,6 +405,27 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id):
 
     return json.dumps({ 'output' : "Integrate Gapfill stub" })
 
+@method(name="Upload Phenotype Data")
+def _upload_phenotype(meth, genome_id, phenotype_id):
+    """Upload phenotype data for FBA analysis
+
+    :param genome_id: a genome id
+    :type genome_id: kbtypes.Genome
+    :ui_name genome_id: Genome ID
+    :param phenotype_id: a phenotype ID
+    :type phenotype_id: kbtypes.Unicode
+    :ui_name phenotype_id: Phenotype Dataset ID
+    :return: something
+    :rtype: kbtypes.Unicode
+    :output_widget: PhenotypeUploader
+    """
+
+    if not phenotype_id:
+        phenotype_id = "phenotype_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    return json.dumps({'token': token, 'ws_name': workspace, 'genome_id': genome_id, 'phenotype_id': phenotype_id})
+
 @method(name="Simulate Phenotype Data")
 def _simulate_phenotype(meth, fba_model_id, phenotype_id):
     """Simulate some phenotype on an FBA model

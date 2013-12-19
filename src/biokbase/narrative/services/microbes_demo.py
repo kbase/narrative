@@ -377,7 +377,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     return json.dumps({ "output":result_meta })
 
 @method(name="Gapfill an FBA Model")
-def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit, fba_result_id):
+def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit):
     """Run Gapfilling on an FBA Model
 
     :param fba_model_id: the FBA Model to gapfill
@@ -389,24 +389,26 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     :ui_name media_id: Media
     
     :param solution_limit: select the number of solutions you want to find
-    :type solution_limit: kbtypes.Integer
+    :type solution_limit: kbtypes.Unicode
     :ui_name solution_limit: Number of Solutions
     
     :param total_time_limit: the total time you want to run gapfill
-    :type total_time_limit: kbtypes.Integer
+    :type total_time_limit: kbtypes.Unicode
     :ui_name total_time_limit: Total Time Limit (s)
     
     :param solution_time_limit: the max time you want to spend per solution
-    :type solution_time_limit: kbtypes.Integer
+    :type solution_time_limit: kbtypes.Unicode
     :ui_name solution_time_limit: Solution Time Limit (s)
-    
-    :param fba_result_id: select a name for the FBA result object (optional)
-    :type fba_result_id: kbtypes.Unicode
-    :ui_name fba_result_id: Output FBA Result Name
     
     :return: job ID string
     :rtype: kbtypes.Unicode
     """
+    
+    # setting the output id appears to not work, so for now we leave it out
+    #:param output_model_id: select a name for the FBA result object (optional)
+    #:type output_model_id: kbtypes.Unicode
+    #:ui_name output_model_id: Output FBA Result Name
+    
 
     meth.stages = 2
     meth.advance("Setting up gapfill parameters")
@@ -495,8 +497,7 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
         'num_solutions' : int(solution_limit),
     }
     gapfill_params = {
-        'model' : model_id,
-        'out_model' : output_model_id,
+        'model' : fba_model_id,
         'model_workspace' : workspaceName,
         'formulation' : gapfill_formulation,
         'workspace' : workspaceName,
@@ -504,12 +505,14 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
         'totalTimeLimit' : int(total_time_limit),
         'auth' : token
     }
+    #if(output_model_id):
+    #    gapfill_params['out_model'] = output_model_id,
 
     meth.advance("Submitting gapfill job")
     job_data = fbaClient.queue_gapfill_model(gapfill_params);
 
     job_id = job_data['id'].strip()
-    total_time_hrs = total_time / 3600
+    total_time_hrs = int(total_time_limit) / 3600.0
     hour_suffix = ""
     if (total_time_hrs is not 1):
         hour_suffix = "s"
@@ -518,7 +521,9 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
         {
             'job_id':job_id,
             'estimated_time_str': str(total_time_hrs) + " hour" + str(hour_suffix),
-            'output_data_id' : str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip())
+            'output_data_id' : str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip()),
+            'job_data' : job_data,
+            'token' : token
         })
 
 @method(name="Integrate Gapfill Solution")
@@ -534,6 +539,69 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id):
     :return: gapfilled model ID
     :rtype: kbtypes.Unicode
     """
+
+    meth.stages = 2
+    meth.advance("Setting up gapfill parameters")
+    
+    #grab token and workspace info, setup the client
+    token, workspaceName = meth.token, meth.workspace_id;
+    
+    fbaClient = fbaModelServices(service.URLS.fba)
+
+    
+
+    """
+    typedef structure {
+        fbamodel_id model;
+        workspace_id model_workspace;
+        list<gapfillsolution_id> gapfillSolutions;
+        list<gapgensolution_id> gapgenSolutions;
+        fbamodel_id out_model;
+        workspace_id workspace;
+        string auth;
+        bool overwrite;
+    } integrate_reconciliation_solutions_params;
+    """
+
+    integrate_params = {
+        'model' : params['Identifiers.Model'],
+        'model_workspace' : workspace,
+        'gapfillSolutions' : params['Identifiers.Gapfill'],
+        'workspace' : workspace,
+        'auth' : token,
+    }
+
+    new_model = params['New model (optional)']
+    new_model = new_model.strip()
+    if (new_model):
+        integrate_params['out_model'] = new_model
+
+    # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);
+
+    _num_done += 1
+    print_progress("Integrate Gapfill results", _num_done, total_work)
+    
+    model_meta = fba.integrate_reconciliation_solutions(integrate_params)
+
+    _num_done += 1
+    print_progress("Fetch Gapfilled FBA Model", _num_done, total_work)
+
+    model_params = {
+        'models': [model_meta[0]],
+        'workspaces': [workspace],
+        'auth': token,
+    }
+    model = fba.get_models(model_params)
+
+    _num_done += 1
+    print_progress("Render FBA Model", _num_done, total_work)
+
+    print json.dumps(metadata)
+
+
+
+
+
 
     return json.dumps({ 'output' : "Integrate Gapfill stub" })
 

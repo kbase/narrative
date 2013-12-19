@@ -361,18 +361,149 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     return json.dumps({ "output":result_meta })
 
 @method(name="Gapfill an FBA Model")
-def _gapfill_fba(meth, fba_model_id):
+def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit, fba_result_id):
     """Run Gapfilling on an FBA Model
 
     :param fba_model_id: the FBA Model to gapfill
     :type fba_model_id: kbtypes.Model
     :ui_name fba_model_id: FBA Model
+    
+    :param media_id: the media condition in which to gapfill
+    :type media_id: kbtypes.Media
+    :ui_name media_id: Media
+    
+    :param solution_limit: select the number of solutions you want to find
+    :type solution_limit: kbtypes.Integer
+    :ui_name solution_limit: Number of Solutions
+    
+    :param total_time_limit: the total time you want to run gapfill
+    :type total_time_limit: kbtypes.Integer
+    :ui_name total_time_limit: Total Time Limit (s)
+    
+    :param solution_time_limit: the max time you want to spend per solution
+    :type solution_time_limit: kbtypes.Integer
+    :ui_name solution_time_limit: Solution Time Limit (s)
+    
+    :param fba_result_id: select a name for the FBA result object (optional)
+    :type fba_result_id: kbtypes.Unicode
+    :ui_name fba_result_id: Output FBA Result Name
+    
     :return: job ID string
     :rtype: kbtypes.Unicode
     """
 
+    meth.stages = 2
+    meth.advance("Setting up gapfill parameters")
+    
+    #grab token and workspace info, setup the client
+    token, workspaceName = meth.token, meth.workspace_id;
+    
+    fbaClient = fbaModelServices(service.URLS.fba)
 
-    return json.dumps({ 'output' : "Gapfill FBA stub" })
+    """
+    typedef structure {
+        FBAFormulation formulation;
+        int num_solutions;
+        bool nomediahyp;
+        bool nobiomasshyp;
+        bool nogprhyp;
+        bool nopathwayhyp;
+        bool allowunbalanced;
+        float activitybonus;
+        float drainpen;
+        float directionpen;
+        float nostructpen;
+        float unfavorablepen;
+        float nodeltagpen;
+        float biomasstranspen;
+        float singletranspen;
+        float transpen;
+        list<reaction_id> blacklistedrxns;
+        list<reaction_id> gauranteedrxns;
+        list<compartment_id> allowedcmps;
+        probanno_id probabilisticAnnotation;
+        workspace_id probabilisticAnnotation_workspace;
+    } GapfillingFormulation;
+    
+    typedef structure {
+        media_id media;
+        list<compound_id> additionalcpds;
+        prommodel_id prommodel;
+        workspace_id prommodel_workspace;
+        workspace_id media_workspace;
+        float objfraction;
+        bool allreversible;
+        bool maximizeObjective;
+        list<term> objectiveTerms;
+        list<feature_id> geneko;
+        list<reaction_id> rxnko;
+        list<bound> bounds;
+        list<constraint> constraints;
+        mapping<string,float> uptakelim;
+        float defaultmaxflux;
+        float defaultminuptake;
+        float defaultmaxuptake;
+        bool simplethermoconst;
+        bool thermoconst;
+        bool nothermoerror;
+        bool minthermoerror;
+    } FBAFormulation;
+    
+    typedef structure {
+        fbamodel_id model;
+        workspace_id model_workspace;
+        GapfillingFormulation formulation;
+        phenotype_set_id phenotypeSet;
+        workspace_id phenotypeSet_workspace;
+        bool integrate_solution;
+        fbamodel_id out_model;
+        workspace_id workspace;
+        gapfill_id gapFill;
+        int timePerSolution;
+        int totalTimeLimit;
+        string auth;
+        bool overwrite;
+        bool completeGapfill;
+    } gapfill_model_params;
+    """
+    
+    fba_formulation = {}
+    if (media_id):
+        fba_formulation = {
+            'media' : media_id,
+            'media_workspace' : workspaceName
+        }
+
+    gapfill_formulation = {
+        'formulation' : fba_formulation,
+        'num_solutions' : int(solution_limit),
+    }
+    gapfill_params = {
+        'model' : model_id,
+        'out_model' : output_model_id,
+        'model_workspace' : workspaceName,
+        'formulation' : gapfill_formulation,
+        'workspace' : workspaceName,
+        'timePerSolution' : int(solution_time_limit),
+        'totalTimeLimit' : int(total_time_limit),
+        'auth' : token
+    }
+
+    meth.advance("Submitting gapfill job")
+    job_data = fbaClient.queue_gapfill_model(gapfill_params);
+
+    job_id = job_data['id'].strip()
+    total_time_hrs = total_time / 3600
+    hour_suffix = ""
+    if (total_time_hrs is not 1):
+        hour_suffix = "s"
+
+    return json.dumps(
+        {
+            'job_id':job_id,
+            'estimated_time_str': str(total_time_hrs) + " hour" + str(hour_suffix),
+            'output_data_id' : str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip())
+        })
 
 @method(name="Integrate Gapfill Solution")
 def _integrate_gapfill(meth, fba_model_id, gapfill_id):

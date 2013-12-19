@@ -17,7 +17,7 @@
         	var pref = (new Date()).getTime();
 
             var wsUrl = "http://kbase.us/services/workspace/";
-            var fmUrl = "https://kbase.us/services/fba_model_services";
+            var fmUrl = "https://kbase.us/services/fba_model_services/";
             var container = this.$elem;
         	var panel = $('<div class="loader-table">Please wait...</div>');
         	container.append(panel);

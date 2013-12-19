@@ -35,6 +35,7 @@ local client = Spore.new_from_string [[{ "name" : "docker remote api",
 					  "version" : '0.1.0',
 					  "expected_status" : [
 					     200,
+					     201,
 					     204
 					  ],
 					  "formats" : ["json"],
@@ -178,4 +179,3 @@ pretty.dump(res)
 --]]
 
 return M
-

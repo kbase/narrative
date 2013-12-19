@@ -15,6 +15,9 @@ local M={}
 -- regexes for matching/validating keys and values
 local key_regex = "[%w_%-%.]+"
 local val_regex = "[%w_%-:%.]+"
+local json = require('json')
+local notemgr = require('notelauncher')
+local proxy_map = ngx.shared.proxy_map
 
 -- This function is used to implement the rest interface
 local function set_proxy()
@@ -30,7 +33,6 @@ local function set_proxy()
 	 response["msg"] = "failed to get post args: "
 	 ngx.status = ngx.HTTP_BAD_REQUEST
       else
-	 local proxy_map = ngx.shared.proxy_map
 	 for key, val in pairs(args) do
 	    key2 = string.match( key, "^"..key_regex.."$")
 	    val2 = string.match( val, "^"..val_regex.."$")
@@ -68,7 +70,6 @@ local function set_proxy()
       ngx.say(json.encode( response ))
    elseif method == "GET" then
       local response = {}
-      local proxy_map = ngx.shared.proxy_map
 
       -- Check URI to see if a specific proxy entry is being asked for
       -- or if we just dump it all out
@@ -91,7 +92,6 @@ local function set_proxy()
       ngx.say(json.encode( response ))
    elseif method == "PUT" then
       local response = {}
-      local proxy_map = ngx.shared.proxy_map
 
       -- Check URI to make sure a specific key is being asked for
       local uri_base = ngx.var.uri_base
@@ -123,7 +123,6 @@ local function set_proxy()
       ngx.say(json.encode( response ))
    elseif method == "DELETE" then
       local response = {}
-      local proxy_map = ngx.shared.proxy_map
 
       -- Check URI to make sure a specific key is being asked for
       local uri_base = ngx.var.uri_base
@@ -146,18 +145,56 @@ local function set_proxy()
    end
 end
 
+--
+-- Route to the appropriate proxy
+-- uses the instance atrtribute "pause" as a path to a
+-- page that pauses the client for a little bit before refreshing
+-- needed to allow a container some time to spin up without locking
+-- up a server side connection while waiting for it to come up
+--
 local function use_proxy()
    ngx.log( ngx.ERR, "In /narrative/ handler")
    local proxy_key = string.match(ngx.var.uri,"/narrative/([%w_-]+)")
    if proxy_key then
-      local proxy_map = ngx.shared.proxy_map
       local target, flags = proxy_map:get(proxy_key)
-      if target == nil then
-	 ngx.log( ngx.ERR, "Bad proxy key:" .. proxy_key)
-	 ngx.exit(ngx.HTTP_NOT_FOUND)
-      else
+      if target == nil then -- didn't find in proxy map, check containers
+	 ngx.log( ngx.ERR, "Unknown proxy key:" .. proxy_key)
+	 local notebooks = notemgr:get_notebooks()
+	 ngx.log( ngx.ERR, json.encode(notebooks))
+	 target = notebooks[proxy_key]
+	 if target then
+	    ngx.log( ngx.ERR, "Found name among containers, redirecting to " .. target )
+	    local success,err,forcible = proxy_map:set(proxy_key,target)
+	    if not success then
+	       ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+	       ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
+	       response = "Unable to set routing for notebook " .. err
+	    end
+	 else
+	    ngx.log( ngx.ERR, "Creating new notebook instance " )
+	    local status, res = pcall(notemgr.launch_notebook,proxy_key)
+	    if status then
+	       ngx.log( ngx.ERR, "New instance at: " .. res)
+	       -- do a none blocking sleep for 2 seconds to allow the instance to spin up
+	       ngx.sleep(5)
+	       local success,err,forcible = proxy_map:set(proxy_key,res)
+	       if not success then
+		  ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+		  ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
+		  response = "Unable to set routing for notebook " .. err
+	       else
+		  target = res
+	       end
+	    else
+	       ngx.log( ngx.ERR, "Failed to launch new instance :" .. res)
+	    end
+	 end
+      end
+      if target ~= nil then
 	 ngx.var.target = target
 	 ngx.log( ngx.ERR, "Redirect to " .. ngx.var.target )
+      else
+	 ngx.exit(ngx.HTTP_NOT_FOUND)
       end
    else
       ngx.log( ngx.ERR, "No proxy key given")

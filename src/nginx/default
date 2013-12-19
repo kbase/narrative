@@ -20,8 +20,6 @@
 lua_package_path "/home/vagrant/dockerstuff/narrative/docker/?;/home/vagrant/dockerstuff/narrative/docker/?.lua;;";
 init_by_lua '
     json = require("json")
-    docker = require("docker")
-    nlaunch = require("notelauncher")
     proxymgr = require("proxy_mgr")
 ';
 

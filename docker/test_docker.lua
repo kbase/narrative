@@ -1,7 +1,6 @@
 PROXY=nil
 d = require('docker')
 p=require('pl.pretty')
-comp = require('pl.comprehension').new()
 
 c=d.config()
 c.image='sychan/narrative:latest'

@@ -660,10 +660,10 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         :param fn: Function object to run
         :param params: tuple of traits describing input parameters
         :param outputs: tuple of traits, describing the output value(s)
-        :param vis_info: dict of 'widget' and 'embed_widget', with the name 
-        of the default widget and whether it should automatically be shown
-        'embed' defaults to True
-
+        :param vis_info: visualization information, with two keys:
+                           * 'widget':  Name of the default widget.
+                           * 'embed_widget': Whether it should automatically be shown, default = True.
+        :type vis_info: dict
         :raise: ServiceMethodParameterError, if function signature does not match
                 ValueError, if None is given for a param
         """
@@ -848,11 +848,11 @@ def configure_service(**kw):
 def method(name=None):
     """Decorator function for creating new services.
 
-    Example usage:
+    Example usage::
     
         @method(name="MyMethod")
         def my_service(method, arg1, arg2, etc.):
-           ...method body...
+            pass # method body goes here
     """
     if _curr_service is None:
         raise ValueError("Attempt to call @method decorator before init_service()")

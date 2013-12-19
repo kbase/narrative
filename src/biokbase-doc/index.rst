@@ -11,9 +11,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   functions
-   functions-quick
    functions-tut
+   functions-quick
+   functions
 
 Indices and tables
 ==================

@@ -185,7 +185,8 @@ Function Output
 Your function links its output directly into a widget. That is, whatever format your widget requires should be the format of your returned data, wrapped into JSON.
 
 All widgets are expected to consume a JSON object as input. Consider how you instantiate a widget. It looks something like this, right?
-**[Javascript code]**:: javascript
+
+.. code-block:: javascript
 
     $(“#myTarget”).kbaseOutputWidget(
         { 
@@ -258,7 +259,7 @@ Where to put your stuff
 
 <narrative_root>/src/notebook/ipython_profiles/profile_narrative/kbase_templates/static/kbase/js/widgets/function_output
 
-* Linking into the narrative::
+* Linking into the narrative:
 
 <narrative_root>/src/notebook/ipython_profiles/profile_narrative/kbase_templates/notebook.html
 

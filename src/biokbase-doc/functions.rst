@@ -19,10 +19,11 @@ What this document is
 Introduction
 -------------
 
-This describes the Python API for KBase services, for the Narrative UI.
-This API is invoked by the KBase Narrative
-engine back-end to run *all* the services that provide functions for the narrative API.
-Therefore, all KBase services must use this API in order to be used by the Narrative.
+This page describes both the high-level and underlying Python APIs for 
+wrapping KBase services as collections of functions in the Narrative.
+The recommended usage of this API is to use the `high-level-api`_, but 
+the lower-level methods are also documented here for developers and those
+needing more flexibility.
 
 First, a couple of terms:
 
@@ -35,22 +36,22 @@ _`service`
 
 **Requirements**
 
-Each `service method`_ should be self-describing, and long-running services
+Each `function`_ [#svcmeth]_ should be self-describing, and long-running functions
 (which, in terms of interactive operation, is most of them) should provide
-intermediate progress indications. Thus, the minimal requirements of service methods are:
+intermediate progress indications. Thus, the minimal requirements of functions are:
 
-- service metadata
+- metadata
     - version [x.y.z]
     - name
     - description
     - list of parameters
-    - list of outputs `*`
+    - list of outputs
     - status
 - parameter metadata
     - name
     - type
     - description
-- output metadata `*`
+- output metadata
     - [name], type, description
     - [name] may be replaced by position in a list
 - status
@@ -58,7 +59,6 @@ intermediate progress indications. Thus, the minimal requirements of service met
     - if failure, then an exception with named fields will be returned
 
 We have specified these requirements in a Python class, :class:`Service`, whose documentation is below.
-Items marked with a `*` in the above list are not yet (fully) implemented in this code.
 
 .. _api:
 
@@ -67,10 +67,10 @@ API Documentation
 
 .. currentmodule:: biokbase.narrative.common.service
 
-This section documents the KBase narrative service and method API.
+This section documents the KBase narrative service and function [#svcmeth]_ API.
 These modules are all under `biokbase.narrative` in the biokbase Python package.
 
-The API is broken down into several functional areas:
+The API is broken down into several areas:
 
 #. :ref:`high-level-api` - Creating new methods using the ``@method`` decorator, interacting with the service API through ``init()`` and ``finalize()``.
 #. :ref:`registry-api`  - Finding services and methods
@@ -79,8 +79,7 @@ The API is broken down into several functional areas:
 #. :ref:`exceptions-api` - Exception hierarchy
 #. :ref:`lifecycle-api` - Extensible actions for method state transitions
 
-See :ref:`api-examples` for an example of API usage. You can run the example code yourself by executing the
-`service.py` module as a script, e.g.::
+See :ref:`api-examples` for an example of API usage. You can run the example code yourself by executing the `service.py` module as a script, e.g.::
 
     python -m biokbase.narrative.common.service
 
@@ -94,7 +93,10 @@ created and added to each service.
 High-Level API
 ^^^^^^^^^^^^^^
 
-As described in the :ref:`quickstart`, the high-level API allows you to write a new KBase narrative service with minimum fuss. All you need to do is initialize, wrap each method with the ``@method`` decorator, then finalize.
+As described in the :doc:`Quickstart </functions-quick>`, the high-level API
+allows you to write a new KBase narrative service with minimum fuss. All you
+need to do is initialize, wrap each method with the ``@method`` decorator,
+then finalize.
 
 .. autofunction:: init_service
 
@@ -103,7 +105,9 @@ As described in the :ref:`quickstart`, the high-level API allows you to write a 
 Method Decorator
 ~~~~~~~~~~~~~~~~~
 
-Each service method needs to be decorated with the ``@method`` decorator.
+Each function (service method) needs to be decorated with the ``@method`` decorator.
+For a detailed example of creating a new function with this decorator, see the
+:doc:`Tutorial </functions-tut>`.
 
 .. autofunction:: method
 
@@ -121,7 +125,7 @@ Registry
 Services
 ^^^^^^^^
 
-The two classes that new service methods will need to instantiate are
+The two classes that new functions (service methods) will need to instantiate are
 the :class:`Service` (one per group of methods) and :class:`ServiceMethod`.
 See the :func:`example` for a usage example.
 
@@ -129,6 +133,8 @@ See the :func:`example` for a usage example.
 
 .. autoclass:: Service
     :members: name, desc, version, __init__
+
+.. _function:
 
 .. autoclass:: ServiceMethod
     :members: set_func, __call__, estimated_runtime,
@@ -161,8 +167,8 @@ Exceptions
 Lifecycle events
 ^^^^^^^^^^^^^^^^^
 
-The lifecycle events for the service method execution, i.e. from start to done or error,
-are coded with the subject/observer pattern. Most people won't need to do anything with these
+The lifecycle events track function (service method) execution, i.e. from start to done or error,
+to provide logging and related operations. They are coded with the subject/observer pattern. Most people won't need to do anything with these
 classes, but they are designed to be extensible. Since :class:`ServiceMethod` inherits from
 :class:`LifecycleSubject`, new observers that take actions based on events can be added
 at any time. The base classes are below.
@@ -197,3 +203,6 @@ Below is the source code showing usage of many of the API calls.
 .. literalinclude:: ../biokbase/narrative/common/service.py
     :pyobject: example
 
+.. SOME footnotes
+
+.. [#svcmeth] called ServiceMethod in the code

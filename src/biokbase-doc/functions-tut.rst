@@ -46,7 +46,7 @@ Narrative functions are packaged together into service modules, of presumably re
 
     <narrative_root>/src/biokbase/narrative/common
 
-The top chunk of the file describes components of the service. Each of the imported modules and the init_service() statement are required for the service to function and be registered with the IPython Kernel.
+The top chunk of the file describes components of the service. Each of the imported modules and the ``init_service()`` statement are required for the service to function and be registered with the IPython Kernel.
 
 They all end with a ``finalize_service()`` statement.
 
@@ -210,18 +210,21 @@ Linking to Output Widgets
 -------------------------
 
 As detailed above, you need to do three things to link your function to an output widget.
+
 * Put your widget’s name in the ``:output_widget:`` docstring tag.
 * Format your function’s output to be a stringified JSON dump.
 * Plug your widget’s declaration into notebook.html
 
-For that third step, until we get the require.js handles and a CDN for the widget code in place, just copy your output widget code (ugh, I know…) to 
+For that third step, until we get the `require.js` handles and a CDN for the widget code in place, just copy your output widget code (ugh, I know…) to 
 
     *<narrative_root>*/src/notebook/ipython_profiles/profile_narrative/kbase_templates/static/kbase/js/widgets/function_output
 
 and link them to the narrative with the following templated HTML script tag:
-:: html
 
-<script src=”{{ static_url(“kbase/js/widgets/function_output/YOUR_WIDGET_HERE.js”) }}” type=”text/javascript” charset=”utf-8”></script>
+.. code-block:: html+jinja
+
+	<script src=”{{ static_url(“kbase/js/widgets/function_output/YOUR_WIDGET_HERE.js”) }}”
+	        type=”text/javascript” charset=”utf-8”></script>
 
 The static_url() command just routes the page to 
 

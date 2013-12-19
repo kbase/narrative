@@ -156,7 +156,6 @@ header[role="banner"] {
 
 nav[role="navigation"] ul{
     margin: .7em 0 .5em 0;
-    text-align: center;
     padding-left: 0px;
 }
 
@@ -208,10 +207,13 @@ input#search_terms, input#alt_search_terms{
     background-size: 22px; 
     background-repeat:no-repeat;
     background-position:right center; 
+
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
 }
 span#searchspan{
     display: inline-block;
-    width: 55%;
+    width: 40%;
 }
 @media screen and (max-width: 1170px){
     span#searchspan{width: 40%;} 

@@ -176,7 +176,7 @@ input#search_terms{
 }
 span#searchspan{
     display: inline-block;
-    width: 60%;
+    width: 50%;
 }
 @media screen and (max-width: 1170px){
     span#searchspan{width: 50%;} 
@@ -217,7 +217,7 @@ span#searchspan{
 
 #narrative-title {
 	position: relative;
-	top: 45px;
+	top: 15px;
 	padding-left: 24px;
 	padding-bottom: 10px;
 	margin: 10px 0; 
@@ -393,7 +393,7 @@ nav ul li.selected {
 	position: absolute;
 	left: 10px;
 	bottom: 0;
-	top: 40px;
+	top: 10px;
 }
 
 #data-panel {
@@ -716,7 +716,7 @@ p span.notification{
 /* Fixes to bring toolbars up to Bootstrap 3 */
 #maintoolbar {
 	position: relative;
-	top: 45px;
+	top: 15px;
 	min-height: 0;
 	border: none !important;
 	background-image: none !important;
@@ -763,7 +763,7 @@ p span.notification{
 #ipython-main-app {
 	position: absolute;
 	bottom: 5;
-	top: 120px;
+	top: 100px;
 	right: 10px;
 	left: 310px;
 	overflow: auto;

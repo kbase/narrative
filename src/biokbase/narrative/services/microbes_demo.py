@@ -171,6 +171,22 @@ def _annotate_genome(meth, genome, out_genome):
     job_id = fbaClient.annotate_workspace_Genome(annotate_workspace_genome_params)['id']
     return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
 
+@method(name="Show Annotated Genome")
+def _show_genome(meth, genome):
+    """This shows annotated Genome stored in your data space.
+    
+    :param genome: Source genome ID
+    :type genome: kbtypes.Genome
+    :ui_name genome: Genome ID
+    :return: Same genome ID
+    :rtype: kbtypes.Genome
+    :output_widget: GenomeAnnotation
+    """
+    meth.stages = 1  # for reporting progress
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': genome})
+
 @method(name="Build an FBA Model for a Genome")
 def _genome_to_fba_model(meth, genome_id, fba_model_id):
     """Given an annotated Genome, build a draft flux balance analysis model.
@@ -520,6 +536,27 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id):
     """
 
     return json.dumps({ 'output' : "Integrate Gapfill stub" })
+
+@method(name="Upload Phenotype Data")
+def _upload_phenotype(meth, genome_id, phenotype_id):
+    """Upload phenotype data for FBA analysis
+
+    :param genome_id: a genome id
+    :type genome_id: kbtypes.Genome
+    :ui_name genome_id: Genome ID
+    :param phenotype_id: a phenotype ID
+    :type phenotype_id: kbtypes.Unicode
+    :ui_name phenotype_id: Phenotype Dataset ID
+    :return: something
+    :rtype: kbtypes.Unicode
+    :output_widget: PhenotypeUploader
+    """
+
+    if not phenotype_id:
+        phenotype_id = "phenotype_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    return json.dumps({'token': token, 'ws_name': workspace, 'genome_id': genome_id, 'phenotype_id': phenotype_id})
 
 @method(name="Simulate Phenotype Data")
 def _simulate_phenotype(meth, fba_model_id, phenotype_id):

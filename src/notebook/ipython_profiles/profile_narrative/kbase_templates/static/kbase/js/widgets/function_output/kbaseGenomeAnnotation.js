@@ -286,34 +286,37 @@ var timer = null;
             });            	
             };
             
-            var panel = $('<div class="loader-table"/>');
-            container.append(panel);
-            var table = $('<table class="table table-striped table-bordered" \
-                    style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            panel.append(table);
-            table.append('<tr><td>Job was created with id</td><td>'+options.job_id+'</td></tr>');
-            table.append('<tr><td>Genome will have the id</td><td>'+options.ws_id+'</td></tr>');
-            table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
-            var timeLst = function(event) {
-            	kbws.get_jobs({auth: options.token, jobids: [options.job_id]}, function(data) {
-            		var status = data[0]['status'];
-            		if (status === 'done') {
-            			clearInterval(timer);
-            			ready();
-            		} else {
-            			var tdElem = $('#'+pref+'job');
-            			tdElem.html(status);
-            			if (status === 'error') {
-                			clearInterval(timer);
+            if (options.job_id) {
+            	var panel = $('<div class="loader-table"/>');
+            	container.append(panel);
+            	var table = $('<table class="table table-striped table-bordered" \
+            			style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
+            	panel.append(table);
+            	table.append('<tr><td>Job was created with id</td><td>'+options.job_id+'</td></tr>');
+            	table.append('<tr><td>Genome will have the id</td><td>'+options.ws_id+'</td></tr>');
+            	table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
+            	var timeLst = function(event) {
+            		kbws.get_jobs({auth: options.token, jobids: [options.job_id]}, function(data) {
+            			var status = data[0]['status'];
+            			if (status === 'done') {
+            				clearInterval(timer);
+            				ready();
+            			} else {
+            				var tdElem = $('#'+pref+'job');
+            				tdElem.html(status);
+            				if (status === 'error') {
+            					clearInterval(timer);
+            				}
             			}
-            		}
-            	}, function(data) {
-            		alert("Error: " + data.error.message)
-            	});
-            };
-            timeLst();
-            timer = setInterval(timeLst, 5000);
-            		
+            		}, function(data) {
+            			alert("Error: " + data.error.message)
+            		});
+            	};
+            	timeLst();
+            	timer = setInterval(timeLst, 5000);
+            } else {
+            	ready();
+            }
             return this;
         },
         

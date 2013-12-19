@@ -176,7 +176,7 @@ input#search_terms{
 }
 span#searchspan{
     display: inline-block;
-    width: 60%;
+    width: 50%;
 }
 @media screen and (max-width: 1170px){
     span#searchspan{width: 50%;} 

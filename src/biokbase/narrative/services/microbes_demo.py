@@ -249,9 +249,10 @@ def _build_media(meth, media):
     :return: Metadata from new Media object
     :rtype: kbtypes.Media
     :input_widget: kbaseBuildMediaInput
+    :output_widget: kbaseMediaViewer
     :embed: True
     """
-    meth.stages = 2
+    meth.stages = 3
 
     meth.advance("Initializing")
     fba = fbaModelServices(service.URLS.fba)
@@ -265,7 +266,15 @@ def _build_media(meth, media):
 
     media_meta = fba.addmedia(media)
 
-    result = {'data' : media_meta}
+    meth.advance("Rendering new Media object")
+    fetch_media_input = {
+        'medias' : [media['name']],
+        'workspaces' : [workspace_id],
+        'auth' : token
+    }
+    new_media = fba.get_media(fetch_media_input)
+
+    result = {'metadata': media_meta, 'media' : new_media[0] }
     return json.dumps(result)
 
 @method(name="Run Flux Balance Analysis")

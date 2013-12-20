@@ -240,38 +240,32 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
 
 
 @method(name="Build Media")
-def _build_media(meth, base_media):
+def _build_media(meth, media):
     """Assemble a set of compounds to use as a media set for performing FBA on a model.
 
     :param base_media: Base media type
     :type base_media: kbtypes.Media
     :ui_name base_media: Media ID
-    :return: JSON of medias
+    :return: Metadata from new Media object
     :rtype: kbtypes.Media
-    :output_widget: kbaseMediaEditorNarrative
+    :input_widget: kbaseBuildMediaInput
     :embed: True
     """
     meth.stages = 2
 
-    meth.advance("Init")
+    meth.advance("Initializing")
     fba = fbaModelServices(service.URLS.fba)
-    token = os.environ['KB_AUTH_TOKEN']
-    workspace = os.environ['KB_WORKSPACE_ID']
-    base_media = base_media.strip().replace(' ', '_')
+    token, workspace_id = meth.token, meth.workspace_id
 
-    meth.advance("Fetch Base Media")
-    result = { 'viewOnly': False, 'editOnly': True, 'ws': workspace, 'auth': token }
-    if base_media:
-        meth.stages += 1
-        media_params = {
-            'medias': [base_media],
-            'workspaces': [workspace],
-            'auth': token
-        }
-        media_list = fba.get_media(media_params)
-        meth.advance("Render Media")
-        result['mediaData'] = media_list
+    media = json.loads(media)
+    media['auth'] = token
+    media['workspace'] = workspace_id
 
+    meth.advance("Submitting Media to workspace")
+
+    media_meta = fba.addmedia(media)
+
+    result = {'data' : media_meta}
     return json.dumps(result)
 
 @method(name="Run Flux Balance Analysis")

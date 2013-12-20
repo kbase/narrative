@@ -62,10 +62,10 @@
     <div class="row">
    		<div id="subnav" class="col-sm-3" role="navigation">
    			<ul class="subnav">
-   				<li><a href="profile.shtml">Profile</a></li>
-   				<li><a href="manage_subs.shtml">Manage Subscriptions</a></li>
+   				<li><a href="#">Profile</a></li>
+   				<li><a href="#">Manage Subscriptions</a></li>
   				<li><a href="manage_projects.shtml">Manage Projects</a></li>
-  				<li><a href="manage_teams.shtml">Manage Teams</a></li>
+  				<li><a href="#">Manage Teams</a></li>
   			</ul>
 		  </div>
 

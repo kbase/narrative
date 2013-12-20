@@ -30,7 +30,7 @@ $.KBWidget({
         table.append(createTableRow("# Compounds", data[10].number_compounds));
         table.append(createTableRow("# Reactions", data[10].number_reactions));
         table.append(createTableRow("# Compartments", data[10].number_compartments));
-        table.append(createTableRow("Workspace", data[7]));
+        //table.append(createTableRow("Workspace", data[7]));
 
         this.$elem.append(table);
 

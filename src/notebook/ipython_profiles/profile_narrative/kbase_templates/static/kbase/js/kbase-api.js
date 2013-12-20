@@ -477,624 +477,769 @@ function MOTranslation(url, auth, auth_cb) {
 
 
 
-
-function fbaModelServices(url) {
+function fbaModelServices(url, auth, auth_cb) {
 
     var _url = url;
-
-
-    this.get_models = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.get_models", [input]);
-//	var resp = json_call_sync("fbaModelServices.get_models", [input]);
-        return resp[0];
-    }
-
-    this.get_models_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.get_models", [input], 1, _callback, _error_callback)
-    }
-
-    this.get_fbas = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.get_fbas", [input]);
-//	var resp = json_call_sync("fbaModelServices.get_fbas", [input]);
-        return resp[0];
-    }
-
-    this.get_fbas_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.get_fbas", [input], 1, _callback, _error_callback)
-    }
-
-    this.get_gapfills = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.get_gapfills", [input]);
-//	var resp = json_call_sync("fbaModelServices.get_gapfills", [input]);
-        return resp[0];
-    }
-
-    this.get_gapfills_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.get_gapfills", [input], 1, _callback, _error_callback)
-    }
-
-    this.get_gapgens = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.get_gapgens", [input]);
-//	var resp = json_call_sync("fbaModelServices.get_gapgens", [input]);
-        return resp[0];
-    }
-
-    this.get_gapgens_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.get_gapgens", [input], 1, _callback, _error_callback)
-    }
-
-    this.get_reactions = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.get_reactions", [input]);
-//	var resp = json_call_sync("fbaModelServices.get_reactions", [input]);
-        return resp[0];
-    }
-
-    this.get_reactions_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.get_reactions", [input], 1, _callback, _error_callback)
-    }
-
-    this.get_compounds = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.get_compounds", [input]);
-//	var resp = json_call_sync("fbaModelServices.get_compounds", [input]);
-        return resp[0];
-    }
-
-    this.get_compounds_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.get_compounds", [input], 1, _callback, _error_callback)
-    }
-
-    this.get_media = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.get_media", [input]);
-//	var resp = json_call_sync("fbaModelServices.get_media", [input]);
-        return resp[0];
-    }
-
-    this.get_media_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.get_media", [input], 1, _callback, _error_callback)
-    }
-
-    this.get_biochemistry = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.get_biochemistry", [input]);
-//	var resp = json_call_sync("fbaModelServices.get_biochemistry", [input]);
-        return resp[0];
-    }
-
-    this.get_biochemistry_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.get_biochemistry", [input], 1, _callback, _error_callback)
-    }
-
-    this.get_ETCDiagram = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.get_ETCDiagram", [input]);
-//	var resp = json_call_sync("fbaModelServices.get_ETCDiagram", [input]);
-        return resp[0];
-    }
-
-    this.get_ETCDiagram_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.get_ETCDiagram", [input], 1, _callback, _error_callback)
-    }
-
-    this.import_probanno = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.import_probanno", [input]);
-//	var resp = json_call_sync("fbaModelServices.import_probanno", [input]);
-        return resp[0];
-    }
-
-    this.import_probanno_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.import_probanno", [input], 1, _callback, _error_callback)
-    }
-
-    this.genome_object_to_workspace = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.genome_object_to_workspace", [input]);
-//	var resp = json_call_sync("fbaModelServices.genome_object_to_workspace", [input]);
-        return resp[0];
-    }
-
-    this.genome_object_to_workspace_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.genome_object_to_workspace", [input], 1, _callback, _error_callback)
-    }
-
-    this.genome_to_workspace = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.genome_to_workspace", [input]);
-//	var resp = json_call_sync("fbaModelServices.genome_to_workspace", [input]);
-        return resp[0];
-    }
-
-    this.genome_to_workspace_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.genome_to_workspace", [input], 1, _callback, _error_callback)
-    }
-
-    this.add_feature_translation = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.add_feature_translation", [input]);
-//	var resp = json_call_sync("fbaModelServices.add_feature_translation", [input]);
-        return resp[0];
-    }
-
-    this.add_feature_translation_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.add_feature_translation", [input], 1, _callback, _error_callback)
-    }
-
-    this.genome_to_fbamodel = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.genome_to_fbamodel", [input]);
-//	var resp = json_call_sync("fbaModelServices.genome_to_fbamodel", [input]);
-        return resp[0];
-    }
-
-    this.genome_to_fbamodel_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.genome_to_fbamodel", [input], 1, _callback, _error_callback)
-    }
-
-    this.import_fbamodel = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.import_fbamodel", [input]);
-//	var resp = json_call_sync("fbaModelServices.import_fbamodel", [input]);
-        return resp[0];
-    }
-
-    this.import_fbamodel_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.import_fbamodel", [input], 1, _callback, _error_callback)
-    }
-
-    this.genome_to_probfbamodel = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.genome_to_probfbamodel", [input]);
-//	var resp = json_call_sync("fbaModelServices.genome_to_probfbamodel", [input]);
-        return resp[0];
-    }
-
-    this.genome_to_probfbamodel_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.genome_to_probfbamodel", [input], 1, _callback, _error_callback)
-    }
-
-    this.export_fbamodel = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.export_fbamodel", [input]);
-//	var resp = json_call_sync("fbaModelServices.export_fbamodel", [input]);
-        return resp[0];
-    }
-
-    this.export_fbamodel_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.export_fbamodel", [input], 1, _callback, _error_callback)
-    }
-
-    this.export_object = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.export_object", [input]);
-//	var resp = json_call_sync("fbaModelServices.export_object", [input]);
-        return resp[0];
-    }
-
-    this.export_object_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.export_object", [input], 1, _callback, _error_callback)
-    }
-
-    this.export_genome = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.export_genome", [input]);
-//	var resp = json_call_sync("fbaModelServices.export_genome", [input]);
-        return resp[0];
-    }
-
-    this.export_genome_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.export_genome", [input], 1, _callback, _error_callback)
-    }
-
-    this.adjust_model_reaction = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.adjust_model_reaction", [input]);
-//	var resp = json_call_sync("fbaModelServices.adjust_model_reaction", [input]);
-        return resp[0];
-    }
-
-    this.adjust_model_reaction_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.adjust_model_reaction", [input], 1, _callback, _error_callback)
-    }
-
-    this.adjust_biomass_reaction = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.adjust_biomass_reaction", [input]);
-//	var resp = json_call_sync("fbaModelServices.adjust_biomass_reaction", [input]);
-        return resp[0];
-    }
-
-    this.adjust_biomass_reaction_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.adjust_biomass_reaction", [input], 1, _callback, _error_callback)
-    }
-
-    this.addmedia = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.addmedia", [input]);
-//	var resp = json_call_sync("fbaModelServices.addmedia", [input]);
-        return resp[0];
-    }
-
-    this.addmedia_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.addmedia", [input], 1, _callback, _error_callback)
-    }
-
-    this.export_media = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.export_media", [input]);
-//	var resp = json_call_sync("fbaModelServices.export_media", [input]);
-        return resp[0];
-    }
-
-    this.export_media_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.export_media", [input], 1, _callback, _error_callback)
-    }
-
-    this.runfba = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.runfba", [input]);
-//	var resp = json_call_sync("fbaModelServices.runfba", [input]);
-        return resp[0];
-    }
-
-    this.runfba_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.runfba", [input], 1, _callback, _error_callback)
-    }
-
-    this.export_fba = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.export_fba", [input]);
-//	var resp = json_call_sync("fbaModelServices.export_fba", [input]);
-        return resp[0];
-    }
-
-    this.export_fba_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.export_fba", [input], 1, _callback, _error_callback)
-    }
-
-    this.import_phenotypes = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.import_phenotypes", [input]);
-//	var resp = json_call_sync("fbaModelServices.import_phenotypes", [input]);
-        return resp[0];
-    }
-
-    this.import_phenotypes_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.import_phenotypes", [input], 1, _callback, _error_callback)
-    }
-
-    this.simulate_phenotypes = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.simulate_phenotypes", [input]);
-//	var resp = json_call_sync("fbaModelServices.simulate_phenotypes", [input]);
-        return resp[0];
-    }
-
-    this.simulate_phenotypes_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.simulate_phenotypes", [input], 1, _callback, _error_callback)
-    }
-
-    this.export_phenotypeSimulationSet = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.export_phenotypeSimulationSet", [input]);
-//	var resp = json_call_sync("fbaModelServices.export_phenotypeSimulationSet", [input]);
-        return resp[0];
-    }
-
-    this.export_phenotypeSimulationSet_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.export_phenotypeSimulationSet", [input], 1, _callback, _error_callback)
-    }
-
-    this.integrate_reconciliation_solutions = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.integrate_reconciliation_solutions", [input]);
-//	var resp = json_call_sync("fbaModelServices.integrate_reconciliation_solutions", [input]);
-        return resp[0];
-    }
-
-    this.integrate_reconciliation_solutions_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.integrate_reconciliation_solutions", [input], 1, _callback, _error_callback)
-    }
-
-    this.queue_runfba = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.queue_runfba", [input]);
-//	var resp = json_call_sync("fbaModelServices.queue_runfba", [input]);
-        return resp[0];
-    }
-
-    this.queue_runfba_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.queue_runfba", [input], 1, _callback, _error_callback)
-    }
-
-    this.queue_gapfill_model = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.queue_gapfill_model", [input]);
-//	var resp = json_call_sync("fbaModelServices.queue_gapfill_model", [input]);
-        return resp[0];
-    }
-
-    this.queue_gapfill_model_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.queue_gapfill_model", [input], 1, _callback, _error_callback)
-    }
-
-    this.queue_gapgen_model = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.queue_gapgen_model", [input]);
-//	var resp = json_call_sync("fbaModelServices.queue_gapgen_model", [input]);
-        return resp[0];
-    }
-
-    this.queue_gapgen_model_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.queue_gapgen_model", [input], 1, _callback, _error_callback)
-    }
-
-    this.queue_wildtype_phenotype_reconciliation = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.queue_wildtype_phenotype_reconciliation", [input]);
-//	var resp = json_call_sync("fbaModelServices.queue_wildtype_phenotype_reconciliation", [input]);
-        return resp[0];
-    }
-
-    this.queue_wildtype_phenotype_reconciliation_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.queue_wildtype_phenotype_reconciliation", [input], 1, _callback, _error_callback)
-    }
-
-    this.queue_reconciliation_sensitivity_analysis = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.queue_reconciliation_sensitivity_analysis", [input]);
-//	var resp = json_call_sync("fbaModelServices.queue_reconciliation_sensitivity_analysis", [input]);
-        return resp[0];
-    }
-
-    this.queue_reconciliation_sensitivity_analysis_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.queue_reconciliation_sensitivity_analysis", [input], 1, _callback, _error_callback)
-    }
-
-    this.queue_combine_wildtype_phenotype_reconciliation = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.queue_combine_wildtype_phenotype_reconciliation", [input]);
-//	var resp = json_call_sync("fbaModelServices.queue_combine_wildtype_phenotype_reconciliation", [input]);
-        return resp[0];
-    }
-
-    this.queue_combine_wildtype_phenotype_reconciliation_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.queue_combine_wildtype_phenotype_reconciliation", [input], 1, _callback, _error_callback)
-    }
-
-    this.jobs_done = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.jobs_done", [input]);
-//	var resp = json_call_sync("fbaModelServices.jobs_done", [input]);
-        return resp[0];
-    }
-
-    this.jobs_done_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.jobs_done", [input], 1, _callback, _error_callback)
-    }
-
-    this.check_job = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.check_job", [input]);
-//	var resp = json_call_sync("fbaModelServices.check_job", [input]);
-        return resp[0];
-    }
-
-    this.check_job_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.check_job", [input], 1, _callback, _error_callback)
-    }
-
-    this.run_job = function(input)
-    {
-	var resp = json_call_ajax_sync("fbaModelServices.run_job", [input]);
-//	var resp = json_call_sync("fbaModelServices.run_job", [input]);
-        return resp[0];
-    }
-
-    this.run_job_async = function(input, _callback, _error_callback)
-    {
-	json_call_ajax_async("fbaModelServices.run_job", [input], 1, _callback, _error_callback)
-    }
-
-    function _json_call_prepare(url, method, params, async_flag)
-    {
-	var rpc = { 'params' : params,
-		    'method' : method,
-		    'version': "1.1",
-	};
-	
-	var body = JSON.stringify(rpc);
-	
-	var http = new XMLHttpRequest();
-	
-	http.open("POST", url, async_flag);
-	
-	//Send the proper header information along with the request
-	http.setRequestHeader("Content-type", "application/json");
-	//http.setRequestHeader("Content-length", body.length);
-	//http.setRequestHeader("Connection", "close");
-	return [http, body];
-    }
+    var deprecationWarningSent = false;
+    
+    function deprecationWarning() {
+        if (!deprecationWarningSent) {
+            deprecationWarningSent = true;
+            if (!window.console) return;
+            console.log(
+                "DEPRECATION WARNING: '*_async' method names will be removed",
+                "in a future version. Please use the identical methods without",
+                "the'_async' suffix.");
+        }
+    }
+
+    var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
+    var _auth_cb = auth_cb;
+
+
+    this.get_models = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_models",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_models_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_models", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_fbas = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_fbas",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_fbas_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_fbas", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_gapfills = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_gapfills",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_gapfills_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_gapfills", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_gapgens = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_gapgens",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_gapgens_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_gapgens", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_reactions = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_reactions",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_reactions_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_reactions", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_compounds = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_compounds",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_compounds_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_compounds", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_alias = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_alias",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_alias_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_alias", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_aliassets = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_aliassets",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_aliassets_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_aliassets", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_media = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_media",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_media_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_media", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_biochemistry = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_biochemistry",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_biochemistry_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_biochemistry", [input], 1, _callback, _error_callback);
+    };
+
+    this.get_ETCDiagram = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_ETCDiagram",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.get_ETCDiagram_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_ETCDiagram", [input], 1, _callback, _error_callback);
+    };
+
+    this.import_probanno = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.import_probanno",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.import_probanno_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.import_probanno", [input], 1, _callback, _error_callback);
+    };
+
+    this.genome_object_to_workspace = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.genome_object_to_workspace",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.genome_object_to_workspace_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.genome_object_to_workspace", [input], 1, _callback, _error_callback);
+    };
+
+    this.genome_to_workspace = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.genome_to_workspace",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.genome_to_workspace_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.genome_to_workspace", [input], 1, _callback, _error_callback);
+    };
+
+    this.add_feature_translation = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.add_feature_translation",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.add_feature_translation_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.add_feature_translation", [input], 1, _callback, _error_callback);
+    };
+
+    this.genome_to_fbamodel = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.genome_to_fbamodel",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.genome_to_fbamodel_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.genome_to_fbamodel", [input], 1, _callback, _error_callback);
+    };
+
+    this.import_fbamodel = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.import_fbamodel",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.import_fbamodel_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.import_fbamodel", [input], 1, _callback, _error_callback);
+    };
+
+    this.export_fbamodel = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.export_fbamodel",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.export_fbamodel_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.export_fbamodel", [input], 1, _callback, _error_callback);
+    };
+
+    this.export_object = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.export_object",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.export_object_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.export_object", [input], 1, _callback, _error_callback);
+    };
+
+    this.export_genome = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.export_genome",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.export_genome_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.export_genome", [input], 1, _callback, _error_callback);
+    };
+
+    this.adjust_model_reaction = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.adjust_model_reaction",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.adjust_model_reaction_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.adjust_model_reaction", [input], 1, _callback, _error_callback);
+    };
+
+    this.adjust_biomass_reaction = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.adjust_biomass_reaction",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.adjust_biomass_reaction_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.adjust_biomass_reaction", [input], 1, _callback, _error_callback);
+    };
+
+    this.addmedia = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.addmedia",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.addmedia_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.addmedia", [input], 1, _callback, _error_callback);
+    };
+
+    this.export_media = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.export_media",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.export_media_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.export_media", [input], 1, _callback, _error_callback);
+    };
+
+    this.runfba = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.runfba",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.runfba_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.runfba", [input], 1, _callback, _error_callback);
+    };
+
+    this.export_fba = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.export_fba",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.export_fba_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.export_fba", [input], 1, _callback, _error_callback);
+    };
+
+    this.import_phenotypes = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.import_phenotypes",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.import_phenotypes_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.import_phenotypes", [input], 1, _callback, _error_callback);
+    };
+
+    this.simulate_phenotypes = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.simulate_phenotypes",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.simulate_phenotypes_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.simulate_phenotypes", [input], 1, _callback, _error_callback);
+    };
+
+    this.add_media_transporters = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.add_media_transporters",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.add_media_transporters_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.add_media_transporters", [input], 1, _callback, _error_callback);
+    };
+
+    this.export_phenotypeSimulationSet = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.export_phenotypeSimulationSet",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.export_phenotypeSimulationSet_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.export_phenotypeSimulationSet", [input], 1, _callback, _error_callback);
+    };
+
+    this.integrate_reconciliation_solutions = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.integrate_reconciliation_solutions",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.integrate_reconciliation_solutions_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.integrate_reconciliation_solutions", [input], 1, _callback, _error_callback);
+    };
+
+    this.queue_runfba = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.queue_runfba",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.queue_runfba_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.queue_runfba", [input], 1, _callback, _error_callback);
+    };
+
+    this.queue_gapfill_model = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.queue_gapfill_model",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.queue_gapfill_model_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.queue_gapfill_model", [input], 1, _callback, _error_callback);
+    };
+
+    this.queue_gapgen_model = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.queue_gapgen_model",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.queue_gapgen_model_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.queue_gapgen_model", [input], 1, _callback, _error_callback);
+    };
+
+    this.queue_wildtype_phenotype_reconciliation = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.queue_wildtype_phenotype_reconciliation",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.queue_wildtype_phenotype_reconciliation_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.queue_wildtype_phenotype_reconciliation", [input], 1, _callback, _error_callback);
+    };
+
+    this.queue_reconciliation_sensitivity_analysis = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.queue_reconciliation_sensitivity_analysis",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.queue_reconciliation_sensitivity_analysis_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.queue_reconciliation_sensitivity_analysis", [input], 1, _callback, _error_callback);
+    };
+
+    this.queue_combine_wildtype_phenotype_reconciliation = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.queue_combine_wildtype_phenotype_reconciliation",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.queue_combine_wildtype_phenotype_reconciliation_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.queue_combine_wildtype_phenotype_reconciliation", [input], 1, _callback, _error_callback);
+    };
+
+    this.jobs_done = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.jobs_done",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.jobs_done_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.jobs_done", [input], 1, _callback, _error_callback);
+    };
+
+    this.run_job = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.run_job",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.run_job_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.run_job", [input], 1, _callback, _error_callback);
+    };
+
+    this.set_cofactors = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.set_cofactors",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.set_cofactors_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.set_cofactors", [input], 1, _callback, _error_callback);
+    };
+
+    this.find_reaction_synonyms = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.find_reaction_synonyms",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.find_reaction_synonyms_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.find_reaction_synonyms", [input], 1, _callback, _error_callback);
+    };
+
+    this.role_to_reactions = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.role_to_reactions",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.role_to_reactions_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.role_to_reactions", [params], 1, _callback, _error_callback);
+    };
+
+    this.reaction_sensitivity_analysis = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.reaction_sensitivity_analysis",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.reaction_sensitivity_analysis_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.reaction_sensitivity_analysis", [input], 1, _callback, _error_callback);
+    };
+
+    this.delete_noncontributing_reactions = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.delete_noncontributing_reactions",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.delete_noncontributing_reactions_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.delete_noncontributing_reactions", [input], 1, _callback, _error_callback);
+    };
+
+    this.fasta_to_ProteinSet = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.fasta_to_ProteinSet",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.fasta_to_ProteinSet_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.fasta_to_ProteinSet", [params], 1, _callback, _error_callback);
+    };
+
+    this.ProteinSet_to_Genome = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.ProteinSet_to_Genome",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.ProteinSet_to_Genome_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.ProteinSet_to_Genome", [params], 1, _callback, _error_callback);
+    };
+
+    this.fasta_to_TranscriptSet = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.fasta_to_TranscriptSet",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.fasta_to_TranscriptSet_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.fasta_to_TranscriptSet", [params], 1, _callback, _error_callback);
+    };
+
+    this.TranscriptSet_to_Genome = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.TranscriptSet_to_Genome",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.TranscriptSet_to_Genome_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.TranscriptSet_to_Genome", [params], 1, _callback, _error_callback);
+    };
+
+    this.fasta_to_ContigSet = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.fasta_to_ContigSet",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.fasta_to_ContigSet_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.fasta_to_ContigSet", [params], 1, _callback, _error_callback);
+    };
+
+    this.ContigSet_to_Genome = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.ContigSet_to_Genome",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.ContigSet_to_Genome_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.ContigSet_to_Genome", [params], 1, _callback, _error_callback);
+    };
+
+    this.annotate_workspace_Genome = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.annotate_workspace_Genome",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.annotate_workspace_Genome_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.annotate_workspace_Genome", [params], 1, _callback, _error_callback);
+    };
+
+    this.probanno_to_genome = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.probanno_to_genome",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.probanno_to_genome_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.probanno_to_genome", [params], 1, _callback, _error_callback);
+    };
+
+    this.get_mapping = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_mapping",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.get_mapping_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_mapping", [params], 1, _callback, _error_callback);
+    };
+
+    this.adjust_mapping_role = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.adjust_mapping_role",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.adjust_mapping_role_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.adjust_mapping_role", [params], 1, _callback, _error_callback);
+    };
+
+    this.adjust_mapping_complex = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.adjust_mapping_complex",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.adjust_mapping_complex_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.adjust_mapping_complex", [params], 1, _callback, _error_callback);
+    };
+
+    this.adjust_mapping_subsystem = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.adjust_mapping_subsystem",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.adjust_mapping_subsystem_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.adjust_mapping_subsystem", [params], 1, _callback, _error_callback);
+    };
+
+    this.get_template_model = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.get_template_model",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.get_template_model_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.get_template_model", [params], 1, _callback, _error_callback);
+    };
+
+    this.import_template_fbamodel = function (input, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.import_template_fbamodel",
+        [input], 1, _callback, _errorCallback);
+};
+
+    this.import_template_fbamodel_async = function (input, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.import_template_fbamodel", [input], 1, _callback, _error_callback);
+    };
+
+    this.adjust_template_reaction = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.adjust_template_reaction",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.adjust_template_reaction_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.adjust_template_reaction", [params], 1, _callback, _error_callback);
+    };
+
+    this.adjust_template_biomass = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.adjust_template_biomass",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.adjust_template_biomass_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.adjust_template_biomass", [params], 1, _callback, _error_callback);
+    };
+
+    this.add_stimuli = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.add_stimuli",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.add_stimuli_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.add_stimuli", [params], 1, _callback, _error_callback);
+    };
+
+    this.import_regulatory_model = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.import_regulatory_model",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.import_regulatory_model_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.import_regulatory_model", [params], 1, _callback, _error_callback);
+    };
+
+    this.compare_models = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.compare_models",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.compare_models_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.compare_models", [params], 1, _callback, _error_callback);
+    };
+
+    this.compare_genomes = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.compare_genomes",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.compare_genomes_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.compare_genomes", [params], 1, _callback, _error_callback);
+    };
+
+    this.import_metagenome_annotation = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.import_metagenome_annotation",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.import_metagenome_annotation_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.import_metagenome_annotation", [params], 1, _callback, _error_callback);
+    };
+
+    this.models_to_community_model = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.models_to_community_model",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.models_to_community_model_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.models_to_community_model", [params], 1, _callback, _error_callback);
+    };
+
+    this.metagenome_to_fbamodels = function (params, _callback, _errorCallback) {
+    return json_call_ajax("fbaModelServices.metagenome_to_fbamodels",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.metagenome_to_fbamodels_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("fbaModelServices.metagenome_to_fbamodels", [params], 1, _callback, _error_callback);
+    };
+ 
 
     /*
      * JSON call using jQuery method.
      */
+    function json_call_ajax(method, params, numRets, callback, errorCallback) {
+        var deferred = $.Deferred();
 
-    function json_call_ajax_sync(method, params)
-    {
-        var rpc = { 'params' : params,
-                    'method' : method,
-                    'version': "1.1",
-        };
-        
-        var body = JSON.stringify(rpc);
-        var resp_txt;
-	var code;
-        
-        var x = jQuery.ajax({       "async": false,
-                                    dataType: "text",
-                                    url: _url,
-                                    success: function (data, status, xhr) { resp_txt = data; code = xhr.status },
-				    error: function(xhr, textStatus, errorThrown) { resp_txt = xhr.responseText, code = xhr.status },
-                                    data: body,
-                                    processData: false,
-                                    type: 'POST',
-				    });
-
-        var result;
-
-        if (resp_txt)
-        {
-	    var resp = JSON.parse(resp_txt);
-	    
-	    if (code >= 500)
-	    {
-		throw resp.error;
-	    }
-	    else
-	    {
-		return resp.result;
-	    }
+        if (typeof callback === 'function') {
+           deferred.done(callback);
         }
-	else
-	{
-	    return null;
-	}
-    }
 
-    function json_call_ajax_async(method, params, num_rets, callback, error_callback)
-    {
-        var rpc = { 'params' : params,
-                    'method' : method,
-                    'version': "1.1",
+        if (typeof errorCallback === 'function') {
+           deferred.fail(errorCallback);
+        }
+
+        var rpc = {
+            params : params,
+            method : method,
+            version: "1.1",
+            id: String(Math.random()).slice(2),
         };
         
-        var body = JSON.stringify(rpc);
-        var resp_txt;
-	var code;
-        
-        var x = jQuery.ajax({       "async": true,
-                                    dataType: "text",
-                                    url: _url,
-                                    success: function (data, status, xhr)
-				{
-				    resp = JSON.parse(data);
-				    var result = resp["result"];
-				    if (num_rets == 1)
-				    {
-					callback(result[0]);
-				    }
-				    else
-				    {
-					callback(result);
-				    }
-				    
-				},
-				    error: function(xhr, textStatus, errorThrown)
-				{
-				    if (xhr.responseText)
-				    {
-					resp = JSON.parse(xhr.responseText);
-					if (error_callback)
-					{
-					    error_callback(resp.error);
-					}
-					else
-					{
-					    throw resp.error;
-					}
-				    }
-				},
-                                    data: body,
-                                    processData: false,
-                                    type: 'POST',
-				    });
+        var beforeSend = null;
+        var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
+            : (_auth.token ? _auth.token : null);
+        if (token != null) {
+            beforeSend = function (xhr) {
+                xhr.setRequestHeader("Authorization", token);
+            }
+        }
 
-    }
-
-    function json_call_async(method, params, num_rets, callback)
-    {
-	var tup = _json_call_prepare(_url, method, params, true);
-	var http = tup[0];
-	var body = tup[1];
-	
-	http.onreadystatechange = function() {
-	    if (http.readyState == 4 && http.status == 200) {
-		var resp_txt = http.responseText;
-		var resp = JSON.parse(resp_txt);
-		var result = resp["result"];
-		if (num_rets == 1)
-		{
-		    callback(result[0]);
-		}
-		else
-		{
-		    callback(result);
-		}
-	    }
-	}
-	
-	http.send(body);
-	
-    }
-    
-    function json_call_sync(method, params)
-    {
-	var tup = _json_call_prepare(url, method, params, false);
-	var http = tup[0];
-	var body = tup[1];
-	
-	http.send(body);
-	
-	var resp_txt = http.responseText;
-	
-	var resp = JSON.parse(resp_txt);
-	var result = resp["result"];
-	    
-	return result;
+        jQuery.ajax({
+            url: _url,
+            dataType: "text",
+            type: 'POST',
+            processData: false,
+            data: JSON.stringify(rpc),
+            beforeSend: beforeSend,
+            success: function (data, status, xhr) {
+                var result;
+                try {
+                    var resp = JSON.parse(data);
+                    result = (numRets === 1 ? resp.result[0] : resp.result);
+                } catch (err) {
+                    deferred.reject({
+                        status: 503,
+                        error: err,
+                        url: _url,
+                        resp: data
+                    });
+                    return;
+                }
+                deferred.resolve(result);
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                var error;
+                if (xhr.responseText) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        error = resp.error;
+                    } catch (err) { // Not JSON
+                        error = "Unknown error - " + xhr.responseText;
+                    }
+                } else {
+                    error = "Unknown Error";
+                }
+                deferred.reject({
+                    status: 500,
+                    error: error
+                });
+            }
+        });
+        return deferred.promise();
     }
 }
 

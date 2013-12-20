@@ -175,5 +175,8 @@ class Gapfill(tls.Unicode, TypeMeta):
     info_text = "Gapfill set"
 
 
-class PhenotypeData(tls.Unicode, TypeMeta):
+class PhenotypeSet(tls.Unicode, TypeMeta):
     info_text = "Phenotype data"
+
+class PhenotypeSimulationSet(tls.Unicode, TypeMeta):
+    info_text = "Phenotype simulation"

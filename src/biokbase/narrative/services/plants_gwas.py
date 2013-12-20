@@ -148,6 +148,7 @@ def maf(meth, maf=0.05, object_id=None):
     :return: Number of jobs that were run
     :rtype: kbtypes.Numeric
     """
+    meth.debug("starting maf")
     meth.stages = 3
 
     meth.advance("init GWAS service")
@@ -165,6 +166,7 @@ def maf(meth, maf=0.05, object_id=None):
     completed, njobs = 0, _job_count(jid)
     meth.stages += njobs
     while completed < njobs:
+        meth.debug("sleeping 5 sec in wait-for-jobs loop")
         time.sleep(5)
         remaining = _job_count(jid)
         while completed < (njobs - remaining):

@@ -18,6 +18,7 @@ import sys
 import time
 # Third-party
 import IPython.utils.traitlets as trt
+from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes
 
@@ -363,6 +364,7 @@ class LifecycleSubject(object):
     meaning 'not yet started'.
         """
     def __init__(self, stages=1):
+        open("/tmp/kbnarr", "a").write("@@ LIFECYCLE SUBJECT\n")
         if not isinstance(stages, int) or stages < 1:
             raise ValueError("Number of stages ({}) must be > 0".format(stages))
         self._stages = stages
@@ -413,6 +415,11 @@ class LifecycleSubject(object):
         if not self._done:
             self._done = True
             self._event('error', code, err)
+
+    def debug(self, msg):
+        """Debugging message.
+        """
+        self._event('debug', msg)
 
     # get/set 'stage' property
     
@@ -472,6 +479,10 @@ class LifecycleObserver(object):
         """Called on fatal error"""
         pass
 
+    def debug(self, msg):
+        """Debugging message"""
+        pass
+
 
 class LifecycleHistory(LifecycleObserver):
     """Record duration between start/end in lifecycle events.
@@ -516,14 +527,14 @@ class LifecycleHistory(LifecycleObserver):
         pass
 
     def estimated_runtime(self, params):
-        """Based on history and params, estimate runtime for service.
+        """Based on history and params, estimate runtime for function.
 
         """
-        dur = self._history.get_durations()
+        dur = self.get_durations()
         if len(dur) == 0:
             estimate = -1  # no @!$%# idea
         else:
-            # dumb: ignore params
+            # dumb: ignore params, take mean
             estimate = sum(dur) / len(dur)
         return estimate
 
@@ -573,6 +584,54 @@ class LifecyclePrinter(LifecycleObserver):
 
     def error(self, code, err):
         self._write('E' + err.as_json())
+
+    def debug(self, msg):
+        self._write('G' + msg)
+
+
+class LifecycleLogger(LifecycleObserver):
+    """Log lifecycle messages in a simple but structured format,
+    to a file.
+    """
+    MAX_MSG_LEN = 240  # Truncate message to this length, in chars
+                       # Actual display may be a bit longer to indicate
+                       # that the message was indeed truncated.
+
+    def __init__(self, name, debug=False):
+        """Create a Python logging.Logger with the given name, under the existing
+        IPython logging framework.
+
+        :param name: Name of logger
+        :type name: str
+        :param debug: Whether to set debug as the log level
+        :type debug: bool
+        """
+        # use the IPython application singleton's 'log' trait
+        self._log = Application.instance().log
+        self._is_debug = debug
+
+    def _write(self, level, event, msg):
+        if msg and (len(msg) > self.MAX_MSG_LEN):
+            msg = msg[:self.MAX_MSG_LEN] + " [..]"
+        # replace newlines with softer dividers
+        msg = msg.replace("\n\n", "\n").replace("\n", " // ").replace("\r", "")
+        # format a timestamp
+        ts = time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
+        # log the whole tamale
+        self._log.log(level, "ts={ts} event={e} {m}".format(ts=ts, e=event, m=msg))
+
+    def started(self, params):
+        self._write(logging.INFO, "started", "params={}".format(params))
+
+    def done(self):
+        self._write(logging.INFO, "done", "")
+
+    def error(self, code, err):
+        self._write(logging.ERROR, "err({:d})".format(code), "msg={}".format(err))
+
+    def debug(self, msg):
+        if self._is_debug:
+            self._write(logging.DEBUG, "dbg", "msg={}".format(msg))
 
 
 class ServiceMethod(trt.HasTraits, LifecycleSubject):
@@ -626,7 +685,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         LifecycleSubject.__init__(self)
         self._history = status_class(self)
         self.register(self._history)
-        self._lpr = None
+        self._observers = []  # keep our own list of 'optional' observers
         self.quiet(quiet)
         # set traits from 'meta', if present
         for key, val in meta.iteritems():
@@ -643,13 +702,15 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         """Control printing of status messages.
         """
         if value:
-            if self._lpr:
-                self.unregister(self._lpr)
-                self._lpr = None
+            # make it quiet
+            if self._observers:  # for idempotence
+                map(self.unregister, self._observers)
+                self._observers = []
         else:
-            if not self._lpr:
-                self._lpr = LifecyclePrinter()
-                self.register(self._lpr)
+            # make some noise
+            if not self._observers:  # for idempotence
+                self._observers = [LifecyclePrinter(), LifecycleLogger("kb.narr", debug=True)]
+                map(self.register, self._observers)
 
     def set_func(self, fn, params, outputs, vis_info):
         """Set the main function to run, and its metadata.

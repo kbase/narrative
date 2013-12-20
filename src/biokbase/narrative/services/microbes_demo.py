@@ -42,7 +42,7 @@ def _assemble_contigs(meth, reads_files, out_contig_set):
     return json.dumps({"output": "Assemble Contigs stub"})
 
 
-@method(name="Assemble Genome from Contigs")
+@method(name="Assemble Genome from Fasta")
 def _assemble_genome(meth, contig_file, out_genome):
     """This assembles a ContigSet into a Genome object in your data space.
     This should be run before trying to annotate a Genome.
@@ -91,7 +91,7 @@ def _assemble_genome(meth, contig_file, out_genome):
     meth.advance("Rendering Genome Information")
     return json.dumps(genome_meta)
 
-@method(name="Create Empty Genome from Contigs")
+@method(name="Convert Contigs to Genome Object")
 def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     """This wraps a ContigSet by a Genome object in your data space.
     This should be run before trying to annotate a Genome.
@@ -99,9 +99,9 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     :param contig_set: An object with contig data
     :type contig_set: kbtypes.ContigSet
     :ui_name contig_set: Contig Set Object
-    :param scientific_name: Name of preparing genome
+    :param scientific_name: enter the scientific name to assign to your new genome
     :type scientific_name: kbtypes.Unicode
-    :ui_name scientific_name: Name of preparing genome
+    :ui_name scientific_name: Scientific Name
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly.
     :type out_genome: kbtypes.Unicode
     :ui_name out_genome: Output Genome ID
@@ -171,9 +171,9 @@ def _annotate_genome(meth, genome, out_genome):
     job_id = fbaClient.annotate_workspace_Genome(annotate_workspace_genome_params)['id']
     return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
 
-@method(name="Show Annotated Genome")
+@method(name="View Annotated Genome")
 def _show_genome(meth, genome):
-    """This shows annotated Genome stored in your data space.
+    """This shows an annotated Genome stored in your data space.
     
     :param genome: Source genome ID
     :type genome: kbtypes.Genome
@@ -295,7 +295,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     :output_widget: kbaseFbaTabsNarrative
     """
     
-    meth.stages = 2
+    meth.stages = 3
     meth.advance("Setting up FBA parameters")
     
     #grab token and workspace info, setup the client
@@ -523,20 +523,32 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
             'job_id':job_id,
             'estimated_time_str': str(total_time_hrs) + " hour" + str(hour_suffix),
             'output_data_id' : str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip()),
-            'job_data' : job_data,
-            'token' : token
+            'token' : token,
+            #'job_data' : job_data,
         })
 
 @method(name="Integrate Gapfill Solution")
 def _integrate_gapfill(meth, fba_model_id, gapfill_id):
     """Integrate a Gapfill solution into your FBA model
 
-    :param fba_model_id: an FBA model id
+    :param fba_model_id: the FBA Model to integrate gapfill solutions into
     :type fba_model_id: kbtypes.Model
-    :ui_name fba_model_id: FBA Model ID
-    :param gapfill_id: a gapfilling ID
-    :type gapfill_id: kbtypes.Gapfill
-    :ui_name gapfill_id: Gapfill result ID
+    :ui_name fba_model_id: FBA Model
+    
+    :param gapfill_id: select the ID of the gapfill solution (found in the gapfill solutions tab in the model viewer)
+    :type gapfill_id: kbtypes.Unicode
+    :ui_name gapfill_id: Gapfill ID
+
+    :param output_model_id: select a name for the gapfilled object (optional)
+    :type output_model_id: kbtypes.Unicode
+    :ui_name output_model_id: Output FBA Result Name
+
+
+    :return: Generated FBA Model ID
+    :rtype: kbtypes.Model
+    
+    :output_widget: kbaseModelMetaNarrative
+
     :return: gapfilled model ID
     :rtype: kbtypes.Unicode
     """
@@ -546,10 +558,7 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id):
     
     #grab token and workspace info, setup the client
     token, workspaceName = meth.token, meth.workspace_id;
-    
     fbaClient = fbaModelServices(service.URLS.fba)
-
-    
 
     """
     typedef structure {
@@ -565,22 +574,19 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id):
     """
 
     integrate_params = {
-        'model' : params['Identifiers.Model'],
-        'model_workspace' : workspace,
+        'model' : fba_model_id,
+        'model_workspace' : workspaceName,
         'gapfillSolutions' : params['Identifiers.Gapfill'],
-        'workspace' : workspace,
+        'workspace' : workspaceName,
         'auth' : token,
     }
 
-    new_model = params['New model (optional)']
-    new_model = new_model.strip()
-    if (new_model):
-        integrate_params['out_model'] = new_model
+    output_model_id = output_model_id.strip()
+    if (output_model_id):
+        integrate_params['out_model'] = output_model_id
 
     # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);
 
-    _num_done += 1
-    print_progress("Integrate Gapfill results", _num_done, total_work)
     
     model_meta = fba.integrate_reconciliation_solutions(integrate_params)
 

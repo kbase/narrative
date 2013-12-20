@@ -183,6 +183,7 @@ def _show_genome(meth, genome):
     :output_widget: GenomeAnnotation
     """
     meth.stages = 1  # for reporting progress
+    meth.advance("Loading the genome")
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
     return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': genome})
@@ -236,6 +237,36 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
         fba_meta_data = wsClient.move_object(move_obj_params)
     
     return json.dumps({"data":fba_meta_data})
+
+
+@method(name="View FBA Model Details")
+def _view_model_details(meth, fba_model_id):
+    """This brings up a detailed view of your FBA Model within the narrative.
+    
+    :param fba_model_id: the FBA Model to view
+    :type fba_model_id: kbtypes.Model
+    :ui_name fba_model_id: FBA Model
+    
+    :return: FBA Model Data
+    :rtype: kbtypes.Model
+    :output_widget: kbaseModelTabs
+    """
+    meth.stages = 2  # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(service.URLS.fba)
+    
+    meth.advance("Loading the model")
+    get_models_params = {
+        'models' : [fba_model_id],
+        'workspaces' : [workspaceName],
+        'auth' : token
+    }
+    modeldata = fbaClient.get_models(get_models_params)
+    
+    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': modeldata})
 
 
 
@@ -379,6 +410,42 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     
     
     return json.dumps({ "ids":[generated_fba_id],"workspaces":[workspaceName],"fbaData":fbadata })
+
+
+
+@method(name="View FBA Result Details")
+def _view_fba_result_details(meth, fba_id):
+    """This brings up a detailed view of your FBA Model within the narrative.
+    
+    :param fba_id: the FBA Result to view
+    :type fba_id: kbtypes.FBA
+    :ui_name fba_id: FBA Result
+    
+    :return: something 
+    :rtype: kbtypes.Unicode
+    
+    :output_widget: kbaseFbaTabsNarrative
+    """
+    meth.stages = 2  # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(service.URLS.fba)
+    
+    meth.advance("Retrieving FBA results")
+    get_fbas_params = {
+        'fbas' : [fba_id],
+        'workspaces' : [workspaceName],
+        'auth' : token
+    }
+    fbadata = fbaClient.get_fbas(get_fbas_params)
+    
+    
+    return json.dumps({ "ids":[fba_id],"workspaces":[workspaceName],"fbaData":fbadata })
+
+
+
 
 @method(name="Gapfill an FBA Model")
 def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit):
@@ -531,24 +598,20 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
         })
 
 @method(name="Integrate Gapfill Solution")
-def _integrate_gapfill(meth, fba_model_id, gapfill_id):
+def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
     """Integrate a Gapfill solution into your FBA model
 
     :param fba_model_id: the FBA Model to integrate gapfill solutions into
     :type fba_model_id: kbtypes.Model
     :ui_name fba_model_id: FBA Model
     
-    :param gapfill_id: select the ID of the gapfill solution (found in the gapfill solutions tab in the model viewer)
+    :param gapfill_id: select the ID of the gapfill solution (found in the Gapfilling tab in the model viewer)
     :type gapfill_id: kbtypes.Unicode
     :ui_name gapfill_id: Gapfill ID
 
     :param output_model_id: select a name for the gapfilled object (optional)
     :type output_model_id: kbtypes.Unicode
     :ui_name output_model_id: Output FBA Result Name
-
-
-    :return: Generated FBA Model ID
-    :rtype: kbtypes.Model
     
     :output_widget: kbaseModelMetaNarrative
 
@@ -556,8 +619,8 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id):
     :rtype: kbtypes.Unicode
     """
 
-    meth.stages = 2
-    meth.advance("Setting up gapfill parameters")
+    meth.stages = 3
+    meth.advance("Setting up parameters")
     
     #grab token and workspace info, setup the client
     token, workspaceName = meth.token, meth.workspace_id;
@@ -579,7 +642,8 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id):
     integrate_params = {
         'model' : fba_model_id,
         'model_workspace' : workspaceName,
-        'gapfillSolutions' : params['Identifiers.Gapfill'],
+        'gapfillSolutions' : [gapfill_id],
+        'gapgenSolutions' : [],
         'workspace' : workspaceName,
         'auth' : token,
     }
@@ -589,31 +653,10 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id):
         integrate_params['out_model'] = output_model_id
 
     # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);
+    meth.advance("Integrating the gapfill solutions")
+    model_meta = fbaClient.integrate_reconciliation_solutions(integrate_params)
 
-    
-    model_meta = fba.integrate_reconciliation_solutions(integrate_params)
-
-    _num_done += 1
-    print_progress("Fetch Gapfilled FBA Model", _num_done, total_work)
-
-    model_params = {
-        'models': [model_meta[0]],
-        'workspaces': [workspace],
-        'auth': token,
-    }
-    model = fba.get_models(model_params)
-
-    _num_done += 1
-    print_progress("Render FBA Model", _num_done, total_work)
-
-    print json.dumps(metadata)
-
-
-
-
-
-
-    return json.dumps({ 'output' : "Integrate Gapfill stub" })
+    return json.dumps({"data":model_meta})
 
 @method(name="Upload Phenotype Data")
 def _upload_phenotype(meth, genome_id, phenotype_id):
@@ -686,6 +729,8 @@ def _reconcile_phenotype(meth, fba_model_id, phenotype_id):
     """
 
     return json.dumps({ 'output' : "Reconcile Phenotype stub" })
+
+
 
 
 

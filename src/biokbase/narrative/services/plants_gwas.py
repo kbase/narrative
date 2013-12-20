@@ -163,7 +163,7 @@ def filter_maf(meth, maf=0.05, vd_oid=None):
     :param vd_oid: Target workspace object ID for the population data.
     :type vd_oid: kbtypes.WorkspaceObjectId
     :return: Workspace object ID for the variation data
-    :rtype: kbtypes.WorkspaceObjectID
+    :rtype: kbtypes.WorkspaceObjectId
     """
     meth.debug("starting function")
     meth.stages = 3

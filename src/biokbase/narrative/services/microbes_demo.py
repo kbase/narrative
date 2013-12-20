@@ -199,6 +199,8 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     :ui_name fba_model_id: Output FBA Model Name
     :return: Generated FBA Model ID
     :rtype: kbtypes.Model
+    
+    :output_widget: kbaseModelMetaNarrative
     """
     
     meth.stages = 3  # for reporting progress
@@ -233,7 +235,7 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
         }
         fba_meta_data = wsClient.move_object(move_obj_params)
     
-    return json.dumps({ 'output' : fba_meta_data })
+    return json.dumps({"data":fba_meta_data})
 
 
 
@@ -289,10 +291,8 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     
     :return: something 
     :rtype: kbtypes.Unicode
-    """
     
-    """
-    :output_widget: kbaseFbaResultViewer
+    :output_widget: kbaseFbaTabsNarrative
     """
     
     meth.stages = 2
@@ -366,15 +366,16 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     result_meta = fbaClient.runfba(fba_params)
     generated_fba_id = result_meta[0]
     
-    #meth.advance("Retrieving FBA results")
-    #get_fbas_params = {
-    #    'fbas' : ['MyGenome.fbamdl.1.fba.0'],
-    #    'workspaces' : [workspaceName],
-    #    'auth' : token
-    #}
-    #results = fbaClient.get_fbas(get_fbas_params)
+    meth.advance("Retrieving FBA results")
+    get_fbas_params = {
+        'fbas' : [generated_fba_id],
+        'workspaces' : [workspaceName],
+        'auth' : token
+    }
+    fbadata = fbaClient.get_fbas(get_fbas_params)
     
-    return json.dumps({ "output":result_meta })
+    
+    return json.dumps({ "ids":[generated_fba_id],"workspaces":[workspaceName],"fbaData":fbadata })
 
 @method(name="Gapfill an FBA Model")
 def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit):

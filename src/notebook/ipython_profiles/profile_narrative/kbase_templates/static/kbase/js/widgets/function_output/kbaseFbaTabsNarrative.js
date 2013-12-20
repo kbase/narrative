@@ -16,7 +16,15 @@ $.KBWidget({
 
 
         var container = this.$elem;
-        container.append("<h4>Objective: " + data[0].objective + "</h4>");
+        
+        container.append("<h4 style=\"display:inline\">"+fbas[0]+"</h4>");
+        if (data[0].objective < 0.001) {
+            // no grow, make it red!
+            container.append("&nbsp&nbsp Objective: <span class=\"label label-danger\">" + data[0].objective + "</span>");
+        } else {
+            // grow, make it green!
+            container.append("&nbsp&nbsp Objective: <span class=\"label label-success\">" + data[0].objective + "</span>");
+        }
 
         var tables = ['Reactions', 'Compounds'];
         var tableIds = [randId+'reaction', randId+'compound'];

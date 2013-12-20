@@ -109,9 +109,9 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     :rtype: kbtypes.Unicode
     """
     if not scientific_name:
-        return json.dump({'output': 'ERROR: output genome name should be defined'})
+        return json.dump({'error': 'output genome name should be defined'})
     if not out_genome:
-        return json.dump({'output': 'ERROR: output genome ID should be defined'})
+        out_genome = "genome_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
     meth.stages = 1
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
@@ -627,20 +627,39 @@ def _upload_phenotype(meth, genome_id, phenotype_id):
     return json.dumps({'token': token, 'ws_name': workspace, 'genome_id': genome_id, 'phenotype_id': phenotype_id})
 
 @method(name="Simulate Phenotype Data")
-def _simulate_phenotype(meth, fba_model_id, phenotype_id):
+def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
     """Simulate some phenotype on an FBA model
 
     :param fba_model_id: an FBA model id
     :type fba_model_id: kbtypes.Model
     :ui_name fba_model_id: FBA Model ID
     :param phenotype_id: a phenotype ID
-    :type phenotype_id: kbtypes.PhenotypeData
+    :type phenotype_id: kbtypes.PhenotypeSet
     :ui_name phenotype_id: Phenotype Dataset ID
+    :param simulation_id: an output simulation ID
+    :type simulation_id: kbtypes.Unicode
+    :ui_name simulation_id: Phenotype Simulation ID
     :return: something
     :rtype: kbtypes.Unicode
+    :output_widget: PhenotypeSimulation
     """
 
-    return json.dumps({ 'output' : "Simulate Phenotype stub" })
+    if not simulation_id:
+        simulation_id = "simulation_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    fbaClient = fbaModelServices(service.URLS.fba)
+    simulate_phenotypes_params = {
+        'auth': token, 
+        'workspace': workspace, 
+        'phenotypeSimultationSet': simulation_id,
+        'model_workspace': workspace,
+        'model': fba_model_id,
+        'phenotypeSet_workspace': workspace,
+        'phenotypeSet': phenotype_id,
+    }
+    fbaClient.simulate_phenotypes(simulate_phenotypes_params)
+    return json.dumps({'token': token, 'ws_name': workspace, 'simulation_id': simulation_id})
 
 @method(name="Reconcile Phenotype Data")
 def _reconcile_phenotype(meth, fba_model_id, phenotype_id):
@@ -650,7 +669,7 @@ def _reconcile_phenotype(meth, fba_model_id, phenotype_id):
     :type fba_model_id: kbtypes.Model
     :ui_name fba_model_id: FBA Model ID
     :param phenotype_id: a phenotype ID
-    :type phenotype_id: kbtypes.PhenotypeData
+    :type phenotype_id: kbtypes.PhenotypeSet
     :ui_name phenotype_id: Phenotype Dataset ID
     :return: something
     :rtype: kbtypes.Unicode

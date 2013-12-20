@@ -91,7 +91,7 @@ def _assemble_genome(meth, contig_file, out_genome):
     meth.advance("Rendering Genome Information")
     return json.dumps(genome_meta)
 
-@method(name="Convert Contigs to Genome Object")
+@method(name="Convert Contigs to a Genome")
 def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     """This wraps a ContigSet by a Genome object in your data space.
     This should be run before trying to annotate a Genome.

@@ -58,7 +58,6 @@
 
             $(document).on('workspaceUpdated.Narrative', 
                 $.proxy(function(e, ws_id) {
-                    console.log(ws_id);
                     this.ws_id = ws_id;
                 }, 
                 this)
@@ -236,8 +235,8 @@
                 // This is the list of parameters for the given method
 //                var inputs = this.buildFunctionInputs(method, cellId);
                 var inputWidget = this.defaultInputWidget;
-                if (method.properties.widgets.input_widget)
-                    inputWidget = method.properties.widgets.input_widget;
+                if (method.properties.widgets.input)
+                    inputWidget = method.properties.widgets.input;
 
                 var inputDiv = "<div id='inputs'></div>";
 
@@ -452,9 +451,8 @@
                 function(event) {
                     event.preventDefault();
                     var cell = IPython.notebook.get_selected_cell();
-//                    var paramList = [];
                     var inputWidget = cell.metadata[self.KB_CELL].method.properties.widgets.input || self.defaultInputWidget;
-                    var paramList = $(cell.element)[inputWidget]('getParameters');
+                    var paramList = $(cell.element).find("#inputs")[inputWidget]('getParameters');
 
                     // $(cell.element).find("[name^=param]").filter(":input").each(function(key, field) {
                     //     console.log(field.name + "=" + field.value);
@@ -563,7 +561,9 @@
                       "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
                       "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
 
-            var paramList = params.map(function(p) { return '"' + p + '"'; });
+            console.log(params);
+
+            var paramList = params.map(function(p) { return "'" + p + "'"; });
             cmd += "method(" + paramList + ")";
             return cmd;
         },
@@ -704,20 +704,11 @@
                             }
                             // No progress marker on non-empty line => treat as final output of program.
                             else {
-<<<<<<< HEAD
                                 result += line;
                                 // all but the last line should have \n appended
                                 if (index < lines.length - 1) {
                                     result += "\n";
                                 }
-=======
-                                    // save the line
-                                    result += line;
-                                    // all but the last line should have \n appended
-                                    if (index < lines.length - 1) {
-                                        result += "\n";
-                                    }
->>>>>>> master
                             }
                         }
                     }

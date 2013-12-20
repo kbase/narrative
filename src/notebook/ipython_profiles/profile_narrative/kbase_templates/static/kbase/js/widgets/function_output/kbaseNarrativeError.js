@@ -73,6 +73,7 @@
          * that's just a style thing. You can do whatever the widget requires.
          */
         render: function() {
+            var printMsg = this.options.error.msg;
             this.$elem.append('Sorry, an error occurred<br>')
                       .append('In method: ' + this.options.error.method_name + '<br>')
                       .append('of type: ' + this.options.error.type + '<br>')

@@ -63,6 +63,15 @@
                 this )
             );
 
+            $(document).on(
+                'workspaceQuery.Narrative', $.proxy(function(e, callback) {
+                    if (callback) {
+                        callback(this.ws_id);
+                    }
+                }, 
+                this)
+            );
+
             return this;
         },
 

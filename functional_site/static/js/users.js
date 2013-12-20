@@ -268,7 +268,8 @@
                     //populate the data structure for the template
 					var count = 0;
 					_.every(projectresults, function(project_id){
-                        var name = project_id.id.substr(project_id.id.lastIndexOf("_") + 1);
+                        //var name = project_id.id.substr(project_id.id.lastIndexOf("_") + 1);
+                        var name = project_id.id.replace(/_/g," ");
 
 						data.rows.push({
                             "name": name,

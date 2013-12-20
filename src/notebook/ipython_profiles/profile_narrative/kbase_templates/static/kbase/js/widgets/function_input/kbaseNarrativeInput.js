@@ -27,6 +27,14 @@
             return [ "returning parameter list" ];
         },
 
+        getState: function() {
+
+        },
+
+        loadState: function() {
+
+        },
+
     });
 
 })( jQuery );

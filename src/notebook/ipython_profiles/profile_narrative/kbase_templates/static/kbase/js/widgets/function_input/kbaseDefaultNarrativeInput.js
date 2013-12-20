@@ -86,6 +86,13 @@
 
             return paramList;
         },
-    });
 
+        getState: function() {
+
+        },
+
+        loadState: function() {
+
+        },
+    });
 })( jQuery );

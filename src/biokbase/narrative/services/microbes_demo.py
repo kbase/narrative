@@ -663,20 +663,39 @@ def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
     return json.dumps({'token': token, 'ws_name': workspace, 'simulation_id': simulation_id})
 
 @method(name="Reconcile Phenotype Data")
-def _reconcile_phenotype(meth, fba_model_id, phenotype_id):
+def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
     """Run Gapfilling on an FBA Model
 
     :param fba_model_id: an FBA model id
     :type fba_model_id: kbtypes.Model
     :ui_name fba_model_id: FBA Model ID
-    :param phenotype_id: a phenotype ID
-    :type phenotype_id: kbtypes.PhenotypeSet
-    :ui_name phenotype_id: Phenotype Dataset ID
+    :param phenotype_id: a phenotype simulation ID
+    :type phenotype_id: kbtypes.PhenotypeSimulationSet
+    :ui_name phenotype_id: Phenotype Simulation Dataset ID
+    :param out_model_id: a name for the generated FBA Model (optional)
+    :type out_model_id: kbtypes.Unicode
+    :ui_name out_model_id: Output FBA Model Name
     :return: something
     :rtype: kbtypes.Unicode
+    :output_widget: kbaseModelMetaNarrative
     """
 
-    return json.dumps({ 'output' : "Reconcile Phenotype stub" })
+    if not out_model_id:
+        out_model_id = "model_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    fbaClient = fbaModelServices(service.URLS.fba)
+    wildtype_phenotype_reconciliation_params = {
+        'auth': token, 
+        'model_workspace': workspace,
+        'model': fba_model_id,
+        'phenotypeSet_workspace': workspace,
+        'phenotypeSet': phenotype_id,
+        'workspace': workspace, 
+        'out_model': out_model_id,
+    }
+    job_id = fbaClient.queue_wildtype_phenotype_reconciliation(wildtype_phenotype_reconciliation_params)['id']
+    return json.dumps({'token': token, 'ws_name': workspace, 'model_id': out_model_id, 'job_id': job_id})
 
 
 

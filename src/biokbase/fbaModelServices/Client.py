@@ -4,7 +4,7 @@
 # any changes made here will be overwritten
 #
 # Passes on URLError, timeout, and BadStatusLine exceptions.
-#     See: 
+#     See:
 #     http://docs.python.org/2/library/urllib2.html
 #     http://docs.python.org/2/library/httplib.html
 #
@@ -16,81 +16,101 @@ except ImportError:
     import sys
     sys.path.append('simplejson-2.3.3')
     import simplejson as json
-    
-import urllib2, httplib, urlparse, random, base64, httplib2
+
+import urllib2
+import httplib
+import urlparse
+import random
+import base64
+import httplib2
 from urllib2 import URLError, HTTPError
 from ConfigParser import ConfigParser
 import os
 
 _CT = 'content-type'
 _AJ = 'application/json'
-_URL_SCHEME = frozenset(['http', 'https']) 
+_URL_SCHEME = frozenset(['http', 'https'])
 
-# This is bandaid helper function until we get a full
-# KBase python auth client released
-def _get_token( user_id, password,
-                auth_svc="https://nexus.api.globusonline.org/goauth/token?grant_type=client_credentials"):
-    h = httplib2.Http( disable_ssl_certificate_validation=True)
-    
-    auth = base64.encodestring( user_id + ':' + password )
-    headers = { 'Authorization' : 'Basic ' + auth }
-    
+
+def _get_token(user_id, password,
+               auth_svc='https://nexus.api.globusonline.org/goauth/token?' +
+                        'grant_type=client_credentials'):
+    # This is bandaid helper function until we get a full
+    # KBase python auth client released
+    h = httplib2.Http(disable_ssl_certificate_validation=True)
+
+    auth = base64.encodestring(user_id + ':' + password)
+    headers = {'Authorization': 'Basic ' + auth}
+
     h.add_credentials(user_id, password)
     h.follow_all_redirects = True
     url = auth_svc
-    
+
     resp, content = h.request(url, 'GET', headers=headers)
     status = int(resp['status'])
-    if status>=200 and status<=299:
+    if status >= 200 and status <= 299:
         tok = json.loads(content)
-    elif status == 403: 
-        raise Exception( "Authentication failed: Bad user_id/password combination %s:%s" % (user_id, password))
+    elif status == 403:
+        raise Exception('Authentication failed: Bad user_id/password ' +
+                        'combination %s:%s' % (user_id, password))
     else:
         raise Exception(str(resp))
-        
+
     return tok['access_token']
 
-# Another bandaid to read in the ~/.authrc file if one is present
-def _read_rcfile( file=os.environ['HOME']+"/.authrc"):
+
+def _read_rcfile(file=os.environ['HOME'] + '/.authrc'):  # @ReservedAssignment
+    # Another bandaid to read in the ~/.authrc file if one is present
     authdata = None
-    if os.path.exists( file):
+    if os.path.exists(file):
         try:
-            with open( file ) as authrc:
-                rawdata = json.load( authrc)
+            with open(file) as authrc:
+                rawdata = json.load(authrc)
                 # strip down whatever we read to only what is legit
-                authdata = { x : rawdata.get(x) for x in ( 'user_id', 'auth_token',
-                                                           'client_secret', 'keyfile',
-                                                           'keyfile_passphrase','password')}
+                authdata = {x: rawdata.get(x) for x in (
+                    'user_id', 'token', 'client_secret', 'keyfile',
+                    'keyfile_passphrase', 'password')}
         except Exception, e:
             print "Error while reading authrc file %s: %s" % (file, e)
     return authdata
 
-# Another bandaid to read in the ~/.kbase_config file if one is present
-def _read_inifile( file=os.environ.get('KB_DEPLOYMENT_CONFIG',os.environ['HOME']+"/.kbase_config")):
+
+def _read_inifile(file=os.environ.get(  # @ReservedAssignment
+                      'KB_DEPLOYMENT_CONFIG', os.environ['HOME'] +
+                      '/.kbase_config')):
+    # Another bandaid to read in the ~/.kbase_config file if one is present
     authdata = None
-    if os.path.exists( file):
+    if os.path.exists(file):
         try:
             config = ConfigParser()
             config.read(file)
             # strip down whatever we read to only what is legit
-            authdata = { x : config.get('authentication',x) if config.has_option('authentication',x) else None for x in
-                         ( 'user_id', 'auth_token','client_secret', 'keyfile','keyfile_passphrase','password') }
+            authdata = {x: config.get('authentication', x)
+                        if config.has_option('authentication', x)
+                        else None for x in
+                           ('user_id', 'token', 'client_secret',
+                            'keyfile', 'keyfile_passphrase', 'password')}
         except Exception, e:
             print "Error while reading INI file %s: %s" % (file, e)
     return authdata
 
+
 class ServerError(Exception):
 
-    def __init__(self, name, code, message):
+    def __init__(self, name, code, message, data=None, error=None):
         self.name = name
         self.code = code
         self.message = '' if message is None else message
+        self.data = data or error or ''
+        # data = JSON RPC 2.0, error = 1.1
 
     def __str__(self):
-        return self.name + ': ' + str(self.code) + '. ' + self.message
-        
+        return self.name + ': ' + str(self.code) + '. ' + self.message + \
+            '\n' + self.data
+
+
 class JSONObjectEncoder(json.JSONEncoder):
-  
+
     def default(self, obj):
         if isinstance(obj, set):
             return list(obj)
@@ -98,10 +118,11 @@ class JSONObjectEncoder(json.JSONEncoder):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 
-class fbaModelServices:
 
-    def __init__(self, url = None, timeout = 30 * 60, user_id = None, 
-                 password = None, token = None, ignore_authrc = False):
+class fbaModelServices(object):
+
+    def __init__(self, url=None, timeout=30 * 60, user_id=None,
+                 password=None, token=None, ignore_authrc=False):
         if url is None:
             raise ValueError('A url is required')
         scheme, _, _, _, _, _ = urlparse.urlparse(url)
@@ -114,7 +135,7 @@ class fbaModelServices:
         if token is not None:
             self._headers['AUTHORIZATION'] = token
         elif user_id is not None and password is not None:
-            self._headers['AUTHORIZATION'] = _get_token( user_id, password)
+            self._headers['AUTHORIZATION'] = _get_token(user_id, password)
         elif 'KB_AUTH_TOKEN' in os.environ:
             self._headers['AUTHORIZATION'] = os.environ.get('KB_AUTH_TOKEN')
         elif not ignore_authrc:
@@ -122,41 +143,43 @@ class fbaModelServices:
             if authdata is None:
                 authdata = _read_rcfile()
             if authdata is not None:
-                if authdata.get('auth_token') is not None:
-                    self._headers['AUTHORIZATION'] = authdata['auth_token']
-                elif authdata.get('user_id') is not None and authdata.get('password') is not None:
-                    self._headers['AUTHORIZATION'] = _get_token( authdata['user_id'],authdata['password'] )
+                if authdata.get('token') is not None:
+                    self._headers['AUTHORIZATION'] = authdata['token']
+                elif(authdata.get('user_id') is not None
+                     and authdata.get('password') is not None):
+                    self._headers['AUTHORIZATION'] = _get_token(
+                        authdata['user_id'], authdata['password'])
         if self.timeout < 1:
             raise ValueError('Timeout value must be at least 1 second')
 
     def get_models(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.get_models',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.get_models',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -166,32 +189,32 @@ class fbaModelServices:
 
     def get_fbas(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.get_fbas',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.get_fbas',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -201,32 +224,32 @@ class fbaModelServices:
 
     def get_gapfills(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.get_gapfills',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.get_gapfills',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -236,32 +259,32 @@ class fbaModelServices:
 
     def get_gapgens(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.get_gapgens',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.get_gapgens',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -271,32 +294,32 @@ class fbaModelServices:
 
     def get_reactions(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.get_reactions',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.get_reactions',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -306,32 +329,102 @@ class fbaModelServices:
 
     def get_compounds(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.get_compounds',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.get_compounds',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def get_alias(self, input):
+
+        arg_hash = {'method': 'fbaModelServices.get_alias',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def get_aliassets(self, input):
+
+        arg_hash = {'method': 'fbaModelServices.get_aliassets',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -341,32 +434,32 @@ class fbaModelServices:
 
     def get_media(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.get_media',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.get_media',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -376,32 +469,32 @@ class fbaModelServices:
 
     def get_biochemistry(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.get_biochemistry',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.get_biochemistry',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -411,32 +504,32 @@ class fbaModelServices:
 
     def get_ETCDiagram(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.get_ETCDiagram',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.get_ETCDiagram',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -446,32 +539,32 @@ class fbaModelServices:
 
     def import_probanno(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.import_probanno',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.import_probanno',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -481,32 +574,32 @@ class fbaModelServices:
 
     def genome_object_to_workspace(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.genome_object_to_workspace',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.genome_object_to_workspace',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -516,32 +609,32 @@ class fbaModelServices:
 
     def genome_to_workspace(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.genome_to_workspace',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.genome_to_workspace',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -551,32 +644,32 @@ class fbaModelServices:
 
     def add_feature_translation(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.add_feature_translation',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.add_feature_translation',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -586,32 +679,32 @@ class fbaModelServices:
 
     def genome_to_fbamodel(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.genome_to_fbamodel',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.genome_to_fbamodel',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -621,67 +714,32 @@ class fbaModelServices:
 
     def import_fbamodel(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.import_fbamodel',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.import_fbamodel',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
-        resp = json.loads(ret.read())
-
-        if 'result' in resp:
-            return resp['result'][0]
-        else:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
-
-    def import_template_fbamodel(self, input):
-
-        arg_hash = { 'method': 'fbaModelServices.import_template_fbamodel',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
-
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
-        try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
-        except HTTPError as h:
-            if _CT in h.headers and h.headers[_CT] == _AJ:
-                b = h.read()
-                err = json.loads(b) 
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
-                    se = ServerError('Unknown', 0, b)
-                    se.httpError = h
-                    raise se
-                    #raise h      #  h.read() will return '' in the calling code.
-            else:
-                raise h
-        if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -691,32 +749,32 @@ class fbaModelServices:
 
     def export_fbamodel(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.export_fbamodel',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.export_fbamodel',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -726,32 +784,32 @@ class fbaModelServices:
 
     def export_object(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.export_object',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.export_object',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -761,32 +819,32 @@ class fbaModelServices:
 
     def export_genome(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.export_genome',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.export_genome',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -796,32 +854,32 @@ class fbaModelServices:
 
     def adjust_model_reaction(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.adjust_model_reaction',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.adjust_model_reaction',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -831,32 +889,32 @@ class fbaModelServices:
 
     def adjust_biomass_reaction(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.adjust_biomass_reaction',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.adjust_biomass_reaction',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -866,32 +924,32 @@ class fbaModelServices:
 
     def addmedia(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.addmedia',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.addmedia',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -901,32 +959,32 @@ class fbaModelServices:
 
     def export_media(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.export_media',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.export_media',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -936,32 +994,32 @@ class fbaModelServices:
 
     def runfba(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.runfba',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.runfba',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -971,32 +1029,32 @@ class fbaModelServices:
 
     def export_fba(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.export_fba',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.export_fba',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1006,32 +1064,32 @@ class fbaModelServices:
 
     def import_phenotypes(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.import_phenotypes',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.import_phenotypes',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1041,32 +1099,67 @@ class fbaModelServices:
 
     def simulate_phenotypes(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.simulate_phenotypes',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.simulate_phenotypes',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def add_media_transporters(self, input):
+
+        arg_hash = {'method': 'fbaModelServices.add_media_transporters',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1076,32 +1169,32 @@ class fbaModelServices:
 
     def export_phenotypeSimulationSet(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.export_phenotypeSimulationSet',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.export_phenotypeSimulationSet',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1111,32 +1204,32 @@ class fbaModelServices:
 
     def integrate_reconciliation_solutions(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.integrate_reconciliation_solutions',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.integrate_reconciliation_solutions',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1146,32 +1239,32 @@ class fbaModelServices:
 
     def queue_runfba(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.queue_runfba',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.queue_runfba',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1181,32 +1274,32 @@ class fbaModelServices:
 
     def queue_gapfill_model(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.queue_gapfill_model',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.queue_gapfill_model',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1216,32 +1309,32 @@ class fbaModelServices:
 
     def queue_gapgen_model(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.queue_gapgen_model',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.queue_gapgen_model',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1251,32 +1344,32 @@ class fbaModelServices:
 
     def queue_wildtype_phenotype_reconciliation(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.queue_wildtype_phenotype_reconciliation',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.queue_wildtype_phenotype_reconciliation',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1286,32 +1379,32 @@ class fbaModelServices:
 
     def queue_reconciliation_sensitivity_analysis(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.queue_reconciliation_sensitivity_analysis',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.queue_reconciliation_sensitivity_analysis',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1321,32 +1414,32 @@ class fbaModelServices:
 
     def queue_combine_wildtype_phenotype_reconciliation(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.queue_combine_wildtype_phenotype_reconciliation',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.queue_combine_wildtype_phenotype_reconciliation',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1356,32 +1449,32 @@ class fbaModelServices:
 
     def jobs_done(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.jobs_done',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.jobs_done',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1391,32 +1484,32 @@ class fbaModelServices:
 
     def run_job(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.run_job',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.run_job',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1426,32 +1519,32 @@ class fbaModelServices:
 
     def set_cofactors(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.set_cofactors',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.set_cofactors',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1461,32 +1554,32 @@ class fbaModelServices:
 
     def find_reaction_synonyms(self, input):
 
-        arg_hash = { 'method': 'fbaModelServices.find_reaction_synonyms',
-                     'params': [input],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.find_reaction_synonyms',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1496,32 +1589,32 @@ class fbaModelServices:
 
     def role_to_reactions(self, params):
 
-        arg_hash = { 'method': 'fbaModelServices.role_to_reactions',
-                     'params': [params],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
+        arg_hash = {'method': 'fbaModelServices.role_to_reactions',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
         try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
         except HTTPError as h:
             if _CT in h.headers and h.headers[_CT] == _AJ:
                 b = h.read()
-                err = json.loads(b) 
+                err = json.loads(b)
                 if 'error' in err:
                     raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
+                else:            # this should never happen... but if it does
                     se = ServerError('Unknown', 0, b)
                     se.httpError = h
+                    # h.read() will return '' in the calling code.
                     raise se
-                    #raise h      #  h.read() will return '' in the calling code.
             else:
                 raise h
         if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
         resp = json.loads(ret.read())
 
         if 'result' in resp:
@@ -1529,5 +1622,877 @@ class fbaModelServices:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
+    def reaction_sensitivity_analysis(self, input):
 
+        arg_hash = {'method': 'fbaModelServices.reaction_sensitivity_analysis',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
 
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def delete_noncontributing_reactions(self, input):
+
+        arg_hash = {'method': 'fbaModelServices.delete_noncontributing_reactions',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def fasta_to_ProteinSet(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.fasta_to_ProteinSet',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def ProteinSet_to_Genome(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.ProteinSet_to_Genome',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def fasta_to_TranscriptSet(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.fasta_to_TranscriptSet',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def TranscriptSet_to_Genome(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.TranscriptSet_to_Genome',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def fasta_to_ContigSet(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.fasta_to_ContigSet',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def ContigSet_to_Genome(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.ContigSet_to_Genome',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def annotate_workspace_Genome(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.annotate_workspace_Genome',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def probanno_to_genome(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.probanno_to_genome',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def get_mapping(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.get_mapping',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def adjust_mapping_role(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.adjust_mapping_role',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def adjust_mapping_complex(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.adjust_mapping_complex',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def adjust_mapping_subsystem(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.adjust_mapping_subsystem',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def get_template_model(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.get_template_model',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def import_template_fbamodel(self, input):
+
+        arg_hash = {'method': 'fbaModelServices.import_template_fbamodel',
+                    'params': [input],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def adjust_template_reaction(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.adjust_template_reaction',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def adjust_template_biomass(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.adjust_template_biomass',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def add_stimuli(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.add_stimuli',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def import_regulatory_model(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.import_regulatory_model',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def compare_models(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.compare_models',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def compare_genomes(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.compare_genomes',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def import_metagenome_annotation(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.import_metagenome_annotation',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def models_to_community_model(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.models_to_community_model',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def metagenome_to_fbamodels(self, params):
+
+        arg_hash = {'method': 'fbaModelServices.metagenome_to_fbamodels',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')

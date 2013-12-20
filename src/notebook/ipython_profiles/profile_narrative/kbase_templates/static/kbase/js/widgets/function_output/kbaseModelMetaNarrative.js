@@ -30,15 +30,16 @@ $.KBWidget({
         table.append(createTableRow("# Compounds", data[10].number_compounds));
         table.append(createTableRow("# Reactions", data[10].number_reactions));
         table.append(createTableRow("# Compartments", data[10].number_compartments));
-        table.append(createTableRow("Workspace", data[7]));
+        //table.append(createTableRow("Workspace", data[7]));
 
         this.$elem.append(table);
 
-        var wsBrowserLink = "<a href='" + this.wsBrowserURL + data[7] + "/" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View Model Details</a>";
-        var glammLink = "<a href='" + this.glammURL + this.glammWorkspaceTag + "=" + data[7] + "&" + this.glammModelTag + "=" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View in GLAMM</a>";
+        // removed because these don't seem to work, and views should probably be within the narrartive sidebar -mike
+        //var wsBrowserLink = "<a href='" + this.wsBrowserURL + data[7] + "/" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View Model Details</a>";
+        //var glammLink = "<a href='" + this.glammURL + this.glammWorkspaceTag + "=" + data[7] + "&" + this.glammModelTag + "=" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View in GLAMM</a>";
 
-        this.$elem.append(wsBrowserLink);
-        this.$elem.append(" " + glammLink);
+        //this.$elem.append(wsBrowserLink);
+        //this.$elem.append(" " + glammLink);
 
         return this;
 

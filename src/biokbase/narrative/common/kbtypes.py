@@ -91,13 +91,6 @@ class VersionNumber(TraitType, TypeMeta):
         self.error(obj, value)
 
 
-class Genome(tls.Unicode, TypeMeta):
-    info_text = "a genome"
-
-
-class Media(tls.Unicode, TypeMeta):
-    info_text = "some media"
-
 
 class Numeric(tls.Float, TypeMeta):
     info_text = "a number"
@@ -118,6 +111,10 @@ class Integer(tls.Integer, TypeMeta):
 
 class Unicode(tls.Unicode, TypeMeta):
     info_text = "a unicode string"
+
+
+class List(tls.Unicode, TypeMeta):
+    info_text = "List"
 
 
 class WorkspaceObjectId(tls.Unicode, TypeMeta):
@@ -150,3 +147,39 @@ class VariationDataset(JsonTraits):
 
     def __repr__(self):
         return json.dumps(self.as_json())
+
+
+######### Microbes Narrative ###########
+
+class Genome(tls.Unicode, TypeMeta):
+    info_text = "a genome"
+
+
+class Media(tls.Unicode, TypeMeta):
+    info_text = "some media"
+
+
+class Model(tls.Unicode, TypeMeta):
+    info_text = "an FBA model ID"
+
+
+class ContigSet(tls.Unicode, TypeMeta):
+    info_text = "a ContigSet"
+
+
+class FBAResult(tls.Unicode, TypeMeta):
+    info_text = "FBA result"
+
+class FBA(tls.Unicode, TypeMeta):
+    info_text = "FBA result"
+
+
+class Gapfill(tls.Unicode, TypeMeta):
+    info_text = "Gapfill set"
+
+
+class PhenotypeSet(tls.Unicode, TypeMeta):
+    info_text = "Phenotype data"
+
+class PhenotypeSimulationSet(tls.Unicode, TypeMeta):
+    info_text = "Phenotype simulation"

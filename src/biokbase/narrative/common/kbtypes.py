@@ -170,6 +170,9 @@ class ContigSet(tls.Unicode, TypeMeta):
 class FBAResult(tls.Unicode, TypeMeta):
     info_text = "FBA result"
 
+class FBA(tls.Unicode, TypeMeta):
+    info_text = "FBA result"
+
 
 class Gapfill(tls.Unicode, TypeMeta):
     info_text = "Gapfill set"

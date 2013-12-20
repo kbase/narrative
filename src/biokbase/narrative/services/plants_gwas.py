@@ -22,27 +22,37 @@ Upload Population Variation Data   (Ranjan,
  Step2:
 Filter Population variation data
   (Ranjan)
-For
- all of my future analysis, I only want to work with those variations with a minor allele frequency more than 1%. So I need to filter out all those variations that have minor allele frequency less than 1%. This function filters the vcf file on the hadoop cluster,
- pushes the filtered file to shock and creates a new variation type object with the command that I used to generate this new object.
+
+For  all of my future analysis, I only want to work with those variations with
+a minor allele frequency more than 1%.  So I need to filter out all those
+variations that have minor allele frequency less than 1%. This function
+filters the vcf file on the hadoop cluster,  pushes the filtered file to shock
+and creates a new variation type object with the command that I used to
+generate this new object.
 
 
  Step3:Calculate
  Populations structure (Ranjan)
-For
- Genome wide association analysis, I need a Population structure file which can be calculated from the variation data.
+
+For  Genome wide association analysis, I need a Population structure file
+which can be calculated from the variation data.
 
 
  Step4:Upload
  Trait/Phenotype data (Ranjan)
-Now
- I have taken care of variation data and Population structure data. This is just a one time analysis and would be used for all the association analysis and candidate gene discovery I will be doing in future for trait datasets. So now I upload the sugar release
- trait data. It is a small tab delimited file. I create an object of the type trait. I will use the widget to enter the metadata related to the trait.
+
+Now  I have taken care of variation data and Population structure data. This
+is just a one time analysis and would be used for all the association analysis
+and candidate gene discovery I will be doing in future for trait datasets. So
+now I upload the sugar release  trait data. It is a small tab delimited file.
+I create an object of the type trait. I will use the widget to enter the
+metadata related to the trait.
 
  Step5:Run
  Genome wide association analysis ( Ranjan)
-Now
- I run the GWAS workflow and provide it the id of the objects I just created. The GWAS object has list of significant SNPs, pvalue, rank and FDR.
+
+Now  I run the GWAS workflow and provide it the id of the objects I just
+created. The GWAS object has list of significant SNPs, pvalue, rank and FDR.
 
  Step6:Visualize
  significant SNPs (Shiran)
@@ -54,30 +64,36 @@ Now
 
  Step7:Identify
  genes close to the SNPs (Ranjan need to be modified for  workspace)
-I
- would like a gene list and so I use the command variations_to_genes. I want to filter by pvalue and I want to look 5 kb around the snp for any gene.
+
+I  would like a gene list and so I use the command variations_to_genes. I want
+to filter by pvalue and I want to look 5 kb around the snp for any gene.
 
 
- The
- region contains  70 genes. That is a big list of genes to work with. I want to prioritize my candidate gene list. I want to use other tools in KBase and explore that let me narrow done this gene list and help me identify the best set of genes to work with.
+ Theregioncontains70genes.Thatisabiglistofgenestoworkwith.Iwanttoprioritizemyc
+ andidategenelist.IwanttouseothertoolsinKBaseandexplorethatletmenarrowdonethis
+ genelistandhelpmeidentifythebestsetofgenestoworkwith.
 
  Step8:Functional
  annotation of genes (Sunita, Shinjae, Shiran objects)
-I
- want to look at the functional information for these 70 genes as well as gene ontology, pathways and pfam domains. Some of the genes related to cell wall look interesting. It would be interesting to see the expression profile of these and other genes.
+
+I  want to look at the functional information for these 70 genes as well as
+gene ontology, pathways and pfam domains. Some of the genes related to cell
+wall look interesting. It would be interesting to see the expression profile
+of these and other genes.
 
  Step9:Expression
  profile of genes (Sunita, Vidya, Shinjae objects)
-I
- want to look at the expression profile of these genes. I would select an experiment in poplar where researchers have done expression profiling in root, shoot, leaf, xylem, catkin, internode etc.
 
- 10
- of these genes have very high expression in xylem as compared to other tissues. Looks promising. Two of them also have pfam domains related to cell wall. One of them is an unknown protein. Now I have a manageable gene list to work with.
+I  want to look at the expression profile of these genes. I would select an
+experiment in poplar where researchers have done expression profiling in root,
+shoot, leaf, xylem, catkin, internode etc.
 
- How
- researchers can use this:
-Now
-  I will go back to my lab and knock down these genes or overexpress them and report the results back.
+ 10 ofthesegeneshaveveryhighexpressioninxylemascomparedtoothertissues.Lookspro
+ mising.Twoofthemalsohavepfamdomainsrelatedtocellwall.Oneofthemisanunknownprot
+ ein.NowIhaveamanageablegenelisttoworkwith.
+
+ How  researchers can use this: Now   I will go back to my lab and knock down
+these genes or overexpress them and report the results back.
 
 
 
@@ -137,32 +153,33 @@ class URLS:
 # Initialize
 init_service(name=NAME, desc="Plants GWAS service", version=VERSION)
 
-@method(name="M_stands A_for F_something")
-def maf(meth, maf=0.05, object_id=None):
-    """DESCRIPTION NEEDED.
+@method(name="Filter Minor Allele Frequencies")
+def filter_maf(meth, maf=0.05, vd_oid=None):
+    """Filter out all those variations that have minor allele frequency 
+    less than the given quantity.
 
-    :param maf: DESCRIPTION NEEDED
+    :param maf: Minimum Minor Allele Frequency (MAF)
     :type maf: kbtypes.Numeric
-    :param object_id: Workspace object ID for DESCRIPTION NEEDED
-    :type object_id: kbtypes.WorkspaceObjectId
-    :return: Number of jobs that were run
-    :rtype: kbtypes.Numeric
+    :param vd_oid: Target workspace object ID for the population data.
+    :type vd_oid: kbtypes.WorkspaceObjectId
+    :return: Workspace object ID for the variation data
+    :rtype: kbtypes.WorkspaceObjectID
     """
-    meth.debug("starting maf")
+    meth.debug("starting function")
     meth.stages = 3
 
     meth.advance("init GWAS service")
     gc = GWAS(URLS.gwas, token=meth.token)
 
-    meth.advance("submit job to filter VCF")
+    meth.advance("submit job to filter VCF file")
     try:
-        jid = gc.filter_vcf(meth.workspace_id, object_id, maf)
+        jid = gc.filter_vcf(meth.workspace_id, vd_oid, maf)
     except Exception as err:
         raise GWASException("submit job failed: {}".format(err))
     if not jid:
         raise GWASException(2, "submit job failed, no job id")
 
-    meth.advance("run VCF")
+    meth.advance("running job to filter VCF file")
     completed, njobs = 0, _job_count(jid)
     meth.stages += njobs
     while completed < njobs:
@@ -171,8 +188,8 @@ def maf(meth, maf=0.05, object_id=None):
         remaining = _job_count(jid)
         while completed < (njobs - remaining):
             completed += 1
-            meth.advance("VCF: {:d}/{:d} jobs completed".format(completed, njobs))
-    return njobs
+            meth.advance("job to filter VCF file: {:d}/{:d} tasks completed".format(completed, njobs))
+    return vd_oid
 
 
 def _job_count(id_):
@@ -183,6 +200,82 @@ def _job_count(id_):
     response = json.loads(r.text)
     remain_tasks = response.get("data", dict()).get("remaintasks")
     return remain_tasks
+
+@method(name="Population structure")
+def pop_struct(meth, vd_oid=None):
+    """Create new population structure file from the 
+    population variation data.
+
+    :param vd_oid: Workspace object ID specifying the population data.
+    :type vd_oid: kbtypes.WorkspaceObjectId
+    :return: Workspace object ID specifying the population structure file.
+    :rtype: kbtypes.WorkspaceObjectId
+    """
+    # XXX: What parameters are needed?
+    # XXX: What gets executed and returned?
+    meth.debug("starting function")
+    meth.stages = 1
+    meth.advance("doing something..")
+    return "fake_pop_struct_id"
+
+@method(name="Sugar release trait")
+def create_trait(meth, p1=None):
+    """Create an object for a sugar release trait.
+
+    :param p1: Dummy parameter
+    :type p1: kbtypes.Unicode
+    :return: Workspace ID of the new trait object
+    :rtype: kbtypes.WorkspaceObjectId
+    """
+    # XXX: What parameters are needed?
+    # XXX: What gets executed and returned?
+    meth.debug("starting function")
+    meth.stages = 1
+    meth.advance("doing something..")
+    return "fake_trait_id"
+
+@method(name="Run GWAS")
+def run_gwas(meth, ps_oid=None, trait_oid=None):
+    """Run genome-wide association study (GWAS) workflow, creating a
+    GWAS object that has a list of significant SNPs, pvalue, rank and FDR.
+
+    :param ps_oid: Workspace ID of population structure object
+    :type ps_oid: kbtypes.WorkspaceObjectId
+    :param trait_oid: Workspace ID of trait object
+    :type trait_oid: kbtypes.WorkspaceObjectId
+    :return: Workspace ID of GWAS object
+    :rtype: kbtypes.WorkspaceObjectId
+    """
+    # XXX: What parameters are needed?
+    # XXX: What gets executed and returned?
+    meth.debug("starting function")
+    meth.stages = 1
+    meth.advance("doing something..")
+    return "fake_gwas_id"
+
+@method(name="Gene list")
+def gene_list(meth, pvalue=None, snp_dist=5000):
+    """Call 'variations_to_genes' to get a gene list, and filter by
+    the given p-value and look 'snp_dist' around the SNP for any gene.
+
+    :param pvalue: p-value
+    :type pvalue: kbtypes.Numeric
+    :param snp_dist: SNP distance
+    :type snp_dist: kbtypes.Numeric
+    :return: Workspace ID of a list of genes
+    :rtype: kbtypes.WorkspaceObjectId
+    """
+    # XXX: What (other) parameters are needed?
+    # XXX: What gets executed and returned?
+    meth.debug("starting function")
+    meth.stages = 1
+    meth.advance("doing something..")
+    return "fake_gene_list_id"
+
+#XXX: Methods need to be added to get more information for genes the gene list
+#XXX: object. These methods will all take the gene list workspace ID and 
+#XXX: some parameters as input, and return another workspace ID, which has the
+#XXX: gene list with the additional information for each gene.
 
 # Finalize (registers service)
 finalize_service()

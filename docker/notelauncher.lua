@@ -56,9 +56,23 @@ local function launch_notebook( name )
    return(string.format("%s:%d","127.0.0.1", ports['8888/tcp'][1].HostPort))
 end
 
+--
+--    Kill and remove an existing docker container.
+--
+local function remove_notebook( name )
+   local portmap = get_notebooks()
+   assert(portmap[name], "Notebook by this name does not exist: " .. name)
+   local id = string.format('/%s',name)
+   local res = docker.client:stop_container{ id = id }
+   assert(res.status == 204, "Failed to stop container: " .. json.encode(res.body))
+   res = docker.client:remove_container{ id = id}
+   assert(res.status == 204, "Failed to remove container " .. id .. " : " .. json.encode(res.body))
+   return true
+end
+
 M.docker = docker
 M.get_notebooks = get_notebooks
 M.launch_notebook = launch_notebook
-
+M.remove_notebook = remove_notebook
 return M
 

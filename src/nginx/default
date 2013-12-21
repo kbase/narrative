@@ -17,13 +17,15 @@
 # Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
 ##
 
+lua_shared_dict proxy_map 1m;
+lua_shared_dict proxy_last 1m;
+
 lua_package_path "/home/vagrant/dockerstuff/narrative/docker/?;/home/vagrant/dockerstuff/narrative/docker/?.lua;;";
 init_by_lua '
     json = require("json")
     proxymgr = require("proxy_mgr")
+    proxymgr:initialize()
 ';
-
-lua_shared_dict proxy_map 1m;
 
 server {
 	#listen   80; ## listen for ipv4; this line is default and implied
@@ -50,6 +52,16 @@ server {
 
 	     set $uri_base '/proxymgr';
 	     content_by_lua 'proxymgr:set_proxy()';
+
+	}
+
+	# Dynamic proxy manager
+	location /proxy_last {
+	     default_type 'application/json';
+	     allow 127.0.0.1;
+
+	     set $uri_base '/proxy_last';
+	     content_by_lua 'proxymgr:idle_status()';
 
 	}
 

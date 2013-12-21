@@ -17,7 +17,112 @@ local key_regex = "[%w_%-%.]+"
 local val_regex = "[%w_%-:%.]+"
 local json = require('json')
 local notemgr = require('notelauncher')
-local proxy_map = ngx.shared.proxy_map
+
+local proxy_map = nil
+local proxy_last = nil
+
+-- strangely, the init_by_lua seems to run the initialize() method twice,
+-- use this flag to avoid reinitializing
+local initialized = nil
+
+-- Command to run in order to get netstat info for tcp connections in
+-- pure numeric form (no DNS or service name lookups)
+local NETSTAT = 'netstat -nt'
+
+-- How often (in seconds) does the reaper wake up
+M.interval = 300
+
+-- How long (in seconds) since we last saw activity on a container should we wait before
+-- shutting it down?
+M.timeout = 180
+
+
+--
+-- Function that runs a netstat and returns a table of foreign IP:PORT
+-- combinations and the number of observed ESTABLISHED connetions (at
+-- least 1)
+--
+local function est_connections()
+   local connections = {}
+   local handle = io.popen( NETSTAT, 'r')
+   if handle then
+      netstat = handle:read('*a')
+      handle:close()
+      for conn in string.gmatch(netstat,"[%d%.]+:[%d]+ + ESTABLISHED") do
+	 ipport = string.match( conn, "[%d%.]+:[%d]+")
+	 if connections[ipport] then
+	    connections[ipport] = connections[ipport] + 1
+	 else
+	    connections[ipport] = 1
+	 end
+      end
+   else
+      ngx.log( ngx.ERR, string.format("Error trying to execute %s", NETSTAT))
+   end
+   return connections
+end
+
+--
+-- Reaper function that examines containers to see if they have been idle for longer than
+-- M.timeout and then retires them and cleans up the proxy_map table
+--
+local function reap ()
+   ngx.log( ngx.INFO, "Reaper running")
+   local keys = proxy_last:get_keys() 
+   local timeout = os.time() - M.timeout
+
+   -- fetch currently open connections
+   local conn = est_connections()
+   local now = os.time()
+
+   for key = 1, #keys do
+      name = keys[key]
+      local target = proxy_map:get( name)
+      -- ngx.log( ngx.INFO, string.format("Checking %s -> %s", name, target))
+      if conn[target] then
+	 -- ngx.log( ngx.INFO, string.format("Found %s among current connections", name))
+	 success, err = proxy_last:set(name, now)
+	 if not success then
+	    ngx.log( ngx.ERR, string.format("Error setting proxy_last[ %s ] from established connections: %s",
+					    keys[key],err ))
+	 end
+      else -- not among current connections, check for reaping
+	 local last, flags = proxy_last:get( name)
+	 if last <= timeout then
+	    -- reap it
+	    ngx.log( ngx.INFO, string.format("Reaping %s - last seen %s",
+					     name,os.date("%c",last)))
+	    -- notemgr.remove_notebook(name)
+	    proxy_map:delete(name)
+	    proxy_last:delete(name)
+	 end
+      end
+   end
+end
+
+--
+-- Do some initialization for the proxy manager.
+-- Named parameters are:
+--     reap_interval - number of seconds between runs of the reaper, unused for now
+--     idle_timeout  - number of seconds since last activity before a container is reaped
+--     proxy_map - name to use for the nginx shared memory proxy_map
+--     proxy_last - name to use for the nginx shared memory last connection access time
+--
+local function initialize( conf )
+   if not initialized then
+      initialized = os.time()
+      M.interval = conf.reap_interval or M.interval
+      M.timeout = conf.idle_timeout or M.timeout
+      proxy_map = conf.proxy_map or ngx.shared.proxy_map
+      proxy_last = conf.proxy_last or ngx.shared.proxy_last
+
+      ngx.log( ngx.INFO, string.format("Initializing proxy manager: reap_internal %d idle_timeout %d",
+				      M.interval,M.timeout))
+   else
+      ngx.log( ngx.INFO, string.format("Initialized at %d, skipping",initialized))
+   end
+end
+
 
 -- This function is used to implement the rest interface
 local function set_proxy()
@@ -147,23 +252,19 @@ end
 
 --
 -- Route to the appropriate proxy
--- uses the instance atrtribute "pause" as a path to a
--- page that pauses the client for a little bit before refreshing
--- needed to allow a container some time to spin up without locking
--- up a server side connection while waiting for it to come up
 --
 local function use_proxy()
-   ngx.log( ngx.ERR, "In /narrative/ handler")
+   ngx.log( ngx.INFO, "In /narrative/ handler")
    local proxy_key = string.match(ngx.var.uri,"/narrative/([%w_-]+)")
    if proxy_key then
       local target, flags = proxy_map:get(proxy_key)
       if target == nil then -- didn't find in proxy map, check containers
-	 ngx.log( ngx.ERR, "Unknown proxy key:" .. proxy_key)
+	 ngx.log( ngx.WARN, "Unknown proxy key:" .. proxy_key)
 	 local notebooks = notemgr:get_notebooks()
-	 ngx.log( ngx.ERR, json.encode(notebooks))
+	 ngx.log( ngx.INFO, json.encode(notebooks))
 	 target = notebooks[proxy_key]
 	 if target then
-	    ngx.log( ngx.ERR, "Found name among containers, redirecting to " .. target )
+	    ngx.log( ngx.INFO, "Found name among containers, redirecting to " .. target )
 	    local success,err,forcible = proxy_map:set(proxy_key,target)
 	    if not success then
 	       ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
@@ -171,10 +272,10 @@ local function use_proxy()
 	       response = "Unable to set routing for notebook " .. err
 	    end
 	 else
-	    ngx.log( ngx.ERR, "Creating new notebook instance " )
+	    ngx.log( ngx.INFO, "Creating new notebook instance " )
 	    local status, res = pcall(notemgr.launch_notebook,proxy_key)
 	    if status then
-	       ngx.log( ngx.ERR, "New instance at: " .. res)
+	       ngx.log( ngx.INFO, "New instance at: " .. res)
 	       -- do a none blocking sleep for 2 seconds to allow the instance to spin up
 	       ngx.sleep(5)
 	       local success,err,forcible = proxy_map:set(proxy_key,res)
@@ -192,7 +293,11 @@ local function use_proxy()
       end
       if target ~= nil then
 	 ngx.var.target = target
-	 ngx.log( ngx.ERR, "Redirect to " .. ngx.var.target )
+	 ngx.log( ngx.INFO, "Redirect to " .. ngx.var.target )
+	 local success,err,forcible = proxy_last:set(proxy_key,os.time())
+	 if not success then
+	    ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )
+	 end
       else
 	 ngx.exit(ngx.HTTP_NOT_FOUND)
       end
@@ -202,6 +307,38 @@ local function use_proxy()
    end
 end
 
+local function idle_status()
+   local uri_key_rx = ngx.var.uri_base.."/("..key_regex ..")"
+   local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
+   local method = ngx.req.get_method()
+   local response = {}
+
+   -- Check URI to see if a specific proxy entry is being asked for
+   -- or if we just dump it all out
+   local uri_base = ngx.var.uri_base
+   local key = string.match(ngx.var.uri,uri_key_rx)
+   if key then
+      local last, flags = proxy_last:get(key)
+      if last == nil then
+	 ngx.status = ngx.HTTP_NOT_FOUND
+      else
+	 response = os.date("%c",last)
+      end
+   else 
+      local keys = proxy_last:get_keys() 
+      for key = 1, #keys do
+	 local last, flags = proxy_last:get( keys[key])
+	 response[keys[key]] = os.date("%c",last)
+      end
+   end
+   ngx.say(json.encode( response ))
+   reap()
+end
+
 M.set_proxy = set_proxy
 M.use_proxy = use_proxy
+M.initialize = initialize
+M.idle_status = idle_status
+M.est_connections = est_connections
+
 return M

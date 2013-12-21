@@ -248,5 +248,14 @@
             return [ JSON.stringify(mediaParams) ];
         },
 
+        getState: function() {
+            return {};
+        },
+
+        loadState: function(state) {
+            if (!state)
+                return;
+        },
+
     });
 })( jQuery );

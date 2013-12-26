@@ -13,11 +13,12 @@
             width: 400
         },
 
-        workspaceURL: "https://kbase.us/services/workspace",
+//        workspaceURL: "https://kbase.us/services/workspace",
+        workspaceURL: "http://140.221.84.170:7058/",
 
         init: function(options) {
             this._super(options);
-            if (this.options.meme_run_result_id === null) {
+            if (this.options.meme_run_result_name === null) {
                 //throw an error
                 return;
             }
@@ -42,9 +43,9 @@
              * Number of motifs
              */
             var self = this;
-            this.workspaceClient.get_object({"id" : this.options.meme_run_result_id, "type" : "MemeRunResult", "workspace": this.options.workspace_id}, 
+            this.workspaceClient.get_objects([{"obj_name" : this.options.meme_run_result_name, "type" : "MemeRunResult", "ws_name": this.options.workspace_name}], 
 		    	function(data){
-					self.collection = data;
+					self.collection = data[0];
 					rawOutput = self.collection.data.raw_output;
 					var d = new Date(parseInt(self.collection.data.timestamp));
 					var creationMonth = d.getMonth()+1;

@@ -210,16 +210,16 @@
             <span class="glyphicon glyphicon-check"></span><br>
 
         <h5>Params</h5>        
-            #/meme/$workspaceId<br>
-            #/meme/$workspaceId/$memeRunResultId<br>
-            #/meme/$workspaceId/$tomtomRunResultId<br>
-            #/meme/$workspaceId/$mastRunResultId<br>
+            #/meme/$workspaceName<br>
+            #/meme/$workspaceName/$memeRunResultName<br>
+            #/meme/$workspaceName/$tomtomRunResultName<br>
+            #/meme/$workspaceName/$mastRunResultName<br>
         <h5>Examples</h5>        
             <form class="form-inline" role="form" type="meme">
                 #/meme/
                 <div class="form-group">
-                <label class="sr-only" for="input1">workspace id</label>
-                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+                <label class="sr-only" for="input1">workspace name</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="AKtest">
                 </div>
                 <a class="btn btn-default api-url-submit">Go</a>
                 <span class="glyphicon glyphicon-check"></span>
@@ -228,11 +228,11 @@
               #/meme/
               <div class="form-group">
                 <label class="sr-only" for="input1">workspace</label>
-                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="AKtest">
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">meme_run_result</label>
-                <input class="form-control" id="input2" placeholder="Meme Run Result ID" value="TestMemeRunResult">
+                <input class="form-control" id="input2" placeholder="Meme Run Result Name" value="kb|memerunresult.15">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>
@@ -241,11 +241,11 @@
               #/meme/
               <div class="form-group">
                 <label class="sr-only" for="input1">workspace</label>
-                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="AKtest">
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">tomtom_run_result</label>
-                <input class="form-control" id="input2" placeholder="Tomtom Run Result ID" value="TestTomtomRunResult">
+                <input class="form-control" id="input2" placeholder="Tomtom Run Result Name" value="kb|tomtomrunresult.??">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>
@@ -254,11 +254,11 @@
               #/meme/
               <div class="form-group">
                 <label class="sr-only" for="input1">workspace</label>
-                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="AKtest">
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">mast_run_result</label>
-                <input class="form-control" id="input2" placeholder="Mast Run Result ID" value="TestMastRunResult">
+                <input class="form-control" id="input2" placeholder="Mast Run Result Name" value="kb|mastrunresult.??">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>
@@ -292,17 +292,17 @@
             <span class="glyphicon glyphicon-check"></span><br>
 
         <h5>Params</h5>        
-            #/cmonkey/$workspaceId/$cmonkeyRunResultId<br>
+            #/cmonkey/$workspaceName/$cmonkeyRunResultName<br>
         <h5>Examples</h5>        
             <form class="form-inline" role="form" type="cmonkey">
               #/cmonkey/
               <div class="form-group">
                 <label class="sr-only" for="input1">workspace</label>
-                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="AKtest">
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">cmonkey_run_result</label>
-                <input class="form-control" id="input2" placeholder="Cmonkey Run Result ID" value="TestCmonkeyRunResult">
+                <input class="form-control" id="input2" placeholder="Cmonkey Run Result Name" value="kb|cmonkeyrunresult.??">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>

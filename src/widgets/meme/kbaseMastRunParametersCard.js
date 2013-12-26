@@ -1,22 +1,18 @@
 (function( $, undefined ) { 
     $.KBWidget({ 
-        name: "KBaseMemeRawOutputCard", 
+        name: "KBaseMastRunParametersCard", 
         parent: "kbaseWidget", 
         version: "1.0.0",
 
         options: {
-            title: "MEME raw output",
+            title: "MAST run parameters",
             isInCard: false,
-            width: 800,
-            height: 600
+            width: 400
         },
-
-//        workspaceURL: "https://kbase.us/services/workspace",
 
         init: function(options) {
             this._super(options);
-            
-            if (this.options.memeOutput === null) {
+            if (this.options.mastresult === null) {
                 //throw an error
                 return;
             }
@@ -26,36 +22,34 @@
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-//            this.workspaceClient = new workspaceService(this.workspaceURL);
             return this.render();
-
         },
 
         render: function(options) {
 
-            /**
-             * Fields to show:
-             * ID
-             * Timestamp
-             * Run parameters
-             * Number of motifs
-             */
             var self = this;
-            self.memeOutput = this.options.memeOutput;
-
-	        self.$elem.append($("<div />").append($("<pre />").append(this.options.memeOutput)));
+            self.mastresult = this.options.mastresult;
+            
+			self.$elem.append($("<div />")
+					.append($("<table/>").addClass("kbgo-table")
+                                        .append($("<tr/>").append("<td>Query reference</td><td>" + self.mastresult.data.params.query_ref + "</td>"))
+                                        .append($("<tr/>").append("<td>Target reference</td><td>" + self.mastresult.data.params.target_ref + "</td>"))
+                                        .append($("<tr/>").append("<td>PSPM id</td><td>" + self.mastresult.data.params.pspm_id + "</td>"))
+                                        .append($("<tr/>").append("<td>Threshold</td><td>" + self.mastresult.data.params.mt.toString() + "</td>"))
+			));
 
             return this;
         },
 
         getData: function() {
             return {
-                type: "MemeRunResult",
-//                id: this.options.meme_run_result_id,
-                workspace: this.options.workspace_id,
-                title: "MEME raw output"
+                type: "MastRunResult",
+                id: this.options.mastresult.data.id,
+                workspace: this.options.ws,
+                title: "MAST run parameters"
             };
         },
+
 
         showMessage: function(message) {
             var span = $("<span/>").append(message);

@@ -23,46 +23,53 @@ $.KBWidget({
                 "sSearch": "Search all:"
             }
         };
+        var newWorkspaceServiceUrlForSpec = 'http://140.221.84.209:7058/';
+        var kbws = new Workspace(newWorkspaceServiceUrlForSpec);
         
-        var prom = kb.req('ws', 'list_workspace_objects',
-                            {type: 'MemeRunResult', workspace: ws});
-        $.when(prom).done(function(d){
+        kbws.prealpha_list_objects({type: 'MEME.MemeRunResult', workspaces: [ws]},
+            function(d){
+                var dataListMeme = formatObjs(d);
+                kbws.prealpha_list_objects({type: 'MEME.TomtomRunResult', workspaces: [ws]},
+                    function(d){
+                        var dataListTomtom = formatObjs(d);
+                        kbws.prealpha_list_objects({type: 'MEME.MastRunResult', workspaces: [ws]},
+                            function(d){
+                                var dataListMast = formatObjs(d);
+                                var panel_body = panel.body();
+                                var labels = ["ID", "Name", "Type"];
+                                var cols = getColumnsByLabel(labels);
+                                tableSettings.aoColumns = cols;
+                                panel_body.append('<table id="meme-table2" class="table table-striped table-bordered"></table>');
+                                var table = $('#meme-table2').dataTable(tableSettings);
 
-            var dataListMeme = formatObjs(d);
-
-            var promT = kb.req('ws', 'list_workspace_objects',
-                            {type: 'TomtomRunResult', workspace: ws});
-
-            $.when(promT).done(function(d){
-                var dataListTomtom = formatObjs(d);
-
-                var promM = kb.req('ws', 'list_workspace_objects',
-                                {type: 'MastRunResult', workspace: ws});
-                $.when(promM).done(function(d){
-                    var dataListMast = formatObjs(d);
-
-                    var panel_body = panel.body();
-                    var labels = ["ID", "Type", "Modification time"];
-                    var cols = getColumnsByLabel(labels);
-                    tableSettings.aoColumns = cols;
-                    panel_body.append('<table id="meme-table2" class="table table-striped table-bordered"></table>');
-                    var table = $('#meme-table2').dataTable(tableSettings);
-
-                    table.fnAddData(dataListMeme);
-                    table.fnAddData(dataListTomtom);
-                    table.fnAddData(dataListMast);
-                })
-                
-            })
-
-        })
-
+                                table.fnAddData(dataListMeme);
+                                table.fnAddData(dataListTomtom);
+                                table.fnAddData(dataListMast);
+                            }, 
+                            function(data) {
+                        	$('.loader-table').remove();
+                                self.$elem.append('<p>[Error] ' + data.error.message + '</p>');
+                                return;
+                            }
+                        )},
+                      function(data) {
+                        $('.loader-table').remove();
+                        self.$elem.append('<p>[Error] ' + data.error.message + '</p>');
+                        return;
+                      })
+                  },
+                 function(data) {
+                     $('.loader-table').remove();
+                     self.$elem.append('<p>[Error] ' + data.error.message + '</p>');
+                     return;
+                 })
+          
         function formatObjs(meme_meta) {
             var meme_list = [];
             for (var i in meme_meta) {
                 var meme = meme_meta[i].slice();
-                meme[0] = '<a class="meme-click" data-meme="'+meme[0]+'">'
-                            +meme[0]+'</a>';
+                meme[1] = '<a class="meme-click" data-meme="'+meme[1]+'">'
+                            +meme[1]+'</a>';
                 meme_list.push(meme);
             }
             return meme_list;

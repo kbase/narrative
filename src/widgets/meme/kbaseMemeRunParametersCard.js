@@ -10,7 +10,6 @@
             width: 780
         },
 
-//        workspaceURL: "https://kbase.us/services/workspace",
 
         init: function(options) {
             this._super(options);
@@ -24,8 +23,6 @@
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-//            this.workspaceClient = new workspaceService(this.workspaceURL);
-
             return this.render();
         },
 
@@ -37,8 +34,10 @@
 			self.$elem.append($("<div />")
 					.append($("<table/>").addClass("kbgo-table")
 				    .append($("<tr/>").append("<td>MEME Version</td><td>" + self.collection.data.version + "</td>"))
-				    .append($("<tr/>").append("<td>Input file (temporary)</td><td>" + self.collection.data.input_file_name + "</td>"))
+//				    .append($("<tr/>").append("<td>Input file (temporary)</td><td>" + self.collection.data.input_file_name + "</td>"))
 				    .append($("<tr/>").append("<td>Command line</td><td>" + self.collection.data.command_line + "</td>"))
+					.append($("<tr/>").append("<td>Source reference</td><td>" + self.collection.data.params.source_ref + "</td>"))
+					.append($("<tr/>").append("<td>Source ID</td><td>" + self.collection.data.params.source_id + "</td>"))
 					.append($("<tr/>").append("<td>Mode of distribution</td><td>" + self.collection.data.mod + "</td>"))
 					.append($("<tr/>").append("<td>Number of motifs</td><td>" + self.collection.data.nmotifs + "</td>"))
 					.append($("<tr/>").append("<td>Minimal motif width</td><td>" + self.collection.data.minw + "</td>"))

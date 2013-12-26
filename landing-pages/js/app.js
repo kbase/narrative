@@ -175,13 +175,13 @@ var app = angular.module('landing-pages',
             {url: '/meme/:ws',
              templateUrl: 'views/meme-list.html',
              controller: 'WSObjects'})
-        .state('memebyid',
+        .state('memebyname',
             {url: '/meme/:ws/:id',
              templateUrl: 'views/objects/meme.html',
              controller: 'MemeDetail'})
 
 	$stateProvider
-        .state('cmonkeybyid',
+        .state('cmonkeybyname',
             {url: '/cmonkey/:ws/:id',
              templateUrl: 'views/objects/cmonkey.html',
              controller: 'CmonkeyDetail'})
@@ -233,7 +233,7 @@ app.run(function ($rootScope, $location) {
 
     $rootScope.$on('$stateChangeStart',
         function (event, toState, toParams, fromState, fromParams) {
-            console.log(toState)
+            console.log(toState);
             if (toState.name == 'trees') {
                 $('#navigation').load('partials/nav-trees.html', navbar_cb);
             } else if (toState.name == 'mv') {

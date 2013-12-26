@@ -137,8 +137,13 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })  
 
 .controller('MemeDetail', function($scope, $stateParams) {
-    $scope.params = {'meme_run_result_id': $stateParams.id,
-                     'workspace_id': $stateParams.ws}
+    $scope.params = {'id': $stateParams.id,
+                     'ws': $stateParams.ws};
+})
+
+.controller('CmonkeyDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id,
+                     'ws': $stateParams.ws};
 })
 
 .controller('BambiDetail', function($scope, $stateParams) {

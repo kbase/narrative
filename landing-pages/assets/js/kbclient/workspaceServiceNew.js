@@ -94,7 +94,7 @@ function Workspace(url, auth, auth_cb) {
     };
 
     this.prealpha_list_objects = function (wsi, _callback, _errorCallback) {
-    return json_call_ajax("Workspace.prealpha_list_objects",
+    return json_call_ajax("Workspace.list_objects",
         [wsi], 1, _callback, _errorCallback);
 };
 

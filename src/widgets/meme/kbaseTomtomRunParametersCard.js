@@ -32,11 +32,13 @@
             
 			self.$elem.append($("<div />")
 					.append($("<table/>").addClass("kbgo-table")
-				    .append($("<tr/>").append("<td>Threshold</td><td>" + self.tomtomresult.data.thresh.toString() + "</td>"))
-				    .append($("<tr/>").append("<td>Distance scoring</td><td>" + self.tomtomresult.data.dist + "</td>"))
-					.append($("<tr/>").append("<td>Use evalue</td><td>" + self.tomtomresult.data.evalue.toString() + "</td>"))
-					.append($("<tr/>").append("<td>Use internal</td><td>" + self.tomtomresult.data.internal.toString() + "</td>"))
-					.append($("<tr/>").append("<td>Minimal overlap</td><td>" + self.tomtomresult.data.min_overlap.toString() + "</td>"))
+                                        .append($("<tr/>").append("<td>Query reference</td><td>" + self.tomtomresult.data.params.query_ref + "</td>"))
+                                        .append($("<tr/>").append("<td>Target reference</td><td>" + self.tomtomresult.data.params.target_ref + "</td>"))
+                                        .append($("<tr/>").append("<td>Threshold</td><td>" + self.tomtomresult.data.params.thresh.toString() + "</td>"))
+                                        .append($("<tr/>").append("<td>Distance scoring</td><td>" + self.tomtomresult.data.params.dist + "</td>"))
+					.append($("<tr/>").append("<td>Use evalue</td><td>" + self.tomtomresult.data.params.evalue.toString() + "</td>"))
+					.append($("<tr/>").append("<td>Use internal</td><td>" + self.tomtomresult.data.params.internal.toString() + "</td>"))
+					.append($("<tr/>").append("<td>Minimal overlap</td><td>" + self.tomtomresult.data.params.min_overlap.toString() + "</td>"))
 			));
 
             return this;

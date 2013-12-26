@@ -5,8 +5,8 @@
         version: "1.0.0",
 
         options: {
-            meme_run_result_id: null,
-            workspace_id: null,
+            id: null,
+            ws: null,
             loadingImage: "assets/img/ajax-loader.gif",
             title: "MEME Run Result Overview",
             isInCard: false,
@@ -14,11 +14,11 @@
         },
 
 //        workspaceURL: "https://kbase.us/services/workspace",
-        workspaceURL: "http://140.221.84.170:7058/",
+        newWorkspaceServiceUrl: "http://140.221.84.209:7058/",
 
         init: function(options) {
             this._super(options);
-            if (this.options.meme_run_result_name === null) {
+            if (this.options.id === null) {
                 //throw an error
                 return;
             }
@@ -28,8 +28,8 @@
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-            this.workspaceClient = new workspaceService(this.workspaceURL);
-
+            this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl);
+            
             return this.render();
         },
 
@@ -43,8 +43,9 @@
              * Number of motifs
              */
             var self = this;
-            this.workspaceClient.get_objects([{"obj_name" : this.options.meme_run_result_name, "type" : "MemeRunResult", "ws_name": this.options.workspace_name}], 
+            this.workspaceClient.get_objects([{workspace: this.options.ws, name: this.options.id}], 
 		    	function(data){
+                            //document.write(data[0]);
 					self.collection = data[0];
 					rawOutput = self.collection.data.raw_output;
 					var d = new Date(parseInt(self.collection.data.timestamp));
@@ -89,7 +90,11 @@
 	                );
 			    },
 
-			    self.rpcError
+			    function(data) {
+                                $('.loader-table').remove();
+                                self.$elem.append('<p>[Error] ' + data.error.message + '</p>');
+                                return;
+                            }
 		    );
             this.hideMessage();
             return this;
@@ -99,8 +104,8 @@
         getData: function() {
             return {
                 type: "MemeRunResult",
-                id: this.options.meme_run_result_id,
-                workspace: this.options.workspace_id,
+                id: this.options.id,
+                workspace: this.options.ws,
                 title: "MEME Run Result Overview"
             };
         },

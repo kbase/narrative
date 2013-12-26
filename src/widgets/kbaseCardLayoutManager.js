@@ -673,11 +673,11 @@
         	var pattMeme = /MemeRunResult/i;
         	var pattTomtom = /TomtomRunResult/i;
         	var pattMast = /MastRunResult/i;
-        	if (this.options.data.meme_run_result_id.match(pattMeme)){
+        	if (this.options.data.id.match(pattMeme)){
             	this.addNewCard("KBaseMemeRunResultCard",
                         {
-                            meme_run_result_id: this.options.data.meme_run_result_id,
-                            workspace_id: this.options.data.workspace_id,
+                            id: this.options.data.id,
+                            ws: this.options.data.ws,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
@@ -689,11 +689,11 @@
                     );
         	    return this;
         	}
-        	else if (this.options.data.meme_run_result_id.match(pattTomtom)){
+        	else if (this.options.data.id.match(pattTomtom)){
             	this.addNewCard("KBaseTomtomRunResultCard",
                         {
-                            tomtom_run_result_id: this.options.data.meme_run_result_id,
-                            workspace_id: this.options.data.workspace_id,
+                            id: this.options.data.id,
+                            ws: this.options.data.ws,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
@@ -705,11 +705,11 @@
                     );
         	    return this;
         	}
-        	else if (this.options.data.meme_run_result_id.match(pattMast)){
+        	else if (this.options.data.id.match(pattMast)){
             	this.addNewCard("KBaseMastRunResultCard",
                         {
-                            mast_run_result_id: this.options.data.meme_run_result_id,
-                            workspace_id: this.options.data.workspace_id,
+                            id: this.options.data.id,
+                            ws: this.options.data.ws,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
@@ -728,8 +728,8 @@
         showCmonkeyCards: function() {
             	this.addNewCard("KBaseCmonkeyRunResultCard",
                         {
-                            cmonkey_run_result_id: this.options.data.cmonkey_run_result_id,
-                            workspace_id: this.options.data.workspace_id,
+                            id: this.options.data.id,
+                            ws: this.options.data.ws,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
@@ -808,6 +808,7 @@
                                      "showTomtomHits", 
                                      "showTomtomRunParameters", 
                                      "showMastHits",
+                                     "showMastRunParameters", 
                                      "showCmonkeyCluster", 
                                      "showCmonkeyMotif", 
                                      "showBambiMotif",
@@ -1068,6 +1069,26 @@
                     {
                         my: "left+440 top",
                         at: "left bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showMastRunParameters
+             * -------------------
+             * Adds new TOMTOM Hits card.
+             */
+            $(document).on("showMastRunParameters", function(event, data) {
+                self.addNewCard("KBaseMastRunParametersCard",
+                    {
+                        mastresult: data.mastresult,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+420 bottom",
                         of: "#app"
                     }
                 );

@@ -1,12 +1,13 @@
 (function($, undefined) {
     $.KBWidget({
-        name: "KBaseMemeMotifCard",
+        name: "KBaseCmonkeyMotifCard",
         parent: "kbaseWidget",
         version: "1.0.0",
         options: {
-            title: "MEME Motif",
+            title: "cMonkey Motif",
             isInCard: false,
-            width: 900
+            width: 600,
+            height: 800
         },
         init: function(options) {
             this._super(options);
@@ -29,13 +30,15 @@
             self.$elem.append($("<div />")
 						.append($("<table/>").addClass("kbgo-table")
 					    .append($("<tr/>")
-					    	.append("<td>Motif description</td><td>" + self.motif.description + "</td>"))
+					    	.append("<td>Motif evalue</td><td>" + self.motif.evalue + "</td>"))
 					    .append($("<tr/>").
-					    	append("<td>Motif width</td><td>" + self.motif.width + "</td>"))
+					    	append("<td>Sequence type</td><td>" + self.motif.seq_type + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>Motif width</td><td>" + self.motif.pssm_rows.length + "</td>"))
 					    .append($("<tr/>").
 					    	append("<td>Number of sites</td><td>" + self.motif.sites.length + "</td>"))
 					    .append($("<tr/>").
-					    	append("<td>Motif E-value</td><td>" + self.motif.evalue + "</td>"))
+					    	append("<td>Number of hits</td><td>" + self.motif.hits.length + "</td>"))
 			));
 
             //Logo 
@@ -55,23 +58,52 @@
                     .append("<h3>List of sites</h3>"));
 
             var $sitesTable = '<table id="sites-table' + self.motif.id + '" class="kbgo-table">';
-            $sitesTable += "<tr><td>Sequence ID</td><td>Start</td><td>p-value</td><td>&nbsp;</td><td>Site sequence</td><td>&nbsp;</td></tr>";
+            $sitesTable += "<tr><td>Sequence ID</td><td>Start</td><td>Site sequence</td></tr>";
 
             for (var site in self.motif.sites) {
-                $sitesTable += "<tr><td>" + self.motif.sites[site].source_sequence_id + "</td><td>" + self.motif.sites[site].start + "</td><td>" + self.motif.sites[site].pvalue + "</td><td>" + self.motif.sites[site].left_flank + "</td><td>" + self.motif.sites[site].sequence + "</td><td>" + self.motif.sites[site].right_flank + "</td></tr>";
+                $sitesTable += "<tr><td>" + self.motif.sites[site].source_sequence_id + "</td><td>" + self.motif.sites[site].start + "</td><td>" + self.motif.sites[site].sequence + "</td></tr>";
             }
 
             $sitesTable += "</table>";
             self.$elem.append($("<div />").append($sitesTable));
 
+            //Hits
+            self.$elem.append($("<div />")
+                    .append("<h3>Motif hits</h3>"));
+
+            var $hitsTable = '<table id="hits-table' + self.motif.id + '" class="kbgo-table">';
+            $hitsTable += "<tr><td>Sequence ID</td><td>Start</td><td>End</td><td>Strand</td><td>P-value</td></tr>";
+
+            for (var hit in self.motif.hits) {
+                $hitsTable += "<tr><td>" + self.motif.hits[hit].sequence_id + "</td><td>" + self.motif.hits[hit].hit_start + "</td><td>" + self.motif.hits[hit].hit_end + "</td><td>" + self.motif.hits[hit].strand + "</td><td>" + self.motif.hits[hit].hit_pvalue + "</td></tr>";
+            }
+
+            $hitsTable += "</table>";
+            self.$elem.append($("<div />").append($hitsTable));
+
+            //PSSM
+            self.$elem.append($("<div />")
+                    .append("<h3>Matrix</h3>"));
+
+            var $pssmTable = '<table id="pssm-table' + self.motif.id + '" class="kbgo-table">';
+            $pssmTable += "<tr><td>A</td><td>C</td><td>G</td><td>T</td></tr>";
+
+            for (var row in self.motif.pssm_rows) {
+                $pssmTable += "<tr><td>" + self.motif.pssm_rows[row][0] + "</td><td>" + self.motif.pssm_rows[row][1] + "</td><td>" + self.motif.pssm_rows[row][2] + "</td><td>" + self.motif.pssm_rows[row][3] + "</td></tr>";
+            }
+
+            $pssmTable += "</table>";
+            self.$elem.append($("<div />").append($pssmTable));
+
+
             return this;
         },
         getData: function() {
             return {
-                type: "MemeMotif",
+                type: "CmonkeyMotif",
                 id: this.options.motif.id,
                 workspace: this.options.workspace_id,
-                title: "MEME Motif"
+                title: "cMonkey Motif"
             };
         },
         showMessage: function(message) {

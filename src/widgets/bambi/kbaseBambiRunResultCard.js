@@ -58,7 +58,7 @@
 
 					var $dropdown = $("<select />");
 					for (var motif in self.collection.data.motifs) {						
-						$dropdown.append("<option id='" + motif + "'> self.collection.data.motifs[motif].description </option>");
+						$dropdown.append("<option id='" + motif + "'>"+ self.collection.data.motifs[motif].description + "</option>");
 					}
 					self.$elem.append($dropdown);
 					self.$elem.append($("<button class='btn btn-default'>Show Motif</button>")

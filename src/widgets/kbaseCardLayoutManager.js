@@ -531,6 +531,13 @@
             return [];
         },
 
+        _exportCmonkeyRunResult: function(data, workspace) {
+            this.dbg("Exporting cMonkey run result");
+            this.dbg(data);
+
+            return [];
+        },
+
         _exportBambiRunResult: function(data, workspace) {
             this.dbg("Exporting BAMBI run result");
             this.dbg(data);
@@ -568,6 +575,8 @@
                 this.showGenomeCards();
             else if (this.options.template.toLowerCase() === "meme")
                 this.showMemeCards();
+            else if (this.options.template.toLowerCase() === "cmonkey")
+                this.showCmonkeyCards();
             else if (this.options.template.toLowerCase() === "bambi")
                 this.showBambiCards();
             else if (this.options.template.toLowerCase() === "gene")
@@ -716,6 +725,23 @@
         	};
         },
         
+        showCmonkeyCards: function() {
+            	this.addNewCard("KBaseCmonkeyRunResultCard",
+                        {
+                            cmonkey_run_result_id: this.options.data.cmonkey_run_result_id,
+                            workspace_id: this.options.data.workspace_id,
+                            loadingImage: this.options.loadingImage,
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        },
+
         showBambiCards: function() {
             	this.addNewCard("KBaseBambiRunResultCard",
                         {
@@ -782,6 +808,8 @@
                                      "showTomtomHits", 
                                      "showTomtomRunParameters", 
                                      "showMastHits",
+                                     "showCmonkeyCluster", 
+                                     "showCmonkeyMotif", 
                                      "showBambiMotif",
                                      "showBambiRunParameters", 
                                      "showBambiRawOutput"];
@@ -1040,6 +1068,47 @@
                     {
                         my: "left+440 top",
                         at: "left bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showCmonkeyCluster
+             * -------------------
+             * Adds card with cMonkey bi-cluster.
+             */
+
+            $(document).on("showCmonkeyCluster", function(event, data) {
+                self.addNewCard("KBaseCmonkeyClusterCard",
+                    {
+                        cluster: data.cluster,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+600 bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showCmonkeyMotif
+             * -------------------
+             * Adds new cMonkey Motif card.
+             */
+            $(document).on("showCmonkeyMotif", function(event, data) {
+                self.addNewCard("KBaseCmonkeyMotifCard",
+                    {
+                        motif: data.motif,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "center top",
+                        at: "center bottom",
                         of: "#app"
                     }
                 );

@@ -32,7 +32,8 @@ var app = angular.module('landing-pages',
           url: "/mv/",
           templateUrl: 'views/mv/mv.html',
           controller: 'ModelViewer'
-        })
+        })   
+        
         .state('mv.objtable', {
           url: "objtable/?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
@@ -179,6 +180,12 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/objects/meme.html',
              controller: 'MemeDetail'})
 
+	$stateProvider
+        .state('cmonkeybyid',
+            {url: '/cmonkey/:ws/:id',
+             templateUrl: 'views/objects/cmonkey.html',
+             controller: 'CmonkeyDetail'})
+
     $stateProvider
         .state('spec',
             {url: '/spec/:kind/:id',
@@ -186,10 +193,11 @@ var app = angular.module('landing-pages',
              controller: 'SpecDetail'})
 
     $stateProvider
-        .state('bambi',
+        .state('bambibyid',
             {url: '/bambi/:ws/:id',
-             templateUrl: 'views/objects/bambi.html',
+            templateUrl: 'views/objects/bambi.html',
              controller: 'BambiDetail'})
+
 
     $stateProvider
         .state('landing-pages-help',

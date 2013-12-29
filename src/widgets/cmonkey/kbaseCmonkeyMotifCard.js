@@ -7,7 +7,7 @@
             title: "cMonkey Motif",
             isInCard: false,
             width: 600,
-            height: 800
+            height: 700
         },
         init: function(options) {
             this._super(options);
@@ -75,7 +75,7 @@
             $hitsTable += "<tr><td>Sequence ID</td><td>Start</td><td>End</td><td>Strand</td><td>P-value</td></tr>";
 
             for (var hit in self.motif.hits) {
-                $hitsTable += "<tr><td>" + self.motif.hits[hit].sequence_id + "</td><td>" + self.motif.hits[hit].hit_start + "</td><td>" + self.motif.hits[hit].hit_end + "</td><td>" + self.motif.hits[hit].strand + "</td><td>" + self.motif.hits[hit].hit_pvalue + "</td></tr>";
+                $hitsTable += "<tr><td>" + self.motif.hits[hit].seq_id + "</td><td>" + self.motif.hits[hit].hit_start + "</td><td>" + self.motif.hits[hit].hit_end + "</td><td>" + self.motif.hits[hit].strand + "</td><td>" + self.motif.hits[hit].hit_pvalue + "</td></tr>";
             }
 
             $hitsTable += "</table>";

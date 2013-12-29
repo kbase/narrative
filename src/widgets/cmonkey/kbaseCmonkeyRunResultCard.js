@@ -10,7 +10,8 @@
             loadingImage: "assets/img/ajax-loader.gif",
             title: "cMonkey Run Result Overview",
             isInCard: false,
-            width: 550
+            width: 600,
+            height: 550
         },
 
 //        workspaceURL: "https://kbase.us/services/workspace",
@@ -52,17 +53,21 @@
 			        self.$elem.append($("<div />").
 					append($("<table/>").addClass("kbgo-table")
 					    .append($("<tr/>").append("<td>ID</td><td>" + self.collection.data.id + "</td>"))
-					    .append($("<tr/>").append("<td>Created: </td><td>" + self.collection.data.start_time + "</td>"))
-                                            .append($("<tr/>").append("<td>Organism</td><td>" + self.collection.data.organism + "</td>"))
-                                            .append($("<tr/>").append("<td>Number of clusters</td><td>" + self.collection.data.clusters_number + "</td>"))
-                                            .append($("<tr/>").append("<td>Number of genes</td><td>" + self.collection.data.rows_number + "</td>"))
-                                            .append($("<tr/>").append("<td>Number of conditions</td><td>" + self.collection.data.columns_number + "</td>"))
+					    .append($("<tr/>").append("<td>Run started </td><td>" + self.collection.data.start_time + "</td>"))
+					    .append($("<tr/>").append("<td>Run finished </td><td>" + self.collection.data.finish_time + "</td>"))
+                                            .append($("<tr/>").append("<td>Expression data reference</td><td>" + self.collection.data.parameters.series_ref + "</td>"))
+                                            .append($("<tr/>").append("<td>Genome reference</td><td>" + self.collection.data.parameters.genome_ref + "</td>"))
+                                            .append($("<tr/>").append("<td>Operons data reference</td><td>" + self.collection.data.parameters.operome_ref + "</td>"))
+                                            .append($("<tr/>").append("<td>STRING data reference</td><td>" + self.collection.data.parameters.network_ref + "</td>"))
+                                            .append($("<tr/>").append("<td>Number of clusters</td><td>" + self.collection.data.network.clusters_number + "</td>"))
+                                            .append($("<tr/>").append("<td>Number of genes</td><td>" + self.collection.data.network.rows_number + "</td>"))
+                                            .append($("<tr/>").append("<td>Number of conditions</td><td>" + self.collection.data.network.columns_number + "</td>"))
 					));
 					self.$elem.append("<h3>View clusters</h3>");
 
 					var $dropdown = $("<select />");
 					for (var cluster in self.collection.data.network.clusters) {						
-						$dropdown.append("<option id='" + cluster + "'>"+self.collection.data.network.clusters[cluster].id+"; residual = " + self.collection.data.network.clusters[cluster].residual + "; genes = " + self.collection.data.network.clusters[cluster].gene_ids.length + "; conditions = " + self.collection.data.network.clusters[cluster].dataset_ids.length + " </option>");
+						$dropdown.append("<option id='" + cluster + "'>"+self.collection.data.network.clusters[cluster].id+"; residual = " + self.collection.data.network.clusters[cluster].residual.toFixed(4) + "; genes = " + self.collection.data.network.clusters[cluster].gene_ids.length + "; conditions = " + self.collection.data.network.clusters[cluster].sample_ws_ids.length + " </option>");
 					}
 					self.$elem.append($dropdown);
 					self.$elem.append($("<button class='btn btn-default'>Show Cluster</button>")

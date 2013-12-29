@@ -6,8 +6,9 @@
         options: {
             title: "cMonkey Cluster",
             isInCard: false,
-            width: 600
-        },
+            width: 600,
+            height: 700
+       },
         init: function(options) {
             this._super(options);
             if (this.options.cluster === null) {
@@ -26,6 +27,8 @@
 
             var self = this;
             self.cluster = this.options.cluster;
+            
+            
             self.$elem.append($("<div />")
 						.append($("<table/>").addClass("kbgo-table")
 					    .append($("<tr/>")
@@ -35,7 +38,7 @@
 					    .append($("<tr/>").
 					    	append("<td>Number of genes</td><td>" + self.cluster.gene_ids.length + "</td>"))
 					    .append($("<tr/>").
-					    	append("<td>Number of conditions</td><td>" + self.cluster.dataset_ids.length + "</td>"))
+					    	append("<td>Number of conditions</td><td>" + self.cluster.sample_ws_ids.length + "</td>"))
 					    .append($("<tr/>").
 					    	append("<td>Number of motifs</td><td>" + self.cluster.motifs.length + "</td>"))
 			));
@@ -68,31 +71,38 @@
             var $conditionsTable = '<table id="conditions-table' + self.cluster.id + '" class="kbgo-table">';
             $conditionsTable += "<tr><td>Condition</td></tr>";
 
-            for (var condition in self.cluster.dataset_ids) {
-                $conditionsTable += "<tr><td>" + self.cluster.dataset_ids[condition] + "</td></tr>";
+            for (var condition in self.cluster.sample_ws_ids) {
+                $conditionsTable += "<tr><td>" + self.cluster.sample_ws_ids[condition] + "</td></tr>";
             }
 
             $conditionsTable += "</table>";
             self.$elem.append($("<div />").append($conditionsTable));
             
             //Motifs
-            self.$elem.append($("<div />")
-                    .append("<h3>List of motifs</h3>"));
 
-            var $dropdown = $("<select />");
-            for (var motif in self.cluster.motifs) {						
-		$dropdown.append("<option id='" + motif + "'> id = "+self.cluster.motifs[motif].id+"; width = " + self.cluster.motifs[motif].pssm_rows.length + "; evalue = " + self.cluster.motifs[motif].evalue + " </option>");
-		}
-		self.$elem.append($dropdown);
-		self.$elem.append($("<button class='btn btn-default'>Show Motif</button>")
-	            .on("click", 
-                        function(event) {
-                            $(self.$elem.selector + " > select option:selected").each(function() {
-    //                      	console.log(event);
-                                self.trigger("showCmonkeyMotif", { motif: self.cluster.motifs[$(this).attr("id")], event: event });
-                            });
-                        })
-	            );
+                self.$elem.append($("<div />")
+                        .append("<h3>List of motifs</h3>"));
+
+            var $dropdown;
+            if (typeof self.cluster.motifs[0] === 'undefined'){
+                $dropdown = $("<div />").append("No motifs in this cluster");
+                self.$elem.append($dropdown);
+            } else {
+                $dropdown = $("<select />");
+                for (var motif in self.cluster.motifs) {
+                       $dropdown.append("<option id='" + motif + "'> id = "+self.cluster.motifs[motif].id+"; width = " + self.cluster.motifs[motif].pssm_rows.length + "; evalue = " + self.cluster.motifs[motif].evalue + " </option>");
+                }
+                self.$elem.append($dropdown);
+                    self.$elem.append($("<button class='btn btn-default'>Show Motif</button>")
+                        .on("click", 
+                            function(event) {
+                                $(self.$elem.selector + " > select option:selected").each(function() {
+    //                              console.log(event);
+                                    self.trigger("showCmonkeyMotif", { motif: self.cluster.motifs[$(this).attr("id")], event: event });
+                                });
+                            })
+                        );
+            };
 
             return this;
         },

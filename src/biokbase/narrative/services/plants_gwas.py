@@ -272,10 +272,5 @@ def gene_list(meth, pvalue=None, snp_dist=5000):
     meth.advance("doing something..")
     return "fake_gene_list_id"
 
-#XXX: Methods need to be added to get more information for genes the gene list
-#XXX: object. These methods will all take the gene list workspace ID and 
-#XXX: some parameters as input, and return another workspace ID, which has the
-#XXX: gene list with the additional information for each gene.
-
 # Finalize (registers service)
 finalize_service()

@@ -28,11 +28,12 @@
         },
 
         getState: function() {
-
+            return {};
         },
 
-        loadState: function() {
-
+        loadState: function(state) {
+            if (!state)
+                return;
         },
 
     });

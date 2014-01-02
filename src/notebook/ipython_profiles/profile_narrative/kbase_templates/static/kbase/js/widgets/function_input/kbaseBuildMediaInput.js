@@ -248,13 +248,67 @@
             return [ JSON.stringify(mediaParams) ];
         },
 
+        /**
+         * Returns the current state of this widget as a single Javascript object.
+         * This object is structured as:
+         *
+         * {
+         *   'name' : <string name>,
+         *   'ph' : <string ph>,
+         *   'compounds' : 
+         *       [
+         *          {
+         *              'name' : <cpd name>,
+         *              'conc' : <cpd concentration>,
+         *              'min' : <string>,
+         *              'max' : <string>,
+         *          },
+         *          { ... as above ...},
+         *       ],
+         * }
+         *
+         * The compounds in the structure might contain nulls/blanks. So watch for that.
+         * It also gives the compound list in the same order as on the screen. Hopefully.
+         */
         getState: function() {
-            return {};
+            var state = {};
+            state['name'] = this.$headerInputDiv.find("#media-name").val();
+            state['ph'] = this.$headerInputDiv.find("#media-ph").val();
+
+            var cpds = [];
+            this.$mediaTable.find("tr:has('td')").each(function(idx, row) {
+                cpds.push({
+                    'name' : $(row).find("td:nth-child(1) input").val(),
+                    'conc' : $(row).find("td:nth-child(2) input").val(),
+                    'min' : $(row).find("td:nth-child(3) input").val(),
+                    'max' : $(row).find("td:nth-child(4) input").val(),
+                });
+            });
+            state['compounds'] = cpds;
+            return state;
         },
 
+        /**
+         * Loads up the previous state into the widget.
+         * This expects to see the object generated with this widget's getState function.
+         */
         loadState: function(state) {
             if (!state)
                 return;
+
+            this.$headerInputDiv.find("#media-name").val(state['name']);
+            this.$headerInputDiv.find("#media-ph").val(state['ph']);
+
+            var cpds = state['compounds'];
+            this.$mediaTable.find("tr > td").closest("tr").remove();
+            for (var i=0; i<cpds.length; i++) {
+                var cpd = cpds[i];
+                cpd.concentration = cpd.conc;
+                cpd.min_flux = cpd.min;
+                cpd.max_flux = cpd.max;
+                this.addMediaRow(cpd);
+            }
+
         },
 
     });

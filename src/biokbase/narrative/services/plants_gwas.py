@@ -55,7 +55,7 @@ Now  I run the GWAS workflow and provide it the id of the objects I just
 created. The GWAS object has list of significant SNPs, pvalue, rank and FDR.
 
  Step6:Visualize
- significant SNPs (Shiran)
+ significant SNPs (Shiran, Mustafa)
 Now
  I want to visualize the distribution of snps and pvalues on a manhattan plot where the x-axis has the chromosome and position and y-axis has the -log pvalue.
 
@@ -63,7 +63,7 @@ Now
  plot looks interesting. There are peaks on chromosome 5, 6 and 14. So the genes of interest should lie in those regions.
 
  Step7:Identify
- genes close to the SNPs (Ranjan need to be modified for  workspace)
+ genes close to the SNPs (Mustafa, Ranjan)
 
 I  would like a gene list and so I use the command variations_to_genes. I want
 to filter by pvalue and I want to look 5 kb around the snp for any gene.
@@ -271,6 +271,25 @@ def gene_list(meth, pvalue=None, snp_dist=5000):
     meth.stages = 1
     meth.advance("doing something..")
     return "fake_gene_list_id"
+
+@method(name="Trait Manhattan Plot")
+def trait_manhattan_plot(meth, workspaceID=None, gwasObjectID=None):
+    """
+    Visualize significant SNPs from GWAS study on the manhattan plot. On the X-axis of the plot are all contigs, and on the Y-axis is pvalue of SNPs-association for the trait.
+
+    :param workspaceID: workspaceID
+    :type workspaceID: kbtypes.Unicode
+    :param gwasObjectID: gwas result objectID
+    :type gwasObjectID: kbtypes.Unicode
+    :return: Workspace objectID of gwas results
+    :rtype: kbtypes.Unicode
+    :output_widget: Manhattan
+    """
+    meth.debug("starting function")
+    meth.stages = 1
+    meth.advance("doing something..")
+    token = meth.token
+    return json.dumps({ 'token': token, 'workspaceID' : workspaceID, 'gwasObjectID' : gwasObjectID })
 
 # Finalize (registers service)
 finalize_service()

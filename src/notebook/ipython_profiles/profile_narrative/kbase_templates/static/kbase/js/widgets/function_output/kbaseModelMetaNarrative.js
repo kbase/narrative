@@ -41,7 +41,7 @@ $.KBWidget({
 
         	container.append(table);
 
-                // removed because these don't seem to work, and views should probably be within the narrartive sidebar -mike
+            // removed because these don't seem to work, and views should probably be within the narrartive sidebar -mike
         	//var wsBrowserLink = "<a href='" + self.wsBrowserURL + data[7] + "/" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View Model Details</a>";
         	//var glammLink = "<a href='" + self.glammURL + self.glammWorkspaceTag + "=" + data[7] + "&" + self.glammModelTag + "=" + data[0] + "' target='_blank' class='btn btn-primary' style='text-decoration:none; color: #fff'>View in GLAMM</a>";
         	
@@ -53,6 +53,7 @@ $.KBWidget({
     	if (data) {
     		dataIsReady(data);
     	} else {
+            var kbws = new workspaceService(this.wsUrl);
         	var panel = $('<div class="loader-table"/>');
         	container.append(panel);
         	var table = $('<table class="table table-striped table-bordered" \

@@ -1,0 +1,14 @@
+<svg>
+<g>
+    <rect rxns="R05930" x="1288" y="272" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1291" y="285" font-size="9" stroke="grey" fill="black" >2.4.1.223</text>
+</g>
+<g>
+    <rect rxns="R05935" x="1288" y="343" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1291" y="356" font-size="9" stroke="grey" fill="black" >2.4.1.225</text>
+</g>
+<g>
+    <rect rxns="R05936" x="1289" y="413" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1292" y="426" font-size="9" stroke="grey" fill="black" >2.4.1.224</text>
+</g>
+</svg>

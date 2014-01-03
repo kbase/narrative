@@ -29,8 +29,6 @@ angular.module('trees-directives')
 
                 $('.tree-stats').after(info)
 
-
-
                 var options = '<button type="button" class="btn btn-default" onClick="document.getElementById("'+inputId+'").value="'+"''"+'">Clear</button>'
                             + ' <button type="button" class="btn btn-default" href="javascript:void(0);" onClick="kn_actions.undo_redo();">Undo/Redo</button>'
 //                            + '<br><br><a type="button" href="javascript:void(0);" onClick="kn_search_leaf(kn_g_tree,document.getElementById(\'searchLeaf\').value);kn_actions.plot();">Search</a>: <input class="form-control input-sm" id="searchLeaf" size=12><br>'

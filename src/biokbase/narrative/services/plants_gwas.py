@@ -134,7 +134,7 @@ class GWASException(Exception):
 ## Globals
 
 VERSION = (0, 0, 1)
-NAME = "GWAS"
+NAME = "Plants GWAS"
 
 
 class URLS:

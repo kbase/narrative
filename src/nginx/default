@@ -17,8 +17,14 @@
 # Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
 ##
 
+# These are the shared memory dictionaries used by the proxy_mgr module. The
+# rbtrees that implement dictionarires are pretty compact, and we're just storing
+# short strings and int/booleans so these numbers should be vastly more than we
+# need
 lua_shared_dict proxy_map 1m;
-lua_shared_dict proxy_last 1m;
+lua_shared_dict proxy_last 200k;
+lua_shared_dict proxy_state 100k;
+lua_shared_dict proxy_mgr 100k;
 
 lua_package_path "/home/vagrant/dockerstuff/narrative/docker/?;/home/vagrant/dockerstuff/narrative/docker/?.lua;;";
 init_by_lua '
@@ -46,21 +52,21 @@ server {
 	}
 
 	# Dynamic proxy manager
-	location /proxymgr {
+	location /proxy_map {
 	     default_type 'application/json';
 	     allow 127.0.0.1;
 
-	     set $uri_base '/proxymgr';
+	     set $uri_base '/proxy_map';
 	     content_by_lua 'proxymgr:set_proxy()';
 
 	}
 
 	# Dynamic proxy manager
-	location /proxy_last {
+	location /proxy_state {
 	     default_type 'application/json';
 	     allow 127.0.0.1;
 
-	     set $uri_base '/proxy_last';
+	     set $uri_base '/proxy_state';
 	     content_by_lua 'proxymgr:idle_status()';
 
 	}

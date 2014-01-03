@@ -7,6 +7,14 @@
 -- context - it is used in parsing out the URI path
 -- Used to implement a dynamic reverse proxy for KBase Narrative project
 --
+-- The following ngx.shared.DICT need to be declared in the main config, or
+-- else use different names and pass them in during initialization:
+--
+-- proxy_map
+-- proxy_state
+-- proxy_last
+-- proxy_mgr
+--
 -- Steve Chan
 -- sychan@lbl.gov
 --
@@ -18,10 +26,41 @@ local val_regex = "[%w_%-:%.]+"
 local json = require('json')
 local notemgr = require('notelauncher')
 
+-- this are name/value pairs referencing ngx.shared.DICT objects
+-- that we use to track docker containers. The ngx.shared.DICT
+-- implementation only supports basic scalar types, so we need a
+-- couple of these instead of using a common table object
+-- proxy_map maps a URL component ('sychan') to an
+--           ip/port proxy target ('127.0.0.1:49000')
+-- proxy_last maps a URL component('sychan') to a time value
+--           (output from os.time()) when the proxy target was
+--           last seen to be active
+-- proxy_state maps a URL component ('sychan') to a boolean that
+--           flags if that proxy has been marked for reaping
+--           a true value means that the proxy is considered alive
+--           and a false value means the instance is ready to be
+--           reaped
 local proxy_map = nil
 local proxy_last = nil
+local proxy_state = nil
 
--- strangely, the init_by_lua seems to run the initialize() method twice,
+-- This is a dictionary for storing proxy manager internal state
+-- The following names are currentl supported
+-- 'next_sweep' - this stores the next time() the reap_sweeper is scheduled
+--                 to be run. It is cleared when the sweeper runs, and
+--                 set when the sweeper is rescheduled. If we notice that
+--                 'next_sweep' is either relatively far in the past, or
+--                 not set, we generate a warning in the logs and schedule
+--                 an semi-immediate asynchronous sweeper run
+-- 'next_mark' - this stores the next time() the reap_marker is scheduled
+--                 to be run. It is cleared when the marker runs, and
+--                 set when the marker is rescheduled. If we notice that
+--                 'next_mark' is either relatively far in the past, or
+--                 not set, we generate a warning in the logs and schedule
+--                 an immediate marker run
+local proxy_mgr = nil
+
+-- strangely, init_by_lua seems to run the initialize() method twice,
 -- use this flag to avoid reinitializing
 local initialized = nil
 
@@ -30,11 +69,17 @@ local initialized = nil
 local NETSTAT = 'netstat -nt'
 
 -- How often (in seconds) does the reaper wake up
+-- we don't have an internal timer based worker thread for this yet,
+-- but it is supposed to be in the HttpLuaModule repo, and waiting to be
+-- released
 M.interval = 300
 
 -- How long (in seconds) since we last saw activity on a container should we wait before
 -- shutting it down?
 M.timeout = 180
+
+-- How long (in seconds) after we mark an instance for deletion should we try to sweep it?
+M.sweep_delay = 30
 
 
 --
@@ -63,41 +108,93 @@ local function est_connections()
 end
 
 --
--- Reaper function that examines containers to see if they have been idle for longer than
--- M.timeout and then retires them and cleans up the proxy_map table
+-- Reaper function that looks in the proxy_state table for instances that need to be
+-- removed and removes them
+local function reap_sweeper ()
+   ngx.log( ngx.INFO, "reap_sweeper running")
+   proxy_mgr:delete('next_sweep')
+
+   local keys = proxy_state:get_keys() 
+   for key = 1, #keys do
+      name = keys[key]
+      if proxy_state:get(name) == false then
+	 ngx.log( ngx.INFO, "reap_sweeper removing ",name)
+	 notemgr.remove_notebook(name)
+	 proxy_map:delete(key)
+	 proxy_state:delete(key)
+	 proxy_last:delete(key)
+      end
+   end
+   -- enqueue ourself again
+   ngx.log( ngx.INFO, string.format("Scheduling another sweeper run in %d seconds", M.interval))
+   local success, err = ngx.timer.at(M.sweep_delay, reap_sweeper)
+   if not success then
+      ngx.log( ngx.ERR, string.format("Error enqueuing reap_sweeper to run in %d seconds: %s",
+				      M.sweep_delay,err ))
+   end
+   proxy_mgr:set('next_sweep', os.time() + M.sweep_delay)
+end
+
+
 --
-local function reap ()
-   ngx.log( ngx.INFO, "Reaper running")
+-- Reaper function that examines containers to see if they have been idle for longer than
+-- M.timeout and then marks them for cleanup
+--
+local function reap_marker ()
+   ngx.log( ngx.INFO, "reap_marker running")
+   proxy_mgr:delete('next_mark')
    local keys = proxy_last:get_keys() 
-   local timeout = os.time() - M.timeout
+   local now = os.time()
+   local timeout = now - M.timeout
 
    -- fetch currently open connections
    local conn = est_connections()
-   local now = os.time()
 
    for key = 1, #keys do
       name = keys[key]
       local target = proxy_map:get( name)
-      -- ngx.log( ngx.INFO, string.format("Checking %s -> %s", name, target))
+      ngx.log( ngx.INFO, string.format("Checking %s -> %s", name, target))
       if conn[target] then
-	 -- ngx.log( ngx.INFO, string.format("Found %s among current connections", name))
+	 ngx.log( ngx.INFO, string.format("Found %s among current connections", name))
 	 success, err = proxy_last:set(name, now)
 	 if not success then
 	    ngx.log( ngx.ERR, string.format("Error setting proxy_last[ %s ] from established connections: %s",
-					    keys[key],err ))
+					    name,err ))
 	 end
       else -- not among current connections, check for reaping
 	 local last, flags = proxy_last:get( name)
 	 if last <= timeout then
 	    -- reap it
-	    ngx.log( ngx.INFO, string.format("Reaping %s - last seen %s",
+	    ngx.log( ngx.INFO, string.format("Marking %s for reaping - last seen %s",
 					     name,os.date("%c",last)))
-	    -- notemgr.remove_notebook(name)
-	    proxy_map:delete(name)
-	    proxy_last:delete(name)
+	    proxy_state:set(name,false)
 	 end
       end
    end
+   local next_run = proxy_mgr:get('next_sweep')
+   if next_run == nil then -- no sweeper in the queue, put one into the queue!
+      ngx.log( ngx.ERR, string.format("reaper_sweeper not in run queue, adding to queue with %d second delay",M.sweep_delay))
+      local success, err = ngx.timer.at(M.sweep_delay, reap_sweeper)
+      if not success then
+	 ngx.log( ngx.ERR, string.format("Error enqueuing reap_sweeper to run in %d seconds: %s",
+					 M.sweep_delay,err ))
+      end
+      proxy_mgr:set('next_sweep', os.time() + M.sweep_delay)
+   elseif next_run + 60 < now then -- the reap sweeper should have run over a minute ago, warn and run immediately
+      ngx.log( ngx.ERR, string.format("reaper_sweeper should have run at %s, forcing immediate run",
+				      os.date("%c",next_run)))
+      reap_sweeper()
+   else
+      ngx.log( ngx.INFO, "reap_sweeper already in run queue")
+   end
+   -- requeue ourselves
+   local success, err = ngx.timer.at(M.interval, reap_marker)
+   if not success then
+      ngx.log( ngx.ERR, string.format("Error requeuing reap_marker to run in %d seconds: %s",
+				      M.interval,err ))
+   end
+   proxy_mgr:set('next_mark', os.time() + M.interval)
+
 end
 
 --
@@ -115,6 +212,8 @@ local function initialize( conf )
       M.timeout = conf.idle_timeout or M.timeout
       proxy_map = conf.proxy_map or ngx.shared.proxy_map
       proxy_last = conf.proxy_last or ngx.shared.proxy_last
+      proxy_state = conf.proxy_state or ngx.shared.proxy_state
+      proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
 
       ngx.log( ngx.INFO, string.format("Initializing proxy manager: reap_internal %d idle_timeout %d",
 				      M.interval,M.timeout))
@@ -160,6 +259,9 @@ local function set_proxy()
 		  response["msg"] = "key insertion error " .. key .. " : " ..err
 		  ngx.log( ngx.WARN, "Failed insertion: " .. key .. " -> " .. val)
 	       end
+	       -- add an entry for proxy state
+	       success, err, force = proxy_state:add(key, true)
+	       success, err, force = proxy_last:set(key,os.time())
 	    end
 	 end
 	 -- make sure we had at least 1 legit entry
@@ -216,6 +318,8 @@ local function set_proxy()
 	       response = err
 	    else
 	       response = "updated"
+	       success,err,forcible = proxy_state:set(key,true)
+	       success,err,forcible = proxy_last:set(key,os.time())
 	    end
 	 else
 	    ngx.status = ngx.HTTP_BAD_REQUEST
@@ -237,8 +341,9 @@ local function set_proxy()
 	 if target == nil then
 	    ngx.status = ngx.HTTP_NOT_FOUND
 	 else
-	    proxy_map:delete(key)
-	    response = "deleted"
+	    response = "Marked for reaping"
+	    -- mark the proxy instance for deletion
+	    proxy_state:set(key,false)
 	 end
       else 
 	 response = "No key specified"
@@ -298,6 +403,7 @@ local function use_proxy()
 	 if not success then
 	    ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )
 	 end
+	 local success,err,forcible = proxy_state:set(proxy_key,true)
       else
 	 ngx.exit(ngx.HTTP_NOT_FOUND)
       end
@@ -313,6 +419,13 @@ local function idle_status()
    local method = ngx.req.get_method()
    local response = {}
 
+   -- run the reap marker to update state of all containers if there isn't one in the queue
+   local next_mark = proxy_mgr:get('next_mark')
+   if next_mark == nil or next_mark + 10 < os.time() then
+      ngx.log( ngx.WARN, "No reap_marker in queue, performing immediate marker run")
+      reap_marker()
+   end
+
    -- Check URI to see if a specific proxy entry is being asked for
    -- or if we just dump it all out
    local uri_base = ngx.var.uri_base
@@ -322,17 +435,19 @@ local function idle_status()
       if last == nil then
 	 ngx.status = ngx.HTTP_NOT_FOUND
       else
-	 response = os.date("%c",last)
+	 -- return the date seen plus the status value
+	 response = os.date("%c",last) .. " " .. tostring(proxy_state:get(key))
       end
    else 
       local keys = proxy_last:get_keys() 
       for key = 1, #keys do
 	 local last, flags = proxy_last:get( keys[key])
-	 response[keys[key]] = os.date("%c",last)
+	 -- return either just the last seen date,
+	 -- or the last seen date plus " _reap_" indicating it is awaiting reaping
+	 response[keys[key]] = os.date("%c",last) .. " " .. tostring(proxy_state:get(keys[key]))
       end
    end
    ngx.say(json.encode( response ))
-   reap()
 end
 
 M.set_proxy = set_proxy

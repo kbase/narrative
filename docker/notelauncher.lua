@@ -7,7 +7,7 @@ local docker = require('docker')
 local json = require('json')
 local docker_image = 'sychan/narrative:latest'
 local p = require('pl.pretty')
-
+local private_port = 8888
 --
 --  Query the docker container for a list of containers and
 -- return a list of the container names that have listeners on
@@ -17,12 +17,14 @@ local function get_notebooks()
    local res = docker.client:containers()
    local portmap = {}
    for index,container in pairs(res.body) do
-      name = string.sub(container.Names[1],2,-1)
-      portmap[name]={}
-      for i, v in pairs(container.Ports) do
-	 -- we only care about services listening on port 8888 - IPython notebooks
-	 if v.PrivatePort == 8888 then
-	    portmap[name] = string.format("127.0.0.1:%u", v.PublicPort)
+      -- we only care about containers running docker_image and listening on the proper port
+      if container.Image == docker_image then
+	 name = string.sub(container.Names[1],2,-1)
+	 portmap[name]={}
+	 for i, v in pairs(container.Ports) do
+	    if v.PrivatePort == private_port then
+	       portmap[name] = string.format("127.0.0.1:%u", v.PublicPort)
+	    end
 	 end
       end
    end

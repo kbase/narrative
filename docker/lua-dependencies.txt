@@ -8,3 +8,4 @@ luarocks install luasocket
 luarocks install luajson
 luarocks install penlight
 luarocks install lua-spore
+luarocks install luacrypto

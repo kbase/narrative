@@ -11,7 +11,8 @@ $.KBWidget({
     },
 
     wsUrl: "http://kbase.us/services/workspace/",
-    cmpImgUrl: "http://140.221.85.98:8283/image",
+    jobSrvUrl: "http://140.221.84.180:7083/",
+    cmpImgUrl: "http://140.221.85.98:8284/image",
     timer: null,
 
     init: function(options) {
@@ -20,6 +21,7 @@ $.KBWidget({
         var container = this.$elem;
     	var pref = (new Date()).getTime();
         var kbws = new workspaceService(this.wsUrl);
+        var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': options.token});
         var size = 500;
         var scale = null;
 
@@ -35,6 +37,7 @@ $.KBWidget({
             	var createTableRow = function(name, value) {
             		return "<tr><td>" + name + "</td><td>" + value + "</td></tr>";
             	};
+            	table.append(createTableRow("Comparison object", options.ws_id));
             	table.append(createTableRow("Genome1 (x-axis)", cmp.genome1id + " (" + cmp.proteome1names.length + " genes)"));
             	table.append(createTableRow("Genome2 (y-axis)", cmp.genome2id + " (" + cmp.proteome2names.length + " genes)"));
             	scale = size * 100 / Math.max(cmp.proteome1names.length, cmp.proteome2names.length);
@@ -60,15 +63,17 @@ $.KBWidget({
         	table.append('<tr><td>Output result will have the id</td><td>'+options.ws_id+'</td></tr>');
         	table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
         	var timeLst = function(event) {
-        		kbws.get_jobs({auth: options.token, jobids: [options.job_id]}, function(data) {
-        			var status = data[0]['status'];
+        		jobSrv.get_job_status(options.job_id, function(data) {
+        			var status = data[2];
+        			var complete = data[5];
+        			var wasError = data[6];
     				var tdElem = $('#'+pref+'job');
     				tdElem.html(status);
-        			if (status === 'done') {
+        			if (complete === 1) {
         				clearInterval(self.timer);
         				dataIsReady();
         			} else {
-        				if (status === 'error') {
+        				if (wasError === 1) {
         					clearInterval(self.timer);
         				}
         			}

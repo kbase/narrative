@@ -231,9 +231,9 @@ def gwas_create_population_trait_object(meth, GwasPopulation_obj_id=None, popula
     return _output_object('Trait_' + output_trait_object_name)
 
 
-@method(name="Create Gwas  Variation object")
+@method(name="Create GWAS Variation object")
 def gwas_create_population_variation_object(meth,population_variation_file_shock_url=None, population_variation_file_shock_id=None, GwasPopulation_obj_id=None, assay=None, filetype=None,comment=None,  originator=None, output_variation_object_name=None, kbase_genome_id=None):
-    """DESCRIPTION NEEDED.
+    """Create the GWAS variation object
 
     :param population_variation_file_shock_url:Shock URL  of the population variation file 140.221.84.236:8000 
     :type population_variation_file_shock_url: kbtypes.Unicode

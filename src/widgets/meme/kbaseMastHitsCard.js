@@ -33,7 +33,7 @@
 			$hitsTable += "<tr><td>PSPM ID</td><td>Sequence ID</td><td>Strand</td><td>Start</td><td>End</td><td>Score</td><td>p-value</td></tr>";
 
 			for (var hit in self.mastresult.data.hits) {
-				$hitsTable+= "<tr><td>" + self.mastresult.data.hits[hit].pspm_id + "</td><td>" + self.mastresult.data.hits[hit].sequence_id + "</td><td>" + self.mastresult.data.hits[hit].strand +
+				$hitsTable+= "<tr><td>" + self.mastresult.data.hits[hit].pspm_id + "</td><td>" + self.mastresult.data.hits[hit].seq_id + "</td><td>" + self.mastresult.data.hits[hit].strand +
 				"</td><td>" + self.mastresult.data.hits[hit].hit_start + "</td><td>" + self.mastresult.data.hits[hit].hit_end + "</td><td>" + self.mastresult.data.hits[hit].score +
 				"</td><td>" + self.mastresult.data.hits[hit].hit_pvalue + "</td></tr>";
 			}

@@ -192,16 +192,15 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.ws = $stateParams.ws;
 })
 
-.controller('Trees', function($scope, $stateParams, $location) {
-    console.log('in tree controller')
-
+.controller('Trees', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
+    })
 
-
-
+.controller('WorkspaceBrowser', function($scope, $stateParams) {
+    $scope.selected_ws = $stateParams.ws;
+    console.log($scope.selected_ws)
 })
-
 
 
 

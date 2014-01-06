@@ -1,0 +1,18 @@
+
+<div>
+	<div ng-show="selectedObjs.length == 0">
+		<span class="text-danger">No Objects Selected</span>
+		<br>
+		<small>You may want to select select some FBA objects from workspaces for analysis.</small>
+	</div>
+
+	<div ng-repeat="obj in selectedObjs">
+		<div class="alert alert-success alert-dismissable selected-obj-alert">
+			<button type="button" class="close" data-dismiss="alert" aria-hidden="true" 
+			ng-click="removeItem($index)">&times;</button>
+			{{obj.id}}<br>
+			<small><span class="text-muted">{{obj.ws}}</span></small>
+		</div>
+	</div>	
+</div>
+<!--<span class="text-danger">No selected objects</span>-->

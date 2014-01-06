@@ -28,13 +28,20 @@ function Cache() {
 
 
 function KBCacheClient(token) {
-    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/', token);
-    var kbws = new workspaceService('http://kbase.us/services/workspace_service/', token);
+    var token = token;
+
+    var auth = {};
+    auth.token = token;
+    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
+    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+    //var kbws = new Workspace('http://140.221.84.209:7058', token);
+    //console.log('Using test workspace service.')
 
     var cache = new Cache();    
 
     this.req = function(service, method, params) {
-        if (!params) var params = {};
+        if (!params) var params = {auth: auth.token};
+        else params.auth = auth.token;  // Fixme: set auth in client object
 
         // see if api call has already been made        
         var data = cache.get(service, method, params);
@@ -48,7 +55,7 @@ function KBCacheClient(token) {
             console.log('Making request:', 'fba.'+method+'('+JSON.stringify(params)+')');
             var prom = fba[method](params);
         } else if (service == 'ws') {
-            console.log('Making request:', 'kbws.'+method+'('+JSON.stringify(params)+')');            
+            console.log('Making request:', 'kbws.'+method+'('+JSON.stringify(params)+')');       
             var prom = kbws[method](params);
         }
 
@@ -64,6 +71,10 @@ function KBCacheClient(token) {
     this.kbwsAPI = function() {
         return kbws;
     }
+
+    this.token = function() {
+        return token;
+    }
 }
 
 
@@ -71,7 +82,8 @@ function KBCacheClient(token) {
 
 function getBio(type, loaderDiv, callback) {
     var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+//    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
+    var kbws = new workspaceService('http://140.221.84.209:7058');    
 
     // This is not cached yet; waiting to compare performanced.
     loaderDiv.append('<div class="progress">\

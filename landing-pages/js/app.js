@@ -20,12 +20,25 @@
 
 
 var app = angular.module('landing-pages', 
-    ['lp-directives', 'card-directives', 'mv-directives', 'trees-directives', 'ui.router'])
+    ['lp-directives', 'card-directives', 'mv-directives', 'trees-directives', 'ws-directives', 'ui.router'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
 
     // with some configuration, we can change this in the future.
     $locationProvider.html5Mode(false);  
+
+
+    $stateProvider
+        .state('ws', {
+          url: "/ws/",
+          templateUrl: 'views/ws/ws.html',
+          controller: 'WorkspaceBrowser'
+        }).state('ws.id', {
+          url: "objtable/:ws",
+          templateUrl: 'views/ws/objtable.html',
+          controller: 'WorkspaceBrowser'
+        })
+
 
     $stateProvider
         .state('mv', {
@@ -233,12 +246,17 @@ app.run(function ($rootScope, $location) {
 
     $rootScope.$on('$stateChangeStart',
         function (event, toState, toParams, fromState, fromParams) {
-            console.log(toState);
-            if (toState.name == 'trees') {
+            subURL = toState.name.split('.')[0];
+            if (subURL == 'trees') {
                 $('#navigation').load('partials/nav-trees.html', navbar_cb);
-            } else if (toState.name == 'mv') {
+            } else if (subURL == 'mv') {
                 $('#navigation').load('partials/nav-mv.html', navbar_cb);
+            } else if (subURL == 'ws') {
+                $('#navigation').load('partials/nav-ws.html', navbar_cb);
+            } else {
+                $('#navigation').load('partials/nav.html', navbar_cb);              
             }
+
         });
 
     //  Here's a sort of hack to remove any cards when a view changes.
@@ -248,7 +266,8 @@ app.run(function ($rootScope, $location) {
     })
 
     // here's a workaround so that ui-router doesn't remove query strings.
-    /*$rootScope.$on('$stateChangeStart',
+    /*
+    $rootScope.$on('$stateChangeStart',
     function (event, toState, toParams, fromState, fromParams) {
         this.locationSearch = $location.search();
     });
@@ -262,11 +281,8 @@ app.run(function ($rootScope, $location) {
         // sign in button
         $('#signin-button').kbaseLogin({login_callback: login_change,
                                         logout_callback: login_change});
+        $('#signin-button').css('padding', '0');  // Jim!
 
-        $('#signin-button').css('padding', '0');  // This is Jim's fault.
-
-
-        console.log('load')
         $('.help-dropdown').html(LPDROPDOWN);
 
         $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
@@ -307,11 +323,6 @@ function set_selected_workspace() {
     if (state.get('selected')) {
         $('#selected-workspace').html(state.get('selected')[0]);
     }
-}
-
-function navEvent() {
-    console.log('nav event');
-    $(document).trigger("navEvent");
 }
 
 function removeCards() {
@@ -412,7 +423,4 @@ function State() {
         return localStorage.setItem(key, val);
     };
 }
-
-
-
 

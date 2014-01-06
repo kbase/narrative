@@ -209,10 +209,13 @@
             // Put filename in description, unless user entered something
             $frm.on('change.bs.fileinput', function(e) {
                 console.debug("changed", e);
-                self.cur_files = e.target.files;
-                if (self.cur_files.length > 0 && !fields.dataset.modified) {
-                    var $txt = $frm.find(':text');
-                    $txt.val(self.cur_files[0].name);
+                // if the file-input was changed..
+                if (e.target.className === "file-input") {
+                    self.cur_files = e.target.files;
+                    if (self.cur_files.length > 0 && !fields.dataset.modified) {
+                        var $txt = $frm.find(':text');
+                        $txt.val(self.cur_files[0].name);
+                    }
                 }
             });
             // Set up response

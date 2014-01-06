@@ -91,7 +91,6 @@ class VersionNumber(TraitType, TypeMeta):
         self.error(obj, value)
 
 
-
 class Numeric(tls.Float, TypeMeta):
     info_text = "a number"
 
@@ -104,6 +103,7 @@ class Numeric(tls.Float, TypeMeta):
             except ValueError:
                 self.error(obj, value)
         return value
+
 
 class Integer(tls.Integer, TypeMeta):
     info_text = "an integer"
@@ -170,6 +170,7 @@ class ContigSet(tls.Unicode, TypeMeta):
 class FBAResult(tls.Unicode, TypeMeta):
     info_text = "FBA result"
 
+
 class FBA(tls.Unicode, TypeMeta):
     info_text = "FBA result"
 
@@ -180,6 +181,7 @@ class Gapfill(tls.Unicode, TypeMeta):
 
 class PhenotypeSet(tls.Unicode, TypeMeta):
     info_text = "Phenotype data"
+
 
 class PhenotypeSimulationSet(tls.Unicode, TypeMeta):
     info_text = "Phenotype simulation"

@@ -26,13 +26,13 @@ $.KBWidget({
         var newWorkspaceServiceUrlForSpec = 'http://140.221.84.209:7058/';
         var kbws = new Workspace(newWorkspaceServiceUrlForSpec);
         
-        kbws.prealpha_list_objects({type: 'MEME.MemeRunResult', workspaces: [ws]},
+        kbws.list_objects({type: 'MEME.MemeRunResult', workspaces: [ws]},
             function(d){
                 var dataListMeme = formatObjs(d);
-                kbws.prealpha_list_objects({type: 'MEME.TomtomRunResult', workspaces: [ws]},
+                kbws.list_objects({type: 'MEME.TomtomRunResult', workspaces: [ws]},
                     function(d){
                         var dataListTomtom = formatObjs(d);
-                        kbws.prealpha_list_objects({type: 'MEME.MastRunResult', workspaces: [ws]},
+                        kbws.list_objects({type: 'MEME.MastRunResult', workspaces: [ws]},
                             function(d){
                                 var dataListMast = formatObjs(d);
                                 var panel_body = panel.body();

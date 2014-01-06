@@ -142,8 +142,15 @@ AweJob.URL = URLS.awe
 init_service(name=NAME, desc="Plants GWAS service", version=VERSION)
 
 
+def _output_object(name):
+    """Format an object ID as JSON output, for returning from a narr. function.
+    """
+    return json.dumps({'output': name})
+
+
 @method(name="Create Gwas Population object")
-def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_population_object_name=None, GwasPopulation_description=None, kbase_genome_id=None, comment=None):
+def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_population_object_name=None,
+                                  GwasPopulation_description=None, kbase_genome_id=None, comment=None):
     """Create Gwas Population object from an uploaded Population file in the workspace.
 
     :param GwasPopulation_file_id:workspace_object_id of the uploaded Population file
@@ -166,31 +173,22 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
 
     meth.advance("creating Population object")
     try:
-        jid = gc.gwas_create_population_object(meth.workspace_id, GwasPopulation_file_id, output_population_object_name, GwasPopulation_description, kbase_genome_id,comment )
+        jid = gc.gwas_create_population_object(meth.workspace_id, GwasPopulation_file_id, output_population_object_name,
+                                               GwasPopulation_description, kbase_genome_id,comment )
     except Exception as err:
         raise GWASException("submit job failed: {}".format(err))
     if not jid:
         raise GWASException(2, "submit job failed, no job id")
 
-    njobs = AweJob(meth, started="creating Population object", running="create Population object").run(jid[0])
-    # meth.advance("creating Population object")
-    # completed, njobs = 0, _job_count(jid[0])
-    # meth.stages += njobs
-    # while completed < njobs:
-    #     time.sleep(5)
-    #     remaining = _job_count(jid[0])
-    #     while completed < (njobs - remaining):
-    #         completed += 1
-    #         meth.advance("Population Object: {:d}/{:d} jobs completed".format(completed, njobs))
-    if njobs == 1:
-        h = 'GwasPopulation_' + output_population_object_name
-        return json.dumps({'output': h})
-    else:
-        return njobs
+    AweJob(meth, started="creating Population object", running="create Population object").run(jid[0])
+    return _output_object('GwasPopulation_' + output_population_object_name)
 
 
 @method(name="Create Gwas Population Trait object")
-def gwas_create_population_trait_object(meth,GwasPopulation_obj_id=None, population_trait_file_id=None, protocol=None, comment=None, originator=None, output_trait_object_name=None, kbase_genome_id=None, trait_ontology_id=None, trait_name=None, unit_of_measure=None): 
+def gwas_create_population_trait_object(meth, GwasPopulation_obj_id=None, population_trait_file_id=None, protocol=None,
+                                        comment=None, originator=None, output_trait_object_name=None,
+                                        kbase_genome_id=None, trait_ontology_id=None, trait_name=None,
+                                        unit_of_measure=None):
     """DESCRIPTION NEEDED.
 
     :param GwasPopulation_obj_id:Object id of the population data
@@ -229,20 +227,8 @@ def gwas_create_population_trait_object(meth,GwasPopulation_obj_id=None, populat
     if not jid:
         raise GWASException(2, "submit job failed, no job id")
 
-    meth.advance("creating population trait object")
-    completed, njobs = 0, _job_count(jid[0])
-    meth.stages += njobs
-    while completed < njobs:
-        time.sleep(5)
-        remaining = _job_count(jid[0])
-        while completed < (njobs - remaining):
-            completed += 1
-            meth.advance("Population Trait Object: {:d}/{:d} jobs completed".format(completed, njobs))
-    if (njobs==1):
-        h='Trait_' + output_trait_object_name
-        return json.dumps({ 'output':  h })
-    else:
-        return njobs
+    AweJob(meth, started="creating Population trait object", running="create Population trait object").run(jid[0])
+    return _output_object('Trait_' + output_trait_object_name)
 
 
 @method(name="Create Gwas  Variation object")
@@ -283,20 +269,8 @@ def gwas_create_population_variation_object(meth,population_variation_file_shock
     if not jid:
         raise GWASException(2, "submit job failed, no job id")
 
-    meth.advance("creating population variation object")
-    completed, njobs = 0, _job_count(jid[0])
-    meth.stages += njobs
-    while completed < njobs:
-        time.sleep(5)
-        remaining = _job_count(jid[0])
-        while completed < (njobs - remaining):
-            completed += 1
-            meth.advance("Population variation Object: {:d}/{:d} jobs completed".format(completed, njobs))
-    if (njobs==1):
-        h='Variation_' + output_variation_object_name
-        return json.dumps({ 'output':  h })
-    else:
-        return njobs
+    AweJob(meth, started="creating Population variation object", running="create Population variation object").run(jid[0])
+    return _output_object('Variation_' + output_variation_object_name)
 
 
 @method(name="VCF-Filtering")
@@ -323,20 +297,9 @@ def maf(meth, maf=0.05, object_id=None):
     if not jid:
         raise GWASException(2, "submit job failed, no job id")
 
-    meth.advance("run VCF")
-    completed, njobs = 0, _job_count(jid[0])
-    meth.stages += njobs
-    while completed < njobs:
-        time.sleep(5)
-        remaining = _job_count(jid[0])
-        while completed < (njobs - remaining):
-            completed += 1
-            meth.advance("VCF: {:d}/{:d} jobs completed".format(completed, njobs))
-    if (njobs==1):
-        h= object_id + '-filter-' + maf
-        return json.dumps({ 'output':  h })
-    else:
-        return njobs
+    AweJob(meth, started="run VCF", running="VCF").run(jid[0])
+    return _output_object(object_id + '-filter-' + maf)
+
 
 @method(name="Calculate Kinship matrix")
 def gwas_run_kinship(meth,  object_id=None):
@@ -360,20 +323,8 @@ def gwas_run_kinship(meth,  object_id=None):
     if not jid:
         raise GWASException(2, "submit job failed, no job id")
 
-    meth.advance("Calculate Kinship matrix")
-    completed, njobs = 0, _job_count(jid[0])
-    meth.stages += njobs
-    while completed < njobs:
-        time.sleep(5)
-        remaining = _job_count(jid[0])
-        while completed < (njobs - remaining):
-            completed += 1
-            meth.advance("VCF: {:d}/{:d} jobs completed".format(completed, njobs))
-    if (njobs==1):
-        h= object_id + 'kinship-matrix' 
-        return json.dumps({ 'output':  h })
-    else:
-        return njobs
+    AweJob(meth, started="Calculate Kinship matrix", running="Kinship matrix").run(jid[0])
+    return _output_object(object_id + 'kinship-matrix')
 
 
 @method(name="Run GWAS analysis MLM")
@@ -404,20 +355,8 @@ def gwas_run_gwas2(meth,  genotype_obj_id=None,  kinship_obj_id=None, trait_obj_
     if not jid:
         raise GWASException(2, "submit job failed, no job id")
 
-    meth.advance("GWAS analysis using tassel")
-    completed, njobs = 0, _job_count(jid[0])
-    meth.stages += njobs
-    while completed < njobs:
-        time.sleep(5)
-        remaining = _job_count(jid[0])
-        while completed < (njobs - remaining):
-            completed += 1
-            meth.advance("VCF: {:d}/{:d} jobs completed".format(completed, njobs))
-    if (njobs==1):
-        h= 'TopVariations' + trait_obj_id + pvalue_cutoff
-        return json.dumps({ 'output':  h })
-    else:
-        return njobs
+    AweJob(meth, started="GWAS analysis using tassel", running="GWAS analysis using tassel").run(jid[0])
+    return _output_object('TopVariations' + trait_obj_id + pvalue_cutoff)
 
 
 @method(name="Trait Manhattan Plot")
@@ -434,9 +373,9 @@ def trait_manhattan_plot(meth, workspaceID=None, gwasObjectID=None):
     :output_widget: Manhattan
     """
     meth.stages = 1
-    meth.advance("doing something..")
+    meth.advance("Manhattan plot")
     token = meth.token
-    return json.dumps({ 'token': token, 'workspaceID' : workspaceID, 'gwasObjectID' : gwasObjectID })
+    return json.dumps({'token': token, 'workspaceID' : workspaceID, 'gwasObjectID': gwasObjectID })
 
 
 

@@ -5,7 +5,7 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "kbaseDefaultNarrativeInput", 
+        name: "kbaseDefaultNarrativeInput",
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
@@ -44,7 +44,8 @@
                         var p = params[pid];
 
                         var input = "";
-                        if (objects[p.type] && objects[p.type].length > 0) {
+                        # XXX: HACK to disable the pull-down
+                        if (objects[p.type] && objects[p.type].length > 5000) {
                             var objList = objects[p.type];
                             objList.sort(function(a, b) {
                                 if (a[0] < b[0])

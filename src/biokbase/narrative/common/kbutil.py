@@ -9,6 +9,11 @@ import requests
 import time
 
 
+class AweTimeoutError(Exception):
+    def __init__(self, jobid,  timeout):
+        Exception.__init__(self, "AWE job ({}) timed out after {:d} seconds".format(jobid, timeout))
+
+
 class AweJob(object):
     URL = None
 
@@ -23,15 +28,18 @@ class AweJob(object):
         self._meth = meth
         self._sname, self._rname = started, running
 
-    def run(self, jid, stage_fun=None):
+    def run(self, jid, stage_fun=None, timeout=600):
         """Run synchronously, optionally invoking a callback at each completed stage, until
         all sub-jobs have completed.
 
         :param jid: AWE Job ID
         :param stage_fun: Stage callback function.
                           If present, invoked with the (jid, completed, total_jobs)
+        :param timeout int: Timeout, in seconds
         :return int: Number of jobs run
+        :raises: AweTimeoutError on timeout.
         """
+        t0 = time.time()
         self._cb = stage_fun
         self._jid = jid
         njobs = self.job_count()
@@ -40,6 +48,8 @@ class AweJob(object):
         self._add_jobs(njobs)
         while completed < njobs:
             time.sleep(5)
+            if time.time() - t0 > timeout:
+                raise AweTimeoutError(self._jid, timeout)
             remaining = self.job_count()
             while completed < (njobs - remaining):
                 completed += 1

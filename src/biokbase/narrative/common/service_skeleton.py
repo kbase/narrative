@@ -14,7 +14,8 @@ from biokbase.narrative.common import kbtypes
 VERSION = (0, 0, 1)
 NAME = "MyExampleService"
 
-# Create containing service
+# Initialization
+
 init_service(name=NAME, desc="This is an example", version=VERSION)
 
 # Define one service
@@ -25,10 +26,13 @@ def _my_service_function(meth, param1, param2):
 
     :param param1: Input Genome
     :type param1: kbtypes.Genome
+    :ui_name param1: Genome ID (what the user sees)
     :param param2: Some text
     :type param2: kbtypes.Unicode
+    :ui_name param2: Text
     :return: Workspace object ID
     :rtype: kbtypes.Unicode
+    :output_widget: kbaseOutputWidgetName
     """
     meth.stages = 1  # for reporting progress
     result = None
@@ -37,5 +41,6 @@ def _my_service_function(meth, param1, param2):
 
     return "bogus_workspace_id"
 
-## Finalization
+# Finalization
+
 finalize_service()

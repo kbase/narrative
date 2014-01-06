@@ -15,11 +15,12 @@ KBase Services Python API
 Introduction
 -------------
 
-This describes the Python API for KBase services. This API is invoked by the KBase Narrative
+This describes the Python API for KBase services, for the Narrative UI.
+This API is invoked by the KBase Narrative
 engine back-end to run *all* the services that are exposed as functions for the narrative API.
 Therefore, all KBase services must use this API in order to be used by the Narrative.
 
-**Terminology**
+First, a couple of terms:
 
 _`service`
     A group of related service methods
@@ -66,59 +67,54 @@ the following steps (for existing Python scripts):
 
 #. Start a new Python module, which here we will call `my_service.py`, using the skeleton in `narrative/common/service_skeleton.py` as a starting point::
 
-    $ mkdir narrative/cp narrative/common/service_skeleton.py narrative/services/my_service.py
+    $ mkdir narrative/
+    $ cp narrative/common/service_skeleton.py narrative/services/my_service.py
 
-#. Add a few lines to `my_service.py` to set the service version and create a Service object::
+#. Modify the NAME and VERSION lines in the skeleton, and the description in ``init``,
+   to create a Service object::
 
-    from biokbase.narrative.common import service
+    from biokbase.narrative.common.service import init_service, method, finalize_service
     from biokbase.narrative.common import kbtypes
+
     VERSION = (0, 0, 1)
-    # Create containing service
-    svc = service.Service(name="my stuff", desc="Genotype to phenotype: solved!", version=VERSION)
+    NAME = "MyExampleService"
+
+    init_service(name=NAME, desc="This is an example", version=VERSION)
     
-#. For each function, import or include inline the function implementation, modified very
-   slightly to report progress to the Narrative::
-   
-       def my_function_implementation(method, param1, param2):
-           # tell Narrative how many stages are in here
-           method.stages = 3
-           # tell Narrative we are starting a new stage
-           method.advance("MeetAndGreet")
-           print("hello, world")
-           # starting a new stage
-           method.advance("Compute")
-           result = param1 * param2 * 3.1415
-           # starting a new stage
-           method.advance("Announce")
-           print("All done")
-           # simply return result value
-           return result
-       
+#. For each function, wrap the function implementation with a ``@method`` decorator, as shown 
+   in the example function.
+   Add a first argument to each function, which will be passed a method object::
+
+    @method(name="MyExampleFunction")
+    def _my_service_function(meth, param1, param2):
+        ...function body goes here...
+
 #. Add to the function a docstring (standard Python top-of-function comment) that
    contains a specific form of reStructured text markup indicating parameter types and return types::
 
-    def my_function_implementation(method, param1, param2):
-        """Implement my function, with a great deal of vim and vigor.
-        
-        :param param1: A multiplicand
-        :type param1: kbtypes.Double
-        :param param2: Another multiplicand
-        :type param2: kbtypes.Double
-        :result: The product of the parameters and pi
-        :rtype: kbtypes.Double
+    @method(name="MyExampleFunction")
+    def _my_service_function(meth, param1, param2):
+        """This is an example function.
+
+        :param param1: Input Genome
+        :type param1: kbtypes.Genome
+        :param param2: Some text
+        :type param2: kbtypes.Unicode
+        :return: Workspace object ID
+        :rtype: kbtypes.Unicode
         """
-        method.stages = 3 
-        .. rest of implementation, as shown above ..
-
-#. Add one line after each function to add the fully wrapped function to the overall service::
-
-    my_function = svc.add_method(name="MyFunction", func=my_function_implementation)
+        meth.stages = 1  # for reporting progress
+        result = None
+        meth.advance("Only this one stage")
+        return "result"
     
-#. At the bottom of the file, 1 line of code to register the Service as a whole for the Narrative to discover it::
+#. At the bottom of the file, 1 line of code to finalize the Service, which registers it 
+   for the Narrative to discover it::
+
+    finalize_service()
    
-    service.register_service(svc)
    
-That's it! Steps 3-5 are repeated for each function in the service.
+That's it! Steps 3-4 are repeated for each function in the service.
 
 .. _api:
 
@@ -132,6 +128,7 @@ These modules are all under `biokbase.narrative` in the biokbase Python package.
 
 The API is broken down into several functional areas:
 
+#. :ref:`high-level-api` - Creating new methods using the ``@method`` decorator, interacting with the service API through ``init()`` and ``finalize()``.
 #. :ref:`registry-api`  - Finding services and methods
 #. :ref:`services-api` - Classes for KBase services and service methods
 #. :ref:`types-api` - Classes for KBase types
@@ -148,8 +145,27 @@ lines beginning with `@@` that have status information.
 These lines are generated by the :class:`LifecyclePrinter` instance that is automatically
 created and added to each service.
 
+.. _high-level-api:
+
+High-Level API
+^^^^^^^^^^^^^^
+
+As described in the :ref:`quickstart`, the high-level API allows you to write a new KBase narrative service with minimum fuss. All you need to do is initialize, wrap each method with the ``@method`` decorator, then finalize.
+
+.. autofunction:: init_service
+
+.. autofunction:: finalize_service
+
+Method Decorator
+~~~~~~~~~~~~~~~~~
+
+Each service method needs to be decorated with the ``@method`` decorator.
+
+.. autofunction:: method
 
 .. _registry-api:
+
+
 
 Registry
 ^^^^^^^^
@@ -168,7 +184,7 @@ See the :func:`example` for a usage example.
 .. automodule:: biokbase.narrative.common.service
 
 .. autoclass:: Service
-    :members: name, desc, version
+    :members: name, desc, version, __init__
 
 .. autoclass:: ServiceMethod
     :members: set_func, __call__, estimated_runtime,

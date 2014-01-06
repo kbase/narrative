@@ -18,6 +18,7 @@ import sys
 import time
 # Third-party
 import IPython.utils.traitlets as trt
+from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes
 
@@ -41,6 +42,7 @@ class URLS:
     workspace = "http://kbase.us/services/workspace"
     invocation = "https://kbase.us/services/invocation"
     fba = "https://kbase.us/services/fba_model_services"
+    genomeCmp = "http://140.221.85.98:8283/jsonrpc"
 
 ## Exceptions
 
@@ -73,9 +75,10 @@ class ServiceMethodError(ServiceError):
     """Base class for all ServiceMethod errors"""
 
     def __init__(self, method, errmsg):
-        msg = "in ServiceMethod '{}': {}".format(method.name, errmsg)
+        msg = "in function '{}': {}".format(method.name, errmsg)
         ServiceError.__init__(self, msg)
         self.add_info('method_name', method.name)
+
 
 class ServiceMethodParameterError(ServiceMethodError):
     """Bad parameter for ServiceMethod."""
@@ -84,6 +87,7 @@ class ServiceMethodParameterError(ServiceMethodError):
         msg = "bad parameter: " + errmsg
         ServiceMethodError.__init__(self, method, msg)
         self.add_info('details', errmsg)
+
 
 class ServiceRegistryFormatError(ServiceMethodError):
     """Bad format for Service Registry."""
@@ -125,11 +129,13 @@ def get_func_info(fn):
     param_order = []
     for line in doc.split("\n"):
         line = line.strip()
+        # :param
         if line.startswith(":param"):
             _, name, desc = line.split(":", 2)
             name = name[6:].strip()  # skip 'param '
             params[name] = {'desc': desc.strip()}
             param_order.append(name)
+        # :type (of parameter, should be in kbtypes)
         elif line.startswith(":type"):
             _, name, desc = line.split(":", 2)
             name = name[5:].strip()  # skip 'type '
@@ -137,23 +143,60 @@ def get_func_info(fn):
                 raise ValueError("'type' without 'param' for {}".format(name))
             typeobj = eval(desc.strip())
             params[name]['type'] = typeobj
+
+        # :ui_name (of parameter) - the name that should be displayed in the user interface
+        elif line.startswith(":ui_name"):
+            _, name, ui_name = line.split(":", 2)
+            name = name[8:].strip()  # skip 'ui_name '
+            if not name in params:
+                raise ValueError("'ui_name' without 'param' for {}".format(name))
+            ui_name = ui_name.strip()
+            params[name]['ui_name'] = ui_name
+
+        # :return - name of thing to return
         elif line.startswith(":return"):
             _1, _2, desc = line.split(":", 2)
             return_['desc'] = desc
+
+        # :rtype - type of thing to return
         elif line.startswith(":rtype"):
             _1, _2, desc = line.split(":", 2)
             typeobj = eval(desc.strip())
             return_['type'] = typeobj
+
+        # :input_widget - the default visualization widget for this method. 
+        # Should be the name as it's invoked in Javascript.
+        elif line.startswith(":input_widget"):
+            _1, _2, widget = line.split(":", 2)
+            return_['input_widget'] = widget.strip()
+
+        # :output_widget - the visualization widget for this method. 
+        # Should be the name as it's invoked in Javascript.
+        elif line.startswith(":output_widget"):
+            _1, _2, widget = line.split(":", 2)
+            return_['output_widget'] = widget.strip()
+
+        # :embed - True if the widget should be automatically embedded.
+        # so, probably always True, but not necessarily
+        elif line.startswith(":embed"):
+            _1, _2, embed = line.split(":", 2)
+            embed = eval(embed.strip())
+            return_['embed_widget'] = embed
     r_params = []
+    vis_info = {'input_widget': None,
+                'output_widget': None,
+                'embed_widget': True}
     for i, name in enumerate(param_order):
         type_ = params[name]['type']
         desc = params[name]['desc']
-        r_params.append(type_(desc=desc))
+        ui_name = params[name].get('ui_name', name)  # use parameter name if no ui_name is given
+        r_params.append(type_(desc=desc, ui_name=ui_name))
     if return_ is None:
         r_output = None
     else:
         r_output = return_['type'](desc=return_['desc'])
-    return r_params, r_output
+        vis_info = dict(vis_info.items() + return_.items())
+    return r_params, r_output, vis_info
 
 ## Registry
 
@@ -214,9 +257,9 @@ def get_all_services(as_json=False, as_json_schema=False):
     """
     if as_json or as_json_schema:
         if as_json:
-            return {name: inst.as_json() for name, inst in _services.iteritems()}
+            return json.dumps({name: inst.as_json() for name, inst in _services.iteritems()})
         else:
-            return {name: inst.as_json_schema() for name, inst in _services.iteritems()}
+            return json.dumps({name: inst.as_json_schema() for name, inst in _services.iteritems()})
     else:
         return _services.copy()
 
@@ -237,6 +280,12 @@ class Service(trt.HasTraits):
     version = kbtypes.VersionNumber()
 
     def __init__(self, **meta):
+        """Initialize a Service instance.
+
+        :param meta: Metadata keywords to set as attributes on the instance.
+                     Special keywords are `name`, `desc`, and `version` (see
+                     documentation for each).
+        """
         trt.HasTraits.__init__(self)
         # set traits from 'meta', if present
         for key, val in meta.iteritems():
@@ -316,6 +365,7 @@ class LifecycleSubject(object):
     meaning 'not yet started'.
         """
     def __init__(self, stages=1):
+        open("/tmp/kbnarr", "a").write("@@ LIFECYCLE SUBJECT\n")
         if not isinstance(stages, int) or stages < 1:
             raise ValueError("Number of stages ({}) must be > 0".format(stages))
         self._stages = stages
@@ -366,6 +416,11 @@ class LifecycleSubject(object):
         if not self._done:
             self._done = True
             self._event('error', code, err)
+
+    def debug(self, msg):
+        """Debugging message.
+        """
+        self._event('debug', msg)
 
     # get/set 'stage' property
     
@@ -425,6 +480,10 @@ class LifecycleObserver(object):
         """Called on fatal error"""
         pass
 
+    def debug(self, msg):
+        """Debugging message"""
+        pass
+
 
 class LifecycleHistory(LifecycleObserver):
     """Record duration between start/end in lifecycle events.
@@ -469,14 +528,14 @@ class LifecycleHistory(LifecycleObserver):
         pass
 
     def estimated_runtime(self, params):
-        """Based on history and params, estimate runtime for service.
+        """Based on history and params, estimate runtime for function.
 
         """
-        dur = self._history.get_durations()
+        dur = self.get_durations()
         if len(dur) == 0:
             estimate = -1  # no @!$%# idea
         else:
-            # dumb: ignore params
+            # dumb: ignore params, take mean
             estimate = sum(dur) / len(dur)
         return estimate
 
@@ -527,6 +586,54 @@ class LifecyclePrinter(LifecycleObserver):
     def error(self, code, err):
         self._write('E' + err.as_json())
 
+    def debug(self, msg):
+        self._write('G' + msg)
+
+
+class LifecycleLogger(LifecycleObserver):
+    """Log lifecycle messages in a simple but structured format,
+    to a file.
+    """
+    MAX_MSG_LEN = 240  # Truncate message to this length, in chars
+                       # Actual display may be a bit longer to indicate
+                       # that the message was indeed truncated.
+
+    def __init__(self, name, debug=False):
+        """Create a Python logging.Logger with the given name, under the existing
+        IPython logging framework.
+
+        :param name: Name of logger
+        :type name: str
+        :param debug: Whether to set debug as the log level
+        :type debug: bool
+        """
+        # use the IPython application singleton's 'log' trait
+        self._log = Application.instance().log
+        self._is_debug = debug
+
+    def _write(self, level, event, msg):
+        if msg and (len(msg) > self.MAX_MSG_LEN):
+            msg = msg[:self.MAX_MSG_LEN] + " [..]"
+        # replace newlines with softer dividers
+        msg = msg.replace("\n\n", "\n").replace("\n", " // ").replace("\r", "")
+        # format a timestamp
+        ts = time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
+        # log the whole tamale
+        self._log.log(level, "ts={ts} event={e} {m}".format(ts=ts, e=event, m=msg))
+
+    def started(self, params):
+        self._write(logging.INFO, "started", "params={}".format(params))
+
+    def done(self):
+        self._write(logging.INFO, "done", "")
+
+    def error(self, code, err):
+        self._write(logging.ERROR, "err({:d})".format(code), "msg={}".format(err))
+
+    def debug(self, msg):
+        if self._is_debug:
+            self._write(logging.DEBUG, "dbg", "msg={}".format(msg))
+
 
 class ServiceMethod(trt.HasTraits, LifecycleSubject):
     """A method of a service.
@@ -563,6 +670,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
     #: Output of the method, a Tuple of traits
     outputs = trt.Tuple()
 
+
     def __init__(self, status_class=LifecycleHistory, quiet=False,
                  func=None, **meta):
         """Constructor.
@@ -578,7 +686,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         LifecycleSubject.__init__(self)
         self._history = status_class(self)
         self.register(self._history)
-        self._lpr = None
+        self._observers = []  # keep our own list of 'optional' observers
         self.quiet(quiet)
         # set traits from 'meta', if present
         for key, val in meta.iteritems():
@@ -588,22 +696,24 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         # docstring, if function is given
         if func is not None:
             self.desc = get_func_desc(func)
-            params, output = get_func_info(func)
-            self.set_func(func, tuple(params), (output,))
+            params, output, vis_info = get_func_info(func)
+            self.set_func(func, tuple(params), (output,), vis_info)
 
     def quiet(self, value=True):
         """Control printing of status messages.
         """
         if value:
-            if self._lpr:
-                self.unregister(self._lpr)
-                self._lpr = None
+            # make it quiet
+            if self._observers:  # for idempotence
+                map(self.unregister, self._observers)
+                self._observers = []
         else:
-            if not self._lpr:
-                self._lpr = LifecyclePrinter()
-                self.register(self._lpr)
+            # make some noise
+            if not self._observers:  # for idempotence
+                self._observers = [LifecyclePrinter(), LifecycleLogger("kb.narr", debug=True)]
+                map(self.register, self._observers)
 
-    def set_func(self, fn, params, outputs):
+    def set_func(self, fn, params, outputs, vis_info):
         """Set the main function to run, and its metadata.
         Although params and outputs are normally traits or
         subclasses of traits defined in kbtypes, the value
@@ -612,20 +722,42 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         :param fn: Function object to run
         :param params: tuple of traits describing input parameters
         :param outputs: tuple of traits, describing the output value(s)
-
+        :param vis_info: visualization information, with two keys:
+                           * 'widget':  Name of the default widget.
+                           * 'embed_widget': Whether it should automatically be shown, default = True.
+        :type vis_info: dict
         :raise: ServiceMethodParameterError, if function signature does not match
                 ValueError, if None is given for a param
         """
         self.run = fn
         if self.name is None:
             self.name = fn.__name__
+
+        # Handle parameters
         for i, p in enumerate(params):
             if p is None:
                 raise ValueError("None is not allowed for a parameter type")
             p.name = "param{:d}".format(i)
         self.params = params
+
+        # Handle outputs
         for i, o in enumerate(outputs):
             o.name = "output{:d}".format(i)
+
+        # Set widget name
+        self.input_widget = None
+        if 'input_widget' in vis_info and vis_info['input_widget'] is not None:
+            self.input_widget = vis_info['input_widget']
+
+        self.output_widget = None
+        if 'output_widget' in vis_info and vis_info['output_widget'] is not None:
+            self.output_widget = vis_info['output_widget']
+
+        # Set embed_widget
+        self.embed_widget = True
+        if 'embed' in vis_info and vis_info['embed_widget'] is not None:
+            self.embed_widget = vis_info['embed_widget']
+
         self.outputs = outputs
         self._one_output_ok = len(outputs) == 1
 
@@ -648,10 +780,20 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             self._validate(tmpresult, self.outputs)
             result = tmpresult
             self.done()
-        except ServiceMethodError, err:
+        except ServiceMethodError as err:
             self.error(-2, err)
-        except Exception, err:
+        except Exception as err:
             self.error(-1, ServiceMethodError(self, err))
+
+        # output object contains:
+        # data
+        # default widget name
+        # whether it should automatically embed the result or not
+        output_obj = {'data': result,
+                      'widget': self.output_widget,
+                      'embed': self.embed_widget}
+
+        sys.stdout.write(json.dumps(output_obj))
         return result
 
     def _validate(self, values, specs):
@@ -678,12 +820,30 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         """
         return self._history.estimated_runtime(params)
 
+    ## Utility functions
+
+    @property
+    def token(self):
+        """Authorization token passed in from front-end.
+        """
+        return os.environ['KB_AUTH_TOKEN']
+
+    @property
+    def workspace_id(self):
+        """Workspace ID passed in from front-end.
+        """
+        return os.environ['KB_WORKSPACE_ID']
+
+    ## JSON serialization
+
     def as_json(self, formatted=False, **kw):
         d = {
             'name': self.name,
             'desc': self.desc,
-            'params': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.params],
-            'outputs': [(p.name, p.info_text, p.get_metadata('desc')) for p in self.outputs]
+            'input_widget': self.input_widget,
+            'output_widget': self.output_widget,
+            'params': [(p.name, p.get_metadata('ui_name'), str(p), p.get_metadata('desc')) for p in self.params],
+            'outputs': [(p.name, str(p), p.get_metadata('desc')) for p in self.outputs]
         }
         if formatted:
             return json.dumps(d, **kw)
@@ -704,10 +864,12 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             'type': 'object',
             'description': self.desc,
             'properties': {
-                'parameters': {p.name: {'type': self.trt_2_jschema.get(p.info_text, 'object'),
-                                        'description': p.get_metadata('desc')} for p in self.params},
+                'parameters': {p.name: {'type': self.trt_2_jschema.get(p.info(), str(p)),
+                                        'description': p.get_metadata('desc'),
+                                        'ui_name': p.get_metadata('ui_name')} for p in self.params},
+                'widgets': { 'input': self.input_widget, 'output': self.output_widget },
             },
-            'returns': {p.name: {'type': self.trt_2_jschema.get(p.info_text, 'object'),
+            'returns': {p.name: {'type': self.trt_2_jschema.get(p.info(), str(p)),
                                  'description': p.get_metadata('desc')} for p in self.outputs}
         }
         if formatted:
@@ -727,7 +889,7 @@ def init_service(**kw):
     """Call this first, to create & set service.
 
     All arguments must be keywords. See :class:`Service` and
-    :method:`Service.__init__`.
+    :meth:`Service.__init__`.
     """
     global _curr_service
     _curr_service = Service(**kw)
@@ -749,13 +911,10 @@ def method(name=None):
     """Decorator function for creating new services.
 
     Example usage::
-        init_service(name="MyService", ...)
-
-        # ..later..
-
-        @service_method(name="MyMethod")
-        def my_service(method, arg1, ...):
-           # do whatever you do
+    
+        @method(name="MyMethod")
+        def my_service(method, arg1, arg2, etc.):
+            pass # method body goes here
     """
     if _curr_service is None:
         raise ValueError("Attempt to call @method decorator before init_service()")
@@ -764,6 +923,9 @@ def method(name=None):
         if name is None:
             name = fn.__name__
         wrapped_fn = _curr_service.add_method(name=name, func=fn)
+        # copy docstring from original fn to wrapped fn, so that
+        # interactive help, autodoc, etc. will show the 'real' docs.
+        wrapped_fn.__doc__ = fn.__doc__
         return wrapped_fn
     return wrap
 

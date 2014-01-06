@@ -1,4 +1,4 @@
-/**
+ /**
  * File upload widget.
  * Upload objects to the workspace service.
  *
@@ -101,6 +101,7 @@
          * @returns {*}
          */
         _createDialog: function(self) {
+            self.cur_files = [];
             var _fn = "createDialog.";
             console.debug(_fn + "begin", "self=", self);
             var _p = self.ws_p; // alias
@@ -206,21 +207,19 @@
             // Populate dialog with form
             self.dlg.append($frm);
             // Put filename in description, unless user entered something
-            $frm.find(':file').change(function(e) {
-                if (fields.dataset.modified) {
-                    return; // don't mess if user typed something
+            $frm.on('change.bs.fileinput', function(e) {
+                console.debug("changed", e);
+                self.cur_files = e.target.files;
+                if (self.cur_files.length > 0 && !fields.dataset.modified) {
+                    var $txt = $frm.find(':text');
+                    $txt.val(self.cur_files[0].name);
                 }
-                var s = that._getFileName(this.value);
-                var $txt = $frm.find(':text');
-                $txt.val(s);
             });
             // Set up response
             $frm.on("submit", function(event) {
                 event.preventDefault();
-                var target = $('#upload_files')[0];
-                var files = target.files;
-                for (var i=0; i < files.length; i++) {
-                    var f = files[i];
+                for (var i=0; i < self.cur_files.length; i++) {
+                    var f = self.cur_files[i];
                     $.extend(f, {
                         desc: that.desc_elem[0].value, // description
                         dtype: that.type_elem[0].value // data type name

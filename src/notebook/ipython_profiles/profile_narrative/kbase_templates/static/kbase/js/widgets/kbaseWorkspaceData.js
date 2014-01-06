@@ -5,12 +5,16 @@
  *    ws_id - the name of the workspace to show in this widget
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    notLoggedInMsg - a string to put in the middle of the widget when not logged in.
+ *
+ * Triggers events:
+ * dataUpdated.Narrative - when the loaded data table gets updated.
+ * workspaceUpdated.Narrative - when the current workspace ID gets updated
  */
 (function( $, undefined ) {
 
 	$.KBWidget({
-        name: "kbaseWorkspaceDataWidget", 
-        parent: "kbaseWidget",
+        name: "kbaseWorkspaceData", 
+        parent: "kbaseAuthenticatedWidget",
 		version: "1.0.0",
 		ws_client: null,
 		table: null,
@@ -25,6 +29,7 @@
 		options: {
 			loadingImage: "../../images/ajax-loader.gif",
 			notLoggedInMsg: "Please log in to view a workspace.",
+            workspaceURL: "http://kbase.us/services/workspace",
             container: null,
             ws_id: null
 		},
@@ -40,6 +45,48 @@
                 .createMessages()
                 .createLoading()
                 .render();
+
+            $(document).on(
+                'dataLoadedQuery.Narrative', $.proxy(function(e, params, callback) {
+                    var objList = this.getLoadedData(params);
+                    if (callback) {
+                        callback(objList);
+                    }
+                },
+                this)
+            );
+
+            $(document).on(
+                'updateData.Narrative', $.proxy(function(e) {
+                    this.render();
+                },
+                this )
+            );
+
+            $(document).on(
+                'workspaceQuery.Narrative', $.proxy(function(e, callback) {
+                    if (callback) {
+                        callback(this.ws_id);
+                    }
+                }, 
+                this)
+            );
+
+            return this;
+        },
+
+        loggedInCallback: function(event, auth) {
+            this.ws_auth = auth.token;
+            this.ws_client = new workspaceService(this.options.workspaceURL);
+            this.isLoggedIn = true;
+            this.render();
+            return this;
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.ws_auth = null;
+            this.isLoggedIn = false;
+            this.render();
             return this;
         },
 
@@ -564,15 +611,13 @@
             else {
                 this.$loading.show();
                 var that = this;
+
                 this.setWs(function() {
                     var opts = {workspace: that.ws_id, auth: that.ws_auth};
-                    console.debug("list_workspace_objects.begin");
                     that.ws_client.list_workspace_objects(opts,
                         function(results) {
-                            //console.log("Results: " + results);
                             that.updateResults(results);
                             that.createTable();
-                            console.debug("list_workspace_objects.end");
                         },
                         function(err) {
                             console.error("getting objects for workspace " + that.ws_id, err);
@@ -656,6 +701,7 @@
                     console.error("Cannot get/create workspace: " + name, err);
                 });
             this.ws_id = name;
+            this.trigger('workspaceUpdated.Narrative', this.ws_id);
             // Set the title of the UI element showing the data
             //$('#kb-wsname').text(name);
             
@@ -723,13 +769,13 @@
                     this.loadedData[type] = [];
                 this.loadedData[type].push(results[i]);
             }
-            console.log(this.loadedData);
+//            console.log(this.loadedData);
 
             var mdstring = '';
             $.each(IPython.notebook.metadata, function(key, val) {
                 mdstring = mdstring + key + "=" + val + "\n";
             });
-            console.log('notebook metadata = ' + mdstring);
+//            console.log('notebook metadata = ' + mdstring);
             // just columns shown
             this.tableData = [ ];
             // all data from table, keyed by object name + type
@@ -742,7 +788,8 @@
                 this.tableData.push([name, type]);
                 this.table_meta[this._item_key(name, type)] = results[i];
             }
-            return this;
+
+            this.trigger('dataUpdated.Narrative');
         },
 
         /**
@@ -758,19 +805,20 @@
             return name + '/' + type;
         },
 
-		loggedIn: function(client, token) {
-            console.debug("WorkspaceData.loggedIn");
-            this.ws_client = client, this.ws_auth = token;
-            this.isLoggedIn = true;
-            this.render();
-            return this;
-		},
+		// loggedIn: function(client, token) {
+  //           console.debug("WorkspaceData.loggedIn");
+  //           this.ws_client = new workspaceService(this.options.workspaceURL);
+  //           this.ws_auth = token;
+  //           this.isLoggedIn = true;
+  //           this.render();
+  //           return this;
+		// },
 
-		loggedOut: function(e, args) {
-            this.isLoggedIn = false;
-            this.render();
-            return this;
-        },
+		// loggedOut: function(e, args) {
+  //           this.isLoggedIn = false;
+  //           this.render();
+  //           return this;
+  //       },
 
         clearTable: function() {
 			if (this.table) {

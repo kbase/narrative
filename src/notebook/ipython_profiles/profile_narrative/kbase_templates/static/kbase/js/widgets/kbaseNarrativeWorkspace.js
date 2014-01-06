@@ -43,6 +43,7 @@
         KB_OUTPUT_CELL: 'function_output',
         KB_ERROR_CELL: 'kb_error',
         KB_CODE_CELL: 'kb_code',
+        KB_STATE: 'input_state',
 
         init: function(options) {
             this._super(options);
@@ -275,6 +276,8 @@
 
             cell.rendered = false;
             cell.render();
+            // restore the input widget's state.
+
 
             this.removeCellEditFunction(cell);
             this.bindActionButtons(cell);
@@ -284,6 +287,9 @@
          * Refreshes any function inputs to sync with workspace data.
          * Since this re-renders the cell, it must rebind all buttons, too.
          * Kind of annoying, but it should run quickly enough.
+         *
+         * Also checks to see if that cell has any parameter state associated
+         * with it, and if so, sends that to the widget.
          * @private
          */
         renderFunctionInputs: function() {
@@ -292,9 +298,16 @@
                 for (var i=0; i<cells.length; i++) {
                     var cell = cells[i];
                     if (this.isFunctionCell(cell)) {
-//                    if (cell.metadata && cell.metadata['kb-cell'] && cell.metadata['kb-cell']['type'] == this.FUNCTION_CELL) {
                         cell.rendered = false;
                         cell.render();
+
+                        var state = cell.metadata[this.KB_CELL][this.KB_STATE];
+                        if (state) {
+                            var method = cell.metadata[this.KB_CELL].method;
+                            var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
+
+                            $(cell.element).find("#inputs")[inputWidget]('loadState', state);
+                        }
                         this.bindActionButtons(cell);
                     }
                 }
@@ -450,16 +463,19 @@
             return (
                 function(event) {
                     event.preventDefault();
+                    // get the cell
                     var cell = IPython.notebook.get_selected_cell();
+
+                    // get a 'handle' (really just the invocable name) of the input widget
                     var inputWidget = cell.metadata[self.KB_CELL].method.properties.widgets.input || self.defaultInputWidget;
+
+                    // get the list of parameters and save the state in the cell's metadata
                     var paramList = $(cell.element).find("#inputs")[inputWidget]('getParameters');
+                    var state = $(cell.element).find("#inputs")[inputWidget]('getState');
+                    cell.metadata[self.KB_CELL][self.KB_STATE] = state;
 
-                    // $(cell.element).find("[name^=param]").filter(":input").each(function(key, field) {
-                    //     console.log(field.name + "=" + field.value);
-                    //     paramList.push(field.value);
-                    // });
+                    // Run the method.
                     var method = cell.metadata[self.KB_CELL].method;
-
                     self.runCell()(cell, method.service, method.title, paramList);
                 }
             );

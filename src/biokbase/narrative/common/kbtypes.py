@@ -185,3 +185,6 @@ class PhenotypeSet(tls.Unicode, TypeMeta):
 
 class PhenotypeSimulationSet(tls.Unicode, TypeMeta):
     info_text = "Phenotype simulation"
+
+class ProteomeComparison(tls.Unicode, TypeMeta):
+    info_text = "Proteome comparison result"

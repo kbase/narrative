@@ -15,6 +15,7 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 from biokbase.workspaceService.Client import workspaceService
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.fbaModelServices.Client import fbaModelServices
+from biokbase.GenomeComparison.Client import GenomeComparison
 
 ## Globals
 
@@ -715,22 +716,91 @@ def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
     return json.dumps({'token': token, 'ws_name': workspace, 'simulation_id': simulation_id})
 
 @method(name="Reconcile Phenotype Data")
-def _reconcile_phenotype(meth, fba_model_id, phenotype_id):
+def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
     """Run Gapfilling on an FBA Model
 
     :param fba_model_id: an FBA model id
     :type fba_model_id: kbtypes.Model
     :ui_name fba_model_id: FBA Model ID
-    :param phenotype_id: a phenotype ID
-    :type phenotype_id: kbtypes.PhenotypeSet
-    :ui_name phenotype_id: Phenotype Dataset ID
+    :param phenotype_id: a phenotype simulation ID
+    :type phenotype_id: kbtypes.PhenotypeSimulationSet
+    :ui_name phenotype_id: Phenotype Simulation Dataset ID
+    :param out_model_id: a name for the generated FBA Model (optional)
+    :type out_model_id: kbtypes.Unicode
+    :ui_name out_model_id: Output FBA Model Name
     :return: something
     :rtype: kbtypes.Unicode
+    :output_widget: kbaseModelMetaNarrative
     """
 
-    return json.dumps({ 'output' : "Reconcile Phenotype stub" })
+    if not out_model_id:
+        out_model_id = "model_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    fbaClient = fbaModelServices(service.URLS.fba)
+    wildtype_phenotype_reconciliation_params = {
+        'auth': token, 
+        'model_workspace': workspace,
+        'model': fba_model_id,
+        'phenotypeSet_workspace': workspace,
+        'phenotypeSet': phenotype_id,
+        'workspace': workspace, 
+        'out_model': out_model_id,
+    }
+    job_id = fbaClient.queue_wildtype_phenotype_reconciliation(wildtype_phenotype_reconciliation_params)['id']
+    return json.dumps({'token': token, 'ws_name': workspace, 'model_id': out_model_id, 'job_id': job_id})
 
+@method(name="Compare Two Genome Proteomes")
+def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
+    """This starts a job that might run for an hour or longer.
+    When it finishes, the annotated Genome will be stored in your data space.
+     
+    :param genome1: Source genome1 ID
+    :type genome1: kbtypes.Genome
+    :ui_name genome1: Genome1 ID
+    :param genome2: Source genome2 ID
+    :type genome2: kbtypes.Genome
+    :ui_name genome2: Genome2 ID
+    :param out_proteome_cmp: Output proteome comparison ID. If empty, an ID will be chosen randomly.
+    :type out_proteome_cmp: kbtypes.Unicode
+    :ui_name out_proteome_cmp: Output Proteome Comparison ID
+    :return: Output Proteome Comparison ID
+    :rtype: kbtypes.ProteomeComparison
+    :output_widget: GenomeComparisonWidget
+    """
+    meth.stages = 1  # for reporting progress
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    if not out_proteome_cmp:
+        out_proteome_cmp = "proteome_cmp_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    cmpClient = GenomeComparison(url = service.URLS.genomeCmp, token = token)
+    blast_proteomes_params = {
+        'genome1ws': workspace, 
+        'genome1id': genome1, 
+        'genome2ws': workspace, 
+        'genome2id': genome2, 
+        'output_ws': workspace, 
+        'output_id': out_proteome_cmp, 
+    }
+    job_id = cmpClient.blast_proteomes(blast_proteomes_params)
+    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_proteome_cmp, 'job_id': job_id})
 
+@method(name="View Proteome Comparison")
+def _view_proteome_cmp(meth, proteome_cmp):
+    """This starts a job that might run for an hour or longer.
+    When it finishes, the annotated Genome will be stored in your data space.
+     
+    :param proteome_cmp: Proteome comparison ID
+    :type proteome_cmp: kbtypes.ProteomeComparison
+    :ui_name proteome_cmp: Proteome Comparison ID
+    :return: Output Proteome Comparison ID
+    :rtype: kbtypes.ProteomeComparison
+    :output_widget: GenomeComparisonWidget
+    """
+    meth.stages = 1  # for reporting progress
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': proteome_cmp})
 
 
 

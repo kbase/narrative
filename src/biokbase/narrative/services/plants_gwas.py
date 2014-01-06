@@ -91,6 +91,7 @@ Now
 5. Functional annotation of novel proteins
 6. Pathway analysis of output gene set
 """
+
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 __date__ = '12/12/13'
 
@@ -138,12 +139,9 @@ class URLS:
 init_service(name=NAME, desc="Plants GWAS service", version=VERSION)
 
 
-
-
-
 @method(name="Create Gwas Population object")
 def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_population_object_name=None, GwasPopulation_description=None, kbase_genome_id=None, comment=None):
-    """DESCRIPTION NEEDED.
+    """Create Gwas Population object from an uploaded Population file in the workspace.
 
     :param GwasPopulation_file_id:workspace_object_id of the uploaded Population file
     :type GwasPopulation_file_id: kbtypes.WorkspaceObjectId
@@ -180,9 +178,9 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
         while completed < (njobs - remaining):
             completed += 1
             meth.advance("Population Object: {:d}/{:d} jobs completed".format(completed, njobs))
-    if (njobs==1):
-        h='GwasPopulation_' + output_population_object_name
-        return json.dumps({ 'output':  h })
+    if njobs == 1:
+        h = 'GwasPopulation_' + output_population_object_name
+        return json.dumps({'output': h})
     else:
         return njobs
 
@@ -243,8 +241,6 @@ def gwas_create_population_trait_object(meth,GwasPopulation_obj_id=None, populat
         return njobs
 
 
-
-
 @method(name="Create Gwas  Variation object")
 def gwas_create_population_variation_object(meth,population_variation_file_shock_url=None, population_variation_file_shock_id=None, GwasPopulation_obj_id=None, assay=None, filetype=None,comment=None,  originator=None, output_variation_object_name=None, kbase_genome_id=None):
     """DESCRIPTION NEEDED.
@@ -299,10 +295,6 @@ def gwas_create_population_variation_object(meth,population_variation_file_shock
         return njobs
 
 
-
-
-
-
 @method(name="VCF-Filtering")
 def maf(meth, maf=0.05, object_id=None):
     """DESCRIPTION NEEDED.
@@ -342,10 +334,6 @@ def maf(meth, maf=0.05, object_id=None):
     else:
         return njobs
 
-
-
-
-
 @method(name="Calculate Kinship matrix")
 def gwas_run_kinship(meth,  object_id=None):
     """DESCRIPTION NEEDED.
@@ -382,9 +370,6 @@ def gwas_run_kinship(meth,  object_id=None):
         return json.dumps({ 'output':  h })
     else:
         return njobs
-
-
-
 
 
 @method(name="Run GWAS analysis MLM")
@@ -431,12 +416,6 @@ def gwas_run_gwas2(meth,  genotype_obj_id=None,  kinship_obj_id=None, trait_obj_
         return njobs
 
 
-
-
-
-
-
-
 @method(name="Trait Manhattan Plot")
 def trait_manhattan_plot(meth, workspaceID=None, gwasObjectID=None):
     """
@@ -454,17 +433,6 @@ def trait_manhattan_plot(meth, workspaceID=None, gwasObjectID=None):
     meth.advance("doing something..")
     token = meth.token
     return json.dumps({ 'token': token, 'workspaceID' : workspaceID, 'gwasObjectID' : gwasObjectID })
-
-
-
-
-
-
-
-
-
-
-
 
 
 def _job_count(id_):

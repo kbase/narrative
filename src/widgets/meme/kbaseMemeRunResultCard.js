@@ -7,6 +7,8 @@
         options: {
             id: null,
             ws: null,
+            auth: null,
+            userId: null,
             loadingImage: "assets/img/ajax-loader.gif",
             title: "MEME Run Result Overview",
             isInCard: false,
@@ -28,7 +30,7 @@
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-            this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl);
+            this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, { 'token' : this.options.auth, 'user_id' : this.options.userId});
             
             return this.render();
         },
@@ -106,6 +108,8 @@
                 type: "MemeRunResult",
                 id: this.options.id,
                 workspace: this.options.ws,
+                auth: this.options.auth,
+                userId: this.options.userId,
                 title: "MEME Run Result Overview"
             };
         },

@@ -30,7 +30,7 @@
             this.$elem.append(this.$messagePane);
 
 //            this.workspaceClient = new workspaceService(this.workspaceURL);
-              this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl);
+              this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, { 'token' : this.options.auth, 'user_id' : this.options.userId});
 
             return this.render();
         },

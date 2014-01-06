@@ -7,6 +7,8 @@
         options: {
             id: null,
             ws: null,
+            auth: null,
+            userId: null,
             loadingImage: "assets/img/ajax-loader.gif",
             title: "MAST Run Result Overview",
             isInCard: false,
@@ -29,7 +31,7 @@
             this.$elem.append(this.$messagePane);
 
 //            this.workspaceClient = new workspaceService(this.workspaceURL);
-            this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl);
+            this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, { 'token' : this.options.auth, 'user_id' : this.options.userId});
 
             return this.render();
         },
@@ -95,6 +97,8 @@
                 type: "MastRunResult",
                 id: this.options.mast_run_result_id,
                 workspace: this.options.workspace_id,
+                auth: this.options.auth,
+                userId: this.options.userId,
                 title: "MAST Run Result Overview"
             };
         },

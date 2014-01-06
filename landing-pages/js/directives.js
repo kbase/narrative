@@ -72,7 +72,7 @@ angular.module('lp-directives')
             link: function(scope, element, attr) {
                 var ws = scope.ws ? scope.ws : "AKtest"; 
 
-                $(element).kbaseMemeTable({ws: ws});
+                $(element).kbaseMemeTable({ws: ws, auth: scope.USER_TOKEN, userId: scope.USER_ID});
                 $(document).on('memeClick', function(e, data) {
                     var url = '/meme/'+ws+'/'+data.id;
                     scope.$apply( $location.path(url) );

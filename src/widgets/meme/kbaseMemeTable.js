@@ -4,6 +4,9 @@ $.KBWidget({
     name: "kbaseMemeTable",      
     version: "1.0.0",
     options: {
+        ws: null,
+        auth: null,
+        userId: null
     },
     init: function(options) {
         this._super(options);
@@ -24,7 +27,7 @@ $.KBWidget({
             }
         };
         var newWorkspaceServiceUrlForSpec = 'http://140.221.84.209:7058/';
-        var kbws = new Workspace(newWorkspaceServiceUrlForSpec);
+        var kbws = new Workspace(newWorkspaceServiceUrlForSpec, { 'token' : this.options.auth, 'user_id' : this.options.userId});
         
         kbws.list_objects({type: 'MEME.MemeRunResult', workspaces: [ws]},
             function(d){

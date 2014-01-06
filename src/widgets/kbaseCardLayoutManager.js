@@ -678,6 +678,8 @@
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
@@ -694,6 +696,8 @@
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
@@ -710,6 +714,8 @@
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
@@ -730,6 +736,8 @@
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },

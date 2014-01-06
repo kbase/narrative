@@ -14,21 +14,26 @@
 
 /* Container for func list */
 .kb-function-body {
-    border: 1px solid #dddddd;
     padding: 10px;
     padding: 0;
     height: 300px;
     overflow-y: auto;
+    width: 100%;
 }
 
 .kb-function-body ul {
+    border: 1px solid #dddddd;
     list-style-type: none;
     margin: 0;
     padding: 0;
+    width: 100%;
 }
 .kb-function-body li {
     padding: 5px 5px;
+    width: 100%;
+    text-align: left;
 }
+
 /* alt. rows */
 .kb-function-body li:nth-child(odd) {
     background-color: #eee;
@@ -38,6 +43,13 @@
     background-color: #fff;
     border-bottom: 1px solid #ddd;
 }
+
+.kb-function-body li:hover {
+    text-decoration: underline;
+    cursor: pointer;
+    background-color: #F4F5D6;
+}
+
 
 /* Link to a function */
 .kb-function-body a {
@@ -49,12 +61,12 @@
 
 /* Help on a function */
 .kb-function-help {
-    font-family: Arial sans-serif;
-    background-color: #c1da31;
     color: white;
     padding: 0 3px;
     float: right;
     cursor: pointer;
+    color: #0064b6;
+    font-size: 14pt;
 }
 
 .kb-function-help-popup {

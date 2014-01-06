@@ -27,6 +27,15 @@
             return [ "returning parameter list" ];
         },
 
+        getState: function() {
+            return {};
+        },
+
+        loadState: function(state) {
+            if (!state)
+                return;
+        },
+
     });
 
 })( jQuery );

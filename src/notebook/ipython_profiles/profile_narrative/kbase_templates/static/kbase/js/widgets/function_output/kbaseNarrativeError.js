@@ -67,19 +67,19 @@
             return this.render();
         },
 
-        /**
-         * (not required)
-         * I prefer to keep initialization and rendering code separate, but
-         * that's just a style thing. You can do whatever the widget requires.
-         */
         render: function() {
             var printMsg = this.options.error.msg;
+
+            // for now, just truncate the error to 300 characters.
+            if (printMsg.length > 300)
+                printMsg = printMsg.substring(0, 300) + "...[error truncated]";
+
             this.$elem.append('Sorry, an error occurred<br>')
                       .append('In method: ' + this.options.error.method_name + '<br>')
                       .append('of type: ' + this.options.error.type + '<br>')
                       .append('severity: ' + this.options.error.severity + '<br>')
                       .append('Error Message: ')
-                      .append($('<pre>').append(this.options.error.msg));
+                      .append($('<pre>').append(printMsg));
             return this;
         },
     });

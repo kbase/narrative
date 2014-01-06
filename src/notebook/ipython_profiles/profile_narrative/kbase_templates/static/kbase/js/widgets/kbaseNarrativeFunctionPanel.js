@@ -36,7 +36,7 @@
             // DOM structure setup here.
             // After this, just need to update the function list
 
-            this.$functionList = $('<ul>');
+//            this.$functionList = $('<ul>');
 
             // Make and append the header.
             this.$elem.append($('<div>')
@@ -45,8 +45,8 @@
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
-                                  .addClass('kb-function-body')
-                                  .append(this.$functionList);
+                                  .addClass('kb-function-body');
+//                                  .append(this.$functionList);
             this.$elem.append(this.$functionPanel);
 
             // The 'loading' panel should just have a spinning gif in it.
@@ -111,7 +111,6 @@
          */
         parseKernelResponse: function(msgType, content) {
             // if it's not a datastream, display some kind of error, and return.
-            console.debug(content);
             if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the function list.');
                 return;
@@ -131,16 +130,63 @@
          * @private
          */
         populateFunctionList: function(serviceSet) {
-            console.log(serviceSet);
-            this.$functionList.empty();
+            this.dbg(serviceSet);
+
+            var serviceAccordion = [];
+
             for (var serviceName in serviceSet) {
+                var $methodList = $('<ul>');
                 var service = serviceSet[serviceName];
                 for (var i=0; i<service.methods.length; i++) {
                     var method = service.methods[i];
                     method['service'] = serviceName;
-                    this.addFunction(method);
+                    $methodList.append(this.buildFunction(method));
                 }
+
+                serviceAccordion.push({
+                    'title' : serviceName,
+                    'body' : $methodList
+                });
             }
+
+            this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
+
+            /** pre-accordion code commented out below **/
+            // for (var serviceName in serviceSet) {
+            //     var service = serviceSet[serviceName];
+            //     for (var i=0; i<service.methods.length; i++) {
+            //         var method = service.methods[i];
+            //         method['service'] = serviceName;
+            //         this.addFunction(method);
+            //     }
+            // }
+        },
+
+        /**
+         * Creates and returns a list item containing info about the given narrative function.
+         * Clicking the function anywhere outside the help (?) button will trigger a 
+         * function_clicked.Narrative event. Clicking the help (?) button will trigger a 
+         * function_help.Narrative event.
+         * 
+         * Both events have the relevant data passed along with them for use by the responding
+         * element.
+         * @param {object} method - the method object returned from the kernel.
+         * @private
+         */
+        buildFunction: function(method) {
+            var self = this;
+
+            var $helpButton = $('<span>')
+                              .addClass('glyphicon glyphicon-question-sign kb-function-help')
+                              .css({'margin-top': '-5px'})
+                              .click(function(event) { event.preventDefault(); event.stopPropagation(); self.showHelpPopup(method); });
+
+            var $newFunction = $('<li>')
+                               .append(method.title)
+                               .click(function(event) { self.trigger('function_clicked.Narrative', method); })
+                               .append($helpButton);
+
+            return $newFunction;
         },
 
         /**

@@ -24,7 +24,8 @@ class AweJob(object):
         self._sname, self._rname = started, running
 
     def run(self, jid, stage_fun=None):
-        """Run synchronously, optionally invoking a callback at each completed stage.
+        """Run synchronously, optionally invoking a callback at each completed stage, until
+        all sub-jobs have completed.
 
         :param jid: AWE Job ID
         :param stage_fun: Stage callback function.

@@ -102,13 +102,14 @@ import json
 import time
 
 # Third party
-import requests
 
 # Service framework
 from biokbase.narrative.common.service import init_service, method, finalize_service
 from IPython.display import display, HTML
 # Other KBase
 from biokbase.GWAS.Client import GWAS
+
+from biokbase.narrative.common.kbutil import AweJob
 
 ## Exceptions
 
@@ -134,6 +135,8 @@ class URLS:
     ontology = "http://kbase.us/services/ontology_service"
     gwas = "http://140.221.85.171:7086"
     ujs = "http://140.221.85.171:7083"
+
+AweJob.URL = URLS.awe
 
 # Initialize
 init_service(name=NAME, desc="Plants GWAS service", version=VERSION)
@@ -169,15 +172,16 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
     if not jid:
         raise GWASException(2, "submit job failed, no job id")
 
-    meth.advance("creating Population object")
-    completed, njobs = 0, _job_count(jid[0])
-    meth.stages += njobs
-    while completed < njobs:
-        time.sleep(5)
-        remaining = _job_count(jid[0])
-        while completed < (njobs - remaining):
-            completed += 1
-            meth.advance("Population Object: {:d}/{:d} jobs completed".format(completed, njobs))
+    njobs = AweJob(meth, started="creating Population object", running="create Population object").run(jid[0])
+    # meth.advance("creating Population object")
+    # completed, njobs = 0, _job_count(jid[0])
+    # meth.stages += njobs
+    # while completed < njobs:
+    #     time.sleep(5)
+    #     remaining = _job_count(jid[0])
+    #     while completed < (njobs - remaining):
+    #         completed += 1
+    #         meth.advance("Population Object: {:d}/{:d} jobs completed".format(completed, njobs))
     if njobs == 1:
         h = 'GwasPopulation_' + output_population_object_name
         return json.dumps({'output': h})
@@ -435,14 +439,6 @@ def trait_manhattan_plot(meth, workspaceID=None, gwasObjectID=None):
     return json.dumps({ 'token': token, 'workspaceID' : workspaceID, 'gwasObjectID' : gwasObjectID })
 
 
-def _job_count(id_):
-    """Get count of jobs remaining in AWE.
-    """
-    url = "%s/job/%s" % (URLS.awe, id_)
-    r = requests.get(url)
-    response = json.loads(r.text)
-    remain_tasks = response.get("data", dict()).get("remaintasks")
-    return remain_tasks
 
 # Finalize (registers service)
 finalize_service()

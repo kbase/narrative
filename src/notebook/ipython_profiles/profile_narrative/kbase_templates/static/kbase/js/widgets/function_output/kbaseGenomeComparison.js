@@ -71,10 +71,8 @@ $.KBWidget({
     				tdElem.html(status);
         			if (complete === 1) {
         				clearInterval(self.timer);
-        				dataIsReady();
-        			} else {
-        				if (wasError === 1) {
-        					clearInterval(self.timer);
+        				if (wasError === 0) {
+            				dataIsReady();
         				}
         			}
         		}, function(data) {

@@ -915,6 +915,7 @@ angular.module('ws-directives')
                     })
 
                     // event for showing object history
+                    $('.show-versions').unbind('click')
                     $('.show-versions').click(function() {
                         console.log('show versions')
                         var type = $(this).prev('.obj-id').data('obj-type');

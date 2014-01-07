@@ -24,36 +24,48 @@
         name: "GeneTableWidget",
         version: "0.1.0",
         options: {
-            data: null
+            table: null
         },
 
         wsUrl: "http://kbase.us/services/workspace/",
         columns: ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"],
 
         init: function(options) {
+            console.debug("GeneTableWidget.init", options);
             var self = this;
             this._super(options);
-            var container = this.$elem;
-            this.showTable(container, options.data);
+            return this.render();
         },
 
-        showTable: function(elem, rows) {
-            var table = $('<table/>')
+        render: function() {
+            console.debug("GeneTableWidget.showTable.start");
+            var i, j;
+            // Create table container.
+            var table = $('<table>')
                 .addClass('table table-bordered')
-                .css({'margin-left': 'auto', 'margin-right': 'auto'});
-            var tr1 = $('<tr>');
-            for (var th in this.columns) {
-                tr1.append($('<th>').text(th));
+                .css({'margin-left': 'auto', 'margin-right': 'auto', 'border': '0'});
+            var thead = $('<thead>'), tbody = $('<tbody>');
+            thead.css({'background-color': '#EEEEEE', 'color': '#0D7876'});
+            // Add header.
+            var tr1 = $('<tr>').css({'border-top-color': '#DDDDDD'});
+            for (i = 0; i < this.columns.length; i++) {
+                tr1.append($('<th>').text(this.columns[i]));
             }
-            table.append(tr1);
-            for (var row in rows) {
-                var tr = $('<tr>');
-                for (var col in row) {
-                    tr.append($('<td>').text(col));
+            thead.append(tr1);
+            table.append(thead);
+            // Add body.
+            for (i = 0; i < this.options.table.length; i++) {
+                var tr = $('<tr>'), row = this.options.table[i];
+                for (j = 0; j < row.length; j++) {
+                    tr.append($('<td>').text(row[j]));
                 }
-                table.append(tr);
+                tbody.append(tr);
             }
-            elem.append(table);
+            table.append(tbody);
+            // Put table in cell.
+            this.$elem.append(table);
+            console.debug("GeneTableWidget.showTable.end");
+            return this;
         }
     });
 }( jQuery ) );

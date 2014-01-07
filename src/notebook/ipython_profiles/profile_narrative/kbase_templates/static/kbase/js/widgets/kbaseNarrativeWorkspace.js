@@ -209,7 +209,7 @@
          * include a list of parameters and outputs.
          */
         buildFunctionCell: function(method) {
-            console.log(method);
+            console.debug("buildFunctionCell.start method:",method);
 
             var cell = IPython.notebook.insert_cell_below('markdown');
             // make this a function input cell, as opposed to an output cell
@@ -259,12 +259,14 @@
                                   progressBar +
                               "</div>\n" + 
                               "<script>" + 
-                              "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" + JSON.stringify(method) + "'});" +
+                              "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" + this.safeJSONStringify(method) + "'});" +
                               "</script>";
             }
             else {
                 cellContent = "Error - the selected method is invalid.";
             }
+            // Useful for debugging Markdown errors
+            console.debug("buildFunctionCell.set_text content:", cellContent);
             cell.set_text(cellContent);
 
             cell.rendered = false;
@@ -274,6 +276,22 @@
 
             this.removeCellEditFunction(cell);
             this.bindActionButtons(cell);
+            console.debug("buildFunctionCell.end");
+        },
+
+        /**
+         * Escape chars like single quotes in descriptions and titles,
+         * before rendering as a JSON string.
+         *
+         * @post This does not modify the input object.
+         * @return {string} JSON string
+         */
+        safeJSONStringify: function(method) {
+            var esc = function(s) { return s.replace(/'/g, "&apos;"); };
+            return JSON.stringify(method, function(key, value) {
+                return (typeof(value) == "string" && (key == "description" || key == "title")) ?
+                    esc(value) : value;
+            });
         },
 
         /**

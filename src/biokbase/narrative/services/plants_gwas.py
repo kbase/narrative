@@ -146,7 +146,7 @@ def _output_object(name):
     return json.dumps({'output': name})
 
 
-@method(name="Create Gwas Population object")
+@method(name="Create GWAS Population obj")
 def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_population_object_name=None,
                                   GwasPopulation_description=None, kbase_genome_id=None, comment=None):
     """Create Gwas Population object from an uploaded Population file in the workspace.
@@ -182,7 +182,7 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
     return _output_object('GwasPopulation_' + output_population_object_name)
 
 
-@method(name="Create Gwas Population Trait object")
+@method(name="Create Gwas Population Trait obj")
 def gwas_create_population_trait_object(meth, GwasPopulation_obj_id=None, population_trait_file_id=None, protocol=None,
                                         comment=None, originator=None, output_trait_object_name=None,
                                         kbase_genome_id=None, trait_ontology_id=None, trait_name=None,
@@ -383,9 +383,9 @@ GENE_TABLE_OBJECT_TYPE = "GwasTopVariations"
 def gene_table(meth, workspace_id=None, obj_id=None):
     """Make a browsable table of gene data.
 
-    :param workspace_id: workspace name (if empty, defaults to current workspace)
+    :param workspace_id: Workspace name (if empty, defaults to current workspace)
     :type workspace_id: kbtypes.Unicode
-    :param obj_id: Gene's workspace ID
+    :param obj_id: Gene's workspace object identifier.
     :type obj_id: kbtypes.Unicode
     :return: Rows for display
     :rtype: kbtypes.Unicode
@@ -397,7 +397,7 @@ def gene_table(meth, workspace_id=None, obj_id=None):
         workspace_id = meth.workspace_id
     ws = Workspace(url=URLS.workspace, token=meth.token, name=workspace_id)
     raw_data = ws.get(obj_id, objtype=GENE_TABLE_OBJECT_TYPE)
-    data = raw_data['data']['genes']
+    data = {'table': raw_data['data']['genes']}
     return json.dumps(data)
 
 # Finalize (registers service)

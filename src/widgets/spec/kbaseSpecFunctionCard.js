@@ -24,7 +24,7 @@
             	funcName = funcName.substring(0, funcName.indexOf('-'));
             }
         	self.options.name = funcName;
-        	var pref = (new Date()).getTime();
+        	var pref = generateSpecPrefix();
         	
             kbws.get_func_info(this.options.id, function(data) {
             	$('.loader-table').remove();
@@ -67,12 +67,12 @@
                 for (var i in data.module_vers) {
                 	var moduleVer = data.module_vers[i];
                 	var moduleId = moduleName + '-' + moduleVer;
-                	moduleLinks[moduleLinks.length] = '<a class="'+pref+'modver-click" data-moduleid="'+moduleId+'">'+moduleVer+'</a>';
+                	moduleLinks[moduleLinks.length] = '<a onclick="specClicks[\''+pref+'modver-click\'](this,event); return false;" data-moduleid="'+moduleId+'">'+moduleVer+'</a>';
                 }
                 overviewTable.append('<tr><td>Module version(s)</td><td>'+moduleLinks+'</td></tr>');
             	overviewTable.append('<tr><td>Description</td><td><textarea style="width:100%;" cols="2" rows="7" readonly>'+data.description+'</textarea></td></tr>');
-                $('.'+pref+'modver-click').click(function(e) {
-                    var moduleId = $(this).data('moduleid');
+            	specClicks[pref+'modver-click'] = (function(elem, e) {
+                    var moduleId = $(elem).data('moduleid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "module", 
@@ -87,8 +87,8 @@
             	$('#'+pref+'spec').append(
             			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + "</pre></div>"
             	);
-                $('.'+pref+'links-click').click(function(e) {
-                    var aTypeId = $(this).data('typeid');
+            	specClicks[pref+'links-click'] = (function(elem, e) {
+                    var aTypeId = $(elem).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
@@ -106,7 +106,7 @@
             		var aTypeId = data.used_type_defs[i];
             		var aTypeName = aTypeId.substring(0, aTypeId.indexOf('-'));
             		var aTypeVer = aTypeId.substring(aTypeId.indexOf('-') + 1);
-            		subsData[subsData.length] = {name: '<a class="'+pref+'subs-click" data-typeid="'+aTypeId+'">'+aTypeName+'</a>', ver: aTypeVer};
+            		subsData[subsData.length] = {name: '<a onclick="specClicks[\''+pref+'subs-click\'](this,event); return false;" data-typeid="'+aTypeId+'">'+aTypeName+'</a>', ver: aTypeVer};
             	}
                 var subsSettings = {
                         "sPaginationType": "full_numbers",
@@ -120,8 +120,8 @@
                     };
                 var subsTable = $('#'+pref+'subs-table').dataTable(subsSettings);
                 subsTable.fnAddData(subsData);
-                $('.'+pref+'subs-click').click(function(e) {
-                    var aTypeId = $(this).data('typeid');
+                specClicks[pref+'subs-click'] = (function(elem, e) {
+                    var aTypeId = $(elem).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
@@ -141,7 +141,7 @@
                 	if (funcVer === aFuncVer) {
                 		link = aFuncId;
                 	} else {
-                		link = '<a class="'+pref+'vers-click" data-funcid="'+aFuncId+'">'+aFuncId+'</a>';
+                		link = '<a onclick="specClicks[\''+pref+'vers-click\'](this,event); return false;" data-funcid="'+aFuncId+'">'+aFuncId+'</a>';
                 	}
             		versData[versData.length] = {name: link};
             	}
@@ -157,8 +157,8 @@
                     };
                 var versTable = $('#'+pref+'vers-table').dataTable(versSettings);
                 versTable.fnAddData(versData);
-                $('.'+pref+'vers-click').click(function(e) {
-                    var aFuncId = $(this).data('funcid');
+                specClicks[pref+'vers-click'] = (function(elem, e) {
+                    var aFuncId = $(elem).data('funcid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "function", 

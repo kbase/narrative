@@ -307,7 +307,7 @@
            return this;
         },
 
-        addCover : function(text) {
+        addCover : function(text, type) {
             if (this.data('dialogModal').find('.modal-cover')) {
                 this.rmCover();
             }
@@ -320,6 +320,15 @@
                                </div> \
                              </div> \
                            </div>');
+
+    
+            if (type) {
+                ele.find('.modal-cover-box').addClass('alert-'+type);
+            } else {
+                ele.find('.modal-cover-box').addClass('alert-success');                
+            }
+
+
             ele.hide();
 
             if (text) {

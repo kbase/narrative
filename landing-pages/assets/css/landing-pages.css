@@ -26,7 +26,6 @@ text-decoration: none;
 /* END KBase navigation bar */
 
 
-
 .app-icon:hover {
     opacity: 0.9;
     text-decoration: none;
@@ -172,7 +171,7 @@ div::-webkit-scrollbar-thumb {
 /* ws browser */
 
 .ws-selector {
-    width: 250px;
+    width: 265px;
 }
 
 .modal-alert {
@@ -207,7 +206,7 @@ div::-webkit-scrollbar-thumb {
     -moz-box-shadow: 7px 7px 5px #888;
     -webkit-box-shadow: 7px 7px 5px #888;
     box-shadow: 7px 7px 5px #888;
-    background: #95C07C;    
+    /*background: #95C07C;    */
 }
 
 .modal-cover-content {
@@ -233,7 +232,6 @@ div::-webkit-scrollbar-thumb {
     bottom: 0;
 }
 */
-
 
 .ellipsis {
     white-space: nowrap;

@@ -13,7 +13,6 @@ angular.module('ws-directives')
     .directive('wsselector', function($location) {
         return {
             controller: function($scope) {
-
                 /*
                // model for storing selected objects
                 $scope.selectedObjs = []
@@ -93,7 +92,7 @@ angular.module('ws-directives')
 
 
                         '<div id="select-box" class="select-box scroll-pane">'+
-                          '<table class="table table-bordered"></table>'+
+                          '<table class="table table-bordered table-condensed"></table>'+
                         '</div>'+
                       '</div>'
                       ,
@@ -106,74 +105,84 @@ angular.module('ws-directives')
                                  'o': 'Owner',
                                  'n': 'None'};
 
+
                 //global list and dict of fetched workspaces
                 var workspaces = [];
                 var workspace_dict = {};
 
                 var nav_height = 100;
 
-                var prom = kb.req('ws', 'list_workspaces');
-                $('.select-box').loading();
-                $.when(prom).done(function(data) {
-                    $('.select-box').rmLoading()
+                scope.loadData = function() {
+                    $('#select-box .table').remove();
+                    $('#select-box').append('<table class="table table-bordered table-condensed"></table>');
+                    workspaces = []
+                    workspace_dict = {}
 
-                    var sorted_ws = [];
-                    var owned_ws = [];
-                    for (var i in data) {
-                        var ws = data[i];
-                        var user = ws[1];
-                        var perm = ws[4];
+                    var prom = kb.kbwsAPI().list_workspaces({});
+                    $('.select-box').loading();
+                    $.when(prom).done(function(data) {
+                        console.log(data)
+                        $('.select-box').rmLoading();
 
-                        if (user == USER_ID) {
-                            owned_ws.push(ws);
-                        } else {
-                            sorted_ws.push(ws)
+                        var sorted_ws = [];
+                        var owned_ws = [];
+                        for (var i in data) {
+                            var ws = data[i];
+                            var user = ws[1];
+                            var perm = ws[4];
+
+                            if (user == USER_ID) {
+                                owned_ws.push(ws);
+                            } else {
+                                sorted_ws.push(ws)
+                            }
                         }
-                    }
 
-                    var data = owned_ws.concat(sorted_ws);
+                        var data = owned_ws.concat(sorted_ws);
 
-                    for (var i in data) {
-                        var ws = data[i];
-                        var name = ws[0];
-                        var user = ws[1];
-                        var obj_count = ws[3];
-                        var perm = ws[4];
-                        var global_perm = ws[5];
-                        //var short_ws = ws[0].slice(0,12) + '...'
+                        for (var i in data) {
+                            var ws = data[i];
+                            var name = ws[0];
+                            var user = ws[1];
+                            var obj_count = ws[3];
+                            var perm = ws[4];
+                            var global_perm = ws[5];
+                            //var short_ws = ws[0].slice(0,12) + '...'
 
-                        if (user == USER_ID) {
-                            var selector = $('<tr><td class="select-ws ellipsis" data-ws="'+name+'">\
-                                                            <span class="badge">'+obj_count+'</span>'+
-                                                        ' <span><b>'+name+'</b></span></td></tr>')
-                        } else {
-                            var selector = $('<tr><td class="select-ws ellipsis" data-ws="'+name+'">\
-                                                            <span class="badge">'+obj_count+'</span>'+
-                                                        ' <span>'+name+'</span></td></tr>')
+                            if (user == USER_ID) {
+                                var selector = $('<tr><td class="select-ws ellipsis" data-ws="'+name+'">\
+                                                                <span class="badge">'+obj_count+'</span>'+
+                                                            ' <span><b>'+name+'</b></span></td></tr>');
+                            } else {
+                                var selector = $('<tr><td class="select-ws ellipsis" data-ws="'+name+'">\
+                                                                <span class="badge">'+obj_count+'</span>'+
+                                                            ' <span>'+name+'</span></td></tr>');
+                            }
+                            selector.find('td').append('<button type="button" class="btn \
+                                                btn-default btn-xs btn-ws-settings hide pull-right" data-ws="'+name+'">\
+                                                <span class="glyphicon glyphicon-cog"></span></button>');
+
+                            // event for showing settings button
+                            selector.hover(function() {
+                                $(this).find('.btn-ws-settings').removeClass('hide');
+                            }, function() {
+                                $(this).find('.btn-ws-settings').addClass('hide');
+                            })
+                            $(".select-box table").append(selector);
+
+                            workspace_dict[name] = ws; //store in dictionary for optimization
                         }
-                        selector.find('td').append('<button type="button" class="btn \
-                                            btn-default btn-xs btn-ws-settings hide pull-right" data-ws="'+name+'">\
-                                            <span class="glyphicon glyphicon-cog"></span></button>')
 
-                        // event for showing settings button
-                        selector.hover(function() {
-                            $(this).find('.btn-ws-settings').removeClass('hide');
-                        }, function() {
-                            $(this).find('.btn-ws-settings').addClass('hide');
-                        })
-                        $(".select-box table").append(selector)
+                        workspaces = data;
 
-                        workspace_dict[name] = ws; //store in dictionary for optimization
-                    }
+                        $('.scroll-pane').css('height', $(window).height()-
+                            $('.ws-selector-header').height() - nav_height )                     
+                        events();
+                    });
+                }
 
-                    workspaces = data;
-
-                    $('.scroll-pane').css('height', $(window).height()-
-                        $('.ws-selector-header').height() - nav_height )                     
-                    events();
-                });
-
-
+                // load the content of the ws selector
+                scope.loadData();
 
                 function events() {
                     var filterCollapse = $('.perm-filters');
@@ -186,7 +195,7 @@ angular.module('ws-directives')
                     // modal for create new workspace
 
                     $('.new-ws').click(function() {
-                        createWorkspaceModal()
+                        createWorkspaceModal();
                     });
 
                     // events for search box
@@ -335,9 +344,9 @@ angular.module('ws-directives')
 
                                         // save permissions
                                         savePermissions(ws_name, function() {
-                                            $prompt.addCover('Permissions saved.');
+                                            $prompt.addCover('Permissions saved.', 'success');
                                         }, function() {
-                                            $prompt.addCover(e.error.error.split('\n')[0]);                                            
+                                            $prompt.addCover(e.error.error.split('\n')[0], 'danger');                                            
                                         })
                                 }
                             }]
@@ -359,12 +368,12 @@ angular.module('ws-directives')
 
                     var modal_body = manage_modal.data('dialogModal').find('.modal-body');
 
-                    // if user is admin, show permission table. (?)
-                    if (isAdmin) {
-                        var params = {auth: USER_TOKEN,
+                    // if user is logged in and admin 
+                    if (USER_ID && isAdmin ) {
+                        var params = {//auth: USER_TOKEN,
                                       workspace: ws_name}
 
-                        var prom = kb.kbwsAPI().get_workspacepermissions(params);
+                        var prom = kb.kbwsAPI().get_permissions(params);
 
                         //var newPerms;
                         var placeholder = $('<div></div>').loading()
@@ -387,30 +396,29 @@ angular.module('ws-directives')
                             var perm_table = getPermTable(data)
                             perm_container.append(perm_table);
 
-                            $('.edit-perms').click(function() {
-                                if (perm_container.find('table.perm-table').length > 0) {
-                                    $(this).html('Cancel')
-                                    perm_table.remove()
-                                    perm_table = getEditablePermTable(data);
-                                    perm_container.html(perm_table);
-                                } else {
-                                    $(this).html('Edit')                                    
-                                    perm_table.remove()
-                                    perm_table = getPermTable(data);
-                                    perm_container.html(perm_table);                                  
-                                }
-                            })
-
-                            if (USER_ID) {
-                                modal_body.append(cloneWS);
-                                modal_body.append(deleteWS);                                
+                            if (isAdmin) {
+                                $('.edit-perms').click(function() {
+                                    if (perm_container.find('table.perm-table').length > 0) {
+                                        $(this).html('Cancel')
+                                        perm_table.remove()
+                                        perm_table = getEditablePermTable(data);
+                                        perm_container.html(perm_table);
+                                    } else {
+                                        $(this).html('Edit')                                    
+                                        perm_table.remove()
+                                        perm_table = getPermTable(data);
+                                        perm_container.html(perm_table);                                  
+                                    }
+                                })
                             }
-                        })
-                    } else if (USER_ID) {
-                        modal_body.append(cloneWS);
-                        modal_body.append(deleteWS);
-                    }
 
+
+                            modal_body.append(cloneWS);
+                            modal_body.append(deleteWS);                                
+
+                        })
+                    // if logged in and admin
+                    }
 
 
                     function savePermissions(ws_name, cb, fail_cb) {
@@ -447,10 +455,10 @@ angular.module('ws-directives')
                                 workspace: ws_name,
                                 new_permission: newPerms[new_user],
                                 users: [new_user],
-                                auth: USER_TOKEN
+                                //auth: USER_TOKEN
                             };
 
-                            var p = kb.kbwsAPI().set_workspace_permissions(params);
+                            var p = kb.kbwsAPI().set_permissions(params);
                             promises.push(p);
                         };
 
@@ -467,10 +475,10 @@ angular.module('ws-directives')
                                     workspace: ws_name,
                                     new_permission: 'n',
                                     users: [user],
-                                    auth: USER_TOKEN
+                                    //auth: USER_TOKEN
                                 };
 
-                                var p = kb.kbwsAPI().set_workspace_permissions(params);
+                                var p = kb.kbwsAPI().set_permissions(params);
                                 promises.push(p);
                                 rm_users.push(user)
                             } 
@@ -490,15 +498,16 @@ angular.module('ws-directives')
                     //table for displaying user permissions
                     function getPermTable(data) {
                         var table = $('<table class="table table-bordered perm-table"></table>');
-
+                        console.log('user perms', data);
                         // if there are no user permissions, display 'none'
                         // (excluding ~global 'user' and owner)
                         var perm_count = Object.keys(data).length;
-                        if (perm_count == 2) {
+                        if (perm_count == 1) {
                             var row = $('<tr><td>None</td></tr>');
                             table.append(row);
                             return table;
                         }
+
 
                         // create table of permissions
                         for (var key in data) {
@@ -578,8 +587,6 @@ angular.module('ws-directives')
                         return table;
                     }
 
-
-
                     // dropdown for user permissions (used in getPermission Table) //fixme: cleanup
                     function permDropDown(perm) {
                         var dd = $('<select class="form-control create-permission" data-value="n">\
@@ -598,12 +605,7 @@ angular.module('ws-directives')
 
                         return $('<div>').append(dd).html();
                     }
-
                 }  // end manageModal
-
-
-        
-
 
                 function createWorkspaceModal() {
                     var body = $('<form class="form-horizontal" role="form">\
@@ -614,7 +616,7 @@ angular.module('ws-directives')
                                         </div>\
                                       </div>\
                                       <div class="form-group">\
-                                        <label class="col-sm-5 control-label">Password</label>\
+                                        <label class="col-sm-5 control-label">Permsission</label>\
                                         <div class="col-sm-3">\
                                          <select class="form-control create-permission" data-value="n">\
                                             <option value="n" selected="selected">none</option>\
@@ -635,10 +637,10 @@ angular.module('ws-directives')
                                         var ws_id = $('.create-id').val();
                                         var perm = $('.create-permission option:selected').val();
                                         var params = {
-                                            auth: USER_TOKEN,  //wsdeluxe
+                                            //auth: USER_TOKEN,  //wsdeluxe
                                             workspace: ws_id,
-                                            default_permission: perm
-                                            //globalread: perm
+                                            //default_permission: perm
+                                            globalread: perm
                                         };
 
                                         if (ws_id === '') {
@@ -651,15 +653,19 @@ angular.module('ws-directives')
                                         $prompt.addCover()
                                         $prompt.getCover().loading()
                                         $.when(prom).done(function(){
-                                            $prompt.addCover('Created workspace: '+ws_id);
+                                            $prompt.addCover('Created workspace: '+ws_id, 'success');
+                                                scope.loadData()
+
                                             var btn = $('<button type="button" class="btn btn-primary">Close</button>');
-                                            btn.click(function() { $prompt.closePrompt(); })
+                                            btn.click(function() { 
+                                                $prompt.closePrompt(); 
+                                            });
+
                                             $prompt.data('dialogModal').find('.modal-footer').html(btn);                                            
                                         }).fail(function(e) {
                                             //$prompt.addCover(e.error.errsor.split('\n')[0]);
-                                            $prompt.addCover('could not create workspace');                                            
+                                            $prompt.addCover('could not create workspace', 'danger');                                            
                                         })
-
                                 }
                             }]
                         }
@@ -671,13 +677,13 @@ angular.module('ws-directives')
                 function cloneWorkspace(ws_name) {
                     var body = $('<form class="form-horizontal" role="form">\
                                       <div class="form-group">\
-                                        <label class="col-sm-5 control-label">Workspace Name</label>\
+                                        <label class="col-sm-5 control-label">New Workspace Name</label>\
                                         <div class="col-sm-4">\
                                           <input type="text" class="form-control new-ws-id">\
                                         </div>\
                                       </div>\
                                       <div class="form-group">\
-                                        <label class="col-sm-5 control-label">Password</label>\
+                                        <label class="col-sm-5 control-label">Permission</label>\
                                         <div class="col-sm-3">\
                                          <select class="form-control create-permission" data-value="n">\
                                             <option value="n" selected="selected">none</option>\
@@ -706,13 +712,15 @@ angular.module('ws-directives')
                                         var new_ws_id = $('.new-ws-id').val();
                                         var perm = $('.create-permission option:selected').val();
                                         var params = {
-                                            auth: USER_TOKEN,                                            
-                                            current_workspace: ws_name,
-                                            new_workspace: new_ws_id,
-                                            default_permission: perm                                            
+                                            //auth: USER_TOKEN,                                            
+                                            workspace: new_ws_id,
+                                            ws_name: ws_name,
+
+                                            //default_permission: perm                                            
+                                            globalread: perm
                                         };
 
-                                        if (ws_id === '') {
+                                        if (new_ws_id === '') {
                                             $prompt.addAlert('must enter');
                                             $('.new-ws-id').focus();
                                             return;
@@ -723,9 +731,9 @@ angular.module('ws-directives')
                                         $prompt.getCover().loading()
                                         $.when(prom).done(function(){
                                             $prompt.addCover('Cloned workspace: '+new_ws_id);
+                                            scope.loadData();
                                         }).fail(function() {
-                                            $prompt.addCover('This workspace name already exists.');                                                
-
+                                            $prompt.addCover('This workspace name already exists.', 'danger');
                                         })
 
                                 }
@@ -759,19 +767,20 @@ angular.module('ws-directives')
                                 type : 'primary',
                                 callback : function(e, $prompt) {
                                     var params = {workspace: ws_name,
-                                                  auth: kb.token()}
+                                                  //auth: kb.token()
+                                                 }
 
                                     var prom = kb.kbwsAPI().delete_workspace(params);
                                     $prompt.addCover()
                                     $prompt.getCover().loading()
                                     $.when(prom).done(function(){
                                         $prompt.addCover('Deleted workspace: '+ws_name);
+                                        scope.loadData();
                                         var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                         btn.click(function() { $prompt.closePrompt(); })
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);
                                     }).fail(function() {
-                                        $prompt.addCover('Could not delete workspace.');                                                
-
+                                        $prompt.addCover('Could not delete workspace.', 'danger');
                                     })
 
                                 }
@@ -848,16 +857,22 @@ angular.module('ws-directives')
                                        obj[5]];
 
 
-                        if (type == 'FBA') {
-                            wsarray[0] = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                                        +id+'</a> ('+instance+')'
+                        //if (type == 'FBA') {
+                        //    wsarray[0] = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                         //               +id+'</a> (<a class="show-versions">'+instance+'</a>)'
                                         //+'<a class="add-to-mv pull-right">'
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
-                        } else {
-                            wsarray[0] = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                                    +id+'</a> ('+instance+')';
-                        }
+
+                        //} else {
+                          
+
+                        var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                                +id+'</a> (<a class="show-versions">'+instance+'</a>)';
+
+                        wsarray[0] = new_id
+
+                        //}
 
                         wsobjs.push(wsarray);
                     }
@@ -865,6 +880,7 @@ angular.module('ws-directives')
                 }
 
                 function events() {
+                    // event for clicking on a workspace id
                     $('.obj-id').unbind('click');                    
                     $('.obj-id').click(function(){
                         var type = $(this).data('obj-type');
@@ -886,8 +902,47 @@ angular.module('ws-directives')
                         var type = $(this).prev('.obj-id').data('obj-type');
                         var id = $(this).prev('.obj-id').data('obj-id');
                         scope.selectedObjs.push({ws:ws, id:id, type:type});
-                        scope.$apply()                        
+                        scope.$apply();
                     })
+
+                    /*
+                    $('.show-versions').click(function() {
+                        console.log('show versions')
+
+                        var prom = kb.kbwsAPI().get_permissions(type, id);
+
+                        $.when(prom).done(function(data) {
+                            $(tr).next().children('td').append('<h5>History of <i>'+id+'</i></h5>');
+
+                            var info = $('<table class="history-table">');
+                            var header = $('<tr><th>ID</th>\
+                                                <th>Type</th>\
+                                                <th>WS</th>\
+                                                <th>Vers</th>\
+                                                <th>Owner</th>\
+                                                <th>Last modby</th>\
+                                                <th>Cmd</th>\
+                                                <th>Moddate</th>');
+                            info.append(header);
+                            for (var i=0; i<data.length; i++) {
+                                var ver = data[i];
+                                var row = $('<tr>');
+                                row.append('<td><a class="id-download" data-id="'+id+'" \
+                                    data-type="'+type+'" data-workspace="'+ws+'">' + ver[0] + '</a></td>'
+                                         + '<td>' + ver[1] + '</td>'
+                                         + '<td>' + ver[2] + '</td>'
+                                         + '<td>' + ver[3] + '</td>'
+                                         + '<td>' + ver[4] + '</td>'
+                                         + '<td>' + ver[5] + '</td>'
+                                         + '<td>' + ver[6] + '</td>'
+                                         + '<td>' + ver[7] + '</td>');
+                                info.append(row);
+                            }
+
+                        */
+                        $(this).parents('tr').after('blah blah blah');
+                    })
+
                 }
 
 

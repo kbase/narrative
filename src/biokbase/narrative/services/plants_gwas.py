@@ -136,6 +136,8 @@ class URLS:
     gwas = "http://140.221.85.171:7086"
     ujs = "http://140.221.85.171:7083"
 
+AweJob.URL = URLS.awe
+
 # Initialize
 init_service(name=NAME, desc="Plants GWAS service", version=VERSION)
 
@@ -167,8 +169,10 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
     meth.stages = 3
 
     meth.advance("init GWAS service")
+    meth.debug("init")
     gc = GWAS(URLS.gwas, token=meth.token)
 
+    meth.debug("create")
     meth.advance("creating Population object")
     try:
         jid = gc.gwas_create_population_object(meth.workspace_id, GwasPopulation_file_id, output_population_object_name,
@@ -178,7 +182,10 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
     if not jid:
         raise GWASException(2, "submit job failed, no job id")
 
+    meth.debug("run job")
     AweJob(meth, started="creating Population object", running="create Population object").run(jid[0])
+
+    meth.debug("done, output name = {}".format(output_population_object_name))
     return _output_object('GwasPopulation_' + output_population_object_name)
 
 

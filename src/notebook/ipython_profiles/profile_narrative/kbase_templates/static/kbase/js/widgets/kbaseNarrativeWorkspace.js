@@ -36,6 +36,8 @@
         defaultInputWidget: "kbaseDefaultNarrativeInput",
         errorWidget: "kbaseNarrativeError",
 
+        inputsRendered: false,
+
         // constants.
         KB_CELL: 'kb-cell',
         KB_TYPE: 'type',
@@ -67,7 +69,13 @@
             $(document).on('dataUpdated.Narrative', 
                 $.proxy(function(event) {
                     if (IPython && IPython.notebook) {
-                        this.renderFunctionInputs();
+                        // XXX: This is a hell of a hack. I hate
+                        // using the 'first time' bit like this,
+                        // but without some heavy rewiring, it's difficult
+                        // to track when some event occurred.
+                        // So, dirty bit it is.
+                        this.refreshFunctionInputs(!this.inputsRendered);
+                        this.inputsRendered = true;
                     }
                 },
                 this)
@@ -292,23 +300,28 @@
          * with it, and if so, sends that to the widget.
          * @private
          */
-        renderFunctionInputs: function() {
+        refreshFunctionInputs: function(fullRender) {
             if (IPython && IPython.notebook) {
                 var cells = IPython.notebook.get_cells();
                 for (var i=0; i<cells.length; i++) {
                     var cell = cells[i];
                     if (this.isFunctionCell(cell)) {
-                        cell.rendered = false;
-                        cell.render();
+                        var method = cell.metadata[this.KB_CELL].method;
+                        var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
 
-                        var state = cell.metadata[this.KB_CELL][this.KB_STATE];
-                        if (state) {
-                            var method = cell.metadata[this.KB_CELL].method;
-                            var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
+                        if (fullRender) {
+                            cell.rendered  = false;
+                            cell.render();
 
-                            $(cell.element).find("#inputs")[inputWidget]('loadState', state);
+                            var state = cell.metadata[this.KB_CELL][this.KB_STATE];
+                            if (state) {
+                                $(cell.element).find("#inputs")[inputWidget]('loadState', state);
+                            }
+                            this.bindActionButtons(cell);
                         }
-                        this.bindActionButtons(cell);
+                        else {
+                            $(cell.element).find("#inputs")[inputWidget]('refresh');
+                        }
                     }
                 }
             }

@@ -538,6 +538,13 @@
             return [];
         },
 
+        _exportInferelatorRunResult: function(data, workspace) {
+            this.dbg("Exporting Inferelator run result");
+            this.dbg(data);
+
+            return [];
+        },
+
         _exportBambiRunResult: function(data, workspace) {
             this.dbg("Exporting BAMBI run result");
             this.dbg(data);
@@ -577,6 +584,8 @@
                 this.showMemeCards();
             else if (this.options.template.toLowerCase() === "cmonkey")
                 this.showCmonkeyCards();
+            else if (this.options.template.toLowerCase() === "inferelator")
+                this.showInferelatorCards();
             else if (this.options.template.toLowerCase() === "bambi")
                 this.showBambiCards();
             else if (this.options.template.toLowerCase() === "gene")
@@ -750,6 +759,25 @@
         	    return this;
         },
 
+        showInferelatorCards: function() {
+            	this.addNewCard("KBaseInferelatorRunResultCard",
+                        {
+                            id: this.options.data.id,
+                            ws: this.options.data.ws,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
+                            loadingImage: this.options.loadingImage,
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        },
+
         showBambiCards: function() {
             	this.addNewCard("KBaseBambiRunResultCard",
                         {
@@ -819,7 +847,8 @@
                                      "showMastHits",
                                      "showMastRunParameters", 
                                      "showCmonkeyCluster", 
-                                     "showCmonkeyMotif", 
+                                     "showCmonkeyMotif",
+                                     "showInferelatorHits",
                                      "showBambiMotif",
                                      "showBambiRunParameters", 
                                      "showBambiRawOutput"];
@@ -1139,6 +1168,27 @@
                     {
                         my: "center top",
                         at: "center bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showInferelatorHits
+             * -------------------
+             * Adds card with Inferelator hit list.
+             */
+
+            $(document).on("showInferelatorHits", function(event, data) {
+                self.addNewCard("KBaseInferelatorHitsCard",
+                    {
+                        inferelatorrunresult: data.inferelatorrunresult,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+600 bottom",
                         of: "#app"
                     }
                 );

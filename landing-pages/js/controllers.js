@@ -146,7 +146,12 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                      'ws': $stateParams.ws};
 })
 
-.controller('BambiDetail', function($scope, $stateParams) {
+.controller('InferelatorDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id,
+                     'ws': $stateParams.ws};
+})
+
+        .controller('BambiDetail', function($scope, $stateParams) {
     $scope.params = {'bambi_run_result_id': $stateParams.id,
                      'workspace_id': $stateParams.ws}
 })

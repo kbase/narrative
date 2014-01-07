@@ -193,11 +193,17 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/objects/meme.html',
              controller: 'MemeDetail'})
 
-	$stateProvider
+    $stateProvider
         .state('cmonkeybyname',
             {url: '/cmonkey/:ws/:id',
              templateUrl: 'views/objects/cmonkey.html',
              controller: 'CmonkeyDetail'})
+
+    $stateProvider
+        .state('inferelator',
+            {url: '/inferelator/:ws/:id',
+             templateUrl: 'views/objects/inferelator.html',
+             controller: 'InferelatorDetail'})
 
     $stateProvider
         .state('spec',

@@ -1,6 +1,6 @@
 /* Set the defaults for DataTables initialisation */
 $.extend( true, $.fn.dataTable.defaults, {
-	"sDom": "<'row'<'col-xs-6'l><'col-xs-6'f>r>t<'row'<'col-xs-6'i><'col-xs-6'p>>",
+	"sDom": "<'row'<'col-xs-6'><'col-xs-6'f>r>t<'row'<'col-xs-6'il><'col-xs-6'p>>",
 	"sPaginationType": "bootstrap",
 	"oLanguage": {
 		"sLengthMenu": "_MENU_ records per page"
@@ -54,6 +54,8 @@ $.extend( $.fn.dataTableExt.oPagination, {
 			var els = $('a', nPaging);
 			$(els[0]).bind( 'click.DT', { action: "previous" }, fnClickHandler );
 			$(els[1]).bind( 'click.DT', { action: "next" }, fnClickHandler );
+
+			$('.dataTables_length').find('select').addClass('form-control')
 		},
 
 		"fnUpdate": function ( oSettings, fnDraw ) {

@@ -1,5 +1,5 @@
 body {
-    padding-top: 70px;
+    padding-top: 65px;
     height: 100%;
 }
 
@@ -172,10 +172,13 @@ div::-webkit-scrollbar-thumb {
 .ws-selector {
     width: 265px;
 }
-
-.btn-ws-settings {
+.ws-selector.btn-ws-settings {
     position: absolute;
     right: 30px;
+}
+
+.object-view {
+    margin: 10px 0 0 0;
 }
 
 .select-ws .badge {
@@ -241,10 +244,51 @@ div::-webkit-scrollbar-thumb {
 }
 */
 
+.obj-table .dataTables_length label {
+    margin: 7px 0 0 0;
+}
+
+.dataTables_info {
+    margin: 0 10px 0 0;
+}
+.dataTables_length, .dataTables_info {
+float: left;
+}
 .ellipsis {
     white-space: nowrap;
     text-overflow: ellipsis;
-    max-width: 175px;
+    max-width: 170px;
     display: inline-block;
     overflow: hidden
 }
+
+
+/* custom checkboxes (prototyped) */
+.ncheck {
+    width: 15px;
+    height: 15px;
+    border: 1px solid #ccc ;
+    margin-left: auto;
+    margin-right: auto;
+}
+.ncheck:hover {
+    border: 1px solid #444 ;    
+}
+.ncheck-btn {
+    width: 15px;
+    height: 15px;
+    border: 1px solid #888 ;
+    margin: 4px 0px 4px -1px;
+}
+.ncheck-btn:hover {
+    border: 1px solid #444 ;    
+}
+.ncheck-checked {
+    background: url(../img/checkmark.png) no-repeat -5px -4px;
+    background-image: -webkit-image-set(url(../img/checkmark.png) 1x,url(../img/checkmark_2x.png) 2x);
+}
+.ncheck-minus {
+    background: url(../img/checkmark-partial.png) no-repeat -5px -5px;
+    background-image: -webkit-image-set(url(../img/checkmark-partial.png) 1x,url(../img/checkmark_2x.png) 2x);
+}
+

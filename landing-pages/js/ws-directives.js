@@ -819,10 +819,11 @@ angular.module('ws-directives')
                     "fnDrawCallback": events,
 
                   "aoColumns": [
-                      { "sTitle": "id"}, //"sWidth": "10%"
-                      { "sTitle": "type", "sWidth": "10%"},
-                      { "sTitle": "moddate"},
-                      { "sTitle": "owner"},
+                      { "sTitle": ""},
+                      { "sTitle": "Name"}, //"sWidth": "10%"
+                      { "sTitle": "Type", "sWidth": "10%"},
+                      { "sTitle": "Moddate"},
+                      { "sTitle": "Owner"},
                   ],                         
                     "oLanguage": {
                         "sSearch": "Search:"
@@ -832,6 +833,7 @@ angular.module('ws-directives')
                 $(element).html('')
                 $(element).loading('loading '+ws+'...')
 
+                // load workspace objects
                 var prom = kb.req('ws', 'list_workspace_objects', {workspace: ws});
                 $.when(prom).done(function(data){
                     $(element).rmLoading();
@@ -840,7 +842,10 @@ angular.module('ws-directives')
 
                     var wsobjs = formatObjs(data);
                     tableSettings.aaData = wsobjs;
+
                     var table = $('#obj-table-'+ws).dataTable(tableSettings);
+
+                    $(element).prepend('<div class="object-options"></div>')
                 }).fail(function(e){
                     $(element).html('<div class="alert alert-danger">'+e.error.error.split('\n')[0]+'</div>');
                 })
@@ -855,12 +860,16 @@ angular.module('ws-directives')
                         var type = obj[1];
                         var instance = obj[3];
 
-                        var wsarray = [id,
+                        var check = '<div class="ncheck check-option"'
+                                + ' data-workspace="' + obj.workspace + '"'
+                                + ' data-type="' + obj.type + '"'
+                                + ' data-id="' + obj.id + '"></div>';
+
+                        var wsarray = [check, id,
                                        type,
-                                       obj[2], // moddate
+                                       obj[2].split('+')[0].replace('T',' '), // moddate
                                        obj[5]  // owner
                                        ];
-
 
                         //if (type == 'FBA') {
                         //    wsarray[0] = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
@@ -869,15 +878,10 @@ angular.module('ws-directives')
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
 
-                        //} else {
-
                         var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
                                 +id+'</a> (<a class="show-versions">'+instance+'</a>)';
 
-                        wsarray[0] = new_id
-
-                        //}
-
+                        wsarray[1] = new_id
                         wsobjs.push(wsarray);
                     }
                     return wsobjs
@@ -901,6 +905,7 @@ angular.module('ws-directives')
                         }
                     })
 
+                    // event for adding a object to, say, model viewer
                     $('.add-to-mv').unbind('click');
                     $('.add-to-mv').click(function(){
                         var type = $(this).prev('.obj-id').data('obj-type');
@@ -909,6 +914,7 @@ angular.module('ws-directives')
                         scope.$apply();
                     })
 
+                    // event for showing object history
                     $('.show-versions').click(function() {
                         console.log('show versions')
                         var type = $(this).prev('.obj-id').data('obj-type');
@@ -932,7 +938,7 @@ angular.module('ws-directives')
                                 console.log(data)
                             modal_body.append('<b>ID</b>: '+data[0][0]+'<br>')
                             modal_body.append('<b>Type</b>: '+data[0][2])                            
-                            var info = $('<table class="table table-bordered">');
+                            var info = $('<table class="table table-striped table-bordered">');
                             var header = $('<tr><th>Mod Date</th>\
                                                 <th>Vers</th>\
                                                 <th>Owner</th>\
@@ -950,11 +956,102 @@ angular.module('ws-directives')
 
                             modal_body.append(info)
                         })
+                    })
+
+                    //checkBoxObjectClickEvent('.check-option')
+
+                }
 
 
+
+                var checkedList = []
+                function checkBoxObjectClickEvent(ele) {
+                    // if select all checkbox was clicked
+                    if (!ele) {
+                        addOptionButtons();
+                        objOptClick()            
+                        return;
+                    }
+
+                    // checkbox click event
+                    $(ele).unbind('click');
+                    $(ele).click(function(){
+                        var id = $(this).attr('data-id');
+                        //var modelID = get_fba_model_id( $(this).attr('data-id') );            
+                        var dataWS = $(this).attr('data-workspace');
+                        var dataType = $(this).attr('data-type');
+
+                        if ($(this).hasClass('ncheck-checked')) { 
+                            $(this).removeClass('ncheck-checked');
+                            for (var i = 0; i < checkedList.length; i++) {
+                                if (checkedList[i][0] == id) {
+                                    checkedList.splice(i,1);
+                                }
+                            }
+                        } else {
+                            checkedList.push([id, dataWS, dataType])
+                            $(this).addClass('ncheck-checked');
+                        }
+
+                        addOptionButtons()
+                        objOptClick()
                     })
                 }
 
+
+
+                function addOptionButtons() {
+                    /* if options dropdown doesn't exist, add it (at top of table) */
+                        console.log('adding options')
+                        // container for options
+                        $('.object-options').append('<div class="checked-opts obj-opt"></div>')
+
+                        // delete button
+                        $('.checked-opts').append('<a class="btn obj-btn opt-delete btn-danger">\
+                                                   <i class="icon-trash icon-white"></i></a>')
+
+                        // move, copy, download button
+                        $('.checked-opts').append('<div class="dropdown obj-opt opt-dropdown"> \
+                                            <a class="btn obj-btn dropdown-toggle" type="button" data-toggle="dropdown"> \
+                                         <i class="icon-folder-open"></i> <span class="caret"></span></a>\
+                                         <ul class="dropdown-menu"> \
+                                          <li opt="copy"><a>Copy</a> </li> \
+                                          <li  opt="move"><a>Move</a></li> \
+                                          <li class="divider"><a></a></li> \
+                                          <li><a>Download</li> \
+                                    </ul></div>');
+                                        //<i class="icon-download-alt"></i></a>
+
+                        // model viewer button
+                        if ($(this).attr('data-type') == "FBA") {
+                            var url = 'http://mcs.anl.gov/~nconrad/model_viewer/#models?kbids='+id+'&ws='+dataWS+'&tab=core';
+                            $('.checked-opts').append('<div class="btn obj-opt opt-delete" type="button" \
+                                onclick="location.href='+"'" +url+"'"+'" >Model Viewer</div>');
+                        }
+         
+//
+  //                      $('.checked-opts').remove();
+    //                    $('.select-objs .ncheck-btn').removeClass('ncheck-minus')                
+
+                }
+
+
+                // events for top row options on objects, after checked
+                function objOptClick() {
+                    $('.opt-delete').unbind('click')
+                    $('.opt-delete').click(function(){
+                        deleteObjects(checkedList)
+                    });
+
+                    $('.opt-dropdown ul li').unbind('click')
+                    $('.opt-dropdown ul li').click(function(){
+                        if ($(this).attr('opt') == 'copy'){
+                            copyObjects(checkedList);
+                        } else if ($(this).attr('opt') == 'move'){
+                            moveObjects(checkedList);
+                        }
+                    })
+                }
 
             }
 

@@ -865,7 +865,6 @@ angular.module('ws-directives')
                                         //+'</a>';
 
                         //} else {
-                          
 
                         var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
                                 +id+'</a> (<a class="show-versions">'+instance+'</a>)';
@@ -904,7 +903,6 @@ angular.module('ws-directives')
                         scope.selectedObjs.push({ws:ws, id:id, type:type});
                         scope.$apply();
                     })
-
                     /*
                     $('.show-versions').click(function() {
                         console.log('show versions')
@@ -939,9 +937,8 @@ angular.module('ws-directives')
                                 info.append(row);
                             }
 
-                        */
                         $(this).parents('tr').after('blah blah blah');
-                    })
+                    })*/
 
                 }
 

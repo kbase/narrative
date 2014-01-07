@@ -30,7 +30,7 @@ import json
 import re
 import importlib
 import biokbase.narrative.ws_util as ws_util
-from biokbase.workspaceService.Client import workspaceService
+from biokbase.workspaceService.Client import Workspace
 
 from unicodedata import normalize
 
@@ -78,7 +78,7 @@ class KBaseWSNotebookManager(NotebookManager):
     ipynb_type = Unicode(u'ipynb')
     allowed_formats = List([u'json'])
     node_format = ipynb_type
-    ws_type = Unicode('Narrative', config=True, help='Type to use within workspace service')
+    ws_type = Unicode('NarrativeObject', config=True, help='Type to use within workspace service')
     # regex for parsing out workspace_id and object_id from
     # a "kb|ws.{workspace}.{object}" string
     ws_regex = re.compile( '^(?P<wsid>\w+)\.(?P<objid>\w+)')
@@ -92,15 +92,15 @@ class KBaseWSNotebookManager(NotebookManager):
     wsid_regex = re.compile('[\W]+', re.UNICODE)    
 
     def __init__(self, **kwargs):
-        """Verify that we can connext to the configured WS instance"""
+        """Verify that we can connect to the configured WS instance"""
         super( NotebookManager, self).__init__(**kwargs)
         if not self.kbasews_uri:
             raise web.HTTPError(412, u"Missing KBase workspace service endpoint URI.")
 
-        self.wsclient = workspaceService( self.kbasews_uri)
+        self.wsclient = Workspace( self.kbasews_uri)
         # Verify that we can fetch list of types back to make sure the configured uri is good
         try:
-            self.all_types = self.wsclient.get_types()
+            self.all_modules = self.wsclient.list_modules()
         except Exception as e:
             raise web.HTTPError( 500, u"Unable to connect to workspace service at %s: %s " % (self.kbasews_uri, e))
         mapping = Dict()
@@ -268,20 +268,16 @@ class KBaseWSNotebookManager(NotebookManager):
         if notebook_id not in self.mapping:
             raise web.HTTPError(404, u'Notebook does not exist: %s' % notebook_id)
         try:
-            wsobj = { 'id' : self._clean_id(nb.metadata.name),
+            wsobj = { 'name' : self._clean_id(nb.metadata.name),
                       'type' : self.ws_type,
                       'data' : nb,
-                      'workspace' : nb.metadata.ws_name,
-                      'command' : '',
-                      'metadata' : nb.metadata,
-                      'auth' : token,
-                      'json' : 0,
-                      'compressed': 0,
-                      'retrieveFromURL': 0,
-                      'asHash' :  0
+                      'provenance' : [],
+                      'meta' : nb.metadata,
                     }
+            wsobj_wrapper = { 'workspace' : nb.metadata.ws_name,
+                              'objects' : wsobj }
             self.log.debug("calling save_object")
-            res = self.wsclient.save_object( wsobj)
+            res = self.wsclient.save_objects( wsobj_wrapper)
             self.log.debug("save_object returned %s" % res)
         except Exception as e:
             raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
@@ -306,12 +302,11 @@ class KBaseWSNotebookManager(NotebookManager):
         self.log.debug("deleting notebook %s", notebook_id)
         m = self.ws_regex.match(notebook_id)
         if m:
-            param = { 'auth' : token,
-                  'type' : self.ws_type,
-                  'workspace' : m.group('wsid'),
-                  'id' : m.group('objid')
-            }
-            res = self.wsclient.delete_object( param)
+            param = { 'workspace' : m.group('wsid'),
+                      'id' : m.group('objid')
+                      }
+            param_wrapper = [ param ]
+            res = self.wsclient.delete_objects( param_wrapper)
             self.log.debug("delete object result: %s" % res)
 
         else:

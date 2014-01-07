@@ -92,7 +92,6 @@
             $("#function-test").kbaseNarrativeFunctionPanel({});
 
             // Initialize the data table.
-//            this.initDataTable(options.tableElem);
             this.initControls(options.controlsElem);
 
             // bind search to data table
@@ -171,20 +170,6 @@
 
             return this;
         },
-
-        /**
-         * Initialize the data table in the workspace view
-         *
-         * @param elem Data table parent element
-         * @returns this
-         */
-        // initDataTable: function(elem) {
-        //     this.dataTableWidget = elem.kbaseWorkspaceDataWidget({
-        //         loadingImage: this.options.loadingImage,
-        //         container: elem
-        //      });
-        //     return this;
-        // },
 
         /**
          * Set up interactive features of the function-list panel.
@@ -533,7 +518,7 @@
                 var cellType = cell.metadata[this.KB_CELL];
                 if (cellType) {
                     this.removeCellEditFunction(cell);
-                    if (this.isFunctionCell(cell)) { //cellType[this.KB_TYPE] == this.FUNCTION_CELL) {
+                    if (this.isFunctionCell(cell)) { 
                         this.bindActionButtons(cell);
                     }
                 }
@@ -803,6 +788,8 @@
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
             outputCell.render();
+
+            this.trigger('updateData.Narrative');
         },
 
         /**

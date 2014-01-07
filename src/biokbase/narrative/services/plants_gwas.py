@@ -108,8 +108,8 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 from IPython.display import display, HTML
 # Other KBase
 from biokbase.GWAS.Client import GWAS
+from biokbase.narrative.common.kbutil import AweJob, Workspace
 
-from biokbase.narrative.common.kbutil import AweJob
 
 ## Exceptions
 
@@ -135,8 +135,6 @@ class URLS:
     ontology = "http://kbase.us/services/ontology_service"
     gwas = "http://140.221.85.171:7086"
     ujs = "http://140.221.85.171:7083"
-
-AweJob.URL = URLS.awe
 
 # Initialize
 init_service(name=NAME, desc="Plants GWAS service", version=VERSION)
@@ -375,9 +373,32 @@ def trait_manhattan_plot(meth, workspaceID=None, gwasObjectID=None):
     meth.stages = 1
     meth.advance("Manhattan plot")
     token = meth.token
-    return json.dumps({'token': token, 'workspaceID' : workspaceID, 'gwasObjectID': gwasObjectID })
+    return json.dumps({'token': token, 'workspaceID': workspaceID, 'gwasObjectID': gwasObjectID })
 
 
+GENE_TABLE_OBJECT_TYPE = "GwasTopVariations"
+
+
+@method(name="Gene table")
+def gene_table(meth, workspace_id=None, obj_id=None):
+    """Make a browsable table of gene data.
+
+    :param workspace_id: workspace name (if empty, defaults to current workspace)
+    :type workspace_id: kbtypes.Unicode
+    :param obj_id: Gene's workspace ID
+    :type obj_id: kbtypes.Unicode
+    :return: Rows for display
+    :rtype: kbtypes.Unicode
+    :output_widget: GeneTableWidget
+    """
+    meth.stages = 1
+    meth.advance("Retrieve gene from workspace")
+    if not workspace_id:
+        workspace_id = meth.workspace_id
+    ws = Workspace(url=URLS.workspace, token=meth.token, name=workspace_id)
+    raw_data = ws.get(obj_id, objtype=GENE_TABLE_OBJECT_TYPE)
+    data = raw_data['data']['genes']
+    return json.dumps(data)
 
 # Finalize (registers service)
 finalize_service()

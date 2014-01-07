@@ -1,9 +1,17 @@
 /**
  * KBase widget to display a table of gene information.
  *
- * Expected input data, 'data', is an array:
-
+ * Expected input data is JSON with one key, 'table', whose value is a list.
+ * Each list item is a row, with column values. The first row has column names.
+ * For example:
+ {'table':
     [
+        [
+            "Chromosome ID",
+            "Source gene ID",
+            "Gene ID",
+            "Gene function"
+        ],
         [
             "kb|g.3899.c.3",
             "AT2G02480",
@@ -18,6 +26,7 @@
         ],
         ... etc ...
     ]
+}
 */
 (function( $, undefined ) {
     $.KBWidget({
@@ -28,7 +37,6 @@
         },
 
         wsUrl: "http://kbase.us/services/workspace/",
-        columns: ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"],
 
         init: function(options) {
             console.debug("GeneTableWidget.init", options);
@@ -47,14 +55,15 @@
             var thead = $('<thead>'), tbody = $('<tbody>');
             thead.css({'background-color': '#EEEEEE', 'color': '#0D7876'});
             // Add header.
+            var columns = this.options.table[0];
             var tr1 = $('<tr>').css({'border-top-color': '#DDDDDD'});
-            for (i = 0; i < this.columns.length; i++) {
-                tr1.append($('<th>').text(this.columns[i]));
+            for (i = 0; i < columns.length; i++) {
+                tr1.append($('<th>').text(columns[i]));
             }
             thead.append(tr1);
             table.append(thead);
             // Add body.
-            for (i = 0; i < this.options.table.length; i++) {
+            for (i = 1; i < this.options.table.length; i++) {
                 var tr = $('<tr>'), row = this.options.table[i];
                 for (j = 0; j < row.length; j++) {
                     tr.append($('<td>').text(row[j]));

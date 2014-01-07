@@ -397,7 +397,9 @@ def gene_table(meth, workspace_id=None, obj_id=None):
         workspace_id = meth.workspace_id
     ws = Workspace(url=URLS.workspace, token=meth.token, name=workspace_id)
     raw_data = ws.get(obj_id, objtype=GENE_TABLE_OBJECT_TYPE)
-    data = {'table': raw_data['data']['genes']}
+    genes = raw_data['data']['genes']
+    header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"]
+    data = {'table': [header] + genes}
     return json.dumps(data)
 
 # Finalize (registers service)

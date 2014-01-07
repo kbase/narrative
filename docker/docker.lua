@@ -1,12 +1,46 @@
-local docker = {}
+local M = {}
 local Spore = require('Spore')
-docker.client = Spore.new_from_string [[{ "name" : "docker remote api",
-					  "base_url" : 'http://127.0.0.1:65000',
+local json = require('json')
+
+-- For creating new containers the config object must contain certain fields
+-- Example config contains:
+local function config()
+   local config = { Hostname = "",
+		    User = "",
+		    Memory = 0,
+		    MemorySwap = 0,
+		    AttachStdin = false,
+		    AttachStdout = false,
+		    AttachStderr = false,
+		    PortSpecs = json.util.null,
+		    Privileged = false,
+		    Tty = false,
+		    OpenStdin = false,
+		    StdinOnce = false,
+		    Env = json.util.null,
+		    Cmd = {'/bin/bash'},
+		    Dns = json.util.null,
+		    Image = "base",
+		    Volumes = {},
+		    VolumesFrom = "",
+		    WorkingDir = ""
+		 }
+   return config
+end
+
+M.config = config
+
+local client = Spore.new_from_string [[{ "name" : "docker remote api",
+					  "base_url" : 'https://127.0.0.1:65000',
 					  "version" : '0.1.0',
-					  "expected_status" : [ 200 ],
-					  "formats" : "json",
+					  "expected_status" : [
+					     200,
+					     201,
+					     204
+					  ],
+					  "formats" : ["json"],
 					  "methods" : {
-					     "list_containers" : { 
+					     "containers" : { 
 						"path" : "/containers/json",
 						"method" : "GET",
 						"optional_params" : [
@@ -14,7 +48,15 @@ docker.client = Spore.new_from_string [[{ "name" : "docker remote api",
 						   'limit',
 						   'since',
 						   'before',
-						   'size']
+						   'size'
+						]
+					     },
+					     "create_container" : { 
+						"path" : "/containers/create",
+						"method" : "POST",
+						"optional_params" : [
+						   'name'],
+						"required_payload" : true,
 					     },
 					     "inspect_container" : { 
 						"path" : "/containers/:id/json",
@@ -22,14 +64,61 @@ docker.client = Spore.new_from_string [[{ "name" : "docker remote api",
 						"required_params" : [
 						   "id"
 						],
-						"optional_params" : [
-						   'all',
-						   'limit',
-						   'since',
-						   'before',
-						   'size']
 					     },
-					     "list_images" : { 
+					     "fs_changes_container" : { 
+						"path" : "/containers/:id/changes",
+						"method" : "GET",
+						"required_params" : [
+						   "id"
+						],
+					     },
+					     "start_container" : { 
+						"path" : "/containers/:id/start",
+						"method" : "POST",
+						"required_params" : [
+						   "id"
+						],
+						"optional_payload" : true,
+					     },
+					     "stop_container" : { 
+						"path" : "/containers/:id/stop",
+						"method" : "POST",
+						"required_params" : [
+						   "id"
+						],
+					     },
+					     "restart_container" : { 
+						"path" : "/containers/:id/restart",
+						"method" : "POST",
+						"required_params" : [
+						   "id"
+						],
+					     },
+					     "kill" : { 
+						"path" : "/containers/:id/kill",
+						"method" : "POST",
+						"required_params" : [
+						   "id"
+						],
+					     },
+					     "remove_container" : { 
+						"path" : "/containers/:id",
+						"method" : "DELETE",
+						"required_params" : [
+						   "id"
+						],
+					     },
+					     "top" : { 
+						"path" : "/containers/:id/top",
+						"method" : "GET",
+						"required_params" : [
+						   "id"
+						],
+						"optional_params" : [
+						   'ps_args',
+						   ]
+					     },
+					     "images" : { 
 						"path" : "/images/json",
 						"method" : "GET",
 						"optional_params" : [
@@ -45,20 +134,40 @@ docker.client = Spore.new_from_string [[{ "name" : "docker remote api",
 						"required_params" : [
 						   "name"
 						],
-						"optional_params" : [
-						   'all',
-						   'limit',
-						   'since',
-						   'before',
-						   'size']
-					     }
+					     },
+					     "history_image" : { 
+						"path" : "/images/:name/history",
+						"method" : "GET",
+						"required_params" : [
+						   "name"
+						],
+					     },
+					     "info" : { 
+						"path" : "/info",
+						"method" : "GET",
+					     },
+					     "version" : { 
+						"path" : "/info",
+						"method" : "GET",
+					     },
+					     "search_images" : { 
+						"path" : "/images/search",
+						"method" : "GET",
+						"required_params" : [
+						   "term"
+						],
+					     },
 					  }
 				       }]]
-
+client:enable('Format.JSON')
+M.client = client
+--[[
 local pretty = require('pl.pretty')
-local res = docker.client:list_containers{ all = 1 }
+local res = client:list_containers{ all = 1 }
 pretty.dump(res)
 print "\n=========\n"
-res = docker.client:list_images{ all = 1 }
+res = client:list_images{ all = 1 }
 pretty.dump(res)
-return docker
+--]]
+
+return M

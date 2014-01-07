@@ -12,7 +12,7 @@
 
     <body>
       <!--#include virtual="header.html" -->
-
+      <div id="wrap">
 		<div id="main" class="container">
 			<h1 class="pds_name">Narrative</h1>
 			<span style="font-size: 1.1em"><b>Narrations</b> capture your analyses and include rich annotations, visualizations widgets, reusable workflows, and custom scripts. Through <b>projects</b>, a special type of workspace, you can share your narrations and data with colleagues.</span>
@@ -94,6 +94,9 @@
 			
 		</div>
 
+	</div> <!-- end wrap -->
+
+
 		<!-- modal dialogs --->
 		<!-- Modal -->
 		  <div class="modal fade" id="newNarrative" tabindex="-1" role="dialog" aria-labelledby="NewNarrative" aria-hidden="true">
@@ -173,6 +176,7 @@
 		{{/rows}}
 		</script>
 
+	<!--#include virtual="footer.html" -->
 
     </body>
 </html>

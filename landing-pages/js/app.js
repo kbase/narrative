@@ -298,9 +298,7 @@ app.run(function ($rootScope, $location) {
 
         // set the currently selected workspace.
         set_selected_workspace();
-
     }
-
 });
 
 

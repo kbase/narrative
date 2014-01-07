@@ -19,7 +19,7 @@ rect:hover {
     box-shadow: 0 1px 10px rgba(0,0,0,.1);
 }
 .nav > li > a:hover, .nav > li > a:focus {
-text-decoration: none;
+    text-decoration: none;
     background-color: #fff !important;
 }
 
@@ -38,7 +38,6 @@ text-decoration: none;
 
 
 #signin-button {
-
     margin: 15px 7px 0 0;
 }
 
@@ -114,9 +113,9 @@ table {
     padding: 10px; /* making enough room for button */
 }
 
-#select-box tr :hover {
+/*#select-box tr :hover {
     background-color: #eee;
-}
+}*/
 
 .selected-ws {
     background-color: #428bca;
@@ -172,6 +171,15 @@ div::-webkit-scrollbar-thumb {
 
 .ws-selector {
     width: 265px;
+}
+
+.btn-ws-settings {
+    position: absolute;
+    right: 30px;
+}
+
+.select-ws .badge {
+    margin: 0 4px 0 0 ;
 }
 
 .modal-alert {

@@ -92,7 +92,7 @@ angular.module('ws-directives')
 
 
                         '<div id="select-box" class="select-box scroll-pane">'+
-                          '<table class="table table-bordered table-condensed"></table>'+
+                          '<table class="table table-bordered table-condensed table-hover"></table>'+
                         '</div>'+
                       '</div>'
                       ,
@@ -114,14 +114,15 @@ angular.module('ws-directives')
 
                 scope.loadData = function() {
                     $('#select-box .table').remove();
-                    $('#select-box').append('<table class="table table-bordered table-condensed"></table>');
+                    $('#select-box').append('<table class="table table-bordered table-condensed table-hover"></table>');
                     workspaces = []
                     workspace_dict = {}
 
                     var prom = kb.kbwsAPI().list_workspaces({});
                     $('.select-box').loading();
                     $.when(prom).done(function(data) {
-                        console.log(data)
+
+                        console.log('workspace data', data)
                         $('.select-box').rmLoading();
 
                         var sorted_ws = [];
@@ -235,6 +236,7 @@ angular.module('ws-directives')
                         scope.$apply( $location.path('/ws/objtable/'+ws) );
                     });
 
+                    // event for settings (manage modal) button
                     $('.btn-ws-settings').click(function(e) {
                         e.stopPropagation();
                         e.preventDefault();
@@ -264,7 +266,7 @@ angular.module('ws-directives')
                         var write = filterWrite.prop('checked');
                         var read  = filterRead.prop('checked');
 
-                        $(".select-box table").children()
+                        //$(".select-box table").children()
                         for (var i=0; i< workspaces.length; i++) {
                             var ws = workspaces[i];
                             var name = ws[0];
@@ -279,7 +281,10 @@ angular.module('ws-directives')
                             if (admin && perm === 'a') show = true;
                             if (write && perm === 'w') show = true;
                             if (read && perm === 'r') show = true;
+                            if (!show && read && global_perm === 'r') show = true;
                             if (show && owner && user != USER_ID) show = false;
+                            console.log('global', owner)
+
 
                             if (!show) {
                                 $('.select-box table tr:nth-child('+j+')').hide();
@@ -303,7 +308,7 @@ angular.module('ws-directives')
                     }
 
                     // table of meta data
-                    var table = $('<table class="table table-bordered manage-table table-striped">');
+                    var table = $('<table class="table table-bordered manage-table table-striped">');                
                     var data = [
                         ['Name', settings[0]],
                         ['Objects', '~ ' + settings[3] ],
@@ -321,7 +326,6 @@ angular.module('ws-directives')
 
                     var content = $('<div class="manage-content"></div>');
                     content.append(table);
-
 
                     // modal for managing workspace permissions, clone, and delete
                     var permData; 
@@ -379,6 +383,7 @@ angular.module('ws-directives')
                         var placeholder = $('<div></div>').loading()
                         modal_body.append(placeholder);                        
                         $.when(prom).done(function(data) {
+                            console.log('perm data', data)
                             permData = data
 
                             //newPerms = $.extend({},data)
@@ -444,7 +449,7 @@ angular.module('ws-directives')
                         var promises = [];
                         for (var new_user in newPerms) {
                             // ignore these
-                            if (new_user == '~global' || new_user == USER_ID) continue;   
+                            if (new_user == '*' || new_user == USER_ID) continue;   
 
                             // if perms have not change, do not request change
                             if ( (new_user in permData) && newPerms[new_user] == permData[new_user]) {
@@ -467,7 +472,7 @@ angular.module('ws-directives')
 
                         // if user was removed from user list, change permission to 'n'
                         for (var user in permData) {
-                            if (user == '~global' || user == USER_ID) continue;                            
+                            if (user == '*' || user == USER_ID) continue;                            
 
                             if ( !(user in newPerms) ) {
                                 console.log('removing:', user)
@@ -512,7 +517,7 @@ angular.module('ws-directives')
                         // create table of permissions
                         for (var key in data) {
                             // ignore user's perm, ~global, and users with no permissions
-                            if (key == '~global' || key == USER_ID || data[key] == 'n') continue;
+                            if (key == '*' || key == USER_ID || data[key] == 'n') continue;
                             var row = $('<tr><td class="perm-user" data-user="'+key+'">'+key+'</td><td class="perm-value" data-value="'+data[key]+'">'+
                                              perm_dict[data[key]]+'</td></tr>');
 
@@ -529,7 +534,7 @@ angular.module('ws-directives')
                         // create table of permissions
                         for (var key in data) {
                             // ignore user's perm, ~global, and users with no permissions
-                            if (key == '~global' || key == USER_ID || data[key] == 'n') continue;
+                            if (key == '*' || key == USER_ID || data[key] == 'n') continue;
                             var row = $('<tr><td><input type="text" class="form-control perm-user" value="'+key+'"></input></td>\
                                 <td class="perm-value">'+permDropDown(data[key])+'</td>\
                                 <td><button class="form-control rm-perm" data-user="'+key+'">\
@@ -711,11 +716,12 @@ angular.module('ws-directives')
                                 callback : function(e, $prompt) {
                                         var new_ws_id = $('.new-ws-id').val();
                                         var perm = $('.create-permission option:selected').val();
+                                        //var id = workspace_dict[ws_name][6];
+
                                         var params = {
                                             //auth: USER_TOKEN,                                            
+                                            wsi: {workspace: ws_name},
                                             workspace: new_ws_id,
-                                            ws_name: ws_name,
-
                                             //default_permission: perm                                            
                                             globalread: perm
                                         };
@@ -726,6 +732,7 @@ angular.module('ws-directives')
                                             return;
                                         }                   
 
+                                        console.log('calling clone workspace with:', params)
                                         var prom = kb.kbwsAPI().clone_workspace(params);
                                         $prompt.addCover()
                                         $prompt.getCover().loading()
@@ -815,9 +822,7 @@ angular.module('ws-directives')
                       { "sTitle": "id"}, //"sWidth": "10%"
                       { "sTitle": "type", "sWidth": "10%"},
                       { "sTitle": "moddate"},
-                      { "sTitle": "lastmodifier"},
                       { "sTitle": "owner"},
-
                   ],                         
                     "oLanguage": {
                         "sSearch": "Search:"
@@ -852,9 +857,9 @@ angular.module('ws-directives')
 
                         var wsarray = [id,
                                        type,
-                                       obj[2],
-                                       obj[4],
-                                       obj[5]];
+                                       obj[2], // moddate
+                                       obj[5]  // owner
+                                       ];
 
 
                         //if (type == 'FBA') {
@@ -903,43 +908,51 @@ angular.module('ws-directives')
                         scope.selectedObjs.push({ws:ws, id:id, type:type});
                         scope.$apply();
                     })
-                    /*
+
                     $('.show-versions').click(function() {
                         console.log('show versions')
+                        var type = $(this).prev('.obj-id').data('obj-type');
+                        var id = $(this).prev('.obj-id').data('obj-id');
 
-                        var prom = kb.kbwsAPI().get_permissions(type, id);
+                        var historyModal = $('<div class="history-modal"></div>').kbasePrompt({
+                                title : 'History <small>(<i>'+id+'</i>)</small>',
+                                //body : '',
+                                modalClass : '', 
+                                controls : ['closeButton']
+                            }
+                        );
 
+                        historyModal.openPrompt();
+                        var modal_body = historyModal.data('dialogModal').find('.modal-body').loading();
+                        historyModal.data('dialogModal').find('.modal-dialog').css('width', '800px')
+
+                        var prom = kb.kbwsAPI().get_object_history({workspace: ws, name: id});
                         $.when(prom).done(function(data) {
-                            $(tr).next().children('td').append('<h5>History of <i>'+id+'</i></h5>');
-
-                            var info = $('<table class="history-table">');
-                            var header = $('<tr><th>ID</th>\
-                                                <th>Type</th>\
-                                                <th>WS</th>\
+                            modal_body.rmLoading();
+                                console.log(data)
+                            modal_body.append('<b>ID</b>: '+data[0][0]+'<br>')
+                            modal_body.append('<b>Type</b>: '+data[0][2])                            
+                            var info = $('<table class="table table-bordered">');
+                            var header = $('<tr><th>Mod Date</th>\
                                                 <th>Vers</th>\
                                                 <th>Owner</th>\
-                                                <th>Last modby</th>\
-                                                <th>Cmd</th>\
-                                                <th>Moddate</th>');
+                                                <th>Cmd</th></tr>');
                             info.append(header);
                             for (var i=0; i<data.length; i++) {
                                 var ver = data[i];
                                 var row = $('<tr>');
-                                row.append('<td><a class="id-download" data-id="'+id+'" \
-                                    data-type="'+type+'" data-workspace="'+ws+'">' + ver[0] + '</a></td>'
-                                         + '<td>' + ver[1] + '</td>'
-                                         + '<td>' + ver[2] + '</td>'
-                                         + '<td>' + ver[3] + '</td>'
+                                row.append('<td>' + ver[3] + '</td>' // type
                                          + '<td>' + ver[4] + '</td>'
                                          + '<td>' + ver[5] + '</td>'
-                                         + '<td>' + ver[6] + '</td>'
                                          + '<td>' + ver[7] + '</td>');
                                 info.append(row);
                             }
 
-                        $(this).parents('tr').after('blah blah blah');
-                    })*/
+                            modal_body.append(info)
+                        })
 
+
+                    })
                 }
 
 

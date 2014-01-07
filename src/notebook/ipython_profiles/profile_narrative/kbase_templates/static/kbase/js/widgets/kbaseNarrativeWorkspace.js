@@ -95,13 +95,17 @@
             this.initControls(options.controlsElem);
 
             // bind search to data table
-            $search_inp = options.controlsElem.find(':input');
-            var that = this;
-            $search_inp.on('change keyup', function(e) {
-                var tbl = that.dataTableWidget.table;
-                tbl.fnFilter($search_inp.val());
-                tbl.fnDraw();
-            });
+            // XXX: This is BROKEN, so skip it!
+            // XXX: At some point, 'this.dataTableWidget' went away..
+            if ( false ) {
+                $search_inp = options.controlsElem.find(':input');
+                var that = this;
+                $search_inp.on('change keyup', function(e) {
+                    var tbl = that.dataTableWidget.table;
+                    tbl.fnFilter($search_inp.val());
+                    tbl.fnDraw();
+                });
+            }
 
             // **DEPRECATED** Initializes controls.
             this.initFuncs();

@@ -236,7 +236,7 @@ div::-webkit-scrollbar-thumb {
 .ellipsis {
     white-space: nowrap;
     text-overflow: ellipsis;
-    width: 250px;
+    max-width: 175px;
     display: inline-block;
     overflow: hidden
 }

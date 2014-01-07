@@ -150,13 +150,13 @@ angular.module('ws-directives')
                             //var short_ws = ws[0].slice(0,12) + '...'
 
                             if (user == USER_ID) {
-                                var selector = $('<tr><td class="select-ws ellipsis" data-ws="'+name+'">\
-                                                                <span class="badge">'+obj_count+'</span>'+
-                                                            ' <span><b>'+name+'</b></span></td></tr>');
+                                var selector = $('<tr><td class="select-ws" data-ws="'+name+'">\
+                                                                <div class="badge pull-left">'+obj_count+'</div>'+
+                                                            ' &nbsp;<div class="pull-left ellipsis"> <b>'+name+'</b></div></td></tr>');
                             } else {
-                                var selector = $('<tr><td class="select-ws ellipsis" data-ws="'+name+'">\
-                                                                <span class="badge">'+obj_count+'</span>'+
-                                                            ' <span>'+name+'</span></td></tr>');
+                                var selector = $('<tr><td class="select-ws" data-ws="'+name+'">\
+                                                                <div class="badge pull-left">'+obj_count+'</div>'+
+                                                            ' &nbsp;<div class="pull-left ellipsis">'+name+'</div></td></tr>');
                             }
                             selector.find('td').append('<button type="button" class="btn \
                                                 btn-default btn-xs btn-ws-settings hide pull-right" data-ws="'+name+'">\

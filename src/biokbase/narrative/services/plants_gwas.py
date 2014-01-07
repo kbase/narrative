@@ -383,7 +383,40 @@ def trait_manhattan_plot(meth, workspaceID=None, gwasObjectID=None):
     return json.dumps({'token': token, 'workspaceID': workspaceID, 'gwasObjectID': gwasObjectID })
 
 
-GENE_TABLE_OBJECT_TYPE = "GwasTopVariations"
+@method(name="GWAS Variation To Genes")
+def gwas_variation_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=None, distance=None):
+    """Get variations to genes.
+
+    :param workspaceID: workspaceID
+    :type workspaceID: kbtypes.Unicode
+    :param gwasObjectID: gwas result objectID
+    :type gwasObjectID: kbtypes.Unicode
+    :param pmin: minimum pvalue (-log10)
+    :type pmin: kbtypes.Numeric
+    :param distance: distance in bp around SNP to look for genes
+    :type distance: kbtypes.Numeric
+    :return: Workspace objectID of gwas results
+    :rtype: kbtypes.Unicode
+    """
+    meth.stages = 3 
+
+    meth.advance("init GWAS service")
+    gc = GWAS(URLS.gwas, token=meth.token)
+    meth.advance("Variations to Genes")
+    try:
+        gl_oid = gc.gwas_variation_to_genes(workspaceID, gwasObjectID, pmin, distance)
+    except Exception as err:
+        raise GWASException("submit job failed: {}".format(err))
+    if not gl_oid:
+        raise GWASException(2, "submit job failed, no job id")
+
+    meth.advance("Creating object")
+    h= gwasObjectID + '.genelist' 
+    return json.dumps({ 'output':  h })
+
+
+
+GENE_TABLE_OBJECT_TYPE = "GwasTopGenes"
 
 
 @method(name="Gene table")
@@ -403,7 +436,7 @@ def gene_table(meth, workspace_id=None, obj_id=None):
     if not workspace_id:
         workspace_id = meth.workspace_id
     ws = Workspace(url=URLS.workspace, token=meth.token, name=workspace_id)
-    raw_data = ws.get(obj_id, objtype=GENE_TABLE_OBJECT_TYPE)
+    raw_data = ws.get(obj_id, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
     genes = raw_data['data']['genes']
     header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"]
     data = {'table': [header] + genes}

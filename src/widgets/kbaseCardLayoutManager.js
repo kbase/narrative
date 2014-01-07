@@ -783,7 +783,8 @@
         	}        		
             this.addNewCard(cardName,
                         {
-                            id: this.options.data.id
+                            id: this.options.data.id,
+                            token: this.options.auth
                         },
                         {
                             my: "left top",
@@ -1223,7 +1224,8 @@
             	}
                 self.addNewCard(cardName,
                 {
-                    id: data.id
+                    id: data.id,
+                    token: data.token
                 },
                 {
                     my: "left top",

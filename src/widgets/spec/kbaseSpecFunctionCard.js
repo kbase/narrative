@@ -7,7 +7,8 @@
         options: {
             id: "",
             name: "",
-            width: 600
+            width: 600,
+            token: null
         },
 
         init: function(options) {
@@ -16,7 +17,7 @@
             var container = this.$elem;
             self.$elem.append('<p class="muted loader-table"><img src="assets/img/ajax-loader.gif"> loading...</p>');
 
-            var kbws = new Workspace(newWorkspaceServiceUrlForSpec);
+            var kbws = new Workspace(newWorkspaceServiceUrlForSpec, {token: options.token});
             var funcName = this.options.id;
             var funcVer = null;
             if (funcName.indexOf('-') >= 0) {
@@ -77,6 +78,7 @@
                     		{
                     			kind: "module", 
                     			id : moduleId,
+                    			token: options.token,
                     			event: e
                     		});
                 });
@@ -93,6 +95,7 @@
                     		{
                     			kind: "type", 
                     			id : aTypeId,
+                    			token: options.token,
                     			event: e
                     		});
                 });
@@ -126,6 +129,7 @@
                     		{
                     			kind: "type", 
                     			id : aTypeId,
+                    			token: options.token,
                     			event: e
                     		});
                 });
@@ -163,6 +167,7 @@
                     		{
                     			kind: "function", 
                     			id : aFuncId,
+                    			token: options.token,
                     			event: e
                     		});
                 });

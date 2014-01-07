@@ -194,7 +194,8 @@ angular.module('card-directives')
         return {
             link: function(scope, element, attrs) {
                 $(element).KBaseCardLayoutManager({template: "spec", 
-                                                   data: scope.params});
+                                                   data: scope.params,
+                                                   auth: $rootScope.USER_TOKEN});
             }
         };
     })

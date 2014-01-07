@@ -6,7 +6,8 @@
 
         options: {
             id: '',
-            width: 560
+            width: 560,
+            token: null
         },
 
         init: function(options) {
@@ -16,7 +17,7 @@
         	var pref = generateSpecPrefix();
             self.$elem.append('<p class="muted loader-table"><img src="assets/img/ajax-loader.gif"> loading...</p>');
 
-            var kbws = new Workspace(newWorkspaceServiceUrlForSpec);
+            var kbws = new Workspace(newWorkspaceServiceUrlForSpec, {token: options.token});
             kbws.list_modules({}, function(data) {
                 $('.loader-table').remove();
 
@@ -42,6 +43,7 @@
                     		{
                     			kind: "module", 
                     			id : module,
+                    			token: options.token,
                     			event: e
                     		});
                 };

@@ -1,19 +1,19 @@
 (function( $, undefined ) { 
     $.KBWidget({ 
-        name: "KBaseMastHitsCard", 
+        name: "KBaseInferelatorHitsCard", 
         parent: "kbaseWidget", 
         version: "1.0.0",
 
         options: {
-            title: "MAST Hits",
+            title: "Inferelator Hits",
             isInCard: false,
-            height: 600,
-            width: 600
+            height: 500,
+            width: 500
         },
 
         init: function(options) {
             this._super(options);
-            if (this.options.mastresult === null) {
+            if (this.options.inferelatorrunresult === null) {
                 //throw an error
                 return;
             }
@@ -29,14 +29,13 @@
         render: function(options) {
 
             var self = this;
-            self.mastresult = this.options.mastresult;
-			var $hitsTable = '<table id="hits-table' + self.mastresult.data.id + '" class="kbgo-table">';
-			$hitsTable += "<tr><td>PSPM ID</td><td>Sequence ID</td><td>Strand</td><td>Start</td><td>End</td><td>Score</td><td>p-value</td></tr>";
+            self.inferelatorrunresult = this.options.inferelatorrunresult;
+			var $hitsTable = '<table id="hits-table' + self.inferelatorrunresult.data.id + '" class="kbgo-table">';
+			$hitsTable += "<tr><td>Bi-cluster ID</td><td>Regulator ID</td><td>Coeff</td></tr>";
 
-			for (var hit in self.mastresult.data.hits) {
-				$hitsTable+= "<tr><td>" + self.mastresult.data.hits[hit].pspm_id + "</td><td>" + self.mastresult.data.hits[hit].seq_id + "</td><td>" + self.mastresult.data.hits[hit].strand +
-				"</td><td>" + self.mastresult.data.hits[hit].hit_start + "</td><td>" + self.mastresult.data.hits[hit].hit_end + "</td><td>" + self.mastresult.data.hits[hit].score +
-				"</td><td>" + self.mastresult.data.hits[hit].hit_pvalue + "</td></tr>";
+			for (var hit in self.inferelatorrunresult.data.hits) {
+				$hitsTable+= "<tr><td>" + self.inferelatorrunresult.data.hits[hit].bicluster_id + "</td><td>" + self.inferelatorrunresult.data.hits[hit].tf_id + "</td><td>" + self.inferelatorrunresult.data.hits[hit].coeff +
+				"</td></tr>";
 			}
 			
 			$hitsTable+= "</table>";
@@ -47,10 +46,10 @@
 
         getData: function() {
             return {
-                type: "MastRunResult",
-                id: this.options.mastresult.data.id,
+                type: "InferelatorRunResult",
+                id: this.options.inferelatorrunresult.data.id,
                 workspace: this.options.workspace_id,
-                title: "MAST Hits"
+                title: "Inferelator Hits"
             };
         },
 

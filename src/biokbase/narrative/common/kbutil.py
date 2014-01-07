@@ -8,6 +8,8 @@ import json
 import requests
 import time
 
+from biokbase.workspaceService.Client import workspaceService as WS
+
 
 class AweTimeoutError(Exception):
     def __init__(self, jobid,  timeout):
@@ -78,3 +80,30 @@ class AweJob(object):
         response = json.loads(r.text)
         remain_tasks = response.get("data", dict()).get("remaintasks")
         return remain_tasks
+
+
+class Workspace(WS):
+    """Simple wrapper for KBase workspace service.
+    """
+    def __init__(self, url=None, token=None, name=None):
+        WS.__init__(self, url=url, token=token)
+        self._ws_name = name
+
+    def get(self, objid, objtype, instance=None, as_json=True):
+        # set common parameters
+        params = {
+            'id': objid,
+            'type': objtype,
+            'workspace': self._ws_name
+        }
+        # if instance isn't given, figure out most recent one
+        # XXX: this is dumb -- better way to do this?!
+        if instance is None:
+            params['asHash'] = False
+            result = self.object_history(params)
+            instance = len(result) - 1
+        # get selected instance
+        params.update({'asJSON': as_json, 'instance': instance})
+        obj = self.get_object(params)
+        # return the object
+        return obj

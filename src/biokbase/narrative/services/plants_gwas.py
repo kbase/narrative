@@ -108,9 +108,8 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 from IPython.display import display, HTML
 # Other KBase
 from biokbase.GWAS.Client import GWAS
-from biokbase.GWAS1.Client import GWAS1
+from biokbase.narrative.common.kbutil import AweJob, Workspace
 
-from biokbase.narrative.common.kbutil import AweJob
 
 ## Exceptions
 
@@ -138,8 +137,6 @@ class URLS:
     gwas1 = "http://140.221.85.95:7086"
     ujs = "http://140.221.85.171:7083"
 
-AweJob.URL = URLS.awe
-
 # Initialize
 init_service(name=NAME, desc="Plants GWAS service", version=VERSION)
 
@@ -150,7 +147,7 @@ def _output_object(name):
     return json.dumps({'output': name})
 
 
-@method(name="Create Gwas Population object")
+@method(name="Create GWAS Population obj")
 def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_population_object_name=None,
                                   GwasPopulation_description=None, kbase_genome_id=None, comment=None):
     """Create Gwas Population object from an uploaded Population file in the workspace.
@@ -186,7 +183,7 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
     return _output_object('GwasPopulation_' + output_population_object_name)
 
 
-@method(name="Create Gwas Population Trait object")
+@method(name="Create Gwas Population Trait obj")
 def gwas_create_population_trait_object(meth, GwasPopulation_obj_id=None, population_trait_file_id=None, protocol=None,
                                         comment=None, originator=None, output_trait_object_name=None,
                                         kbase_genome_id=None, trait_ontology_id=None, trait_name=None,
@@ -377,41 +374,64 @@ def trait_manhattan_plot(meth, workspaceID=None, gwasObjectID=None):
     meth.stages = 1
     meth.advance("Manhattan plot")
     token = meth.token
-    return json.dumps({'token': token, 'workspaceID' : workspaceID, 'gwasObjectID': gwasObjectID })
+    return json.dumps({'token': token, 'workspaceID': workspaceID, 'gwasObjectID': gwasObjectID })
 
 
+GENE_TABLE_OBJECT_TYPE = "GwasTopVariations"
 
-@method(name="GWAS Variation To Genes")
-def gwas_variations_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=2, distance=1000):
-    """
-    Get 
 
-    :param workspaceID: workspaceID
-    :type workspaceID: kbtypes.Unicode
-    :param gwasObjectID: gwas result objectID
-    :type gwasObjectID: kbtypes.Unicode
-    :param pmin: minimum pvalue (-log10)
-    :type gwasObjectID: kbtypes.Numeric
-    :param distance: distance in bp around SNP to look for genes 
-    :type gwasObjectID: kbtypes.Numeric
-    :return: Workspace objectID of gwas results
+@method(name="Gene table")
+def gene_table(meth, workspace_id=None, obj_id=None):
+    """Make a browsable table of gene data.
+
+    :param workspace_id: Workspace name (if empty, defaults to current workspace)
+    :type workspace_id: kbtypes.Unicode
+    :param obj_id: Gene's workspace object identifier.
+    :type obj_id: kbtypes.Unicode
+    :return: Rows for display
     :rtype: kbtypes.Unicode
+    :output_widget: GeneTableWidget
     """
-    meth.debug("starting function")
     meth.stages = 1
+    meth.advance("Retrieve gene from workspace")
+    if not workspace_id:
+        workspace_id = meth.workspace_id
+    ws = Workspace(url=URLS.workspace, token=meth.token, name=workspace_id)
+    raw_data = ws.get(obj_id, objtype=GENE_TABLE_OBJECT_TYPE)
+    data = {'table': raw_data['data']['genes']}
+    return json.dumps(data)
 
-    meth.advance("init GWAS service")
-    gc = GWAS1(URLS.gwas1, token=meth.token)
+# @method(name="GWAS Variation To Genes")
+# def gwas_variations_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=2, distance=1000):
+#     """
+#     Get 
 
-    try:
-        gl_oid = gc.gwas_variation_to_genes(meth.workspace_id, vd_oid, pmin, distance)
-    except Exception as err:
-        raise GWASException("submit job failed: {}".format(err))
-    if not jid:
-        raise GWASException(2, "submit job failed, no job id")
+#     :param workspaceID: workspaceID
+#     :type workspaceID: kbtypes.Unicode
+#     :param gwasObjectID: gwas result objectID
+#     :type gwasObjectID: kbtypes.Unicode
+#     :param pmin: minimum pvalue (-log10)
+#     :type gwasObjectID: kbtypes.Numeric
+#     :param distance: distance in bp around SNP to look for genes 
+#     :type gwasObjectID: kbtypes.Numeric
+#     :return: Workspace objectID of gwas results
+#     :rtype: kbtypes.Unicode
+#     """
+#     meth.debug("starting function")
+#     meth.stages = 1
 
-    meth.stages += 1
-    return gl_oid
+#     meth.advance("init GWAS service")
+#     gc = GWAS1(URLS.gwas1, token=meth.token)
+
+#     try:
+#         gl_oid = gc.gwas_variation_to_genes(meth.workspace_id, vd_oid, pmin, distance)
+#     except Exception as err:
+#         raise GWASException("submit job failed: {}".format(err))
+#     if not jid:
+#         raise GWASException(2, "submit job failed, no job id")
+
+#     meth.stages += 1
+#     return gl_oid
 
 
 

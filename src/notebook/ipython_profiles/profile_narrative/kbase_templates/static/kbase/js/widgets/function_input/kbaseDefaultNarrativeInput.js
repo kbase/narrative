@@ -43,7 +43,6 @@
                         var p = params[pid];
 
                         var input = "";
-                        // XXX: HACK to disable the pull-down
                         if (objects[p.type] && objects[p.type].length > 1) {
                             var objList = objects[p.type];
                             objList.sort(function(a, b) {

@@ -818,6 +818,7 @@ angular.module('ws-directives')
                       { "sTitle": "Owner"},
                   ],                         
                     "oLanguage": {
+                        "sEmptyTable": "No objects in workspace",
                         "sSearch": "Search:"
                     }
                 }
@@ -832,16 +833,40 @@ angular.module('ws-directives')
                     $(element).append('<table id="obj-table-'+ws+'" \
                         class="table table-bordered table-striped" style="width: 100%;"></table>')    
 
-                    var wsobjs = formatObjs(data);
+                    var tableobjs = formatObjs(data);
+                    var wsobjs = tableobjs[0];
+                    var type_counts = tableobjs[1];
+
                     tableSettings.aaData = wsobjs;
 
                     var table = $('#obj-table-'+ws).dataTable(tableSettings);
 
                     //$(element).prepend('<div class="object-options"></div>')
-                    $('.table-options').append('<button class="btn btn-default btn-select-all">\
-                        <div class="ncheck check-option"></div></button> ')
-                
-                    checkBoxObjectClickEvent('.obj-check-box');
+
+                    // if there are objects, add 'select all' button
+                    if (data.length > 0) {
+                        $('.table-options').append('<button class="btn btn-default btn-select-all">\
+                            <div class="ncheck check-option"></div></button> ');
+
+                        var select = $('<select class="input-small type-filter form-control">\
+                                            <option selected="selected">All Types</option> \
+                                        </select>')
+                        for (var type in type_counts) {
+                            console.log('"'+type+'"')
+                            select.append('<option data-type="'+type+'">'+type+' ('+type_counts[type]+')</option>');
+                        }
+                        $('.table-options').append(select);
+
+                        $('.type-filter').change( function () {
+                            if ($(this).val() == "All Types") {
+                                table.fnFilter('', 2)
+                            } else {
+                                table.fnFilter( $(this).find('option:selected').data('type'), 2);
+                            }    
+                        });
+
+                        checkBoxObjectClickEvent('.obj-check-box');
+                    }
                 }).fail(function(e){
                     $(element).html('<div class="alert alert-danger">'+e.error.error.split('\n')[0]+'</div>');
                 })
@@ -849,6 +874,7 @@ angular.module('ws-directives')
 
                 function formatObjs(objs) {
                     var wsobjs = []
+                    var type_counts = {}
 
                     for (var i in objs) {
                         var obj = objs[i];
@@ -861,11 +887,19 @@ angular.module('ws-directives')
                                 + ' data-type="' + type + '"'
                                 + ' data-id="' + id + '"></div>';
 
+                        var type = type.split('.')[0];
+                        console.log(type)
                         var wsarray = [check, id,
                                        type,
                                        obj[2].split('+')[0].replace('T',' '), // moddate
                                        obj[5]  // owner
                                        ];
+
+                        if (type in type_counts) {
+                            type_counts[type] = type_counts[type] + 1;
+                        } else {
+                            type_counts[type] = 1;
+                        }
 
                         //if (type == 'FBA') {
                         //    wsarray[0] = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
@@ -886,7 +920,7 @@ angular.module('ws-directives')
                         wsarray[1] = new_id
                         wsobjs.push(wsarray);
                     }
-                    return wsobjs
+                    return [wsobjs, type_counts]
                 }
 
 
@@ -1093,7 +1127,7 @@ angular.module('ws-directives')
 
                     $.when(prom).done(function(data){
 
-                        
+
                     })
 
 

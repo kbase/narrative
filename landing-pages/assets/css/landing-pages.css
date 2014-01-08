@@ -297,5 +297,10 @@ float: left;
 }
 
 .btn-select-all {
-    margin: 0 20px 0 0 ;
+    height: 34px;
+    margin: 0 20px 0 0;
+}
+
+.type-filter {
+    margin: 0 20px 0 0;
 }

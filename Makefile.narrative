@@ -28,7 +28,9 @@ script-install:
 	@i=0; while read s; do \
 		echo $$s; \
 		if [ $$i = 0 ]; then \
-			echo d=`pwd`; i=1;\
+			echo d=`pwd`; \
+			echo e=$$(dirname `which python`); \
+			i=1;\
 		fi; \
 	done < run_notebook.tmpl > run_notebook
 	@d=$$(dirname `which python`); chmod 0755 run_notebook; mv run_notebook $$d

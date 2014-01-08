@@ -881,8 +881,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             'properties': {
                 'parameters': {p.name: {'type': self.trt_2_jschema.get(p.info(), str(p)),
                                         'description': p.get_metadata('desc'),
-                                        'ui_name': p.get_metadata('ui_name')} for p in self.params},
-                'widgets': { 'input': self.input_widget, 'output': self.output_widget },
+                                        'ui_name': p.get_metadata('ui_name'),
+                                        'default': p.get_default_value()} for p in self.params},
+                'widgets': {'input': self.input_widget, 'output': self.output_widget },
             },
             'returns': {p.name: {'type': self.trt_2_jschema.get(p.info(), str(p)),
                                  'description': p.get_metadata('desc')} for p in self.outputs}

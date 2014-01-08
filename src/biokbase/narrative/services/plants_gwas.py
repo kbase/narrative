@@ -134,6 +134,7 @@ class URLS:
     cdmi = "http://kbase.us/services/cdmi_api"
     ontology = "http://kbase.us/services/ontology_service"
     gwas = "http://140.221.85.171:7086"
+    gwas1 = "http://140.221.85.95:7086"
     ujs = "http://140.221.85.171:7083"
 
 AweJob.URL = URLS.awe
@@ -441,6 +442,40 @@ def gene_table(meth, workspace_id=None, obj_id=None):
     header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"]
     data = {'table': [header] + genes}
     return json.dumps(data)
+
+# @method(name="GWAS Variation To Genes")
+# def gwas_variations_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=2, distance=1000):
+#     """
+#     Get 
+
+#     :param workspaceID: workspaceID
+#     :type workspaceID: kbtypes.Unicode
+#     :param gwasObjectID: gwas result objectID
+#     :type gwasObjectID: kbtypes.Unicode
+#     :param pmin: minimum pvalue (-log10)
+#     :type gwasObjectID: kbtypes.Numeric
+#     :param distance: distance in bp around SNP to look for genes 
+#     :type gwasObjectID: kbtypes.Numeric
+#     :return: Workspace objectID of gwas results
+#     :rtype: kbtypes.Unicode
+#     """
+#     meth.debug("starting function")
+#     meth.stages = 1
+
+#     meth.advance("init GWAS service")
+#     gc = GWAS1(URLS.gwas1, token=meth.token)
+
+#     try:
+#         gl_oid = gc.gwas_variation_to_genes(meth.workspace_id, vd_oid, pmin, distance)
+#     except Exception as err:
+#         raise GWASException("submit job failed: {}".format(err))
+#     if not jid:
+#         raise GWASException(2, "submit job failed, no job id")
+
+#     meth.stages += 1
+#     return gl_oid
+
+
 
 # Finalize (registers service)
 finalize_service()

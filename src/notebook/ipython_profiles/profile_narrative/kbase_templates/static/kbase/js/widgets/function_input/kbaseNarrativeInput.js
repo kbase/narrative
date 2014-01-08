@@ -36,6 +36,10 @@
                 return;
         },
 
+        refresh: function() {
+
+        },
+
     });
 
 })( jQuery );

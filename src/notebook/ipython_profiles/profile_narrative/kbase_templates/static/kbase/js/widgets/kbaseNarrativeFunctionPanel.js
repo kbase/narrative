@@ -36,7 +36,7 @@
             // DOM structure setup here.
             // After this, just need to update the function list
 
-            this.$functionList = $('<ul>');
+//            this.$functionList = $('<ul>');
 
             // Make and append the header.
             this.$elem.append($('<div>')
@@ -45,8 +45,8 @@
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
-                                  .addClass('kb-function-body')
-                                  .append(this.$functionList);
+                                  .addClass('kb-function-body');
+//                                  .append(this.$functionList);
             this.$elem.append(this.$functionPanel);
 
             // The 'loading' panel should just have a spinning gif in it.
@@ -97,9 +97,30 @@
                     self.parseKernelResponse(msgType, content); 
                     self.showFunctionPanel();
                 },
+                'execute_reply' : function(content) { 
+                    self.handleCallback("execute_reply", content); 
+                },
+                'clear_output' : function(content) { 
+                    self.handleCallback("clear_output", content); 
+                },
+                'set_next_input' : function(content) { 
+                    self.handleCallback("set_next_input", content); 
+                },
+                'input_request' : function(content) { 
+                    self.handleCallback("input_request", content); 
+                },
             };
 
             var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
+        },
+
+        handleCallback: function(call, content) {
+            this.dbg("kbaseNarrativeFunctionPanel.handleCallback - " + call);
+            this.dbg(content);
+
+            if (content.status === "error") {
+                this.showError(content);
+            }
         },
 
         /**
@@ -111,7 +132,9 @@
          */
         parseKernelResponse: function(msgType, content) {
             // if it's not a datastream, display some kind of error, and return.
-            console.debug(content);
+            this.dbg("kbaseNarrativeFunctionPanel.parseKernelResponse");
+            this.dbg(content);
+
             if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the function list.');
                 return;
@@ -131,16 +154,61 @@
          * @private
          */
         populateFunctionList: function(serviceSet) {
-            console.log(serviceSet);
-            this.$functionList.empty();
+            var serviceAccordion = [];
+
             for (var serviceName in serviceSet) {
+                var $methodList = $('<ul>');
                 var service = serviceSet[serviceName];
                 for (var i=0; i<service.methods.length; i++) {
                     var method = service.methods[i];
                     method['service'] = serviceName;
-                    this.addFunction(method);
+                    $methodList.append(this.buildFunction(method));
                 }
+
+                serviceAccordion.push({
+                    'title' : serviceName,
+                    'body' : $methodList
+                });
             }
+
+            this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
+
+            /** pre-accordion code commented out below **/
+            // for (var serviceName in serviceSet) {
+            //     var service = serviceSet[serviceName];
+            //     for (var i=0; i<service.methods.length; i++) {
+            //         var method = service.methods[i];
+            //         method['service'] = serviceName;
+            //         this.addFunction(method);
+            //     }
+            // }
+        },
+
+        /**
+         * Creates and returns a list item containing info about the given narrative function.
+         * Clicking the function anywhere outside the help (?) button will trigger a 
+         * function_clicked.Narrative event. Clicking the help (?) button will trigger a 
+         * function_help.Narrative event.
+         * 
+         * Both events have the relevant data passed along with them for use by the responding
+         * element.
+         * @param {object} method - the method object returned from the kernel.
+         * @private
+         */
+        buildFunction: function(method) {
+            var self = this;
+
+            var $helpButton = $('<span>')
+                              .addClass('glyphicon glyphicon-question-sign kb-function-help')
+                              .css({'margin-top': '-5px'})
+                              .click(function(event) { event.preventDefault(); event.stopPropagation(); self.showHelpPopup(method); });
+
+            var $newFunction = $('<li>')
+                               .append(method.title)
+                               .click(function(event) { self.trigger('function_clicked.Narrative', method); })
+                               .append($helpButton);
+
+            return $newFunction;
         },
 
         /**
@@ -216,11 +284,47 @@
 
         /**
          * Shows an error text message on top of the panel. All other pieces are hidden.
-         * @param {string} text - the text of the error message
+         * @param {string} error - the text of the error message
          * @private
          */
-        showError: function(text) {
-            this.$errorPanel.html(text);
+        showError: function(error) {
+            var $errorHeader = $('<div>')
+                               .addClass('alert alert-danger')
+                               .append('<b>Sorry, an error occurred while loading KBase functions.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20function%20loading%20error">help@kbase.us</a> with the information below.');
+
+            this.$errorPanel.empty();
+            this.$errorPanel.append($errorHeader);
+
+            // If it's a string, just dump the string.
+            if (typeof error === 'string') {
+                this.$errorPanel.append($('<div>').append(error));
+            }
+
+            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            else if (typeof error === 'object') {
+                var $details = $('<div>');
+                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
+                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
+
+                var $tracebackDiv = $('<div>')
+                                 .css({
+                                    'white-space' : 'nowrap',
+                                    'float' : 'left',
+                                    'max-width' : '250px',
+                                    'overflow-x' : 'scroll'
+                                 });
+                for (var i=0; i<error.traceback.length; i++) {
+                    $tracebackDiv.append(error.traceback[i] + "<br>");
+                }
+
+                var $tracebackPanel = $('<div>');
+                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
+
+                this.$errorPanel.append($details)
+                                .append($tracebackPanel);
+                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+            }
+
             this.$functionPanel.hide();
             this.$loadingPanel.hide();
             this.$errorPanel.show();

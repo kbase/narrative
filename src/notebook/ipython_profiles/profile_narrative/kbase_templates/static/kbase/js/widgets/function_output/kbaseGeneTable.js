@@ -39,10 +39,17 @@
         wsUrl: "http://kbase.us/services/workspace/",
 
         init: function(options) {
-            console.debug("GeneTableWidget.init", options);
-            var self = this;
+            console.debug("GeneTableWidget.init.start", options);
             this._super(options);
-            return this.render();
+            // on error, may be called with null
+            if (this.options.table !== null && this.options.table.length > 1) {
+                this.render();
+            }
+            else {
+                this.$elem.html("No result");
+            }
+            console.debug("GeneTableWidget.init.end");
+            return this;
         },
 
         render: function() {

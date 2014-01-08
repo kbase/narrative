@@ -197,20 +197,20 @@ def gwas_create_population_trait_object(meth, GwasPopulation_obj_id=None, popula
                                         unit_of_measure=None):
     """DESCRIPTION NEEDED.
 
-    :param GwasPopulation_obj_id:Object id of the population data
-    :type GwasPopulation_obj_id:kbtypes.WorkspaceObjectId
-    :param population_trait_file_id:File id of uploaded trait file
-    :type population_trait_file_id:kbtypes.WorkspaceObjectId
-    :param protocol:A brief description of the experimental protocol used for measuring the trait  
-    :type protocol:kbtypes.Unicode
+    :param GwasPopulation_obj_id: Object id of the population data
+    :type GwasPopulation_obj_id: kbtypes.WorkspaceObjectId
+    :param population_trait_file_id: File id of uploaded trait file
+    :type population_trait_file_id: kbtypes.WorkspaceObjectId
+    :param protocol: A brief description of the experimental protocol used for measuring the trait
+    :type protocol: kbtypes.Unicode
     :param comment: Comment 
-    :type comment:kbtypes.Unicode
-    :param originator:Name of lab or PI  
-    :type originator:kbtypes.Unicode
-    :param output_trait_object_name:object_id that will appear in workspace  
-    :type output_trait_object_name:kbtypes.WorkspaceObjectId
+    :type comment: kbtypes.Unicode
+    :param originator: Name of lab or PI
+    :type originator: kbtypes.Unicode
+    :param output_trait_object_name: object_id that will appear in workspace
+    :type output_trait_object_name: kbtypes.WorkspaceObjectId
     :param kbase_genome_id: kbase genome id of the genome  
-    :type kbase_genome_id:kbtypes.Genome
+    :type kbase_genome_id: kbtypes.Genome
     :param trait_ontology_id: Trait ontology id
     :type trait_ontology_id:kbtypes.Unicode
     :param trait_name:Brief name of trait
@@ -435,6 +435,7 @@ def gene_table(meth, workspace_id=None, obj_id=None):
     meth.stages = 1
     meth.advance("Retrieve gene from workspace")
     if not workspace_id:
+        meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
         workspace_id = meth.workspace_id
     ws = Workspace(url=URLS.workspace, token=meth.token, name=workspace_id)
     raw_data = ws.get(obj_id, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)

@@ -82,6 +82,16 @@ class AweJob(object):
         return remain_tasks
 
 
+class WorkspaceException(Exception):
+    """More friendly workspace exception messages.
+    """
+    def __init__(self, command, params, err):
+        fmt_params = ", ".join(["{nm}='{val}'".format(nm=k, val=params[k]) for k in sorted(params.keys())])
+        oper = "{}({})".format(command, fmt_params)
+        msg = "Workspace.{o}: {e}".format(o=oper, e=err)
+        Exception.__init__(self, msg)
+
+
 class Workspace(WS):
     """Simple wrapper for KBase workspace service.
     """
@@ -100,10 +110,16 @@ class Workspace(WS):
         # XXX: this is dumb -- better way to do this?!
         if instance is None:
             params['asHash'] = False
-            result = self.object_history(params)
+            try:
+                result = self.object_history(params)
+            except Exception as err:
+                raise WorkspaceException("object_history", params, err)
             instance = len(result) - 1
         # get selected instance
         params.update({'asJSON': as_json, 'instance': instance})
-        obj = self.get_object(params)
+        try:
+            obj = self.get_object(params)
+        except Exception as err:
+            raise WorkspaceException("get_object", params, err)
         # return the object
         return obj

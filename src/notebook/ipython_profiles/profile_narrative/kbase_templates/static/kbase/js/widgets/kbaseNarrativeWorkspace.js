@@ -253,9 +253,22 @@
                                     "<p class='text-success'/>" +
                                   "</div>";
 
+                // Associate method title with description via BS3 collapsing
+                var methodId = cellId + "-method-details";
+                var buttonLabel = "...";
+                var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
+                var methodInfo = "<div class='kb-func-desc'>" +
+                                   "<h1>" + method.title + "</h1>" +
+                                   "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
+                                      " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
+                                    "<h2 class='collapse' id='" + methodId + "'>" +
+                                      methodDesc + "</h2>" +
+                                  "</div>";
+
                 // Bringing it all together...
                 cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
-                                  "<h1>" + method.title + "</h1>" +
+                                  //"<h1>" + method.title + "</h1>" +
+                                  methodInfo +
                                   "<div>" +  
                                       inputDiv +
                                       buttons + 
@@ -263,7 +276,8 @@
                                   progressBar +
                               "</div>\n" + 
                               "<script>" + 
-                              "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" + this.safeJSONStringify(method) + "'});" +
+                              "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" +
+                               this.safeJSONStringify(method) + "'});" +
                               "</script>";
             }
             else {
@@ -291,7 +305,7 @@
          * @return {string} JSON string
          */
         safeJSONStringify: function(method) {
-            var esc = function(s) { return s.replace(/'/g, "&apos;"); };
+            var esc = function(s) { return s.replace(/'/g, "&apos;").replace(/"/g, "&quot;"); };
             return JSON.stringify(method, function(key, value) {
                 return (typeof(value) == "string" && (key == "description" || key == "title")) ?
                     esc(value) : value;

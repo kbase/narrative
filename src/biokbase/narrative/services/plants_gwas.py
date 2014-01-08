@@ -281,13 +281,15 @@ def gwas_create_population_variation_object(meth,population_variation_file_shock
 
 @method(name="VCF-Filtering")
 def maf(meth, maf=0.05, object_id=None):
-    """DESCRIPTION NEEDED.
+    """Perform filtering on Minor allele frequency (MAF).
+    Minor allele frequency (MAF) refers to the frequency at which the least common
+    <a href="http://en.wikipedia.org/wiki/Allele">allele</a> occurs in a given population.
 
     :param maf: Minor allele frequency
     :type maf: kbtypes.Numeric
     :param object_id: Workspace object ID for DESCRIPTION NEEDED
     :type object_id: kbtypes.WorkspaceObjectId
-    :return: Number of jobs that were run
+    :return: Workspace ID of filtered data
     :rtype: kbtypes.Unicode
     """
     meth.stages = 3

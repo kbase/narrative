@@ -8,6 +8,8 @@ import json
 import requests
 import time
 
+from biokbase.workspaceService.Client import workspaceService as WS
+
 
 class AweTimeoutError(Exception):
     def __init__(self, jobid,  timeout):
@@ -78,3 +80,46 @@ class AweJob(object):
         response = json.loads(r.text)
         remain_tasks = response.get("data", dict()).get("remaintasks")
         return remain_tasks
+
+
+class WorkspaceException(Exception):
+    """More friendly workspace exception messages.
+    """
+    def __init__(self, command, params, err):
+        fmt_params = ", ".join(["{nm}='{val}'".format(nm=k, val=params[k]) for k in sorted(params.keys())])
+        oper = "{}({})".format(command, fmt_params)
+        msg = "Workspace.{o}: {e}".format(o=oper, e=err)
+        Exception.__init__(self, msg)
+
+
+class Workspace(WS):
+    """Simple wrapper for KBase workspace service.
+    """
+    def __init__(self, url=None, token=None, name=None):
+        WS.__init__(self, url=url, token=token)
+        self._ws_name = name
+
+    def get(self, objid, objtype, instance=None, as_json=True):
+        # set common parameters
+        params = {
+            'id': objid,
+            'type': objtype,
+            'workspace': self._ws_name
+        }
+        # if instance isn't given, figure out most recent one
+        # XXX: this is dumb -- better way to do this?!
+        if instance is None:
+            params['asHash'] = False
+            try:
+                result = self.object_history(params)
+            except Exception as err:
+                raise WorkspaceException("object_history", params, err)
+            instance = len(result) - 1
+        # get selected instance
+        params.update({'asJSON': as_json, 'instance': instance})
+        try:
+            obj = self.get_object(params)
+        except Exception as err:
+            raise WorkspaceException("get_object", params, err)
+        # return the object
+        return obj

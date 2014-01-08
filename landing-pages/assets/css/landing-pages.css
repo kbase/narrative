@@ -171,7 +171,9 @@ div::-webkit-scrollbar-thumb {
 /* ws browser */
 
 .ws-selector {
-    width: 265px;
+    width: inherit;
+
+    /*width: 265px;*/
 }
 .ws-selector.btn-ws-settings {
     position: absolute;

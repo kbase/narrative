@@ -809,7 +809,7 @@ angular.module('ws-directives')
                     "iDisplayLength": 10,
                     "aaData": [],
                     "fnDrawCallback": events,
-
+                    "aaSorting": [[ 3, "desc" ]],
                   "aoColumns": [
                       { "sTitle": ""},
                       { "sTitle": "Name"}, //"sWidth": "10%"

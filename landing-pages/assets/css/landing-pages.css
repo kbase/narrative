@@ -105,12 +105,13 @@ table {
 
 .scroll-pane {
     height: 200px;
-    overflow: scroll; 
+    overflow-y: scroll; 
+    overflow-x: hi;
 }
 
 
 #select-box tr td{
-    padding: 10px; /* making enough room for button */
+    padding: 6px;
 }
 
 /*#select-box tr :hover {
@@ -183,6 +184,9 @@ div::-webkit-scrollbar-thumb {
 
 .select-ws .badge {
     margin: 0 4px 0 0 ;
+}
+.select-ws .btn-ws-settings {
+    padding: 0px 5px;
 }
 
 .modal-alert {
@@ -289,6 +293,9 @@ float: left;
 }
 .ncheck-minus {
     background: url(../img/checkmark-partial.png) no-repeat -5px -5px;
-    background-image: -webkit-image-set(url(../img/checkmark-partial.png) 1x,url(../img/checkmark_2x.png) 2x);
+    background-image: -webkit-image-set(url(../img/checkmark-partial.png) 1x,url(../img/checkmark-partial_2x.png) 2x);
 }
 
+.btn-select-all {
+    margin: 0 20px 0 0 ;
+}

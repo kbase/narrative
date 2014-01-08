@@ -122,7 +122,6 @@ angular.module('ws-directives')
                     $('.select-box').loading();
                     $.when(prom).done(function(data) {
 
-                        console.log('workspace data', data)
                         $('.select-box').rmLoading();
 
                         var sorted_ws = [];
@@ -283,8 +282,6 @@ angular.module('ws-directives')
                             if (read && perm === 'r') show = true;
                             if (!show && read && global_perm === 'r') show = true;
                             if (show && owner && user != USER_ID) show = false;
-                            console.log('global', owner)
-
 
                             if (!show) {
                                 $('.select-box table tr:nth-child('+j+')').hide();
@@ -383,7 +380,6 @@ angular.module('ws-directives')
                         var placeholder = $('<div></div>').loading()
                         modal_body.append(placeholder);                        
                         $.when(prom).done(function(data) {
-                            console.log('perm data', data)
                             permData = data
 
                             //newPerms = $.extend({},data)
@@ -441,8 +437,6 @@ angular.module('ws-directives')
                             
                             newPerms[user] = perm
                         })
-                        console.log('new perms', newPerms)
-
 
                         // create new permissions for each user that does not currently have 
                         // permsissions.
@@ -475,7 +469,6 @@ angular.module('ws-directives')
                             if (user == '*' || user == USER_ID) continue;                            
 
                             if ( !(user in newPerms) ) {
-                                console.log('removing:', user)
                                 var params = {
                                     workspace: ws_name,
                                     new_permission: 'n',
@@ -503,7 +496,6 @@ angular.module('ws-directives')
                     //table for displaying user permissions
                     function getPermTable(data) {
                         var table = $('<table class="table table-bordered perm-table"></table>');
-                        console.log('user perms', data);
                         // if there are no user permissions, display 'none'
                         // (excluding ~global 'user' and owner)
                         var perm_count = Object.keys(data).length;
@@ -541,7 +533,6 @@ angular.module('ws-directives')
                                 <span class="glyphicon glyphicon-trash"></span></button></tr>');
 
                             row.find('.rm-perm').click(function(){
-                                console.log('removing', $(this).data('user'))
                                 $(this).closest('tr').remove();                            
                             });
 
@@ -732,7 +723,6 @@ angular.module('ws-directives')
                                             return;
                                         }                   
 
-                                        console.log('calling clone workspace with:', params)
                                         var prom = kb.kbwsAPI().clone_workspace(params);
                                         $prompt.addCover()
                                         $prompt.getCover().loading()
@@ -810,6 +800,8 @@ angular.module('ws-directives')
 
             link: function(scope, element, attrs) {
                 var ws = scope.selected_ws;
+                var showObjOpts = false;
+                var checkedList = []
 
                 var tableSettings = {
                     "sPaginationType": "bootstrap",
@@ -845,7 +837,11 @@ angular.module('ws-directives')
 
                     var table = $('#obj-table-'+ws).dataTable(tableSettings);
 
-                    $(element).prepend('<div class="object-options"></div>')
+                    //$(element).prepend('<div class="object-options"></div>')
+                    $('.table-options').append('<button class="btn btn-default btn-select-all">\
+                        <div class="ncheck check-option"></div></button> ')
+                
+                    checkBoxObjectClickEvent('.obj-check-box');
                 }).fail(function(e){
                     $(element).html('<div class="alert alert-danger">'+e.error.error.split('\n')[0]+'</div>');
                 })
@@ -860,10 +856,10 @@ angular.module('ws-directives')
                         var type = obj[1];
                         var instance = obj[3];
 
-                        var check = '<div class="ncheck check-option"'
-                                + ' data-workspace="' + obj.workspace + '"'
-                                + ' data-type="' + obj.type + '"'
-                                + ' data-id="' + obj.id + '"></div>';
+                        var check = '<div class="ncheck obj-check-box check-option"'
+                                + ' data-workspace="' + ws + '"'
+                                + ' data-type="' + type + '"'
+                                + ' data-id="' + id + '"></div>';
 
                         var wsarray = [check, id,
                                        type,
@@ -877,9 +873,15 @@ angular.module('ws-directives')
                                         //+'<a class="add-to-mv pull-right">'
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
+                        var match = (type.split('.')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) !== null ? true : false);
+                        if (match) {
+                            var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                                    +id+'</a> (<a class="show-versions">'+instance+'</a>)';
+                        } else {
+                            var new_id = '<span class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                                    +id+'</span> (<a class="show-versions">'+instance+'</a>)';                            
+                        }
 
-                        var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                                +id+'</a> (<a class="show-versions">'+instance+'</a>)';
 
                         wsarray[1] = new_id
                         wsobjs.push(wsarray);
@@ -887,11 +889,12 @@ angular.module('ws-directives')
                     return wsobjs
                 }
 
+
                 function events() {
                     // event for clicking on a workspace id
                     $('.obj-id').unbind('click');                    
                     $('.obj-id').click(function(){
-                        var type = $(this).data('obj-type');
+                        var type = $(this).data('obj-type').split('.')[0];
                         var id = $(this).data('obj-id');
 
                         if (type == 'Genome') {
@@ -902,7 +905,12 @@ angular.module('ws-directives')
                             scope.$apply( $location.path('/fbas/'+ws+'/'+id) );
                         } else if (type == 'Media') {
                             scope.$apply( $location.path('/media/'+ws+'/'+id) );
+                        } else if (type == 'Cmonkey') {
+                            scope.$apply( $location.path('/cmonkey/'+ws+'/'+id) );                            
+                        } else if (type == 'Bambi') {
+                            scope.$apply( $location.path('/bambi/'+ws+'/'+id) );                            
                         }
+
                     })
 
                     // event for adding a object to, say, model viewer
@@ -917,7 +925,6 @@ angular.module('ws-directives')
                     // event for showing object history
                     $('.show-versions').unbind('click')
                     $('.show-versions').click(function() {
-                        console.log('show versions')
                         var type = $(this).prev('.obj-id').data('obj-type');
                         var id = $(this).prev('.obj-id').data('obj-id');
 
@@ -936,7 +943,6 @@ angular.module('ws-directives')
                         var prom = kb.kbwsAPI().get_object_history({workspace: ws, name: id});
                         $.when(prom).done(function(data) {
                             modal_body.rmLoading();
-                                console.log(data)
                             modal_body.append('<b>ID</b>: '+data[0][0]+'<br>')
                             modal_body.append('<b>Type</b>: '+data[0][2])                            
                             var info = $('<table class="table table-striped table-bordered">');
@@ -959,24 +965,54 @@ angular.module('ws-directives')
                         })
                     })
 
-                    //checkBoxObjectClickEvent('.check-option')
-
+                    checkBoxObjectClickEvent()
+                    
                 }
 
 
-
-                var checkedList = []
-                function checkBoxObjectClickEvent(ele) {
+                function checkBoxObjectClickEvent() {
                     // if select all checkbox was clicked
-                    if (!ele) {
-                        addOptionButtons();
-                        objOptClick()            
-                        return;
-                    }
+                    $('.btn-select-all').unbind('click') 
+                    $('.btn-select-all').click(function(){
+                        console.log('clicked', showObjOpts)
+                        // if select all button is already checked, removed all checked
+                        if ($(this).find('.check-option').hasClass('ncheck-checked')) {
+                            $('.obj-check-box').removeClass('ncheck-checked');
+                            $(this).find('.check-option').removeClass('ncheck-checked');
+                            checkedList = []
+                        // otherwise, check all
+                        } else {
+                            $('.obj-check-box').addClass('ncheck-checked');
+                            $(this).find('.check-option').removeClass('ncheck-minus');
+                            $(this).find('.check-option').addClass('ncheck-checked');
+
+                            checkedList = [];
+                            $('.obj-check-box').each(function(){
+                                var id = $(this).attr('data-id');
+                                var dataWS = $(this).attr('data-workspace');
+                                var dataType = $(this).attr('data-type');
+                                checkedList.push([id, dataWS, dataType]);
+                            })
+                            console.log('new length:', checkedList.length)
+                        }
+
+                        if (!showObjOpts){
+                            addOptionButtons()
+                            objOptClick()
+                            showObjOpts = true;
+                        }
+                        if (checkedList.length == 0){
+                            $('.object-options').html('');
+                            showObjOpts = false;                            
+                        } 
+
+
+                    })
+
 
                     // checkbox click event
-                    $(ele).unbind('click');
-                    $(ele).click(function(){
+                    $('.obj-check-box').unbind('click');
+                    $('.obj-check-box').click(function(){
                         var id = $(this).attr('data-id');
                         //var modelID = get_fba_model_id( $(this).attr('data-id') );            
                         var dataWS = $(this).attr('data-workspace');
@@ -986,6 +1022,7 @@ angular.module('ws-directives')
                             $(this).removeClass('ncheck-checked');
                             for (var i = 0; i < checkedList.length; i++) {
                                 if (checkedList[i][0] == id) {
+                                    console.log('removing', id)
                                     checkedList.splice(i,1);
                                 }
                             }
@@ -994,53 +1031,43 @@ angular.module('ws-directives')
                             $(this).addClass('ncheck-checked');
                         }
 
-                        addOptionButtons()
-                        objOptClick()
+                        console.log(checkedList.length)
+
+                        if (!showObjOpts){
+                            addOptionButtons()
+                            objOptClick()
+                            showObjOpts = true;
+                        }
+
+                        if (checkedList.length == 0){
+                            $('.object-options').html('');
+                            $('.btn-select-all').find('.check-option')
+                                        .removeClass('ncheck-checked');                            
+                            showObjOpts = false;
+                        } 
+                        console.log('checked list:',checkedList)
                     })
+
                 }
-
-
 
                 function addOptionButtons() {
-                    /* if options dropdown doesn't exist, add it (at top of table) */
-                        console.log('adding options')
-                        // container for options
-                        $('.object-options').append('<div class="checked-opts obj-opt"></div>')
+                    var form = $('<span class="object-options">');
 
-                        // delete button
-                        $('.checked-opts').append('<a class="btn obj-btn opt-delete btn-danger">\
-                                                   <i class="icon-trash icon-white"></i></a>')
+                    form.append('<button class="btn btn-danger btn-delete-obj">\
+                        <span class="glyphicon glyphicon-trash"></span></button> ');
 
-                        // move, copy, download button
-                        $('.checked-opts').append('<div class="dropdown obj-opt opt-dropdown"> \
-                                            <a class="btn obj-btn dropdown-toggle" type="button" data-toggle="dropdown"> \
-                                         <i class="icon-folder-open"></i> <span class="caret"></span></a>\
-                                         <ul class="dropdown-menu"> \
-                                          <li opt="copy"><a>Copy</a> </li> \
-                                          <li  opt="move"><a>Move</a></li> \
-                                          <li class="divider"><a></a></li> \
-                                          <li><a>Download</li> \
-                                    </ul></div>');
-                                        //<i class="icon-download-alt"></i></a>
+                    form.append('<button class="btn btn-default btn-mv-dd">\
+                        <span class="glyphicon glyphicon-folder-open"></span>\
+                        <span class="caret"></span></button>');
 
-                        // model viewer button
-                        if ($(this).attr('data-type') == "FBA") {
-                            var url = 'http://mcs.anl.gov/~nconrad/model_viewer/#models?kbids='+id+'&ws='+dataWS+'&tab=core';
-                            $('.checked-opts').append('<div class="btn obj-opt opt-delete" type="button" \
-                                onclick="location.href='+"'" +url+"'"+'" >Model Viewer</div>');
-                        }
-         
-//
-  //                      $('.checked-opts').remove();
-    //                    $('.select-objs .ncheck-btn').removeClass('ncheck-minus')                
+                    var container = $('.table-options').append(form);
 
                 }
-
-
+ 
                 // events for top row options on objects, after checked
                 function objOptClick() {
-                    $('.opt-delete').unbind('click')
-                    $('.opt-delete').click(function(){
+                    $('.btn-delete-obj').unbind('click')
+                    $('.btn-delete-obj').click(function(){
                         deleteObjects(checkedList)
                     });
 
@@ -1052,6 +1079,25 @@ angular.module('ws-directives')
                             moveObjects(checkedList);
                         }
                     })
+                }
+
+
+
+
+                function detelObjects() {
+                    console.log('deleting', checkedList)
+
+                    var params = {}
+                    var prom = kb.kbwsAPI().delete_workspace(params)
+
+
+                    $.when(prom).done(function(data){
+
+                        
+                    })
+
+
+
                 }
 
             }

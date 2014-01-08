@@ -89,7 +89,7 @@
             });
 
             // Build the list of available functions.
-            $("#function-test").kbaseNarrativeFunctionPanel({});
+            $("#function-panel").kbaseNarrativeFunctionPanel({});
 
             // Initialize the data table.
             this.initControls(options.controlsElem);
@@ -759,8 +759,6 @@
             if (typeof result === 'string')
                 result = JSON.parse(result);
 
-            console.log(result);
-
             if (!result.embed) {
                 //do something.
                 return;
@@ -784,11 +782,11 @@
                             // Disable most actions on this element'
                             '$("#'+uuid+'").off("click dblclick keydown keyup keypress focus");',
                             '</script>'].join('\n');
-            console.log(cellText);
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
             outputCell.render();
 
+            this.resetProgress(cell);
             this.trigger('updateData.Narrative');
         },
 

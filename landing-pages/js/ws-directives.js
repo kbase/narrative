@@ -192,13 +192,14 @@ angular.module('ws-directives')
                     var filterRead  = filterCollapse.find('#ws-filter-read').change(filter);
                     //var search = filterSearch.val();
 
-                    // modal for create new workspace
-
+                    // event for clicking on 'create new workspace'
+                    $('.new-ws').unbind('click');
                     $('.new-ws').click(function() {
                         createWorkspaceModal();
                     });
 
                     // events for search box
+                    $('.search-query').unbind('click');
                     $('.search-query').keyup(function() {
                         $('.select-box').find('td').show();
                             var input = $(this).val();
@@ -212,6 +213,7 @@ angular.module('ws-directives')
                     });
 
                     // events for filters at top of ws selector
+                    $('.show-filters').unbind('click');
                     $('.show-filters').click(function() {
                         $(this).parent().find('.perm-filters').slideToggle(function() {
 
@@ -228,6 +230,7 @@ angular.module('ws-directives')
                     });
 
                     // event for selecting a workspace on the sidebar
+                    $('.select-ws').not('.btn-ws-settings').unbind('click');
                     $('.select-ws').not('.btn-ws-settings').click(function() {
                         var ws = $(this).data('ws');
                         $('.select-ws').removeClass('selected-ws');
@@ -236,6 +239,7 @@ angular.module('ws-directives')
                     });
 
                     // event for settings (manage modal) button
+                    $('.btn-ws-settings').unbind('click')
                     $('.btn-ws-settings').click(function(e) {
                         e.stopPropagation();
                         e.preventDefault();
@@ -244,7 +248,7 @@ angular.module('ws-directives')
                     })
 
 
-                    // event for resizing ws selector scroll bars
+                    // event for resizing ws selector scroll bars //fixme
                     $(window).resize(function () {
                         // only adjust of ws selector is visible
                         if ($(element).is(':visible')) {
@@ -296,6 +300,12 @@ angular.module('ws-directives')
 
                 function manageModal(ws_name) {
                     var settings = scope.workspace_dict[ws_name];
+                    console.log(settings)
+
+                    var prom = kb.kbwsAPI().get_workspace_description({workspace:ws_name})
+                    $.when(prom).done(function() {
+                        console.log('blah', data)
+                    })
 
                     var isAdmin;
                     if (settings[4] == 'a') {
@@ -305,7 +315,7 @@ angular.module('ws-directives')
                     }
 
                     // table of meta data
-                    var table = $('<table class="table table-bordered manage-table table-striped">');                
+                    var table = $('<table class="table table-bordered table-condensed table-striped manage-table">');                
                     var data = [
                         ['Name', settings[0]],
                         ['Objects', '~ ' + settings[3] ],
@@ -315,8 +325,7 @@ angular.module('ws-directives')
                     ];
                     for (var i=0; i<data.length; i++) {
                         var row = $('<tr>');
-                        row.append(
-                            '<td class="manage-modal-attribute"><strong>' + data[i][0] + '</strong></td>'
+                        row.append('<td class="manage-modal-attribute"><strong>' + data[i][0] + '</strong></td>'
                                 + '<td class="manage-modal-value">' + data[i][1] + '</td>');
                         table.append(row);
                     }
@@ -354,6 +363,7 @@ angular.module('ws-directives')
                         })
 
                     manage_modal.openPrompt();
+                    manage_modal.data('dialogModal').find('.modal-dialog').css('width', '500px');
 
                     var cloneWS = $('<button class="btn btn-link pull-left">Clone</button>');
                     cloneWS.click(function() {
@@ -497,7 +507,8 @@ angular.module('ws-directives')
                         // if there are no user permissions, display 'none'
                         // (excluding ~global 'user' and owner)
                         var perm_count = Object.keys(data).length;
-                        if (perm_count == 1) {
+                        console.log(perm_count)
+                        if (perm_count <= 2) {
                             var row = $('<tr><td>None</td></tr>');
                             table.append(row);
                             return table;
@@ -604,17 +615,23 @@ angular.module('ws-directives')
                 function createWorkspaceModal() {
                     var body = $('<form class="form-horizontal" role="form">\
                                       <div class="form-group">\
-                                        <label class="col-sm-5 control-label">Workspace Name</label>\
+                                        <label class="col-sm-4 control-label">Workspace Name</label>\
                                         <div class="col-sm-4">\
                                           <input type="text" class="form-control create-id">\
                                         </div>\
                                       </div>\
                                       <div class="form-group">\
-                                        <label class="col-sm-5 control-label">Permsission</label>\
+                                        <label class="col-sm-4 control-label">Permsission</label>\
                                         <div class="col-sm-3">\
                                          <select class="form-control create-permission" data-value="n">\
                                             <option value="n" selected="selected">none</option>\
                                             <option value="r">read</option></select>\
+                                        </div>\
+                                      </div>\
+                                      <div class="form-group">\
+                                        <label class="col-sm-4 control-label">Description</label>\
+                                        <div class="col-sm-7">\
+                                          <textarea class="form-control create-descript" rows="3"></textarea>\
                                         </div>\
                                       </div>\
                                   </div>')
@@ -630,11 +647,13 @@ angular.module('ws-directives')
                                 callback : function(e, $prompt) {
                                         var ws_id = $('.create-id').val();
                                         var perm = $('.create-permission option:selected').val();
+                                        var descript = $('.create-descript').val();
                                         var params = {
                                             //auth: USER_TOKEN,  //wsdeluxe
                                             workspace: ws_id,
                                             //default_permission: perm
-                                            globalread: perm
+                                            globalread: perm,
+                                            description: descript
                                         };
 
                                         if (ws_id === '') {
@@ -738,11 +757,9 @@ angular.module('ws-directives')
                     cloneModal.openPrompt();
                 }
 
-
                 function deleteWorkspace(ws_name) {
                     var body = $('<div style="text-align: center;">Are you sure you want to delete this workspace?<h3>'
                                     +ws_name+'</h3>This action is irreversible.</div>');
-                    
 
                     var deleteModal = $('<div></div>').kbasePrompt({
                             title : 'Delete Workspace',
@@ -781,16 +798,17 @@ angular.module('ws-directives')
                             }]
                         }
                     );
-
                     deleteModal.openPrompt();
                     deleteModal.addAlert('<strong>Warning</strong> All objects in the workspace will be deleted!');
                 }
-
-
             }  /* end link */
-
         };
     })
+
+
+
+
+
 
     .directive('objtable', function($location) {
         return {
@@ -847,7 +865,7 @@ angular.module('ws-directives')
                         $('.table-options').append('<button class="btn btn-default btn-select-all">\
                             <div class="ncheck check-option"></div></button> ');
 
-                        var select = $('<select class="input-small type-filter form-control">\
+                        var select = $('<select class=" type-filter form-control">\
                                             <option selected="selected">All Types</option> \
                                         </select>')
                         for (var type in type_counts) {
@@ -885,7 +903,6 @@ angular.module('ws-directives')
                         var obj = objs[i];
                         var id = obj[1];
                         var type = obj[2].split('.')[0];
-                        console.log(type)
                         var date = obj[3].split('+')[0].replace('T',' ');
                         var instance = obj[4];
                         var owner = obj[5];
@@ -915,16 +932,17 @@ angular.module('ws-directives')
                                         //+'<a class="add-to-mv pull-right">'
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
+
                         var match = (type.split('.')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) !== null ? true : false);
                         if (match) {
                             var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                                    +id+'</a> (<a class="show-versions">'+instance+'</a>)';
+                                    +id+'</a> (<a class="show-versions">'+instance+'</a>)\
+                                        <a class="btn-show-info hide pull-right">More</a>'
                         } else {
                             var new_id = '<span class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                                    +id+'</span> (<a class="show-versions">'+instance+'</a>)';                            
+                                    +id+'</span> (<a class="show-versions">'+instance+'</a>)\
+                                        <a class="btn-show-info hide pull-right">More</a>';
                         }
-
-
 
                         wsarray[1] = new_id
                         wsobjs.push(wsarray);
@@ -954,6 +972,22 @@ angular.module('ws-directives')
                         } else if (type == 'Bambi') {
                             scope.$apply( $location.path('/bambi/'+ws+'/'+id) );                            
                         }
+                    })
+
+                    $('.obj-id').parents('td').unbind('click');
+                    $('.obj-id').parents('td').hover(function() {
+                        $(this).find('.btn-show-info').removeClass('hide');
+                    }, function() {
+                        $(this).find('.btn-show-info').addClass('hide');
+                    })
+
+                    $('.btn-show-info').unbind('click');
+                    $('.btn-show-info').click(function() {
+//                        var type = $(this).prev('.obj-id').data('.obj-type').split('.')[0];
+                        var id = $(this).parent('td').find('.obj-id').data('obj-id');
+                        console.log(id)
+                        showObjectInfo(ws, id);
+
 
                     })
 
@@ -989,7 +1023,7 @@ angular.module('ws-directives')
                             modal_body.rmLoading();
                             modal_body.append('<b>ID</b>: '+data[0][0]+'<br>')
                             modal_body.append('<b>Type</b>: '+data[0][2])                            
-                            var info = $('<table class="table table-striped table-bordered">');
+                            var info = $('<table class="table table-striped table-bordered table-condensed">');
                             var header = $('<tr><th>Mod Date</th>\
                                                 <th>Vers</th>\
                                                 <th>Owner</th>\
@@ -1010,7 +1044,6 @@ angular.module('ws-directives')
                     })
 
                     checkBoxObjectClickEvent()
-                    
                 }
 
 
@@ -1102,8 +1135,7 @@ angular.module('ws-directives')
                                     <ul class="dropdown-menu" role="menu">\
                                         <!--<li><a class="btn-mv-obj">Move</a></li>-->\
                                         <li><a class="btn-cp-obj">Copy</a></li>\
-                                    </ul>\
-                                </div>');
+                                    </ul></div>');
                     // if user has narrative home workspace, add option to copy there
                     if (scope.workspace_dict[USER_ID+'_home']) {
                         var dd = options.find('.dropdown-menu')
@@ -1136,7 +1168,90 @@ angular.module('ws-directives')
                     })
                 }
 
+                function showObjectInfo(ws, id) {
+                    var info_modal = $('<div></div>').kbasePrompt({
+                            title : id,
+                            modalClass : '', 
+                            controls : ['closeButton']
+                        })
 
+                    info_modal.openPrompt();
+                    info_modal.data('dialogModal').find('.modal-dialog').css('width', '500px');
+                    var modal_body = info_modal.data('dialogModal').find('.modal-body');
+
+                    var params = [{workspace: ws, name: id}]
+                    var prom = kb.kbwsAPI().get_object_info(params);
+                    modal_body.loading();
+                    $.when(prom).done(function(data) {
+                        modal_body.rmLoading();
+                        var data = data[0];  // only 1 object was requested
+                        
+                        modal_body.append('<h5>Meta Data</h5>');
+                        if (data[10] > 0) {
+                            var table = $('<table class="table table-striped table-bordered table-condensed">');
+                            var keys = [];
+                            for (var key in data[10]) {
+                                table.append('<tr><td><b>'+key+'</b></td><td>'+data[i]+'</td></tr>')
+                            }
+                            modal_body.append(table);
+                        } else {
+                            modal_body.append('none');                            
+                        }
+
+                        var items = ['id', 'name', 'type', 'moddate', 'instance','command','lastmodifier',
+                                        'owner','workspace','ref','checksum']
+                        modal_body.append('<h5>Properties</h5>');
+                        var table = $('<table class="table table-striped table-bordered table-condensed">');
+                        for (var i=0; i <data.length-1; i++) {
+                            table.append('<tr><td><b>'+items[i]+'</b></td><td>'+data[i]+'</td></tr>')
+                        }
+                        modal_body.append(table);                        
+
+                        var download = $('<a class="btn btn-default pull-left">Download\
+                                    <span class="glyphicon glyphicon-download-alt"></span></a>')
+                        download.click(function() {
+
+                            var saveData = (function () {
+                                var a = document.createElement("a");
+                                document.body.appendChild(a);
+                                a.style = "display: none";
+                                return function (data, fileName) {
+                                    var json = JSON.stringify(data),
+                                        blob = new Blob([json], {type: "octet/stream"}),
+                                        url = window.URL.createObjectURL(blob);
+                                    a.href = url;
+                                    a.download = fileName;
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                };
+                            }());
+
+                            var prom = kb.kbwsAPI().get_objects([{workspace: ws, name:id}])
+                            $.when(prom).done(function(json) {
+                                var fileName = id+'.'+data[4]+'.json';
+                                saveData(json[0], fileName);
+                            })
+
+                        })
+                        info_modal.data('dialogModal').find('.modal-footer .text-left').append(download);
+
+                        var open = $('<a class="open-obj pull-left">Open</a>')
+                        open.click(function() {
+                            var fileName = id+'.'+data[4]+'.json';
+                            var jsonWindow = window.open(fileName,"_blank");
+                            var prom = kb.kbwsAPI().get_objects([{workspace: ws, name:id}])
+                            $.when(prom).done(function(json) {
+                                jsonWindow.document.write(JSON.stringify(json[0]));
+                            })                            
+                        })
+                        info_modal.data('dialogModal').find('.modal-footer .text-left').append(open);
+                    })
+
+
+
+
+
+                }
 
 
                 function displayTrashBin() {
@@ -1145,7 +1260,6 @@ angular.module('ws-directives')
                 }
 
                 function deteleObjects() {
-                    console.log('deleting', checkedList)
                     var params = {}
                     var prom = kb.kbwsAPI().delete_workspace(params)
                     $.when(prom).done(function(data){
@@ -1178,7 +1292,6 @@ angular.module('ws-directives')
                                 type : 'primary',
                                 callback : function(e, $prompt) {
                                     var ws = $('.select-ws option:selected').val()
-                                    console.log(ws)
                                     confirmCopy(ws);
                                 }
                             }]
@@ -1191,7 +1304,6 @@ angular.module('ws-directives')
 
 
                 function copyObjectsToNarrative() {
-                    console.log('called copy to narr', USER_ID+'_home')
                     confirmCopy(USER_ID+'_home');
                 }
 
@@ -1219,7 +1331,6 @@ angular.module('ws-directives')
                                         var obj_name = checkedList[i][0];
                                         var params = {from: {workspace: ws, name: obj_name},
                                                       to: {workspace: new_ws, name: obj_name}}
-                                        console.log(params)
                                         var prom = kb.kbwsAPI().copy_object(params);
                                         proms.push(prom);
                                     }

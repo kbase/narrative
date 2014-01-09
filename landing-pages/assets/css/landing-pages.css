@@ -310,3 +310,13 @@ float: left;
 .btn-trash { 
     margin: 3px 20px 0 0;
 }
+
+
+.btn-show-info .glyphicon{
+    padding: 0px 0px 4px 0px;
+}
+
+
+.open-obj {
+    margin: 7px 0 0 20px;
+}

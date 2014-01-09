@@ -39,8 +39,8 @@ function KBCacheClient(token) {
     var cache = new Cache();    
 
     this.req = function(service, method, params) {
-        if (!params) var params = {auth: auth.token};
-        else params.auth = auth.token;  // Fixme: set auth in client object
+        //if (!params) var params = {auth: auth.token};
+        //else params.auth = auth.token;  // Fixme: set auth in client object
 
         // see if api call has already been made        
         var data = cache.get(service, method, params);

@@ -108,7 +108,7 @@ angular.module('ws-directives')
 
                 //global list and dict of fetched workspaces
                 var workspaces = [];
-                var workspace_dict = {};
+                scope.workspace_dict = {};
 
                 var nav_height = 100;
 
@@ -116,7 +116,7 @@ angular.module('ws-directives')
                     $('#select-box .table').remove();
                     $('#select-box').append('<table class="table table-bordered table-condensed table-hover"></table>');
                     workspaces = []
-                    workspace_dict = {}
+                    scope.workspace_dict = {}
 
                     var prom = kb.kbwsAPI().list_workspaces({});
                     $('.select-box').loading();
@@ -170,7 +170,7 @@ angular.module('ws-directives')
                             })
                             $(".select-box table").append(selector);
 
-                            workspace_dict[name] = ws; //store in dictionary for optimization
+                            scope.workspace_dict[name] = ws; //store in dictionary for optimization
                         }
 
                         workspaces = data;
@@ -295,7 +295,7 @@ angular.module('ws-directives')
                 } /* end events */
 
                 function manageModal(ws_name) {
-                    var settings = workspace_dict[ws_name];
+                    var settings = scope.workspace_dict[ws_name];
 
                     var isAdmin;
                     if (settings[4] == 'a') {
@@ -347,7 +347,7 @@ angular.module('ws-directives')
                                         savePermissions(ws_name, function() {
                                             $prompt.addCover('Permissions saved.', 'success');
                                         }, function() {
-                                            $prompt.addCover(e.error.error.split('\n')[0], 'danger');                                            
+                                            $prompt.addCover(e.error.message, 'danger');                                            
                                         })
                                 }
                             }]
@@ -423,7 +423,7 @@ angular.module('ws-directives')
 
 
                     function savePermissions(ws_name, cb, fail_cb) {
-                        var settings = workspace_dict[ws_name];
+                        var settings = scope.workspace_dict[ws_name];
 
                         var newPerms = {};
                         var table = $('.edit-perm-table');
@@ -483,9 +483,7 @@ angular.module('ws-directives')
                         }
 
                         $.when.apply($, promises).done(function() {
-                            // update model to remove 
-
-
+                            // update model to remove
                             cb();
                         }).fail(function() {
                             fail_cb;
@@ -659,8 +657,7 @@ angular.module('ws-directives')
 
                                             $prompt.data('dialogModal').find('.modal-footer').html(btn);                                            
                                         }).fail(function(e) {
-                                            //$prompt.addCover(e.error.errsor.split('\n')[0]);
-                                            $prompt.addCover('could not create workspace', 'danger');                                            
+                                            $prompt.addCover(e.error.message, 'danger');                                            
                                         })
                                 }
                             }]
@@ -823,11 +820,13 @@ angular.module('ws-directives')
                     }
                 }
 
+                // clear object view every load
                 $(element).html('')
                 $(element).loading('loading '+ws+'...')
 
                 // load workspace objects
-                var prom = kb.req('ws', 'list_workspace_objects', {workspace: ws});
+                var prom = kb.req('ws', 'list_objects', 
+                                        {workspaces: [ws]});
                 $.when(prom).done(function(data){
                     $(element).rmLoading();
                     $(element).append('<table id="obj-table-'+ws+'" \
@@ -839,11 +838,11 @@ angular.module('ws-directives')
 
                     tableSettings.aaData = wsobjs;
 
+                    // load object table
                     var table = $('#obj-table-'+ws).dataTable(tableSettings);
 
-                    //$(element).prepend('<div class="object-options"></div>')
-
-                    // if there are objects, add 'select all' button
+                    // if there are objects, add 'select all' button, type filter,
+                    // and trash bin.
                     if (data.length > 0) {
                         $('.table-options').append('<button class="btn btn-default btn-select-all">\
                             <div class="ncheck check-option"></div></button> ');
@@ -852,7 +851,6 @@ angular.module('ws-directives')
                                             <option selected="selected">All Types</option> \
                                         </select>')
                         for (var type in type_counts) {
-                            console.log('"'+type+'"')
                             select.append('<option data-type="'+type+'">'+type+' ('+type_counts[type]+')</option>');
                         }
                         $('.table-options').append(select);
@@ -865,34 +863,44 @@ angular.module('ws-directives')
                             }    
                         });
 
+                        // trash bin link
+                        //var trash_btn = $('<a class="btn-trash pull-right">Trash \
+                        //            <span class="badge trash-count">0</span><a>');
+                        //trash_btn.on('click', displayTrashBin);
+                        //$('.dataTables_filter').append(trash_btn);
+
                         checkBoxObjectClickEvent('.obj-check-box');
                     }
                 }).fail(function(e){
-                    $(element).html('<div class="alert alert-danger">'+e.error.error.split('\n')[0]+'</div>');
+                    $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
                 })
 
 
+                // function that takes json for the object table and formats
                 function formatObjs(objs) {
                     var wsobjs = []
                     var type_counts = {}
 
                     for (var i in objs) {
                         var obj = objs[i];
-                        var id = obj[0];
-                        var type = obj[1];
-                        var instance = obj[3];
+                        var id = obj[1];
+                        var type = obj[2].split('.')[0];
+                        console.log(type)
+                        var date = obj[3].split('+')[0].replace('T',' ');
+                        var instance = obj[4];
+                        var owner = obj[5];
+
 
                         var check = '<div class="ncheck obj-check-box check-option"'
                                 + ' data-workspace="' + ws + '"'
                                 + ' data-type="' + type + '"'
                                 + ' data-id="' + id + '"></div>';
 
-                        var type = type.split('.')[0];
-                        console.log(type)
-                        var wsarray = [check, id,
+                        var wsarray = [check, 
+                                       id,
                                        type,
-                                       obj[2].split('+')[0].replace('T',' '), // moddate
-                                       obj[5]  // owner
+                                       date,
+                                       owner
                                        ];
 
                         if (type in type_counts) {
@@ -917,13 +925,15 @@ angular.module('ws-directives')
                         }
 
 
+
                         wsarray[1] = new_id
                         wsobjs.push(wsarray);
                     }
                     return [wsobjs, type_counts]
                 }
 
-
+                // events for object table.  
+                // This is reloaded on table change/pagination
                 function events() {
                     // event for clicking on a workspace id
                     $('.obj-id').unbind('click');                    
@@ -988,7 +998,7 @@ angular.module('ws-directives')
                             for (var i=0; i<data.length; i++) {
                                 var ver = data[i];
                                 var row = $('<tr>');
-                                row.append('<td>' + ver[3] + '</td>' // type
+                                row.append('<td>' + ver[3].split('+')[0].replace('T',' ') + '</td>' // type
                                          + '<td>' + ver[4] + '</td>'
                                          + '<td>' + ver[5] + '</td>'
                                          + '<td>' + ver[7] + '</td>');
@@ -1004,11 +1014,11 @@ angular.module('ws-directives')
                 }
 
 
+                // event for when an object is checked
                 function checkBoxObjectClickEvent() {
                     // if select all checkbox was clicked
                     $('.btn-select-all').unbind('click') 
                     $('.btn-select-all').click(function(){
-                        console.log('clicked', showObjOpts)
                         // if select all button is already checked, removed all checked
                         if ($(this).find('.check-option').hasClass('ncheck-checked')) {
                             $('.obj-check-box').removeClass('ncheck-checked');
@@ -1027,7 +1037,6 @@ angular.module('ws-directives')
                                 var dataType = $(this).attr('data-type');
                                 checkedList.push([id, dataWS, dataType]);
                             })
-                            console.log('new length:', checkedList.length)
                         }
 
                         if (!showObjOpts){
@@ -1056,7 +1065,6 @@ angular.module('ws-directives')
                             $(this).removeClass('ncheck-checked');
                             for (var i = 0; i < checkedList.length; i++) {
                                 if (checkedList[i][0] == id) {
-                                    console.log('removing', id)
                                     checkedList.splice(i,1);
                                 }
                             }
@@ -1065,7 +1073,6 @@ angular.module('ws-directives')
                             $(this).addClass('ncheck-checked');
                         }
 
-                        console.log(checkedList.length)
 
                         if (!showObjOpts){
                             addOptionButtons()
@@ -1079,23 +1086,37 @@ angular.module('ws-directives')
                                         .removeClass('ncheck-checked');                            
                             showObjOpts = false;
                         } 
-                        console.log('checked list:',checkedList)
                     })
-
                 }
 
                 function addOptionButtons() {
-                    var form = $('<span class="object-options">');
+                    var options = $('<span class="object-options">');
 
-                    form.append('<button class="btn btn-danger btn-delete-obj">\
+                    options.append('<button class="btn btn-danger btn-delete-obj" disabled>\
                         <span class="glyphicon glyphicon-trash"></span></button> ');
 
-                    form.append('<button class="btn btn-default btn-mv-dd">\
-                        <span class="glyphicon glyphicon-folder-open"></span>\
-                        <span class="caret"></span></button>');
+                    options.append('<div class="btn-group"><button class="btn btn-default btn-mv-dd" \
+                                        data-toggle="dropdown">\
+                                    <span class="glyphicon glyphicon-folder-open"></span>\
+                                    <span class="caret"></span></button>\
+                                    <ul class="dropdown-menu" role="menu">\
+                                        <!--<li><a class="btn-mv-obj">Move</a></li>-->\
+                                        <li><a class="btn-cp-obj">Copy</a></li>\
+                                    </ul>\
+                                </div>');
+                    // if user has narrative home workspace, add option to copy there
+                    if (scope.workspace_dict[USER_ID+'_home']) {
+                        var dd = options.find('.dropdown-menu')
+                        dd.append('<li class="divider"></li>');
+                        dd.append('<li><a class="btn-mv-obj-to-nar">Copy to Narrative Home</a></li>');
+                    }
 
-                    var container = $('.table-options').append(form);
+                    //options.find('.btn-mv-obj').on('click', moveObjects);
+                    options.find('.btn-cp-obj').on('click', copyObjects);
+                    options.find('.btn-mv-obj-to-nar').on('click', copyObjectsToNarrative);                                        
 
+
+                    var container = $('.table-options').append(options);
                 }
  
                 // events for top row options on objects, after checked
@@ -1118,21 +1139,106 @@ angular.module('ws-directives')
 
 
 
-                function detelObjects() {
-                    console.log('deleting', checkedList)
-
-                    var params = {}
-                    var prom = kb.kbwsAPI().delete_workspace(params)
-
-
-                    $.when(prom).done(function(data){
-
-
-                    })
-
+                function displayTrashBin() {
 
 
                 }
+
+                function deteleObjects() {
+                    console.log('deleting', checkedList)
+                    var params = {}
+                    var prom = kb.kbwsAPI().delete_workspace(params)
+                    $.when(prom).done(function(data){
+                    })
+                }
+
+
+                function copyObjects() {
+                    var workspace = ws; // just getting current workspace
+
+                    var wsSelect = $('<form class="form-horizontal" role="form">\
+                                        <div class="form-group">\
+                                          <label class="col-sm-5 control-label">Destination Workspace</label>\
+                                        </div>\
+                                     </div>');
+
+                    var select = $('<select class="form-control select-ws"></select>')
+                    for (var key in scope.workspace_dict) {
+                        select.append('<option>'+key+'</option>')
+                    }
+                    select = $('<div class="col-sm-5">').append(select);
+                    wsSelect.find('.form-group').append(select);
+
+                    var copyObjectsModal = $('<div></div>').kbasePrompt({
+                            title : 'Copy Objects',
+                            body: wsSelect,
+                            modalClass : '', 
+                            controls : ['cancelButton',
+                                {name : 'Copy',
+                                type : 'primary',
+                                callback : function(e, $prompt) {
+                                    var ws = $('.select-ws option:selected').val()
+                                    console.log(ws)
+                                    confirmCopy(ws);
+                                }
+                            }]
+                        }
+                    );
+
+                    copyObjectsModal.openPrompt();
+                }
+
+
+
+                function copyObjectsToNarrative() {
+                    console.log('called copy to narr', USER_ID+'_home')
+                    confirmCopy(USER_ID+'_home');
+                }
+
+
+                function confirmCopy(new_ws) {
+                    var alert = '<div class="alert alert-danger"><strong>Warning</strong> Are you sure you want to copy these <b>'
+                            +checkedList.length+'</b> objects to <i>'+new_ws+'</i>?';
+
+                    var confirmCopy = $('<div></div>').kbasePrompt({
+                            title : 'Confirm',
+                            body: alert,
+                            modalClass : '',
+                            controls : [{
+                                name: 'No',
+                                type: 'default',
+                                callback: function(e, $prompt) {
+                                    $prompt.closePrompt();
+                                    }
+                                },
+                                {name : 'Yes',
+                                type : 'primary',
+                                callback : function(e, $prompt) {
+                                    var proms = [];
+                                    for (var i in checkedList) {
+                                        var obj_name = checkedList[i][0];
+                                        var params = {from: {workspace: ws, name: obj_name},
+                                                      to: {workspace: new_ws, name: obj_name}}
+                                        console.log(params)
+                                        var prom = kb.kbwsAPI().copy_object(params);
+                                        proms.push(prom);
+                                    }
+
+                                    $.when.apply($, proms).done(function() {
+                                        $prompt.addCover('Copied objects to: <i>'+new_ws+'</i>');
+                                        scope.loadData();
+                                        var btn = $('<button type="button" class="btn btn-primary">Close</button>');
+                                        btn.click(function() { $prompt.closePrompt(); })
+                                        $prompt.data('dialogModal').find('.modal-footer').html(btn);
+                                    }).fail(function() {
+                                        $prompt.addCover('Could not copy some or all of the objects.', 'danger');
+                                    })
+                                }
+                            }]
+                        }
+                    );
+                    confirmCopy.openPrompt();
+                }                
 
             }
 

@@ -1,5 +1,5 @@
 (function($, undefined) {
 	$(function() {
-		$("#my-element").HelloWidget();
+		$("#my-element").HelloWidget({data: ['a','b']});
 	});
 })(jQuery);

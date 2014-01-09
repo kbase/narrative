@@ -15,18 +15,13 @@
             this._super(options);
 
             var self = this;
-            var $helloDiv = $("<div/>")
-                            .css("color", this.options.color)
-                            .append("Hello, world!")
-                            .on("click", function(event) {
-                                self.trigger("helloClick", 
-                                    { 
-                                      message: "hello!", 
-                                      event: event
-                                    }
-                                )
-                            });
-            this.$elem.append($helloDiv);
+
+
+
+            this.$elem.append(options.data[0]);
+
+
+
             return this;
         }
 

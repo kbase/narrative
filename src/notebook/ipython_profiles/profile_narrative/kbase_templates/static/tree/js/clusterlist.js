@@ -148,7 +148,7 @@ var IPython = (function (IPython) {
         var profile_col = $('<span/>').addClass('profile_col col-md-4').text(this.data.profile);
         var status_col = $('<span/>').addClass('status_col col-md-3').html('running');
         var engines_col = $('<span/>').addClass('engines_col col-md-3').html(this.data.n);
-        var stop_button = $('<button/>').addClass("btn btn-mini").text("Stop");
+        var stop_button = $('<button/>').addClass("btn btn-xs").text("Stop");
         var action_col = $('<span/>').addClass('action_col col-md-2').append(
             $("<span/>").addClass("item_buttons btn-group").append(
                 stop_button

@@ -20,12 +20,30 @@
 
 
 var app = angular.module('landing-pages', 
-    ['lp-directives', 'card-directives', 'mv-directives', 'trees-directives', 'ws-directives', 'ui.router'])
+    ['lp-directives', 'card-directives', 'mv-directives', 'trees-directives', 'ws-directives', 'narrative-directives', 'ui.router'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
 
     // with some configuration, we can change this in the future.
     $locationProvider.html5Mode(false);  
+
+    $stateProvider
+        .state('narrative', {
+          url: "/narrative/",
+          templateUrl: 'views/narrative/login.html',
+          controller: 'Narrative'
+        })
+
+    $stateProvider
+        .state('home', {
+          url: "/narrative/home/",
+          templateUrl: 'views/narrative/home.html',
+          controller: 'Narrative'
+        }).state('home.projects', {
+          url: "projects/",
+          templateUrl: 'views/narrative/projects.html',
+          controller: 'Narrative'
+        }) 
 
 
     $stateProvider

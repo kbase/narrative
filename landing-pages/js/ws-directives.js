@@ -1186,7 +1186,7 @@ angular.module('ws-directives')
                         modal_body.rmLoading();
                         var data = data[0];  // only 1 object was requested
                         
-                        modal_body.append('<h5>Meta Data</h5>');
+                        modal_body.append('<h4>Meta Data</h4>');
                         if (data[10] > 0) {
                             var table = $('<table class="table table-striped table-bordered table-condensed">');
                             var keys = [];
@@ -1198,9 +1198,9 @@ angular.module('ws-directives')
                             modal_body.append('none');                            
                         }
 
-                        var items = ['id', 'name', 'type', 'moddate', 'instance','command','lastmodifier',
-                                        'owner','workspace','ref','checksum']
-                        modal_body.append('<h5>Properties</h5>');
+                        var items = ['ID', 'Name', 'Type', 'Moddate', 'Instance','Command',
+                                        'Owner','Workspace','Reference','Checksum']
+                        modal_body.append('<h4>Properties</h4>');
                         var table = $('<table class="table table-striped table-bordered table-condensed">');
                         for (var i=0; i <data.length-1; i++) {
                             table.append('<tr><td><b>'+items[i]+'</b></td><td>'+data[i]+'</td></tr>')

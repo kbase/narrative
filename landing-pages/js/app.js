@@ -126,6 +126,12 @@ var app = angular.module('landing-pages',
              controller: 'ModelDetailCards'})
 
     $stateProvider
+       .state('gptype', {
+            url: '/gwaspopulation/:id',
+            templateUrl: 'views/objects/gptype.html',
+            controller: 'GPTypeDetail'})  
+
+    $stateProvider
         .state('fbasbyws', {
                 url:'/fbas/:ws', 
                 templateUrl: 'views/object-list.html',
@@ -177,6 +183,12 @@ var app = angular.module('landing-pages',
             {url: '/genomes/:ws/:id',
              templateUrl: 'views/objects/genome.html',
              controller: 'GenomeDetail'})
+
+    $stateProvider
+        .state('gwaspop',
+            {url: '/gwas/gwaspopulation/:ws/:id',
+             templateUrl: 'views/objects/gwaspopulation.html',
+             controller: 'GWASPopDetail'})
 
 
     $stateProvider

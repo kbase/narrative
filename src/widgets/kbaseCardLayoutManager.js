@@ -594,6 +594,10 @@
 
             if (this.options.template.toLowerCase() === "genome")
                 this.showGenomeCards();
+            else if (this.options.template.toLowerCase() === "gwaspopulation")
+                this.showGWASPopCards();
+            else if (this.options.template.toLowerCase() === "gptype")
+                this.showGWASPopCards();
             else if (this.options.template.toLowerCase() === "meme")
                 this.showMemeCards();
             else if (this.options.template.toLowerCase() === "cmonkey")
@@ -652,6 +656,27 @@
         },
 
         /**
+         * Template to show GWAS population data
+         */
+        showGWASPopCards: function() {
+            this.addNewCard("KBasePopulationDetails", 
+                { 
+                    objectID: this.options.data.id,
+                    loadingImage: this.options.loadingImage,
+                    isInCard: true
+                },
+                {
+                    my: "left top",
+                    at: "left bottom",
+                    of: "#app"
+                }
+            );
+
+            
+            return this;
+        },
+
+        /**
          * Template for showing gene cards.
          */
         showGeneCards: function() {
@@ -676,6 +701,23 @@
                 }
             );
         },
+
+        /**
+         * Template for showing model cards.
+         */
+        showGWASPopCards: function() {
+            this.addNewCard("KBaseGWASPop",
+                { color: "green"},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+            this.addNewCard("KBaseGWASPopTable",
+                { color: "green"},
+                { my: "left top",
+                  at: "left+410 bottom",
+                  of: "#app"});
+        },
+
 
         /**
          * Template for showing model cards.
@@ -915,6 +957,8 @@
                                      "showGenome", 
 				     "showFeature",
                                      "showGenomeDescription",
+                                     "showGWASPopDetails",
+                                     "showGWASPopCards",
                                      "showDomains", 
                                      "showOperons", 
                                      "showBiochemistry", 
@@ -1089,6 +1133,36 @@
                         of: data.event
                     }
                 );
+            });
+
+            /**
+             * Event: showGWASPopDetails
+             * -----------------
+             * Adds a GWAS Population overview overview card for the given object ID
+             */
+            $(document).on("showGWASPopDetails", function(event, data) {
+                self.addNewCard("KBasePopulationDetails",
+                    {
+                        genomeID: data.id,
+                        workspaceID: data.workspaceID,
+                        isInCard: true
+                    },
+                    {
+                        my: "left top",
+                        at: "center",
+                        of: data.event
+                    }
+                );
+            });
+
+            $(document).on('showGWASPopCards ', function(event,data) {
+
+                self.addNewCard("KBaseGWASPop",
+                { color: "red"},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+
             });
 
             /**

@@ -126,6 +126,11 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                      'workspaceID': $stateParams.ws}
 })
 
+.controller('GWASPopDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id,
+                     'workspaceID': $stateParams.ws}
+})
+
 .controller('MediaDetail', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
@@ -178,6 +183,10 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     };
 })
 
+
+.controller('GPTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'color': $stateParams.id}
+})
 
 .controller('GeneDetail', function($scope, $stateParams) {
     $scope.params = {'geneID': $stateParams.id,

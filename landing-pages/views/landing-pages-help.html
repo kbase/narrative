@@ -6,6 +6,7 @@
     <div class="col-md-2">
         <ul class="nav nav-pills nav-stacked" id="navbar" ng-controller="ScrollCtrl" style="position:fixed;">
             <li><a ng-click="gotoAnchor('genomes')">Genomes</a></li>
+            <li><a ng-click="gotoAnchor('gwas')">GWAS</a></li>
             <li><a ng-click="gotoAnchor('reactions')">Reactions</a></li>
             <li><a ng-click="gotoAnchor('compounds')">Compounds</a></li>
             <li><a ng-click="gotoAnchor('media')">Media</a></li>
@@ -46,6 +47,29 @@
             <a class="btn btn-default api-url-submit">Go</a>
             <span class="glyphicon glyphicon-unchecked"></span>
         </form>
+
+
+       <div class="page-header"><h3 id="gwas">GWAS Population</h3></div>
+        <h4>URLs</h4>
+            <a href="#/gwas">#/gwas</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/gwas/gwaspopulation/$workspaceId/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="gwas">
+              #/gwas/gwaspopulation/
+              <div class="form-group">
+                <label class="sr-only" for="input1">Workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">Object</label>
+                <input class="form-control" id="input2" placeholder="Object Id" value="kb|mastrunresult.2">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
 
         <div class="page-header"><h3 id="reactions">Reactions</h3></div>
         <h4>URLs</h4>
@@ -399,6 +423,7 @@
 
         <br><br>
         </div>
+
 
 
 </div>

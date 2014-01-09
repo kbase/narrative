@@ -19,6 +19,16 @@ angular.module('card-directives')
             }
         };
     })
+    .directive('gwaspopulationcards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "gwaspopulation", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
     .directive('genecards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {

@@ -67,6 +67,36 @@ angular.module('lp-directives')
             
         };
     })
+    .directive('gwaspopulationcards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBasePopulationDetails({template: "gwaspopulation", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
+    .directive('gptype', function($rootScope) {
+        return {
+            link: function(scope, element, attr) {
+
+                /*
+                console.log($scope);
+                $(element).HelloWidget({color:"red"});
+                alert('hellow world!');
+                */
+                $(element).KBaseCardLayoutManager({
+                template: 'gptype',
+                data: scope.params,
+                auth: $rootScope.USER_TOKEN,
+                userId: $rootScope.USER_ID
+           });
+                
+            }
+            
+        };
+    })
     .directive('memelist', function($location) {
         return {
             link: function(scope, element, attr) {

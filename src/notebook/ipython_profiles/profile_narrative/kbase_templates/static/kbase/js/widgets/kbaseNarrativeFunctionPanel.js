@@ -307,12 +307,7 @@
                         .append($('<div>').append('<b>Value:</b> ' + error.evalue));
 
                 var $tracebackDiv = $('<div>')
-                                 .css({
-                                    'white-space' : 'nowrap',
-                                    'float' : 'left',
-                                    'max-width' : '250px',
-                                    'overflow-x' : 'scroll'
-                                 });
+                                 .addClass('kb-function-error-traceback');
                 for (var i=0; i<error.traceback.length; i++) {
                     $tracebackDiv.append(error.traceback[i] + "<br>");
                 }

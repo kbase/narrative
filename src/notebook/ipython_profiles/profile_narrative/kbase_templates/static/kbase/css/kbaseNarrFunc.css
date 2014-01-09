@@ -123,6 +123,13 @@
     font-weight: 100;
 }
 
+#kb-function-error-traceback {
+    white-space : nowrap;
+    float : left;
+    max-width : 250px;
+    overflow-x : scroll;
+}
+
 /* ------------------------------------------------- */
 /* IPython cells */
 

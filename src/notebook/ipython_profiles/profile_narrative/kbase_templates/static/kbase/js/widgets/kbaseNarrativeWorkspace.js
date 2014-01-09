@@ -160,9 +160,7 @@
                 .addClass('btn btn-default btn-sm')
                 .attr({'type': 'button', 'id': 'kb-ws-refresh'});
                 //.text("Refresh");
-            // XXX: BS-3 glyphicons aren't working
-            //$refresh.append($('<span>').addClass("glyphicon glyphicon-refresh"));
-            $refresh.append($('<i>').addClass('icon-refresh'));
+            $refresh.append($('<span>').addClass("glyphicon glyphicon-refresh"));
             elem.append($refresh);
             var self = this;
             elem.on('click', function(e) {
@@ -291,7 +289,6 @@
             cell.render();
             // restore the input widget's state.
 
-
             this.removeCellEditFunction(cell);
             this.bindActionButtons(cell);
             console.debug("buildFunctionCell.end");
@@ -355,21 +352,21 @@
          * @returns {String} an HTML string describing the available parameters for the cell.
          * @private
          */
-        buildFunctionInputs: function(method, cellId) {
-            var inputDiv = "<div class='kb-cell-params'><table class='table'>";
-            var params = method.properties.parameters;
-            for (var i=0; i<Object.keys(params).length; i++) {
-                var p = 'param' + i;
-                inputDiv += "<tr style='border:none'>" + 
-                                "<td style='border:none'>" + params[p].ui_name + "</td>" + 
-                                "<td style='border:none'><input type='text' name='" + p + "' value=''></input></td>" +
-                                "<td style='border:none'>" + params[p].description + "</td>" +
-                            "</tr>";
-            }
-            inputDiv += "</table></div>";
+        // buildFunctionInputs: function(method, cellId) {
+        //     var inputDiv = "<div class='kb-cell-params'><table class='table'>";
+        //     var params = method.properties.parameters;
+        //     for (var i=0; i<Object.keys(params).length; i++) {
+        //         var p = 'param' + i;
+        //         inputDiv += "<tr style='border:none'>" + 
+        //                         "<td style='border:none'>" + params[p].ui_name + "</td>" + 
+        //                         "<td style='border:none'><input type='text' name='" + p + "' value=''></input></td>" +
+        //                         "<td style='border:none'>" + params[p].description + "</td>" +
+        //                     "</tr>";
+        //     }
+        //     inputDiv += "</table></div>";
 
-            return inputDiv;
-        },
+        //     return inputDiv;
+        // },
 
         /**
          * Checks if the given method object has a minimally valid structure.
@@ -450,6 +447,7 @@
             }
         },
 
+        // Function input cell type.
         isFunctionCell: function(cell) {
             return this.checkCellType(cell, this.KB_FUNCTION_CELL);
         },
@@ -462,6 +460,7 @@
             cell.metadata[this.KB_CELL] = cellInfo;
         },
 
+        // Function output cell type.
         isOutputCell: function(cell) {
             return this.checkCellType(cell, this.KB_OUTPUT_CELL);
         },
@@ -472,6 +471,7 @@
             cell.metadata[this.KB_CELL] = cellInfo;
         },
 
+        // Backup function code cell type (usually hidden through css... I still think this is superfluous)
         isFunctionCodeCell: function(cell) {
             return this.checkCellType(cell, this.KB_CODE_CELL);
         },
@@ -486,6 +486,43 @@
             return cell.metadata &&
                    cell.metadata[this.KB_CELL] &&
                    cell.metadata[this.KB_CELL][this.KB_TYPE] === type;
+        },
+
+        /**
+         * Saves a cell's state into its metadata.
+         * This includes marking that state with a timestamp.
+         * We might need to add more stuff as well, but this is a start.
+         * Mostly, it gathers the state from the cell's widget (if it has one) and puts it together
+         * with the timestamp.
+         * {
+         *    state: <cell state>,
+         *    time: <timestamp in ms since the epoch>,
+         * }
+         * This is prepended to the front - so the most recent state is the first element of the array.
+         */
+        saveCellState: function(cell) {
+            var state;
+            
+            if (this.isFunctionCell(cell)) {
+                // do input widget stuff... maybe each cell should know what widget it contains?
+                var inputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.input || self.defaultInputWidget;
+                state = $(cell.element).find("#inputs")[inputWidget]('getState');
+            }
+            else if (this.isOutputCell(cell)) {
+                // do output widget stuff.
+                var outputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.output || self.defaultOutputWidget;
+                state = $(cell.element).find("#output")[outputWidget]('getState');
+            }
+
+            var timestamp = this.getTimestamp();
+            cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
+        },
+
+        getCellStateArray: function(cell) {
+            if (this.isFunctionCell(cell) || this.isOutputCell(cell)) {
+                return cell.metadata[this.KB_CELL][this.KB_STATE];
+            }
+            return [];
         },
 
         /**
@@ -1011,6 +1048,43 @@
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);});
         },
+
+        /**
+         * Returns a timestamp in milliseconds since the epoch.
+         * (This is a one-liner, but kept as a separate function in case our needs change. 
+         * Maybe we'll want to use UTC or whatever...)
+         * @public
+         */
+        getTimestamp: function() {
+            return new Date().getTime();
+        },
+
+        /**
+         * Converts a timestamp to a simple string.
+         * Do this American style - HH:MM:SS MM/DD/YYYY
+         *
+         * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
+         * @return {string} a human readable timestamp
+         */
+        readableTimestamp: function(timestamp) {
+            var format = function(x) {
+                if (x < 10)
+                    x = '0' + x;
+                return x;
+            };
+
+            var d = new Date(timestamp);
+            var hours = format(d.getHours());
+            var minutes = format(d.getMinutes());
+            var seconds = format(d.getSeconds());
+            var month = format(d.getMonth()+1);
+            var day = format(d.getDay());
+            var year = d.getFullYear();
+
+            return hours + ":" + minutes + ":" + seconds + " " + month + "/" + day + "/" + year;
+        },
+
+
     });
 
 })( jQuery );

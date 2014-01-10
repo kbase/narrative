@@ -23,7 +23,10 @@ $.KBWidget({
         var kbws = new workspaceService(this.wsUrl);
         var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': options.token});
         var size = 500;
+        var imgI = 0;
+        var imgJ = 0;
         var scale = null;
+        var stepPercent = 25;
 
         var dataIsReady = function() {
             kbws.get_object({auth: options.token, workspace: options.ws_name, id: options.ws_id, 
@@ -41,12 +44,108 @@ $.KBWidget({
             	table.append(createTableRow("Genome1 (x-axis)", cmp.genome1id + " (" + cmp.proteome1names.length + " genes)"));
             	table.append(createTableRow("Genome2 (y-axis)", cmp.genome2id + " (" + cmp.proteome2names.length + " genes)"));
             	scale = size * 100 / Math.max(cmp.proteome1names.length, cmp.proteome2names.length);
-            	var img = self.cmpImgUrl + "?ws=" + options.ws_name + "&id=" + options.ws_id + "&x=0&y=0&w=" + 
-            		size + "&sp=" + scale + "&token=" + encodeURIComponent(options.token);
-            	table.append(createTableRow('', '<img src="'+img+'"/>'));
-            	//table.append('<tr><td id="'+pref+'btns-td"/><td id="'+pref+'img-td"><img src="'+img+'"/></td></tr>'));
-            	//var btnsTd = $('#'+pref+'btns-td');
-            	//var btnZoomIn = btnsTd.append("<button>Zoom in</button");
+            	var st = ' style="border: 0px; margin: 0px; padding: 0px;"';
+            	var sr = ' style="border: 0px; margin: 0px; padding: 0px;"';
+            	var sd = ' style="border: 0px; margin: 0px; padding: 1px;"';
+            	table.append('<tr><td>' + 
+            			'<center>' +
+            			'<button id="'+pref+'btn-zi">Zoom +</button>'+
+            			'&nbsp;' + 
+            			'<button id="'+pref+'btn-zo">Zoom -</button>'+
+            			'<br><br><table'+st+'><tr'+sr+'><td'+sd+'>' + 
+            			'<button id="'+pref+'btn-mul">&#8598;</button>'+
+            			'</td><td'+sd+'>' +
+            			'<button id="'+pref+'btn-mu">&#8593;</button>'+
+            			'</td><td'+sd+'>' + 
+            			'<button id="'+pref+'btn-mur">&#8599;</button>'+
+            			'</td></tr><tr'+sr+'><td'+sd+'>' +
+            			'<button id="'+pref+'btn-ml">&#8592;</button>'+
+            			'</td><td'+sd+'/><td'+sd+'>' +
+            			'<button id="'+pref+'btn-mr">&#8594;</button>'+
+            			'</td></tr><tr'+sr+'><td'+sd+'>' + 
+            			'<button id="'+pref+'btn-mdl">&#8601;</button>'+
+            			'</td><td'+sd+'>' +
+            			'<button id="'+pref+'btn-md">&#8595;</button>'+
+            			'</td><td'+sd+'>' + 
+            			'<button id="'+pref+'btn-mdr">&#8600;</button>'+
+            			'</td></tr></table></center>' +
+            			'</td><td id="'+pref+'img-td"><img id="'+pref+'img" src=""/></td></tr>');
+            	var refreshImage = function() {
+            		var maxI = imgI + size * 100 / scale;
+            		if (maxI > cmp.proteome1names.length)
+                		maxI = cmp.proteome1names.length;
+            		var maxJ = imgJ + size * 100 / scale;
+            		if (maxJ > cmp.proteome2names.length)
+            			maxJ = cmp.proteome2names.length;
+            		imgI = maxI - size * 100 / scale;
+            		imgJ = maxJ - size * 100 / scale;
+            		if (imgI < 0)
+            			imgI = 0;
+            		if (imgJ < 0)
+            			imgJ = 0;
+            		imgI = Math.round(imgI);
+            		imgJ = Math.round(imgJ);
+            		var img = self.cmpImgUrl + "?ws=" + options.ws_name + "&id=" + options.ws_id + "&x=" + imgI + 
+            				"&y=" + imgJ + "&w=" + size + "&sp=" + scale + "&token=" + encodeURIComponent(options.token);
+            		$('#'+pref+'img').attr('src', img);
+            	};
+            	refreshImage();
+            	$('#'+pref+'btn-zi').click(function() {
+            		var xSize = Math.min(size, cmp.proteome1names.length * scale / 100);
+            		var ySize = Math.min(size, cmp.proteome2names.length * scale / 100);
+            		var centerI = imgI + xSize * 50 / scale;
+            		var centerJ = imgJ + ySize * 50 / scale;
+            		scale *= 1.5;
+            		imgI = centerI - size * 50 / scale;
+            		imgJ = centerJ - size * 50 / scale;
+            		refreshImage();
+            	});
+            	$('#'+pref+'btn-zo').click(function() {
+            		var xSize = Math.min(size, cmp.proteome1names.length * scale / 100);
+            		var ySize = Math.min(size, cmp.proteome2names.length * scale / 100);
+            		var centerI = imgI + xSize * 50 / scale;
+            		var centerJ = imgJ + ySize * 50 / scale;
+            		scale /= 1.5;
+            		imgI = centerI - size * 50 / scale;
+            		imgJ = centerJ - size * 50 / scale;
+            		refreshImage();
+            	});
+            	$('#'+pref+'btn-mul').click(function() {
+            		imgJ += size * stepPercent / scale;
+            		imgI -= size * stepPercent / scale;
+            		refreshImage();
+            	});
+            	$('#'+pref+'btn-mu').click(function() {
+            		imgJ += size * stepPercent / scale;
+            		refreshImage();
+            	});
+            	$('#'+pref+'btn-mur').click(function() {
+            		imgJ += size * stepPercent / scale;
+            		imgI += size * stepPercent / scale;
+            		refreshImage();
+            	});
+            	$('#'+pref+'btn-ml').click(function() {
+            		imgI -= size * stepPercent / scale;
+            		refreshImage();
+            	});
+            	$('#'+pref+'btn-mr').click(function() {
+            		imgI += size * stepPercent / scale;
+            		refreshImage();
+            	});
+            	$('#'+pref+'btn-mdl').click(function() {
+            		imgJ -= size * stepPercent / scale;
+            		imgI -= size * stepPercent / scale;
+            		refreshImage();
+            	});
+            	$('#'+pref+'btn-md').click(function() {
+            		imgJ -= size * stepPercent / scale;
+            		refreshImage();
+            	});
+            	$('#'+pref+'btn-mdr').click(function() {
+            		imgJ -= size * stepPercent / scale;
+            		imgI += size * stepPercent / scale;
+            		refreshImage();
+            	});
             }, function(data) {
     			alert("Error: " + data.error.message)
             });

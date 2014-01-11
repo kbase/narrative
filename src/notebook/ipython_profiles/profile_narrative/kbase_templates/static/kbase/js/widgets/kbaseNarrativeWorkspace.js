@@ -37,8 +37,9 @@
         errorWidget: "kbaseNarrativeError",
 
         inputsRendered: false,
+        maxSavedStates: 10000,      // dummy for now. 10000 ~ infinity, right?
 
-        // constants.
+        // constant strings.
         KB_CELL: 'kb-cell',
         KB_TYPE: 'type',
         KB_FUNCTION_CELL: 'function_input',
@@ -503,6 +504,9 @@
             }
             var timestamp = this.getTimestamp();
             cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
+            while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
+                cell.metadata[this.KB_CELL][this.KB_STATE].pop();
+            }
         },
 
         loadRecentCellState: function(cell) {

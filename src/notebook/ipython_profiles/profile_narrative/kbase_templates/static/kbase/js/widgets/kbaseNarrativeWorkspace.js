@@ -45,7 +45,7 @@
         KB_OUTPUT_CELL: 'function_output',
         KB_ERROR_CELL: 'kb_error',
         KB_CODE_CELL: 'kb_code',
-        KB_STATE: 'input_state',
+        KB_STATE: 'widget_state',
 
         init: function(options) {
             this._super(options);
@@ -220,7 +220,7 @@
             // THIS IS WRONG! FIX THIS LATER!
             // But it should work for now... nothing broke up to this point, right?
             var cellIndex = IPython.notebook.ncells() - 1;
-            var cellId = 'kb-cell-' + cellIndex + "-" + this.uuidgen();
+            var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
 
             // The various components are HTML STRINGS, not jQuery objects.
             // This is because the cell expects a text input, not a jQuery input.
@@ -261,7 +261,7 @@
                                       " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
                                     "<h2 class='collapse' id='" + methodId + "'>" +
                                       methodDesc + "</h2>" +
-                                  "</div>";
+                                 "</div>";
 
                 // Bringing it all together...
                 cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
@@ -328,13 +328,10 @@
                         var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
 
                         if (fullRender) {
-                            cell.rendered  = false;
+                            cell.rendered = false;
                             cell.render();
 
-                            var state = cell.metadata[this.KB_CELL][this.KB_STATE];
-                            if (state) {
-                                $(cell.element).find("#inputs")[inputWidget]('loadState', state);
-                            }
+                            this.loadRecentCellState(cell);
                             this.bindActionButtons(cell);
                         }
                         else {
@@ -344,29 +341,6 @@
                 }
             }
         },
-
-
-        /**
-         * Builds the input div for a function cell, based on the given method object.
-         * @param {Object} method - the method being constructed around.
-         * @returns {String} an HTML string describing the available parameters for the cell.
-         * @private
-         */
-        // buildFunctionInputs: function(method, cellId) {
-        //     var inputDiv = "<div class='kb-cell-params'><table class='table'>";
-        //     var params = method.properties.parameters;
-        //     for (var i=0; i<Object.keys(params).length; i++) {
-        //         var p = 'param' + i;
-        //         inputDiv += "<tr style='border:none'>" + 
-        //                         "<td style='border:none'>" + params[p].ui_name + "</td>" + 
-        //                         "<td style='border:none'><input type='text' name='" + p + "' value=''></input></td>" +
-        //                         "<td style='border:none'>" + params[p].description + "</td>" +
-        //                     "</tr>";
-        //     }
-        //     inputDiv += "</table></div>";
-
-        //     return inputDiv;
-        // },
 
         /**
          * Checks if the given method object has a minimally valid structure.
@@ -456,6 +430,8 @@
             var cellInfo = {}
             cellInfo[this.KB_TYPE] = this.KB_FUNCTION_CELL;
             cellInfo['method'] = method;
+            cellInfo[this.KB_STATE] = [];
+            cellInfo['widget'] = method.properties.widgets.input || this.defaultInputWidget;
 
             cell.metadata[this.KB_CELL] = cellInfo;
         },
@@ -465,9 +441,12 @@
             return this.checkCellType(cell, this.KB_OUTPUT_CELL);
         },
 
-        setOutputCell: function(cell) {
+        setOutputCell: function(cell, widget) {
             var cellInfo = {};
             cellInfo[this.KB_TYPE] = this.KB_OUTPUT_CELL;
+            cellInfo[this.KB_STATE] = [];
+            cellInfo['widget'] = widget;
+
             cell.metadata[this.KB_CELL] = cellInfo;
         },
 
@@ -501,21 +480,51 @@
          * This is prepended to the front - so the most recent state is the first element of the array.
          */
         saveCellState: function(cell) {
-            var state;
-            
+            // ignore it if it isn't a KBase cell with a widget state to save.
+            if (!this.isFunctionCell(cell) && !this.isOutputCell(cell))
+                return;
+
+            var target;
+            var widget;
+
             if (this.isFunctionCell(cell)) {
-                // do input widget stuff... maybe each cell should know what widget it contains?
-                var inputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.input || self.defaultInputWidget;
-                state = $(cell.element).find("#inputs")[inputWidget]('getState');
+                widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
+                target = "#inputs";
             }
             else if (this.isOutputCell(cell)) {
                 // do output widget stuff.
-                var outputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.output || self.defaultOutputWidget;
-                state = $(cell.element).find("#output")[outputWidget]('getState');
+                widget = cell.metadata[this.KB_CELL].widget;
+                target = "#output";
             }
 
+            var state;
+            if ($(cell.element).find(target)[widget](['prototype'])['getState']) {
+                state = $(cell.element).find(target)[widget]('getState');
+            }
             var timestamp = this.getTimestamp();
             cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
+        },
+
+        loadRecentCellState: function(cell) {
+            var state = this.getRecentState(cell);
+            if (state) {
+                var target;
+                var widget;
+
+                if (this.isFunctionCell(cell)) {
+                    widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
+                    target = "#inputs";
+                }
+                else if (this.isOutputCell(cell)) {
+                    // do output widget stuff.
+                    widget = cell.metadata[this.KB_CELL].widget;
+                    target = "#output";
+                }
+                if ($(cell.element).find(target)[widget](['prototype'])['loadState']) {
+                    $(cell.element).find(target)[widget]('loadState', state.state);
+                    // later, do something with the timestamp.
+                }
+            }
         },
 
         getCellStateArray: function(cell) {
@@ -523,6 +532,30 @@
                 return cell.metadata[this.KB_CELL][this.KB_STATE];
             }
             return [];
+        },
+
+        saveAllCellStates: function() {
+            var cells = IPython.notebook.get_cells();
+            $.each(cells, $.proxy(function(idx, cell) {
+                this.saveCellState(cell);
+            }, this));
+        },
+
+        loadAllRecentCellStates: function() {
+            var cells = IPython.notebook.get_cells();
+            $.each(cells, $.proxy(function(idx, cell) {
+                this.loadRecentCellState(cell);
+            }, this));
+        },
+
+        getRecentState: function(cell) {
+            var state;
+            if (this.isFunctionCell(cell) || this.isOutputCell(cell)) {
+                var stateList = cell.metadata[this.KB_CELL][this.KB_STATE];
+                if (stateList.length > 0)
+                    state = stateList[0];
+            }
+            return state;
         },
 
         /**
@@ -542,8 +575,9 @@
 
                     // get the list of parameters and save the state in the cell's metadata
                     var paramList = $(cell.element).find("#inputs")[inputWidget]('getParameters');
-                    var state = $(cell.element).find("#inputs")[inputWidget]('getState');
-                    cell.metadata[self.KB_CELL][self.KB_STATE] = state;
+                    self.saveCellState(cell);
+                    // var state = $(cell.element).find("#inputs")[inputWidget]('getState');
+                    // cell.metadata[self.KB_CELL][self.KB_STATE] = state;
 
                     // Run the method.
                     var method = cell.metadata[self.KB_CELL].method;
@@ -647,8 +681,6 @@
                       "method = Service.get_service('" + service + "').get_method('" + method + "')\n" +
                       "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
                       "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
-
-            console.log(params);
 
             var paramList = params.map(function(p) { return "'" + p + "'"; });
             cmd += "method(" + paramList + ")";
@@ -837,8 +869,11 @@
                 return;
             }
 
-            var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell));
+            var widget = result.widget || this.defaultOutputWidget;
+
+            var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
             var uuid = this.uuidgen();
+            var outCellId = 'kb-cell-out-' + uuid;
 
             // set up the widget line
             var widgetInvoker = "";
@@ -847,14 +882,14 @@
             else
                 widgetInvoker = this.defaultOutputWidget + "({'data' : " + result.data + "});";
 
-            var cellText = ['<div id="'+uuid+'"></div>',
+            var cellText = ['<div class="kb-cell-output" id="' + outCellId + '">',
+                            '<div></div>', // gap for header info
+                            '<div id="output" style="margin:-10px;"></div>',
+                            '</div>',
                             '<script>',
-                            '$("#'+uuid+'").' + widgetInvoker, 
-                            // Make the element a little bigger,
-                            '$("#'+uuid+'").css({margin: "-10px"});',
-                            // Disable most actions on this element'
-                            '$("#'+uuid+'").off("click dblclick keydown keyup keypress focus");',
+                            '$("#' + outCellId + ' > div#output").' + widgetInvoker,
                             '</script>'].join('\n');
+
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
             outputCell.render();
@@ -897,7 +932,7 @@
                 $progressMsg.text("Completed");
                 percentDone = 100;
                 $progressBar.css('width', '100%');
-                $(cell.element).find("#kb-func-progress").fadeOut(1000);
+                $(cell.element).find("#kb-func-progress").fadeOut(1000, $.proxy(function() { this.resetProgress(cell); }, this));
             }
             else {
                 $progressMsg.text("Step " + done + " / " + total + ": " + name);
@@ -917,11 +952,11 @@
          * @private
          * @return id of <div> inside cell where content can be placed
          */
-        addOutputCell: function(currentIndex) {
+        addOutputCell: function(currentIndex, widget) {
             var nb = IPython.notebook;
             var cell = nb.insert_cell_below('markdown', currentIndex);
 
-            cell.metadata['kb-cell'] = 'output';
+            this.setOutputCell(cell, widget);
             this.removeCellEditFunction(cell);
 
             return( cell );

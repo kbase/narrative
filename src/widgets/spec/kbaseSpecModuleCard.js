@@ -7,7 +7,8 @@
         options: {
             id: "",
             name: "",
-            width: 600
+            width: 600,
+            token: null
         },
 
         init: function(options) {
@@ -16,7 +17,7 @@
             var container = this.$elem;
             self.$elem.append('<p class="muted loader-table"><img src="assets/img/ajax-loader.gif"> loading...</p>');
 
-            var kbws = new Workspace(newWorkspaceServiceUrlForSpec);
+            var kbws = new Workspace(newWorkspaceServiceUrlForSpec, {token: options.token});
             var moduleName = this.options.id;
             var moduleVer = null;
             if (moduleName.indexOf('-') >= 0) {
@@ -24,7 +25,7 @@
             	moduleName = moduleName.substring(0, moduleName.indexOf('-'));
             }
         	self.options.name = moduleName;
-        	var pref = (new Date()).getTime();
+        	var pref = generateSpecPrefix();
         	
             kbws.get_module_info({mod: moduleName, ver:moduleVer}, function(data) {
             	$('.loader-table').remove();
@@ -81,7 +82,7 @@
             	for (var typeId in data.types) {
             		var typeName = typeId.substring(typeId.indexOf('.') + 1, typeId.indexOf('-'));
             		var typeVer = typeId.substring(typeId.indexOf('-') + 1);
-            		typesData[typesData.length] = {name: '<a class="'+pref+'types-click" data-typeid="'+typeId+'">'+typeName+'</a>', ver: typeVer};
+            		typesData[typesData.length] = {name: '<a onclick="specClicks[\''+pref+'types-click\'](this,event); return false;" data-typeid="'+typeId+'">'+typeName+'</a>', ver: typeVer};
             	}
                 var typesSettings = {
                         "sPaginationType": "full_numbers",
@@ -95,15 +96,16 @@
                     };
                 var typesTable = $('#'+pref+'types-table').dataTable(typesSettings);
                 typesTable.fnAddData(typesData);
-                $('.'+pref+'types-click').click(function(e) {
-                    var typeId = $(this).data('typeid');
+                specClicks[pref+'types-click'] = function(elem, e) {
+                    var typeId = $(elem).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
                     			id : typeId,
+                    			token: options.token,
                     			event: e
                     		});
-                });
+                };
 
             	////////////////////////////// Functions Tab //////////////////////////////
             	$('#'+pref+'funcs').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'funcs-table" \
@@ -113,7 +115,7 @@
             		var funcId = data.functions[i];
             		var funcName = funcId.substring(funcId.indexOf('.') + 1, funcId.indexOf('-'));
             		var funcVer = funcId.substring(funcId.indexOf('-') + 1);
-            		funcsData[funcsData.length] = {name: '<a class="'+pref+'funcs-click" data-funcid="'+funcId+'">'+funcName+'</a>', ver: funcVer};
+            		funcsData[funcsData.length] = {name: '<a onclick="specClicks[\''+pref+'funcs-click\'](this,event); return false;" data-funcid="'+funcId+'">'+funcName+'</a>', ver: funcVer};
             	}
                 var funcsSettings = {
                         "sPaginationType": "full_numbers",
@@ -127,15 +129,16 @@
                     };
                 var funcsTable = $('#'+pref+'funcs-table').dataTable(funcsSettings);
                 funcsTable.fnAddData(funcsData);
-                $('.'+pref+'funcs-click').click(function(e) {
-                    var funcId = $(this).data('funcid');
+                specClicks[pref+'funcs-click'] = function(elem, e) {
+                    var funcId = $(elem).data('funcid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "function", 
                     			id : funcId,
+                    			token: options.token,
                     			event: e
                     		});
-                });
+                };
 
             	////////////////////////////// Includes Tab //////////////////////////////
             	$('#'+pref+'incs').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'incs-table" \
@@ -144,7 +147,7 @@
             	for (var incName in data.included_spec_version) {
             		var incVer = data.included_spec_version[incName];
             		var incId = incName + "-" + incVer;
-            		incsData[incsData.length] = {name: '<a class="'+pref+'incs-click" data-incid="'+incId+'">'+incName+'</a>', ver: incVer};
+            		incsData[incsData.length] = {name: '<a onclick="specClicks[\''+pref+'incs-click\'](this,event); return false;" data-incid="'+incId+'">'+incName+'</a>', ver: incVer};
             	}
                 var incsSettings = {
                         "sPaginationType": "full_numbers",
@@ -158,15 +161,16 @@
                     };
                 var incsTable = $('#'+pref+'incs-table').dataTable(incsSettings);
                 incsTable.fnAddData(incsData);
-                $('.'+pref+'incs-click').click(function(e) {
-                    var incId = $(this).data('incid');
+                specClicks[pref+'incs-click'] = function(elem,e) {
+                    var incId = $(elem).data('incid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "module", 
                     			id : incId,
+                    			token: options.token,
                     			event: e
                     		});
-                });
+                };
 
                 var wsAJAX2 = kbws.list_module_versions({mod: moduleName});
                 $.when(wsAJAX2).done(function(data){
@@ -182,7 +186,7 @@
                 		if (ver === moduleVer) {
                 			link = "" + ver + " (current)";
                 		} else {
-                			link = '<a class="'+pref+'vers-click" data-verid="'+moduleName+'-'+ver+'">'+ver+'</a>';
+                			link = '<a onclick="specClicks[\''+pref+'vers-click\'](this,event); return false;" data-verid="'+moduleName+'-'+ver+'">'+ver+'</a>';
                 		}
                 		versData[versData.length] = {ver: link, date: verDate};
                 	}
@@ -198,15 +202,16 @@
                         };
                     var versTable = $('#'+pref+'vers-table').dataTable(versSettings);
                     versTable.fnAddData(versData);
-                    $('.'+pref+'vers-click').click(function(e) {
-                        var modId = $(this).data('verid');
+                    specClicks[pref+'vers-click'] = function(elem,e) {
+                        var modId = $(elem).data('verid');
                         self.trigger('showSpecElement', 
                         		{
                         			kind: "module", 
                         			id : modId,
+                        			token: options.token,
                         			event: e
                         		});
-                    });
+                    };
 
                 });
 

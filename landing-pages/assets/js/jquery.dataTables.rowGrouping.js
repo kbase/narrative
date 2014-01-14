@@ -1,9 +1,9 @@
 /*
 * File:        jquery.dataTables.grouping.js
-* Version:     1.2.7.
+* Version:     1.2.9.
 * Author:      Jovan Popovic 
 * 
-* Copyright 2012 Jovan Popovic, all rights reserved.
+* Copyright 2013 Jovan Popovic, all rights reserved.
 *
 * This source file is free software, under either the GPL v2 license or a
 * BSD style license, as supplied with this software.
@@ -16,6 +16,7 @@
 * @sGroupingColumnSortDirection                         Enumeration         Sort direction of the group
 * @iGroupingOrderByColumnIndex                          Integer             Index of the column that will be used for ordering groups
 * @sGroupingClass                                       String              Class that will be associated to the group row. Default - "group"
+* @sGroupItemClass                                      String              Class that will be associated to the group row of group items. Default - "group-item"
 * @bSetGroupingClassOnTR                                Boolean             If set class will be set to the TR instead of the TD withing the grouping TR
 * @bHideGroupingColumn                                  Boolean             Hide column used for grouping once results are grouped. Default - true
 * @bHideGroupingOrderByColumn                           Boolean             Hide column used for ordering groups once results are grouped. Default - true
@@ -33,6 +34,7 @@
 * @sGroupingColumnSortDirection2                        Enumeration         Sort direction of the secondary group
 * @iGroupingOrderByColumnIndex2                         Integer             Index of the column that will be used for ordering secondary groups
 * @sGroupingClass2                                      String              Class that will be associated to the secondary group row. Default "subgroup"
+* @sGroupItemClass2                                     String              Class that will be associated to the secondary group row of group items. Default "subgroup-item"
 * @bHideGroupingColumn2                                 Boolean             Hide column used for secondary grouping once results are grouped. Default - true,
 * @bHideGroupingOrderByColumn2                          Boolean             Hide column used for ordering secondary groups once results are grouped. Default - true,
 * @sGroupBy2                                            Enumeration         Type of grouping that should be applied to secondary column. Values "name"(default), "letter", "year",
@@ -40,6 +42,8 @@
 * @fnOnGrouped                                          Function            Function that is called when grouping is finished. Function has no parameters.
 */
 (function ($) {
+
+	"use strict";
 
     $.fn.rowGrouping = function (options) {
 
@@ -60,7 +64,7 @@
         }
 
         function _getMonthName(iMonth) {
-            var asMonths = ["January", "February", "March", "April", "May", "June", "Jully", "August", "September", "October", "November", "December"];
+            var asMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             return asMonths[iMonth - 1];
         }
 
@@ -70,6 +74,7 @@
             sGroupingColumnSortDirection: "",
             iGroupingOrderByColumnIndex: -1,
             sGroupingClass: "group",
+			sGroupItemClass: "group-item",
             bHideGroupingColumn: true,
             bHideGroupingOrderByColumn: true,
             sGroupBy: "name",
@@ -88,6 +93,7 @@
             sGroupingColumnSortDirection2: "",
             iGroupingOrderByColumnIndex2: -1,
             sGroupingClass2: "subgroup",
+            sGroupItemClass2: "subgroup-item",
             bHideGroupingColumn2: true,
             bHideGroupingOrderByColumn2: true,
             sGroupBy2: "name",
@@ -98,7 +104,7 @@
             fnOnGrouped: _fnOnGrouped,
 
             fnOnGroupCreated: _fnOnGroupCreated,
-	    fnOnGroupCompleted: _fnOnGroupCompleted,
+            fnOnGroupCompleted: _fnOnGroupCompleted,
 
             oHideEffect: null, // { method: "hide", duration: "fast", easing: "linear" },
             oShowEffect: null,//{ method: "show", duration: "slow", easing: "linear" }
@@ -157,7 +163,7 @@
                 var nCell2 = document.createElement('td');
                 var dataGroup = oParentGroup.dataGroup + '_' + sGroup2;
 
-                oGroup = { id: nGroup2.id, key: sGroup2, text: sGroupLabel, level: oParentGroup.level + 1, groupItemClass: ".group-item-" + dataGroup,
+                var oGroup = { id: nGroup2.id, key: sGroup2, text: sGroupLabel, level: oParentGroup.level + 1, groupItemClass: ".group-item-" + dataGroup,
                     dataGroup: dataGroup, aoSubgroups: new Array()
                 };
 
@@ -348,7 +354,7 @@
                         fnExpandGroup(sGroup);
 
                         if (properties.iExpandGroupOffset != -1) {
-                            var position = $("#group-id-" + oTable.attr("id") + "-" + sGroup).offset().top - properties.iExpandGroupOffset;
+                            var position = $("#group-id-" + oTable.attr("id") + "_" + sGroup).offset().top - properties.iExpandGroupOffset;
                             window.scroll(0, position);
                         } else {
                             var position = oTable.offset().top;
@@ -425,10 +431,10 @@
                         if (sLastGroup == null || _fnGetCleanedGroup(sGroup) != _fnGetCleanedGroup(sLastGroup)) { // new group encountered (or first of group)
                             var sGroupCleaned = _fnGetCleanedGroup(sGroup);
 				
-			    if(sLastGroup != null)
-			    {
-			    	properties.fnOnGroupCompleted(aoGroups[_fnGetCleanedGroup(sLastGroup)]);
-			    }
+                            if(sLastGroup != null)
+                            {
+                            	properties.fnOnGroupCompleted(aoGroups[_fnGetCleanedGroup(sLastGroup)]);
+                            }
 							/*
                             if (properties.bExpandableGrouping && bInitialGrouping) {
                                 if (properties.bExpandSingleGroup) {
@@ -449,7 +455,7 @@
 								nTrs[i].parentNode.insertBefore(nGroup, nTrs[i]);
 							else
 								$(nTrs[i]).before(nGroup);
-                            $(nTrs[i]).attr("data-group", oGroup.dataGroup);
+
                             sLastGroup = sGroup;
                             sLastGroup2 = null; //to reset second level grouping
 
@@ -458,9 +464,12 @@
 
 
                         } // end if (sLastGroup == null || sGroup != sLastGroup)
+						
+						$(nTrs[i]).attr("data-group", aoGroups[sGroupCleaned].dataGroup);
 
+                        $(nTrs[i]).addClass(properties.sGroupItemClass);
+                        $(nTrs[i]).addClass("group-item-" + sGroupCleaned);
                         if (properties.bExpandableGrouping) {
-                            $(nTrs[i]).addClass("group-item-" + sGroupCleaned);
                             if (_fnIsGroupCollapsed(sGroupCleaned) && !properties.bUseFilteringForGrouping) {
                                 $(nTrs[i]).hide();
                             }
@@ -479,6 +488,7 @@
                             }
 
                             $(nTrs[i]).attr("data-group", oGroup2.dataGroup)
+										.addClass(properties.sGroupItemClass2)
                                         .addClass("group-item-" + oGroup2.dataGroup);
                         } //end if (bUseSecondaryGrouping)
 
@@ -543,8 +553,8 @@
             iYearIndex = properties.sDateFormat.toLowerCase().indexOf('yy');
             iYearLength = properties.sDateFormat.toLowerCase().lastIndexOf('y') - properties.sDateFormat.toLowerCase().indexOf('y') + 1;
 
-            iMonthIndex = properties.sDateFormat.toLowerCase().indexOf('mm');
-            iMonthLength = properties.sDateFormat.toLowerCase().lastIndexOf('m') - properties.sDateFormat.toLowerCase().indexOf('m') + 1;
+            var iMonthIndex = properties.sDateFormat.toLowerCase().indexOf('mm');
+            var iMonthLength = properties.sDateFormat.toLowerCase().lastIndexOf('m') - properties.sDateFormat.toLowerCase().indexOf('m') + 1;
 
             var fnGetGroup = _fnGetGroupByName;
             switch (properties.sGroupBy) {
@@ -586,7 +596,7 @@
 			}
 			if(properties.bExpandSingleGroup){
 			    var nTrs = $('tbody tr', oTable);
-				sGroupData = oTable.fnGetData(nTrs[0], properties.iGroupingColumnIndex);
+				var sGroupData = oTable.fnGetData(nTrs[0], properties.iGroupingColumnIndex);
 				
 				var sGroup = sGroupData;
                 if (properties.sGroupBy != "year")

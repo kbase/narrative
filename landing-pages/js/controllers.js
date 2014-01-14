@@ -206,10 +206,19 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.selected_ws = $stateParams.ws;
     console.log($scope.selected_ws)
 })
+
+
 .controller('Narrative', function($scope, $stateParams) {
    /* $scope.selected_ws = $stateParams.ws;
     console.log($scope.selected_ws) */
 })
+
+.controller('NarrativeProjects', function($scope, $stateParams) {
+
+
+})
+
+
 
 
 

@@ -545,6 +545,20 @@
             return [];
         },
 
+        _exportRegulome: function(data, workspace) {
+            this.dbg("Exporting Regulome");
+            this.dbg(data);
+
+            return [];
+        },
+
+        _exportMAKResult: function(data, workspace) {
+            this.dbg("Exporting MAK result");
+            this.dbg(data);
+
+            return [];
+        },
+
         _exportBambiRunResult: function(data, workspace) {
             this.dbg("Exporting BAMBI run result");
             this.dbg(data);
@@ -586,6 +600,10 @@
                 this.showCmonkeyCards();
             else if (this.options.template.toLowerCase() === "inferelator")
                 this.showInferelatorCards();
+            else if (this.options.template.toLowerCase() === "regprecise")
+                this.showRegpreciseCards();
+            else if (this.options.template.toLowerCase() === "mak")
+                this.showMAKCards();
             else if (this.options.template.toLowerCase() === "bambi")
                 this.showBambiCards();
             else if (this.options.template.toLowerCase() === "gene")
@@ -778,6 +796,44 @@
         	    return this;
         },
 
+        showRegpreciseCards: function() {
+            	this.addNewCard("KBaseRegulomeCard",
+                        {
+                            id: this.options.data.id,
+                            ws: this.options.data.ws,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
+                            loadingImage: this.options.loadingImage,
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        },
+
+        showMAKCards: function() {
+            	this.addNewCard("KBaseMAKResultCard",
+                        {
+                            id: this.options.data.id,
+                            ws: this.options.data.ws,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
+                            loadingImage: this.options.loadingImage,
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        },
+
         showBambiCards: function() {
             	this.addNewCard("KBaseBambiRunResultCard",
                         {
@@ -849,6 +905,8 @@
                                      "showCmonkeyCluster", 
                                      "showCmonkeyMotif",
                                      "showInferelatorHits",
+                                     "showRegulon",
+                                     "showMAKCluster", 
                                      "showBambiMotif",
                                      "showBambiRunParameters", 
                                      "showBambiRawOutput"];
@@ -1183,6 +1241,48 @@
                 self.addNewCard("KBaseInferelatorHitsCard",
                     {
                         inferelatorrunresult: data.inferelatorrunresult,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+600 bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showRegulon
+             * -------------------
+             * Adds card with Regulon.
+             */
+
+            $(document).on("showRegulon", function(event, data) {
+                self.addNewCard("KBaseRegulonCard",
+                    {
+                        regulon: data.regulon,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+600 bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showMAKBicluster
+             * -------------------
+             * Adds card with MAK bi-cluster.
+             */
+
+            $(document).on("showMAKBicluster", function(event, data) {
+                self.addNewCard("KBaseMAKBiclusterCard",
+                    {
+                        bicluster: data.bicluster,
                         showButtons: true,
                         centerFeature: data.centerFeature
                     },

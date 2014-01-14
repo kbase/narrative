@@ -206,6 +206,18 @@ var app = angular.module('landing-pages',
              controller: 'InferelatorDetail'})
 
     $stateProvider
+        .state('regprecise',
+            {url: '/regprecise/:ws/:id',
+             templateUrl: 'views/objects/regprecise.html',
+             controller: 'RegpreciseDetail'})
+
+    $stateProvider
+        .state('mak',
+            {url: '/mak/:ws/:id',
+             templateUrl: 'views/objects/mak.html',
+             controller: 'MAKDetail'})
+
+    $stateProvider
         .state('spec',
             {url: '/spec/:kind/:id',
              templateUrl: 'views/objects/spec.html',

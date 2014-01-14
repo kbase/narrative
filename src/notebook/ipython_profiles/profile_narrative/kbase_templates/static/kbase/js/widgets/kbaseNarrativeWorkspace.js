@@ -89,19 +89,23 @@
             });
 
             // Build the list of available functions.
-            $("#function-test").kbaseNarrativeFunctionPanel({});
+            $("#function-panel").kbaseNarrativeFunctionPanel({});
 
             // Initialize the data table.
             this.initControls(options.controlsElem);
 
             // bind search to data table
-            $search_inp = options.controlsElem.find(':input');
-            var that = this;
-            $search_inp.on('change keyup', function(e) {
-                var tbl = that.dataTableWidget.table;
-                tbl.fnFilter($search_inp.val());
-                tbl.fnDraw();
-            });
+            // XXX: This is BROKEN, so skip it!
+            // XXX: At some point, 'this.dataTableWidget' went away..
+            if ( false ) {
+                $search_inp = options.controlsElem.find(':input');
+                var that = this;
+                $search_inp.on('change keyup', function(e) {
+                    var tbl = that.dataTableWidget.table;
+                    tbl.fnFilter($search_inp.val());
+                    tbl.fnDraw();
+                });
+            }
 
             // **DEPRECATED** Initializes controls.
             this.initFuncs();
@@ -209,7 +213,7 @@
          * include a list of parameters and outputs.
          */
         buildFunctionCell: function(method) {
-            console.log(method);
+            console.debug("buildFunctionCell.start method:",method);
 
             var cell = IPython.notebook.insert_cell_below('markdown');
             // make this a function input cell, as opposed to an output cell
@@ -249,9 +253,22 @@
                                     "<p class='text-success'/>" +
                                   "</div>";
 
+                // Associate method title with description via BS3 collapsing
+                var methodId = cellId + "-method-details";
+                var buttonLabel = "...";
+                var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
+                var methodInfo = "<div class='kb-func-desc'>" +
+                                   "<h1>" + method.title + "</h1>" +
+                                   "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
+                                      " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
+                                    "<h2 class='collapse' id='" + methodId + "'>" +
+                                      methodDesc + "</h2>" +
+                                  "</div>";
+
                 // Bringing it all together...
                 cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
-                                  "<h1>" + method.title + "</h1>" +
+                                  //"<h1>" + method.title + "</h1>" +
+                                  methodInfo +
                                   "<div>" +  
                                       inputDiv +
                                       buttons + 
@@ -259,12 +276,15 @@
                                   progressBar +
                               "</div>\n" + 
                               "<script>" + 
-                              "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" + JSON.stringify(method) + "'});" +
+                              "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" +
+                               this.safeJSONStringify(method) + "'});" +
                               "</script>";
             }
             else {
                 cellContent = "Error - the selected method is invalid.";
             }
+            // Useful for debugging Markdown errors
+            console.debug("buildFunctionCell.set_text content:", cellContent);
             cell.set_text(cellContent);
 
             cell.rendered = false;
@@ -274,6 +294,22 @@
 
             this.removeCellEditFunction(cell);
             this.bindActionButtons(cell);
+            console.debug("buildFunctionCell.end");
+        },
+
+        /**
+         * Escape chars like single quotes in descriptions and titles,
+         * before rendering as a JSON string.
+         *
+         * @post This does not modify the input object.
+         * @return {string} JSON string
+         */
+        safeJSONStringify: function(method) {
+            var esc = function(s) { return s.replace(/'/g, "&apos;").replace(/"/g, "&quot;"); };
+            return JSON.stringify(method, function(key, value) {
+                return (typeof(value) == "string" && (key == "description" || key == "title")) ?
+                    esc(value) : value;
+            });
         },
 
         /**
@@ -759,8 +795,6 @@
             if (typeof result === 'string')
                 result = JSON.parse(result);
 
-            console.log(result);
-
             if (!result.embed) {
                 //do something.
                 return;
@@ -784,11 +818,11 @@
                             // Disable most actions on this element'
                             '$("#'+uuid+'").off("click dblclick keydown keyup keypress focus");',
                             '</script>'].join('\n');
-            console.log(cellText);
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
             outputCell.render();
 
+            this.resetProgress(cell);
             this.trigger('updateData.Narrative');
         },
 

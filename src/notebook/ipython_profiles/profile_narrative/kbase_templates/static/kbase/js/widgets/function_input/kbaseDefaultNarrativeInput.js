@@ -43,7 +43,8 @@
                         var p = params[pid];
 
                         var input = "";
-                        // XXX: HACK to disable the pull-down
+                        var input_default = (p.default !== "" && p.default !== undefined) ?
+                            " placeholder='" + p.default + "'" : "";
                         if (objects[p.type] && objects[p.type].length > 1) {
                             var objList = objects[p.type];
                             objList.sort(function(a, b) {
@@ -54,17 +55,20 @@
                                 return 0;
                             });
                             var datalistUUID = this.genUUID();
-                            input = "<input type='text' name='" + pid + "' list='" + datalistUUID + "'>" +
+                            input = "<input type='text' name='" + pid + "'" + input_default +
+                                    " list='" + datalistUUID + "'>" +
                                     "<datalist id='" + datalistUUID + "'>";
 
-                            for (var j=0; j<objects[p.type].length; j++) {
+                            for (var j=0; j < objects[p.type].length; j++) {
                                 input += "<option value='" + objList[j][0] + "'>" + objList[j][0] + "</option>";
                             }
                             input += "</datalist>";
                         }
                         else {
-                            input = "<input name='" + pid + "' value='' type='text'></input>";
+                            input = "<input name='" + pid + "'" + input_default +
+                                    " value='' type='text'></input>";
                         }
+
                         inputDiv += "<tr style='border:none'>" + 
                                         "<td style='border:none'>" + p.ui_name + "</td>" +
                                         "<td style='border:none'>" + input + "</td>" +

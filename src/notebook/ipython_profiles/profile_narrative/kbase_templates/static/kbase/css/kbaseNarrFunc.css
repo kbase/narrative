@@ -142,6 +142,22 @@
     color: #0D7876;
     margin: 3px;
     opacity: inherit;
+    display: inline;
+}
+.kb-cell-run div.kb-func-desc {
+    opacity: inherit;
+    display: block;
+}
+.kb-func-desc button {
+    margin-left: 10px;
+}
+.kb-cell-run h2 {
+    font-family: 'Roboto';
+    font-size: 11pt;
+    line-height: 15px;
+    color: #666666;
+    margin: 3px;
+    opacity: inherit;
 }
 .kb-cell-run form input[type="submit"] {
     float: right;

@@ -12,12 +12,12 @@
  */
 (function( $, undefined ) {
 
-	$.KBWidget({
+    $.KBWidget({
         name: "kbaseWorkspaceData", 
         parent: "kbaseAuthenticatedWidget",
-		version: "1.0.0",
-		ws_client: null,
-		table: null,
+        version: "1.0.0",
+        ws_client: null,
+        table: null,
         tableData: [],
         $loginMessage: null,
         $errorMessage: null,
@@ -26,19 +26,19 @@
         ws_auth: null,
         // The set of all data currently loaded into the widget
         loadedData: {},
-		options: {
-			loadingImage: "../../images/ajax-loader.gif",
-			notLoggedInMsg: "Please log in to view a workspace.",
+        options: {
+            loadingImage: "static/kbase/images/ajax-loader.gif",
+            notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "http://kbase.us/services/workspace",
             container: null,
             ws_id: null
-		},
+        },
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
 
         init: function(options) {
-			this._super(options);
+            this._super(options);
             this.ws_id = options.ws_id;
             this.$tbl = options.container;
             this.createTable()
@@ -227,8 +227,8 @@
                     });
                 //}
             });
-			return this;
-		},
+            return this;
+        },
 
         /* Convert object metadata from list to object */
         _meta2obj: function(m) {
@@ -602,7 +602,7 @@
          *
          * @returns this
          */
-		render: function() {
+        render: function() {
             this.hideMessages();
             if (!this.isLoggedIn) {
                 this.clearTable();
@@ -629,7 +629,7 @@
                 });
             }
             return this;
-		},
+        },
 
         /**
          * Returns the set of currently loaded data objects from the workspace.
@@ -805,34 +805,34 @@
             return name + '/' + type;
         },
 
-		// loggedIn: function(client, token) {
+        // loggedIn: function(client, token) {
   //           console.debug("WorkspaceData.loggedIn");
   //           this.ws_client = new workspaceService(this.options.workspaceURL);
   //           this.ws_auth = token;
   //           this.isLoggedIn = true;
   //           this.render();
   //           return this;
-		// },
+        // },
 
-		// loggedOut: function(e, args) {
+        // loggedOut: function(e, args) {
   //           this.isLoggedIn = false;
   //           this.render();
   //           return this;
   //       },
 
         clearTable: function() {
-			if (this.table) {
-				this.table.fnDestroy();
-				this.table = null;
-			}
+            if (this.table) {
+                this.table.fnDestroy();
+                this.table = null;
+            }
             return this;
-		},
+        },
 
         hideMessages: function() {
             this.$errorMessage.hide();
             this.$loginMessage.hide();
         }
 
-	});
+    });
 
 })( jQuery );

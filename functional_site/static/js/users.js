@@ -1,4 +1,45 @@
+
+
 (function($, undefined) {
+
+
+    // Loads the public KBase RSS feed
+    // Uses the Google Feed API to read the feed and convert into JSON
+    // https://developers.google.com/feed/v1/ 
+    function loadKBaseFeed() {
+        var feedURL = "http://acs.lbl.gov/~sspoon/misc/kbasefeed.xml";
+
+        var feed = new google.feeds.Feed(feedURL);
+        feed.load(function(result) {
+            if (!result.error) {
+
+                var data = { rows: []};
+
+                //only read 10 entries (unless there are fewer than 10 entries in the feed)
+                var length = result.feed.entries.length <= 10 ? result.feed.entries.length : 10;
+
+                for (var i = 0; i < length; i++) {
+                    var entry = result.feed.entries[i];
+
+                    //add the content element of the entry 
+                    data.rows.push({
+                        "summary": entry.content
+                    });     
+                }
+
+                //call the html template
+                rows = ich.newsfeed_items(data)
+                $('#public_newsfeed').append(rows);
+
+            }
+        });
+    }
+
+    //loads the Google feed module and on page load, retrieves the feed
+    google.load("feeds", "1");
+    google.setOnLoadCallback(loadKBaseFeed);
+
+
     var workspaceURL = "https://kbase.us/services/workspace";
     var workspaceClient = new workspaceService(workspaceURL);
     notLoggedIn();
@@ -113,8 +154,8 @@
 
 
     function loadPage() {
-    	$("#alt_banner").hide(); // Hmmm???
-    	$("#header_banner").show(); // Hmmm??
+    	$("#alt_banner").hide(); // related to the login widget
+    	$("#header_banner").show(); // related to the login widget
 		$("#login_section").hide();
 		$("#public_section").hide();
 	    $("#newsfeed_column").show();
@@ -125,11 +166,24 @@
         var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
         var userName = $("#login-widget").kbaseLogin("get_kbase_cookie", "name");
 
+
         if (!userName)
             userName = "KBase User";
         $("#kb_name").html(userName);
 
-        loadProjectFeed(token, userId);
+        //populate the little profile area, only have full name right now ..
+        var data = {
+            "name" : userName,
+            "username" : userId
+        };
+
+        //populate the html template
+        var profile = ich.profile(data)
+        $('#profile_area').append(profile);
+
+
+        //loadProjectFeed(token, userId);
+
         loadRecentNarratives();
         loadRecentProjects();
 
@@ -140,6 +194,9 @@
     function clientError(error) {
         console.debug(error);
     };
+
+
+
 
     // feed 
 	function loadProjectFeed (token, userId) {
@@ -253,11 +310,8 @@
         $("#projects_loading").show();
         project.get_projects({
             callback: function(projectresults) {
-            	console.log("got here2");
                 if (Object.keys(projectresults).length > 0) {
                     var data = { rows: []};
-
-                    console.log("got here");
             
 					//first sort
 					results = _.sortBy(projectresults, function(project_id) {

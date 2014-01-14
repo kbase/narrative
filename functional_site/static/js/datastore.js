@@ -199,7 +199,7 @@
                             var moddate = allObjectsList[i][2];
                             moddate = moddate.replace(/T/g," ");
                             objectMetaTable.push([
-                                "<input type='checkbox' />",
+                                
                                 allObjectsList[i][0], // id
                                 allObjectsList[i][1], // type
                                 allObjectsList[i][6], // owner
@@ -207,7 +207,8 @@
                                                       // source
                                                       // created
                                 allObjectsList[i][7], // (workspace)
-                                moddate  // modified
+                                moddate,  // modified
+                                "<span class=\"glyphicon glyphicon-trash\"></span>" //delete
                             ]);
                         }
                     }

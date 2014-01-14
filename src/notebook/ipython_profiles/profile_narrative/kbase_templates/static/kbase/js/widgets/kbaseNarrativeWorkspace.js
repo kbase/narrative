@@ -37,7 +37,7 @@
         errorWidget: "kbaseNarrativeError",
 
         inputsRendered: false,
-        maxSavedStates: 10000,      // dummy for now. 10000 ~ infinity, right?
+        maxSavedStates: 2,      // limit the states saved to 2 for now.
 
         // constant strings.
         KB_CELL: 'kb-cell',
@@ -230,7 +230,6 @@
 
             if (this.validateMethod(method)) {
                 // This is the list of parameters for the given method
-//                var inputs = this.buildFunctionInputs(method, cellId);
                 var inputWidget = this.defaultInputWidget;
                 if (method.properties.widgets.input)
                     inputWidget = method.properties.widgets.input;
@@ -293,6 +292,51 @@
             this.removeCellEditFunction(cell);
             this.bindActionButtons(cell);
             console.debug("buildFunctionCell.end");
+        },
+
+        /**
+         * A TEMPORARY FUNCTION that should refresh and update the given cell's metadata to the new(er) version,
+         * if it needs to happen.
+         * should be the structure:
+         * {
+         *     'kb-cell': {
+         *         'type' : 'function_input' | 'function_output',
+         *         'method' : object (if input cell),
+         *         'widget' : <widget name>
+         *         'widget_state' : [array of states]
+         *     }
+         * }
+         */
+        checkCellMetadata: function(cell) {
+            if (cell.metadata[this.KB_CELL]) {
+                // if that top-level one is a string, it'll probably be an output cell, so make it one.
+                if (typeof cell.metadata[this.KB_CELL] === "string") {
+                    var newMeta = {};
+                    newMeta[this.KB_TYPE] = this.KB_OUTPUT_CELL;
+                    newMeta['widget'] = undefined;
+                    newMeta[this.KB_STATE] = [];
+                    cell.metadata[this.KB_CELL] = newMeta;
+                }
+                else if (typeof cell.metadata[this.KB_CELL] === "object") {
+                    // The "old" version (i.e. at the beginning of the workshop starting 1/6/2013)
+                    // just needs to make sure the input cells have the widget state as an array.
+                    // AND it should store the widget name, as found in the method, as a separate field.
+
+                    if (cell.metadata[this.KB_CELL][this.KB_TYPE] === this.KB_FUNCTION_CELL) {
+                        if (!cell.metadata[this.KB_CELL]['widget'])
+                            cell.metadata[this.KB_CELL]['widget'] = cell.metadata[this.KB_CELL]['method'].properties.widgets.input || this.defaultInputWidget;
+                        if (!cell.metadata[this.KB_CELL][this.KB_STATE]) {
+                            cell.metadata[this.KB_CELL][this.KB_STATE] = [];
+                            if (cell.metadata[this.KB_CELL]['input_state']) {
+                                cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time': 0, 'state' : cell.metadata[this.KB_CELL]['input_state'] });
+                            }
+                        }
+                        else if (Object.prototype.toString.call(cell.metadata[this.KB_CELL][this.KB_STATE]) !== '[object Array]') {
+                            cell.metadata[this.KB_CELL][this.KB_STATE] = [ { 'time' : 0, 'state' : cell.metadata[this.KB_CELL][this.KB_STATE] } ];
+                        }
+                    }
+                }
+            }
         },
 
         /**
@@ -499,16 +543,26 @@
             }
 
             var state;
-            if ($(cell.element).find(target)[widget](['prototype'])['getState']) {
+            if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
+                // if that widget can save state, do it!
                 state = $(cell.element).find(target)[widget]('getState');
             }
+
             var timestamp = this.getTimestamp();
+            console.debug(cell);
             cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
             while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
                 cell.metadata[this.KB_CELL][this.KB_STATE].pop();
             }
         },
 
+        /**
+         * Loads the most recent cell state (i.e. the top of the stack) of the given cell.
+         * If that state is undefined (or if the state array is undefined or not an array), nothing is done.
+         * @param {Object} cell - the cell to fetch the most recent cell state from
+         * @returns the most recent cell state, in whatever form that state takes (scalar, array, object, etc.)
+         * @private
+         */
         loadRecentCellState: function(cell) {
             var state = this.getRecentState(cell);
             if (state) {
@@ -531,13 +585,28 @@
             }
         },
 
+        /**
+         * Returns the entire state array from the given cell.
+         * If there is not an array present, or if the state object is not an array, then an empty list is returned.
+         * @param {Object} cell - the cell to fetch the state array from
+         * @returns {Array} an array of states for that cell
+         * @private
+         */
         getCellStateArray: function(cell) {
             if (this.isFunctionCell(cell) || this.isOutputCell(cell)) {
-                return cell.metadata[this.KB_CELL][this.KB_STATE];
+                var stateArr = cell.metadata[this.KB_CELL][this.KB_STATE];
+                // if it's an array, return it.
+                if (Object.prototype.toString.call(stateArr) === "[object Array]")
+                    return stateArr;
             }
+            // if the cell doesn't have a state array, or if it's NOT an array, return the empty array.
             return [];
         },
 
+        /**
+         * Saves the state of all cells into their respective arrays.
+         * @public
+         */
         saveAllCellStates: function() {
             var cells = IPython.notebook.get_cells();
             $.each(cells, $.proxy(function(idx, cell) {
@@ -545,6 +614,10 @@
             }, this));
         },
 
+        /**
+         * Loads the most recently saved state into all cells.
+         * @public
+         */
         loadAllRecentCellStates: function() {
             var cells = IPython.notebook.get_cells();
             $.each(cells, $.proxy(function(idx, cell) {
@@ -552,12 +625,20 @@
             }, this));
         },
 
+        /**
+         * Fetches the most recent cell state. If the cell state is an array, it gets the first element,
+         * if it's NOT an array, it just returns that state.
+         * This *should* make things still functional for the older (non-array-based) stateful cells.
+         * XXX: eventually update this to just array, once we're out of dev-panic-mode and closer to production.
+         */
         getRecentState: function(cell) {
             var state;
             if (this.isFunctionCell(cell) || this.isOutputCell(cell)) {
                 var stateList = cell.metadata[this.KB_CELL][this.KB_STATE];
-                if (stateList.length > 0)
+                if (Object.prototype.toString.call(stateList) === "[object Array]")
                     state = stateList[0];
+                else
+                    state = stateList;
             }
             return state;
         },
@@ -1034,6 +1115,10 @@
         render: function() {
             this.rebindActionButtons();
             this.hideGeneratedCodeCells();
+            var cells = IPython.notebook.get_cells();
+            for (var i=0; i<cells.length; i++) {
+                this.checkCellMetadata(cells[i]);
+            }
             this.trigger('updateData.Narrative');
             return this;
         },

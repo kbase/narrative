@@ -105,22 +105,23 @@ def get_wsobj( wsclient, token, ws_id, objtype=None):
     return res
 
 # Tag a workspace as a project, if there is an error, let it propagate up
-def check_project_tag( wsclient, workspace, token):
+def check_project_tag( wsclient, workspace):
     try:
-        tag = wsclient.get_objectmeta( { 'auth' : token,
-                                         'workspace' : workspace,
-                                         'id' : ws_tag['project'],
-                                         'type' : ws_tag_type});
+        tag = wsclient.get_object_info( [{ 'workspace' : workspace,
+                                           'name' : ws_tag['project']}],
+                                        false);
     except biokbase.workspaceService.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found'):
-            ws_meta = wsclient.save_object( { 'workspace' : workspace,
-                                              'auth' : token,
-                                              'type' :ws_tag_type,
-                                              'id' : ws_tag['project'],
-                                              'data' : { 'description' : 'Tag! You\'re a project!'},
-                                              'metadata' : {},
-                                              'default_permission' : 'n'});
+            obj_save_data = { 'name' : ws_tag['project'],
+                              'type' :ws_tag_type,
+                              'data' : { 'description' : 'Tag! You\'re a project!'},
+                              'meta' : {},
+                              'provenance' : [],
+                              'hidden' : 0,
+                              'default_permission' : 'n'}
+            ws_meta = wsclient.save_objects( 'workspace' : workspace,
+                                             'objects' : [obj_save_data]);
         else:
             raise e
     return True
@@ -135,15 +136,15 @@ def check_homews( wsclient, user_id, token):
     it is tagged with a workspace_meta object named "_project"
     """
     try:
-        homews = "%s_home" % user_id
-        ws_meta = wsclient.get_workspacemeta( { 'auth' : token,
-                                                'workspace' : homews})
+        homews = "%s:home" % user_id
+        workspace_identity = { 'workspace' : homews }
+        ws_meta = wsclient.get_workspace_info( workspace_identity)
     except biokbase.workspaceService.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found'):
             ws_meta = wsclient.create_workspace( { 'workspace' : homews,
-                                                   'auth' : token,
-                                                   'default_permission' : 'n'})
+                                                   'globalread' : 'n',
+                                                   'description' : 'User home workspace'})
             return homews
         else:
             raise e

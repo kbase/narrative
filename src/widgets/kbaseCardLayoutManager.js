@@ -839,6 +839,8 @@
                         {
                             bambi_run_result_id: this.options.data.bambi_run_result_id,
                             workspace_id: this.options.data.workspace_id,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },

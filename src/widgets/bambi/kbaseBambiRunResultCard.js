@@ -13,8 +13,9 @@
             width: 450
         },
 
-        workspaceURL: "https://kbase.us/services/workspace",
-
+//        workspaceURL: "https://kbase.us/services/workspace",
+        newWorkspaceServiceUrl: "http://140.221.84.209:7058/",
+        
         init: function(options) {
             this._super(options);
             if (this.options.bambi_run_result_id === null) {
@@ -27,7 +28,8 @@
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-            this.workspaceClient = new workspaceService(this.workspaceURL);
+//            this.workspaceClient = new workspaceService(this.workspaceURL);
+            this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, { 'token' : this.options.auth, 'user_id' : this.options.userId});
 
             return this.render();
         },
@@ -42,8 +44,8 @@
              * Number of motifs
              */
             var self = this;
-            this.workspaceClient.get_object({"id" : this.options.bambi_run_result_id, "type" : "BambiRunResult", "workspace": this.options.workspace_id}, 
-		    	function(data){
+            this.workspaceClient.get_objects([{workspace: this.options.workspace_id, name: this.options.bambi_run_result_id}], 
+            		    	function(data){
 					self.collection = data;
 					var d = new Date(parseInt(self.collection.data.timestamp));
 					var creationMonth = d.getMonth()+1;
@@ -84,12 +86,18 @@
 								self.trigger("showBambiRawOutput", { raw_output: self.collection.data.raw_output, event: event });
 	                    })
 	                );
-			    },
+						
+                        },
 
-			    self.rpcError
+			    function(data) {
+                                $('.loader-table').remove();
+                                self.$elem.append('<p>[Error] ' + data.error.message + '</p>');
+                                return;
+                            }
 		    );
             this.hideMessage();
             return this;
+
         },
 
 

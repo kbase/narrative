@@ -46,7 +46,7 @@
             var self = this;
             this.workspaceClient.get_objects([{workspace: this.options.workspace_id, name: this.options.bambi_run_result_id}], 
             		    	function(data){
-					self.collection = data;
+					self.collection = data[0];
 					var d = new Date(parseInt(self.collection.data.timestamp));
 					var creationMonth = d.getMonth()+1;
 					self.$elem.append("<h3>BAMBI Run Info</h3>");

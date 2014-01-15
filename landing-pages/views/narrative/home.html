@@ -11,17 +11,17 @@
                         <a id="new_narrative_button" data-toggle="modal" href="#" class="btn btn-default">Copy Narrative</a>
                         
                     </div> -->
-                    <ul>
-                        <li><a class="btn narr-btn-primary btn-block" href="#/narrative/home/">Newsfeed<span class="glyphicon glyphicon-chevron-right pull-right"></span></a>
-                        <li><a class="btn narr-btn-default btn-block" href="#/narrative/home/projects/">Projects/Narratives<span class="glyphicon glyphicon-chevron-right pull-right"></span></a></li>
-                        <li><a class="btn narr-btn-default btn-block" href="#/narrative/home/projects/">Workspace Browser<span class="glyphicon glyphicon-chevron-right pull-right"></span></a></li>
+                    <ul id="narr-sidenav-items">
+                        <li><a class="btn narr-btn-primary btn-block" href="#/narrative/home/">NEWSFEED<span class="glyphicon glyphicon-chevron-right pull-right"></span></a>
+                        <li><a class="btn narr-btn-default btn-block" href="#/narrative/home/projects/">PROJECTS / NARRATIVES<span class="glyphicon glyphicon-chevron-right pull-right"></span></a></li>
+                        <li><a class="btn narr-btn-default btn-block" href="#/narrative/home/projects/">WORKSPACE BROWSER<span class="glyphicon glyphicon-chevron-right pull-right"></span></a></li>
                         
                     </ul>
                     
 
                     <div class="narr-narrative-section">
                         <h3>RECENT NARRATIVES</h3>
-                        <img src="./assets/images/ajax-loader.gif" id="narratives_loading"  />
+                        <img src="./assets/images/ajax-loader.gif" id="narratives_loading" style="display: none;" />
                         <div id="no_narratives" style="display: none;">You do not have any narratives. Create a narrative to get started.</div>
                         <div id="recent_narratives_list" recentnarratives>
     
@@ -30,7 +30,7 @@
                     </div>
                     <div class="narr-narrative-section">
                         <h3>RECENT PROJECTS</h3>
-                        <img src="./assets/images/ajax-loader.gif" id="projects_loading"  />
+                        <img src="./assets/images/ajax-loader.gif" id="projects_loading"  style="display: none;"/>
                         <div id="no_projects" style="display: none;">You do not have any projects. Create a project to get started.</div>
                         <ol id="recent_projects_list" recentprojects>
      

@@ -612,7 +612,7 @@
                 this.showModelCards();
             else if (this.options.template.toLowerCase() === "spec")
                 this.showSpecCards();
-            else if (this.options.template.toLowerCase() === "ppi")
+            else if (this.options.template.toLowerCase() === "ppid")
                 this.showPPICards();
             else {
                 // throw an error for an unknown template. modal dialog, maybe?

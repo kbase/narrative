@@ -210,7 +210,7 @@
 			   workspace_id : undefined,
 			   error_callback: error_handler };
 	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+	var token = $(project.auth_div).kbaseLogin('session').token//.kbaseLogin('get_kbase_cookie').token;
         var ws_meta = project.ws_client.list_workspace_objects( { auth: token,
 								  workspace: p.workspace_id});
 	$.when( ws_meta).then( function (results) {
@@ -240,7 +240,7 @@
 			   error_callback: error_handler
 			 };
 	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+	var token = $(project.auth_div).kbaseLogin('session').token; //.kbaseLogin('get_kbase_cookie').token;
         var del_fn = project.ws_client.get_object( { auth: token,
 						     type: p.type,
 						     workspace: p.workspace,
@@ -254,18 +254,18 @@
     // dictionary keyed on the obj_meta_fields for the result
     project.delete_object = function( p_in ) {
 	var def_params = { callback : undefined,
-			   workspace_id : undefined,
-			   object_id : undefined,
+			   workspace : undefined,
+			   id : undefined,
 			   type: undefined,
 			   error_callback: error_handler };
 	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
-	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
+	var token = $(project.auth_div).kbaseLogin('session').token;//.kbaseLogin('get_kbase_cookie').token;
+	var user_id = $(project.auth_div).kbaseLogin('session').user_id;//.kbaseLogin('get_kbase_cookie').user_id;
 
         var del_fn = project.ws_client.delete_object( { auth: token,
 							type: p.type,
 							workspace: p.workspace,
-							id: p.object_id });
+							id: p.id });
 	$.when( del_fn).then( p.callback,
 			      p.error_callback);
     };
@@ -283,7 +283,7 @@
 			   error_callback: error_handler
 			 };
 	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+	var token = $(project.auth_div).kbaseLogin('session').token//.kbaseLogin('get_kbase_cookie').token;
 
         if ( legit_ws_id.test(p.project_id)) {
 	    // Check if the workspace exists already. If it does, then 'upgrade'
@@ -327,7 +327,7 @@
 			   error_callback: error_handler
 			 };
 	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+	var token = $(project.auth_div).kbaseLogin('session').token//.kbaseLogin('get_kbase_cookie').token;
 
         if ( legit_ws_id.test(p.project_id)) {
 	    var ws_def_fun = project.ws_client.delete_workspace({ auth: token,
@@ -352,7 +352,7 @@
 			   error_callback : error_handler
 			 };
 	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+	var token = $(project.auth_div).kbaseLogin('session').token//.kbaseLogin('get_kbase_cookie').token;
 
 	var perm_fn =  project.ws_client.get_workspacepermissions( { auth : token,
 								      workspace : p.project_id });
@@ -380,7 +380,7 @@
 			   error_callback : error_handler
 			 };
 	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+	var token = $(project.auth_div).kbaseLogin('session').token;//.kbaseLogin('get_kbase_cookie').token;
 
 	var set_perm_fn =  [];
 	// If a new default permission was given push a set_global_workspace_permissions
@@ -474,14 +474,14 @@
     // if it fails to conform
 
     project.new_narrative = function( p_in ) {
-	var user_id = $(project.auth_div).kbaseLogin('get_kbase_cookie').user_id;
+	var user_id = $(project.auth_div).kbaseLogin('session').user_id//.kbaseLogin('get_kbase_cookie').user_id;
 	var def_params = { callback : undefined,
 			   project_id : user_id+"_home",
 			   narrative_id : undefined,
 			   description : "A KBase narrative",
 			   error_callback: error_handler };
 	var p = $.extend( def_params, p_in);
-	var token = $(project.auth_div).kbaseLogin('get_kbase_cookie').token;
+	var token = $(project.auth_div).kbaseLogin('session').token//.kbaseLogin('get_kbase_cookie').token;
 
         if ( legit_ws_id.test(p.narrative_id)) {
 	    var nar = $.extend(true,{},empty_narrative);

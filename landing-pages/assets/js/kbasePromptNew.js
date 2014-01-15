@@ -320,7 +320,6 @@
                                </div> \
                              </div> \
                            </div>');
-
     
             if (type) {
                 ele.find('.modal-cover-box').addClass('alert-'+type);
@@ -328,13 +327,9 @@
                 ele.find('.modal-cover-box').addClass('alert-success');                
             }
 
-
             ele.hide();
-
-            if (text) {
-                ele.find('.modal-cover-box').html(text)
-                ele.show();                
-            }
+            if (text) ele.find('.modal-cover-box').html(text);
+            ele.show();            
 
             $('.modal-body').append(ele);
 

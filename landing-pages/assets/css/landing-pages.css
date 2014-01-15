@@ -73,7 +73,7 @@ h1 {
     font-weight: normal;
     }
 h2 {
-    font-family: 'RobotoBlack', Arial, sans-serif; 
+    font:  1.5em/1.75em  'RobotoBlack', Arial, sans-serif; 
     font-weight: normal; 
     color: #898989; 
     letter-spacing: 0;
@@ -447,5 +447,13 @@ float: left;
 
 .group-item-expander {
     background: #e9f8fd;
+}
+
+.btn-delete-narrative {
+    cursor: hand;
+    cursor: pointer;
+}
+.btn-delete-narrative:hover {
+    opacity: 0.7;    
 }
 

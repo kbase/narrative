@@ -20,6 +20,10 @@ body {
 	border: none;
 }
 
+#narr-newsfeed-column h2 {
+	color: #4a4a4a;
+}
+
 .narr-featured-title {
 	font-size: 16px; 
 	margin-top: 10px
@@ -56,6 +60,7 @@ body {
 	border-top: 1px solid #ddd;
 	padding-bottom: 40px;
 }
+
 
 .narr-narrative-section h3 {
 	font-size: 14px;

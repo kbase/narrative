@@ -940,6 +940,8 @@
 
         /**
          * Result is an object with this structure:
+         * cell = the invoking function cell.
+         * result = the result data object from the Python call.
          * widget - the widget to use (if null, then use kbaseDefaultNarrativeOutput)
          * data - the object to be passed in to the widget
          * embed - if true, then embed the widget and render it.

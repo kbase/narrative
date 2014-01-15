@@ -229,6 +229,11 @@ var app = angular.module('landing-pages',
             templateUrl: 'views/objects/bambi.html',
              controller: 'BambiDetail'})
 
+    $stateProvider
+	.state('ppid',
+	   {url: '/ppid/:ws/:id',
+	    templateUrl: 'views/objects/ppid.html',
+	    controller: 'PPIDetail'})
 
     $stateProvider
         .state('landing-pages-help',

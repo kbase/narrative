@@ -122,7 +122,7 @@
          * @returns this
          */
         initControls: function(elem) {
-            console.debug('initControls.begin');
+//            this.dbg('initControls.begin');
             var $search = $('<div>').addClass('kb-search')
             var $search_inp = $('<input>').attr('type', 'text');
             $search.append($search_inp);
@@ -165,9 +165,9 @@
             elem.append($refresh);
             var self = this;
             elem.on('click', function(e) {
-                console.debug("refresh.begin");
+                // this.dbg("refresh.begin");
                 self.render();
-                console.debug("refresh.end");
+                // this.dbg("refresh.end");
             });
             // done
 
@@ -192,7 +192,7 @@
                 this.help = $anchor2.data('help');
                 this.help_title = $anchor2.data('name');
                 $anchor2.click(function() {
-                    console.debug("help asked for");
+//                    console.debug("help asked for");
                     var $elt = $('#kb-function-help');
                     $elt.addClass("alert alert-info");
                     $elt.html("<h1>" + self.help_title + " help</h1>" + 
@@ -212,7 +212,7 @@
          * include a list of parameters and outputs.
          */
         buildFunctionCell: function(method) {
-            console.debug("buildFunctionCell.start method:",method);
+//            console.debug("buildFunctionCell.start method:",method);
 
             var cell = IPython.notebook.insert_cell_below('markdown');
             // make this a function input cell, as opposed to an output cell
@@ -282,7 +282,7 @@
                 cellContent = "Error - the selected method is invalid.";
             }
             // Useful for debugging Markdown errors
-            console.debug("buildFunctionCell.set_text content:", cellContent);
+//            console.debug("buildFunctionCell.set_text content:", cellContent);
             cell.set_text(cellContent);
 
             cell.rendered = false;
@@ -291,7 +291,7 @@
 
             this.removeCellEditFunction(cell);
             this.bindActionButtons(cell);
-            console.debug("buildFunctionCell.end");
+//            console.debug("buildFunctionCell.end");
         },
 
         /**
@@ -549,7 +549,6 @@
             }
 
             var timestamp = this.getTimestamp();
-            console.debug(cell);
             cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
             while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
                 cell.metadata[this.KB_CELL][this.KB_STATE].pop();
@@ -816,7 +815,7 @@
          * @private
          */
         handleExecuteReply: function (cell, content) {
-            console.debug("Done running the function", content);
+//            console.debug("Done running the function", content);
             this.showCellProgress(cell, "DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
@@ -834,7 +833,7 @@
          * @private
          */
         handleInputRequest: function (cell, content) {
-            console.log("handle input request called");
+            this.dbg("handle input request called");
             return;
             //this.output_area.append_raw_input(content);
         },
@@ -843,7 +842,7 @@
          * @private
          */
         handleClearOutput: function (cell, content) {
-            console.debug("handle clear output called");
+            this.dbg("handle clear output called");
             return;
             //this.clear_output(content.stdout, content.stderr, content.other);
         },

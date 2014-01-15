@@ -89,7 +89,7 @@ angular.module('card-directives')
             }
         };
     })
-    .directive('ppicards', function($rootScope) {
+    .directive('ppid', function($rootScope) {
 	return {
 	    link: function(scope, element, attrs) {
 		$(element).KBaseCardLayoutManager({

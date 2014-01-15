@@ -7,7 +7,8 @@
         options: {
             id: "",
             name: "",
-            width: 600
+            width: 600,
+            token: null
         },
 
         init: function(options) {
@@ -16,7 +17,7 @@
             var container = this.$elem;
             self.$elem.append('<p class="muted loader-table"><img src="assets/img/ajax-loader.gif"> loading...</p>');
 
-            var kbws = new Workspace(newWorkspaceServiceUrlForSpec);
+            var kbws = new Workspace(newWorkspaceServiceUrlForSpec, {token: options.token});
             var typeName = this.options.id;
             var typeVer = null;
             if (typeName.indexOf('-') >= 0) {
@@ -24,7 +25,7 @@
             	typeName = typeName.substring(0, typeName.indexOf('-'));
             }
         	self.options.name = typeName;
-        	var pref = (new Date()).getTime();
+        	var pref = generateSpecPrefix();
         	
             kbws.get_type_info(this.options.id, function(data) {
             	$('.loader-table').remove();
@@ -67,16 +68,17 @@
                 for (var i in data.module_vers) {
                 	var moduleVer = data.module_vers[i];
                 	var moduleId = moduleName + '-' + moduleVer;
-                	moduleLinks[moduleLinks.length] = '<a class="'+pref+'modver-click" data-moduleid="'+moduleId+'">'+moduleVer+'</a>';
+                	moduleLinks[moduleLinks.length] = '<a onclick="specClicks[\''+pref+'modver-click\'](this,event); return false;" data-moduleid="'+moduleId+'">'+moduleVer+'</a>';
                 }
                 overviewTable.append('<tr><td>Module version(s)</td><td>'+moduleLinks+'</td></tr>');
             	overviewTable.append('<tr><td>Description</td><td><textarea style="width:100%;" cols="2" rows="7" readonly>'+data.description+'</textarea></td></tr>');
-                $('.'+pref+'modver-click').click(function(e) {
-                    var moduleId = $(this).data('moduleid');
+            	specClicks[pref+'modver-click'] = (function(elem, e) {
+                    var moduleId = $(elem).data('moduleid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "module", 
                     			id : moduleId,
+                    			token: options.token,
                     			event: e
                     		});
                 });
@@ -87,12 +89,13 @@
             	$('#'+pref+'spec').append(
             			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + "</pre></div>"
             	);
-                $('.'+pref+'links-click').click(function(e) {
-                    var aTypeId = $(this).data('typeid');
+            	specClicks[pref+'links-click'] = (function(elem, e) {
+                    var aTypeId = $(elem).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
                     			id : aTypeId,
+                    			token: options.token,
                     			event: e
                     		});
                 });
@@ -106,7 +109,7 @@
             		var funcId = data.using_func_defs[i];
             		var funcName = funcId.substring(0, funcId.indexOf('-'));
             		var funcVer = funcId.substring(funcId.indexOf('-') + 1);
-            		funcsData[funcsData.length] = {name: '<a class="'+pref+'funcs-click" data-funcid="'+funcId+'">'+funcName+'</a>', ver: funcVer};
+            		funcsData[funcsData.length] = {name: '<a onclick="specClicks[\''+pref+'funcs-click\'](this,event); return false;" data-funcid="'+funcId+'">'+funcName+'</a>', ver: funcVer};
             	}
                 var funcsSettings = {
                         "sPaginationType": "full_numbers",
@@ -120,12 +123,13 @@
                     };
                 var funcsTable = $('#'+pref+'funcs-table').dataTable(funcsSettings);
                 funcsTable.fnAddData(funcsData);
-                $('.'+pref+'funcs-click').click(function(e) {
-                    var funcId = $(this).data('funcid');
+                specClicks[pref+'funcs-click'] = (function(elem, e) {
+                    var funcId = $(elem).data('funcid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "function", 
                     			id : funcId,
+                    			token: options.token,
                     			event: e
                     		});
                 });
@@ -138,7 +142,7 @@
             		var aTypeId = data.using_type_defs[i];
             		var aTypeName = aTypeId.substring(0, aTypeId.indexOf('-'));
             		var aTypeVer = aTypeId.substring(aTypeId.indexOf('-') + 1);
-            		typesData[typesData.length] = {name: '<a class="'+pref+'types-click" data-typeid="'+aTypeId+'">'+aTypeName+'</a>', ver: aTypeVer};
+            		typesData[typesData.length] = {name: '<a onclick="specClicks[\''+pref+'types-click\'](this,event); return false;" data-typeid="'+aTypeId+'">'+aTypeName+'</a>', ver: aTypeVer};
             	}
                 var typesSettings = {
                         "sPaginationType": "full_numbers",
@@ -152,12 +156,13 @@
                     };
                 var typesTable = $('#'+pref+'types-table').dataTable(typesSettings);
                 typesTable.fnAddData(typesData);
-                $('.'+pref+'types-click').click(function(e) {
-                    var aTypeId = $(this).data('typeid');
+                specClicks[pref+'types-click'] = (function(elem, e) {
+                    var aTypeId = $(elem).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
                     			id : aTypeId,
+                    			token: options.token,
                     			event: e
                     		});
                 });
@@ -170,7 +175,7 @@
             		var aTypeId = data.used_type_defs[i];
             		var aTypeName = aTypeId.substring(0, aTypeId.indexOf('-'));
             		var aTypeVer = aTypeId.substring(aTypeId.indexOf('-') + 1);
-            		subsData[subsData.length] = {name: '<a class="'+pref+'subs-click" data-typeid="'+aTypeId+'">'+aTypeName+'</a>', ver: aTypeVer};
+            		subsData[subsData.length] = {name: '<a onclick="specClicks[\''+pref+'subs-click\'](this,event); return false;" data-typeid="'+aTypeId+'">'+aTypeName+'</a>', ver: aTypeVer};
             	}
                 var subsSettings = {
                         "sPaginationType": "full_numbers",
@@ -184,12 +189,13 @@
                     };
                 var subsTable = $('#'+pref+'subs-table').dataTable(subsSettings);
                 subsTable.fnAddData(subsData);
-                $('.'+pref+'subs-click').click(function(e) {
-                    var aTypeId = $(this).data('typeid');
+                specClicks[pref+'subs-click'] = (function(elem, e) {
+                    var aTypeId = $(elem).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
                     			id : aTypeId,
+                    			token: options.token,
                     			event: e
                     		});
                 });
@@ -205,7 +211,7 @@
                 	if (typeVer === aTypeVer) {
                 		link = aTypeId;
                 	} else {
-                		link = '<a class="'+pref+'vers-click" data-typeid="'+aTypeId+'">'+aTypeId+'</a>';
+                		link = '<a onclick="specClicks[\''+pref+'vers-click\'](this,event); return false;" data-typeid="'+aTypeId+'">'+aTypeId+'</a>';
                 	}
             		versData[versData.length] = {name: link};
             	}
@@ -221,12 +227,13 @@
                     };
                 var versTable = $('#'+pref+'vers-table').dataTable(versSettings);
                 versTable.fnAddData(versData);
-                $('.'+pref+'vers-click').click(function(e) {
-                    var aTypeId = $(this).data('typeid');
+                specClicks[pref+'vers-click'] = (function(elem, e) {
+                    var aTypeId = $(elem).data('typeid');
                     self.trigger('showSpecElement', 
                     		{
                     			kind: "type", 
                     			id : aTypeId,
+                    			token: options.token,
                     			event: e
                     		});
                 });

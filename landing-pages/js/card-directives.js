@@ -49,6 +49,16 @@ angular.module('card-directives')
             }
         };
     })
+    .directive('inferelatorcards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "inferelator", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
     .directive('bambicards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
@@ -194,7 +204,8 @@ angular.module('card-directives')
         return {
             link: function(scope, element, attrs) {
                 $(element).KBaseCardLayoutManager({template: "spec", 
-                                                   data: scope.params});
+                                                   data: scope.params,
+                                                   auth: $rootScope.USER_TOKEN});
             }
         };
     })

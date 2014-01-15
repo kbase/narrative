@@ -20,7 +20,9 @@
 
 
 var app = angular.module('landing-pages', 
-    ['lp-directives', 'card-directives', 'mv-directives', 'trees-directives', 'ws-directives', 'narrative-directives', 'ui.router'])
+    ['lp-directives', 'card-directives',
+     'mv-directives', 'trees-directives', 
+     'ws-directives', 'narrative-directives', 'ui.router'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
 
@@ -42,7 +44,7 @@ var app = angular.module('landing-pages',
         }).state('home.projects', {
           url: "projects/",
           templateUrl: 'views/narrative/projects.html',
-          controller: 'Narrative'
+          controller: 'NarrativeProjects'
         }) 
 
 
@@ -211,11 +213,17 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/objects/meme.html',
              controller: 'MemeDetail'})
 
-	$stateProvider
+    $stateProvider
         .state('cmonkeybyname',
             {url: '/cmonkey/:ws/:id',
              templateUrl: 'views/objects/cmonkey.html',
              controller: 'CmonkeyDetail'})
+
+    $stateProvider
+        .state('inferelator',
+            {url: '/inferelator/:ws/:id',
+             templateUrl: 'views/objects/inferelator.html',
+             controller: 'InferelatorDetail'})
 
     $stateProvider
         .state('spec',
@@ -264,15 +272,18 @@ app.run(function ($rootScope, $location) {
 
     $rootScope.$on('$stateChangeStart',
         function (event, toState, toParams, fromState, fromParams) {
-            subURL = toState.name.split('.')[0];
-            if (subURL == 'trees') {
-                $('#navigation').load('partials/nav-trees.html', navbar_cb);
-            } else if (subURL == 'mv') {
-                $('#navigation').load('partials/nav-mv.html', navbar_cb);
-            } else if (subURL == 'ws') {
-                $('#navigation').load('partials/nav-ws.html', navbar_cb);
+            contr = toState.controller;
+            var nav = $('#navigation');
+            if (contr == 'Narrative' || contr == 'NarrativeProjects') {
+                nav.load('partials/nav-narrative.html', navbar_cb);
+            } else if (contr == 'Trees') {
+                nav.load('partials/nav-trees.html', navbar_cb);
+            } else if (contr == 'ModelViewer') {
+                nav.load('partials/nav-mv.html', navbar_cb);
+            } else if (contr == 'WorkspaceBrowser') {
+                nav.load('partials/nav-narrative.html', navbar_cb);
             } else {
-                $('#navigation').load('partials/nav.html', navbar_cb);              
+                nav.load('partials/nav.html', navbar_cb);              
             }
 
         });

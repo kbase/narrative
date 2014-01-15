@@ -37,7 +37,7 @@
             }
             this.trigger('dataLoadedQuery.Narrative', [lookupTypes, $.proxy(
                 function(objects) {
-                    console.log(objects);
+//                    console.log(objects);
                     var inputDiv = "<div class='kb-cell-params'><table class='table'>";
                     for (var i=0; i<Object.keys(params).length; i++) {
                         var pid = 'param' + i;

@@ -26,92 +26,90 @@
         render: function(options) {
 
             var self = this;
-            self.cluster = this.options.cluster;
+            self.bicluster = this.options.bicluster;
             
             
             self.$elem.append($("<div />")
 						.append($("<table/>").addClass("kbgo-table")
 					    .append($("<tr/>")
-					    	.append("<td>Cluster id</td><td>" + self.cluster.id + "</td>"))
+					    	.append("<td>ID</td><td>" + self.bicluster.bicluster_id + "</td>"))
 					    .append($("<tr/>").
-					    	append("<td>Cluster residual</td><td>" + self.cluster.residual + "</td>"))
+					    	append("<td>Cluster type</td><td>" + self.bicluster.bicluster_type + "</td>"))
 					    .append($("<tr/>").
-					    	append("<td>Number of genes</td><td>" + self.cluster.gene_ids.length + "</td>"))
+					    	append("<td>Number of genes</td><td>" + self.bicluster.num_genes + "</td>"))
 					    .append($("<tr/>").
-					    	append("<td>Number of conditions</td><td>" + self.cluster.sample_ws_ids.length + "</td>"))
+					    	append("<td>Number of conditions</td><td>" + self.bicluster.num_conditions + "</td>"))
 					    .append($("<tr/>").
-					    	append("<td>Number of motifs</td><td>" + self.cluster.motifs.length + "</td>"))
+					    	append("<td>Expression mean</td><td>" + self.bicluster.exp_mean + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>Expression mean criterion value</td><td>" + self.bicluster.exp_mean_crit + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>Expression criterion value</td><td>" + self.bicluster.exp_crit + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>PPI criterion value</td><td>" + self.bicluster.ppi_crit + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>TF criterion value</td><td>" + self.bicluster.tf_crit + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>Orthology criterion value</td><td>" + self.bicluster.ortho_crit + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>Full criterion value</td><td>" + self.bicluster.full_crit + "</td>"))
+					    .append($("<tr/>").
+					    	append("<td>Fraction of missing data</td><td>" + self.bicluster.miss_frxn + "</td>"))
 			));
 
             //Genes
             self.$elem.append($("<div />")
                     .append("<h3>List of genes</h3>"));
             
-            var $geneList = "";
-            for (var gene in self.cluster.gene_ids) {
-                $geneList += self.cluster.gene_ids[gene] + ", ";
-            }
-            self.$elem.append($("<div />").append($geneList));
+            var $genesTable = '<table id="genes-table' + self.bicluster.id + '" class="kbgo-table">';
+            $genesTable += "<tr><th>Gene ID</th><th>Gene label</th></tr>";
 
-/*
-            var $genesTable = '<table id="genes-table' + self.cluster.id + '" class="kbgo-table">';
-            $genesTable += "<tr><td>Gene ID</td></tr>";
-
-            for (var gene in self.cluster.gene_ids) {
-                $genesTable += "<tr><td>" + self.cluster.gene_ids[gene] + "</td></tr>";
+            for (var i = 0; i < self.bicluster.num_genes; i++) {
+                $genesTable += "<tr><td>" + self.bicluster.gene_ids[i] + "</td><td>" + self.bicluster.gene_labels[i] + "</td></tr>";
             }
 
             $genesTable += "</table>";
             self.$elem.append($("<div />").append($genesTable));
-*/
+
             //Conditions
             self.$elem.append($("<div />")
                     .append("<h3>List of conditions</h3>"));
 
-            var $conditionsTable = '<table id="conditions-table' + self.cluster.id + '" class="kbgo-table">';
-            $conditionsTable += "<tr><td>Condition</td></tr>";
+            var $conditionsTable = '<table id="conditions-table' + self.bicluster.id + '" class="kbgo-table">';
+            $conditionsTable += "<tr><th>Condition ID</th><th>Condition label</th></tr>";
 
-            for (var condition in self.cluster.sample_ws_ids) {
-                $conditionsTable += "<tr><td>" + self.cluster.sample_ws_ids[condition] + "</td></tr>";
+            for (var i = 0; i < self.bicluster.num_conditions; i++) {
+                $conditionsTable += "<tr><td>" + self.bicluster.condition_ids[i] + "</td><td>" + self.bicluster.condition_labels[i] + "</td></tr>";
             }
 
             $conditionsTable += "</table>";
             self.$elem.append($("<div />").append($conditionsTable));
             
-            //Motifs
+            //Enriched terms
+            self.$elem.append($("<div />")
+                    .append("<h3>List of enriched terms</h3>"));
 
-                self.$elem.append($("<div />")
-                        .append("<h3>List of motifs</h3>"));
+            var $termsTable = '<table id="terms-table' + self.bicluster.id + '" class="kbgo-table">';
+            $termsTable += "<tr><th>Key</th><th>Value</th></tr>";
 
-            var $dropdown;
-            if (typeof self.cluster.motifs[0] === 'undefined'){
-                $dropdown = $("<div />").append("No motifs in this cluster");
-                self.$elem.append($dropdown);
-            } else {
-                $dropdown = $("<select />");
-                for (var motif in self.cluster.motifs) {
-                       $dropdown.append("<option id='" + motif + "'> id = "+self.cluster.motifs[motif].id+"; width = " + self.cluster.motifs[motif].pssm_rows.length + "; evalue = " + self.cluster.motifs[motif].evalue + " </option>");
-                }
-                self.$elem.append($dropdown);
-                    self.$elem.append($("<button class='btn btn-default'>Show Motif</button>")
-                        .on("click", 
-                            function(event) {
-                                $(self.$elem.selector + " > select option:selected").each(function() {
-    //                              console.log(event);
-                                    self.trigger("showCmonkeyMotif", { motif: self.cluster.motifs[$(this).attr("id")], event: event });
-                                });
-                            })
-                        );
-            };
+            for (var enrichedTerm in self.bicluster.enriched_terms) {
+                $termsTable += "<tr><td>" + enrichedTerm.key + "</td><td>" + enrichedTerm.value + "</td></tr>";
+            }
+
+            $termsTable += "</table>";
+            self.$elem.append($("<div />").append($termsTable));
+
+            self.$elem.append($("<div />")
+                    .append("&nbsp;"));
 
             return this;
         },
         getData: function() {
             return {
-                type: "CmonkeyCluster",
-                id: this.options.cluster.id,
+                type: "MAKBicluster",
+                id: this.options.bicluster.id,
                 workspace: this.options.workspace_id,
-                title: "cMonkey cluster"
+                title: "MAK Bicluster"
             };
         },
         showMessage: function(message) {

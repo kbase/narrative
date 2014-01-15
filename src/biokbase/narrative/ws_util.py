@@ -11,7 +11,6 @@ import json
 import re
 import biokbase
 import biokbase.workspaceService
-from biokbase.workspaceService.Client import workspaceService
 
 # regex for parsing out workspace_id and object_id from
 # a "kb|ws.{workspace}.{object}" string
@@ -36,7 +35,7 @@ list_ws_obj_fields = ['id','type','moddate','instance','command',
 # objects, and has a different field list
 list_objects_fields = [ 'objid','name','type','save_date','ver','saved_by','wsid','workspace',
                         'chsum','size','meta']
-obj_field = dict(zip(list_object_fields,range(len(list_objects_fields))))
+obj_field = dict(zip(list_objects_fields,range(len(list_objects_fields))))
 
 # object type for a project tag object
 ws_tag_type = 'workspace_meta'
@@ -44,7 +43,7 @@ ws_tag_type = 'workspace_meta'
 # object name for project tag
 ws_tag = { 'project' : '_project' }
 
-def get_wsobj_meta( wsclient, token, objtype="NarrativeObject", perm=None, ws=None ):
+def get_wsobj_meta( wsclient, objtype="KBaseNarrative.Narrative", perm=None, ws=None ):
     """
     Takes an initialized workspace client and a token. Defaults to searching for
     Narrative types in any workspace that the token has at least read access to.
@@ -120,8 +119,8 @@ def check_project_tag( wsclient, workspace):
                               'provenance' : [],
                               'hidden' : 0,
                               'default_permission' : 'n'}
-            ws_meta = wsclient.save_objects( 'workspace' : workspace,
-                                             'objects' : [obj_save_data]);
+            ws_meta = wsclient.save_objects( workspace = workspace,
+                                             objects = [obj_save_data]);
         else:
             raise e
     return True

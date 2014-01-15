@@ -36,7 +36,7 @@
 
 */
 
-module NarrativeObject {
+module KBaseNarrative {
 
     typedef structure {
 	string input;
@@ -44,19 +44,19 @@ module NarrativeObject {
 	string language;
 	mapping<string, UnspecifiedObject> metadata;
 	string cell_type;
-    } NarrativeCell;
+    } Cell;
 
     typedef structure {
-	list<NarrativeCell> cells;
+	list<Cell> cells;
 	mapping<string,UnspecifiedObject> metadata;
-    } NarrativeWorksheet;
+    } Worksheet;
 
     typedef structure {
 	int nbformat;
 	int nbformat_minor;
-	list<NarrativeWorksheet> worksheets;
+	list<Worksheet> worksheets;
 	mapping<string,UnspecifiedObject> metadata;
-    } NarrativeObject;
+    } Narrative;
 
 };
 

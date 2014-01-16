@@ -20,38 +20,42 @@ data-base-kernel-url={{base_kernel_url}}
 {% block site %}
 
 <div id="maincontainer">
-    <div id="ipython-main-app" class="container">
+    <div id="ipython-main-app" class="container" style="left:0">
 
         <div id="tabs" class="tabbable">
             <ul class="nav nav-tabs" id="tabs">
-                <li class="active"><a href="#notebooks" data-toggle="tab">Notebooks</a></li>
+                <li class="active"><a href="#notebooks" data-toggle="tab">Narratives</a></li>
                 <!-- <li><a href="#clusters" data-toggle="tab">Clusters</a></li> -->
             </ul>
 
             <div class="tab-content">
             <div id="notebooks" class="tab-pane active">
                 <div id="notebook_toolbar">
-                    <form id='alternate_upload'  class='alternate_upload' >
-                        <span id="drag_info" style="position:absolute" >
-                            To import a notebook, drag the file onto the listing below or <strong>click here</strong>.
-                            </span>
-                        <input type="file" name="datafile" class="fileinput" multiple='multiple'>
-                    </form>
-                    <span id="notebook_buttons">
-                        <button id="refresh_notebook_list" title="Refresh notebook list" class="btn btn-default btn-sm">Refresh</button>
-                        <button id="new_notebook" title="Create new notebook" class="btn btn-default btn-sm">New Notebook</button>
-                    </span>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <form id='alternate_upload'  class='alternate_upload' >
+                                <span id="drag_info" style="position:absolute" >
+                                    To import a notebook, drag the file onto the listing below or <strong>click here</strong>.
+                                </span>
+                                <input type="file" name="datafile" class="fileinput" multiple='multiple'>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <div id="notebook_buttons">
+                                <button id="refresh_notebook_list" title="Refresh notebook list" class="btn btn-default btn-sm" type="button">Refresh</button>
+                                <button id="new_notebook" title="Create new notebook" class="btn btn-default btn-sm" type="button">New Narrative</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="notebook_list">
-                  <div id="notebook_list_header" class="row list_header">
+                  <div id="notebook_list_header" class="list_header">
                       <div id="project_name">
                         <ul class="breadcrumb">
-			  <!--
                             {% for component in project_component %}
-                                <li>{{component}} <span>/</span></li>
+                                <li>{{component}} <span></span></li>
                             {% endfor %}
-			  -->
                         </ul>
                       </div>
                   </div>

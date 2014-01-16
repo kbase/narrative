@@ -16,8 +16,8 @@ nav[role="navigation"] ul li.alt a{
 
 /** styling for the feed area */
 #feed_section {
-	padding-left:40px;
-	padding-right: 30px;
+	/* padding-left:40px;
+	padding-right: 30px; */
 }
 
 #feed_section h2 {
@@ -26,14 +26,16 @@ nav[role="navigation"] ul li.alt a{
 
 /** styling for the narrative column */
 #narrative_column{
-    padding: 30px 30px 30px 20px;
+    padding: 10px 20px;
 		border: 1px solid #f2f2f2;
 	background-color: #f2f2f2;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
 	/*margin: 10px;*/
 	min-height: 600px;
-	
+	border: 1px solid #ddd;
+	margin-right:30px;
+
 }
 
 #narrative_column h2 {
@@ -69,6 +71,10 @@ nav[role="navigation"] ul li.alt a{
 	border-radius: 10px;
 	/*margin: 10px;*/
 	
+}
+
+#maincontent #login_section {
+	margin-left: 40px;
 }
 
 #maincontent #login_section {
@@ -137,6 +143,10 @@ ul li, ol li {
 ul, ol {
 	padding-left: 0;
 	margin: 0 0 10px 25px;
+}
+
+ol#public_newsfeed {
+	margin-left: 0px;
 }
 
 #metrics_section ul, #metrics_section ol {

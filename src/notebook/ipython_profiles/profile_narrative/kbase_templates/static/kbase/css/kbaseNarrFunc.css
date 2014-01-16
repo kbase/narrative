@@ -123,6 +123,13 @@
     font-weight: 100;
 }
 
+#kb-function-error-traceback {
+    white-space : nowrap;
+    float : left;
+    max-width : 250px;
+    overflow-x : scroll;
+}
+
 /* ------------------------------------------------- */
 /* IPython cells */
 
@@ -140,6 +147,22 @@
     font-size: 12pt;
     line-height: 15px;
     color: #0D7876;
+    margin: 3px;
+    opacity: inherit;
+    display: inline;
+}
+.kb-cell-run div.kb-func-desc {
+    opacity: inherit;
+    display: block;
+}
+.kb-func-desc button {
+    margin-left: 10px;
+}
+.kb-cell-run h2 {
+    font-family: 'Roboto';
+    font-size: 11pt;
+    line-height: 15px;
+    color: #666666;
     margin: 3px;
     opacity: inherit;
 }

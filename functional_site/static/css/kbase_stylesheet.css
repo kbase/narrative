@@ -243,3 +243,38 @@ span#searchspan{
     padding-top: 0;
 }
 
+html, body {
+    height: 100%;
+}
+
+#wrap {
+  min-height: 100%;
+  height: auto;
+  /* Negative indent footer by its height */
+  margin: 0 auto -100px;
+  /* Pad bottom by footer height */
+  padding: 0 0 120px;
+}
+
+#footer {
+   /* margin-top: 60px;
+    position: relative;
+    bottom: 0px; */
+    height: 100px;
+}
+
+#footer ul {
+    text-align: center;
+}
+
+#footer ul li {
+    display: inline;
+    padding: 10px;
+}
+
+#footer img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+

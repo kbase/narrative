@@ -12,31 +12,32 @@
 
     <body>
       <!--#include virtual="header.html" -->
-
+      <div id="wrap">
 		<div id="main" class="container">
 			<h1 class="pds_name">Narrative</h1>
-			<span style="font-size: 1.1em"><b>Narrations</b> capture your analyses and include rich annotations, visualizations widgets, reusable workflows, and custom scripts. Through <b>projects</b>, a special type of workspace, you can share your narrations and data with colleagues.</span>
+			<span style="font-size: 1.1em"><b>Narratives</b> capture your analyses and include rich annotations, visualizations widgets, reusable workflows, and custom scripts. Through <b>projects</b>, a special type of workspace, you can share your narratives and data with colleagues.</span>
 
 			<div class="table_section container">
 				<div class="section_title row">
 					<div class="title">
-						<a href="#" data-toggle="collapse" data-target="#narratives_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Narrations&nbsp;&nbsp;&nbsp;<img id="narratives_loading" src="static/images/ajax-loader-blue.gif" style="display:none"></a>
+						<a href="#" data-toggle="collapse" data-target="#narratives_container"><span class="glyphicon glyphicon-chevron-down"></span>&nbsp;Narratives&nbsp;&nbsp;&nbsp;<img id="narratives_loading" src="static/images/ajax-loader-blue.gif" style="display:none"></a>
 					</div>
 					<div class="col-md-2">
 						<a id="new_narrative_button" data-toggle="modal" href="#newNarrative" class="btn btn-primary btn-sm">new</a>
 					</div>
 				</div>
 	 			<div id="narratives_container" class="row collapse in">
-	 				<div id="no_narratives" style="display: none">You do not have any narrations. <a href="#" id="create_narrative_link">Create a narration</a> to get started.</div>
+	 				<div id="no_narratives" style="display: none">You do not have any narratives. <a href="#" id="create_narrative_link">Create a narrative</a> to get started.</div>
 					<table id="narratives_table" class="table table-striped table-bordered" cellpadding="0" cellspacing="0" border="0" >
 						<thead id="narrative_table_header" style="display: none;">
 							<tr>
-								<th>&nbsp;</th>
 								<th>Name</th>
 								<th>Owner</th>
 								<th>Shared with</th>
 								<th>In Projects</th>
 								<th>Last modified</th>
+								<th>&nbsp;</th>
+
 							</tr>
 						</thead>
 						<tbody id="narrative_table_rows">
@@ -75,14 +76,12 @@
 					<div id="no_projects" style="display: none">You do not have any projects. Go to the <a href="manage_projects.shtml">Manage Projects</a> page to get started.</div>
 					<table id="projects_table" class="table table-striped table-bordered" cellpadding="0" cellspacing="0" border="0" >
 						<thead id="project_table_header" style="display: none;">
-							<tr>
-								<th>&nbsp;</th>
+							<tr>		
 								<th>Name</th>
-
 								<th>Owner</th>
 								<th>Working with</th>
-
 								<th>Last modified</th>
+								<th>&nbsp;</th>
 							</tr>
 						</thead>
 						<tbody id="projectTableRows">
@@ -93,6 +92,9 @@
 			</div>	
 			
 		</div>
+
+	</div> <!-- end wrap -->
+
 
 		<!-- modal dialogs --->
 		<!-- Modal -->
@@ -144,12 +146,13 @@
 		<script id="project_table_rows" type="text/html">
 		{{#rows}}
 		<tr>
-			<td><input type="checkbox"></td>
 			<td><a href="./project.shtml#{{project_id}}">{{name}}</a></td>
 			<td>{{owner}}</td>
 			<td id="{{project_id}}_users"></td>
 
 			<td>{{date}}</td>
+			<td><span class="glyphicon glyphicon-trash"></span></td>
+
 		</tr>
 		{{/rows}}
 		</script>
@@ -157,12 +160,13 @@
 		<script id="narrative_table_rows" type="text/html">
 		{{#rows}}
 		<tr>
-			<td><input type="checkbox"></td>
+			
 			<td><a href="http://narrative.kbase.us/{{project_id}}.{{narrative_id}}">{{name}}</a></td>
 			<td>{{owner}}</td>
 			<td id="{{project_id}}-{{narrative_id}}_users"></td>
 			<td>{{project_name}}</td>
 			<td>{{date}}</td>
+			<td><span class="glyphicon glyphicon-trash"></span></td>
 		</tr>
 		{{/rows}}
 		</script>
@@ -173,6 +177,7 @@
 		{{/rows}}
 		</script>
 
+	<!--#include virtual="footer.html" -->
 
     </body>
 </html>

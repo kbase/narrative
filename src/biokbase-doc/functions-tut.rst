@@ -110,8 +110,10 @@ argument to your wrapped function::
 Docstring formatting
 ^^^^^^^^^^^^^^^^^^^^^
 
-The docstring at the head of your method will contain all the information about your method that needs to get passed to the user interface. This includes:
+The docstring at the head of your method will contain all the information about your method that needs to get passed to the user interface. Following standard Python style, this string should be a triple-quoted string
+that allows embedded newlines and single (or double) quotes. This includes:
 
+* A :ref:`function description <f-desc>`, which can contain HTML markup
 * Parameter :ref:`names and descriptions <p-desc>`
 * Parameter :ref:`types <p-type>` (typed object vs. string, etc.)
 * Return object :ref:`description <r-desc>` and :ref:`type <r-type>`
@@ -120,6 +122,23 @@ The docstring at the head of your method will contain all the information about 
 
 These use the following format:
 
+Function description
+~~~~~~~~~~~~~~~~~~~~
+.. _f-desc:
+
+The function description is a paragraph of plain text, starting after the triple quote, and which may
+span multiple lines. It should be separated from the parameter and other documentation
+by a blank line. It may contain embedded HTML. For example::
+
+    @method(name="myFunction")
+    def my_function(method, param1):
+        """My function does what it wants to do.
+        Look <a href="http://www.youtube.com/watch?v=oHg5SJYRHA0">here</a> for more information.
+
+        :param param1: This parameter is awesome.
+        ... rest of the documentation ...
+        """
+    
 Parameters
 ~~~~~~~~~~
 .. _p-desc:

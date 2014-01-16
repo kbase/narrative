@@ -19,7 +19,6 @@ angular.module('narrative-directives')
                     callback: function(results) {
                         $(element).rmLoading();
                         if (Object.keys(results).length > 0) {
-                            console.log(results)
                             //first sort
                             for (var i in results) {
                                 results[i].timestamp = getTimestamp(results[i].moddate);
@@ -29,7 +28,6 @@ angular.module('narrative-directives')
 
                             scope.$apply(function() {
                                 scope.narratives = results;
-                                console.log('applied')
                             })
 
                         } else {
@@ -62,7 +60,14 @@ angular.module('narrative-directives')
         return {
             templateUrl: 'partials/narrative/project_table.html',
             link: function(scope, element, attrs) {
-                $('body').scrollspy({ target: '#sidebar'});
+                //fixme: temporary
+                var help_text = '<b>Projects</b> hold assets that can be shared by members. Project members—the people who have permission to use the project\'s assets—can be individuals or teams. You set permissions for all assets shared in the project, but you can set additional permissions on any individual asset.\
+                                <br>\
+                                <br>\
+                                <b>Narratives</b> capture your analyses and include rich annotations, visualizations widgets, reusable workflows, and custom scripts. Through projects, a special type of workspace, you can share your narratives and data with colleagues.'
+
+                $('.project-help').popover({html: true, trigger: 'hover', 
+                                        content: help_text, placement:'bottom'})
 
 
                 var tableId = 'project-table';
@@ -208,8 +213,10 @@ angular.module('narrative-directives')
                         table = $('#'+tableId).dataTable(tableSettings)
                                         .rowGrouping({iGroupingColumnIndex: 2,
                                                       bExpandableGrouping: true});
+                        $('.table-options').append('<a class="btn btn-default pull-left">\
+                                <span class="glyphicon glyphicon-plus"></span>New Project</a>')
                         new FixedHeader( table , {offsetTop: 50, "zTop": 1000});
-                        //$('.fixedHeader').remove();                         
+                        //$('.fixedHeader').remove();
 
                 }
 
@@ -669,7 +676,7 @@ function formateDate(timestamp) {
     } else if (days < 7) {
         var d = new Date(timestamp);        
         var day = dayOfWeek[d.getDay()]
-        var time = d.toLocaleTimeString().split(':');
+        var t = d.toLocaleTimeString().split(':');
         return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
     } else {
         return false;

@@ -66,24 +66,24 @@
     font-style: normal;
 }
 
-h1 {
+h1, .h1 {
     font-family: 'RobotoBlack', Arial, sans-serif;
     letter-spacing: 0; 
     color: #232323;
     font-weight: normal;
     }
-h2 {
+h2, .h2 {
     font:  1.5em/1.75em  'RobotoBlack', Arial, sans-serif; 
     font-weight: normal; 
     color: #898989; 
     letter-spacing: 0;
     }
-h3 {
+h3, .h3 {
     font-family:'RobotoBlack', Arial, sans-serif; 
     letter-spacing: 0;
     font-weight: normal;
     }
-h4 {
+h4, .h4 {
     font-family:  'OxygenItalic', Arial, sans-serif;
     letter-spacing: .06em;
     }
@@ -202,7 +202,6 @@ table {
 
 
 /* mv */
-
 .search-query {
     width: 100%;
     margin: 0 0 5px 0;
@@ -537,3 +536,20 @@ color: #555;
     letter-spacing: 0;
     font-weight: normal;
 }
+
+
+.view-header {
+    font:  1.5em/1.75em  'RobotoBlack', Arial, sans-serif; 
+    font-weight: normal; 
+    color: #898989; 
+    letter-spacing: 0;
+}
+
+.view-header {
+    font:  1.5em/1.75em  'RobotoBlack', Arial, sans-serif; 
+    font-weight: normal; 
+    color: #898989; 
+    letter-spacing: 0;
+}
+
+

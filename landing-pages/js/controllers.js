@@ -166,6 +166,11 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                      'workspace_id': $stateParams.ws}
 })
 
+.controller('PPIDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id,
+		     'ws': $stateParams.ws};
+})
+
 .controller('SpecDetail', function($scope, $stateParams) {
     $scope.params = {
         'kind' : $stateParams.kind,

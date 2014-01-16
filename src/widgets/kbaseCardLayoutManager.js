@@ -612,6 +612,8 @@
                 this.showModelCards();
             else if (this.options.template.toLowerCase() === "spec")
                 this.showSpecCards();
+            else if (this.options.template.toLowerCase() === "ppid")
+                this.showPPICards();
             else {
                 // throw an error for an unknown template. modal dialog, maybe?
             }
@@ -834,6 +836,25 @@
         	    return this;
         },
 
+	showPPICards: function() {
+	    this.addNewCard("KBasePPICard",
+			    {
+				id: this.options.data.id,
+				ws: this.options.data.ws,
+				auth: this.options.auth,
+				userId: this.options.userId,
+				loadingImage: this.options.loadingImage,
+				isInCard: true
+			    },
+			    {
+				my: "left top",
+				at: "left bottom",
+				of: "#app"
+			    }
+			   );
+	    return this;
+	},
+
         showBambiCards: function() {
             	this.addNewCard("KBaseBambiRunResultCard",
                         {
@@ -892,6 +913,7 @@
             this.registeredEvents = ["featureClick", 
                                      "showContig",
                                      "showGenome", 
+				     "showFeature",
                                      "showGenomeDescription",
                                      "showDomains", 
                                      "showOperons", 
@@ -907,6 +929,7 @@
                                      "showCmonkeyCluster", 
                                      "showCmonkeyMotif",
                                      "showInferelatorHits",
+				     "showNetwork",
                                      "showRegulon",
                                      "showMAKCluster", 
                                      "showBambiMotif",
@@ -1015,6 +1038,24 @@
                     }
                 );
             });
+
+            /**
+             * Event: showFeature
+             * -----------------
+             * Adds new KBaseGeneInfo card for a given Feature ID
+             */
+	    $(document).on("showFeature", function(event, data) {
+		self.addNewCard("KBaseGeneInfo",
+				{
+				    featureID: data.featureID
+				},
+				{
+				    my: "left top",
+				    at: "center",
+				    of: data.event
+				}
+			       );
+	    });
 
             /**
              * Event: showGenome
@@ -1385,6 +1426,25 @@
                     of: data.event
                 });
             });
+
+            /**
+             * Event: showNetwork
+             * -------------------
+             * Adds card with Cytoscape.js view of a network
+             */
+	    $(document).on("showNetwork", function(event, data) {
+		self.addNewCard("KBaseNetworkCard",
+				{
+				    network: data.network,
+				    netname: data.netname,
+				},
+				{
+				    my: "left top",
+				    at: "left+600 bottom",
+				    of: "#app"
+				}
+			       );
+	    });
 
             $(document).on("helloClick", function(event, data) {
                 window.alert(data.message);

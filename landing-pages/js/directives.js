@@ -259,7 +259,6 @@ angular.module('lp-directives')
         };
     })
 
-
     // Workspace browser widgets (directives)
     .directive('wsobjtable-old', function($rootScope) {
         return {

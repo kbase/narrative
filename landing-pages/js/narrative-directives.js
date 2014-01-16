@@ -12,9 +12,33 @@ angular.module('narrative-directives', []);
 angular.module('narrative-directives')
     .directive('recentnarratives', function($location) {
         return {
-            template: "blah blah blah",
             link: function(scope, element, attrs) {
-                $(element).append('blah blah blah')
+
+                $(element).loading()
+                project.get_narratives({
+                    callback: function(results) {
+                        $(element).rmLoading();
+                        if (Object.keys(results).length > 0) {
+                            console.log(results)
+                            //first sort
+                            for (var i in results) {
+                                results[i].timestamp = getTimestamp(results[i].moddate);
+                                results[i].nealtime = formateDate(results[i].timestamp) 
+                                                ? formateDate(results[i].timestamp) : results[i].moddate.replace('T',' ');
+                            }
+
+                            scope.$apply(function() {
+                                scope.narratives = results;
+                                console.log('applied')
+                            })
+
+                        } else {
+                            $(element).append('no narratives')
+
+                        }
+                    }
+                })
+
             }  /* end link */
         };
     })
@@ -38,6 +62,9 @@ angular.module('narrative-directives')
         return {
             templateUrl: 'partials/narrative/project_table.html',
             link: function(scope, element, attrs) {
+                $('body').scrollspy({ target: '#sidebar'});
+
+
                 var tableId = 'project-table';
                 var table;
 
@@ -89,9 +116,14 @@ angular.module('narrative-directives')
                                             +proj+'.'+nar_id+'" >'+nar_id+'</a>';
                                 // projects are workspaces right now
                                 nar.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
-                                                <b>Project:</b> '+proj+'</span>';
+                                                 <i>Project</i> <b>'+proj+'</b></span>';//<b>Project:</b>
 
-                                nar.moddate = nar.moddate.replace('T', ' ');
+
+                                nar.timestamp = getTimestamp(nar.moddate)
+                                nar.moddate = formateDate(nar.timestamp) ? formateDate(nar.timestamp) : nar.moddate.replace('T',' ')
+
+                                //nar.moddate = nar.moddate
+
                                 nar.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" class="glyphicon glyphicon-trash btn-delete-narrative"></span>'
 
                                 //fixme: wow!  This is horrible.
@@ -109,9 +141,9 @@ angular.module('narrative-directives')
                             for (var i in proj_ids) {
                                 if (nar_projs.indexOf(proj_ids[i]) == -1) {
                                     //empty_projects.push(proj_ids[i])
-                                    narratives.push({project: '<span class="caret"></span> <b>Project:</b> '+proj_ids[i],
+                                    narratives.push({project: '<span class="caret"></span> <i>Project</i>  <b>'+proj_ids[i]+'</b>',
                                                     id: '<span class="text-muted">Empty Project</span>', 
-                                                    owner: '', moddate: '', users: '', deleteButton: ''})
+                                                    owner: '', moddate: '', users: '', deleteButton: '', timestamp: ''})
                                 }
                             }
 
@@ -120,6 +152,7 @@ angular.module('narrative-directives')
                     })
 
                 }
+
 
                 function addUserColumn(ws, id) {
                     project.get_project_perms({
@@ -147,19 +180,21 @@ angular.module('narrative-directives')
                         var tableSettings = {
                             "sPaginationType": "bootstrap",
                             //"sPaginationType": "full_numbers",
-                            //"iDisplayLength": 10,
+                            "iDisplayLength": 200,
                             //"aaData": [],
                             "fnDrawCallback": events,
                             bLengthChange: false,
                             "bInfo": false,
-                            //"aaSorting": [[ 3, "desc" ]],
+                            "aaSorting": [[ 4, "desc" ]],
                           "aoColumns": [
                               { "sTitle": "Name", "mData": "id"},
                               { "sTitle": "Owner", "mData": "owner"},
                               { "sTitle": "Project", "mData": "project"},  // grouped by this column
                               { "sTitle": "Shared With", "mData": "users"},
-                              { "sTitle": "Last Modified", "mData": "moddate"},
-                              { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'}
+                              { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 6},
+                              { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'},
+                              { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}  
+
                           ],                         
                             "oLanguage": {
                                 //"sEmptyTable": "No objects in workspace",
@@ -173,9 +208,9 @@ angular.module('narrative-directives')
                         table = $('#'+tableId).dataTable(tableSettings)
                                         .rowGrouping({iGroupingColumnIndex: 2,
                                                       bExpandableGrouping: true});
+                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});
+                        //$('.fixedHeader').remove();                         
 
-//                        $('#project-table').append('<td class="group -span-class-caret-span-b-project-b-nconrad-home group-item-expander expanded-group" colspan="3" data-group="-span-class-caret-span-b-project-b-nconrad-home" data-group-level="0">\
-  //                                                  <span class="caret"></span> <b>Project:</b> nconrad_home</td>')
                 }
 
 
@@ -185,15 +220,13 @@ angular.module('narrative-directives')
                     // adding buttons to project header
                     $('.group-item-expander').each(function() {
                         var proj = $(this).find('.proj-link').data('proj')                        
-                        console.log(proj)
+
                         $(this).append('<span class="proj-opts pull-right">\
-                                          <a class="btn btn-default btn-xs new-narrrative"><span class="glyphicon glyphicon-plus"></span> Narrative</a> \
+                                          <a class="btn btn-default btn-xs btn-new-narrative"><span class="glyphicon glyphicon-plus"></span> Narrative</a> \
                                           <a class="btn-view-data" data-proj="'+proj+'" >Data</a> |\
-                                          <a class="edit-perms">Edit Perms</a>\
+                                          <a class="edit-perms">Manage</a>\
                                        </span>');
                     })
-
-
 
 
 
@@ -207,8 +240,8 @@ angular.module('narrative-directives')
                     })
 
                     // event for new narrative button
-                    $('.new-narrrative').unbind('click')
-                    $('.new-narrrative').click(function(e){
+                    $('.btn-new-narrative').unbind('click')
+                    $('.btn-new-narrative').click(function(e){
                         e.stopImmediatePropagation()
                         var proj = $(this).parents('td').find('.proj-link').data('proj')
                         newNarrativeModal(proj);
@@ -331,7 +364,6 @@ angular.module('narrative-directives')
                                 name : 'Yes',
                                 type : 'primary',
                                 callback : function(e, $prompt) {
-                                    console.log('proj_id...',proj_id, nar_id)
                                     $prompt.addCover();
                                     $prompt.getCover().loading();
                                     project.new_narrative({
@@ -470,7 +502,7 @@ angular.module('narrative-directives')
                         // if there are no user permissions, display 'none'
                         // (excluding ~global 'user' and owner)
                         var perm_count = Object.keys(data).length;
-                        console.log(perm_count)
+
                         if (perm_count <= 2) {
                             var row = $('<tr><td>None</td></tr>');
                             table.append(row);
@@ -576,7 +608,7 @@ angular.module('narrative-directives')
                 }  // end manageModal
 
 
-            }
+            } // end link
 
 
         }
@@ -586,5 +618,66 @@ angular.module('narrative-directives')
 
 
 
+//
+// utility functions 
+//
+
+function getTimestamp(datetime){
+    var ymd = datetime.split('T')[0].split('-');
+    var hms = datetime.split('T')[1].split(':');
+    return Date.UTC(ymd[0],ymd[1]-1,ymd[2],hms[0],hms[1],hms[2]);                     
+}
 
 
+
+var msecPerMinute = 1000 * 60;
+var msecPerHour = msecPerMinute * 60;
+var msecPerDay = msecPerHour * 24;
+function formateDate(timestamp) {
+    var date = new Date()
+
+    var interval =  date.getTime() - timestamp;
+
+    var days = Math.floor(interval / msecPerDay );
+    interval = interval - (days * msecPerDay);
+
+    var hours = Math.floor(interval / msecPerHour);
+    interval = interval - (hours * msecPerHour);
+
+    var minutes = Math.floor(interval / msecPerMinute);
+    interval = interval - (minutes * msecPerMinute);
+
+    var seconds = Math.floor(interval / 1000);
+
+    // if greater than 5 months ago, show date
+    if (days > 150) {
+        return false;
+    }
+
+    if (days == 0 && hours == 0 && minutes == 0) {
+        return seconds + " secs ago.";
+    } else if (days == 0 && hours == 0) {
+        if (minutes == 1) return "1 min ago";
+        return  minutes + " mins ago";
+    } else if (days == 0) {
+        if (hours == 1) return "1 hour ago";
+        return hours + " hours ago"
+    } else if (days == 1) {
+        var d = new Date(timestamp);
+        var t = d.toLocaleTimeString().split(':');        
+        return 'yesterday at ' + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
+    } else if (days < 7) {
+        var d = new Date(timestamp);        
+        var day = dayOfWeek[d.getDay()]
+        var time = d.toLocaleTimeString().split(':');
+        return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
+    } else {
+        return false;
+    }
+
+}
+
+
+
+var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
+                     4:'Thurs', 5:'Fri', 6: 'Sat'}

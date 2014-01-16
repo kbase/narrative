@@ -209,6 +209,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 .controller('Narrative', function($scope, $stateParams) {
+    $scope.nar_url = 'http://narrative.kbase.us'
    /* $scope.selected_ws = $stateParams.ws;
     console.log($scope.selected_ws) */
 })

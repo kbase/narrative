@@ -1,77 +1,81 @@
-				
 
+<div class="row">
+    <div class="col-sm-3" >
+        <div class="narrative-sidebar">
+            <ul class="nav nav-pills nav-stacked nav-sidebar">
+                <li class="active">
+                    <a class="btn-sidebar-nav" href="#/narrative/home/">
+                    Newsfeed
+                    <span class="glyphicon glyphicon-chevron-right pull-right"></span>
+                    </a>
+                </li>
 
-                <div id="narr-narrative-column" class="col-sm-3" >
-                    <div id="profile_area" style="margin-bottom: 10px">
-                    
-                    </div>
-                   <!-- <div class="narrative_section" style="border-top: 1px solid #ddd">
-                        <h3>Copy a Narrative <span class="glyphicon glyphicon-question-sign" style="color: #0088CC; font-size: 16px; padding-left: 5px"></span></h3>
-                        <div style="margin-bottom: 10px">Use the token you received from your collaborator to copy the narrative and data into your workspace.</div>
-                        <a id="new_narrative_button" data-toggle="modal" href="#" class="btn btn-default">Copy Narrative</a>
-                        
-                    </div> -->
-                    <ul id="narr-sidenav-items">
-                        <li><a class="btn narr-btn-primary btn-block" href="#/narrative/home/">NEWSFEED<span class="glyphicon glyphicon-chevron-right pull-right"></span></a>
-                        <li><a class="btn narr-btn-default btn-block" href="#/narrative/home/projects/">PROJECTS / NARRATIVES<span class="glyphicon glyphicon-chevron-right pull-right"></span></a></li>
-                        <li><a class="btn narr-btn-default btn-block" href="#/narrative/home/projects/">WORKSPACE BROWSER<span class="glyphicon glyphicon-chevron-right pull-right"></span></a></li>
-                        
+                <li>
+                    <a class="btn-sidebar-nav" href="#/narrative/home/projects/">
+                    Projects/Narratives
+                    <span class="glyphicon glyphicon-chevron-right pull-right"></span>
+                    </a>
+                </li>
+
+                <li>
+                    <a class="btn-sidebar-nav" href="#/ws/">
+                    Workspace Browser
+                    <span class="glyphicon glyphicon-chevron-right pull-right"></span>
+                    </a>
+                </li>
+            </ul>
+
+            <br>
+            <div class="narrative-sidebar-section">
+                <div class="sidebar-header">RECENT NARRATIVES</div>
+                <div recentnarratives>
+                    <ul class="recent-narratives" ng-repeat="nar in narratives | orderBy:'timestamp':true | limitTo:5">
+                        <li><a href="{{nar_url}}/{{nar.workspace}}.{{nar.id}}">{{nar.id}}</a> 
+                            <span class="text-mutted pull-right">{{nar.nealtime}}</span>
+                        </li>
                     </ul>
-                    
-
-                    <div class="narr-narrative-section">
-                        <h3>RECENT NARRATIVES</h3>
-                        <img src="./assets/images/ajax-loader.gif" id="narratives_loading" style="display: none;" />
-                        <div id="no_narratives" style="display: none;">You do not have any narratives. Create a narrative to get started.</div>
-                        <div id="recent_narratives_list" recentnarratives>
-    
-                        </div>
-                        <a id="new_narrative_button" data-toggle="modal" href="#newNarrative" class="btn btn-default">Create a New Narrative</a>
-                    </div>
-                    <div class="narr-narrative-section">
-                        <h3>RECENT PROJECTS</h3>
-                        <img src="./assets/images/ajax-loader.gif" id="projects_loading"  style="display: none;"/>
-                        <div id="no_projects" style="display: none;">You do not have any projects. Create a project to get started.</div>
-                        <ol id="recent_projects_list" recentprojects>
-     
-    
-                        </ol>
-                        <a href="./manage_projects.shtml" class="btn btn-default">Create/Manage Projects</a>
-                    </div>
                 </div>
+                <a class="pull-right" href="#/narrative/home/projects/">View all</a>
+                <br>
+                <hr>
+                <h3>RECENT PROJECTS</h3>
+                <ol recentprojects></ol>
+            </div>
+        </div> <!-- end fixed sidebar -->
+    </div> <!-- end left column -->
 
-                <div id="narr-newsfeed-column" class="col-sm-8" ui-view>
-                    <div id="newsfeed_inner" >
-                        <div id="feed_section" >
+    <div id="newsfeed_column" class="col-sm-9" ui-view>
+        <div id="newsfeed_inner" >
+            <div id="feed_section" >
 
-                            <h2 class="small">Featured Narratives <span class="glyphicon glyphicon-question-sign narr-featured-help" ></span></h2>
-                            <div id="narr-newsfeed-section">
-                                <h3><img src="./static/images/ajax-loader.gif" id="loading-indicator-ws" style="display: none;"  /></h3>
-                                <div class="narr-featured-narrative">
-                                    <div class="featured_author"><a href="#">Paramvir Dehal</a> created a narrative on Jan 14, 2014:</div>
-                                    <div class="narr-featured-title"><a href="#"><strong>Assembly and Modeling of Pseudomonas stutzeri A150</strong></a></div>
-                                    <div class="featured_desc">
-This narrative builds a genome scale metabolic model reconstruction starting from an annotated genome object using the DOE Systems Biology Knowledgebase tools. I create a draft model for Pseudomonas stutzeri A1501, gapfill the model on complete media and then calculate the fluxes on complete media.
-                                    </div>
-                                    <div class="narr-copy"><a href="#">copy narrative</a> </div>
-                                </div>  
-                                <div class="narr-featured-narrative" >
-                                    <div class="featured_author"><a href="#">Ranjan Priya</a> created a narrative on Jan 14, 2014:</div>
-                                    <div class="narr-featured-title" ><a href="#"><strong>GWAS analysis of Arabidopsis thaliana</strong></a></div>
-                                    <div class="featured_desc">
-This narrative builds a genome scale metabolic model reconstruction starting from an annotated genome object using the DOE Systems Biology Knowledgebase tools. I create a draft model for Pseudomonas stutzeri A1501, gapfill the model on complete media and then calculate the fluxes on complete media.
-                                    </div>
-                                    <div class="narr-copy"><a href="#">copy narrative</a></div>
-                                </div>  
-                                <div class="narr-featured-narrative" >
-                                    <div class="featured_author"><a href="#">Paramvir Dehal</a> created a narrative on Jan 14, 2014:</div>
-                                    <div class="narr-featured-title"><a href="#"><strong>Assembly and Modeling of Pseudomonas stutzeri A150</strong></a></div>
-                                    <div class="featured_desc">
-This narrative builds a genome scale metabolic model reconstruction starting from an annotated genome object using the DOE Systems Biology Knowledgebase tools. I create a draft model for Pseudomonas stutzeri A1501, gapfill the model on complete media and then calculate the fluxes on complete media.
-                                    </div>
-                                    <div class="narr-copy"><a href="#">copy narrative</a></div>
-                                </div>              
-                            </div>	
+                <h2 class="small">Featured Narratives <span class="glyphicon glyphicon-question-sign" style="color: #0088CC; font-size: 16px; padding-left: 5px"></span></h2>
+                <div class="newsfeed_section">
+                    <div class="featured_narrative" style="padding-top: 5px; padding-bottom: 10px; margin-bottom: 20px; border-bottom: 1px solid #ccc;">
+                        <div class="featured_author"><a href="#">Paramvir Dehal</a> created a narrative on Jan 14, 2014:</div>
+                        <div class="narr-featured-title"><a href="#"><strong>Assembly and Modeling of Pseudomonas stutzeri A150</strong></a></div>
+                        <div class="featured_desc">
+    This narrative builds a genome scale metabolic model reconstruction starting from an annotated genome object using the DOE Systems Biology Knowledgebase tools. I create a draft model for Pseudomonas stutzeri A1501, gapfill the model on complete media and then calculate the fluxes on complete media.
                         </div>
-                    </div>
-                </div>
+                        <div class="narr-copy"><a href="#">copy narrative</a> </div>
+                    </div>  
+                    <div class="narr-featured-narrative" >
+                        <div class="featured_author"><a href="#">Ranjan Priya</a> created a narrative on Jan 14, 2014:</div>
+                        <div class="narr-featured-title" ><a href="#"><strong>GWAS analysis of Arabidopsis thaliana</strong></a></div>
+                        <div class="featured_desc">
+    This narrative builds a genome scale metabolic model reconstruction starting from an annotated genome object using the DOE Systems Biology Knowledgebase tools. I create a draft model for Pseudomonas stutzeri A1501, gapfill the model on complete media and then calculate the fluxes on complete media.
+                        </div>
+                        <div class="narr-copy"><a href="#">copy narrative</a></div>
+                    </div>  
+                    <div class="narr-featured-narrative" >
+                        <div class="featured_author"><a href="#">Paramvir Dehal</a> created a narrative on Jan 14, 2014:</div>
+                        <div class="narr-featured-title"><a href="#"><strong>Assembly and Modeling of Pseudomonas stutzeri A150</strong></a></div>
+                        <div class="featured_desc">
+    This narrative builds a genome scale metabolic model reconstruction starting from an annotated genome object using the DOE Systems Biology Knowledgebase tools. I create a draft model for Pseudomonas stutzeri A1501, gapfill the model on complete media and then calculate the fluxes on complete media.
+                        </div>
+                        <div class="narr-copy"><a href="#">copy narrative</a></div>
+                    </div>              
+                </div>	
+            </div>
+        </div>
+    </div>
+</div>

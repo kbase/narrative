@@ -109,7 +109,6 @@ strong em, em strong, b i, i b{
     font-weight: normal;
     }
 
-
 body {
     padding-top: 65px;
     height: 100%;
@@ -123,6 +122,13 @@ rect:hover {
     cursor: pointer;
 }
 
+/* adjustments for fonts */
+.badge {
+    padding-top: 5px;
+    padding-left: 8px;
+}
+
+
 
 /* KBase navigation bar */
 .navbar-kbase {
@@ -134,7 +140,7 @@ rect:hover {
 }
 .nav > li > a:hover, .nav > li > a:focus {
     text-decoration: none;
-    background-color: #fff !important;
+    /*background-color: #fff !important;*/
 }
 
 /* END KBase navigation bar */
@@ -240,9 +246,7 @@ table {
 .selected-ws:hover { /* fixme */
     background-color: #428bca !important;
 }
-.mv-sidebar {
 
-}
 
 .side-bar-switch {
     margin: 0 0 10px 0;
@@ -437,18 +441,27 @@ float: left;
 
 
 
-/* narrative */
+/******************     narrative     ***************/
+#narrative-nav,
+.recent-narratives,
+.recent-projects {
+    padding: 0;
+    margin: 0;
+}
 
 .group-item-expander:hover {
     cursor: hand;
     cursor: pointer;
 }
 
-
 .group-item-expander {
     background: #e9f8fd;
 }
 
+
+.btn-new-narrative {
+    margin: 0 20px 0 0;
+}
 .btn-delete-narrative {
     cursor: hand;
     cursor: pointer;
@@ -456,4 +469,71 @@ float: left;
 .btn-delete-narrative:hover {
     opacity: 0.7;    
 }
+/* changing z index for datatable fixed header */
+.navbar-fixed-top {
+    z-index: 500;
+}
+.FixedHeader_Header {
+    background: #fff;
+    margin: -6px 0 0px 0;
+    height: 44px;
 
+}
+
+.recent-narratives li {
+    list-style: none;
+}
+
+@media (min-width: 960px) {
+    .narrative-sidebar {
+        position:fixed;
+        top: 80px;
+        width: 22%;
+        float:left;
+    }
+}
+
+.nav-sidebar li {
+    list-style: none;
+    margin-bottom: 10px;
+    text-align: left;
+    font-family: 'RobotoBlack', Arial, sans-serif;
+    font-size: 12px;    
+}
+
+
+.btn-sidebar-nav {
+    background-color: #f2f2f2;
+    text-align: left;
+    padding: 0;
+    /*padding-left: 20px;
+    padding-right: 20px;*/
+    border: 1px solid #DBDBDB;
+    color: #6DA8CF;
+}
+
+
+.btn-sidebar-nav span {
+    color: #ccc;
+}
+
+.btn-sidebar-nav:hover, 
+.btn-sidebar-nav:hover span {
+color: #555;
+}
+.nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus {
+    background-color: #BBE8F9;
+    text-align: left;
+    padding-left: 20px;
+    padding-right: 20px;
+    border: 1px solid #A5D4E1;
+
+}
+
+.sidebar-header {
+    font-size: 14px;
+    color: #898989;
+    font-family: 'RobotoBlack', Arial, sans-serif;
+    letter-spacing: 0;
+    font-weight: normal;
+}

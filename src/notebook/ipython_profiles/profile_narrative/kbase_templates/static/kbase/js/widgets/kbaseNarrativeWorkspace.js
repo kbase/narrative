@@ -256,7 +256,7 @@
                 var buttonLabel = "...";
                 var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
                 var methodInfo = "<div class='kb-func-desc'>" +
-                                   "<h1>" + method.title + "</h1>" +
+                                   "<h1><b>" + method.title + "</b></h1>" +
                                    "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
                                       " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
                                     "<h2 class='collapse' id='" + methodId + "'>" +
@@ -958,6 +958,13 @@
             var widget = result.widget || this.defaultOutputWidget;
 
             var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
+
+            // kinda ugly, but concise. grab the method. if it's not falsy, fetch the title from it.
+            // worst case, it'll still be falsy, and we can deal with it in the header line.
+            var methodName = cell.metadata[this.KB_CELL].method;
+            if (methodName)
+                methodName = methodName.title;
+
             var uuid = this.uuidgen();
             var outCellId = 'kb-cell-out-' + uuid;
 
@@ -968,13 +975,31 @@
             else
                 widgetInvoker = this.defaultOutputWidget + "({'data' : " + result.data + "});";
 
-            var cellText = ['<div class="kb-cell-output" id="' + outCellId + '">',
-                            '<div></div>', // gap for header info
-                            '<div id="output" style="margin:-10px;"></div>',
-                            '</div>',
-                            '<script>',
-                            '$("#' + outCellId + ' > div#output").' + widgetInvoker,
-                            '</script>'].join('\n');
+            var header = '<span class="kb-out-desc"><b>' + 
+                            (methodName ? methodName : 'Unknown method') + 
+                            '</b></span><span class="pull-right kb-func-timestamp">' + 
+                            this.readableTimestamp(this.getTimestamp()) +
+                            '</span>' + 
+                         '';
+
+            var cellText = '<div class="kb-cell-output" id="' + outCellId + '">' +
+                                '<div class="panel panel-default">' + 
+                                    '<div class="panel-heading">' + header + '</div>' +
+                                    '<div class="panel-body"><div id="output"></div></div>' +
+                                '</div>' +
+                           '</div>\n' +
+                           '<script>' +
+                           '$("#' + outCellId + ' > div > div > div#output").' + widgetInvoker +
+                           '</script>';
+
+
+            // var cellText = '<div class="kb-cell-output" id="' + outCellId + '">' +
+            //                    '<div>' + header + '</div>' + // gap for header info
+            //                    '<div id="output" style="margin:-10px;"></div>' +
+            //                '</div>\n' +
+            //                '<script>' +
+            //                '$("#' + outCellId + ' > div#output").' + widgetInvoker +
+            //                '</script>';
 
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
@@ -1200,13 +1225,21 @@
 
             var d = new Date(timestamp);
             var hours = format(d.getHours());
+            // var meridian = "am";
+            // if (hours >= 12) {
+            //     hours -= 12;
+            //     meridian = "pm";
+            // }
+            // if (hours === 0)
+            //     hours = 12;
+
             var minutes = format(d.getMinutes());
             var seconds = format(d.getSeconds());
-            var month = format(d.getMonth()+1);
-            var day = format(d.getDay());
+            var month = d.getMonth()+1;
+            var day = format(d.getDate());
             var year = d.getFullYear();
 
-            return hours + ":" + minutes + ":" + seconds + " " + month + "/" + day + "/" + year;
+            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         },
 
 

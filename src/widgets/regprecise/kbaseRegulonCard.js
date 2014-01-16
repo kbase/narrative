@@ -49,6 +49,21 @@
 					    	append("<td>RFAM ID</td><td>" + self.regulon.regulator.rfam_id + "</td>"))
 			));
 
+            //Logo 
+            if (self.regulon.regulator.regulation_type === "TF"){
+                var sitesList = [];
+                for (var operon in self.regulon.operons) {
+                    for (var site in self.regulon.operons[operon].sites) {
+                        sitesList.push(self.regulon.operons[operon].sites[site].sequence);
+                    }
+                };
+                
+                self.$elem.append($("<div />")
+                        .attr("id", "motif-logo"))
+                        .append(Logo(150, 300, sitesList));
+            };
+
+
             //TFs
             self.$elem.append($("<div />")
                     .append("<h3>Transcription factors</h3>"));

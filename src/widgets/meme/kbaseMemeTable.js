@@ -26,7 +26,7 @@ $.KBWidget({
                 "sSearch": "Search all:"
             }
         };
-        var newWorkspaceServiceUrlForSpec = 'http://140.221.84.209:7058/';
+        var newWorkspaceServiceUrlForSpec = "https://kbase.us/services/ws";//'http://140.221.84.209:7058/';
         var kbws = new Workspace(newWorkspaceServiceUrlForSpec, { 'token' : this.options.auth, 'user_id' : this.options.userId});
         
         kbws.list_objects({type: 'MEME.MemeRunResult', workspaces: [ws]},

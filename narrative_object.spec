@@ -38,24 +38,26 @@
 
 module KBaseNarrative {
 
+    typedef UnspecifiedObject Metadata;
+
     typedef structure {
 	string input;
-	list<string> outputs;
+	list<UnspecifiedObject> outputs;
 	string language;
-	mapping<string, UnspecifiedObject> metadata;
+	Metadata metadata;
 	string cell_type;
     } Cell;
 
     typedef structure {
 	list<Cell> cells;
-	mapping<string,UnspecifiedObject> metadata;
+	Metadata metadata;
     } Worksheet;
 
     typedef structure {
 	int nbformat;
 	int nbformat_minor;
 	list<Worksheet> worksheets;
-	mapping<string,UnspecifiedObject> metadata;
+	Metadata metadata;
     } Narrative;
 
 };

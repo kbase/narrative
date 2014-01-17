@@ -38,19 +38,18 @@ list_objects_fields = [ 'objid','name','type','save_date','ver','saved_by','wsid
 obj_field = dict(zip(list_objects_fields,range(len(list_objects_fields))))
 
 # object type for a project tag object
-ws_tag_type = 'workspace_meta'
+ws_tag_type = 'KBaseNarrative.Metadata'
+
+# object type for a project tag object
+ws_narrative_type = 'KBaseNarrative.Narrative'
 
 # object name for project tag
-ws_tag = { 'project' : '_project' }
+ws_tag = { 'project' : 'project_meta' }
 
-def get_wsobj_meta( wsclient, objtype="KBaseNarrative.Narrative", perm=None, ws=None ):
+def get_wsobj_meta( wsclient, objtype=ws_narrative_type, ws=None ):
     """
-    Takes an initialized workspace client and a token. Defaults to searching for
+    Takes an initialized workspace client. Defaults to searching for
     Narrative types in any workspace that the token has at least read access to.
-
-    If the perm field is specified then the workspaces will be filtered by that
-    permission value - if perm='a' then search all workspaces where the token
-    provides administrative access
 
     If the ws field is specified then it will return the workspace metadata
     for only the workspace specified
@@ -60,22 +59,18 @@ def get_wsobj_meta( wsclient, objtype="KBaseNarrative.Narrative", perm=None, ws=
     keyed on the list_ws_obj_field list above.
     """
     if ws is None:
-        res = wsclient.list_objects( { 'type' : objtype } )
+        res = wsclient.list_objects( { 'type' : objtype,
+                                       'includeMetadata' : 1} )
     else:
         res = wsclient.list_objects( { 'type' : objtype,
+                                       'includeMetadata' : 1,
                                        'workspaces' : [ws]} )
-    # Ignore perms for now                                   
-    #if perm is None:
-    #    wslist2 = (w[0] for w in wslist1 if w[4] != u'n')
-    #else:
-    #    wslist2 = (w[0] for w in wslist1 if w[4] == perm)
-
     my_narratives = {}
     for obj in res:
-        my_narratives["kb|ws.%s.%s" % (obj[obj_field['wsid']],obj[obj_field['objid']])] = dict(zip(obj_field,obj))
+        my_narratives["kb|ws.%s.%s" % (obj[obj_field['wsid']],obj[obj_field['objid']])] = dict(zip(list_objects_fields,obj))
     return my_narratives
 
-def get_wsobj( wsclient, token, ws_id, objtype=None):
+def get_wsobj( wsclient, ws_id, objtype=None):
     """
     This is just a wrapper for the workspace get_objects call.
 
@@ -100,7 +95,7 @@ def get_wsobj( wsclient, token, ws_id, objtype=None):
     elif len(objs) > 1:
         raise BadWorkspaceID( "%s non-unique! Weird!!!" % ws_id)
     res=objs[0]
-    res['metadata'] = dict(zip(list_objects_fields,objs[0]. info))
+    res['metadata'] = dict(zip(list_objects_fields,objs[0]['info']))
     return res
 
 # Tag a workspace as a project, if there is an error, let it propagate up
@@ -108,7 +103,7 @@ def check_project_tag( wsclient, workspace):
     try:
         tag = wsclient.get_object_info( [{ 'workspace' : workspace,
                                            'name' : ws_tag['project']}],
-                                        false);
+                                        False);
     except biokbase.workspaceService.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found'):
@@ -117,16 +112,15 @@ def check_project_tag( wsclient, workspace):
                               'data' : { 'description' : 'Tag! You\'re a project!'},
                               'meta' : {},
                               'provenance' : [],
-                              'hidden' : 0,
-                              'default_permission' : 'n'}
-            ws_meta = wsclient.save_objects( workspace = workspace,
-                                             objects = [obj_save_data]);
+                              'hidden' : 1}
+            ws_meta = wsclient.save_objects( { 'workspace' : workspace,
+                                               'objects' : [obj_save_data]});
         else:
             raise e
     return True
 
 
-def check_homews( wsclient, user_id, token):
+def check_homews( wsclient, user_id):
     """
     Helper routine to make sure that the user's home workspace is built. Putting it here
     so that when/if it changes we only have a single place to change things.
@@ -148,7 +142,8 @@ def check_homews( wsclient, user_id, token):
         else:
             raise e
     if ws_meta:
-        check_project_tag( wsclient, homews, token)
-        return homews
+        check_project_tag( wsclient, homews)
+        # return the textual name and the numeric ws_id
+        return ws_meta[1],ws_meta[0]
     else:
         raise Exception('Unable to find or create home workspace: %s' % homews)

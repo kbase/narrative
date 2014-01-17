@@ -78,7 +78,7 @@ class KBaseWSNotebookManager(NotebookManager):
     ipynb_type = Unicode(u'ipynb')
     allowed_formats = List([u'json'])
     node_format = ipynb_type
-    ws_type = Unicode('NarrativeObject', config=True, help='Type to use within workspace service')
+    ws_type = Unicode(ws_util.ws_narrative_type, config=True, help='Type to store narratives within workspace service')
     # regex for parsing out workspace_id and object_id from
     # a "kb|ws.{workspace}.{object}" string
     ws_regex = re.compile( '^(?P<wsid>\w+)\.(?P<objid>\w+)')
@@ -274,8 +274,8 @@ class KBaseWSNotebookManager(NotebookManager):
                       'provenance' : [],
                       'meta' : nb.metadata,
                     }
-            wsobj_wrapper = { 'workspace' : nb.metadata.ws_name,
-                              'objects' : wsobj }
+            wsobj_wrapper = { 'ws_id' : nb.metadata.ws_name,
+                              'objects' : [wsobj] }
             self.log.debug("calling save_object")
             res = self.wsclient.save_objects( wsobj_wrapper)
             self.log.debug("save_object returned %s" % res)

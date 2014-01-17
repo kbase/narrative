@@ -97,7 +97,9 @@
             return {
                 type: "CmonkeyRunResult",
                 id: this.options.id,
-                ws: this.options.ws,
+                workspace: this.options.ws,
+                auth: this.options.auth,
+                userId: this.options.userId,
                 title: "cMonkey Run Result Overview"
             };
         },

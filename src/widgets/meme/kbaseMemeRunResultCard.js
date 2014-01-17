@@ -15,7 +15,6 @@
             width: 400
         },
 
-//        workspaceURL: "https://kbase.us/services/workspace",
         newWorkspaceServiceUrl: "https://kbase.us/services/ws",//"http://140.221.84.209:7058/",
 
         init: function(options) {
@@ -47,7 +46,6 @@
             var self = this;
             this.workspaceClient.get_objects([{workspace: this.options.ws, name: this.options.id}], 
 		    	function(data){
-                            //document.write(data[0]);
 					self.collection = data[0];
 					rawOutput = self.collection.data.raw_output;
 					var d = new Date(parseInt(self.collection.data.timestamp));

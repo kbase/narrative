@@ -95,8 +95,8 @@
         getData: function() {
             return {
                 type: "MastRunResult",
-                id: this.options.mast_run_result_id,
-                workspace: this.options.workspace_id,
+                id: this.options.id,
+                workspace: this.options.ws,
                 auth: this.options.auth,
                 userId: this.options.userId,
                 title: "MAST Run Result Overview"

@@ -14,7 +14,6 @@
             height: 450
         },
 
-//        workspaceURL: "https://kbase.us/services/workspace",
         newWorkspaceServiceUrl: "https://kbase.us/services/ws",//"http://140.221.84.209:7058/",
 
         init: function(options) {
@@ -29,7 +28,6 @@
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-//            this.workspaceClient = new workspaceService(this.workspaceURL);
               this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, { 'token' : this.options.auth, 'user_id' : this.options.userId});
 
             return this.render();
@@ -84,7 +82,9 @@
             return {
                 type: "InferelatorRunResult",
                 id: this.options.id,
-                ws: this.options.ws,
+                workspace: this.options.ws,
+                auth: this.options.auth,
+                userId: this.options.userId,
                 title: "Inferelator Run Result Overview"
             };
         },

@@ -106,6 +106,8 @@
                 type: "BambiRunResult",
                 id: this.options.bambi_run_result_id,
                 workspace: this.options.workspace_id,
+                auth: this.options.auth,
+                userId: this.options.userId,
                 title: "BAMBI Run Result Overview"
             };
         },

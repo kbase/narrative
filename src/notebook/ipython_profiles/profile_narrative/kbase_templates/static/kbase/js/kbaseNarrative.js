@@ -52,7 +52,8 @@
         $([IPython.events]).on('status_idle.Kernel', function() {
             if (narr_ws == null) {
                 if (narr_ws == null) {
-                    $('#kb-ws').find('.kb-table').kbaseWorkspaceData({container: $('#kb-ws').find('.kb-table')});
+//                    $('#kb-ws').find('.kb-table').kbaseWorkspaceData({container: $('#kb-ws').find('.kb-table')});
+                    $('#kb-ws').kbaseWorkspaceDataDeluxe({});
                     var $ws = $('#kb-ws');
                     narr_ws = $ws
                         .kbaseNarrativeWorkspace({

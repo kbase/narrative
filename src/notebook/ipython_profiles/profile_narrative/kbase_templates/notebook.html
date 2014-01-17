@@ -178,7 +178,7 @@ class="notebook_app"
 
     <div id="left-column">
         <div id="kb-ws">
-            <div class="kb-header"><span id='kb-wsname'>Data</span></div>
+<!--             <div class="kb-header"><span id='kb-wsname'>Data</span></div>
             <div class="kb-controls"><span id='kb-ws-upload-dialog'></span>
             </div>
             <div class="kb-table">
@@ -193,104 +193,16 @@ class="notebook_app"
                     </tbody>
                 </table>
             </div>
-        </div>
+ -->        </div>
         <!-- <div class="kb-ws-browser-link">
             See more in the 
             <a href="http://140.221.84.142/" target="_blank">workspace browser</a>.
         </div>
     -->
-<!--         <div class="kb-function-panel left-pane">
-            <div class="kb-function-header">
-                Functions
-            </div>
-            <div class="kb-function-body">
-                <ul>
-                    <li><a href="#" data-name="Plants Co-expression">Plants Co-expression</a>
-                        <span data-name="Plants Co-expression" 
-                              data-help="Calculate gene co-expression clusters and visualize results as a graph."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Assemble Contigs">Assemble Contigs from Reads</a>
-                        <span data-name="Assemble Contigs" 
-                              data-help="Use a KBase pipeline to assemble a set of contigs from generated reads files."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Assemble Genome">Assemble Genome from Contigs</a>
-                        <span data-name="Assemble Genome" 
-                              data-help="Assemble an unannotated Genome from a set of Contigs in your data."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Annotate Genome">Annotate Assembled Genome</a>
-                        <span data-name="Annotate Genome" 
-                              data-help="Annotate a Genome. This starts a job that might run for an hour or longer.
-                                         When it finishes, the annotated Genome will be stored in your data space."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="View Genome Details">View Genome Details</a>
-                        <span data-name="View Genome Details" 
-                              data-help="Select and view a brief list of details about a Genome in your workspace."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Genome To Draft FBA Model">Genome to Draft FBA Model</a>
-                        <span data-name="Genome to Draft FBA Model" 
-                              data-help="Build a draft FBA model from a genome in your workspace."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="View FBA Model Details">View FBA Model Details</a>
-                        <span data-name="View FBA Model Details" 
-                              data-help="Select and view a constructed FBA Model from your data."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Build Media">Build Media</a>
-                        <span data-name="Build Media" 
-                              data-help="Assemble a set of compounds to use as a media set for performing FBA on a model."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="View Media">View Media</a>
-                        <span data-name="View Media" 
-                              data-help="Select and view a media set from your data."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Run Flux Balance Analysis">Run Flux Balance Analysis</a>
-                        <span data-name="Run Flux Balance Analysis" 
-                              data-help="Run a Flux Balance Analysis using a model and media set."
-                              class="kb-function-help">?</span>
-                    </li>                    
-                    <li><a href="#" data-name="View FBA Results">View FBA Results</a>
-                        <span data-name="View FBA Results" 
-                              data-help="Select and view FBA results from your data."
-                              class="kb-function-help">?</span>
-                    </li>                    
-                    <li><a href="#" data-name="Gapfill FBA Model">Gapfill FBA Model</a>
-                        <span data-name="Gapfill FBA Model" 
-                              data-help="Generate a set of reactions to add to your FBA model in order to allow biomass production in a set of conditions."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Integrate Gapfill Solution">Integrate Gapfill Solution</a>
-                        <span data-name="Integrate Gapfill Solution" 
-                              data-help="Integrate a set of gapfilled reactions into your FBA model."
-                              class="kb-function-help">?</span>
-                    </li>
-                </ul>
-            </div>
-        </div> -->
         <div id="function-panel" class="left-pane"></div>
         <div id="kb-function-help"></div>
         
-<!--         <div id="data-pane" class="left-pane">
-            <h3 class="pane-title">
-                Data<span id="add-link"><a id="add-data" href="#">+ add data</a></span>
-            </h3>
-            <p><span class="tab1">In workspace</span><span class="tab2">In narrative</span></p>
-             <ul id="data-list" class="pane-list">
-             </ul>
-        </div>
-        <div id="function-pane" class="left-pane">
-            <h3 class="pane-title">Functions</h3>
-            <ul id="command-list" class="pane-list">
-            </ul>
-        </div>
- -->    </div>
+     </div>
 
      <div id="content-column">
         <div id="menubar-container">
@@ -401,6 +313,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbaseLogging.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/workspaceService.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/workspaceDeluxeClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -410,7 +323,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/kbaseAccordion.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeFunctionPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceData.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceDataDeluxe.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseDeletePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbaseContigBrowserButtons.js") }}" type="text/javascript" charset="utf-8"></script>

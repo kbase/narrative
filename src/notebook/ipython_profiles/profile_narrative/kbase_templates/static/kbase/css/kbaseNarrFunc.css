@@ -241,19 +241,19 @@
 }
 
 .kb-func-panel {
-  border-color: #ddd;
+  border-color: #bce8f1;
 }
 
 .kb-func-panel > .panel-heading {
   color: #31708f;
-  background-color: #fff;
-  border-color: #ddd;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
 }
 
 .kb-func-panel > .panel-heading + .panel-collapse .panel-body {
-  border-top-color: #ddd;
+  border-top-color: #bce8f1;
 }
 
 .kb-func-panel > .panel-footer + .panel-collapse .panel-body {
-  border-bottom-color: #ddd;
+  border-bottom-color: #bce8f1;
 }

@@ -136,14 +136,15 @@
 .kb-cell-run {
     z-index: auto;
     opacity: 1;
-    border: 1px solid #aaa;
+/*    border: 1px solid #aaa;
     border-radius: 4px;
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
     padding: 5px;
-}
+*/}
 .kb-cell-run h1 {
     font-family: 'Roboto';
+    font-weight: bold;
     font-size: 12pt;
     line-height: 15px;
     color: #0D7876;
@@ -158,6 +159,7 @@
 .kb-func-desc button {
     margin-left: 10px;
 }
+
 .kb-cell-run h2 {
     font-family: 'Roboto';
     font-size: 11pt;
@@ -184,6 +186,7 @@
 }
 .kb-cell-params table > tr,td {
     border: none;
+    vertical-align: middle;
 }
 
 .kb-cell-params input {
@@ -213,4 +216,44 @@
 .kb-cell-progressbar {
     width: 400px;
     height: 20px;
+}
+
+.kb-out-desc {
+    font-family: 'Roboto';
+    font-weight: bold;
+    font-size: 12pt;
+    line-height: 15px;
+    color: #0D7876;
+    margin: 3px;
+    opacity: inherit;
+    display: inline;
+}
+
+.kb-out-header {
+    background-color: #ddd;
+    padding: 10px;
+}
+
+.kb-func-timestamp {
+    color: #555;
+    font-size: 10pt;
+    font-family: 'Roboto';
+}
+
+.kb-func-panel {
+  border-color: #bce8f1;
+}
+
+.kb-func-panel > .panel-heading {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+}
+
+.kb-func-panel > .panel-heading + .panel-collapse .panel-body {
+  border-top-color: #bce8f1;
+}
+
+.kb-func-panel > .panel-footer + .panel-collapse .panel-body {
+  border-bottom-color: #bce8f1;
 }

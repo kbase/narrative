@@ -136,12 +136,12 @@
 .kb-cell-run {
     z-index: auto;
     opacity: 1;
-    border: 1px solid #aaa;
+/*    border: 1px solid #aaa;
     border-radius: 4px;
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
     padding: 5px;
-}
+*/}
 .kb-cell-run h1 {
     font-family: 'Roboto';
     font-weight: bold;
@@ -159,6 +159,7 @@
 .kb-func-desc button {
     margin-left: 10px;
 }
+
 .kb-cell-run h2 {
     font-family: 'Roboto';
     font-size: 11pt;
@@ -185,6 +186,7 @@
 }
 .kb-cell-params table > tr,td {
     border: none;
+    vertical-align: middle;
 }
 
 .kb-cell-params input {
@@ -236,4 +238,22 @@
     color: #555;
     font-size: 10pt;
     font-family: 'Roboto';
+}
+
+.kb-func-panel {
+  border-color: #ddd;
+}
+
+.kb-func-panel > .panel-heading {
+  color: #31708f;
+  background-color: #fff;
+  border-color: #ddd;
+}
+
+.kb-func-panel > .panel-heading + .panel-collapse .panel-body {
+  border-top-color: #ddd;
+}
+
+.kb-func-panel > .panel-footer + .panel-collapse .panel-body {
+  border-bottom-color: #ddd;
 }

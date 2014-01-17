@@ -61,15 +61,15 @@ angular.module('narrative-directives')
             templateUrl: 'partials/narrative/project_table.html',
             link: function(scope, element, attrs) {
                 //fixme: temporary
-                var help_text = '<b>Projects</b> hold assets that can be shared by members. Project members—the people who have permission to use the project\'s assets—can be individuals or teams. You set permissions for all assets shared in the project, but you can set additional permissions on any individual asset.\
-                                <br>\
+                var help_text = "<b>Projects</b> hold assets that can be shared by members. Project members\-the people who have permission to use the project\'s assets\—can be individuals or teams. You set permissions for all assets shared in the project, but you can set additional permissions on any individual asset."+
+                                '<br>\
                                 <br>\
                                 <b>Narratives</b> capture your analyses and include rich annotations, visualizations widgets, reusable workflows, and custom scripts. Through projects, a special type of workspace, you can share your narratives and data with colleagues.'
-
                 $('.project-help').popover({html: true, trigger: 'hover', 
-                                        content: help_text, placement:'bottom'})
+                                        content: help_text, placement:'bottom'}) 
 
 
+                // global variables
                 var tableId = 'project-table';
                 var table;
 
@@ -77,15 +77,15 @@ angular.module('narrative-directives')
                 // this "api" method loads the project/narrative table; 
                 scope.loadData = function() {
                     //tableEle.remove();
+
+                    // if datatable already exists, clear it
                     if (table) {
-                        $('#'+tableId).dataTable().fnDestroy();                     
-                        $('#'+tableId).remove();
-                        $(element).append('<table class="table table-bordered" id="'+tableId+'"></table>')
+                        $('#'+tableId).dataTable().fnClearTable();
                     }
 
-                    $(element).loading();
+                    // get all projects
                     var proj_ids = []
-
+                    $(element).loading();
                     project.get_projects({
                         callback: function(projs) {
                             var projects = [];
@@ -95,15 +95,13 @@ angular.module('narrative-directives')
                                 proj_ids.push(projs[key].id);
                             }
 
+                            // get narratives for each projectr //fixme: optimize
                             getNarratives(proj_ids);
-
-
                         }
                     })
                 }
 
                 scope.loadData();
-
 
                 function getNarratives(proj_ids) {
                     project.get_narratives({project_ids:proj_ids, 
@@ -140,13 +138,15 @@ angular.module('narrative-directives')
                                 //nar.users = 
                             }
 
-                            // if project is empty, add to empty_projects.
 
+                            // if project is empty, add to empty_projects.
                             var empty_projects = []
                             for (var i in proj_ids) {
                                 if (nar_projs.indexOf(proj_ids[i]) == -1) {
                                     //empty_projects.push(proj_ids[i])
-                                    narratives.push({project: '<span class="caret"></span> <i>Project</i>  <b>'+proj_ids[i]+'</b>',
+                                    narratives.push({project: '<span class="proj-link" data-proj="'+proj_ids[i]+'">\
+                                                                <span class="caret"></span><i>Project</i> <b>'+proj_ids[i]+'</b>\
+                                                               </span>',
                                                     id: '<span class="text-muted">Empty Project</span>', 
                                                     owner: '', moddate: '', users: '', deleteButton: '', timestamp: ''})
                                 }
@@ -182,42 +182,47 @@ angular.module('narrative-directives')
 
 
                 function buildTable(narratives) {
-                        var tableSettings = {
-                            "sPaginationType": "bootstrap",
-                            //"sPaginationType": "full_numbers",
-                            "iDisplayLength": 200,
-                            //"aaData": [],
-                            "fnDrawCallback": events,
-                            bLengthChange: false,
-                            "bInfo": false,
-                            "aaSorting": [[ 4, "desc" ]],
-                          "aoColumns": [
-                              { "sTitle": "Name", "mData": "id"},
-                              { "sTitle": "Owner", "mData": "owner"},
-                              { "sTitle": "Project", "mData": "project"},  // grouped by this column
-                              { "sTitle": "Shared With", "mData": "users"},
-                              { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 6},
-                              { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'},
-                              { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}  
+                        // reinstantiate fixed header, if one already exists in dom
+                        if (table) {
+                            table.fnAddData(narratives)
+                        } else {
 
-                          ],                         
-                            "oLanguage": {
-                                //"sEmptyTable": "No objects in workspace",
-                                "sSearch": "Search:"
+                            var tableSettings = {
+                                "sPaginationType": "bootstrap",
+                                //"sPaginationType": "full_numbers",
+                                "iDisplayLength": 200,
+                                //"aaData": [],
+                                "fnDrawCallback": events,
+                                bLengthChange: false,
+                                "bInfo": false,
+                                "aaSorting": [[ 4, "desc" ]],
+                              "aoColumns": [
+                                  { "sTitle": "Name", "mData": "id"},
+                                  { "sTitle": "Owner", "mData": "owner"},
+                                  { "sTitle": "Project", "mData": "project"},  // grouped by this column
+                                  { "sTitle": "Shared With", "mData": "users"},
+                                  { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 6},
+                                  { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'},
+                                  { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}  
+
+                              ],                         
+                                "oLanguage": {
+                                    //"sEmptyTable": "No objects in workspace",
+                                    "sSearch": "Search:"
+                                }
                             }
+    
+                            tableSettings.aaData = narratives;
+                            table = $('#'+tableId).dataTable(tableSettings)
+                                            .rowGrouping({iGroupingColumnIndex: 2,
+                                                          bExpandableGrouping: true});
+                            var new_proj_btn = $('<a class="btn btn-default pull-left">\
+                                    <span class="glyphicon glyphicon-plus"></span>New Project</a>')
+                            new_proj_btn.on('click', newProjectModal)
+                            $('.table-options').append(new_proj_btn)
+
+                            new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                                  
                         }
-
-
-                        tableSettings.aaData = narratives;
-
-                        table = $('#'+tableId).dataTable(tableSettings)
-                                        .rowGrouping({iGroupingColumnIndex: 2,
-                                                      bExpandableGrouping: true});
-                        $('.table-options').append('<a class="btn btn-default pull-left">\
-                                <span class="glyphicon glyphicon-plus"></span>New Project</a>')
-                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});
-                        //$('.fixedHeader').remove();
-
                 }
 
 
@@ -276,6 +281,92 @@ angular.module('narrative-directives')
                 }
 
 
+
+
+                function newProjectModal() {
+                    var body = $('<form class="form-horizontal" role="form">\
+                                      <div class="form-group">\
+                                        <label class="col-sm-4 control-label">Project Name</label>\
+                                        <div class="col-sm-4">\
+                                          <input type="text" class="form-control new-project-name">\
+                                        </div>\
+                                      </div>\
+                                      <div class="form-group">\
+                                        <label class="col-sm-4 control-label">Global Permsissions</label>\
+                                        <div class="col-sm-3">\
+                                          <div>None</div>\
+                                         <!--<select class="form-control create-permission" data-value="n">\
+                                            <option value="n" selected="selected">none</option>\
+                                            <option value="r">read</option></select>\
+                                        </div>-->\
+                                      </div>\
+                                      <!--<div class="form-group">\
+                                        <label class="col-sm-4 control-label">Description</label>\
+                                        <div class="col-sm-7">\
+                                          <textarea class="form-control create-descript" rows="3"></textarea>\
+                                        </div>\
+                                      </div>-->\
+                                  </div>')
+                    
+
+                    var newProjModal = $('<div></div>').kbasePrompt({
+                            title : 'Create New Project</small>',
+                            body : body,
+                            modalClass : '', 
+                            controls : ['cancelButton', {
+                                name : 'Create',
+                                type : 'primary',
+                                callback : function(e, $prompt) {
+                                    var proj_id = $(".new-project-name").val();
+                                    //var project_id = $("#new_narrative_project").val();
+
+                                    //no spaces allowed in narrative name
+                                    proj_id = proj_id.replace(/ /g,"_");
+                                    proj_id = proj_id.replace(/\W/g,"");
+
+                                    if (proj_id === '') {
+                                        $prompt.addAlert('must enter project');
+                                        $('.create-id').focus();
+                                        return;
+                                    }               
+
+                                    //create the new narrative in ws
+                                    $prompt.addCover()
+                                    $prompt.getCover().loading()                                  
+                                    project.new_project({
+                                        project_id: proj_id,
+                                        callback: function(results) {
+
+                                            $prompt.addCover('Created project <b><i>'+proj_id+'</b></i>');
+
+                                            scope.loadData()
+
+                                            var btn = $('<button type="button" class="btn btn-primary">Close</button>');
+                                            btn.click(function() { 
+                                                $prompt.closePrompt(); 
+                                            });
+
+                                            $prompt.data('dialogModal').find('.modal-footer').html(btn);     
+
+                                            //redirect to the narrative page
+                                            //var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+                                            //window.location.href = "http://narrative.kbase.us/"+proj_id+"."+name;
+                                        }
+                                    }); 
+
+                                    // fixme: use promise!
+                                    //.fail(function(e) {
+                                    //    $prompt.addCover(e.error.message, 'danger');                                            
+                                    //})
+                                }
+                            }]
+                        }
+                    );
+                    newProjModal.openPrompt();
+                }
+
+
+
                 function newNarrativeModal(proj_id) {
                     var body = $('<form class="form-horizontal" role="form">\
                                       <div class="form-group">\
@@ -309,12 +400,12 @@ angular.module('narrative-directives')
                                     name = name.replace(/\W/g,"");
                                     
 
-                                    if (proj_id === '') {
+                                    if (name === '') {
                                         $prompt.addAlert('must enter');
                                         $('.create-id').focus();
                                         return;
                                     }               
-
+                                    console.log('calling with', name, proj_id)
                                     //create the new narrative in ws
                                     $prompt.addCover()
                                     $prompt.getCover().loading()                                  
@@ -325,6 +416,7 @@ angular.module('narrative-directives')
 
                                             $prompt.addCover('Created narrative <b><i>'+name
                                                             +'</i></b> in project <b><i>'+proj_id+'</i></b>');
+
                                             scope.loadData()
 
                                             var btn = $('<button type="button" class="btn btn-primary">Close</button>');
@@ -373,7 +465,7 @@ angular.module('narrative-directives')
                                 callback : function(e, $prompt) {
                                     $prompt.addCover();
                                     $prompt.getCover().loading();
-                                    project.new_narrative({
+                                    project.delete_object({
                                         workspace: proj_id, 
                                         id: nar_id,
                                         type: 'Narrative',

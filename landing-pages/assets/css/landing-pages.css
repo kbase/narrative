@@ -448,13 +448,15 @@ float: left;
     margin: 0;
 }
 
-.group-item-expander:hover {
-    cursor: hand;
-    cursor: pointer;
-}
 
 .group-item-expander {
     background: #e9f8fd;
+}
+
+.group-item-expander:hover {
+    cursor: hand;
+    cursor: pointer;
+    background-color: #e9f8fd !important;
 }
 
 

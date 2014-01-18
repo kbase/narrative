@@ -29,7 +29,7 @@
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
-            workspaceURL: "http://kbase.us/services/workspace",
+            workspaceURL: "http://140.221.84.209:7058",// "http://kbase.us/services/ws",
             container: null,
             ws_id: null
         },
@@ -109,7 +109,7 @@
 
 
             this.$myDataDiv = $('<div id="my-data">');
-            this.$myDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">');
+            this.$myDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered kb-table">');
             this.$myDataDiv.append(this.$myDataTable);
 
             this.$narrativeDiv = $('<div id="narrative-data">');
@@ -132,7 +132,6 @@
             );
 
             this.$myDataTable.dataTable({
-                sScrollY: '100%',
                 sScrollX: '100%',
                 iDisplayLength: -1,
                 bPaginate: false,
@@ -146,11 +145,16 @@
                 ],
                 aoColumnDefs: [
                   { 'bSortable': false, 'aTargets': [ 0 ] },
-               ]
+                ],
+                bInfo: false,
+                bLengthChange: false,
+                bPaginate: false,
+                bAutoWidth: true,
+                bScrollCollapse: true,
+                sScrollY: '240px'
             });
 
             this.$narrativeDataTable.dataTable({
-                sScrollY: '100%',
                 sScrollX: '100%',
                 iDisplayLength: -1,
                 bPaginate: false,
@@ -163,7 +167,13 @@
                 ],
                 aoColumnDefs: [
                   { 'bSortable': false, 'aTargets': [ 0 ] },
-               ]
+                ],
+                bInfo: false,
+                bLengthChange: false,
+                bPaginate: false,
+                bAutoWidth: true,
+                bScrollCollapse: true,
+                sScrollY: '270px'
            });
 
             return this;
@@ -313,7 +323,27 @@
          * Should.
          */
         refresh: function() {
+            this.dbg("workspaceDataDeluxe.refresh");
 
+            // Refresh the workspace client to work with the current token.
+            this.wsClient = new Workspace(this.workspaceURL, this.authToken);
+
+            this.wsClient.list_objects( 
+                {
+                    workspaces : [this.wsId],
+                }, 
+                $.proxy(function(list) {
+                    console.debug("workspaceDataDeluxe.refresh");
+                    console.debug(list);
+                    this.$myDataTable.fnClearTable();
+                    this.$myDataTable.fnAddData(list);
+                }, this), 
+                $.proxy(function(error) {
+                    console.debug(error);
+                }, this)
+            );
+
+            // this.wsClient.list_workspace_objects({ workspace: this.wsId }, function(list) {              }, function(err) { console.err(error); });
         },
 
         /* Convert object metadata from list to object */

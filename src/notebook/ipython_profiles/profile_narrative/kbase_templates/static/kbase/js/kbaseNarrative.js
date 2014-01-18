@@ -49,22 +49,25 @@
             kbaseConnected();
         }
 
+        /*
+         * Once everything else is loaded and the Kernel is idle,
+         * Go ahead and fill in the rest of the Javascript stuff.
+         */
         $([IPython.events]).on('status_idle.Kernel', function() {
             if (narr_ws == null) {
-                if (narr_ws == null) {
-//                    $('#kb-ws').find('.kb-table').kbaseWorkspaceData({container: $('#kb-ws').find('.kb-table')});
-                    $('#kb-ws').kbaseWorkspaceDataDeluxe({});
-                    var $ws = $('#kb-ws');
-                    narr_ws = $ws
-                        .kbaseNarrativeWorkspace({
-                          loadingImage: "/static/kbase/images/ajax-loader.gif",
-                          controlsElem: $ws.find('.kb-controls'),
-                          tableElem: $ws.find('.kb-table')
-                    });
-                }
-                if (token)
-                    narr_ws.loggedIn(token);
+                // $('#kb-ws').find('.kb-table').kbaseWorkspaceData({container: $('#kb-ws').find('.kb-table')});
+                $('#kb-ws').kbaseWorkspaceDataDeluxe({ wsId: IPython.notebook.metadata.ws_name });
+                var $ws = $('#kb-ws');
+                // XXX: Should be renamed.... eventually?
+                narr_ws = $ws
+                    .kbaseNarrativeWorkspace({
+                      loadingImage: "/static/kbase/images/ajax-loader.gif",
+                      controlsElem: $ws.find('.kb-controls'),
+                      tableElem: $ws.find('.kb-table')
+                });
             }
+            if (token)
+                narr_ws.loggedIn(token);
         });
 
     });

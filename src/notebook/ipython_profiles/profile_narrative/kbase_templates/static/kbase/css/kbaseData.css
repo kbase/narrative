@@ -4,7 +4,7 @@ For data in KBase workspace
 #kb-ws {
     background-color: #fff;
     width: 100%;
-    height: 350px;
+    height: 350px !important;
 }
 
 #kb-ws .dataTable {
@@ -89,10 +89,11 @@ For data in KBase workspace
 /* end: Refresh button */
 
 /* Data table */
-#kb-ws .kb-table table {
+.kb-table {
     /*width: 100%;*/
-    height: 100%;
-/*    height: 270px;*/
+/*    height: 100%;
+*/
+    height: 270px;
 }
 
 .kb-table table th {

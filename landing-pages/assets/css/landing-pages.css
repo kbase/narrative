@@ -448,9 +448,8 @@ float: left;
     margin: 0;
 }
 
-
 .group-item-expander {
-    background: #e9f8fd;
+    background: #f2f2f2; /*#d6eaff;*/
 }
 
 .group-item-expander:hover {
@@ -489,47 +488,11 @@ float: left;
     .narrative-sidebar {
         position:fixed;
         top: 80px;
-        width: 22%;
+        width: 20%;
         float:left;
     }
 }
 
-.nav-sidebar li {
-    list-style: none;
-    margin-bottom: 10px;
-    text-align: left;
-    font-family: 'RobotoBlack', Arial, sans-serif;
-    font-size: 12px;    
-}
-
-
-.btn-sidebar-nav {
-    background-color: #f2f2f2;
-    text-align: left;
-    padding: 0;
-    /*padding-left: 20px;
-    padding-right: 20px;*/
-    border: 1px solid #DBDBDB;
-    color: #6DA8CF;
-}
-
-
-.btn-sidebar-nav span {
-    color: #ccc;
-}
-
-.btn-sidebar-nav:hover, 
-.btn-sidebar-nav:hover span {
-color: #555;
-}
-.nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus {
-    background-color: #BBE8F9;
-    text-align: left;
-    padding-left: 20px;
-    padding-right: 20px;
-    border: 1px solid #A5D4E1;
-
-}
 
 .sidebar-header {
     font-size: 14px;
@@ -552,6 +515,57 @@ color: #555;
     font-weight: normal; 
     color: #898989; 
     letter-spacing: 0;
+}
+
+
+.active .btn-narr {
+    background-color: #BBE8F9;
+    text-align: left;
+    padding-left: 20px;
+    padding-right: 20px;
+    border: 1px solid #A5D4E1;
+    font-family: OxygenBold;
+    font-size: 14px;
+}
+
+.btn-narr {
+    background-color: #f2f2f2;
+    text-align: left;
+    padding-left: 20px;
+    padding-right: 20px;
+    border: 1px solid #DBDBDB;
+    color: #6DA8CF;
+    font-family: 'RobotoBlack', Arial, sans-serif;
+    font-size: 14px;
+}
+
+.nav-sidebar li {
+    list-style: none;
+    margin-bottom: 10px;
+    text-align: left;
+    font-family: 'RobotoBlack', Arial, sans-serif;
+}
+
+.navbar-nav {
+    color: #6DA8CF;
+    font-family: 'RobotoBlack', Arial, sans-serif;
+}
+
+.navbar-nav > li > a:hover {
+    background-color: #fff;
+}
+
+.navbar-nav > li.active > a , 
+.navbar-nav > li.active:hover {
+    color: #2a6496 !important;
+    box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    -webkit-box-sizing:border-box;
+    height: 50px;
+    border-bottom: 4px solid #428bca ;
+}
+.navbar-nav > .active:hover {
+    color: #2a6496;
 }
 
 

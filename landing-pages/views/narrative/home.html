@@ -4,21 +4,21 @@
         <div class="narrative-sidebar">
             <ul class="nav nav-pills nav-stacked nav-sidebar">
                 <li class="active">
-                    <a class="btn-sidebar-nav" href="#/narrative/home/">
+                    <a class="btn-narr" href="#/narrative/home/">
                     Newsfeed
                     <span class="glyphicon glyphicon-chevron-right pull-right"></span>
                     </a>
                 </li>
 
                 <li>
-                    <a class="btn-sidebar-nav" href="#/narrative/home/projects/">
+                    <a class="btn-narr" href="#/narrative/home/projects/">
                     Projects/Narratives
                     <span class="glyphicon glyphicon-chevron-right pull-right"></span>
                     </a>
                 </li>
 
                 <li>
-                    <a class="btn-sidebar-nav" href="#/ws/">
+                    <a class="btn-narr" href="#/ws/">
                     Workspace Browser
                     <span class="glyphicon glyphicon-chevron-right pull-right"></span>
                     </a>
@@ -30,7 +30,7 @@
             <div class="narrative-sidebar-section">
                 <div class="sidebar-header">RECENT NARRATIVES</div>
                 <div recentnarratives>
-                    <ul class="recent-narratives" ng-repeat="nar in narratives | orderBy:'timestamp':true | limitTo:5">
+                    <ul class="recent-narratives" ng-repeat="nar in narratives | orderBy:'timestamp':false | limitTo:5">
                         <li><a href="{{nar_url}}/{{nar.workspace}}.{{nar.id}}">{{nar.id}}</a> 
                             <span class="text-mutted pull-right">{{nar.nealtime}}</span>
                         </li>
@@ -40,7 +40,13 @@
                 <br>
                 <hr>
                 <h3 class="sidebar-header">RECENT PROJECTS</h3>
-                <ol recentprojects></ol>
+                <div recentprojects>
+                    <ul class="recent-projects" ng-repeat="nar in projects | orderBy:'timestamp':false | limitTo:5">
+                        <li><a href="{{nar_url}}/{{nar.workspace}}.{{nar.id}}">{{nar.id}}</a> 
+                            <span class="text-mutted pull-right">{{nar.nealtime}}</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div> <!-- end fixed sidebar -->
     </div> <!-- end left column -->

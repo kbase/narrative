@@ -18,6 +18,7 @@ angular.module('narrative-directives')
                 project.get_narratives({
                     callback: function(results) {
                         $(element).rmLoading();
+
                         if (Object.keys(results).length > 0) {
                             //first sort
                             for (var i in results) {
@@ -41,16 +42,33 @@ angular.module('narrative-directives')
         };
     })
 
-
-
-
-
-
     .directive('recentprojects', function($location) {
         return {
-
             link: function(scope, element, attrs) {
-                
+                /*
+                $(element).loading()
+                project.get_projects({
+                    callback: function(results) {
+                        $(element).rmLoading();
+                        console.log('results', results)                        
+                        if (Object.keys(results).length > 0) {
+                            //first sort
+                            for (var i in results) {
+                                results[i].timestamp = getTimestamp(results[i].moddate);
+                                results[i].nealtime = formateDate(results[i].timestamp) 
+                                                ? formateDate(results[i].timestamp) : results[i].moddate.replace('T',' ');
+                            }
+
+                            scope.$apply(function() {
+                                scope.projects = results;
+                            })
+
+                        } else {
+                            $(element).append('no projects')
+                        }
+                    }
+                })
+                */
             }
 
         };
@@ -119,7 +137,7 @@ angular.module('narrative-directives')
                                             +proj+'.'+nar_id+'" >'+nar_id+'</a>';
                                 // projects are workspaces right now
                                 nar.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
-                                                 <i>Project</i> <b>'+proj+'</b></span>';//<b>Project:</b>
+                                                 Project <b>'+proj+'</b></span>';//<b>Project:</b>
 
 
                                 nar.timestamp = getTimestamp(nar.moddate)
@@ -145,7 +163,7 @@ angular.module('narrative-directives')
                                 if (nar_projs.indexOf(proj_ids[i]) == -1) {
                                     //empty_projects.push(proj_ids[i])
                                     narratives.push({project: '<span class="proj-link" data-proj="'+proj_ids[i]+'">\
-                                                                <span class="caret"></span><i>Project</i> <b>'+proj_ids[i]+'</b>\
+                                                                <span class="caret"></span> Project <b>'+proj_ids[i]+'</b>\
                                                                </span>',
                                                     id: '<span class="text-muted">Empty Project</span>', 
                                                     owner: '', moddate: '', users: '', deleteButton: '', timestamp: ''})

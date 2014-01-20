@@ -1,24 +1,10 @@
 
 <div class="row">
-    <div class="col-md-3 mv-sidebar">
-        <div class="wsselector" wsselector></div>
+    <div class="col-md-3">
+        <div wsselector></div>
     </div>
+
     <div class="col-md-9">
-        <!--
-        <ul class="nav nav-tabs mv-tabs">
-            <li class="objtable-tab active"><a ui-sref="mv.objtable({selected_ws: selected_ws, ws: ws_param, ids: ids_param})">Selection</a></li>
-            <li class="core-tab hide"><a ui-sref="mv.core({selected_ws: selected_ws, ws: ws_param, ids: ids_param})">Core</a></li>
-            <li class="heatmap-tab hide"><a ui-sref="mv.heatmap({selected_ws: selected_ws, ws: ws_param, ids: ids_param})">Heatmap</a></li>
-            <li class="tree-tab"><a ui-sref="mv.tree({selected_ws: selected_ws, ws: ws_param, ids: ids_param})">Tree</a></li>
-
-            <li><a ui-sref="#/mv/maps/{{ws}}/{{ids}}">Maps</a></li>
-            <li><a ui-sref="#/mv/heatmap/{{ws}}/{{ids}}">Heatmap</a></li>
-            <li><a ui-sref="#/mv/reactions/{{ws}}/{{ids}}">Reactions</a></li>
-            <li><a ui-sref="#/mv/compounds/{{ws}}/{{ids}}">Compounds</a></li>
-            <li><a ui-sref="#/mv/gapfills/{{ws}}/{{ids}}">Gapfills</a></li>
-        </ul>
-        -->
-
         <div class="object-view" ui-view>
             <div ng-show="!selected_ws">
                 <span class="text-danger">No Workspace Selected</span><br>

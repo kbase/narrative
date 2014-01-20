@@ -787,7 +787,7 @@ function formateDate(timestamp) {
         var d = new Date(timestamp);        
         var day = dayOfWeek[d.getDay()]
         var t = d.toLocaleTimeString().split(':');
-        return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
+        return 'Last '+ day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
     } else {
         return false;
     }

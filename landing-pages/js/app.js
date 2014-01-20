@@ -340,7 +340,6 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
 
     $rootScope.$state = $state;
     $rootScope.$stateParams = $stateParams;
-
 });
 
 

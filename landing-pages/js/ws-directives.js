@@ -302,11 +302,6 @@ angular.module('ws-directives')
                     var settings = scope.workspace_dict[ws_name];
                     console.log(settings)
 
-                    var prom = kb.kbwsAPI().get_workspace_description({workspace:ws_name})
-                    $.when(prom).done(function() {
-                        console.log('blah', data)
-                    })
-
                     var isAdmin;
                     if (settings[4] == 'a') {
                         isAdmin = true;
@@ -363,7 +358,9 @@ angular.module('ws-directives')
                         })
 
                     manage_modal.openPrompt();
-                    manage_modal.data('dialogModal').find('.modal-dialog').css('width', '500px');
+                    var dialog = manage_modal.data('dialogModal').find('.modal-dialog');
+                    dialog.css('width', '500px');
+                    var modal_body = dialog.find('.modal-body');                    
 
                     var cloneWS = $('<button class="btn btn-link pull-left">Clone</button>');
                     cloneWS.click(function() {
@@ -378,6 +375,28 @@ angular.module('ws-directives')
                     });
 
                     var modal_body = manage_modal.data('dialogModal').find('.modal-body');
+
+                    var prom = kb.kbwsAPI().get_workspace_description({workspace:ws_name})
+                    $.when(prom).done(function(descript) {
+                        var d = $('<div>');
+                        d.append('<h4>Description <small><a id="btn-edit-descript">Edit</a></small><h4>');
+                        d.append('<div id="ws-description">'+descript+'</div>')
+                        modal_body.prepend(d)
+
+                        $('#btn-edit-descript').click(function(){
+                            if ($('#ws-description textarea').length > 0) {
+                                $('#ws-description').html(descript);
+                                $(this).text('Edit');                                
+                            } else {
+                                var editable = getEditableDescription(descript);
+                                $('#ws-description').html(editable)
+                                $(this).text('Cancel');
+                            }
+
+                        })
+
+                    })
+
 
                     // if user is logged in and admin 
                     if (USER_ID && isAdmin ) {
@@ -498,6 +517,16 @@ angular.module('ws-directives')
                         }).fail(function() {
                             fail_cb;
                         });
+                    }
+
+                    function getEditableDescription(d) {
+                        var d = $('<form role="form">\
+                                   <div class="form-group">\
+                                    <textarea rows="4" class="form-control" id="ws-description" placeholder="Description">'+d+'</textarea>\
+                                  </div>\
+                                  </form>');
+                        return d;
+
                     }
 
 
@@ -829,8 +858,10 @@ angular.module('ws-directives')
                       { "sTitle": ""},
                       { "sTitle": "Name"}, //"sWidth": "10%"
                       { "sTitle": "Type", "sWidth": "10%"},
-                      { "sTitle": "Moddate"},
+                      { "sTitle": "Last Modified", "iDataSort": 5},
                       { "sTitle": "Owner"},
+                      { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}                        
+
                   ],                         
                     "oLanguage": {
                         "sEmptyTable": "No objects in workspace",
@@ -903,7 +934,8 @@ angular.module('ws-directives')
                         var obj = objs[i];
                         var id = obj[1];
                         var type = obj[2].split('.')[0];
-                        var date = obj[3].split('+')[0].replace('T',' ');
+                        var timestamp = getTimestamp(obj[3].split('+')[0]);
+                        var date = formateDate(timestamp)
                         var instance = obj[4];
                         var owner = obj[5];
 
@@ -917,7 +949,8 @@ angular.module('ws-directives')
                                        id,
                                        type,
                                        date,
-                                       owner
+                                       owner,
+                                       timestamp
                                        ];
 
                         if (type in type_counts) {

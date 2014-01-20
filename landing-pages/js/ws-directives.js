@@ -857,10 +857,10 @@ angular.module('ws-directives')
                   "aoColumns": [
                       { "sTitle": ""},
                       { "sTitle": "Name"}, //"sWidth": "10%"
-                      { "sTitle": "Type", "sWidth": "10%"},
+                      { "sTitle": "Type", "sWidth": "20%"},
                       { "sTitle": "Last Modified", "iDataSort": 5},
                       { "sTitle": "Owner"},
-                      { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}                        
+                      { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}                   
 
                   ],                         
                     "oLanguage": {
@@ -933,7 +933,7 @@ angular.module('ws-directives')
                     for (var i in objs) {
                         var obj = objs[i];
                         var id = obj[1];
-                        var type = obj[2].split('.')[0];
+                        var type = obj[2].slice(obj[2].indexOf('.')+1)
                         var timestamp = getTimestamp(obj[3].split('+')[0]);
                         var date = formateDate(timestamp)
                         var instance = obj[4];

@@ -938,6 +938,7 @@ angular.module('ws-directives')
                         var date = formateDate(timestamp)
                         var instance = obj[4];
                         var owner = obj[5];
+                        var ws = obj[7]
 
 
                         var check = '<div class="ncheck obj-check-box check-option"'
@@ -966,16 +967,17 @@ angular.module('ws-directives')
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
 
-                        var match = (type.split('.')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) !== null ? true : false);
-                        if (match) {
-                            var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                                    +id+'</a> (<a class="show-versions">'+instance+'</a>)\
-                                        <a class="btn-show-info hide pull-right">More</a>'
-                        } else {
+                        //var match = ( type.split('-')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) !== null ? true : false);
+
+                        //if (match) {
+                        //    var new_id = '<a class="obj-id" data-ws="'+ws+'" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                        //            +id+'</a> (<a class="show-versions">'+instance+'</a>)\
+                        //                <a class="btn-show-info hide pull-right">More</a>'
+                        //} else {
                             var new_id = '<span class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
                                     +id+'</span> (<a class="show-versions">'+instance+'</a>)\
                                         <a class="btn-show-info hide pull-right">More</a>';
-                        }
+                        //}
 
                         wsarray[1] = new_id
                         wsobjs.push(wsarray);
@@ -989,8 +991,10 @@ angular.module('ws-directives')
                     // event for clicking on a workspace id
                     $('.obj-id').unbind('click');                    
                     $('.obj-id').click(function(){
-                        var type = $(this).data('obj-type').split('.')[0];
+                        var type = $(this).data('obj-type').split('-')[0];
                         var id = $(this).data('obj-id');
+                        var ws = $(this).data('ws');
+                        console.log(ws, id, type)
 
                         if (type == 'Genome') {
                             scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
@@ -1040,7 +1044,7 @@ angular.module('ws-directives')
                         var id = $(this).prev('.obj-id').data('obj-id');
 
                         var historyModal = $('<div class="history-modal"></div>').kbasePrompt({
-                                title : 'History <small>(<i>'+id+'</i>)</small>',
+                                title : 'History of '+id,
                                 //body : '',
                                 modalClass : '', 
                                 controls : ['closeButton']
@@ -1054,19 +1058,22 @@ angular.module('ws-directives')
                         var prom = kb.kbwsAPI().get_object_history({workspace: ws, name: id});
                         $.when(prom).done(function(data) {
                             modal_body.rmLoading();
-                            modal_body.append('<b>ID</b>: '+data[0][0]+'<br>')
-                            modal_body.append('<b>Type</b>: '+data[0][2])                            
+                            modal_body.append('<span class="h5"><b>Name</b></span>: '+id+'<br>')                            
+                            modal_body.append('<span class="h5"><b>Database ID</b></span>: '+data[0][0]+'<br>')
+                            //modal_body.append('<b>Type</b>: '+data[0][2])                            
                             var info = $('<table class="table table-striped table-bordered table-condensed">');
                             var header = $('<tr><th>Mod Date</th>\
                                                 <th>Vers</th>\
+                                                <th>Type</th>\
                                                 <th>Owner</th>\
                                                 <th>Cmd</th></tr>');
                             info.append(header);
                             for (var i=0; i<data.length; i++) {
                                 var ver = data[i];
                                 var row = $('<tr>');
-                                row.append('<td>' + ver[3].split('+')[0].replace('T',' ') + '</td>' // type
+                                row.append('<td>' + ver[3].split('+')[0].replace('T',' ') + '</td>'
                                          + '<td>' + ver[4] + '</td>'
+                                         + '<td>' + ver[2] + '</td>'
                                          + '<td>' + ver[5] + '</td>'
                                          + '<td>' + ver[7] + '</td>');
                                 info.append(row);

@@ -45,22 +45,23 @@ angular.module('narrative-directives')
     .directive('recentprojects', function($location) {
         return {
             link: function(scope, element, attrs) {
-                /*
                 $(element).loading()
                 project.get_projects({
-                    callback: function(results) {
+                    callback: function(projs) {
+
                         $(element).rmLoading();
-                        console.log('results', results)                        
-                        if (Object.keys(results).length > 0) {
+                        console.log('projects', projs)                        
+                        if (Object.keys(projs).length > 0) {
                             //first sort
-                            for (var i in results) {
-                                results[i].timestamp = getTimestamp(results[i].moddate);
-                                results[i].nealtime = formateDate(results[i].timestamp) 
-                                                ? formateDate(results[i].timestamp) : results[i].moddate.replace('T',' ');
+                            for (var i in projs) {
+                                projs[i].timestamp = getTimestamp(projs[i].moddate);
+                                projs[i].nealtime = formateDate(projs[i].timestamp) 
+                                                ? formateDate(projs[i].timestamp) : projs[i].moddate.replace('T',' ');
                             }
 
                             scope.$apply(function() {
-                                scope.projects = results;
+                                scope.projects = projs;
+                                console.log('projects after')
                             })
 
                         } else {
@@ -68,7 +69,6 @@ angular.module('narrative-directives')
                         }
                     }
                 })
-                */
             }
 
         };
@@ -423,7 +423,7 @@ angular.module('narrative-directives')
                                         $('.create-id').focus();
                                         return;
                                     }               
-                                    console.log('calling with', name, proj_id)
+
                                     //create the new narrative in ws
                                     $prompt.addCover()
                                     $prompt.getCover().loading()                                  

@@ -176,9 +176,9 @@
     			   workspace_id : undefined,
     			   error_callback: error_handler };
     	var p = $.extend( def_params, p_in);
-        console.log('getting cookie')        
+
     	var token = $(project.auth_div).kbaseLogin('session').token;//.kbaseLogin('get_kbase_cookie').token;
-        console.log(token)
+
     	var META_ws;
     	if ( p.workspace_id ) {
     	    META_ws = project.ws_client.get_workspacemeta( { auth : token,

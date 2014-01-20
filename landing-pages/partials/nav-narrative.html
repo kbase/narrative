@@ -1,38 +1,24 @@
 
 
-<div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
+  <div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
     <a href="http://www.kbase.us" class="pull-left">
         <img id="logo" src="assets/img/kbase_logo.png" width="46">
     </a>
-    <ul class="nav navbar-nav">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <!--<a class="navbar-brand" href="#">Brand</a>-->
-      </div>
-    </ul>
-
 
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          <li class="dropdown active">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
-            <ul class="dropdown-menu">
-              <li><a href="#/narrative/home/">Newsfeed</a></li>                
-              <li><a href="#/narrative/home/projects/">Projects</a></li>
-              <li><a href="#/narrative/home/users/">Workspace Data Browser</a></li>
-              <li class="divider"></li>     
-              <li><a href="#">Profile</a></li>                
-            </ul>
-          </li>
-          <li><a href="#/ws/">Workspaces</a></li>
-          <li><a href="http://iris.kbase.us">Upload</a></li>          
-        </ul>
-
+      <ul class="nav navbar-nav"  ng-controller="Navigation"> 
+        <li class="dropdown nav-narrative">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            <li class="nav-newsfeed" ng-class="{ active: isActive('/narrative/home/')}"><a href="#/narrative/home/">Newsfeed</a></li>                
+            <li class="nav-projects" ng-class="{ active: isActive('/narrative/projects/')}"><a href="#/narrative/home/projects/" ng-class="{ active: isActive('/narrative/projects/')}">Projects</a></li>
+            <!--<li class="divider"></li>     
+            <li><a href="#">Profile</a></li>-->
+          </ul>
+        </li>
+        <li ng-class="{ active: isActive('/ws/')}"><a href="#/ws/" >Workspaces</a></li>
+        <li class="nav-upload"><a href="http://iris.kbase.us">Upload</a></li>          
+      </ul>
 
       <form class="navbar-form navbar-left" role="search" style="width: 40%">
         <div class="form-group">
@@ -44,24 +30,10 @@
         </div>
       </form>
 
-
-      <!--
-        <form class="navbar-form navbar-left" role="search">
-          <div class="form-group">
-            <div class="input-group">
-                      <span class="input-group-addon" id="narr-search-label">Search</span>
-              <input class="form-control" name="search" placeholder=" Search KBase Data" autocomplete="off" autofocus="autofocus" type="text">
-              <span class="input-group-addon"><span class="glyphicon glyphicon-search"></span></span>
-          </div>
-        </form>
--->
-
-
-        <div id="signin-button" class="pull-right"></div>
-        <ul class="nav navbar-nav pull-right">
-            <li class="dropdown help-dropdown"></li>
-        </ul>
-
+      <div id="signin-button" class="pull-right"></div>
+      <ul class="nav navbar-nav pull-right">
+          <li class="dropdown help-dropdown"></li>
+      </ul>
     </div> <!-- end collapse -->
 
 

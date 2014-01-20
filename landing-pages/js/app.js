@@ -244,7 +244,7 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/landing-pages-help.html',
              controller: LPHelp})
 
-    $urlRouterProvider.when('', '/landing-pages-help');
+    $urlRouterProvider.when('', '/narrative/');
 
     $stateProvider
         .state('otherwise', 
@@ -255,27 +255,30 @@ var app = angular.module('landing-pages',
 
 
 
-LPDROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
+HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
                  <ul class="dropdown-menu"> \
                  <li><a href="#/landing-pages-help">Landing Page Documentation</a></li> \
               </ul>';
 
 
-app.run(function ($rootScope, $location) {
+app.run(function ($rootScope, $state, $stateParams, $location) {
     // use partials nav_func.html for narrative/functional website look
     // Fixme: this should be a template, loaded with ui-router the same way
     // as the rest of the app.
 
-    $('#navigation').load('partials/nav.html', function(){
-        navbar_cb();
-    });
+    //$('#navigation').load('partials/nav.html', function(){
+    //    navbar_cb();
+    //});
 
+    /*
     $rootScope.$on('$stateChangeStart',
         function (event, toState, toParams, fromState, fromParams) {
             contr = toState.controller;
+
             var nav = $('#navigation');
             if (contr == 'Narrative' || contr == 'NarrativeProjects') {
                 nav.load('partials/nav-narrative.html', navbar_cb);
+                // if user isn't logged in, redirect to login page.
             } else if (contr == 'Trees') {
                 nav.load('partials/nav-trees.html', navbar_cb);
             } else if (contr == 'ModelViewer') {
@@ -287,9 +290,11 @@ app.run(function ($rootScope, $location) {
             }
 
         });
+    */
 
-    //  Here's a sort of hack to remove any cards when a view changes.
-    //  There may be a better way to manage this.
+    navbar_cb();
+
+    //  Things that need to happen when a view changes.
     $rootScope.$on('$stateChangeSuccess', function() {
         $('.fixedHeader').remove(); // fixme
         removeCards();
@@ -313,7 +318,7 @@ app.run(function ($rootScope, $location) {
                                         logout_callback: login_change});
         $('#signin-button').css('padding', '0');  // Jim!
 
-        $('.help-dropdown').html(LPDROPDOWN);
+        $('.help-dropdown').html(HELP_DROPDOWN);
 
         $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
         $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
@@ -323,12 +328,19 @@ app.run(function ($rootScope, $location) {
         USER_TOKEN = $rootScope.USER_TOKEN;
         kb = new KBCacheClient(USER_TOKEN);
 
+        // Fixme, check before load
+        if (typeof USER_ID == 'undefined') $rootScope.$apply($location.path( '/narrative/' ) );
+
         // global state object to store state
         state = new State();
 
         // set the currently selected workspace.
         set_selected_workspace();
     }
+
+    $rootScope.$state = $state;
+    $rootScope.$stateParams = $stateParams;
+
 });
 
 

@@ -3,14 +3,14 @@
     <div class="col-sm-3" >
         <div class="narrative-sidebar">
             <ul class="nav nav-pills nav-stacked nav-sidebar">
-                <li class="active">
+                <li ng-class="{ active: $state.is('home')}">
                     <a class="btn-narr" href="#/narrative/home/">
                     Newsfeed
                     <span class="glyphicon glyphicon-chevron-right pull-right"></span>
                     </a>
                 </li>
 
-                <li>
+                <li ng-class="{ active: $state.is('home.projects')}">
                     <a class="btn-narr" href="#/narrative/home/projects/">
                     Projects/Narratives
                     <span class="glyphicon glyphicon-chevron-right pull-right"></span>
@@ -42,8 +42,7 @@
                 <h3 class="sidebar-header">RECENT PROJECTS</h3>
                 <div recentprojects>
                     <ul class="recent-projects" ng-repeat="nar in projects | orderBy:'timestamp':false | limitTo:5">
-                        <li><a href="{{nar_url}}/{{nar.workspace}}.{{nar.id}}">{{nar.id}}</a> 
-                            <span class="text-mutted pull-right">{{nar.nealtime}}</span>
+                        <li>{{nar.id}}<span class="text-mutted pull-right">{{nar.nealtime}}</span>
                         </li>
                     </ul>
                 </div>

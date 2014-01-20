@@ -110,7 +110,7 @@ angular.module('ws-directives')
                 var workspaces = [];
                 scope.workspace_dict = {};
 
-                var nav_height = 100;
+                var nav_height = 100;//238;
 
                 scope.loadData = function() {
                     $('#select-box .table').remove();

@@ -167,10 +167,7 @@ rect:hover {
 
 
 /* bootstrap overrides */
-
 .wrapper { width: 95%; margin-left: auto; margin-right: auto; }
-/*.navbar { border-bottom: 2px solid #aaa;}*/
-
 /* end bootstrap overrides */
 
 
@@ -287,11 +284,10 @@ div::-webkit-scrollbar-thumb {
 
 /* ws browser */
 
-.ws-selector {
-    width: inherit;
-
-    /*width: 265px;*/
+.ws-selector{
+    margin: 10px 0 0 0;
 }
+
 .ws-selector.btn-ws-settings {
     position: absolute;
     right: 30px;
@@ -352,20 +348,6 @@ div::-webkit-scrollbar-thumb {
     border-radius: 3px;
 }
 
-/*
-.manage-table {
-    margin: 0 auto;
-    width: 300px;
-}
-*/
-
-/*
-.datatable-footer {
-    position: fixed;
-
-    bottom: 0;
-}
-*/
 
 .obj-table .dataTables_length label {
     margin: 7px 0 0 0;
@@ -375,7 +357,7 @@ div::-webkit-scrollbar-thumb {
     margin: 0 10px 0 0;
 }
 .dataTables_length, .dataTables_info {
-float: left;
+    float: left;
 }
 .ellipsis {
     white-space: nowrap;
@@ -441,6 +423,11 @@ float: left;
 
 
 /******************     narrative     ***************/
+
+#login-form {
+    margin: 70px 0 0 0;
+}
+
 #narrative-nav,
 .recent-narratives,
 .recent-projects {
@@ -480,16 +467,15 @@ float: left;
 
 }
 
-.recent-narratives li {
+.narrative-sidebar li {
     list-style: none;
 }
 
 @media (min-width: 960px) {
     .narrative-sidebar {
         position:fixed;
-        top: 80px;
         width: 20%;
-        float:left;
+        /*float:left;*/
     }
 }
 
@@ -539,12 +525,21 @@ float: left;
     font-size: 14px;
 }
 
+.nav-sidebar {
+    top: 70px;
+}
+
 .nav-sidebar li {
     list-style: none;
     margin-bottom: 10px;
     text-align: left;
     font-family: 'RobotoBlack', Arial, sans-serif;
 }
+
+.nav-sidebar > li > a {
+    padding: 7px 15px;
+}
+
 
 .navbar-nav {
     color: #6DA8CF;

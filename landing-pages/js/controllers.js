@@ -4,7 +4,8 @@
  *
  *  These are the 'glue' between models and views.
  *  See: http://docs.angularjs.org/guide/dev_guide.mvc.understanding_controller
- *
+ *  
+ *  Controllers are responsible for state, setting navigation, substate, etc.
 */
 
 
@@ -200,27 +201,49 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 .controller('Trees', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
-    })
+})
 
 .controller('WorkspaceBrowser', function($scope, $stateParams) {
+    //changeNav('workspaces');
     $scope.selected_ws = $stateParams.ws;
-    console.log($scope.selected_ws)
 })
 
 
 .controller('Narrative', function($scope, $stateParams) {
-    $scope.nar_url = 'http://narrative.kbase.us'
-   /* $scope.selected_ws = $stateParams.ws;
-    console.log($scope.selected_ws) */
+    console.log('stateParams', $stateParams)
+    console.log('called narrative')
+    //changeNav('narrative', 'newsfeed');
+    $scope.nar_url = 'http://narrative.kbase.us'; // used for links to narratives
 })
 
 .controller('NarrativeProjects', function($scope, $stateParams) {
-
+    //changeNav('narrative', 'projects');
 
 })
 
 
 
+function Navigation($scope, $location) { 
+    $scope.isActive = function (viewLocation) {
+    console.log(viewLocation, $location.path()) 
+        return viewLocation === $location.path();
+    };
+}
+
+function changeNav(nav, subnav) {
+    if (nav) {
+        $('.navbar-nav li').removeClass('active');
+        $('.navbar-nav .nav-'+nav).addClass('active');
+    } else {
+        $('.navbar-nav li').removeClass('active');
+        return;
+    }
+
+    if (subnav) {
+        $('.nav-sidebar li').removeClass('active');
+        $('.nav-sidebar .nav-'+subnav).addClass('active');
+    }
+}
 
 
 function LPHelp($scope, $stateParams, $location) {

@@ -161,7 +161,8 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
     :param GwasPopulation_description:A brief description of the population  
     :type GwasPopulation_description:kbtypes.Unicode
     :param kbase_genome_id: kbase genome id of the genome  
-    :type kbase_genome_id:kbtypes.Genome
+    :type kbase_genome_id: kbtypes.Genome
+    :default kbase_genome_id: kb|g.3899
     :param comment: Comment 
     :type comment:kbtypes.Unicode
     :return: Number of jobs that were run

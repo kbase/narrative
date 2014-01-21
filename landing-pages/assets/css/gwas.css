@@ -1,9 +1,8 @@
 .gmap3{
   margin: 20px auto;
   border: 1px dashed #C0C0C0;
-  width: 1000px;
-  height: 750px;
-}
+ }
+
 .cluster{
 	color: #FFFFFF;
 	text-align:center;
@@ -12,19 +11,19 @@
 	font-weight:bold;
 }
 .cluster-1{
-  background-image:url(assets/images/m1.png);
+  background-image:url(/landing-pages/assets/images/m1.png);
   line-height:53px;
 	width: 53px;
 	height: 52px;
 }
 .cluster-2{
-  background-image:url(assets/images/m2.png);
+  background-image:url(/landing-pages/assets/images/m2.png);
   line-height:53px;
 	width: 56px;
 	height: 55px;
 }
 .cluster-3{
-  background-image:url(assets/images/m3.png);
+  background-image:url(/landing-pages/assets/images/m3.png);
   line-height:66px;
 	width: 66px;
 	height: 65px;

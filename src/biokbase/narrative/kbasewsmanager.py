@@ -206,10 +206,6 @@ class KBaseWSNotebookManager(NotebookManager):
         except KeyError:
             raise web.HTTPError(400, u'Missing user_id from kbase_session object')
         try:
-            token = self.kbase_session['token']
-        except KeyError:
-            raise web.HTTPError(400, u'Missing token from kbase_session object')
-        try:
             wsobj = ws_util.get_wsobj( self.wsclient(), notebook_id, self.ws_type)
         except ws_util.BadWorkspaceID, e:
             raise web.HTTPError(500, u'Notebook % not found: %' % (notebook_id, e))
@@ -218,7 +214,7 @@ class KBaseWSNotebookManager(NotebookManager):
         nb = current.reads(jsonnb,u'json')
         # Set the notebook metadata workspace to the workspace this came from
         nb.metadata.ws_name = wsobj['metadata']['workspace']
-        last_modified = dateutil.parser.parse(wsobj['metadata']['moddate'])
+        last_modified = dateutil.parser.parse(wsobj['metadata']['save_date'])
         self.log.debug("Notebook successfully read" )
         return last_modified, nb
     

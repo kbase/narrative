@@ -73,7 +73,7 @@ class KBaseWSNotebookManager(NotebookManager):
     Notebooks are identified with workspace identifiers of the format
     {workspace_name}.{object_name}
     """
-    kbasews_uri = Unicode('https://kbase.us/services/workspace/', config=True, help='Workspace service endpoint URI')
+    kbasews_uri = Unicode('https://kbase.us/services/ws/', config=True, help='Workspace service endpoint URI')
 
     ipynb_type = Unicode(u'ipynb')
     allowed_formats = List([u'json'])
@@ -81,7 +81,7 @@ class KBaseWSNotebookManager(NotebookManager):
     ws_type = Unicode(ws_util.ws_narrative_type, config=True, help='Type to store narratives within workspace service')
     # regex for parsing out workspace_id and object_id from
     # a "kb|ws.{workspace}.{object}" string
-    ws_regex = re.compile( '^(?P<wsid>\w+)\.(?P<objid>\w+)')
+    ws_regex = re.compile( '^kb\|ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
 
     # This is a regular expression to make sure that the workspace ID doesn't contain
     # non-legit characters in the object ID field
@@ -97,10 +97,10 @@ class KBaseWSNotebookManager(NotebookManager):
         if not self.kbasews_uri:
             raise web.HTTPError(412, u"Missing KBase workspace service endpoint URI.")
 
-        self.wsclient = Workspace( self.kbasews_uri)
         # Verify that we can fetch list of types back to make sure the configured uri is good
         try:
-            self.all_modules = self.wsclient.list_modules()
+            wsclient = self.wsclient()
+            self.all_modules = wsclient.list_modules({})
         except Exception as e:
             raise web.HTTPError( 500, u"Unable to connect to workspace service at %s: %s " % (self.kbasews_uri, e))
         mapping = Dict()
@@ -108,6 +108,10 @@ class KBaseWSNotebookManager(NotebookManager):
         rev_mapping = Dict()
         # Setup empty hash for session object
         self.kbase_session = {}
+
+    def wsclient(self):
+        """Return a workspace client object for the workspace endpoint in kbasews_uri"""
+        return Workspace( self.kbasews_uri)
 
     def _clean_id( self,id):
         return self.wsid_regex.sub( '', id.replace(' ','_'))
@@ -124,19 +128,16 @@ class KBaseWSNotebookManager(NotebookManager):
         except KeyError:
             self.log.debug("No user_id in session")
             return []
-        try:
-            token = self.kbase_session['token']
-        except KeyError:
-            self.log.debug("No token in session")
-            return []
         # Check only the home workspace by default
-        all = ws_util.get_wsobj_meta( self.wsclient, token, ws=ws_util.check_homews(self.wsclient, user_id,token))
+        wsclient = self.wsclient()
+        (homews,homews_id) = ws_util.check_homews(wsclient, user_id)
+        all = ws_util.get_wsobj_meta( wsclient, ws_id=homews_id)
 
         self.mapping = {
-            "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id']) : "%s.%s" % (all[ws_id]['workspace'],all[ws_id]['id'])
+            ws_id : "%s/%s" % (all[ws_id]['workspace'],all[ws_id]['name'])
             for ws_id in all.keys()
         }
-        self.rev_mapping = self.mapping
+        self.rev_mapping = { self.mapping[ ws_id] : ws_id for ws_id in self.mapping.keys() }
         data = [ dict(notebook_id = it[0], name = it[1]) for it in self.mapping.items()]
         data = sorted(data, key=lambda item: item['name'])
         return data
@@ -145,10 +146,10 @@ class KBaseWSNotebookManager(NotebookManager):
         """Generate a new notebook_id for a name and store its mappings."""
         try:
             user_id = self.kbase_session['user_id']
-            token = self.kbase_session['token']
         except KeyError,e:
             raise web.HTTPError(400, u'Missing field from kbase_session object: %s' % e)
-        notebook_id = "%s.%s" % ( ws_util.check_homews(self.wsclient, user_id, token),name)
+        (homews,homews_id) = ws_util.check_homews(self.wsclient, user_id)
+        notebook_id = "%s.%s" % ( homews,name)
         self.mapping[notebook_id] = name
         self.rev_mapping[name] = notebook_id
         return notebook_id
@@ -160,10 +161,6 @@ class KBaseWSNotebookManager(NotebookManager):
             user_id = self.kbase_session['user_id']
         except KeyError:
             raise web.HTTPError(400, u'Missing user_id from kbase_session object')
-        try:
-            token = self.kbase_session['token']
-        except KeyError:
-            raise web.HTTPError(400, u'Missing token from kbase_session object')
         name = self.mapping[notebook_id]
         super(KBaseWSNotebookManager, self).delete_notebook_id(notebook_id)
 
@@ -173,10 +170,6 @@ class KBaseWSNotebookManager(NotebookManager):
             user_id = self.kbase_session['user_id']
         except KeyError:
             raise web.HTTPError(400, u'Missing user_id from kbase_session object')
-        try:
-            token = self.kbase_session['token']
-        except KeyError:
-            raise web.HTTPError(400, u'Missing token from kbase_session object')
         exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
         self.log.debug("notebook_exists(%s) = %s"%(notebook_id,exists))
         if not exists:
@@ -187,9 +180,9 @@ class KBaseWSNotebookManager(NotebookManager):
             if not m:
                 return False
             self.log.debug("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
-            objmeta = ws_util.get_wsobj_meta( self.wsclient, token, ws=m.group('wsid'))
+            objmeta = ws_util.get_wsobj_meta( self.wsclient(), ws_id=m.group('wsid'))
             self.log.debug("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
-            if "kb|ws.%s" % notebook_id in objmeta:
+            if notebook_id in objmeta:
                 self.mapping[notebook_id] = notebook_id
                 return True
             else:
@@ -217,7 +210,7 @@ class KBaseWSNotebookManager(NotebookManager):
         except KeyError:
             raise web.HTTPError(400, u'Missing token from kbase_session object')
         try:
-            wsobj = ws_util.get_wsobj( self.wsclient, token, "kb|ws.%s" % notebook_id, self.ws_type)
+            wsobj = ws_util.get_wsobj( self.wsclient(), notebook_id, self.ws_type)
         except ws_util.BadWorkspaceID, e:
             raise web.HTTPError(500, u'Notebook % not found: %' % (notebook_id, e))
         jsonnb = json.dumps(wsobj['data'])
@@ -247,7 +240,8 @@ class KBaseWSNotebookManager(NotebookManager):
         new_name = self._clean_id( new_name)
         # Verify that our own home workspace exists, note that we aren't doing this
         # as a general thing for other workspaces
-        homews = ws_util.check_homews( self.wsclient, user_id, token)
+        wsclient = self.wsclient()
+        homews = ws_util.check_homews( wsclient, user_id, token)
         # Carry over some of the metadata stuff from ShockNBManager
         try:
             if notebook_id is None:
@@ -277,7 +271,7 @@ class KBaseWSNotebookManager(NotebookManager):
             wsobj_wrapper = { 'ws_id' : nb.metadata.ws_name,
                               'objects' : [wsobj] }
             self.log.debug("calling save_object")
-            res = self.wsclient.save_objects( wsobj_wrapper)
+            res = wsclient.save_objects( wsobj_wrapper)
             self.log.debug("save_object returned %s" % res)
         except Exception as e:
             raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
@@ -306,7 +300,7 @@ class KBaseWSNotebookManager(NotebookManager):
                       'id' : m.group('objid')
                       }
             param_wrapper = [ param ]
-            res = self.wsclient.delete_objects( param_wrapper)
+            res = self.wsclient().delete_objects( param_wrapper)
             self.log.debug("delete object result: %s" % res)
 
         else:

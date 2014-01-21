@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html ng-app="landing-pages" lang="en">
+    <head>
+        <title>KBase Data Pages</title>
+        <link rel="icon" type="image/x-icon" href="assets/img/KBase_favicon.ico">
+
+        <!-- Global KBase css -->
+        <link rel="stylesheet" type="text/css" href="../ext/bootstrap/3.0.0/css/bootstrap.css" />
+        <link rel="stylesheet" type="text/css" href="../ext/jquery-ui/1.10.3/css/custom-theme/jquery-ui-1.10.0.custom.css"> 
+
+        <link rel="stylesheet" type="text/css" href="assets/css/dataTables.bootstrap.css" />
+        <link rel="stylesheet" type="text/css" href="assets/css/ws-browser.css" />
+        <!--<link rel="stylesheet" type="text/css" href="assets/css/scroll.css" />-->
+        <link rel="stylesheet" type="text/css" href="assets/css/landing-pages.css" />
+        <!--<link rel="stylesheet" type="text/css" href="assets/css/kbase_stylesheet.css" />-->
+
+        <!-- KBase widget css -->
+        <link rel="stylesheet" type="text/css" href="../widgets/css/kbaseLandingPageCard.css" />
+
+        <!-- External javascript packages -->
+        <script src="../ext/jquery/jquery-1.10.2.min.js"></script>
+        <script src="../ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min.js"></script>
+        <script src="../ext/d3/d3.v3.min.js"></script>
+        <script src="../ext/bootstrap/3.0.0/js/bootstrap.js"></script>
+        <script src="../ext/dataTables/1.9.4/js/jquery.dataTables.js"></script>
+        <script src="assets/js/dataTables.bootstrap.js"></script>
+
+        <script src="assets/js/jquery.cookie.min.js"></script>
+        <script src="assets/js/viz/raphael-min.js"></script>
+        <!--<script src="assets/js/jquery.jscrollpane.min.js"></script>
+        <script src="assets/js/jquery.mousewheel.js"></script>-->
+
+        <!-- GWAS widgets -->
+        <script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>
+        <script src='../ext/gmaps/gmap3.js'></script>
+        <!-- End Genome widgets -->
+
+    <style>
+      body{
+        text-align:center;
+      }
+      .gmap3{
+        margin: 20px auto;
+        border: 1px dashed #C0C0C0;
+        width: 1000px;
+        height: 750px;
+      }
+      .cluster{
+            color: #FFFFFF;
+            text-align:center;
+            font-family: 'Arial, Helvetica';
+            font-size:11px;
+            font-weight:bold;
+      }
+      .cluster-1{
+        background-image:url(assets/images/m1.png);
+        line-height:53px;
+            width: 53px;
+            height: 52px;
+      }
+      .cluster-2{
+        background-image:url(assets/images/m2.png);
+        line-height:53px;
+            width: 56px;
+            height: 55px;
+      }
+      .cluster-3{
+        background-image:url(assets/images/m3.png);
+        line-height:66px;
+            width: 66px;
+            height: 65px;
+      }
+    </style>
+    
+    <script type="text/javascript">
+    
+      $(function(){
+        
+        var $mapDiv = $('<div/>')
+        .addClass('gmap3');
+
+        $mapDiv.attr({ id: 'test1'});
+
+        var $btn = $('<button />').attr({type: 'button'}).text('Click me!');
+
+        var $t1 = $('<div/>',{
+            text: 'Div text',
+            'class': 'className'
+        }).appendTo('#parentDiv');
+
+        $('#bbody').append($mapDiv);
+
+
+        // init the map and create a cluster with some markers
+        $('#test1').gmap3({
+          map:{
+            options:{
+              center:[46.578498,2.457275],
+              zoom: 2,
+              mapTypeId: google.maps.MapTypeId.TERRAIN
+            }
+          },
+          marker:{
+            values: [
+              [50.9167, 9.57073],
+              [45, 1.3],
+              [40.31, -3.22],
+              [56.68, 16.5],
+              [51.2167, 4.4],
+              [50.3, 5.3],
+              [56.5459, -4.79821],
+              [56.4, 12.9],
+              [56.4, 12.9],
+              [56.4, 12.9],
+              [47.3667, 8.55]
+            ],
+            cluster:{
+              radius: 100,
+                // This style will be used for clusters with more than 0 markers
+                0: {
+                  content: '<div class="cluster cluster-1">CLUSTER_COUNT</div>',
+                    width: 53,
+                    height: 52
+                },
+                // This style will be used for clusters with more than 20 markers
+                20: {
+                  content: '<div class="cluster cluster-2">CLUSTER_COUNT</div>',
+                    width: 56,
+                    height: 55
+                },
+                // This style will be used for clusters with more than 50 markers
+                50: {
+                  content: '<div class="cluster cluster-3">CLUSTER_COUNT</div>',
+                    width: 66,
+                    height: 65
+                }
+            }
+          }
+        });
+        
+        // append a draggable alone marker
+        $('#test1').gmap3({
+          marker:{
+            latLng:[50.92104315206032, 2.1936031249999814],
+            options:{
+              draggable: true
+            }
+          }
+        });
+        
+        // attach insertion action
+        $('button').click(function(){
+          var marker = $('#test1').gmap3({get:{name:"marker"}});
+          var clusterer = $('#test1').gmap3({get:{name:"clusterer"}});
+          
+          // append the marker to the cluster and attach one event
+          clusterer.add(
+            marker, 
+            { events: {
+              click: function(){
+                alert("I was the one !")
+              }
+            }}
+          );
+            
+            $(this).remove();
+        });
+
+        $('#test1').gmap3();
+        
+      });
+      
+    </script>
+
+    </head>
+
+    <body id='bbody'>
+            <!-- <div id="test1" class="gmap3"></div> -->
+    Drag and drop the marker, and then, click to add it into the current clustering
+
+
+    </body>
+
+</html>

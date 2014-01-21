@@ -16,8 +16,7 @@
 
             var self = this;
             var $helloDiv = $("<div/>")
-            .css("color", this.options.color)
-
+            //.css("color", this.options.color)
             //.append("<iframe width=900 height=600 src='http://140.221.85.85/maps/gmap3v5.1.1/demo/population-cluster1.html' />")
             .on("click", function(event) {
                 self.trigger("showHelloCards", 
@@ -29,7 +28,7 @@
 
             this.workspaceClient = new workspaceService(this.workspaceURL);
 
-            this.$elem.append($helloDiv);
+            //this.$elem.append($helloDiv);
 
             this.workspaceClient.get_object({"id" : 'arabidopsis_population_atwell_et_al', "type" : "GwasPopulation", "workspace": 'genotype_phenotype'}, 
                 function(data){
@@ -95,6 +94,7 @@
             return {
                 type:"GwasPopulation",
                 id: this.options.objId,
+                gwaspopulationId: this.options.gwaspopulationId,
                 workspace: this.options.workspaceID,
                 title: "GWAS Population Ecotype Details"
             };

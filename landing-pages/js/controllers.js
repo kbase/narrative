@@ -185,7 +185,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 .controller('GPTypeDetail', function($scope, $stateParams) {
-    $scope.params = {'color': $stateParams.id}
+    $scope.params = {'gwaspopulationId': $stateParams.id}
 })
 
 .controller('GeneDetail', function($scope, $stateParams) {

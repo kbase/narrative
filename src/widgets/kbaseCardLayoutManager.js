@@ -687,14 +687,19 @@
          */
         showGWASPopCards: function() {
             this.addNewCard("KBaseGWASPop",
-                { color: "green"},
+                { gwaspopulationId: this.options.data.gwaspopulationId},
                 { my: "left top",
                   at: "left bottom",
                   of: "#app"});
             this.addNewCard("KBaseGWASPopTable",
-                { color: "green"},
+                { gwaspopulationId: this.options.data.gwaspopulationId},
                 { my: "left top",
                   at: "left+410 bottom",
+                  of: "#app"});
+            this.addNewCard("KBaseGWASPopMaps",
+                { gwaspopulationId: this.options.data.gwaspopulationId},
+                { my: "left top",
+                  at: "left bottom+500",
                   of: "#app"});
         },
 

@@ -16,6 +16,9 @@ import biokbase.workspaceService
 # a "kb|ws.{workspace}.{object}" string
 ws_regex = re.compile( '^kb\|ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
 
+# regex for parsing out a user_id from a token
+user_id_regex = re.compile( '^un=(?P<user_id>\w+)\|')
+
 # Exception for a malformed workspace ID see regex above
 class BadWorkspaceID( Exception ):
     pass
@@ -70,6 +73,20 @@ def get_wsobj_meta( wsclient, objtype=ws_narrative_type, ws_id=None ):
         my_narratives["kb|ws.%s.obj.%s" % (obj[obj_field['wsid']],obj[obj_field['objid']])] = dict(zip(list_objects_fields,obj))
     return my_narratives
 
+
+def get_wsid( wsclient, workspace):
+    """
+    When given a workspace name, returns the numeric ws_id
+    """
+    try:
+        ws_meta = wsclient.get_workspace_info( { 'workspace' : workspace});
+    except biokbase.workspaceService.Client.ServerError, e:
+        if e.message.find('not found'):
+            return( None)
+        else:
+            raise e
+    return( ws_meta[0])
+
 def get_wsobj( wsclient, ws_id, objtype=None):
     """
     This is just a wrapper for the workspace get_objects call.
@@ -98,6 +115,26 @@ def get_wsobj( wsclient, ws_id, objtype=None):
     res['metadata'] = dict(zip(list_objects_fields,objs[0]['info']))
     return res
 
+# Write an object to the workspace, takes the workspace id, an object of the
+# type workspace.ObjectSaveData
+# typedef structure {
+#                  type_string type;
+#                  UnspecifiedObject data;
+#                  obj_name name;
+#                  obj_id objid;
+#                  usermeta meta;
+#                  list<ProvenanceAction> provenance;
+#                  boolean hidden;
+# } ObjectSaveData;
+
+def put_wsobj( wsclient, ws_id, obj):
+    try:
+        ws_meta = wsclient.save_objects( { 'id' : ws_id,
+                                           'objects' : [obj]})
+    except:
+        raise
+    return dict(zip(list_objects_fields,ws_meta[0]))
+
 # Tag a workspace as a project, if there is an error, let it propagate up
 def check_project_tag( wsclient, ws_id):
     try:
@@ -119,15 +156,35 @@ def check_project_tag( wsclient, ws_id):
             raise e
     return True
 
+def get_user_id(wsclient):
+    """
+    Grab the userid from the token in the wsclient object
+    This is a pretty brittle way to do things, and will need to be changed eventually
+    """
+    try:
+        token = wsclient._headers.get('AUTHORIZATION',None)
+        match = user_id_regex.match(token)
+        if match:
+            return match.group(1)
+        else:
+            return None
+    except Exception, e:
+        raise e
 
-def check_homews( wsclient, user_id):
+def check_homews( wsclient, user_id = None):
     """
     Helper routine to make sure that the user's home workspace is built. Putting it here
     so that when/if it changes we only have a single place to change things.
-    Takes a wsclient and token, will check for the existence of the home workspace and
+    Takes a wsclient, and if it is authenticated, extracts the user_id from the token
+    and will check for the existence of the home workspace and
     create it if necessary. Will pass along any exceptions. Will also make sure that
     it is tagged with a workspace_meta object named "_project"
+    returns the workspace name and workspace id as a tuple
+
+    Note that parsing the token from the wsclient object is brittle and should be changed!
     """
+    if user_id is None:
+        user_id = get_user_id(wsclient)
     try:
         homews = "%s:home" % user_id
         workspace_identity = { 'workspace' : homews }

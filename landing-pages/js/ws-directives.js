@@ -300,7 +300,6 @@ angular.module('ws-directives')
 
                 function manageModal(ws_name) {
                     var settings = scope.workspace_dict[ws_name];
-                    console.log(settings)
 
                     var isAdmin;
                     if (settings[4] == 'a') {
@@ -344,15 +343,91 @@ angular.module('ws-directives')
                                 name : 'Save',
                                 type : 'primary',
                                 callback : function(e, $prompt) {
-                                        $prompt.addCover();
-                                        $prompt.getCover().loading();
+                                    $prompt.addCover();
+                                    $prompt.getCover().loading();
 
-                                        // save permissions
-                                        savePermissions(ws_name, function() {
-                                            $prompt.addCover('Permissions saved.', 'success');
-                                        }, function() {
-                                            $prompt.addCover(e.error.message, 'danger');                                            
+
+                                    // if description textarea is showing, saving description
+                                    if ($('#ws-description textarea').length > 0) {
+                                        var d = $('#ws-description textarea').val();
+                                        var prom = kb.kbwsAPI().set_workspace_description({workspace: ws_name, 
+                                            description: d})
+
+                                        $.when(prom).done(function() {
+                                            $prompt.addCover('Saved.');
+                                        }).fail(function(){
+                                            $prompt.addCover(e.error.message, 'danger');
                                         })
+                                    }
+
+
+                                    var settings = scope.workspace_dict[ws_name];
+
+                                    var newPerms = {};
+                                    var table = $('.edit-perm-table');
+                                    table.find('tr').each(function() {
+                                        var user = $(this).find('.perm-user').val()
+                                        var perm = $(this).find('option:selected').val();
+                                        if (!user) return;
+                                        if ( (user in permData) && perm == permData[user]) {
+                                            return;
+                                        } 
+                                        
+                                        newPerms[user] = perm
+                                    })
+
+                                    // create new permissions for each user that does not currently have 
+                                    // permsissions.
+                                    var promises = [];
+                                    for (var new_user in newPerms) {
+                                        // ignore these
+                                        if (new_user == '*' || new_user == USER_ID) continue;   
+
+                                        // if perms have not change, do not request change
+                                        if ( (new_user in permData) && newPerms[new_user] == permData[new_user]) {
+                                            continue;
+                                        }
+
+                                        var params = {
+                                            workspace: ws_name,
+                                            new_permission: newPerms[new_user],
+                                            users: [new_user],
+                                            //auth: USER_TOKEN
+                                        };
+
+                                        var p = kb.kbwsAPI().set_permissions(params);
+                                        promises.push(p);
+                                    };
+
+                                    var rm_users = [];
+
+
+                                    // if user was removed from user list, change permission to 'n'
+                                    for (var user in permData) {
+                                        if (user == '*' || user == USER_ID) continue;                            
+
+                                        if ( !(user in newPerms) ) {
+                                            var params = {
+                                                workspace: ws_name,
+                                                new_permission: 'n',
+                                                users: [user],
+                                                //auth: USER_TOKEN
+                                            };
+
+                                            var p = kb.kbwsAPI().set_permissions(params);
+                                            promises.push(p);
+                                            rm_users.push(user)
+                                        } 
+                                    }
+                                    prompt = $prompt;
+                                    $.when.apply($, promises).done(function() {
+                                        prompt.addCover('Saved.');
+                                    }).fail(function(e){
+                                        prompt.addCover(e.error.message, 'danger');
+                                    })
+
+
+
                                 }
                             }]
                         })
@@ -374,25 +449,27 @@ angular.module('ws-directives')
                         deleteWorkspace(ws_name);
                     });
 
-                    var modal_body = manage_modal.data('dialogModal').find('.modal-body');
+                    var dialog = manage_modal.data('dialogModal');
+                    var modal_body = dialog.find('.modal-body');
 
                     var prom = kb.kbwsAPI().get_workspace_description({workspace:ws_name})
                     $.when(prom).done(function(descript) {
                         var d = $('<div>');
-                        d.append('<h4>Description <small><a id="btn-edit-descript">Edit</a></small><h4>');
-                        d.append('<div id="ws-description">'+descript+'</div>')
+                        d.append('<h5>Description<small> <a id="btn-edit-descript">Edit</a></small></h5>');
+                        d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>')
                         modal_body.prepend(d)
 
+                        $('#btn-edit-descript').unbind('click');
                         $('#btn-edit-descript').click(function(){
+                            console.log('length', $('#ws-description textarea').length )
                             if ($('#ws-description textarea').length > 0) {
                                 $('#ws-description').html(descript);
-                                $(this).text('Edit');                                
+                                $(this).text('Edit');                          
                             } else {
                                 var editable = getEditableDescription(descript);
                                 $('#ws-description').html(editable)
                                 $(this).text('Cancel');
                             }
-
                         })
 
                     })
@@ -415,7 +492,7 @@ angular.module('ws-directives')
                             placeholder.rmLoading();
 
                             if (isAdmin) {
-                                modal_body.append('<h5>User Permissions <small><a class="edit-perms">Edit</a></small><h5>')
+                                modal_body.append('<hr><h5>User Permissions <small><a class="edit-perms">Edit</a></small><h5>')
                             } else {
                                 modal_body.append('<h5>User Permissions</h5>');                                
                             }
@@ -441,7 +518,6 @@ angular.module('ws-directives')
                                     }
                                 })
                             }
-
 
                             modal_body.append(cloneWS);
                             modal_body.append(deleteWS);                                
@@ -522,7 +598,7 @@ angular.module('ws-directives')
                     function getEditableDescription(d) {
                         var d = $('<form role="form">\
                                    <div class="form-group">\
-                                    <textarea rows="4" class="form-control" id="ws-description" placeholder="Description">'+d+'</textarea>\
+                                    <textarea rows="4" class="form-control" placeholder="Description">'+d+'</textarea>\
                                   </div>\
                                   </form>');
                         return d;
@@ -538,7 +614,7 @@ angular.module('ws-directives')
                         var perm_count = Object.keys(data).length;
                         console.log(perm_count)
                         if (perm_count <= 2) {
-                            var row = $('<tr><td>None</td></tr>');
+                            var row = $('<tr><td>(None)</td></tr>');
                             table.append(row);
                             return table;
                         }
@@ -646,11 +722,11 @@ angular.module('ws-directives')
                                       <div class="form-group">\
                                         <label class="col-sm-4 control-label">Workspace Name</label>\
                                         <div class="col-sm-4">\
-                                          <input type="text" class="form-control create-id">\
+                                          <input type="text" class="form-control create-id focusedInput">\
                                         </div>\
                                       </div>\
                                       <div class="form-group">\
-                                        <label class="col-sm-4 control-label">Permsission</label>\
+                                        <label class="col-sm-4 control-label">Global Permsission</label>\
                                         <div class="col-sm-3">\
                                          <select class="form-control create-permission" data-value="n">\
                                             <option value="n" selected="selected">none</option>\
@@ -677,6 +753,8 @@ angular.module('ws-directives')
                                         var ws_id = $('.create-id').val();
                                         var perm = $('.create-permission option:selected').val();
                                         var descript = $('.create-descript').val();
+                                        console.log(ws_id)
+
                                         var params = {
                                             //auth: USER_TOKEN,  //wsdeluxe
                                             workspace: ws_id,
@@ -734,7 +812,7 @@ angular.module('ws-directives')
                                   </div>');
                     
 
-                    var cloneModal = $('<div></div>').kbasePrompt({
+                    var cloneModal = $('<div class="kbase-prompt"></div>').kbasePrompt({
                             title : 'Clone Workspace',
                             body : body,
                             modalClass : '', 
@@ -781,7 +859,7 @@ angular.module('ws-directives')
                                 }
                             }]
                         }
-                    );
+                    )
 
                     cloneModal.openPrompt();
                 }
@@ -1160,6 +1238,7 @@ angular.module('ws-directives')
                             showObjOpts = false;
                         } 
                     })
+
                 }
 
                 function addOptionButtons() {

@@ -65,15 +65,23 @@
         },
 
         init: function(options) {
-
             this._super(options);
-
             return this;
-
         },
 
         openPrompt : function() {
             this.dialogModal().modal({'keyboard' : true});
+
+            //fixme: hack for jim to fix?  
+            // This results in destroying the modal on close, intead of hiding.  
+            // Critical for modals that are dynamically populated
+            $('.modal').on('hidden.bs.modal', function () {
+                $(this).data('bs.modal', null);
+                $(this).remove();
+            });
+
+            //fixme: I didn't bother figuring this one out?
+            $('.focusedInput').focus();
         },
         closePrompt : function() {
             this.dialogModal().modal('hide');

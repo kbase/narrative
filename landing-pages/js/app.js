@@ -130,6 +130,10 @@ var app = angular.module('landing-pages',
             url: '/gwaspopulation/:id',
             templateUrl: 'views/objects/gptype.html',
             controller: 'GPTypeDetail'})  
+       .state('gttype', {
+            url: '/gwastraits/:id',
+            templateUrl: 'views/objects/gttype.html',
+            controller: 'GTTypeDetail'})  
 
     $stateProvider
         .state('fbasbyws', {

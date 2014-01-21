@@ -173,6 +173,11 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.params = {'gwaspopulationId': $stateParams.id}
 })
 
+.controller('GTTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'gwastraitId': $stateParams.id}
+})
+
+
 .controller('GeneDetail', function($scope, $stateParams) {
     $scope.params = {'geneID': $stateParams.id,
                      'workspaceID': $stateParams.ws}

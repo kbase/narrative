@@ -90,6 +90,7 @@ def do_patching( c ):
 
         @monkeypatch_method(IPython.html.notebook.handlers.NamedNotebookHandler)
         def get(self,notebook_id):
+            IPython.html.base.handlers.app_log.debug("notebook_id = " + notebook_id)
             if 'kbase_session' in self.cookies and hasattr(self,'notebook_manager'):
                 IPython.html.base.handlers.app_log.debug("kbase_session = " + self.cookies['kbase_session'].value)
                 cookie_pusher(self.cookies['kbase_session'].value, getattr(self,'notebook_manager'))

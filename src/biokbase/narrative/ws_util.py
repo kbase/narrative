@@ -10,7 +10,7 @@ import dateutil.parser
 import json
 import re
 import biokbase
-import biokbase.workspaceService
+import biokbase.workspaceServiceDeluxe
 
 # regex for parsing out workspace_id and object_id from
 # a "ws.{workspace}.{object}" string
@@ -80,7 +80,7 @@ def get_wsid( wsclient, workspace):
     """
     try:
         ws_meta = wsclient.get_workspace_info( { 'workspace' : workspace});
-    except biokbase.workspaceService.Client.ServerError, e:
+    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         if e.message.find('not found'):
             return( None)
         else:
@@ -123,7 +123,7 @@ def delete_wsobj(wsclient, wsid, objid):
     try:
         wsclient.delete_objects( [ { 'wsid' : wsid,
                                      'objid' : objid}])
-    except biokbase.workspaceService.Client.ServerError, e:
+    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         raise e
         # return False
     return True
@@ -154,7 +154,7 @@ def check_project_tag( wsclient, ws_id):
         tag = wsclient.get_object_info( [{ 'wsid' : ws_id,
                                            'name' : ws_tag['project']}],
                                         0);
-    except biokbase.workspaceService.Client.ServerError, e:
+    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found'):
             obj_save_data = { 'name' : ws_tag['project'],
@@ -202,7 +202,7 @@ def check_homews( wsclient, user_id = None):
         homews = "%s:home" % user_id
         workspace_identity = { 'workspace' : homews }
         ws_meta = wsclient.get_workspace_info( workspace_identity)
-    except biokbase.workspaceService.Client.ServerError, e:
+    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found'):
             ws_meta = wsclient.create_workspace( { 'workspace' : homews,

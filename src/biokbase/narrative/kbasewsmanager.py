@@ -30,7 +30,7 @@ import json
 import re
 import importlib
 import biokbase.narrative.ws_util as ws_util
-from biokbase.workspaceService.Client import Workspace
+from biokbase.workspaceServiceDeluxe.Client import Workspace
 
 from unicodedata import normalize
 
@@ -355,4 +355,4 @@ tgt_handlers = ( 'IPython.html.notebook.handlers',
 for handlerstr in tgt_handlers:
     IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
     handler = importlib.import_module(handlerstr)
-    handler_route_replace( handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>[:\w]+/\w+)')
+    handler_route_replace( handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')

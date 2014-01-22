@@ -73,7 +73,7 @@ class KBaseWSNotebookManager(NotebookManager):
     Notebooks are identified with workspace identifiers of the format
     {workspace_name}.{object_name}
     """
-    kbasews_uri = Unicode('https://kbase.us/services/ws/', config=True, help='Workspace service endpoint URI')
+    kbasews_uri = Unicode('http://140.221.84.209:7058/', config=True, help='Workspace service endpoint URI')
 
     ipynb_type = Unicode(u'ipynb')
     allowed_formats = List([u'json'])

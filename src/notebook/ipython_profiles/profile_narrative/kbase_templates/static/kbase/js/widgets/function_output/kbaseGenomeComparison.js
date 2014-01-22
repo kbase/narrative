@@ -11,7 +11,7 @@ $.KBWidget({
     },
 
     wsUrl: "http://kbase.us/services/workspace/",
-    jobSrvUrl: "http://140.221.84.180:7083/",
+    jobSrvUrl: "https://kbase.us/services/userandjobstate/",
     cmpImgUrl: "http://140.221.85.98:8284/image",
     timer: null,
     geneRows: 21,
@@ -356,7 +356,8 @@ $.KBWidget({
         				}
         			}
         		}, function(data) {
-        			alert("Error: " + data.error.message)
+    				clearInterval(self.timer);
+        			alert("Error: " + data.error.message + ", service url: " + jobSrvUrl);
         		});
         	};
         	timeLst();

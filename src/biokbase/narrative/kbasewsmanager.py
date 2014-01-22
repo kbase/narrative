@@ -80,8 +80,8 @@ class KBaseWSNotebookManager(NotebookManager):
     node_format = ipynb_type
     ws_type = Unicode(ws_util.ws_narrative_type, config=True, help='Type to store narratives within workspace service')
     # regex for parsing out workspace_id and object_id from
-    # a "kb|ws.{workspace}.{object}" string
-    ws_regex = re.compile( '^kb\|ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
+    # a "ws.{workspace}.{object}" string
+    ws_regex = re.compile( '^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
 
     # This is a regular expression to make sure that the workspace ID doesn't contain
     # non-legit characters in the object ID field
@@ -127,7 +127,7 @@ class KBaseWSNotebookManager(NotebookManager):
         all = ws_util.get_wsobj_meta( wsclient)
 
         self.mapping = {
-            ws_id : "%s/%s" % (all[ws_id]['workspace'],all[ws_id]['name'])
+            ws_id : "%s/%s" % (all[ws_id]['workspace'],all[ws_id]['meta']['name'])
             for ws_id in all.keys()
         }
         self.rev_mapping = { self.mapping[ ws_id] : ws_id for ws_id in self.mapping.keys() }
@@ -136,16 +136,12 @@ class KBaseWSNotebookManager(NotebookManager):
         return data
 
     def new_notebook_id(self, name):
-        """Generate a new notebook_id for a name and store its mappings."""
-        wsclient = self.wsclient()
-        user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
-        if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine valid user_id')
-        (homews,homews_id) = ws_util.check_homews(self.wsclient, user_id)
-        notebook_id = "%s.%s" % ( homews,name)
-        self.mapping[notebook_id] = name
-        self.rev_mapping[name] = notebook_id
-        return notebook_id
+        """
+        Generate a new notebook_id for a name and store its mappings.
+        We don't use this, because we can use workspace id and obj id for a
+        stable, bookmarkable URL
+        """
+        pass
 
     def delete_notebook_id(self, notebook_id):
         """Delete a notebook's id in the mapping."""
@@ -184,11 +180,11 @@ class KBaseWSNotebookManager(NotebookManager):
     
     def get_name(self, notebook_id):
         """get a notebook name, raising 404 if not found"""
-        self.log.debug("get_name(%s) = %s"%(notebook_id))
         try:
             name = self.mapping[notebook_id]
         except KeyError:
             raise web.HTTPError(404, u'Notebook does not exist: %s' % notebook_id)
+        self.log.debug("get_name(%s) = %s"%(notebook_id,name))
         return name
 
     def read_notebook_object(self, notebook_id):
@@ -231,8 +227,6 @@ class KBaseWSNotebookManager(NotebookManager):
         try:
             if not hasattr(nb.metadata, 'ws_name'):
                 nb.metadata.ws_name = homews
-            if notebook_id is None:
-                notebook_id = "kb|ws.%s.obj.%s" % ( nb.metadata.ws_name, new_name)
             if not hasattr(nb.metadata, 'creator'):
                 nb.metadata.creator = user_id
             if not hasattr(nb.metadata, 'type'):
@@ -244,11 +238,8 @@ class KBaseWSNotebookManager(NotebookManager):
             nb.metadata.format = self.node_format
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
-        if notebook_id not in self.mapping:
-            raise web.HTTPError(404, u'Notebook does not exist: %s' % notebook_id)
         try:
-            wsobj = { 'name' : self._clean_id(nb.metadata.name),
-                      'type' : self.ws_type,
+            wsobj = { 'type' : self.ws_type,
                       'data' : nb,
                       'provenance' : [],
                       'meta' : nb.metadata.copy(),
@@ -256,18 +247,28 @@ class KBaseWSNotebookManager(NotebookManager):
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
             wsobj['meta']['data_dependencies'] = json.dumps( wsobj['meta']['data_dependencies'])
-            if nb.metadata.ws_name == homews:
+            # If we're given a notebook id, try to parse it for the save parameters
+            if notebook_id:
+                m = self.ws_regex.match(notebook_id)
+            else:
+                m = None
+            if m:
+                wsid = m.group('wsid')
+                wsobj['objid'] = m.group('objid')
+            elif nb.metadata.ws_name == homews:
                 wsid = homews_id
+                wsobj['name'] = new_name
             else:
                 wsid = ws_util.get_wsid( nb.metadata.ws_name)
+                wsobj['name'] = new_name
             self.log.debug("calling ws_util.put_wsobj")
             res = ws_util.put_wsobj( wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
         except Exception as e:
             raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
-        # use "kb|ws.ws_id.obj.object_id" as the identifier
-        id = "kb|ws.%s.obj.%s" % ( res['wsid'], res['objid'])
-        self.mapping[id] = "%s/%s" % (res['workspace'],res['name'])
+        # use "ws.ws_id.obj.object_id" as the identifier
+        id = "ws.%s.obj.%s" % ( res['wsid'], res['objid'])
+        self.mapping[id] = "%s/%s" % (res['workspace'],new_name)
         return id
 
     def delete_notebook(self, notebook_id):
@@ -282,15 +283,10 @@ class KBaseWSNotebookManager(NotebookManager):
         self.log.debug("deleting notebook %s", notebook_id)
         m = self.ws_regex.match(notebook_id)
         if m:
-            param = { 'workspace' : m.group('wsid'),
-                      'id' : m.group('objid')
-                      }
-            param_wrapper = [ param ]
-            res = self.wsclient().delete_objects( param_wrapper)
+            res = ws_util.delete_wsobj(wsclient, m.group('wsid'),m.group('objid'))
             self.log.debug("delete object result: %s" % res)
-
         else:
-            raise ws_util.BadWorkspaceID( noteboot_id)
+            raise ws_util.BadWorkspaceID( notebook_id)
         self.delete_notebook_id(notebook_id)
 
     # public checkpoint API

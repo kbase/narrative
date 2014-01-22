@@ -13,8 +13,8 @@ import biokbase
 import biokbase.workspaceService
 
 # regex for parsing out workspace_id and object_id from
-# a "kb|ws.{workspace}.{object}" string
-ws_regex = re.compile( '^kb\|ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
+# a "ws.{workspace}.{object}" string
+ws_regex = re.compile( '^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
 
 # regex for parsing out a user_id from a token
 user_id_regex = re.compile( '^un=(?P<user_id>\w+)\|')
@@ -58,7 +58,7 @@ def get_wsobj_meta( wsclient, objtype=ws_narrative_type, ws_id=None ):
     for only the workspace specified
 
     Returns a dictionary of object descriptions - the key is a workspace id of
-    the form "kb|ws.{workspace_id}.obj.{object_id}" and the values are dictionaries
+    the form "ws.{workspace_id}.obj.{object_id}" and the values are dictionaries
     keyed on the list_ws_obj_field list above.
     """
     if ws_id is None:
@@ -70,7 +70,7 @@ def get_wsobj_meta( wsclient, objtype=ws_narrative_type, ws_id=None ):
                                        'ids' : [ws_id]} )
     my_narratives = {}
     for obj in res:
-        my_narratives["kb|ws.%s.obj.%s" % (obj[obj_field['wsid']],obj[obj_field['objid']])] = dict(zip(list_objects_fields,obj))
+        my_narratives["ws.%s.obj.%s" % (obj[obj_field['wsid']],obj[obj_field['objid']])] = dict(zip(list_objects_fields,obj))
     return my_narratives
 
 
@@ -92,7 +92,7 @@ def get_wsobj( wsclient, ws_id, objtype=None):
     This is just a wrapper for the workspace get_objects call.
 
     Takes an initialized workspace client and a workspace ID
-    of the form "kb|ws.{ws_id}.obj.{object id}" and returns the following:
+    of the form "ws.{ws_id}.obj.{object id}" and returns the following:
     { 'data' : {actual data contained in the object},
       'metadata' : { a dictionary version of the object metadata },
       ... all the fields that are normally returned in a ws ObjectData type
@@ -103,7 +103,7 @@ def get_wsobj( wsclient, ws_id, objtype=None):
     """
     match = ws_regex.match( ws_id)
     if not match:
-        raise BadWorkspaceID( "%s does not match workspace ID format kb|ws.{workspace id}.obj.{object id}" % ws_id)
+        raise BadWorkspaceID( "%s does not match workspace ID format ws.{workspace id}.obj.{object id}" % ws_id)
     ws = match.group(1)
     objid = match.group(2)
     objs = wsclient.get_objects( [dict( wsid=ws, objid=objid)])
@@ -114,6 +114,19 @@ def get_wsobj( wsclient, ws_id, objtype=None):
     res=objs[0]
     res['metadata'] = dict(zip(list_objects_fields,objs[0]['info']))
     return res
+
+def delete_wsobj(wsclient, wsid, objid):
+    """
+    Given a workspace client, and numeric workspace id and object id, delete it
+    returns true on success, false otherwise
+    """
+    try:
+        wsclient.delete_objects( [ { 'wsid' : wsid,
+                                     'objid' : objid}])
+    except biokbase.workspaceService.Client.ServerError, e:
+        raise e
+        # return False
+    return True
 
 # Write an object to the workspace, takes the workspace id, an object of the
 # type workspace.ObjectSaveData

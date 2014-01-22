@@ -41,9 +41,6 @@ module KBaseNarrative {
     typedef UnspecifiedObject Metadata;
 
     typedef structure {
-	string input;
-	list<UnspecifiedObject> outputs;
-	string language;
 	Metadata metadata;
 	string cell_type;
     } Cell;

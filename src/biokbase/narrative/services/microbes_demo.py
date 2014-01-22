@@ -12,7 +12,8 @@ import random
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
-from biokbase.workspaceService.Client import workspaceService
+#from biokbase.workspaceService.Client import workspaceService
+from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.GenomeComparison.Client import GenomeComparison
@@ -87,6 +88,10 @@ def _assemble_genome(meth, contig_file, out_genome):
         'auth': token,
     }
     genome_meta = wsClient.get_objectmeta(get_genome_params)
+    get_object_info_params = { [
+        'workspace' : workspace,
+        'id' : out_genome
+    ]}
 
     # 5. Pass it forward to the client.
     meth.advance("Rendering Genome Information")
@@ -227,15 +232,32 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     fba_model_id = fba_model_id.strip()
     if fba_model_id:
         wsClient  = workspaceService(service.URLS.workspace)
-        move_obj_params = {
-            'new_id':fba_model_id,
-            'new_workspace':workspaceName,
-            'source_id':generated_model_id,
-            'type':'Model',
-            'source_workspace':workspaceName,
-            'auth':token
+
+        # THIS FUNCTION IS NO LONGER AVAILABLE
+        #move_obj_params = {
+        #    'new_id':fba_model_id,
+        #    'new_workspace':workspaceName,
+        #    'source_id':generated_model_id,
+        #    'type':'Model',
+        #    'source_workspace':workspaceName,
+        #    'auth':token
+        #}
+        #fba_meta_data = wsClient.move_object(move_obj_params)
+        rename_obj_params = {
+            'obj' : {
+                'ws_name' : workspaceName,
+                'name':generated_model_id,
+                },
+            'new_name' : fba_model_id
         }
-        fba_meta_data = wsClient.move_object(move_obj_params)
+        tmp = wsClient.rename_object(rename_obj_params)
+        # we need to convert the new object_info array back to the
+        # old object meta style - let the workspace service do it for
+        # us, to avoid messing with 'instance'
+        get_objmeta_params = { 'workspace' : workspaceName,
+                               'id' : fba_model_id,
+                               'auth' : token }
+        fba_meta_data = wsClient.get_objectmeta( get_objmeta_params)
     
     return json.dumps({"data":fba_meta_data})
 

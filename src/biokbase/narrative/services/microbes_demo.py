@@ -88,10 +88,6 @@ def _assemble_genome(meth, contig_file, out_genome):
         'auth': token,
     }
     genome_meta = wsClient.get_objectmeta(get_genome_params)
-    get_object_info_params = { [
-        'workspace' : workspace,
-        'id' : out_genome
-    ]}
 
     # 5. Pass it forward to the client.
     meth.advance("Rendering Genome Information")

@@ -30,10 +30,8 @@ angular.module('narrative-directives')
                             scope.$apply(function() {
                                 scope.narratives = results;
                             })
-
                         } else {
-                            $(element).append('no narratives')
-
+                            $(element).append('no narratives');
                         }
                     }
                 })
@@ -791,7 +789,6 @@ function formateDate(timestamp) {
     } else {
         return false;
     }
-
 }
 
 

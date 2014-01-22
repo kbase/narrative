@@ -442,7 +442,6 @@ div::-webkit-scrollbar-thumb {
 .group-item-expander:hover {
     cursor: hand;
     cursor: pointer;
-    background-color: #e9f8fd !important;
 }
 
 

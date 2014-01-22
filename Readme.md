@@ -58,3 +58,17 @@ Last updated: Steve Chan (sychan) 9/2/2013
 Last updated: Dan Gunter (dang) 8/19/2013
 
 
+
+## Alternate install procedure
+
+This is an EXPERIMENTAL way to install, which assumes you have the virtualenv
+already set up.
+
+    make -f Makefile.narrative installed
+
+That is it -- the script file generated is called "run_notebook" instead of
+"run_notebook.sh", and does not require the extra "notebook" argument, so:
+
+    run_notebook
+
+

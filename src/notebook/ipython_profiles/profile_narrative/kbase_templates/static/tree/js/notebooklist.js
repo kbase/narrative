@@ -197,7 +197,7 @@ var IPython = (function (IPython) {
     NotebookList.prototype.add_shutdown_button = function (item, kernel) {
         var that = this;
 	var token = $("#login-widget").kbaseLogin("session", "token");
-        var shutdown_button = $("<button/>").text("Shutdown").addClass("btn btn-mini").
+        var shutdown_button = $("<button/>").text("Shutdown").addClass("btn btn-default btn-xs").
             click(function (e) {
                 var settings = {
                     processData : false,
@@ -222,7 +222,7 @@ var IPython = (function (IPython) {
     NotebookList.prototype.add_delete_button = function (item) {
         var new_buttons = $('<span/>').addClass("btn-group pull-right");
         var notebooklist = this;
-        var delete_button = $("<button/>").text("Delete").addClass("btn btn-mini").
+        var delete_button = $("<button/>").text("Delete").addClass("btn btn-default btn-xs").
             click(function (e) {
                 // $(this) is the button that was clicked.
                 var that = $(this);
@@ -268,7 +268,7 @@ var IPython = (function (IPython) {
     NotebookList.prototype.add_upload_button = function (item) {
         var that = this;
         var upload_button = $('<button/>').text("Upload")
-            .addClass('btn btn-primary btn-mini upload_button')
+            .addClass('btn btn-primary btn-xs upload_button')
             .click(function (e) {
                 var nbname = item.find('.item_name > input').attr('value');
                 var nbformat = item.data('nbformat');
@@ -301,7 +301,7 @@ var IPython = (function (IPython) {
                 return false;
             });
         var cancel_button = $('<button/>').text("Cancel")
-            .addClass("btn btn-mini")
+            .addClass("btn btn-default btn-xs")
             .click(function (e) {
                 console.log('cancel click');
                 item.remove();

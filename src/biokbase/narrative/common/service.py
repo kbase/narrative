@@ -42,7 +42,7 @@ class URLS:
     workspace = "http://kbase.us/services/workspace"
     invocation = "https://kbase.us/services/invocation"
     fba = "https://kbase.us/services/fba_model_services"
-    genomeCmp = "http://140.221.85.98:8283/jsonrpc"
+    genomeCmp = "http://140.221.85.98:8284/jsonrpc"
 
 ## Exceptions
 
@@ -144,6 +144,14 @@ def get_func_info(fn):
             typeobj = eval(desc.strip())
             params[name]['type'] = typeobj
 
+        # :default (value of parameter)
+        elif line.startswith(":default"):
+            _, name, value = line.split(":", 2)
+            name = name[8:].strip()  # skip 'default '
+            if not name in params:
+                raise ValueError("'default' without 'param' for {}".format(name))
+            params[name]['default'] = value.strip() # XXX: should allow quoting
+
         # :ui_name (of parameter) - the name that should be displayed in the user interface
         elif line.startswith(":ui_name"):
             _, name, ui_name = line.split(":", 2)
@@ -156,7 +164,7 @@ def get_func_info(fn):
         # :return - name of thing to return
         elif line.startswith(":return"):
             _1, _2, desc = line.split(":", 2)
-            return_['desc'] = desc
+            return_['desc'] = desc.strip()
 
         # :rtype - type of thing to return
         elif line.startswith(":rtype"):
@@ -190,8 +198,15 @@ def get_func_info(fn):
         type_ = params[name]['type']
         desc = params[name]['desc']
         ui_name = params[name].get('ui_name', name)  # use parameter name if no ui_name is given
-        r_params.append(type_(desc=desc, ui_name=ui_name))
-    if return_ is None:
+        if 'default' in params[name]:
+            # set default value
+            dflt = params[name]['default']
+            pvalue = type_(dflt, desc=desc, ui_name=ui_name)
+        else:
+            # no default value
+            pvalue = type_(desc=desc, ui_name=ui_name)
+        r_params.append(pvalue)
+    if not return_:
         r_output = None
     else:
         r_output = return_['type'](desc=return_['desc'])
@@ -866,8 +881,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             'properties': {
                 'parameters': {p.name: {'type': self.trt_2_jschema.get(p.info(), str(p)),
                                         'description': p.get_metadata('desc'),
-                                        'ui_name': p.get_metadata('ui_name')} for p in self.params},
-                'widgets': { 'input': self.input_widget, 'output': self.output_widget },
+                                        'ui_name': p.get_metadata('ui_name'),
+                                        'default': p.get_default_value()} for p in self.params},
+                'widgets': {'input': self.input_widget, 'output': self.output_widget },
             },
             'returns': {p.name: {'type': self.trt_2_jschema.get(p.info(), str(p)),
                                  'description': p.get_metadata('desc')} for p in self.outputs}

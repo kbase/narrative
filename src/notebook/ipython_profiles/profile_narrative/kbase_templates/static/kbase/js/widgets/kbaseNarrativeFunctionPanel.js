@@ -97,9 +97,30 @@
                     self.parseKernelResponse(msgType, content); 
                     self.showFunctionPanel();
                 },
+                'execute_reply' : function(content) { 
+                    self.handleCallback("execute_reply", content); 
+                },
+                'clear_output' : function(content) { 
+                    self.handleCallback("clear_output", content); 
+                },
+                'set_next_input' : function(content) { 
+                    self.handleCallback("set_next_input", content); 
+                },
+                'input_request' : function(content) { 
+                    self.handleCallback("input_request", content); 
+                },
             };
 
             var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
+        },
+
+        handleCallback: function(call, content) {
+            this.dbg("kbaseNarrativeFunctionPanel.handleCallback - " + call);
+            this.dbg(content);
+
+            if (content.status === "error") {
+                this.showError(content);
+            }
         },
 
         /**
@@ -111,6 +132,9 @@
          */
         parseKernelResponse: function(msgType, content) {
             // if it's not a datastream, display some kind of error, and return.
+            this.dbg("kbaseNarrativeFunctionPanel.parseKernelResponse");
+            this.dbg(content);
+
             if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the function list.');
                 return;
@@ -130,8 +154,6 @@
          * @private
          */
         populateFunctionList: function(serviceSet) {
-            this.dbg(serviceSet);
-
             var serviceAccordion = [];
 
             for (var serviceName in serviceSet) {
@@ -262,11 +284,42 @@
 
         /**
          * Shows an error text message on top of the panel. All other pieces are hidden.
-         * @param {string} text - the text of the error message
+         * @param {string} error - the text of the error message
          * @private
          */
-        showError: function(text) {
-            this.$errorPanel.html(text);
+        showError: function(error) {
+            var $errorHeader = $('<div>')
+                               .addClass('alert alert-danger')
+                               .append('<b>Sorry, an error occurred while loading KBase functions.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20function%20loading%20error">help@kbase.us</a> with the information below.');
+
+            this.$errorPanel.empty();
+            this.$errorPanel.append($errorHeader);
+
+            // If it's a string, just dump the string.
+            if (typeof error === 'string') {
+                this.$errorPanel.append($('<div>').append(error));
+            }
+
+            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            else if (typeof error === 'object') {
+                var $details = $('<div>');
+                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
+                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
+
+                var $tracebackDiv = $('<div>')
+                                 .addClass('kb-function-error-traceback');
+                for (var i=0; i<error.traceback.length; i++) {
+                    $tracebackDiv.append(error.traceback[i] + "<br>");
+                }
+
+                var $tracebackPanel = $('<div>');
+                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
+
+                this.$errorPanel.append($details)
+                                .append($tracebackPanel);
+                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+            }
+
             this.$functionPanel.hide();
             this.$loadingPanel.hide();
             this.$errorPanel.show();

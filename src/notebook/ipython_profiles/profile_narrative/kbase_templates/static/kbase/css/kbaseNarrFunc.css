@@ -69,6 +69,10 @@
     font-size: 14pt;
 }
 
+.kb-function-help:hover {
+    color: black;
+}
+
 .kb-function-help-popup {
     position: absolute;
     top: 0px;

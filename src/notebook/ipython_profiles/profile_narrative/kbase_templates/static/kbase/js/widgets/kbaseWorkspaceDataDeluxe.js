@@ -243,15 +243,7 @@
                                               .append($('<div>')
                                                       .addClass('modal-body'))
                                               .append($('<div>')
-                                                      .addClass('modal-footer')
-                                                      .append($('<button>')
-                                                              .attr({
-                                                                'type' : 'button',
-                                                                'class' : 'btn btn-primary',
-                                                                'data-dismiss' : 'modal',
-                                                              })
-                                                              .append('Close'))
-                                                      )
+                                                      .addClass('modal-footer'))
                                               )
                                      );
 
@@ -467,6 +459,27 @@
                                     ]
                                 }
                             );
+
+                            var $buttonFooter = $('<div>')
+                                                .append($('<button>')
+                                                        .attr({
+                                                            'type' : 'button',
+                                                            'class' : 'btn btn-primary',
+                                                            'data-dismiss' : 'modal'
+                                                        })
+                                                        .append('Close'));
+
+                            this.$infoModal.find('.modal-footer').empty().append($buttonFooter);
+
+                            // this.$infoModal
+                            //                           .append($('<button>')
+                            //                                   .attr({
+                            //                                     'type' : 'button',
+                            //                                     'class' : 'btn btn-primary',
+                            //                                     'data-dismiss' : 'modal',
+                            //                                   })
+                            //                                   .append('Close'))
+                                                      
                         }, this),
 
                         $.proxy(function(error) {

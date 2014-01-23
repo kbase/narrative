@@ -131,7 +131,7 @@ est_connections = function()
 --
 -- Reaper function that looks in the proxy_state table for instances that need to be
 -- removed and removes them
-sweeper = function()
+sweeper = function(self)
 	     ngx.log( ngx.INFO, "sweeper running")
 	     proxy_mgr:delete('next_sweep')
 
@@ -163,7 +163,7 @@ sweeper = function()
 	  end
 
 -- Check for a sweeper in the queue and enqueue if necessary
-check_sweeper = function()
+check_sweeper = function(self)
 		   local next_run = proxy_mgr:get('next_sweep')
 		   if next_run == nil then -- no sweeper in the queue, put one into the queue!
 		      ngx.log( ngx.ERR, string.format("enqueuing sweeper to run in  %d seconds",M.sweep_interval))
@@ -183,7 +183,7 @@ check_sweeper = function()
 -- Reaper function that examines containers to see if they have been idle for longer than
 -- M.timeout and then marks them for cleanup
 --
-marker = function()
+marker = function(self)
 	    ngx.log( ngx.INFO, "marker running")
 	    proxy_mgr:delete('next_mark')
 	    local keys = proxy_last:get_keys() 
@@ -221,7 +221,7 @@ marker = function()
 
 -- This function just checks to make sure there is a sweeper function in the queue
 -- returns true if there was one, false otherwise
-check_marker = function()
+check_marker = function(self)
 		  local next_run = proxy_mgr:get('next_mark')
 		  if next_run == nil then -- no marker in the queue, put one into the queue!
 		     ngx.log( ngx.ERR, string.format("enqueuing marker to run in %d seconds",M.mark_interval))
@@ -245,7 +245,14 @@ check_marker = function()
 --     proxy_map - name to use for the nginx shared memory proxy_map
 --     proxy_last - name to use for the nginx shared memory last connection access time
 --
-initialize = function( conf )
+initialize = function( self, conf )
+		if conf then
+		   for k,v in pairs(conf) do
+		      ngx.log( ngx.INFO, string.format("conf(%s) = %s",k,tostring(v)))
+		   end
+		else
+		   conf = {}
+		end
 		if not initialized then
 		   initialized = os.time()
 		   M.sweep_interval = conf.sweep_interval or M.sweep_interval
@@ -266,7 +273,7 @@ initialize = function( conf )
 	     end
 
 -- This function is used to implement the rest interface
-set_proxy = function()
+set_proxy = function(self)
 	       local uri_key_rx = ngx.var.uri_base.."/("..key_regex ..")"
 	       local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
 	       local method = ngx.req.get_method()
@@ -402,7 +409,7 @@ set_proxy = function()
 
 --
 -- simple URL decode function
-function url_decode(str)
+local function url_decode(str)
    str = string.gsub (str, "+", " ")
    str = string.gsub (str, "%%(%x%x)",
 		      function(h) return string.char(tonumber(h,16)) end)
@@ -447,7 +454,7 @@ end
 --
 -- Route to the appropriate proxy
 --
-use_proxy = function()
+use_proxy = function(self)
 	       local target, flags
 	       -- ngx.log( ngx.INFO, "In /narrative/ handler")
 	       -- get the reaper functions into the run queue if not already
@@ -522,7 +529,7 @@ use_proxy = function()
 	       end
 	    end
 
-idle_status = function()
+idle_status = function(self)
 		 local uri_key_rx = ngx.var.uri_base.."/("..key_regex ..")"
 		 local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
 		 local method = ngx.req.get_method()

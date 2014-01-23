@@ -32,7 +32,11 @@ lua_package_path "/home/vagrant/dockerstuff/narrative/docker/?;/home/vagrant/doc
 init_by_lua '
     json = require("json")
     proxymgr = require("proxy_mgr")
-    proxymgr:initialize()
+    proxymgr:initialize{ proxy_map = ngx.shared.proxy_map,
+                         proxy_last = ngx.shared.proxy_last,
+			 proxy_last_ip = ngx.shared.proxy_last_ip,
+			 proxy_state = ngx.shared.proxy_state,
+			 proxy_mgr = ngx.shared.proxy_mgr }
 ';
 
 server {

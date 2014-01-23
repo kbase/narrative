@@ -22,7 +22,7 @@
 var app = angular.module('landing-pages', 
     ['lp-directives', 'card-directives',
      'mv-directives', 'trees-directives', 
-     'ws-directives', 'narrative-directives', 'ui.router'])
+     'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
 
@@ -253,6 +253,11 @@ var app = angular.module('landing-pages',
 
 }])
 
+//add the login widget as a module
+var kbaseLogin = angular.module('kbaseLogin', []);
+kbaseLogin.factory('kbaseLogin', function() {
+  return $('#signin-button').kbaseLogin(); // assumes underscore has already been loaded on the page
+});
 
 
 HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \

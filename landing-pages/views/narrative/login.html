@@ -17,14 +17,14 @@
                 <p id="login_error" class="text-error" style="display:none"></p>
                 <div class="form-group">
                     <label for="kbase_username">Username:</label>
-                    <input type="text" placeholder="username" id="kbase_username" class=" form-control" tabindex="1">
+                    <input type="text" placeholder="username" id="kbase_username" class=" form-control" tabindex="1" ng-model="user.username">
                 </div>
                 <div class="form-group">
                     <label for="kbase_password" class="full-width">Password:<span class="pull-right"> <a target="_blank" href="http://gologin.kbase.us/ResetPassword" tabindex="4">Forgot password?</a></span></label>
-                    <input type="password" placeholder="password" id="kbase_password" class="form-control" tabindex="2">
+                    <input type="password" placeholder="password" id="kbase_password" class="form-control" tabindex="2" ng-model="user.password">
                 </div>
 
-                <button id="signinbtn" type="button" class="btn btn-primary" tabindex="3">Sign In</button> <img src="./static/images/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
+                <button id="signinbtn" type="button" class="btn btn-primary" tabindex="3" ng-click="loginUser(user)" >Sign In</button> <img src="./static/images/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
             </div>
         </form>
         <span>New to KBase? <a target="_blank" href="http://gologin.kbase.us/Signup">Register now</a></span>

@@ -209,11 +209,61 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 
 
-.controller('Narrative', function($scope, $stateParams) {
+.controller('Narrative', function($scope, $stateParams, $location, kbaseLogin) {
     console.log('stateParams', $stateParams)
     console.log('called narrative')
     //changeNav('narrative', 'newsfeed');
     $scope.nar_url = 'http://narrative.kbase.us'; // used for links to narratives
+
+    // callback for ng-click 'loginUser':
+    $scope.loginUser = function (user) {
+        console.log("username is " + user.username);
+        kbaseLogin.login(
+            user.username,
+            user.password,
+            function(args) {
+                console.log(args);
+                if (args.success === 1) {
+                        
+                    this.registerLogin(args);
+
+                    //set the cookie
+                    var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
+                    
+                    console.log( 'Setting kbase_session cookie');
+                    $.cookie('kbase_session',
+                             'un=' + c.user_id
+                             + '|'
+                             + 'kbase_sessionid=' + c.kbase_sessionid
+                             + '|'
+                             + 'user_id=' + c.user_id
+                             + '|'
+                             + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+                             { path: '/',
+                               domain: 'kbase.us' });
+                    $.cookie('kbase_session',
+                             'un=' + c.user_id
+                             + '|'
+                             + 'kbase_sessionid=' + c.kbase_sessionid
+                             + '|'
+                             + 'user_id=' + c.user_id
+                             + '|'
+                             + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+                             { path: '/'});
+                    console.log("redirecting");
+
+                    $location.path('/narrative/home/');
+                    $scope.$apply();
+                    
+                } else {
+                            console.log("error logging in");
+                }
+
+            }
+        )
+        
+    };
+
 })
 
 .controller('NarrativeProjects', function($scope, $stateParams) {

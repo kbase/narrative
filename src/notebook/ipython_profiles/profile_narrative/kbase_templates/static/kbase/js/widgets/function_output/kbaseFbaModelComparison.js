@@ -33,6 +33,8 @@ $.KBWidget({
 
         var dataIsReady = function() {
         	$('.loader-table').remove();
+        	var headTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" style="margin:0;">');
+        	container.append(headTable);
         	var tables = ['Common reactions', 'Model1 only', 'Model2 only'];
             var tableIds = [pref+'common', pref+'model1', pref+'model2'];
             // build tabs
@@ -92,16 +94,20 @@ $.KBWidget({
                     }
                 };
         	//////////////////////////////////////////// Common tab /////////////////////////////////////////////
-            var dataDict = formatRxnObjs(model1.reactions, model2map);
+            var stat = [0,0];
+            var dataDict = formatRxnObjs(model1.reactions, model2map, stat);
+            headTable.append("<tr><td></td><td>Reactions in genome1</td><td>Reactions in genome2</td><td>Common reactions</td><td>Reactions with same features</td></tr>");
+            headTable.append("<tr><td>Statistics:</td><td><center>" + model1.reactions.length + "</center></td><td><center>" + model2.reactions.length + "</center></td>" +
+            		"<td><center>" + stat[0] + "</center></td><td><center>" + stat[1] + "</center></td></tr>");
             var keys = ["reaction", "definition", "features1", "features2", "name"];
-            var labels = ["Reaction", "Equation", "Features from genome1 (genome2 hit)", "Features from genome2 (genome1 hit)", "Name"];
+            var labels = ["Reaction", "Equation", "Features from genome1", "Features from genome2", "Name"];
             var cols = getColumns(keys, labels);
             var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
             rxnTableSettings.aoColumns = cols;
             var table = $('#'+pref+'common-table').dataTable(rxnTableSettings);
             table.fnAddData(dataDict);
         	//////////////////////////////////////////// Model1 only tab ////////////////////////////////////////
-            var dataDict = formatRxnObjs(model1only, null);
+            var dataDict = formatRxnObjs(model1only, null, null);
             var keys = ["reaction", "definition", "features1", "name"];
             var labels = ["Reaction", "Equation", "Features from genome 1", "Name"];
             var cols = getColumns(keys, labels);
@@ -110,7 +116,7 @@ $.KBWidget({
             var table = $('#'+pref+'model1-table').dataTable(rxnTableSettings);
             table.fnAddData(dataDict);
         	//////////////////////////////////////////// Model2 only tab ////////////////////////////////////////
-            var dataDict = formatRxnObjs(model2only, model2map);
+            var dataDict = formatRxnObjs(model2only, null, null);
             var keys = ["reaction", "definition", "features1", "name"];
             var labels = ["Reaction", "Equation", "Features from genome 2", "Name"];
             var cols = getColumns(keys, labels);
@@ -118,8 +124,10 @@ $.KBWidget({
             rxnTableSettings.aoColumns = cols;
             var table = $('#'+pref+'model2-table').dataTable(rxnTableSettings);
             table.fnAddData(dataDict);
+            container.append($('<table><tr><td>(*) color legend: sub-best bidirectional hits are marked by <font color="blue">blue</font>, '+
+            		'orphan features are marked by <font color="red">red</font>.</td></tr></table>'));
             
-            function formatRxnObjs(rxnObjs, map2) {
+            function formatRxnObjs(rxnObjs, map2, stat) {
                 var rxn_objs = []
                 for (var i in rxnObjs) {
                 	var r1 = rxnObjs[i];
@@ -128,6 +136,8 @@ $.KBWidget({
                                 +rxn.reaction+'</a> ('+rxn.compartment+')';
                     if (map2 != null) {
                     	if (map2.hasOwnProperty(r1.id)) {
+                    		if (stat != null)
+                    			stat[0]++;
                         	var p1map = {};
                         	for (var i in r1.features) {
                         		var f1 = r1.features[i];
@@ -140,42 +150,58 @@ $.KBWidget({
                         		p2map[f2] = cmp.proteome2map[f2];
                         	}
                         	var f1list = [];
+                        	var f1orfans = [];
+                        	var f2list = [];
+                        	var exactly = true;
                         	for (var i in r1.features) {
                         		var f1 = r1.features[i];
                         		var hits = cmp.data1[cmp.proteome1map[f1]];
                         		var links = [];
+                        		var sublinks = [];
                         		for (var h in hits) {
                         			var hit = hits[h];
-                        			if (hit[2] == 100 && p2map.hasOwnProperty(cmp.proteome2names[hit[0]])) {
-                        				links.push(cmp.proteome2names[hit[0]]);
+                        			if (p2map.hasOwnProperty(cmp.proteome2names[hit[0]])) {
+                        				if (hit[2] == 100) {
+                        					links.push(cmp.proteome2names[hit[0]]);
+                        				} else {
+                        					sublinks.push('<font color="blue">' + cmp.proteome2names[hit[0]] + '</font>');
+                        				}
                         			}
                         		}
-                        		if (links.length == 0) {
-                        			f1list.push('<font color="red">' + f1 + '</font>');
+                        		if (links.length == 0 && sublinks.length == 0) {
+                        			f1orfans.push('<font color="red">' + f1 + '</font>');
+                        			exactly = false;
+                        		} else if (links.length > 0) {
+                        			f1list.push(f1);
+                        			f2list.push(links);
                         		} else {
-                        			f1list.push(f1 + " (" + links + ")");
+                        			f1list.push('<font color="blue">' + f1 + '</font>');
+                        			f2list.push(sublinks);
+                        			exactly = false;
                         		}
-                        	}                        	
-                        	var f2list = [];
+                        	}
+                        	for (var item in f1orfans)
+                        		f1list.push(f1orfans[item]);
                         	for (var i in r2.features) {
                         		var f2 = r2.features[i];
                         		var hits = cmp.data2[cmp.proteome2map[f2]];
                         		var links = [];
                         		for (var h in hits) {
                         			var hit = hits[h];
-                        			if (hit[2] == 100 && p1map.hasOwnProperty(cmp.proteome1names[hit[0]])) {
+                        			if (p1map.hasOwnProperty(cmp.proteome1names[hit[0]])) {
                         				links.push(cmp.proteome1names[hit[0]]);
                         			}
                         		}
                         		if (links.length == 0) {
                         			f2list.push('<font color="red">' + f2 + '</font>');
-                        		} else {
-                        			f2list.push(f2 + " (" + links + ")");
+                        			exactly = false;
                         		}
                         	}                        	
                             rxn.features1 = f1list.join('<br>');
                             rxn.features2 = f2list.join('<br>');
                         	rxn_objs.push(rxn);
+                        	if (exactly && stat != null)
+                        		stat[1]++;
                     	}
                     } else {
                         rxn.features1 = rxn.features.join('<br>');

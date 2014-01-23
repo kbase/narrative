@@ -30,7 +30,7 @@ function ContigBrowserPanel() {
 
         //cdmiURL: "http://kbase.us/services/cdmi_api",
         proteinInfoURL: "http://kbase.us/services/protein_info_service",
-        workspaceURL: "http://kbase.us/services/workspace",
+        workspaceURL: "http://140.221.84.209:7058/",
         tooltip: null,
         operonFeatures: [],
         $messagePane: null,

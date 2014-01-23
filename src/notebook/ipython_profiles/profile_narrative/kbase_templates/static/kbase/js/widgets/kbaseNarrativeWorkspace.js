@@ -25,7 +25,7 @@
         parent: "kbaseWidget",
         version: "1.0.0",
         options: {
-            workspaceURL: "https://www.kbase.us/services/workspace",
+            workspaceURL: "http://140.221.84.209:7058/",
             loadingImage: "../images/ajax-loader.gif",
             tableElem: null,
             controlsElem: null

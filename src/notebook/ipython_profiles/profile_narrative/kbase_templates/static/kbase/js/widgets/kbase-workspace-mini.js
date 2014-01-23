@@ -16,7 +16,7 @@
 
 		options: {
 			workspaceName: "",
-			workspaceURL: "https://www.kbase.us/services/workspace",
+			workspaceURL: "http://140.221.84.209:7058/",
 			loadingImage: "ajax-loader.gif",
 			notLoggedInMsg: "Please log in to view a workspace.",
 		},

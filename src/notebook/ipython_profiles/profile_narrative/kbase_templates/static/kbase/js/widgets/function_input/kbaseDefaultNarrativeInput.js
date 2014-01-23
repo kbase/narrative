@@ -37,7 +37,7 @@
             }
             this.trigger('dataLoadedQuery.Narrative', [lookupTypes, $.proxy(
                 function(objects) {
-//                    console.log(objects);
+
                     var inputDiv = "<div class='kb-cell-params'><table class='table'>";
                     for (var i=0; i<Object.keys(params).length; i++) {
                         var pid = 'param' + i;
@@ -70,10 +70,11 @@
                                     " value='' type='text'></input>";
                         }
 
-                        inputDiv += "<tr style='border:none'>" + 
-                                        "<td style='border:none'>" + p.ui_name + "</td>" +
-                                        "<td style='border:none'>" + input + "</td>" +
-                                        "<td style='border:none'>" + p.description + "</td>" +
+                        var cellStyle = "border:none; vertical-align:middle;";
+                        inputDiv += "<tr style='" + cellStyle + "'>" + 
+                                        "<td style='" + cellStyle + "'>" + p.ui_name + "</td>" +
+                                        "<td style='" + cellStyle + "'>" + input + "</td>" +
+                                        "<td style='" + cellStyle + "'>" + p.description + "</td>" +
                                     "</tr>";
                     }
                     inputDiv += "</table></div>";

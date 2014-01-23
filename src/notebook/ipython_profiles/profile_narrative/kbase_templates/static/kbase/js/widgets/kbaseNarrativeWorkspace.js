@@ -237,13 +237,13 @@
                 var inputDiv = "<div id='inputs'></div>";
 
                 // These are the 'delete' and 'run' buttons for the cell
-                var buttons = "<div class='buttons pull-right' style='margin-top:10px'>" +
+                var buttons = "<div class='buttons pull-right'>" + //style='margin-top:10px'>" +
                                   "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-warning'>Delete</button> " +
                                   "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary'>Run</button>" + 
                               "</div>";
 
                 // The progress bar remains hidden until invoked by running the cell
-                var progressBar = "<div id='kb-func-progress' style='display:none;'>" +
+                var progressBar = "<div id='kb-func-progress' class='pull-left' style='display:none;'>" +
                                     "<div class='progress progress-striped active kb-cell-progressbar'>" +
                                         "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
                                         "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
@@ -256,42 +256,57 @@
                 var buttonLabel = "...";
                 var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
                 var methodInfo = "<div class='kb-func-desc'>" +
-                                   "<h1>" + method.title + "</h1>" +
+                                   "<h1><b>" + method.title + "</b></h1>" +
+                                   "<span class='pull-right kb-func-timestamp' id='last-run'></span>" +
                                    "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
                                       " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
-                                    "<h2 class='collapse' id='" + methodId + "'>" +
-                                      methodDesc + "</h2>" +
+                                    "<div><h2 class='collapse' id='" + methodId + "'>" +
+                                      methodDesc + "</h2></div>" +
                                  "</div>";
 
                 // Bringing it all together...
-                cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
-                                  //"<h1>" + method.title + "</h1>" +
-                                  methodInfo +
-                                  "<div>" +  
-                                      inputDiv +
-                                      buttons + 
+                cellContent = "<div class='panel kb-func-panel kb-cell-run' id='" + cellId + "'>" +
+                                  "<div class='panel-heading'>" +
+                                      methodInfo +
                                   "</div>" +
-                                  progressBar +
-                              "</div>\n" + 
-                              "<script>" + 
-                              "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" +
+                                  "<div class='panel-body'>" +
+                                      inputDiv +
+                                  "</div>" +
+                                  "<div class='panel-footer' style='overflow:hidden'>" +
+                                      progressBar +
+                                      buttons +
+                                  "</div>" +
+                              "</div>" +
+                              "\n<script>" + 
+                              "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
                                this.safeJSONStringify(method) + "'});" +
                               "</script>";
+
+                // cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
+                //                   //"<h1>" + method.title + "</h1>" +
+                //                   methodInfo +
+                //                   "<div>" +  
+                //                       inputDiv +
+                //                       buttons + 
+                //                   "</div>" +
+                //                   progressBar +
+                //               "</div>\n" + 
+                //               "<script>" + 
+                //               "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" +
+                //                this.safeJSONStringify(method) + "'});" +
+                //               "</script>";
             }
             else {
                 cellContent = "Error - the selected method is invalid.";
             }
-            // Useful for debugging Markdown errors
-//            console.debug("buildFunctionCell.set_text content:", cellContent);
             cell.set_text(cellContent);
 
             cell.rendered = false;
             cell.render();
-            // restore the input widget's state.
 
+            // restore the input widget's state.
             this.removeCellEditFunction(cell);
             this.bindActionButtons(cell);
-//            console.debug("buildFunctionCell.end");
         },
 
         /**
@@ -666,6 +681,7 @@
                     // Run the method.
                     var method = cell.metadata[self.KB_CELL].method;
                     self.runCell()(cell, method.service, method.title, paramList);
+                    $(cell.element).find("#last-run").html("Last run: " + self.readableTimestamp(self.getTimestamp()));
                 }
             );
         },
@@ -729,9 +745,6 @@
             return function(cell, service, method, params) {
                 var nb = IPython.notebook;
                 var currentIndex = nb.get_selected_index();
-                var codeCell = nb.insert_cell_below('code', currentIndex);
-                self.setCodeCell(codeCell);
-                codeCell.element.css('display', 'none');
 
                 var callbacks = {
                     'execute_reply' : function(content) { self.handleExecuteReply(cell, content); },
@@ -741,10 +754,15 @@
                     'input_request' : function(content) { self.handleInputRequest(cell, content); },
                 };
 
+                // ignore making code cells for now.
+                // var codeCell = nb.insert_cell_below('code', currentIndex);
+                // self.setCodeCell(codeCell);
+                // codeCell.element.css('display', 'none');
+
                 var code = self.buildRunCommand(service, method, params);
-                codeCell.set_text(code);
-                codeCell.output_area.clear_output(true, true, true);
-                codeCell.set_input_prompt('*');
+                // codeCell.set_text(code);
+                // codeCell.output_area.clear_output(true, true, true);
+                // codeCell.set_input_prompt('*');
 
                 $(cell.element).find('#kb-func-progress').css({'display': 'block'});
                 nb.kernel.execute(code, callbacks, {silent: true});
@@ -958,6 +976,13 @@
             var widget = result.widget || this.defaultOutputWidget;
 
             var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
+
+            // kinda ugly, but concise. grab the method. if it's not falsy, fetch the title from it.
+            // worst case, it'll still be falsy, and we can deal with it in the header line.
+            var methodName = cell.metadata[this.KB_CELL].method;
+            if (methodName)
+                methodName = methodName.title;
+
             var uuid = this.uuidgen();
             var outCellId = 'kb-cell-out-' + uuid;
 
@@ -968,13 +993,31 @@
             else
                 widgetInvoker = this.defaultOutputWidget + "({'data' : " + result.data + "});";
 
-            var cellText = ['<div class="kb-cell-output" id="' + outCellId + '">',
-                            '<div></div>', // gap for header info
-                            '<div id="output" style="margin:-10px;"></div>',
-                            '</div>',
-                            '<script>',
-                            '$("#' + outCellId + ' > div#output").' + widgetInvoker,
-                            '</script>'].join('\n');
+            var header = '<span class="kb-out-desc"><b>' + 
+                            (methodName ? methodName : 'Unknown method') + 
+                            '</b> - Output</span><span class="pull-right kb-func-timestamp">' + 
+                            this.readableTimestamp(this.getTimestamp()) +
+                            '</span>' + 
+                         '';
+
+            var cellText = '<div class="kb-cell-output" id="' + outCellId + '">' +
+                                '<div class="panel panel-default">' + 
+                                    '<div class="panel-heading">' + header + '</div>' +
+                                    '<div class="panel-body"><div id="output"></div></div>' +
+                                '</div>' +
+                           '</div>\n' +
+                           '<script>' +
+                           '$("#' + outCellId + ' > div > div > div#output").' + widgetInvoker +
+                           '</script>';
+
+
+            // var cellText = '<div class="kb-cell-output" id="' + outCellId + '">' +
+            //                    '<div>' + header + '</div>' + // gap for header info
+            //                    '<div id="output" style="margin:-10px;"></div>' +
+            //                '</div>\n' +
+            //                '<script>' +
+            //                '$("#' + outCellId + ' > div#output").' + widgetInvoker +
+            //                '</script>';
 
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
@@ -1200,13 +1243,21 @@
 
             var d = new Date(timestamp);
             var hours = format(d.getHours());
+            // var meridian = "am";
+            // if (hours >= 12) {
+            //     hours -= 12;
+            //     meridian = "pm";
+            // }
+            // if (hours === 0)
+            //     hours = 12;
+
             var minutes = format(d.getMinutes());
             var seconds = format(d.getSeconds());
-            var month = format(d.getMonth()+1);
-            var day = format(d.getDay());
+            var month = d.getMonth()+1;
+            var day = format(d.getDate());
             var year = d.getFullYear();
 
-            return hours + ":" + minutes + ":" + seconds + " " + month + "/" + day + "/" + year;
+            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         },
 
 

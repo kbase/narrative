@@ -105,18 +105,25 @@
             this.$elem.append($('<div>')
                               .addClass('kb-function-header')
                               .append('Data'));
-            this.$elem.append($('<div id="data-tabs">'));
+            this.$dataTabs = $('<div id="data-tabs">');
+            this.$elem.append(this.$dataTabs);
 
+            this.$messagePanel = $('<div>').append("blahblah").hide();
+            this.$elem.append(this.$messagePanel);
 
+            // Contains all of a user's data
+            // XXX: Initially just data from the current workspace.
             this.$myDataDiv = $('<div id="my-data">');
-            this.$myDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered kb-table">');
+            this.$myDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">');
             this.$myDataDiv.append(this.$myDataTable);
 
+            // Contains all data in the current narrative.
             this.$narrativeDiv = $('<div id="narrative-data">');
-            this.$narrativeDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">');
+            this.$narrativeDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">');
             this.$narrativeDiv.append(this.$narrativeDataTable);
 
-            this.$elem.find("#data-tabs").kbaseTabs(
+            // Put these into tabs.
+            this.$dataTabs.kbaseTabs(
                 {
                     tabs : [
                         {
@@ -131,6 +138,7 @@
                 }
             );
 
+            // Initialize the datatables.
             this.$myDataTable.dataTable({
                 sScrollX: '100%',
                 iDisplayLength: -1,
@@ -144,14 +152,32 @@
                     { "sTitle": "Type", bVisible: false },
                 ],
                 aoColumnDefs: [
-                  { 'bSortable': false, 'aTargets': [ 0 ] },
+                    { 'bSortable': false, 'aTargets': [ 0 ] },
+                    {
+                        mRender: function(data, type, row) {
+                            // console.log(data + " - " + type + " - " + row);
+                            // var $div = $('<div>')
+                            //            .append(data)
+                            //            .append($('<span>')
+                            //                    .addClass('kb-function-help')
+                            //                    .append('?')
+                            //                    .click(function(event) { console.debug('clicked function link!'); }));
+                            // return $div;
+                            return data + 
+                                   "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
+                                   "data-ws='" + row[7] + "' " +
+                                   "data-id='" + row[1] + "' " + 
+                                   "style='margin-top: -3px'></span>";
+                        },
+                        aTargets: [1]
+                    },
                 ],
                 bInfo: false,
                 bLengthChange: false,
                 bPaginate: false,
                 bAutoWidth: true,
                 bScrollCollapse: true,
-                sScrollY: '240px'
+                sScrollY: '240px',
             });
 
             this.$narrativeDataTable.dataTable({
@@ -166,7 +192,13 @@
                     { "sTitle": "Type", bVisible: false },
                 ],
                 aoColumnDefs: [
-                  { 'bSortable': false, 'aTargets': [ 0 ] },
+                    { 'bSortable': false, 'aTargets': [ 0 ] },
+                    {
+                        mRender: function(data, type, row) {
+                            return data + "<span class='glyphicon glyphicon-question-sign kb-function-help' style='margin-top: -3px'></span>";
+                        },
+                        aTargets: [1]
+                    },
                 ],
                 bInfo: false,
                 bLengthChange: false,
@@ -174,7 +206,44 @@
                 bAutoWidth: true,
                 bScrollCollapse: true,
                 sScrollY: '270px'
-           });
+            });
+
+            this.$infoModal = $('<div>')
+                              .addClass('modal fade')
+                              .append($('<div>')
+                                      .addClass('modal-dialog')
+                                      .append($('<div>')
+                                              .addClass('modal-content')
+                                              .append($('<div>')
+                                                      .addClass('modal-header')
+                                                      .append($('<button>')
+                                                              .attr({
+                                                                'type' : 'button',
+                                                                'class' : 'close',
+                                                                'data-dismiss' : 'modal',
+                                                                'aria-hidden' : 'true'
+                                                              })
+                                                              .append('&times;')
+                                                              )
+                                                      .append($('<h3>')
+                                                              .addClass('modal-title'))
+                                                      )
+                                              .append($('<div>')
+                                                      .addClass('modal-body'))
+                                              .append($('<div>')
+                                                      .addClass('modal-footer')
+                                                      .append($('<button>')
+                                                              .attr({
+                                                                'type' : 'button',
+                                                                'class' : 'btn btn-primary',
+                                                                'data-dismiss' : 'modal',
+                                                              })
+                                                              .append('Close'))
+                                                      )
+                                              )
+                                     );
+
+            this.$elem.append(this.$infoModal);
 
             return this;
 
@@ -186,11 +255,8 @@
          */
         createMessages: function() {
             this.$loginMessage = $('<span>')
-                .css({display: 'none'})
                 .text(this.options.notLoggedInMsg);
-            this.$errorMessage = $('<span>')
-                .css({display: 'none'})
-                .text('Sorry, an error occurred');
+            this.$loadingMessage = $('<div style="text-align:center">').append($('<img src="' + this.options.loadingImage + '">'));
             return this;
         },
 
@@ -202,119 +268,6 @@
             this.$loading = $('<img>').attr('src', this.options.loadingImage)
                 .css({display: 'none'})
             this.$tbl.append(this.$loading);
-            return this;
-        },
-
-        /**
-         * Create/populate the table element.
-         *
-         * @returns this
-         */
-        createTable: function() {
-            if (this.table) {
-                this.table.fnDestroy();
-            }
-            var $elem = this.$tbl.find('table');
-
-            //filter out the narrative and workspace meta files
-            var result_data = [];
-            $.each(this.tableData, function( index, obj ) {
-
-                if ((obj[1] != "Narrative") && (obj[1] != "workspace_meta")) {
-                    result_data.push(obj);
-                }
-            });
-            //this.tableData = result_data;
-            this.table = $elem.dataTable( {
-                aaData : result_data,
-                aoColumns : [
-                    /* Name */{
-                      sTitle: 'Name',
-                      bSortable: true,
-                      bSearchable: true
-                              },
-                    /*Type */  {
-                        sTitle: 'Type',
-                        bSortable: true,
-                        bSearchable: true
-                    }, 
-                ],
-                aoColumnDefs: [
-                        {
-                            "bVisible": false, 
-                            "aTargets": [ 1 ] 
-                        },
-                        {                            
-                             mRender: function ( data, type, row ) {
-                                return data + "<span class='kb-function-help'>?</span>";
-                            },
-                            "aTargets": [ 0 ] 
-                        }
-                    ],
-                oSearch: {sSearch: ''},
-                aaSorting: [[0, 'asc'], [1, 'asc']],
-                //bFilter: false,
-                bInfo: false,
-                bLengthChange: false,
-                bPaginate: false,
-                bAutoWidth: true,
-                bScrollCollapse: true,
-                sScrollY: '270px'
-            });
-            var oTable = this.table;
-            /* indices of displayed columns in result array */
-            this.NAME_IDX = 0;
-            this.TYPE_IDX = 1;
-            // Add click handler for rows
-            var self = this;
-            $("#kb-ws .kb-table tbody tr").on("mouseover", function( e ) {
-                if ( $(this).hasClass('row_selected') ) {
-                    $(this).removeClass('row_selected');
-                }
-                else {
-                    $elem.$('tr.row_selected').removeClass('row_selected');
-                    $(this).addClass('row_selected');
-                }
-            });
-            var get_selected = function(tbl) {
-                return tbl.$('tr.row_selected');
-            }
-            $("#kb-ws .kb-table tbody tr").on("click", function( e ) {
-                if ( $(this).hasClass('row_selected') ) {
-                    var aPos = oTable.fnGetPosition( this );
-                    var aData = oTable.fnGetData( aPos );
-                    var type = aData[1];
-
-                    console.log(this);
-                    var row = $(this)[0];
-                    //console.debug("obj",$(this));
-                    var name = row.children[0].textContent;
-                    //var type = row.children[1].textContent;
-                    // populate and show info panel
-                    //self.infoPanel(name, type, function(info) {
-                    //    info.modal();
-                    //});
-                }
-            });
-            $("#kb-ws .kb-table tbody tr span").on("click", function( e ) {
-                //if ( $(this).hasClass('row_selected') ) {
-                    var row = $(this).parent().parent();
-                    var aPos = oTable.fnGetPosition( $(row)[0] );
-                    // Get the data array for this row
-                    var aData = oTable.fnGetData( aPos );
-                    var type = aData[1];
-
-                    //console.debug("obj",$(this));
-                    var name = $(row).children()[0].textContent;
-                    //var type = $(row).children()[1].textContent;
-                    // populate and show info panel
-                    var name2 = name.replace("?","");
-
-                    self.infoPanel(name2, type, function(info) {
-                        info.modal();
-                    });
-                //}
-            });
             return this;
         },
 
@@ -333,39 +286,59 @@
                     workspaces : [this.wsId],
                 }, 
                 $.proxy(function(list) {
-                    console.debug("workspaceDataDeluxe.refresh");
+                    this.loadedData = {};
+                    for (var i=0; i<list.length; i++) {
+                        var type = list[i][2];
+                        if (!this.loadedData[type])
+                            this.loadedData[type] = [];
+                        this.loadedData[type].push(list[i]);
+                    }
+
                     console.debug(list);
                     this.$myDataTable.fnClearTable();
                     this.$myDataTable.fnAddData(list);
+                    this.$myDataTable.find('.kb-function-help').click(
+                        $.proxy(function(event) {
+                            var ws = $(event.target).attr('data-ws');
+                            var id = $(event.target).attr('data-id');
+                            this.showInfoModal(ws, id);
+                        }, 
+                        this)
+                    );
+
                 }, this), 
                 $.proxy(function(error) {
-                    console.debug(error);
+                    this.showError(error);
                 }, this)
             );
+        },
 
-            // this.wsClient.list_workspace_objects({ workspace: this.wsId }, function(list) {              }, function(err) { console.err(error); });
+        showInfoModal: function(workspace, id) {
+            this.$infoModal.find('.modal-title').html(id);
+            this.$infoModal.find('.modal-body').empty().append(this.$loadingMessage);
+            this.$infoModal.modal();
         },
 
         /* Convert object metadata from list to object */
-        _meta2obj: function(m) {
-            var md;
-            if (m[10] != undefined && m[10].length > 0) {
-                eval("md = " + m[10] + ";");
-            }
-            return {
-                'id': m[0], // an object_id
-                'type': m[1], //an object_type
-                'moddate': m[2].replace('T',' '), // a timestamp
-                'instance': m[3], // instance int
-                'command': m[4], // command string
-                'lastmodifier': m[5], // a username string
-                'owner': m[6], // a username string
-                'workspace': m[7], // a workspace_id string
-                'ref': m[8], // a workspace_ref string
-                'chsum': m[9], // a string
-                'metadata': md // an object
-            };
-        },
+        // _meta2obj: function(m) {
+        //     var md;
+        //     if (m[10] != undefined && m[10].length > 0) {
+        //         eval("md = " + m[10] + ";");
+        //     }
+        //     return {
+        //         'id': m[0], // an object_id
+        //         'type': m[1], //an object_type
+        //         'moddate': m[2].replace('T',' '), // a timestamp
+        //         'instance': m[3], // instance int
+        //         'command': m[4], // command string
+        //         'lastmodifier': m[5], // a username string
+        //         'owner': m[6], // a username string
+        //         'workspace': m[7], // a workspace_id string
+        //         'ref': m[8], // a workspace_ref string
+        //         'chsum': m[9], // a string
+        //         'metadata': md // an object
+        //     };
+        // },
 
         infoPanel: function(name, type, callback) {
             console.debug("infoPanel.begin");
@@ -520,164 +493,164 @@
 
         },
 
-        addVisualizationButton: function(data) {
-            var oid = data.id, oinst = data.instance;
-            var $footer = $('#kb-obj .modal-footer');
-            var $btn = $footer.find('button.kb-network');
-            $btn.show();
-            // add new button/binding
-            var self = this;
-            $btn.click(function(e) {
-                // Figure out the viz function for the data type.
-                // If it doesn't exist throw an error/warning and stop here.
-                // Later-- have it autogen/insert some kind of table for unregistered data types.
-                // Or maybe just insert the metadata?
+//         addVisualizationButton: function(data) {
+//             var oid = data.id, oinst = data.instance;
+//             var $footer = $('#kb-obj .modal-footer');
+//             var $btn = $footer.find('button.kb-network');
+//             $btn.show();
+//             // add new button/binding
+//             var self = this;
+//             $btn.click(function(e) {
+//                 // Figure out the viz function for the data type.
+//                 // If it doesn't exist throw an error/warning and stop here.
+//                 // Later-- have it autogen/insert some kind of table for unregistered data types.
+//                 // Or maybe just insert the metadata?
 
-                var type = data.type;
-                type = type.trim().replace(/\s+/g, "_");
+//                 var type = data.type;
+//                 type = type.trim().replace(/\s+/g, "_");
 
-                console.debug('making viz for ' + type);
-                var typeVizFunction = "_add" + type + "Visualization";
-                if (!self[typeVizFunction])
-                    typeVizFunction = "_addDefaultVisualization";
+//                 console.debug('making viz for ' + type);
+//                 var typeVizFunction = "_add" + type + "Visualization";
+//                 if (!self[typeVizFunction])
+//                     typeVizFunction = "_addDefaultVisualization";
 
-//                console.debug("creating vis. for object: " + oid + "." + oinst);
-                var cell = IPython.notebook.insert_cell_at_bottom('markdown');
-                // put div inside cell with an addr
-                var eid = self._uuidgen();
-                var content = "<div id='" + eid + "'></div>";
-                cell.set_text(content);
-                // re-render cell to make <div> appear
-                cell.rendered = false;
-                cell.render();
-                // slap network into div by addr
-                var $target = $('#' + eid);
-                $target.css({'margin': '-10px'});
+// //                console.debug("creating vis. for object: " + oid + "." + oinst);
+//                 var cell = IPython.notebook.insert_cell_at_bottom('markdown');
+//                 // put div inside cell with an addr
+//                 var eid = self._uuidgen();
+//                 var content = "<div id='" + eid + "'></div>";
+//                 cell.set_text(content);
+//                 // re-render cell to make <div> appear
+//                 cell.rendered = false;
+//                 cell.render();
+//                 // slap network into div by addr
+//                 var $target = $('#' + eid);
+//                 $target.css({'margin': '-10px'});
 
-                self[typeVizFunction](data, $target);
+//                 self[typeVizFunction](data, $target);
 
-                // $target.ForceDirectedNetwork({
-                //     workspaceID: self.ws_id + "." + oid + "#" + oinst,
-                //     token: self.ws_auth,
-                // });
-            });
-        },
+//                 // $target.ForceDirectedNetwork({
+//                 //     workspaceID: self.ws_id + "." + oid + "#" + oinst,
+//                 //     token: self.ws_auth,
+//                 // });
+//             });
+//         },
 
-        _addNetworksVisualization: function(data, $target) {
-            var oid = data.id;
-            var oinst = data.instance;
-            // var workspaceID = self.ws_id + "." + oid + "#" + oinst;
-            // var token = self.ws_auth;
-            $target.ForceDirectedNetwork({
-                workspaceID: this.ws_id + "." + oid + "#" + oinst,
-                token: this.ws_auth,
-            });
-
-        },
-
-        _addGenomeVisualization: function(data, $target) {
-            var tableRow = function(a, b) {
-                return $("<tr>")
-                       .append("<td>" + a + "</td>")
-                       .append("<td>" + b + "</td>");
-            };
-
-            var calcGC = function(gc, total) {
-                if (gc > 1)
-                    gc = gc/total;
-                return (100*gc).toFixed(2);
-            };
-
-            var $metaTable = $("<table>")
-                             .addClass("table table-striped table-bordered")
-                             .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
-                             .append(tableRow("<b>ID</b>", "<b>" + data.id + "</b>"))
-                             .append(tableRow("Scientific Name", data.metadata.scientific_name))
-                             .append(tableRow("Size", data.metadata.size + " bp"))
-                             .append(tableRow("GC Content", calcGC(data.metadata.gc, data.metadata.size) + "%"))
-                             .append(tableRow("Number Features", data.metadata.number_features))
-                             .append(tableRow("Workspace", data.workspace));
-
-            $target.append("<h3>Genome</h3>")
-                   .append($metaTable);
-        },
-
-        _addMediaVisualization: function(data, $target) {
-            $target.kbaseMediaEditorNarrative({
-                ws: this.ws_id,
-                auth: this.ws_auth,
-                id: data.id,
-            });
-        },
-
-        _addModelVisualization: function(data, $target) {
-            var loading = $("<div>")
-                          .addClass("loading")
-                          .append("<img src='" + this.options.loadingImage + "' />Loading...");
-            $target.append(loading);
-
-            var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
-            var modelAJAX = fba.get_models_async(
-                {
-                    models: [data.id], 
-                    workspaces: [this.ws_id], 
-                    auth: this.ws_auth
-                },
-                function(data) {
-                    $target.find(".loading").remove();
-                    $target.kbaseModelTabs({ modelsData: data });
-                });
-        },
-
-        _addFBAVisualization: function(data, $target) {
-            var loading = $("<div>")
-                          .addClass("loading")
-                          .append("<img src='" + this.options.loadingImage + "' />Loading...");
-            $target.append(loading);
-
-            var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
-            var modelAJAX = fba.get_fbas_async(
-                {
-                    fbas: [data.id], 
-                    workspaces: [this.ws_id], 
-                    auth: this.ws_auth
-                },
-                function(data) {
-                    $target.find(".loading").remove();
-                    $target.kbaseFbaTabsNarrative({ fbaData: data });
-                });
-        },
-
-        // _addContigSetVisualization: function(data, $target) {
+        // _addNetworksVisualization: function(data, $target) {
+        //     var oid = data.id;
+        //     var oinst = data.instance;
+        //     // var workspaceID = self.ws_id + "." + oid + "#" + oinst;
+        //     // var token = self.ws_auth;
+        //     $target.ForceDirectedNetwork({
+        //         workspaceID: this.ws_id + "." + oid + "#" + oinst,
+        //         token: this.ws_auth,
+        //     });
 
         // },
 
-        // Just adds a simple table with ID, datatype, owner, and ws location for now.
-        // Maybe something fancier later.
-        _addDefaultVisualization: function(data, $target) {
-            var $metaTable = $("<table>")
-                             .addClass("table table-striped table-bordered")
-                             .css({"margin-left" : "auto", "margin-right" : "auto"});
+        // _addGenomeVisualization: function(data, $target) {
+        //     var tableRow = function(a, b) {
+        //         return $("<tr>")
+        //                .append("<td>" + a + "</td>")
+        //                .append("<td>" + b + "</td>");
+        //     };
 
-            var makeRow = function(a, b) {
-                var row = $("<tr>")
-                          .append("<td>" + a + "</td>")
-                          .append("<td>" + b + "</td>");
+        //     var calcGC = function(gc, total) {
+        //         if (gc > 1)
+        //             gc = gc/total;
+        //         return (100*gc).toFixed(2);
+        //     };
 
-                return row;
-            };
+        //     var $metaTable = $("<table>")
+        //                      .addClass("table table-striped table-bordered")
+        //                      .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
+        //                      .append(tableRow("<b>ID</b>", "<b>" + data.id + "</b>"))
+        //                      .append(tableRow("Scientific Name", data.metadata.scientific_name))
+        //                      .append(tableRow("Size", data.metadata.size + " bp"))
+        //                      .append(tableRow("GC Content", calcGC(data.metadata.gc, data.metadata.size) + "%"))
+        //                      .append(tableRow("Number Features", data.metadata.number_features))
+        //                      .append(tableRow("Workspace", data.workspace));
 
-            console.log(data);
+        //     $target.append("<h3>Genome</h3>")
+        //            .append($metaTable);
+        // },
 
-            $metaTable.append(makeRow("ID", data.id))
-                      .append(makeRow("Type", data.type))
-                      .append(makeRow("Owner", data.owner))
-                      .append(makeRow("Workspace", data.workspace));
+        // _addMediaVisualization: function(data, $target) {
+        //     $target.kbaseMediaEditorNarrative({
+        //         ws: this.ws_id,
+        //         auth: this.ws_auth,
+        //         id: data.id,
+        //     });
+        // },
 
-            $target.append("<h3>Data Object</h3>(No visualization available)")
-                   .append($metaTable);
+        // _addModelVisualization: function(data, $target) {
+        //     var loading = $("<div>")
+        //                   .addClass("loading")
+        //                   .append("<img src='" + this.options.loadingImage + "' />Loading...");
+        //     $target.append(loading);
 
-        },
+        //     var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
+        //     var modelAJAX = fba.get_models_async(
+        //         {
+        //             models: [data.id], 
+        //             workspaces: [this.ws_id], 
+        //             auth: this.ws_auth
+        //         },
+        //         function(data) {
+        //             $target.find(".loading").remove();
+        //             $target.kbaseModelTabs({ modelsData: data });
+        //         });
+        // },
+
+        // _addFBAVisualization: function(data, $target) {
+        //     var loading = $("<div>")
+        //                   .addClass("loading")
+        //                   .append("<img src='" + this.options.loadingImage + "' />Loading...");
+        //     $target.append(loading);
+
+        //     var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
+        //     var modelAJAX = fba.get_fbas_async(
+        //         {
+        //             fbas: [data.id], 
+        //             workspaces: [this.ws_id], 
+        //             auth: this.ws_auth
+        //         },
+        //         function(data) {
+        //             $target.find(".loading").remove();
+        //             $target.kbaseFbaTabsNarrative({ fbaData: data });
+        //         });
+        // },
+
+        // // _addContigSetVisualization: function(data, $target) {
+
+        // // },
+
+        // // Just adds a simple table with ID, datatype, owner, and ws location for now.
+        // // Maybe something fancier later.
+        // _addDefaultVisualization: function(data, $target) {
+        //     var $metaTable = $("<table>")
+        //                      .addClass("table table-striped table-bordered")
+        //                      .css({"margin-left" : "auto", "margin-right" : "auto"});
+
+        //     var makeRow = function(a, b) {
+        //         var row = $("<tr>")
+        //                   .append("<td>" + a + "</td>")
+        //                   .append("<td>" + b + "</td>");
+
+        //         return row;
+        //     };
+
+        //     console.log(data);
+
+        //     $metaTable.append(makeRow("ID", data.id))
+        //               .append(makeRow("Type", data.type))
+        //               .append(makeRow("Owner", data.owner))
+        //               .append(makeRow("Workspace", data.workspace));
+
+        //     $target.append("<h3>Data Object</h3>(No visualization available)")
+        //            .append($metaTable);
+
+        // },
 
         _uuidgen: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -697,26 +670,25 @@
                 this.clearTable();
                 this.$loginMessage.show();
             }
-            else {
-                this.$loading.show();
-                var that = this;
+//             else {
+// //                this.$loading.show();
+//                 var that = this;
 
-                this.setWs(function() {
-                    var opts = {workspace: that.ws_id, auth: that.ws_auth};
-                    that.ws_client.list_workspace_objects(opts,
-                        function(results) {
-                            that.updateResults(results);
-                            that.createTable();
-                        },
-                        function(err) {
-                            console.error("getting objects for workspace " + that.ws_id, err);
-                            that.$loading.hide();
-                            that.$errorMessage.show();
-                        }
-                    )
-                    that.$loading.hide();
-                });
-            }
+//                 this.setWs(function() {
+//                     var opts = {workspace: that.ws_id, auth: that.ws_auth};
+//                     that.ws_client.list_workspace_objects(opts,
+//                         function(results) {
+//                             that.updateResults(results);
+//                             that.createTable();
+//                         },
+//                         function(err) {
+//                             that.$loading.hide();
+//                             that.$errorMessage.show();
+//                         }
+//                     )
+// //                    that.$loading.hide();
+//                 });
+//             }
             return this;
         },
 
@@ -844,42 +816,42 @@
          * @param results The new data
          * @returns this
          */
-        updateResults: function(results) {
-            /* Store the current set of loaded metadata as:
-             * { 
-             *    type1 : [ [metadata1], [metadata2], [metadata3], ... ],
-             *    type2 : [ [metadata4], [metadata5], [metadata6], ... ]
-             * }
-             */
-            this.loadedData = {};
-            for (var i=0; i<results.length; i++) {
-                var type = results[i][1];
-                if (!this.loadedData[type])
-                    this.loadedData[type] = [];
-                this.loadedData[type].push(results[i]);
-            }
-//            console.log(this.loadedData);
+//         updateResults: function(results) {
+//             /* Store the current set of loaded metadata as:
+//              * { 
+//              *    type1 : [ [metadata1], [metadata2], [metadata3], ... ],
+//              *    type2 : [ [metadata4], [metadata5], [metadata6], ... ]
+//              * }
+//              */
+//             this.loadedData = {};
+//             for (var i=0; i<results.length; i++) {
+//                 var type = results[i][1];
+//                 if (!this.loadedData[type])
+//                     this.loadedData[type] = [];
+//                 this.loadedData[type].push(results[i]);
+//             }
+// //            console.log(this.loadedData);
 
-            var mdstring = '';
-            $.each(IPython.notebook.metadata, function(key, val) {
-                mdstring = mdstring + key + "=" + val + "\n";
-            });
-//            console.log('notebook metadata = ' + mdstring);
-            // just columns shown
-            this.tableData = [ ];
-            // all data from table, keyed by object name + type
-            this.table_meta = { }; // *all* data from table
-            this.table_meta_versions = {}; /* all versions of selected objects, empty for now */
-            // Extract selected columns from full result set
-            var i1 = this.NAME_IDX, i2 = this.TYPE_IDX;
-            for (var i=0; i < results.length; i++) {
-                var name = results[i][i1], type = results[i][i2];
-                this.tableData.push([name, type]);
-                this.table_meta[this._item_key(name, type)] = results[i];
-            }
+//             var mdstring = '';
+//             $.each(IPython.notebook.metadata, function(key, val) {
+//                 mdstring = mdstring + key + "=" + val + "\n";
+//             });
+// //            console.log('notebook metadata = ' + mdstring);
+//             // just columns shown
+//             this.tableData = [ ];
+//             // all data from table, keyed by object name + type
+//             this.table_meta = { }; // *all* data from table
+//             this.table_meta_versions = {}; /* all versions of selected objects, empty for now */
+//             // Extract selected columns from full result set
+//             var i1 = this.NAME_IDX, i2 = this.TYPE_IDX;
+//             for (var i=0; i < results.length; i++) {
+//                 var name = results[i][i1], type = results[i][i2];
+//                 this.tableData.push([name, type]);
+//                 this.table_meta[this._item_key(name, type)] = results[i];
+//             }
 
-            this.trigger('dataUpdated.Narrative');
-        },
+//             this.trigger('dataUpdated.Narrative');
+//         },
 
         /**
          * Get key for one row in the object table.
@@ -889,10 +861,10 @@
          * @return (string) key
          * @private
          */
-        _item_key: function(name, type) {
+        // _item_key: function(name, type) {
 
-            return name + '/' + type;
-        },
+        //     return name + '/' + type;
+        // },
 
         clearTable: function() {
             if (this.table) {
@@ -903,10 +875,52 @@
         },
 
         hideMessages: function() {
-            this.$errorMessage.hide();
-            this.$loginMessage.hide();
-        }
+            // this.$errorMessage.hide();
+            // this.$loginMessage.hide();
+        },
 
+        /**
+         * Shows an error text message on top of the panel. All other pieces are hidden.
+         * @param {string} error - the text of the error message
+         * @private
+         */
+        showError: function(error) {
+            var $errorHeader = $('<div>')
+                               .addClass('alert alert-danger')
+                               .append('<b>Sorry, an error occurred while loading data.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20data%20loading%20error">help@kbase.us</a> with the information below.');
+
+            this.$errorPanel.empty();
+            this.$errorPanel.append($errorHeader);
+
+            // If it's a string, just dump the string.
+            if (typeof error === 'string') {
+                this.$errorPanel.append($('<div>').append(error));
+            }
+
+            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            else if (typeof error === 'object') {
+                var $details = $('<div>');
+                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
+                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
+
+                var $tracebackDiv = $('<div>')
+                                 .addClass('kb-function-error-traceback');
+                for (var i=0; i<error.traceback.length; i++) {
+                    $tracebackDiv.append(error.traceback[i] + "<br>");
+                }
+
+                var $tracebackPanel = $('<div>');
+                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
+
+                this.$errorPanel.append($details)
+                                .append($tracebackPanel);
+                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+            }
+
+            this.$functionPanel.hide();
+            this.$loadingPanel.hide();
+            this.$errorPanel.show();
+        },
     });
 
 })( jQuery );

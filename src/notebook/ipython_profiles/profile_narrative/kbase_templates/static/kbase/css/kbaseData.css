@@ -89,53 +89,63 @@ For data in KBase workspace
 /* end: Refresh button */
 
 /* Data table */
-.kb-table {
+.kb-data-table {
     /*width: 100%;*/
 /*    height: 100%;
 */
     height: 270px;
 }
 
-.kb-table table th {
+.kb-data-table table th {
     background-color: white;
     border: 1px solid gainsboro;
 }
 
-#kb-ws .kb-table table thead th td:first-child {
+#kb-ws .kb-data-table table thead th td:first-child {
     max-width: 80%;
 }
 
-.kb-table tbody tr {
+.kb-data-table tbody tr {
     border-bottom: 1px solid gainsboro;
 }
 
-.kb-table tbody tr td {
+.kb-data-table tbody tr td {
     max-height: 16px;
     padding: 5px;
     font-size: 1em;
 
 }
 
-.kb-table table tr:nth-child(odd) {
+.kb-data-table table tr:nth-child(odd) {
     background-color: #F7F7F7;
 }
 
-.kb-table table tr td:first-child {
+.kb-data-table table tr td:first-child {
     max-width: 80%;
     overflow-x: hidden;
 }
 
-/* row-selected */
-/* shade entire row */
-.kb-table table tr.row_selected {
-    background-color: #F4F5D6; /* more yellow: #FFEE66 */
-}
-/* underline name of object */
-#kb-ws .kb-table tr.row_selected td.sorting_1 {
-    text-decoration: underline;
+.kb-data-table tbody tr:hover, .kb-data-table tbody tr td.highlighted {
+    background-color: #F4F5D6;
     cursor: pointer;
 }
 
+/*.kb-data-table tbody tr.odd:hover, .kb-data-table tbody tr td.highlighted {
+    background-color: #F4F5D6;
+    cursor: pointer;
+}
+*/
+/* row-selected */
+/* shade entire row */
+/*.kb-table table tr.row_selected {
+    background-color: #F4F5D6; 
+}
+*//* underline name of object */
+/*#kb-ws .kb-table tr.row_selected td.sorting_1 {
+    text-decoration: underline;
+    cursor: pointer;
+}
+*/
 #kb-ws .dataTables_filter { display: none; }
 
 .sorting { background: url('../images/sort_both.png') no-repeat center right; }

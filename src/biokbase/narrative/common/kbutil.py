@@ -8,7 +8,8 @@ import json
 import requests
 import time
 
-from biokbase.workspaceService.Client import workspaceService as WS
+#from biokbase.workspaceService.Client import workspaceService as WS
+from biokbase.workspaceServiceDeluxe.Client import Workspace as WS
 
 
 class AweTimeoutError(Exception):

@@ -36,7 +36,7 @@
             table: null
         },
 
-        wsUrl: "http://kbase.us/services/workspace/",
+        wsUrl: "http://140.221.84.209:7058/",
 
         init: function(options) {
             console.debug("GeneTableWidget.init.start", options);

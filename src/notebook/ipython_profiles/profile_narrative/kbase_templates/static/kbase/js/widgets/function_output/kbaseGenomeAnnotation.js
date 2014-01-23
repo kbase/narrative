@@ -31,8 +31,8 @@ var timer = null;
             var self = this;
         	var pref = (new Date()).getTime();
 
-            //var wsUrl = 'http://140.221.84.170:7058/';								// WS2
-            var wsUrl = "http://kbase.us/services/workspace/";
+            var wsUrl = 'http://140.221.84.170:7058/';								// WS2
+            //var wsUrl = "http://kbase.us/services/workspace/";
             var container = this.$elem;
 
             //var kbws = new Workspace(wsUrl);											// WS2

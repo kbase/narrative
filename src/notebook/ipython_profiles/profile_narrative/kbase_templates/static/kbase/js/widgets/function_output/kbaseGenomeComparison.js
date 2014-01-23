@@ -10,7 +10,7 @@ $.KBWidget({
     	ws_id: null
     },
 
-    wsUrl: "http://kbase.us/services/workspace/",
+    wsUrl: "http://140.221.84.209:7058/",
     jobSrvUrl: "http://140.221.84.180:7083/",
     cmpImgUrl: "http://140.221.85.98:8284/image",
     timer: null,

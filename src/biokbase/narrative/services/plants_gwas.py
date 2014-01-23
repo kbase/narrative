@@ -129,7 +129,7 @@ class URLS:
     shock = "http://140.221.84.236:8000"
     awe = "http://140.221.85.171:7080"
     expression = "http://{}:7075".format(_host)
-    workspace = "http://kbase.us/services/workspace"
+    workspace = "http://140.221.84.209:7058/"
     ids = "http://kbase.us/services/idserver"
     cdmi = "http://kbase.us/services/cdmi_api"
     ontology = "http://kbase.us/services/ontology_service"

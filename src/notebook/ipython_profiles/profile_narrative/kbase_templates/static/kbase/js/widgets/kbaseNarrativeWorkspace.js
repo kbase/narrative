@@ -28,7 +28,8 @@
             workspaceURL: "https://www.kbase.us/services/workspace",
             loadingImage: "../images/ajax-loader.gif",
             tableElem: null,
-            controlsElem: null
+            controlsElem: null,
+            ws_id: null,
         },
         ws_client: null,
         ws_id: null,
@@ -52,6 +53,8 @@
             this._super(options);
 
             var self = this;
+
+            this.ws_id = this.options.ws_id;
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
 
@@ -795,6 +798,8 @@
 
             var paramList = params.map(function(p) { return "'" + p + "'"; });
             cmd += "method(" + paramList + ")";
+
+            console.debug(cmd);
             return cmd;
         },
 

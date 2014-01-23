@@ -31,7 +31,6 @@
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "http://140.221.84.209:7058", // "http://kbase.us/services/ws",
             container: null,
-            ws_id: null
         },
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
@@ -53,8 +52,6 @@
                 this)
             );
 
-            console.log('set up dataLoadedQuery.Narrative response');
-
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
                     this.refresh();
@@ -74,6 +71,8 @@
             this.createStructure()
                 .createMessages()
                 .render();
+
+            this.trigger('workspaceUpdated.Narrative', this.wsId);
 
             return this;
         },
@@ -123,7 +122,6 @@
                                .addClass('kb-error')
                                .hide();
             this.$elem.append(this.$errorPanel);
-
 
             // Contains all of a user's data
             // XXX: Initially just data from the current workspace.
@@ -381,14 +379,11 @@
                 'name' : id, 
             };
 
+            // Fetch the workspace object.
             this.wsClient.get_object_info([obj], 1, 
                 $.proxy(function(info) {
-                    console.debug(info);
 
-    // typedef tuple<obj_id objid, obj_name name, type_string type,
-    //     timestamp save_date, int version, username saved_by,
-    //     ws_id wsid, ws_name workspace, string chsum, int size, usermeta meta>
-    //     object_info;
+                    // Simple properties panel for the object.
                     var $propPanel = $('<div>')
                                      .append($('<table>')
                                              .addClass('table table-bordered table-striped')
@@ -404,9 +399,7 @@
                                              .append(addRow('Size (B)', info[0][9]))
                                             );
 
-//                    this.$infoModal.find('.modal-body').empty().append($propPanel);
-
-                    // get the metadata field
+                    // Parse the user metadata field.
                     var s = info[0][10];
                     if (typeof s != 'string') {
                         s = JSON.stringify(s, undefined, 2);
@@ -431,51 +424,102 @@
                     }
                     var $metadataPanel = $('<div>').append(($('<pre>').append(s)));
 
-//                    this.$infoModal.find('.modal-body').append($metadataPanel);
+                    // fetch the typespec.
+                    this.wsClient.get_type_info(info[0][2], 
+                        $.proxy(function(type) {
+                            var s = type;
+                            if (typeof s != 'string') {
+                                s = JSON.stringify(s, undefined, 2);
+                                s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+                                    function (match) {
+                                        var cls = 'number';
+                                        if (/^"/.test(match)) {
+                                            if (/:$/.test(match)) {
+                                                cls = 'key';
+                                            } else {
+                                                cls = 'string';
+                                            }
+                                        } else if (/true|false/.test(match)) {
+                                            cls = 'boolean';
+                                        } else if (/null/.test(match)) {
+                                            cls = 'null';
+                                        }
+                                        return '<span class="' + cls + '">' + match + '</span>';
+                                    }
+                                );
+                            }
+                            var $typePanel = $('<div>')
+                                             .append($('<pre>')
+                                                     .append(s)
+                                                     .css({'overflow-y' : 'scroll', 'max-height' : '350px'})
 
-                    var $infoAccordion = $('<div>');
-                    this.$infoModal.find('.modal-body').empty().append($infoAccordion);
-                    $infoAccordion.kbaseAccordion({ elements: [{'title' : 'Properties', 'body' : $propPanel}, {'title' : 'Metadata', 'body' : $metadataPanel}]});
+                                                );
+                            var $infoAccordion = $('<div>');
+                            this.$infoModal.find('.modal-body').empty().append($infoAccordion);
+                            $infoAccordion.kbaseAccordion(
+                                { 
+                                    elements: 
+                                    [
+                                        { 'title' : 'Properties', 'body' : $propPanel }, 
+                                        { 'title' : 'Metadata', 'body' : $metadataPanel },
+                                        { 'title' : 'Type Info', 'body' : $typePanel }
+                                    ]
+                                }
+                            );
+                        }, this),
+
+                        $.proxy(function(error) {
+                            console.debug(error);
+                        }, this)
+                    );
 
                 }, this),
 
                 $.proxy(function(error) {
-                    var $errorPanel = $('<div>');
-                    var $errorHeader = $('<div>')
-                                       .addClass('alert alert-danger')
-                                       .append('<b>Sorry, an error occurred while loading object data.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20data%20loading%20error">help@kbase.us</a> with the information below.');
-
-                    $errorPanel.append($errorHeader);
-
-                    // If it's a string, just dump the string.
-                    if (typeof error === 'string') {
-                        $errorPanel.append($('<div>').append(error));
-                    }
-
-                    // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
-                    else if (typeof error === 'object') {
-                        var $details = $('<div>');
-                        $details.append($('<div>').append('<b>Code:</b> ' + error.error.code))
-                                .append($('<div>').append('<b>Message:</b> ' + error.error.message));
-
-                        var $tracebackDiv = $('<div>')
-                                         .addClass('kb-function-error-traceback')
-                                         .append(error.error.error);
-                        // for (var i=0; i<error.traceback.length; i++) {
-                        //     $tracebackDiv.append(error.traceback[i] + "<br>");
-                        // }
-
-                        var $tracebackPanel = $('<div>');
-                        var tracebackAccordion = [{'title' : 'Details', 'body' : $tracebackDiv}];
-
-                        $errorPanel.append($details);
-                        //                 .append($tracebackPanel);
-                        // $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
-                    }
-
-                    this.$infoModal.find('.modal-body').empty().append($errorPanel);                
+                    this.$infoModal.find('.modal-body').empty().append(this.buildWorkspaceErrorPanel(error));
                 }, this)
             );
+        },
+
+        /**
+         * Returns a jQuery object containing information about the given error that's been passed from the workspace.
+         */
+        buildWorkspaceErrorPanel: function(error) {
+            var $errorPanel = $('<div>');
+            var $errorHeader = $('<div>')
+                               .addClass('alert alert-danger')
+                               .append('<b>Sorry, an error occurred while loading object data.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20data%20loading%20error">help@kbase.us</a> with the information below.');
+
+            $errorPanel.append($errorHeader);
+
+            // If it's a string, just dump the string.
+            if (typeof error === 'string') {
+                $errorPanel.append($('<div>').append(error));
+            }
+
+            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            else if (typeof error === 'object') {
+                var $details = $('<div>');
+                $details.append($('<div>').append('<b>Code:</b> ' + error.error.code))
+                        .append($('<div>').append('<b>Message:</b> ' + error.error.message));
+
+                var $tracebackDiv = $('<div>')
+                                 .addClass('kb-function-error-traceback')
+                                 .append(error.error.error);
+                // for (var i=0; i<error.traceback.length; i++) {
+                //     $tracebackDiv.append(error.traceback[i] + "<br>");
+                // }
+
+                var $tracebackPanel = $('<div>');
+                var tracebackAccordion = [{'title' : 'Details', 'body' : $tracebackDiv}];
+
+                $errorPanel.append($details);
+                //                 .append($tracebackPanel);
+                // $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+            }
+
+            return $errorPanel;
         },
 
         /* Convert object metadata from list to object */

@@ -60,6 +60,7 @@
                 // XXX: Should be renamed.... eventually?
                 narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
                     loadingImage: "/static/kbase/images/ajax-loader.gif",
+                    ws_id: IPython.notebook.metadata.ws_name
                 });
             }
             if (token)

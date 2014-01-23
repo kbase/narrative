@@ -82,6 +82,15 @@
                 this)
             );
 
+            $(document).on('narrativeDataQuery.Narrative', $.proxy(function(e, params, callback) {
+                    var objList = this.getCurrentNarrativeData();
+                    if (callback) {
+                        callback(objList);
+                    }
+                },
+                this)
+            );
+
             // When a user clicks on a function, this event gets fired with
             // method information. This builds a function cell out of that method
             // and inserts it in the right place.
@@ -109,7 +118,7 @@
             }
 
             // **DEPRECATED** Initializes controls.
-            this.initFuncs();
+            //this.initFuncs();
 
             this.render();
             return this;
@@ -123,53 +132,53 @@
          */
         initControls: function(elem) {
 //            this.dbg('initControls.begin');
-            var $search = $('<div>').addClass('kb-search')
-            var $search_inp = $('<input>').attr('type', 'text');
-            $search.append($search_inp);
-            $search.append($('<i>').addClass('icon-search'));
-            elem.append($search);
-            // populate the dropdown
-            var $dd_menu = $('<div>').addClass('dropdown').attr({id:'kb-ws-upload-pulldown'});
-            var $dd_toggle = $('<a>').addClass("dropdown-toggle").attr({'data-toggle':'dropdown',
-                            href: '#', id: 'kb-ws-add-data'}).text('+ Add');
-            $dd_menu.append($dd_toggle);
-            var ul = $('<ul>').addClass('dropdown-menu').attr({role: 'menu', 'aria-labelledby': 'dLabel'});
-            ul.append($('<li>').addClass('nav-header').text('Add data from..'));
-            ul.append($('<li>').addClass('divider'));
-            var dd_items = { // key: [label, element_id]
-                'upload': {label:'Local file', id: 'kb-ws-upload-local'},
-                'cds': {label:'Central Data Store', id:'kb-ws-upload-cds'}
-            }
-            $.each(dd_items, function(key, info) {
-                var item = $('<li>');
-                item.append($('<a>').attr({'href': '#', 'id': info.id}).text(info.label));
-                ul.append(item);
-            })
-            $dd_menu.append(ul);
-            // add to element
-            elem.append($dd_menu);
-            // activate the dropdown
-            $dd_toggle.dropdown();
-            // bind the upload action
-            var $dlg = $('#kb-ws-upload-dialog');
-            var opts = {$anchor: $('#' + dd_items.upload.id),
-                        ws_parent: this};
-            this.uploadWidget_dlg = $dlg //$dlg.kbaseUploadWidget;
-            this.uploadWidget_opts = opts;
-            // Add a 'refresh' button, bound to this widget's render() function
-            var $refresh = $('<button>')
-                .addClass('btn btn-default btn-sm')
-                .attr({'type': 'button', 'id': 'kb-ws-refresh'});
-                //.text("Refresh");
-            $refresh.append($('<span>').addClass("glyphicon glyphicon-refresh"));
-            elem.append($refresh);
-            var self = this;
-            elem.on('click', function(e) {
-                // this.dbg("refresh.begin");
-                self.render();
-                // this.dbg("refresh.end");
-            });
-            // done
+            // var $search = $('<div>').addClass('kb-search')
+            // var $search_inp = $('<input>').attr('type', 'text');
+            // $search.append($search_inp);
+            // $search.append($('<i>').addClass('icon-search'));
+            // elem.append($search);
+            // // populate the dropdown
+            // var $dd_menu = $('<div>').addClass('dropdown').attr({id:'kb-ws-upload-pulldown'});
+            // var $dd_toggle = $('<a>').addClass("dropdown-toggle").attr({'data-toggle':'dropdown',
+            //                 href: '#', id: 'kb-ws-add-data'}).text('+ Add');
+            // $dd_menu.append($dd_toggle);
+            // var ul = $('<ul>').addClass('dropdown-menu').attr({role: 'menu', 'aria-labelledby': 'dLabel'});
+            // ul.append($('<li>').addClass('nav-header').text('Add data from..'));
+            // ul.append($('<li>').addClass('divider'));
+            // var dd_items = { // key: [label, element_id]
+            //     'upload': {label:'Local file', id: 'kb-ws-upload-local'},
+            //     'cds': {label:'Central Data Store', id:'kb-ws-upload-cds'}
+            // }
+            // $.each(dd_items, function(key, info) {
+            //     var item = $('<li>');
+            //     item.append($('<a>').attr({'href': '#', 'id': info.id}).text(info.label));
+            //     ul.append(item);
+            // })
+            // $dd_menu.append(ul);
+            // // add to element
+            // elem.append($dd_menu);
+            // // activate the dropdown
+            // $dd_toggle.dropdown();
+            // // bind the upload action
+            // var $dlg = $('#kb-ws-upload-dialog');
+            // var opts = {$anchor: $('#' + dd_items.upload.id),
+            //             ws_parent: this};
+            // this.uploadWidget_dlg = $dlg //$dlg.kbaseUploadWidget;
+            // this.uploadWidget_opts = opts;
+            // // Add a 'refresh' button, bound to this widget's render() function
+            // var $refresh = $('<button>')
+            //     .addClass('btn btn-default btn-sm')
+            //     .attr({'type': 'button', 'id': 'kb-ws-refresh'});
+            //     //.text("Refresh");
+            // $refresh.append($('<span>').addClass("glyphicon glyphicon-refresh"));
+            // elem.append($refresh);
+            // var self = this;
+            // elem.on('click', function(e) {
+            //     // this.dbg("refresh.begin");
+            //     self.render();
+            //     // this.dbg("refresh.end");
+            // });
+            // // done
 
             return this;
         },
@@ -1183,7 +1192,7 @@
             //this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
             this.workspace("id", this.ws_id); // add to global accessor
             // create/refresh the upload dialog, which needs login to populate types
-            this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
+//            this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
             //this.uploadWidget.createDialog(); -- redundant
             this.render();
         },

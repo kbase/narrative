@@ -55,15 +55,11 @@
          */
         $([IPython.events]).on('status_idle.Kernel', function() {
             if (narr_ws == null) {
-                // $('#kb-ws').find('.kb-table').kbaseWorkspaceData({container: $('#kb-ws').find('.kb-table')});
                 $('#kb-ws').kbaseWorkspaceDataDeluxe({ wsId: IPython.notebook.metadata.ws_name });
-                var $ws = $('#kb-ws');
+
                 // XXX: Should be renamed.... eventually?
-                narr_ws = $ws
-                    .kbaseNarrativeWorkspace({
-                      loadingImage: "/static/kbase/images/ajax-loader.gif",
-                      controlsElem: $ws.find('.kb-controls'),
-                      tableElem: $ws.find('.kb-table')
+                narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
+                    loadingImage: "/static/kbase/images/ajax-loader.gif",
                 });
             }
             if (token)

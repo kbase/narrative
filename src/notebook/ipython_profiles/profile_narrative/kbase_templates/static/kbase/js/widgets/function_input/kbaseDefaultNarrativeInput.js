@@ -27,16 +27,20 @@
          */
         render: function() {
 
+            console.log('rendering input widget');
             // figure out all types from the method
             var method = this.options.method;
             
             var params = method.properties.parameters;
+
             var lookupTypes = [];
             for (var p in params) {
                 lookupTypes.push(params[p].type);
             }
             this.trigger('dataLoadedQuery.Narrative', [lookupTypes, $.proxy(
                 function(objects) {
+                    console.log('fetched data from panel');
+                    console.log(objects);
 
                     var inputDiv = "<div class='kb-cell-params'><table class='table'>";
                     for (var i=0; i<Object.keys(params).length; i++) {

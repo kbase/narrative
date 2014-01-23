@@ -130,6 +130,16 @@ For data in KBase workspace
     cursor: pointer;
 }
 
+.kb-data-loading {
+    height: 100%
+    vertical-align: middle;
+    text-align: center
+}
+
+.kb-data-loading img {
+    vertical-align: middle;
+}
+
 /*.kb-data-table tbody tr.odd:hover, .kb-data-table tbody tr td.highlighted {
     background-color: #F4F5D6;
     cursor: pointer;

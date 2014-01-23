@@ -32,32 +32,32 @@ var timer = null;
         	var pref = (new Date()).getTime();
 
             var wsUrl = 'http://140.221.84.209:7058/';								// WS2
-            //var wsUrl = "http://kbase.us/services/workspace/";
+            //var wsUrl = "http://kbase.us/services/workspace/";	//old ws
             var container = this.$elem;
 
-            //var kbws = new Workspace(wsUrl);											// WS2
-            var kbws = new Workspace(wsUrl);
+            var kbws = new Workspace(wsUrl);											// WS2
+            //var kbws = new workspaceService(wsUrl);	//old ws
             
             var ready = function() {
             
-            //var request = [{workspace: options.ws_name, objid: options.ws_id}];		// WS2
-            var request = {auth: options.token, workspace: options.ws_name, id: options.ws_id, type: 'Genome'};
-            //kbws.get_objects(request, function(data) {								// WS2
-            kbws.get_object(request, function(data) {
+            var request = [{ref: options.ws_name +"/"+ options.ws_id}];		// WS2
+            //var request = {auth: options.token, workspace: options.ws_name, id: options.ws_id, type: 'Genome'};  //old ws
+            kbws.get_objects(request, function(data) {								// WS2
+            //kbws.get_object(request, function(data) {		//old ws
             	$('.loader-table').remove();
-            	//var type = data[0].info[2];											// WS2
-            	var type = data.metadata[1];
+            	var type = data[0].info[2];											// WS2
+            	//var type = data.metadata[1];		//old ws
                 if (type.indexOf('-') >= 0) {
                 	type = type.substring(0, type.indexOf('-'));
                 }
-                //var reqType = 'KBGA.Genome';											// WS2
-                var reqType = 'Genome';
+                var reqType = 'KBaseGenomes.Genome';											// WS2
+                //var reqType = 'Genome';		//old ws
                 if (!(type === reqType)) {
                     container.append('<p>[Error] Object is of type "' + type + '" but expected type is "' + reqType + '"</p>');
                     return;
                 }
-            	//var gnm = data[0].data;
-            	var gnm = data.data;
+            	var gnm = data[0].data;
+            	//var gnm = data.data;
             	var tabPane = $('<div id="'+pref+'tab-content">');
             	container.append(tabPane);
                 tabPane.kbaseTabs({canDelete : true, tabs : []});

@@ -29,7 +29,7 @@
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
-            workspaceURL: "http://140.221.84.209:7058",// "http://kbase.us/services/ws",
+            workspaceURL: /*"http://140.221.84.209:7058",*/ "http://kbase.us/services/ws",
             container: null,
             ws_id: null
         },
@@ -40,15 +40,11 @@
         init: function(options) {
             this._super(options);
             this.wsId = options.wsId;
-            this.$tbl = options.container;
-            // this.createTable()
-            //     .createMessages()
-            //     .createLoading()
-            //     .render();
 
             $(document).on(
                 'dataLoadedQuery.Narrative', $.proxy(function(e, params, callback) {
                     var objList = this.getLoadedData(params);
+                    console.log(objList);
                     if (callback) {
                         callback(objList);
                     }
@@ -58,7 +54,7 @@
 
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
-                    this.render();
+                    this.refresh();
                 },
                 this )
             );
@@ -105,11 +101,21 @@
             this.$elem.append($('<div>')
                               .addClass('kb-function-header')
                               .append('Data'));
-            this.$dataTabs = $('<div id="data-tabs">');
-            this.$elem.append(this.$dataTabs);
+            this.$dataPanel = $('<div id="data-tabs">');
+            this.$elem.append(this.$dataPanel);
 
-            this.$messagePanel = $('<div>').append("blahblah").hide();
-            this.$elem.append(this.$messagePanel);
+            this.$loadingPanel = $('<div>')
+                                 .addClass('kb-loading')
+                                 .append('<img src="' + this.options.loadingImage + '">')
+                                 .hide();
+            this.$elem.append(this.$loadingPanel);
+
+            // The error panel should overlap everything.
+            this.$errorPanel = $('<div>')
+                               .addClass('kb-error')
+                               .hide();
+            this.$elem.append(this.$errorPanel);
+
 
             // Contains all of a user's data
             // XXX: Initially just data from the current workspace.
@@ -123,7 +129,7 @@
             this.$narrativeDiv.append(this.$narrativeDataTable);
 
             // Put these into tabs.
-            this.$dataTabs.kbaseTabs(
+            this.$dataPanel.kbaseTabs(
                 {
                     tabs : [
                         {
@@ -276,10 +282,11 @@
          * Should.
          */
         refresh: function() {
+            if (!this.wsClient) return;
             this.dbg("workspaceDataDeluxe.refresh");
 
             // Refresh the workspace client to work with the current token.
-            this.wsClient = new Workspace(this.workspaceURL, this.authToken);
+//            this.wsClient = new Workspace(this.workspaceURL, this.authToken);
 
             this.wsClient.list_objects( 
                 {
@@ -294,7 +301,6 @@
                         this.loadedData[type].push(list[i]);
                     }
 
-                    console.debug(list);
                     this.$myDataTable.fnClearTable();
                     this.$myDataTable.fnAddData(list);
                     this.$myDataTable.find('.kb-function-help').click(
@@ -899,25 +905,27 @@
 
             // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
             else if (typeof error === 'object') {
+                console.debug(error);
                 var $details = $('<div>');
-                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
-                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
+                $details.append($('<div>').append('<b>Code:</b> ' + error.error.code))
+                        .append($('<div>').append('<b>Message:</b> ' + error.error.message));
 
                 var $tracebackDiv = $('<div>')
-                                 .addClass('kb-function-error-traceback');
-                for (var i=0; i<error.traceback.length; i++) {
-                    $tracebackDiv.append(error.traceback[i] + "<br>");
-                }
+                                 .addClass('kb-function-error-traceback')
+                                 .append(error.error.error);
+                // for (var i=0; i<error.traceback.length; i++) {
+                //     $tracebackDiv.append(error.traceback[i] + "<br>");
+                // }
 
                 var $tracebackPanel = $('<div>');
-                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
+                var tracebackAccordion = [{'title' : 'Details', 'body' : $tracebackDiv}];
 
-                this.$errorPanel.append($details)
-                                .append($tracebackPanel);
-                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+                this.$errorPanel.append($details);
+                //                 .append($tracebackPanel);
+                // $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
             }
 
-            this.$functionPanel.hide();
+            this.$dataPanel.hide();
             this.$loadingPanel.hide();
             this.$errorPanel.show();
         },

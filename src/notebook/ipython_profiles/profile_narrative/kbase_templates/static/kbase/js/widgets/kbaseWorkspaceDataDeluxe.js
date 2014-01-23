@@ -29,7 +29,7 @@
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
-            workspaceURL: /*"http://140.221.84.209:7058",*/ "http://kbase.us/services/ws",
+            workspaceURL: "http://140.221.84.209:7058", // "http://kbase.us/services/ws",
             container: null,
             ws_id: null
         },
@@ -44,6 +44,7 @@
             $(document).on(
                 'dataLoadedQuery.Narrative', $.proxy(function(e, params, callback) {
                     var objList = this.getLoadedData(params);
+                    console.log('caught dataLoadedQuery.Narrative');
                     console.log(objList);
                     if (callback) {
                         callback(objList);
@@ -51,6 +52,8 @@
                 },
                 this)
             );
+
+            console.log('set up dataLoadedQuery.Narrative response');
 
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
@@ -98,14 +101,19 @@
          * @private
          */
         createStructure: function() {
+            // header bar.
             this.$elem.append($('<div>')
                               .addClass('kb-function-header')
                               .append('Data'));
+
+            // encapsulating data panel - all the data-related stuff goes in here.
+            // this way, it can all be hidden easily.
             this.$dataPanel = $('<div id="data-tabs">');
             this.$elem.append(this.$dataPanel);
 
+            // a loading panel that just has a spinning gif sitting in the middle.
             this.$loadingPanel = $('<div>')
-                                 .addClass('kb-loading')
+                                 .addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">')
                                  .hide();
             this.$elem.append(this.$loadingPanel);
@@ -285,6 +293,7 @@
             if (!this.wsClient) return;
             this.dbg("workspaceDataDeluxe.refresh");
 
+            this.showLoadingPanel();
             // Refresh the workspace client to work with the current token.
 //            this.wsClient = new Workspace(this.workspaceURL, this.authToken);
 
@@ -311,6 +320,8 @@
                         }, 
                         this)
                     );
+                    this.trigger('dataUpdated.Narrative');
+                    this.showDataPanel();
 
                 }, this), 
                 $.proxy(function(error) {
@@ -323,6 +334,148 @@
             this.$infoModal.find('.modal-title').html(id);
             this.$infoModal.find('.modal-body').empty().append(this.$loadingMessage);
             this.$infoModal.modal();
+
+    // funcdef get_object_info(list<ObjectIdentity> object_ids,
+    //     boolean includeMetadata) returns (list<object_info> info);
+
+    // typedef structure {
+    //     ws_name workspace;
+    //     ws_id wsid;
+    //     obj_name name;
+    //     obj_id objid;
+    //     obj_ver ver;
+    //     obj_ref ref;
+    // } ObjectIdentity;
+            var addRow = function(a, b) {
+                return "<tr><td><b>" + a + "</b></td><td>" + b + "</td></tr>";
+            };
+
+            var prettyModDate = function(timestamp) {
+                var format = function(x) {
+                    if (x < 10)
+                        x = '0' + x;
+                    return x;
+                };
+
+                var d = new Date(timestamp);
+                var hours = format(d.getHours());
+                // var meridian = "am";
+                // if (hours >= 12) {
+                //     hours -= 12;
+                //     meridian = "pm";
+                // }
+                // if (hours === 0)
+                //     hours = 12;
+
+                var minutes = format(d.getMinutes());
+                var seconds = format(d.getSeconds());
+                var month = d.getMonth()+1;
+                var day = format(d.getDate());
+                var year = d.getFullYear();
+
+                return month + "/" + day + "/" + year + ", " + hours + ":" + minutes + ":" + seconds;
+            };
+
+            var obj = {
+                'workspace' : workspace,
+                'name' : id, 
+            };
+
+            this.wsClient.get_object_info([obj], 1, 
+                $.proxy(function(info) {
+                    console.debug(info);
+
+    // typedef tuple<obj_id objid, obj_name name, type_string type,
+    //     timestamp save_date, int version, username saved_by,
+    //     ws_id wsid, ws_name workspace, string chsum, int size, usermeta meta>
+    //     object_info;
+                    var $propPanel = $('<div>')
+                                     .append($('<table>')
+                                             .addClass('table table-bordered table-striped')
+                                             .append(addRow('ID', info[0][0]))
+                                             .append(addRow('Name', info[0][1]))
+                                             .append(addRow('Type', info[0][2]))
+                                             .append(addRow('Save Date', prettyModDate(info[0][3])))
+                                             .append(addRow('Version', info[0][4]))
+                                             .append(addRow('Saved By', info[0][5]))
+                                             .append(addRow('Workspace ID', info[0][6]))
+                                             .append(addRow('Workspace Name', info[0][7]))
+                                             .append(addRow('Checksum', info[0][8]))
+                                             .append(addRow('Size (B)', info[0][9]))
+                                            );
+
+//                    this.$infoModal.find('.modal-body').empty().append($propPanel);
+
+                    // get the metadata field
+                    var s = info[0][10];
+                    if (typeof s != 'string') {
+                        s = JSON.stringify(s, undefined, 2);
+                        s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+                            function (match) {
+                                var cls = 'number';
+                                if (/^"/.test(match)) {
+                                    if (/:$/.test(match)) {
+                                        cls = 'key';
+                                    } else {
+                                        cls = 'string';
+                                    }
+                                } else if (/true|false/.test(match)) {
+                                    cls = 'boolean';
+                                } else if (/null/.test(match)) {
+                                    cls = 'null';
+                                }
+                                return '<span class="' + cls + '">' + match + '</span>';
+                            }
+                        );
+                    }
+                    var $metadataPanel = $('<div>').append(($('<pre>').append(s)));
+
+//                    this.$infoModal.find('.modal-body').append($metadataPanel);
+
+                    var $infoAccordion = $('<div>');
+                    this.$infoModal.find('.modal-body').empty().append($infoAccordion);
+                    $infoAccordion.kbaseAccordion({ elements: [{'title' : 'Properties', 'body' : $propPanel}, {'title' : 'Metadata', 'body' : $metadataPanel}]});
+
+                }, this),
+
+                $.proxy(function(error) {
+                    var $errorPanel = $('<div>');
+                    var $errorHeader = $('<div>')
+                                       .addClass('alert alert-danger')
+                                       .append('<b>Sorry, an error occurred while loading object data.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20data%20loading%20error">help@kbase.us</a> with the information below.');
+
+                    $errorPanel.append($errorHeader);
+
+                    // If it's a string, just dump the string.
+                    if (typeof error === 'string') {
+                        $errorPanel.append($('<div>').append(error));
+                    }
+
+                    // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+                    else if (typeof error === 'object') {
+                        var $details = $('<div>');
+                        $details.append($('<div>').append('<b>Code:</b> ' + error.error.code))
+                                .append($('<div>').append('<b>Message:</b> ' + error.error.message));
+
+                        var $tracebackDiv = $('<div>')
+                                         .addClass('kb-function-error-traceback')
+                                         .append(error.error.error);
+                        // for (var i=0; i<error.traceback.length; i++) {
+                        //     $tracebackDiv.append(error.traceback[i] + "<br>");
+                        // }
+
+                        var $tracebackPanel = $('<div>');
+                        var tracebackAccordion = [{'title' : 'Details', 'body' : $tracebackDiv}];
+
+                        $errorPanel.append($details);
+                        //                 .append($tracebackPanel);
+                        // $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+                    }
+
+                    this.$infoModal.find('.modal-body').empty().append($errorPanel);                
+                }, this)
+            );
         },
 
         /* Convert object metadata from list to object */
@@ -671,11 +824,10 @@
          * @returns this
          */
         render: function() {
-            this.hideMessages();
-            if (!this.isLoggedIn) {
-                this.clearTable();
-                this.$loginMessage.show();
-            }
+            // if (!this.isLoggedIn) {
+            //     this.clearTable();
+            //     this.$loginMessage.show();
+            // }
 //             else {
 // //                this.$loading.show();
 //                 var that = this;
@@ -880,9 +1032,16 @@
             return this;
         },
 
-        hideMessages: function() {
-            // this.$errorMessage.hide();
-            // this.$loginMessage.hide();
+        showLoadingPanel: function() {
+            this.$dataPanel.hide();
+            this.$errorPanel.hide();
+            this.$loadingPanel.show();
+        },
+
+        showDataPanel: function() {
+            this.$loadingPanel.hide();
+            this.$errorPanel.hide();
+            this.$dataPanel.show();
         },
 
         /**

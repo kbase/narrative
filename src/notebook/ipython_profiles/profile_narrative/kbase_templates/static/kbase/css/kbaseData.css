@@ -4,13 +4,11 @@ For data in KBase workspace
 #kb-ws {
     background-color: #fff;
     width: 100%;
-    height: 350px !important;
+    height: 425px !important;
+    border: 1px solid #b6e9f8;
+    padding: 1px;
 }
 
-#kb-ws .dataTable {
-    width: 100%;
-    height: 300px;
-}
 
 /* header area */
 #kb-ws .kb-header {
@@ -24,8 +22,8 @@ For data in KBase workspace
 
    /* border-top-left-radius: 4px;
     border-top-right-radius: 4px; */
-
 }
+
 .kb-header #kb-wsname {
     color: #0064b6;
     margin-left: 20px;
@@ -93,7 +91,8 @@ For data in KBase workspace
     /*width: 100%;*/
 /*    height: 100%;
 */
-    height: 270px;
+    max-height: 270px;
+    width: 100% !important;
 }
 
 .kb-data-table table th {

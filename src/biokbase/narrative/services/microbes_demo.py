@@ -178,16 +178,15 @@ def _show_genome(meth, genome):
     """View and explore an annotated Genome in your Workspace.
     
     :param genome: select the genome you want to view
-    :type genome: kbtypes.Unicode
+    :type genome: kbtypes.Genome
     :ui_name genome: Genome
     :return: Same genome ID
-    :rtype: kbtypes.Unicode
+    :rtype: kbtypes.Genome
     :output_widget: GenomeAnnotation
     """
     meth.stages = 1  # for reporting progress
     meth.advance("Loading the genome")
     token, workspaceName = meth.token, meth.workspace_id
-    meth.debug("looking at: "+meth.workspace_id + "  "+token);
     return json.dumps({'token': token, 'ws_name': workspaceName, 'ws_id': genome})
 
 @method(name="Build an FBA Model for a Genome")
@@ -260,7 +259,7 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
 
 @method(name="View FBA Model Details")
 def _view_model_details(meth, fba_model_id):
-    """This brings up a detailed view of your FBA Model within the narrative.
+    """Bring up a detailed view of your FBA Model within the narrative.
     
     :param fba_model_id: the FBA Model to view
     :type fba_model_id: kbtypes.Model

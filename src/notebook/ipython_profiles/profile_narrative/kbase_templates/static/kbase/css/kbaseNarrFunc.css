@@ -19,6 +19,7 @@
     height: 300px;
     overflow-y: auto;
     width: 100%;
+    border: 1px solid #b6e9f8;
 }
 
 .kb-function-body ul {

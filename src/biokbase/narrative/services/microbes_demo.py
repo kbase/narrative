@@ -175,20 +175,20 @@ def _annotate_genome(meth, genome, out_genome):
 
 @method(name="View Annotated Genome")
 def _show_genome(meth, genome):
-    """This shows an annotated Genome stored in your data space.
+    """View and explore an annotated Genome in your Workspace.
     
-    :param genome: Source genome ID
-    :type genome: kbtypes.Genome
-    :ui_name genome: Genome ID
+    :param genome: select the genome you want to view
+    :type genome: kbtypes.Unicode
+    :ui_name genome: Genome
     :return: Same genome ID
-    :rtype: kbtypes.Genome
+    :rtype: kbtypes.Unicode
     :output_widget: GenomeAnnotation
     """
     meth.stages = 1  # for reporting progress
     meth.advance("Loading the genome")
-    token = os.environ['KB_AUTH_TOKEN']
-    workspace = os.environ['KB_WORKSPACE_ID']
-    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': genome})
+    token, workspaceName = meth.token, meth.workspace_id
+    meth.debug("looking at: "+meth.workspace_id + "  "+token);
+    return json.dumps({'token': token, 'ws_name': workspaceName, 'ws_id': genome})
 
 @method(name="Build an FBA Model for a Genome")
 def _genome_to_fba_model(meth, genome_id, fba_model_id):
@@ -820,6 +820,37 @@ def _view_proteome_cmp(meth, proteome_cmp):
     workspace = os.environ['KB_WORKSPACE_ID']
     return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': proteome_cmp})
 
+@method(name="Compare Two Fba Models")
+def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
+    """This starts a job that might run for an hour or longer.
+    When it finishes, the annotated Genome will be stored in your data space.
+     
+    :param fba_model1: an FBA model id from first genome
+    :type fba_model1: kbtypes.Model
+    :ui_name fba_model1: FBA Model 1 ID
+    :param fba_model2: an FBA model id from second genome
+    :type fba_model2: kbtypes.Model
+    :ui_name fba_model2: FBA Model 2 ID
+    :param proteome_cmp: Proteome comparison ID
+    :type proteome_cmp: kbtypes.ProteomeComparison
+    :ui_name proteome_cmp: Proteome Comparison ID
+    :return: Output Comparison Result
+    :rtype: kbtypes.Unicode
+    :output_widget: FbaModelComparisonWidget
+    """
+    meth.stages = 1  # for reporting progress
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    fbaClient = fbaModelServices(service.URLS.fba)
+    
+    get_models_params = {
+        'models' : [fba_model1, fba_model2],
+        'workspaces' : [workspace, workspace],
+        'auth' : token
+    }
+    modeldata = fbaClient.get_models(get_models_params)
+    
+    return json.dumps({'token': token, 'ws_name': workspace, 'fba_model1': modeldata[0], 'fba_model2': modeldata[1], 'proteome_cmp': proteome_cmp})
 
 
 #

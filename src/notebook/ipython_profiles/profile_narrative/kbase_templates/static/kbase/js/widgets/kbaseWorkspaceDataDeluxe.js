@@ -163,10 +163,11 @@
 
             // Contains all data in the current narrative.
             this.$narrativeDiv = $('<div id="narrative-data">');
-            this.$narrativeDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">');
+
+//            this.$narrativeDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">');
 //            this.$narrativeDiv.append('<div ><select style="width:100%"><option>All Types</option></select></div>');
 //            this.$narrativeDiv.append('<div ><input style="width:100%" type="text" value="search"></input></div>');
-            this.$narrativeDiv.append(this.$narrativeDataTable);
+//            this.$narrativeDiv.append(this.$narrativeDataTable);
 
             // Put these into tabs.
             this.$dataPanel.kbaseTabs(
@@ -185,6 +186,7 @@
             );
 
             this.$myDataDiv.kbaseNarrativeDataTable();
+            this.$narrativeDiv.kbaseNarrativeDataTable();
 
 
             // Initialize the datatables.
@@ -221,33 +223,33 @@
             //     sScrollY: '240px',
             // });
 
-            this.$narrativeDataTable.dataTable({
-                sScrollX: '100%',
-                iDisplayLength: -1,
-                bPaginate: false,
-                oLanguage: {
-                    sZeroRecords: '<div style="text-align: center">You haven\'t used any data in this narrative yet.</div>',
-                },
-                aoColumns: [
-                    { "sTitle": "ID" },
-                    { "sTitle": "Type", bVisible: false },
-                ],
-                aoColumnDefs: [
-                    { 'bSortable': false, 'aTargets': [ 0 ] },
-                    {
-                        mRender: function(data, type, row) {
-                            return data + "<span class='glyphicon glyphicon-question-sign kb-function-help' style='margin-top: -3px'></span>";
-                        },
-                        aTargets: [1]
-                    },
-                ],
-                bInfo: false,
-                bLengthChange: false,
-                bPaginate: false,
-                bAutoWidth: true,
-                bScrollCollapse: true,
-                sScrollY: '270px'
-            });
+            // this.$narrativeDataTable.dataTable({
+            //     sScrollX: '100%',
+            //     iDisplayLength: -1,
+            //     bPaginate: false,
+            //     oLanguage: {
+            //         sZeroRecords: '<div style="text-align: center">You haven\'t used any data in this narrative yet.</div>',
+            //     },
+            //     aoColumns: [
+            //         { "sTitle": "ID" },
+            //         { "sTitle": "Type", bVisible: false },
+            //     ],
+            //     aoColumnDefs: [
+            //         { 'bSortable': false, 'aTargets': [ 0 ] },
+            //         {
+            //             mRender: function(data, type, row) {
+            //                 return data + "<span class='glyphicon glyphicon-question-sign kb-function-help' style='margin-top: -3px'></span>";
+            //             },
+            //             aTargets: [1]
+            //         },
+            //     ],
+            //     bInfo: false,
+            //     bLengthChange: false,
+            //     bPaginate: false,
+            //     bAutoWidth: true,
+            //     bScrollCollapse: true,
+            //     sScrollY: '270px'
+            // });
 
             this.$infoModal = $('<div>')
                               .addClass('modal fade')

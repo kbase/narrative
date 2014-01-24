@@ -12,6 +12,7 @@
             <li><a ng-click="gotoAnchor('models')">Models</a></li>
             <li><a ng-click="gotoAnchor('fbas')">FBAs</a></li>
             <li><a ng-click="gotoAnchor('meme')">MEME</a></li>
+            <li><a ng-click="gotoAnchor('ppi')">PPI</a></li>
         </ul>
     </div>
     <div class="col-md-10">
@@ -369,6 +370,28 @@
               <div class="form-group">
                 <label class="sr-only" for="input2">regulome</label>
                 <input class="form-control" id="input2" placeholder="Regulome name" value="regprecise_regulome.8">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+      <div class="page-header"><h3 id="ppi">PPI</h3></div>
+        <h4>URLs</h4>
+            #/ppid
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/ppid/$workspaceName/$dataset_name<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="ppid">
+              #/ppid/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="KBASE_Networks">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">ppi_dataset</label>
+                <input class="form-control" id="input2" placeholder="PPI dataset name" value="kb|ppid.3">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>

@@ -20,28 +20,43 @@
 --
 
 local M={}
+
 -- regexes for matching/validating keys and values
 local key_regex = "[%w_%-%.]+"
 local val_regex = "[%w_%-:%.]+"
 local json = require('json')
 local notemgr = require('notelauncher')
 
+-- forward declare the functions used in this module
+local est_connections
+local sweeper
+local marker
+local check_marker
+local check_sweeper
+local initialize
+local set_proxy
+local use_proxy
+local idle_status
+
 -- this are name/value pairs referencing ngx.shared.DICT objects
 -- that we use to track docker containers. The ngx.shared.DICT
 -- implementation only supports basic scalar types, so we need a
 -- couple of these instead of using a common table object
--- proxy_map maps a URL component ('sychan') to an
+-- proxy_map maps a session key (kbase token userid 'sychan') to an
 --           ip/port proxy target ('127.0.0.1:49000')
--- proxy_last maps a URL component('sychan') to a time value
+-- proxy_last maps a session key (kbase token userid 'sychan') to a time value
 --           (output from os.time()) when the proxy target was
 --           last seen to be active
--- proxy_state maps a URL component ('sychan') to a boolean that
+-- proxy_last_ip maps a session key (kbase token userid 'sychan') to an IP address
+--           that was last seen connecting
+-- proxy_state maps a session key (kbase token userid 'sychan') to a boolean that
 --           flags if that proxy has been marked for reaping
 --           a true value means that the proxy is considered alive
 --           and a false value means the instance is ready to be
 --           reaped
 local proxy_map = nil
 local proxy_last = nil
+local proxy_last_ip = nil
 local proxy_state = nil
 
 -- This is a dictionary for storing proxy manager internal state
@@ -84,16 +99,9 @@ M.timeout = 180
 -- How long (in seconds) after we mark an instance for deletion should we try to sweep it?
 M.sweep_delay = 30
 
--- forward declare the functions used in this module
-local est_connections
-local sweeper
-local marker
-local check_marker
-local check_sweeper
-local initialize
-local set_proxy
-local use_proxy
-local idle_status
+-- Default URL for authentication failure redirect, defaults to nil which means just error
+-- out without redirect
+M.auth_redirect = "http://gologin.kbase.us/?redirect=%s"
 
 --
 -- Function that runs a netstat and returns a table of foreign IP:PORT
@@ -123,7 +131,7 @@ est_connections = function()
 --
 -- Reaper function that looks in the proxy_state table for instances that need to be
 -- removed and removes them
-sweeper = function()
+sweeper = function(self)
 	     ngx.log( ngx.INFO, "sweeper running")
 	     proxy_mgr:delete('next_sweep')
 
@@ -137,11 +145,13 @@ sweeper = function()
 		      proxy_map:delete(name)
 		      proxy_state:delete(name)
 		      proxy_last:delete(name)
+		      proxy_last_ip:delete(name)
 		      ngx.log( ngx.INFO, "notebook removed")
 		   elseif string.find(err, "does not exist") then
 		      ngx.log( ngx.INFO, "notebook nonexistent - removing references")
 		      proxy_map:delete(name)
 		      proxy_state:delete(name)
+		      proxy_last_ip:delete(name)
 		      proxy_last:delete(name)
 		   else
 		      ngx.log( ngx.ERROR, string.format("error: %s", err))
@@ -153,7 +163,7 @@ sweeper = function()
 	  end
 
 -- Check for a sweeper in the queue and enqueue if necessary
-check_sweeper = function()
+check_sweeper = function(self)
 		   local next_run = proxy_mgr:get('next_sweep')
 		   if next_run == nil then -- no sweeper in the queue, put one into the queue!
 		      ngx.log( ngx.ERR, string.format("enqueuing sweeper to run in  %d seconds",M.sweep_interval))
@@ -173,7 +183,7 @@ check_sweeper = function()
 -- Reaper function that examines containers to see if they have been idle for longer than
 -- M.timeout and then marks them for cleanup
 --
-marker = function()
+marker = function(self)
 	    ngx.log( ngx.INFO, "marker running")
 	    proxy_mgr:delete('next_mark')
 	    local keys = proxy_last:get_keys() 
@@ -211,7 +221,7 @@ marker = function()
 
 -- This function just checks to make sure there is a sweeper function in the queue
 -- returns true if there was one, false otherwise
-check_marker = function()
+check_marker = function(self)
 		  local next_run = proxy_mgr:get('next_mark')
 		  if next_run == nil then -- no marker in the queue, put one into the queue!
 		     ngx.log( ngx.ERR, string.format("enqueuing marker to run in %d seconds",M.mark_interval))
@@ -235,26 +245,35 @@ check_marker = function()
 --     proxy_map - name to use for the nginx shared memory proxy_map
 --     proxy_last - name to use for the nginx shared memory last connection access time
 --
-initialize = function( conf )
+initialize = function( self, conf )
+		if conf then
+		   for k,v in pairs(conf) do
+		      ngx.log( ngx.INFO, string.format("conf(%s) = %s",k,tostring(v)))
+		   end
+		else
+		   conf = {}
+		end
 		if not initialized then
 		   initialized = os.time()
 		   M.sweep_interval = conf.sweep_interval or M.sweep_interval
 		   M.mark_interval = conf.mark_interval or M.mark_interval
 		   M.timeout = conf.idle_timeout or M.timeout
+		   M.auth_redirect = conf.auth_redirect or M.auth_redirect
 		   proxy_map = conf.proxy_map or ngx.shared.proxy_map
 		   proxy_last = conf.proxy_last or ngx.shared.proxy_last
+		   proxy_last_ip = conf.proxy_last_ip or ngx.shared.proxy_last_ip
 		   proxy_state = conf.proxy_state or ngx.shared.proxy_state
 		   proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
 
-		   ngx.log( ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d",
-						    M.sweep_interval,M.mark_interval, M.timeout))
+		   ngx.log( ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d auth_redirect %s",
+						    M.sweep_interval,M.mark_interval, M.timeout, tostring(M.auth_redirect)))
 		else
 		   ngx.log( ngx.INFO, string.format("Initialized at %d, skipping",initialized))
 		end
 	     end
 
 -- This function is used to implement the rest interface
-set_proxy = function()
+set_proxy = function(self)
 	       local uri_key_rx = ngx.var.uri_base.."/("..key_regex ..")"
 	       local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
 	       local method = ngx.req.get_method()
@@ -387,18 +406,65 @@ set_proxy = function()
 	       end
 	    end
 
+
+--
+-- simple URL decode function
+local function url_decode(str)
+   str = string.gsub (str, "+", " ")
+   str = string.gsub (str, "%%(%x%x)",
+		      function(h) return string.char(tonumber(h,16)) end)
+   str = string.gsub (str, "\r\n", "\n")
+  return str
+end
+
+--
+-- Examines the current request to validate it and return a
+-- session identifier. You can perform authentication here
+-- and only return a session id if the authentication is legit
+-- returns nil, err if a session cannot be found/created
+
+local function get_session()
+   local hdrs = ngx.req.get_headers()
+   local cheader = hdrs['Cookie']
+   local token = {}
+   if cheader then
+      -- ngx.log( ngx.INFO, string.format("cookie = %s",cheader))
+      local session = string.match( cheader,"kbase_session=([%S]+);?")
+      if session then
+	 -- ngx.log( ngx.INFO, string.format("kbase_session = %s",session))
+	 session = string.gsub(session,";$","")
+	 session = url_decode(session)
+	 for k, v in string.gmatch(session, "([%w_]+)=([^|]+);?") do
+	    token[k] = v
+	 end
+	 if token['token'] then
+	    token['token'] = string.gsub(token['token'],"PIPESIGN","|")
+	    token['token'] = string.gsub(token['token'],"EQUALSSIGN","=")
+	    --ngx.log( ngx.INFO, string.format("token[token] = %s",token['token']))
+	 end
+     end
+   end
+   if token['un'] then
+      return token['un']
+   else
+      return nil, "No session id found"
+   end
+end
+
 --
 -- Route to the appropriate proxy
 --
-use_proxy = function()
-	       ngx.log( ngx.INFO, "In /narrative/ handler")
+use_proxy = function(self)
+	       local target, flags
+	       -- ngx.log( ngx.INFO, "In /narrative/ handler")
 	       -- get the reaper functions into the run queue if not already
 	       check_marker()
-	       local proxy_key = string.match(ngx.var.uri,"/narrative/([%w_-]+)")
-	       if proxy_key then
-		  local target, flags = proxy_map:get(proxy_key)
+	       local client_ip = ngx.var.remote_addr
+	       local session_key,err = get_session()
+	       if session_key then
+		  target, flags = proxy_map:get(session_key)
 		  if target == nil then -- didn't find in proxy map, check containers
-		     ngx.log( ngx.WARN, "Unknown proxy key:" .. proxy_key)
+		     ngx.log( ngx.WARN, "Unknown proxy key:" .. session_key)
 		     local notebooks = notemgr:get_notebooks()
 		     ngx.log( ngx.INFO, json.encode(notebooks))
 		     -- add any notebooks we don't know about
@@ -416,49 +482,54 @@ use_proxy = function()
 			      ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )
 			   end
 			   success,err,forcible = proxy_state:set(k,true)
-			end
-		     end
-		     target = proxy_map:get(proxy_key)
-		     if target then
-			ngx.log( ngx.INFO, "Found name among containers, redirecting to " .. target )
-		     else
-			ngx.log( ngx.INFO, "Creating new notebook instance " )
-			local status, res = pcall(notemgr.launch_notebook,proxy_key)
-			if status then
-			   ngx.log( ngx.INFO, "New instance at: " .. res)
-			   -- do a none blocking sleep for 2 seconds to allow the instance to spin up
-			   ngx.sleep(5)
-			   local success,err,forcible = proxy_map:set(proxy_key,res)
-			   if not success then
-			      ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-			      ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
-			      response = "Unable to set routing for notebook " .. err
-			   else
-			      target = res
-			   end
-			else
-			   ngx.log( ngx.ERR, "Failed to launch new instance :" .. res)
+			   success,err,forcible = proxy_last_ip:set(k,client_ip)
 			end
 		     end
 		  end
-		  if target ~= nil then
-		     ngx.var.target = target
-		     ngx.log( ngx.INFO, "Redirect to " .. ngx.var.target )
-		     local success,err,forcible = proxy_last:set(proxy_key,os.time())
-		     if not success then
-			ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )
+		  -- try to fetch the target again
+		  target = proxy_map:get(session_key)
+		  if target == nil then
+		     ngx.log( ngx.INFO, "Creating new notebook instance " )
+		     local status, res = pcall(notemgr.launch_notebook,session_key)
+		     if status then
+			ngx.log( ngx.INFO, "New instance at: " .. res)
+			-- do a none blocking sleep for 2 seconds to allow the instance to spin up
+			ngx.sleep(5)
+			local success,err,forcible = proxy_map:set(session_key,res)
+			if not success then
+			   ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+			   ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
+			   response = "Unable to set routing for notebook " .. err
+			else
+			   target = res
+			end
+		     else
+			ngx.log( ngx.ERR, "Failed to launch new instance :" .. res)
 		     end
-		     local success,err,forcible = proxy_state:set(proxy_key,true)
-		  else
-		     ngx.exit(ngx.HTTP_NOT_FOUND)
 		  end
 	       else
-		  ngx.log( ngx.ERR, "No proxy key given")
+		  ngx.log(ngx.WARN,"No session_key found!")
+		  if M.auth_redirect then
+		     local msg = string.format("Please try going to %s to authenticate and try again",
+					       string.format( M.auth_redirect, ngx.escape_uri(ngx.var.request_uri)))
+		     ngx.say( msg)
+		  end
+	       end
+	       if target ~= nil then
+		  ngx.var.target = target
+		  ngx.log( ngx.INFO, "session: " .. session_key .. " target: " .. ngx.var.target )
+		  local success,err,forcible = proxy_last:set(session_key,os.time())
+		  if not success then
+		     ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )
+		  end
+		  success,err,forcible = proxy_state:set(session_key,true)
+		  success,err,forcible = proxy_last_ip:set(session_key,client_ip)
+	       else
 		  ngx.exit(ngx.HTTP_NOT_FOUND)
 	       end
 	    end
 
-idle_status = function()
+idle_status = function(self)
 		 local uri_key_rx = ngx.var.uri_base.."/("..key_regex ..")"
 		 local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
 		 local method = ngx.req.get_method()
@@ -480,16 +551,15 @@ idle_status = function()
 		    if last == nil then
 		       ngx.status = ngx.HTTP_NOT_FOUND
 		    else
-		       -- return the date seen plus the status value
-		       response = os.date("%c",last) .. " " .. tostring(proxy_state:get(key))
+		       -- return the last timestamp and IP seen plus the status value
+		       response = { last_seen = os.date("%c",last), last_ip = proxy_last_ip:get(key), active = tostring(proxy_state:get(key))}
 		    end
 		 else 
 		    local keys = proxy_last:get_keys() 
 		    for key = 1, #keys do
 		       local last, flags = proxy_last:get( keys[key])
-		       -- return either just the last seen date,
-		       -- or the last seen date plus " _reap_" indicating it is awaiting reaping
-		       response[keys[key]] = os.date("%c",last) .. " " .. tostring(proxy_state:get(keys[key]))
+		       -- return the last timestamp and IP seen plus the status value
+		       response[keys[key]] = { last_seen = os.date("%c",last), last_ip = proxy_last_ip:get(keys[key]), active = tostring(proxy_state:get(keys[key]))}
 		    end
 		 end
 		 ngx.say(json.encode( response ))

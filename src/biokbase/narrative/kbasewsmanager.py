@@ -197,7 +197,7 @@ class KBaseWSNotebookManager(NotebookManager):
         try:
             wsobj = ws_util.get_wsobj( self.wsclient(), notebook_id, self.ws_type)
         except ws_util.BadWorkspaceID, e:
-            raise web.HTTPError(500, u'Notebook % not found: %' % (notebook_id, e))
+            raise web.HTTPError(500, u'Notebook %s not found: %s' % (notebook_id, e))
         jsonnb = json.dumps(wsobj['data'])
         #self.log.debug("jsonnb = %s" % jsonnb)
         nb = current.reads(jsonnb,u'json')
@@ -206,7 +206,44 @@ class KBaseWSNotebookManager(NotebookManager):
         last_modified = dateutil.parser.parse(wsobj['metadata']['save_date'])
         self.log.debug("Notebook successfully read" )
         return last_modified, nb
-    
+
+    def extract_data_dependencies(self, nb):
+        """
+        This is an internal method that parses out the cells in the notebook nb
+        and returns an array of type:value parameters based on the form input
+        specification and the values entered by the user.
+
+        I the cell metadata, we look under:
+        kb-cell.method.properties.parameters.paramN.type
+
+        for anything that isn't a string or numeric, and we combine that type with
+        the corresponding value found under 
+        kb-cell.widget_state[0].state.paramN
+
+        We create an array of type:value pairs from the params and return that
+        """
+        # set of types that we ignore
+        ignore = set(['string','Unicode','Numeric','Integer','List'])
+        deps = set()
+        for wksheet in nb.get('worksheets'):
+            for cell in wksheet.get('cells'):
+                try:
+                    allparams = cell['metadata']['kb-cell']['method']['properties']['parameters']
+                except KeyError:
+                    continue
+                params = [ param for param in allparams.keys() if allparams[param]['type'] not in ignore]
+                try:
+                    paramvals = cell['metadata']['kb-cell']['widget_state'][0]['state']
+                except KeyError:
+                    continue
+                for param in params:
+                    try:
+                        dep = "%s:%s" % ( allparams[param]['type'], paramvals[param])
+                        deps.add(dep)
+                    except KeyError:
+                        continue
+        return list(deps)
+
     def write_notebook_object(self, nb, notebook_id=None):
         """Save an existing notebook object by notebook_id."""
         self.log.debug("writing notebook %s." % notebook_id)
@@ -233,8 +270,7 @@ class KBaseWSNotebookManager(NotebookManager):
                 nb.metadata.type = self.ws_type
             if not hasattr(nb.metadata, 'description'):
                 nb.metadata.description = ''
-            if not hasattr(nb.metadata, 'data_dependencies'):
-                nb.metadata.data_dependencies = []
+            nb.metadata.data_dependencies = self.extract_data_dependencies(nb)
             nb.metadata.format = self.node_format
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)

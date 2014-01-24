@@ -174,7 +174,6 @@
             // the version selector
             this.$versionSelect = $('<select>')
                                   .addClass('form-control')
-                                  .css({'max-width' : '80%'})
                                   .change($.proxy(function(event) {
                                       this.populateInfoModal(this.$versionSelect.find('option:selected').val()); 
                                   }, this));
@@ -233,7 +232,7 @@
                                                                               .append('Properties'))
                                                                       .append(this.$infoModalPropTable))
                                                               .append($infoAccordion)
-                                                              .append($('<div>')
+                                                              .append($('<form class="form-inline">')
                                                                       .append('Version: ')
                                                                       .append(this.$versionSelect))))
                                               .append($('<div>')

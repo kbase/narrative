@@ -82,6 +82,10 @@ class KBaseWSNotebookManager(NotebookManager):
     # regex for parsing out workspace_id and object_id from
     # a "ws.{workspace}.{object}" string
     ws_regex = re.compile( '^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
+    # regex for parsing out fully qualified workspace name and object name
+    ws_regex2 = re.compile( '^(?P<wsname>[\w:]+)/(?P<objname>[\w]+)')
+    # regex for par
+    kbid_regex = re.compile( '^(kb\|[a-zA-Z]+\..+)')
 
     # This is a regular expression to make sure that the workspace ID doesn't contain
     # non-legit characters in the object ID field
@@ -225,6 +229,8 @@ class KBaseWSNotebookManager(NotebookManager):
         # set of types that we ignore
         ignore = set(['string','Unicode','Numeric','Integer','List'])
         deps = set()
+        # What default workspace are we going to use?
+        ws = os.environ.get('KB_WORKSPACE_ID',nb.metadata.ws_name)
         for wksheet in nb.get('worksheets'):
             for cell in wksheet.get('cells'):
                 try:
@@ -238,7 +244,14 @@ class KBaseWSNotebookManager(NotebookManager):
                     continue
                 for param in params:
                     try:
-                        dep = "%s:%s" % ( allparams[param]['type'], paramvals[param])
+                        paramval = paramvals[param]
+                        # Is this a fully qualified workspace name?
+                        if (self.ws_regex.match(paramval) or
+                            self.ws_regex2.match(paramval) or
+                            self.kbid_regex.match(paramval)):
+                            dep = "%s %s" % ( allparams[param]['type'], paramval)
+                        else:
+                            dep = "%s %s/%s" % ( allparams[param]['type'], ws, paramval)
                         deps.add(dep)
                     except KeyError:
                         continue
@@ -263,7 +276,7 @@ class KBaseWSNotebookManager(NotebookManager):
         # Carry over some of the metadata stuff from ShockNBManager
         try:
             if not hasattr(nb.metadata, 'ws_name'):
-                nb.metadata.ws_name = homews
+                nb.metadata.ws_name = os.environ.get('KB_WORKSPACE_ID',homews)
             if not hasattr(nb.metadata, 'creator'):
                 nb.metadata.creator = user_id
             if not hasattr(nb.metadata, 'type'):

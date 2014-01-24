@@ -21,19 +21,17 @@
             this.trigger("workspaceQuery.Narrative", $.proxy(
                 function(wsId) {
                     this.wsId = wsId;
-                    this.trigger("dataLoadedQuery.Narrative", [ ["Media"], $.proxy(
-                        function(objects) {
-                            this.$fetchMediaDiv = this.buildFetchMediaDiv(objects["Media"]);
-                            this.$headerInputDiv = this.buildHeaderInputs();
-                            this.$mediaTable = this.buildMediaTable();
-                            this.addEmptyMediaRow();
+                    this.$fetchMediaDiv = this.buildFetchMediaDiv();
+                    this.$headerInputDiv = this.buildHeaderInputs();
+                    this.$mediaTable = this.buildMediaTable();
+                    this.addEmptyMediaRow();
 
-                            this.$elem.append(this.$fetchMediaDiv)
-                                      .append(this.$headerInputDiv)
-                                      .append(this.$mediaTable);
-                        },
-                        this
-                    )]);
+                    this.$elem.append(this.$fetchMediaDiv)
+                              .append(this.$headerInputDiv)
+                              .append(this.$mediaTable);
+
+                    this.refresh();
+
                 }, this));
 
             return this;
@@ -42,14 +40,13 @@
         /**
          * Builds controls to fetch a media set and populate the current list.
          */
-        buildFetchMediaDiv: function(mediaList) {
-            var $fetchMediaDiv = $("<div>");
+        buildFetchMediaDiv: function() {
+            var $fetchMediaDiv = $("<div class='form-inline'>");
             $fetchMediaDiv.append("Select an existing media to modify (optional): ");
 
-            var $mediaList = $("<select>");
-            for (var i=0; i<mediaList.length; i++) {
-                $mediaList.append($("<option>").append(mediaList[i][0]));
-            }
+            var $mediaList = $("<select>")
+                              .addClass('form-control')
+                              .css({'max-width': '80%', 'margin-right' : '10px'});
 
             var $fetchButton = $("<button>")
                                .attr("type", "button")
@@ -59,7 +56,7 @@
                                .click($.proxy(
                                     function(event) {
                                         var mediaName = this.$elem.find("div > select").val();
-                                        this.fbaClient.get_media_async({
+                                        this.fbaClient.get_media({
                                                 auth: this.authToken(),
                                                 medias: [mediaName],
                                                 workspaces: [this.wsId],
@@ -71,6 +68,9 @@
 
             $fetchMediaDiv.append($mediaList)
                           .append($fetchButton);
+
+            $mediaList.append("<option>No media found</option>");
+            $fetchButton.hide();
 
             return $fetchMediaDiv;
         },
@@ -309,6 +309,26 @@
                 this.addMediaRow(cpd);
             }
 
+        },
+
+        refresh: function() {
+            this.trigger("dataLoadedQuery.Narrative", [ ["Media"], $.proxy(
+                function(objects) {
+                    var mediaList = objects["Media"];
+                    if (mediaList && mediaList.length > 0) {
+                        this.$fetchMediaDiv.find('select').empty();
+                        for (var i=0; i<mediaList.length; i++) {
+                            this.$fetchMediaDiv.find('select').append($('<option>').append(mediaList[i][1]));
+                        }
+                        this.$fetchMediaDiv.find('button').show();
+                    }
+                    else {
+                        this.$fetchMediaDiv.find('select').empty().append($('<option>').append('No media found'));
+                        this.$fetchMediaDiv.find('button').hide();
+                    }
+                },
+                this)
+            ]);
         },
 
     });

@@ -1,6 +1,10 @@
 /*
 For data in KBase workspace
 */
+.modal-body {
+    max-height: 100%;
+}
+
 #kb-ws {
     background-color: #fff;
     width: 100%;

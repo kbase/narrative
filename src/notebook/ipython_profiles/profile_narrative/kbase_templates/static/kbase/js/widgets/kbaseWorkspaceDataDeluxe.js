@@ -125,6 +125,11 @@
                                  .hide();
             this.$elem.append(this.$loadingPanel);
 
+            this.$infoModalLoadingPanel = $('<div>')
+                                 .addClass('kb-data-loading')
+                                 .append('<img src="' + this.options.loadingImage + '">')
+                                 .hide();
+
             // The error panel should overlap everything.
             this.$errorPanel = $('<div>')
                                .addClass('kb-error')
@@ -134,40 +139,9 @@
             // Contains all of a user's data
             // XXX: Initially just data from the current workspace.
             this.$myDataDiv = $('<div id="my-data">');
-            // this.$myDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">');
-            // this.$myDataSelect = $('<select>')
-            //                      .addClass('form-control')
-            //                      .css({'width' : '95%'});
-            // this.$myDataSearch = $('<input>')
-            //                      .attr({
-            //                         'type' : 'text',
-            //                         'class' : 'form-control',
-            //                         'style' : 'width:95%',
-            //                         'placeholder' : 'Search',
-            //                      });
-            // this.$myDataDiv.append($('<div>').append(this.$myDataSelect))
-            //                .append($('<div>').append(this.$myDataSearch))
-            //                .append(this.$myDataTable);
-
-            // this.$myDataSelect.change($.proxy(function(event) {
-            //     var filterValue = '';
-            //     this.$myDataSelect.find('option:selected').each(function(){ filterValue = $( this ).val(); });
-            //     console.log(filterValue);
-            //     this.$myDataTable.fnFilter(filterValue, 2);
-            // }, this));
-
-            // this.$myDataSearch.keyup($.proxy(function(event) {
-            //     var value = this.$myDataSearch.val();
-            //     this.$myDataTable.fnFilter(value, 1);
-            // }, this));
 
             // Contains all data in the current narrative.
             this.$narrativeDiv = $('<div id="narrative-data">');
-
-//            this.$narrativeDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">');
-//            this.$narrativeDiv.append('<div ><select style="width:100%"><option>All Types</option></select></div>');
-//            this.$narrativeDiv.append('<div ><input style="width:100%" type="text" value="search"></input></div>');
-//            this.$narrativeDiv.append(this.$narrativeDataTable);
 
             // Put these into tabs.
             this.$dataPanel.kbaseTabs(
@@ -188,68 +162,47 @@
             this.$myDataDiv.kbaseNarrativeDataTable();
             this.$narrativeDiv.kbaseNarrativeDataTable();
 
+            // separate so it can be hidden
+            this.$infoModalPanel = $('<div>');
 
-            // Initialize the datatables.
-            // this.$myDataTable.dataTable({
-            //     sScrollX: '100%',
-            //     iDisplayLength: -1,
-            //     bPaginate: false,
-            //     oLanguage: {
-            //         sZeroRecords: '<div style="text-align: center">No data found. Click <a href="http://kbase.us" target="_new">Here</a> to upload or use the search bar above.</div>',
-            //     },
-            //     aoColumns: [
-            //         { "sTitle": "Workspace", bVisible: false},
-            //         { "sTitle": "ID" },
-            //         { "sTitle": "Type", bVisible: false },
-            //     ],
-            //     aoColumnDefs: [
-            //         { 'bSortable': false, 'aTargets': [ 0 ] },
-            //         {
-            //             mRender: function(data, type, row) {
-            //                 return data + 
-            //                        "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
-            //                        "data-ws='" + row[7] + "' " +
-            //                        "data-id='" + row[1] + "' " + 
-            //                        "style='margin-top: -3px'></span>";
-            //             },
-            //             aTargets: [1]
-            //         },
-            //     ],
-            //     bInfo: false,
-            //     bLengthChange: false,
-            //     bPaginate: false,
-            //     bAutoWidth: true,
-            //     bScrollCollapse: true,
-            //     sScrollY: '240px',
-            // });
+            // the properties table
+            this.$infoModalPropTable = $('<table>')
+                                       .addClass('table table-bordered table-striped');
+            // the metadata div
+            this.$metadataDiv = $('<pre>');
 
-            // this.$narrativeDataTable.dataTable({
-            //     sScrollX: '100%',
-            //     iDisplayLength: -1,
-            //     bPaginate: false,
-            //     oLanguage: {
-            //         sZeroRecords: '<div style="text-align: center">You haven\'t used any data in this narrative yet.</div>',
-            //     },
-            //     aoColumns: [
-            //         { "sTitle": "ID" },
-            //         { "sTitle": "Type", bVisible: false },
-            //     ],
-            //     aoColumnDefs: [
-            //         { 'bSortable': false, 'aTargets': [ 0 ] },
-            //         {
-            //             mRender: function(data, type, row) {
-            //                 return data + "<span class='glyphicon glyphicon-question-sign kb-function-help' style='margin-top: -3px'></span>";
-            //             },
-            //             aTargets: [1]
-            //         },
-            //     ],
-            //     bInfo: false,
-            //     bLengthChange: false,
-            //     bPaginate: false,
-            //     bAutoWidth: true,
-            //     bScrollCollapse: true,
-            //     sScrollY: '270px'
-            // });
+            // the version selector
+            this.$versionSelect = $('<select>')
+                                  .addClass('form-control')
+                                  .css({'max-width' : '80%'})
+                                  .change($.proxy(function(event) {
+                                      this.populateInfoModal(this.$versionSelect.find('option:selected').val()); 
+                                  }, this));
+
+            var $infoAccordion = $('<div>');
+
+            var $footerButtons = $('<div>')
+                                 .append($('<button>')
+                                         .attr({
+                                             'type' : 'button',
+                                             'class' : 'btn btn-default',
+                                             'id' : 'obj-details-btn'
+                                         })
+                                         .append('Object Details'))
+                                 .append($('<button>')
+                                         .attr({
+                                             'type' : 'button',
+                                             'class' : 'btn btn-default',
+                                             'id' : 'obj-type-btn',
+                                         })
+                                         .append('Object Type Details'))
+                                 .append($('<button>')
+                                         .attr({
+                                             'type' : 'button',
+                                             'class' : 'btn btn-primary',
+                                             'data-dismiss' : 'modal'
+                                         })
+                                         .append('Close'));
 
             this.$infoModal = $('<div>')
                               .addClass('modal fade')
@@ -272,13 +225,30 @@
                                                               .addClass('modal-title'))
                                                       )
                                               .append($('<div>')
-                                                      .addClass('modal-body'))
+                                                      .addClass('modal-body')
+                                                      .append(this.$infoModalLoadingPanel)
+                                                      .append(this.$infoModalPanel
+                                                              .append($('<div>')
+                                                                      .append($('<h3>')
+                                                                              .append('Properties'))
+                                                                      .append(this.$infoModalPropTable))
+                                                              .append($infoAccordion)
+                                                              .append($('<div>')
+                                                                      .append('Version: ')
+                                                                      .append(this.$versionSelect))))
                                               .append($('<div>')
-                                                      .addClass('modal-footer'))
-                                              )
-                                     );
+                                                      .addClass('modal-footer')
+                                                      .append($footerButtons))));
 
             this.$elem.append(this.$infoModal);
+            $infoAccordion.kbaseAccordion(
+                {
+                    elements:
+                    [
+                        { 'title' : 'Metadata', 'body' : $('<div>').append(this.$metadataDiv) }
+                    ]
+                }
+            );
 
             return this;
 
@@ -291,7 +261,10 @@
         createMessages: function() {
             this.$loginMessage = $('<span>')
                 .text(this.options.notLoggedInMsg);
-            this.$loadingMessage = $('<div style="text-align:center">').append($('<img src="' + this.options.loadingImage + '">'));
+            this.$loadingMessage = $('<div>')
+                                   .css({'text-align': 'center'})
+                                   .append($('<img>')
+                                           .attr('src', this.options.loadingImage));
             return this;
         },
 
@@ -353,7 +326,8 @@
 
         showInfoModal: function(workspace, id) {
             this.$infoModal.find('.modal-title').html(id);
-            this.$infoModal.find('.modal-body').empty().append(this.$loadingMessage);
+            this.$infoModalPanel.hide();
+            this.$infoModalLoadingPanel.show();
             this.$infoModal.modal();
 
     // funcdef get_object_info(list<ObjectIdentity> object_ids,
@@ -367,171 +341,31 @@
     //     obj_ver ver;
     //     obj_ref ref;
     // } ObjectIdentity;
-            var addRow = function(a, b) {
-                return "<tr><td><b>" + a + "</b></td><td>" + b + "</td></tr>";
-            };
-
-            var prettyModDate = function(timestamp) {
-                var format = function(x) {
-                    if (x < 10)
-                        x = '0' + x;
-                    return x;
-                };
-
-                var d = new Date(timestamp);
-                var hours = format(d.getHours());
-                // var meridian = "am";
-                // if (hours >= 12) {
-                //     hours -= 12;
-                //     meridian = "pm";
-                // }
-                // if (hours === 0)
-                //     hours = 12;
-
-                var minutes = format(d.getMinutes());
-                var seconds = format(d.getSeconds());
-                var month = d.getMonth()+1;
-                var day = format(d.getDate());
-                var year = d.getFullYear();
-
-                return month + "/" + day + "/" + year + ", " + hours + ":" + minutes + ":" + seconds;
-            };
-
             var obj = {
                 'workspace' : workspace,
                 'name' : id, 
             };
 
             // Fetch the workspace object.
-            this.wsClient.get_object_info([obj], 1, 
-                $.proxy(function(info) {
+            this.wsClient.get_object_history(obj, 
+                $.proxy(function(infoList) {
+                    infoList.sort(function(a, b) { return b[4]-a[4]; });
+                    this.objInfoList = infoList;
 
-                    // Simple properties panel for the object.
-                    var $propPanel = $('<div>')
-                                     .append($('<table>')
-                                             .addClass('table table-bordered table-striped')
-                                             .append(addRow('ID', info[0][0]))
-                                             .append(addRow('Name', info[0][1]))
-                                             .append(addRow('Type', info[0][2]))
-                                             .append(addRow('Save Date', prettyModDate(info[0][3])))
-                                             .append(addRow('Version', info[0][4]))
-                                             .append(addRow('Saved By', info[0][5]))
-                                             .append(addRow('Workspace ID', info[0][6]))
-                                             .append(addRow('Workspace Name', info[0][7]))
-                                             .append(addRow('Checksum', info[0][8]))
-                                             .append(addRow('Size (B)', info[0][9]))
-                                            );
-
-                    // Parse the user metadata field.
-                    var s = info[0][10];
-                    if (typeof s != 'string') {
-                        s = JSON.stringify(s, undefined, 2);
-                        s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                        s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
-                            function (match) {
-                                var cls = 'number';
-                                if (/^"/.test(match)) {
-                                    if (/:$/.test(match)) {
-                                        cls = 'key';
-                                    } else {
-                                        cls = 'string';
-                                    }
-                                } else if (/true|false/.test(match)) {
-                                    cls = 'boolean';
-                                } else if (/null/.test(match)) {
-                                    cls = 'null';
-                                }
-                                return '<span class="' + cls + '">' + match + '</span>';
-                            }
-                        );
+                    this.$versionSelect.empty();
+                    for (var i=0; i<this.objInfoList.length; i++) {
+                        var verStr = this.objInfoList[i][4] + ' - ' + this.prettyTimestamp(this.objInfoList[i][3]);
+                        if (i === 0)
+                            verStr += ' (most recent)';
+                        this.$versionSelect.append($('<option>')
+                                                   .attr('value', i)
+                                                   .append(verStr));
                     }
-                    var $metadataPanel = $('<div>').append(($('<pre>').append(s)));
 
-                    // fetch the typespec.
-                    this.wsClient.get_type_info(info[0][2], 
-                        $.proxy(function(type) {
-                            var s = type;
-                            if (typeof s != 'string') {
-                                s = JSON.stringify(s, undefined, 2);
-                                s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
-                                    function (match) {
-                                        var cls = 'number';
-                                        if (/^"/.test(match)) {
-                                            if (/:$/.test(match)) {
-                                                cls = 'key';
-                                            } else {
-                                                cls = 'string';
-                                            }
-                                        } else if (/true|false/.test(match)) {
-                                            cls = 'boolean';
-                                        } else if (/null/.test(match)) {
-                                            cls = 'null';
-                                        }
-                                        return '<span class="' + cls + '">' + match + '</span>';
-                                    }
-                                );
-                            }
-                            var $typePanel = $('<div>')
-                                             .append($('<pre>')
-                                                     .append(s)
-                                                     .css({'overflow-y' : 'scroll', 'max-height' : '350px'})
+                    this.populateInfoModal(i);
 
-                                             );
-                            var $infoAccordion = $('<div>');
-                            this.$infoModal.find('.modal-body').empty().append($infoAccordion);
-                            $infoAccordion.kbaseAccordion(
-                                { 
-                                    elements: 
-                                    [
-                                        { 'title' : 'Properties', 'body' : $propPanel }, 
-                                        { 'title' : 'Metadata', 'body' : $metadataPanel },
-//                                        { 'title' : 'Type Info', 'body' : $typePanel }
-                                    ]
-                                }
-                            );
-
-                            var dataType = info[0][2];
-                            var landingPage = this.options.landingPageURL + dataType + '/' + workspace + '/' + id;
-
-                            var specPage = this.options.landingPageURL + 'spec/type/' + dataType;
-
-                            var $buttonFooter = $('<div>')
-                                                .append($('<button>')
-                                                        .attr({
-                                                            'type' : 'button',
-                                                            'class' : 'btn btn-default',
-                                                        })
-                                                        .append('Object Details')
-                                                        .click(function(event) {
-                                                            window.open(landingPage);
-                                                        }))
-                                                .append($('<button>')
-                                                        .attr({
-                                                            'type' : 'button',
-                                                            'class' : 'btn btn-default',
-                                                        })
-                                                        .append('Object Type Details')
-                                                        .click(function(event) {
-                                                            window.open(specPage);
-                                                        }))
-                                                .append($('<button>')
-                                                        .attr({
-                                                            'type' : 'button',
-                                                            'class' : 'btn btn-primary',
-                                                            'data-dismiss' : 'modal'
-                                                        })
-                                                        .append('Close'));
-
-                            this.$infoModal.find('.modal-footer').empty().append($buttonFooter);
-                                                      
-                        }, this),
-
-                        $.proxy(function(error) {
-                            console.debug(error);
-                        }, this)
-                    );
-
+                    this.$infoModalLoadingPanel.hide();
+                    this.$infoModalPanel.show();
                 }, this),
 
                 $.proxy(function(error) {
@@ -539,6 +373,47 @@
                     this.$infoModal.find('.modal-body').empty().append($errorPanel);
                 }, this)
             );
+        },
+
+        populateInfoModal: function(versionIndex) {
+            if (!versionIndex || versionIndex < 0 || versionIndex >= this.objInfoList.length)
+                versionIndex = 0;
+
+            var info = this.objInfoList[versionIndex];
+
+            var addRow = function(a, b) {
+                return "<tr><td><b>" + a + "</b></td><td>" + b + "</td></tr>";
+            };
+
+
+            this.$infoModalPropTable.empty()
+                                    .append(addRow('ID', info[0]))
+                                    .append(addRow('Name', info[1]))
+                                    .append(addRow('Type', info[2]))
+                                    .append(addRow('Save Date', this.prettyTimestamp(info[3])))
+                                    .append(addRow('Version', info[4]))
+                                    .append(addRow('Saved By', info[5]))
+                                    .append(addRow('Workspace ID', info[6]))
+                                    .append(addRow('Workspace Name', info[7]))
+                                    .append(addRow('Checksum', info[8]))
+                                    .append(addRow('Size (B)', info[9]));
+
+            // Parse the user metadata field.
+            var metadataJson = this.prettyJson(info[10]);
+            if (metadataJson === "{}")
+                metadataJson = "No metadata found for this object.";
+            this.$metadataDiv.empty().append(metadataJson);
+
+            var dataType = info[2];
+            var workspace = info[7];
+            var id = info[1];
+            var landingPage = this.options.landingPageURL + dataType + '/' + workspace + '/' + id;
+            var specPage = this.options.landingPageURL + 'spec/type/' + dataType;
+
+            this.$infoModal.find('.modal-footer > div > button#obj-type-btn').off('click').click(function(event) { window.open(specPage); });
+            this.$infoModal.find('.modal-footer > div > button#obj-details-btn').off('click').click(function(event) { window.open(landingPage); });
+
+
         },
 
         /**
@@ -580,190 +455,6 @@
 
             return $errorPanel;
         },
-
-        /* Convert object metadata from list to object */
-        // _meta2obj: function(m) {
-        //     var md;
-        //     if (m[10] != undefined && m[10].length > 0) {
-        //         eval("md = " + m[10] + ";");
-        //     }
-        //     return {
-        //         'id': m[0], // an object_id
-        //         'type': m[1], //an object_type
-        //         'moddate': m[2].replace('T',' '), // a timestamp
-        //         'instance': m[3], // instance int
-        //         'command': m[4], // command string
-        //         'lastmodifier': m[5], // a username string
-        //         'owner': m[6], // a username string
-        //         'workspace': m[7], // a workspace_id string
-        //         'ref': m[8], // a workspace_ref string
-        //         'chsum': m[9], // a string
-        //         'metadata': md // an object
-        //     };
-        // },
-
-        // infoPanel: function(name, type, callback) {
-        //     console.debug("infoPanel.begin");
-        //     // Load history for this obj
-        //     var key = this._item_key(name, type);
-        //     var meta = this._meta2obj(this.table_meta[key]);
-        //     var opts = {workspace: this.ws_id, auth: this.ws_auth, id: meta.id, type: meta.type};
-        //     //console.debug("get history, opts=",opts);
-        //     var self = this;
-        //     this.ws_client.object_history(opts,
-        //         function (results) {
-        //             var $elem = $('#kb-obj');
-        //             $elem.find(".modal-title").text(name);
-        //             var objlist = _.map(results, self._meta2obj);
-        //             var versions = _.map(objlist, function(m) {
-        //                     return [m.instance, m.moddate, m.lastmodifier]; 
-        //             });
-        //             self.infoTable(versions, objlist);
-        //             callback($elem);
-        //         },
-        //         function () {
-        //             alert("Failed to get info for '" + name + "'");
-        //         }
-        //     );
-        // },
-
-        // infoTable : function(data, objlist) {
-        //     console.debug("infotable for objects",objlist);
-        //     var t = $('#kb-obj .kb-table table').dataTable();
-        //     t.fnDestroy();
-        //     t.dataTable({
-        //         aaData: data,
-        //         aoColumns : [
-        //             { sTitle: 'Version', sWidth: "8em", bSortable: true, },
-        //             { sTitle: 'Date', sWidth: "15em", bSortable: true },
-        //             { sTitle: 'User', sWidth: "20em", bSortable: false }
-        //         ],
-        //         aaSorting: [[0, 'desc']],
-        //         bAutoWidth: false,
-        //         bFilter: false,
-        //         bInfo: false,
-        //         bLengthChange: false,
-        //         bPaginate: true,
-        //         iDisplayLength: 5,
-        //         sPaginationType: "bootstrap"                
-        //     });
-        //     // Add click handler for rows
-        //     var self = this;
-        //     var _tr = "#kb-obj .kb-table tbody tr";
-        //     var $rows = $(_tr); 
-        //     $rows.on("mouseover", function( e ) {
-        //         if ( $(this).hasClass('row_selected') ) {
-        //             $(this).removeClass('row_selected');
-        //         }
-        //         else {
-        //             t.$('tr.row_selected').removeClass('row_selected');
-        //             $(this).addClass('row_selected');
-        //         }
-        //     });
-        //     var get_selected = function(tbl) {
-        //         return tbl.$('tr.row_selected');
-        //     }
-
-        //     $rows.on("click", function( e ) {
-        //         if ( $(this).hasClass('row_selected') ) {
-        //             var row = $(this)[0];
-        //             var version = row.children[0].textContent * 1;
-        //             // pick out instance that matches version
-        //             var info = _.reduce(objlist, function(memo, val) {
-        //                 return val.instance == version ? val : memo;
-        //             }, null);
-        //             // populate and show description
-        //             if (info != null) {
-        //                 self.descriptionPanel($("#kb-obj table.kb-info"), info);
-        //             }
-        //             else {
-        //                 // XXX: internal error
-        //                 alert("Object version " + version + " not found!");
-        //             }
-        //         }
-        //     });
-        //     // Auto-select first row
-        //     $(_tr + ':first-of-type').mouseover().click();
-        // },
-
-        // descriptionPanel: function($elem, data) {
-        //     console.log("Populate descriptionPanel desc=",data);
-        //     var $footer = $('#kb-obj .modal-footer');
-        //     // remove old button bindings
-        //     $('#kb-obj .modal-footer button.btn').unbind();
-        //     $('#kb-obj .modal-footer button.btn').hide();
-        //     var self = this;
-        //     var body = $elem.find('tbody');
-        //     body.empty();
-        //     $.each(data, function(key, value) {
-        //         if (key != 'metadata') {
-        //             var tr = body.append($('<tr>'));    
-        //             tr.append($('<td>').text(key));
-        //             tr.append($('<td>').text(value));
-        //         }
-        //     });
-        //     // Add metadata, if there is any
-        //     var $meta_elem = $('#kb-obj table.kb-metainfo');
-        //     var body = $meta_elem.find('tbody')
-        //     body.empty();
-        //     console.debug("Metadata:", data.metadata);
-        //     if (data.metadata !== undefined && Object.keys(data.metadata).length > 0) {
-        //         $.each(data.metadata, function(key, value) {
-        //             console.debug("MD key=" + key + ", value=",value);
-        //             // expect keys with '_' to mark sub-sections
-        //             if (key.substr(0,1) == '_') {
-        //                 var pfx = key.substr(1, key.length);
-        //                 console.debug("Prefix: " + pfx);
-        //                 $.each(value, function(key2, value2) {
-        //                     var tr = body.append($('<tr>'));    
-        //                     // key
-        //                     var td = $('<td>');
-        //                     var $prefix = $('<span>').addClass("text-muted").text(pfx + " ");
-        //                     td.append($prefix);
-        //                     td.append($('<span>').text(key2));
-        //                     tr.append(td);
-        //                     // value
-        //                     tr.append($('<td>').text(value2));
-        //                 });
-        //             }
-        //             else {
-        //                 var tr = body.append($('<tr>'));    
-        //                 tr.append($('<td>').text(key));
-        //                 tr.append($('<td>').text(value));                        
-        //             }
-        //         });
-        //     }
-        //     else {
-        //         body.append($('<tr>')).append($('<td>').text("No metadata"));
-        //     }
-        //     // XXX: hack! add button for viz if network
-        //     if (data.type == 'Networks') {
-        //         this.addNetworkVisualization(data);
-        //     }
-        //     else {
-        //         body.append($('<tr>')).append($('<td>').text("No metadata"));
-        //     }
-        //     // XXX: hack! add button for viz if network
-        //     // (slightly less of a hack now? --Bill)
-        //     this.addVisualizationButton(data);
-        // },
-
-        // _uuidgen: function() {
-        //     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        //         var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-        //         return v.toString(16);});
-        //  },
-
-        // /**
-        //  * Render the widget.
-        //  * This fetches the list of data sets for the workspace.
-        //  *
-        //  * @returns this
-        //  */
-        // render: function() {
-            
-        //     return this;
-        // },
 
         /**
          * Returns the set of currently loaded data objects from the workspace.
@@ -826,6 +517,53 @@
             this.$loadingPanel.hide();
             this.$errorPanel.show();
         },
+
+        prettyJson: function(s) {
+            if (typeof s != 'string') {
+                s = JSON.stringify(s, undefined, 2);
+            }
+            s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+                function (match) {
+                    var cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'key';
+                        } else {
+                            cls = 'string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                }
+            );
+            return s;
+        },
+
+        prettyTimestamp: function(timestamp) {
+            var format = function(x) {
+                if (x < 10)
+                    x = '0' + x;
+                return x;
+            };
+
+            var d = new Date(timestamp);
+            var hours = format(d.getHours());
+
+            var minutes = format(d.getMinutes());
+            var seconds = format(d.getSeconds());
+            var month = d.getMonth()+1;
+            var day = format(d.getDate());
+            var year = d.getFullYear();
+
+            return month + "/" + day + "/" + year + ", " + hours + ":" + minutes + ":" + seconds;
+        },
+
+
+
     });
 
 })( jQuery );

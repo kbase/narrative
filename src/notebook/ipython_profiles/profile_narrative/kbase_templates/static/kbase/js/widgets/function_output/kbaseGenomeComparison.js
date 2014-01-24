@@ -77,8 +77,41 @@ $.KBWidget({
             			'<button id="'+pref+'btn-mdr"'+sb+'>&#8600;</button>'+
             			'</td></tr></table></center>' +
             			'</td><td><table'+st+'><tr'+sr+'>' +
-            			'<td width="'+(size+100)+'"'+sd+'><img id="'+pref+'img" src=""/></td>'+
+            			'<td width="'+(size+100)+'"'+sd+'>'+
+            			'<div style="position:relative">'+
+            			'<img id="'+pref+'img" src=""/>'+
+            			'<div id="'+pref+'rect" style="position:absolute; z-index: 2; border: 1px; border-style: solid; border-color: red; background-color: transparent; display:none; pointer-events:none;"/>'+
+            			'</div>'+
+            			'</td>'+
             			'<td width="300"'+sd+'><table id="'+pref+'genes"'+st+'/></td></tr></table></td></tr>');
+            	var refreshDetailedRect = function() {
+            		var rect = $('#'+pref+'rect').append(rect);
+            		if (geneI < 0 || geneJ < 0) {
+            			rect.hide();
+            			return;
+            		}
+            		var parentOffset = $('#'+pref+'img').offset();
+            		var x = (geneI - imgI) * scale / 100;
+            		var y = (geneJ - imgJ) * scale / 100;
+            		if (x < 0 || x >= size || y < 0 || y >= size) {
+            			rect.hide();
+            			return;
+            		}
+            		var half = self.geneRows * scale / 200;
+            		if (half < 1)
+            			half = 1;
+            		var ySize = Math.min(size, cmp.proteome2names.length * scale / 100);
+            		var scrX = x + 35 - half - 1;  // + parentOffset.left 
+            		var scrY = ySize + 1 - y - half - 1;  // + parentOffset.top;
+        			rect.css({
+        				'top': Math.round(scrY) + 'px',
+        				'left': Math.round(scrX) + 'px',
+        				'width': (1 + half * 2) + 'px',
+        				'height': (1 + half * 2) + 'px'
+        			});
+        			rect.show();
+            	};
+
             	var refreshImage = function() {
             		var maxI = imgI + size * 100 / scale;
             		if (maxI > cmp.proteome1names.length)
@@ -97,6 +130,7 @@ $.KBWidget({
             		var img = self.cmpImgUrl + "?ws=" + options.ws_name + "&id=" + options.ws_id + "&x=" + imgI + 
             				"&y=" + imgJ + "&w=" + size + "&sp=" + scale + "&token=" + encodeURIComponent(options.token);
             		$('#'+pref+'img').attr('src', img);
+            		refreshDetailedRect();
             	};
             	refreshImage();
             	$('#'+pref+'btn-zi').click(function() {
@@ -196,12 +230,14 @@ $.KBWidget({
             		}
             		return {scrX: scrX, scrY: scrY, relX: relX, relY: relY, bestDist: bestDist, bestI: bestI, bestJ: bestJ};
             	}
-            	
+            	            	
             	var refreshGenes = function() {
             		var tbl = $('#'+pref+'genes');
             		tbl.empty();
-            		if (geneI < 0 || geneJ < 0)
+            		if (geneI < 0 || geneJ < 0) {
+            			refreshDetailedRect();
             			return;
+            		}
             		var half = Math.floor(self.geneRows / 2);
             		var rowHalf = Math.floor(self.geneRowH / 2);
             		var svg = null;
@@ -229,19 +265,23 @@ $.KBWidget({
             				labelI = cmp.proteome1names[i];
             			if (j >= 0 && j < cmp.proteome2names.length)
             				labelJ = cmp.proteome2names[j];
+            			if (rowPos == half) {
+            				labelI = '<font color="red">' + labelI + '</font>';
+            				labelJ = '<font color="red">' + labelJ + '</font>';
+            			}
             			var tdSt = ' style="border: 0px; margin: 0px; padding: 0px; font-size: 12px; height: '+self.geneRowH+'px; text-align: center; vertical-align: middle;"';
             			var tds = '<td '+tdSt+'>' + labelI + '</td>';
             			if (rowPos == 0)
             				tds += '<td id="'+pref+'glinks" rowspan="'+self.geneRows+'" width="30"'+sr+'/>';
             			tds += '<td '+tdSt+'>' + labelJ + '</td>';
             			tbl.append('<tr'+sr+'>'+tds+'</tr>');
-            			var y1 = rowPos * self.geneRowH + rowHalf;
+            			var y1 = rowPos * (self.geneRowH + 0.2) + rowHalf;
         				for (var tuplePos in cmp.data1[i]) {
         					var tuple = cmp.data1[i][tuplePos];
         					var hitJ = tuple[0];
         					var hitPos = (hitJ - geneJ) * dirJ + half;
         					if (hitPos >= 0 && hitPos < self.geneRows) {
-        						var y2 = hitPos * self.geneRowH + rowHalf;
+        						var y2 = hitPos * (self.geneRowH + 0.2) + rowHalf;
         						var dash = '';
         						if (tuple[2] < 100)
         							dash = ' stroke-dasharray="5, 5"';
@@ -291,6 +331,7 @@ $.KBWidget({
                 		geneJ += dirJ;
                 		refreshGenes();
                 	});
+                	refreshDetailedRect();
             	}
             	
             	$('#'+pref+'img').hover(
@@ -304,12 +345,13 @@ $.KBWidget({
             		var hit = hitSearch(e);
     				var tip = $('#widget-tooltip');
             		if (Number(hit.bestDist) >= 0) {
-            			var msg = 'X-axis: ' + cmp.proteome1names[Number(hit.bestI)] + ', Y-axis: ' + cmp.proteome2names[Number(hit.bestJ)] +
-            			'<br>click to see detailes...';
+            			var msg = 'X-axis: ' + cmp.proteome1names[Number(hit.bestI)] + 
+            				', Y-axis: ' + cmp.proteome2names[Number(hit.bestJ)] +
+            				'<br>click to see detailes...';
             			tip.html(msg);
             			tip.css({
-            				'top': + (Number(hit.scrY) + 10) + 'px',
-            				'left': + (Number(hit.scrX) + 10) + 'px'
+            				'top': (Number(hit.scrY) + 10) + 'px',
+            				'left': (Number(hit.scrX) + 10) + 'px'
             			});
             			tip.show();
             			return;

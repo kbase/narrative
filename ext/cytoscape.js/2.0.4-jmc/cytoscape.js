@@ -2,7 +2,7 @@
 /* cytoscape.js */
 
 /**
- * This file is part of cytoscape.js 2.0.4.
+ * This file is part of cytoscape.js github-snapshot-2014.01.16-11.29.44.
  * 
  * Cytoscape.js is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the Free
@@ -2702,7 +2702,7 @@ var cytoscape;
 
 			// Events bubbling up the document may have been marked as prevented
 			// by a handler lower down the tree; reflect the correct value.
-			this.isDefaultPrevented = ( src.defaultPrevented || src.returnValue === false ||
+			this.isDefaultPrevented = ( src.defaultPrevented || 
 				src.getPreventDefault && src.getPreventDefault() ) ? returnTrue : returnFalse;
 
 		// Event type
@@ -2743,10 +2743,6 @@ var cytoscape;
 			// if preventDefault exists run it on the original event
 			if ( e.preventDefault ) {
 				e.preventDefault();
-
-			// otherwise set the returnValue property of the original event to false (IE)
-			} else {
-				e.returnValue = false;
 			}
 		},
 		stopPropagation: function() {
@@ -2760,8 +2756,6 @@ var cytoscape;
 			if ( e.stopPropagation ) {
 				e.stopPropagation();
 			}
-			// otherwise set the cancelBubble property of the original event to true (IE)
-			e.cancelBubble = true;
 		},
 		stopImmediatePropagation: function() {
 			this.isImmediatePropagationStopped = returnTrue;
@@ -3416,8 +3410,7 @@ var cytoscape;
 
 		this[i] = {
 			selector: selector,
-			properties: [],
-			animations: []
+			properties: []
 		};
 
 		return this; // chaining
@@ -3458,19 +3451,142 @@ var cytoscape;
 		return this; // chaining
 	};
 
-	// just store the animation to be processed later
-	$$.Stylesheet.prototype.animate = function( ani ){
-		var i = this.length - 1;
+	$$.style.applyFromString = function( style, string ){
+		var remaining = "" + string;
+		var selAndBlockStr;
+		var blockRem;
+		var propAndValStr;
 
-		this[i].animations.push( ani );
+		// remove comments from the style string
+		remaining = remaining.replace(/[/][*](\s|.)+?[*][/]/g, "");
 
-		return this; // chaining
+		function removeSelAndBlockFromRemaining(){
+			// remove the parsed selector and block from the remaining text to parse
+			if( remaining.length > selAndBlockStr.length ){
+				remaining = remaining.substr( selAndBlockStr.length );
+			} else {
+				remaining = "";
+			}
+		}
+
+		function removePropAndValFromRem(){
+			// remove the parsed property and value from the remaining block text to parse
+			if( blockRem.length > propAndValStr.length ){
+				blockRem = blockRem.substr( propAndValStr.length );
+			} else {
+				blockRem = "";
+			}
+		}
+
+		while(true){
+			var nothingLeftToParse = remaining.match(/^\s*$/);
+			if( nothingLeftToParse ){ break; }
+
+			var selAndBlock = remaining.match(/^\s*((?:.|\s)+?)\s*\{((?:.|\s)+?)\}/);
+
+			if( !selAndBlock ){
+				$$.util.error("Halting stylesheet parsing: String stylesheet contains more to parse but no selector and block found in: " + remaining);
+				break;
+			}
+
+			selAndBlockStr = selAndBlock[0];
+
+			// parse the selector
+			var selectorStr = selAndBlock[1];
+			var selector = new $$.Selector( selectorStr );
+			if( selector._private.invalid ){
+				$$.util.error("Skipping parsing of block: Invalid selector found in string stylesheet: " + selectorStr);
+
+				// skip this selector and block
+				removeSelAndBlockFromRemaining();
+				continue; 
+			}
+
+			// parse the block of properties and values
+			var blockStr = selAndBlock[2];
+			var invalidBlock = false;
+			blockRem = blockStr;
+			var props = [];
+
+			while(true){
+				var nothingLeftToParse = blockRem.match(/^\s*$/);
+				if( nothingLeftToParse ){ break; }
+
+				var propAndVal = blockRem.match(/^\s*(.+?)\s*:\s*(.+?)\s*;/);
+
+				if( !propAndVal ){
+					$$.util.error("Skipping parsing of block: Invalid formatting of style property and value definitions found in:" + blockStr);
+					invalidBlock = true;
+					break;
+				}
+
+				propAndValStr = propAndVal[0];
+				var propStr = propAndVal[1];
+				var valStr = propAndVal[2];
+
+				var prop = $$.style.properties[ propStr ];
+				if( !prop ){
+					$$.util.error("Skipping property: Invalid property name in: " + propAndValStr);
+
+					// skip this property in the block
+					removePropAndValFromRem();
+					continue;
+				}
+
+				var parsedProp = style.parse( propStr, valStr );
+
+				if( !parsedProp ){
+					$$.util.error("Skipping property: Invalid property definition in: " + propAndValStr);
+
+					// skip this property in the block
+					removePropAndValFromRem();
+					continue;
+				}
+
+				props.push({
+					name: propStr,
+					val: valStr
+				});
+				removePropAndValFromRem();
+			}
+
+			if( invalidBlock ){
+				removeSelAndBlockFromRemaining();
+				break;
+			}
+
+			// put the parsed block in the style
+			style.selector( selectorStr );
+			for( var i = 0; i < props.length; i++ ){
+				var prop = props[i];
+				style.css( prop.name, prop.val );
+			}
+
+			removeSelAndBlockFromRemaining();
+		}
+
+		return style;
 	};
 
-	// static function
-	$$.style.fromJson = function( cy, json ){
+	$$.style.fromString = function( cy, string ){
 		var style = new $$.Style(cy);
+		
+		$$.style.applyFromString( style, string );
 
+		return style;
+	};
+
+	$$.styfn.fromString = function( string ){
+		var style = this;
+
+		style.resetToDefault();
+
+		$$.style.applyFromString( style, string );
+
+		return style;
+	};
+
+	$$.style.applyFromJson = function( style, json ){
 		for( var i = 0; i < json.length; i++ ){
 			var context = json[i];
 			var selector = context.selector;
@@ -3488,24 +3604,21 @@ var cytoscape;
 		return style;
 	};
 
+	// static function
+	$$.style.fromJson = function( cy, json ){
+		var style = new $$.Style(cy);
+
+		$$.style.applyFromJson( style, json );
+
+		return style;
+	};
+
 	$$.styfn.fromJson = function( json ){
 		var style = this;
 
 		style.resetToDefault();
 
-		for( var i = 0; i < json.length; i++ ){
-			var context = json[i];
-			var selector = context.selector;
-			var props = context.css;
-
-			style.selector(selector); // apply selector
-
-			for( var name in props ){
-				var value = props[name];
-
-				style.css( name, value ); // apply property
-			}
-		}
+		$$.style.applyFromJson( style, json );
 
 		return style;
 	};
@@ -3518,7 +3631,6 @@ var cytoscape;
 			var cxt = this[i];
 			var selector = cxt.selector;
 			var props = cxt.properties;
-			var anis = cxt.animations;
 			var css = {};
 
 			for( var i = 0; i < props.length; i++ ){
@@ -3527,8 +3639,7 @@ var cytoscape;
 
 			json.push({
 				selector: selector.toString(),
-				css: css,
-				animate: anis
+				css: css
 			});
 		}
 
@@ -3543,7 +3654,6 @@ var cytoscape;
 			var context = this[i];
 			var selector = context.selector;
 			var props = context.properties;
-			var anis = context.animations;
 
 			style.selector(selector); // apply selector
 
@@ -3551,12 +3661,6 @@ var cytoscape;
 				var prop = props[j];
 
 				style.css( prop.name, prop.value ); // apply property
-			}
-
-			for( var j = 0; j < anis.length; j++ ){
-				var ani = anis[j];
-
-				style.animate( ani ); // add animation
 			}
 		}
 
@@ -3574,7 +3678,6 @@ var cytoscape;
 			var context = this[i];
 			var selector = context.selector;
 			var props = context.properties;
-			var anis = context.animations;
 
 			style.selector(selector); // apply selector
 
@@ -3582,12 +3685,6 @@ var cytoscape;
 				var prop = props[j];
 
 				style.css( prop.name, prop.value ); // apply property
-			}
-
-			for( var j = 0; j < anis.length; j++ ){
-				var ani = anis[j];
-
-				style.animate( ani ); // add animation
 			}
 		}
 	};
@@ -4011,7 +4108,7 @@ var cytoscape;
 		// TODO check if value is inherited (i.e. "inherit")
 
 		// check the type and return the appropriate object
-		if( type.number ){
+		if( type.number ){ 
 			var units;
 			var implicitUnit = "px"; // not set => px
 
@@ -4025,18 +4122,22 @@ var cytoscape;
 					if( units ){ unitsRegex = units; } // only allow explicit units if so set 
 					var match = value.match( "^(" + $$.util.regex.number + ")(" + unitsRegex + ")?" + "$" );
 					
-					if( !type.enums ){
-						if( !match ){ return null; } // no match => not a number
-
+					if( match ){
 						value = match[1];
 						units = match[2] || implicitUnit;
 					}
+					
 				} else if( !units ) {
 					units = implicitUnit; // implicitly px if unspecified
 				}
 			}
 
 			value = parseFloat( value );
+
+			// if not a number and enums not allowed, then the value is invalid
+			if( isNaN(value) && type.enums === undefined ){
+				return null;
+			}
 
 			// check if this number type also accepts special keywords in place of numbers
 			// (i.e. `left`, `auto`, etc)
@@ -4185,8 +4286,7 @@ var cytoscape;
 		var i = this.length++; // new context means new index
 		this[i] = {
 			selector: selector,
-			properties: [],
-			animations: []
+			properties: []
 		};
 
 		return this; // chaining
@@ -4246,14 +4346,6 @@ var cytoscape;
 		return this; // chaining
 	};
 
-	// add an animation to the current context
-	$$.styfn.animate = function( ani ){
-		var i = this.length - 1;
-		this[i].animations.push( ani );
-
-		return this; // chaining
-	};
-
 	// apply a property to the style (for internal use)
 	// returns whether application was successful
 	//
@@ -4308,7 +4400,15 @@ var cytoscape;
 		// put the property in the style objects
 		switch( prop.mapped ){ // flatten the property if mapped
 		case $$.style.types.mapData:
-			fieldVal = ele._private.data[ prop.field ];
+			
+			// flatten the field (e.g. data.foo.bar)
+			var fields = prop.field.split(".");
+			var fieldVal = ele._private.data;
+			for( var i = 0; i < fields.length && fieldVal; i++ ){
+				var field = fields[i];
+				fieldVal = fieldVal[ field ];
+			}
+
 			if( !$$.is.number(fieldVal) ){ return false; } // it had better be a number
 
 			var percent = (fieldVal - prop.fieldMin) / (prop.fieldMax - prop.fieldMin);
@@ -4355,7 +4455,14 @@ var cytoscape;
 			break;
 
 		case $$.style.types.data: // direct mapping
-			fieldVal = eval('ele._private.data.' + prop.field );
+
+			// flatten the field (e.g. data.foo.bar)
+			var fields = prop.field.split(".");
+			var fieldVal = ele._private.data;
+			for( var i = 0; i < fields.length && fieldVal; i++ ){
+				var field = fields[i];
+				fieldVal = fieldVal[ field ];
+			}
 
 			flatProp = this.parse( prop.name, fieldVal, prop.bypass );
 			if( !flatProp ){ // if we can't flatten the property, then use the origProp so we still keep the mapping itself
@@ -4593,7 +4700,7 @@ var cytoscape;
 
 	// just update the functional properties (i.e. mappings) in the elements'
 	// styles (less expensive than recalculation)
-	$$.styfn.updateFunctionalProperties = function( eles ){
+	$$.styfn.updateMappers = function( eles ){
 		for( var i = 0; i < eles.length; i++ ){ // for each ele
 			var ele = eles[i];
 			var style = ele._private.style;
@@ -4702,7 +4809,6 @@ var cytoscape;
 	var isTouch = window && ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch;
 
 	var defaults = {
-		showOverlay: true,
 		hideEdgesOnViewport: false
 	};
 	
@@ -4750,7 +4856,7 @@ var cytoscape;
 		// 	return;
 		// }
 		
-		this._private = {
+		var _p = this._private = {
 			ready: false, // whether ready has been triggered
 			initrender: false, // has initrender has been triggered
 			instanceId: reg.id, // the registered instance id
@@ -4765,8 +4871,10 @@ var cytoscape;
 			notificationsEnabled: true, // whether notifications are sent to the renderer
 			minZoom: 1e-50,
 			maxZoom: 1e50,
-			zoomEnabled: options.zoomEnabled === undefined ? true : options.zoomEnabled,
-			panEnabled: options.panEnabled === undefined ? true : options.panEnabled,
+			zoomingEnabled: options.zoomingEnabled === undefined ? true : options.zoomingEnabled,
+			userZoomingEnabled: options.userZoomingEnabled === undefined ? true : options.userZoomingEnabled,
+			panningEnabled: options.panningEnabled === undefined ? true : options.panningEnabled,
+			userPanningEnabled: options.userPanningEnabled === undefined ? true : options.userPanningEnabled,
 			boxSelectionEnabled: options.boxSelectionEnabled === undefined ? true : options.boxSelectionEnabled,
 			zoom: $$.is.number(options.zoom) ? options.zoom : 1,
 			pan: {
@@ -4782,30 +4890,38 @@ var cytoscape;
 			// then set default
 
 			if( isTouch ){
-				this._private.selectionType = "additive";
+				_p.selectionType = "additive";
 			} else {
-				this._private.selectionType = "single";
+				_p.selectionType = "single";
 			}
 		} else {
-			this._private.selectionType = selType;
+			_p.selectionType = selType;
 		}
 
 		// init zoom bounds
 		if( $$.is.number(options.minZoom) && $$.is.number(options.maxZoom) && options.minZoom < options.maxZoom ){
-			this._private.minZoom = options.minZoom;
-			this._private.maxZoom = options.maxZoom;
+			_p.minZoom = options.minZoom;
+			_p.maxZoom = options.maxZoom;
 		} else if( $$.is.number(options.minZoom) && options.maxZoom === undefined ){
-			this._private.minZoom = options.minZoom;
+			_p.minZoom = options.minZoom;
 		} else if( $$.is.number(options.maxZoom) && options.minZoom === undefined ){
-			this._private.maxZoom = options.maxZoom;
+			_p.maxZoom = options.maxZoom;
 		}
 
 		// init style
-		this._private.style = $$.is.stylesheet(options.style) ? options.style.generateStyle(this) : ( $$.is.array(options.style) ? $$.style.fromJson(this, options.style) : new $$.Style( cy ) );
+
+		if( $$.is.stylesheet(options.style) ){
+			_p.style = options.style.generateStyle(this);
+		} else if( $$.is.array(options.style) ) {
+			_p.style = $$.style.fromJson(this, options.style);
+		} else if( $$.is.string(options.style) ){
+			_p.style = $$.style.fromString(this, options.style);
+		} else {
+			_p.style = new $$.Style( cy );
+		}
 
 		// create the renderer
 		cy.initRenderer( $$.util.extend({
-			showOverlay: options.showOverlay,
 			hideEdgesOnViewport: options.hideEdgesOnViewport
 		}, options.renderer) );
 
@@ -4951,10 +5067,12 @@ var cytoscape;
 
 			json.style = cy.style();
 			json.scratch = cy.scratch();
-			json.zoomEnabled = cy._private.zoomEnabled;
-			json.panEnabled = cy._private.panEnabled;
+			json.zoomingEnabled = cy._private.zoomingEnabled;
+			json.userZoomingEnabled = cy._private.userZoomingEnabled;
+			json.panningEnabled = cy._private.panningEnabled;
 			json.layout = cy._private.options.layout;
 			json.renderer = cy._private.options.renderer;
+			json.hideEdgesOnViewport = cy._private.options.hideEdgesOnViewport;
 			
 			return json;
 		}
@@ -5668,9 +5786,19 @@ var cytoscape;
 		
 		panningEnabled: function( bool ){
 			if( bool !== undefined ){
-				this._private.panEnabled = bool ? true : false;
+				this._private.panningEnabled = bool ? true : false;
 			} else {
-				return this._private.panEnabled;
+				return this._private.panningEnabled;
+			}
+			
+			return this; // chaining
+		},
+
+		userPanningEnabled: function( bool ){
+			if( bool !== undefined ){
+				this._private.userPanningEnabled = bool ? true : false;
+			} else {
+				return this._private.userPanningEnabled;
 			}
 			
 			return this; // chaining
@@ -5678,9 +5806,19 @@ var cytoscape;
 		
 		zoomingEnabled: function( bool ){
 			if( bool !== undefined ){
-				this._private.zoomEnabled = bool ? true : false;
+				this._private.zoomingEnabled = bool ? true : false;
 			} else {
-				return this._private.zoomEnabled;
+				return this._private.zoomingEnabled;
+			}
+			
+			return this; // chaining
+		},
+
+		userZoomingEnabled: function( bool ){
+			if( bool !== undefined ){
+				this._private.userZoomingEnabled = bool ? true : false;
+			} else {
+				return this._private.userZoomingEnabled;
 			}
 			
 			return this; // chaining
@@ -5707,7 +5845,7 @@ var cytoscape;
 
 			case 1: 
 
-				if( !this._private.panEnabled ){
+				if( !this._private.panningEnabled ){
 					return this;
 
 				} else if( $$.is.string( args[0] ) ){ // .pan("x")
@@ -5732,7 +5870,7 @@ var cytoscape;
 				break;
 
 			case 2: // .pan("x", 100)
-				if( !this._private.panEnabled ){
+				if( !this._private.panningEnabled ){
 					return this;
 				}
 
@@ -5762,7 +5900,7 @@ var cytoscape;
 			var pan = this._private.pan;
 			var dim, val, dims, x, y;
 
-			if( !this._private.panEnabled ){
+			if( !this._private.panningEnabled ){
 				return this;
 			}
 
@@ -5814,7 +5952,7 @@ var cytoscape;
 				elements = undefined;
 			}
 
-			if( !this._private.panEnabled || !this._private.zoomEnabled ){
+			if( !this._private.panningEnabled || !this._private.zoomingEnabled ){
 				return this;
 			}
 
@@ -5905,12 +6043,12 @@ var cytoscape;
 					pos = params.position;
 				}
 
-				if( pos && !this._private.panEnabled ){
+				if( pos && !this._private.panningEnabled ){
 					return this; // panning disabled
 				}
 			}
 
-			if( !this._private.zoomEnabled ){
+			if( !this._private.zoomingEnabled ){
 				return this; // zooming disabled
 			}
 
@@ -5952,7 +6090,7 @@ var cytoscape;
 		},
 
 		center: function(elements){
-			if( !this._private.panEnabled || !this._private.zoomEnabled ){
+			if( !this._private.panningEnabled || !this._private.zoomingEnabled ){
 				return this;
 			}
 
@@ -5984,7 +6122,7 @@ var cytoscape;
 		},
 		
 		reset: function(){
-			if( !this._private.panEnabled || !this._private.zoomEnabled ){
+			if( !this._private.panningEnabled || !this._private.zoomingEnabled ){
 				return this;
 			}
 
@@ -6133,6 +6271,10 @@ var cytoscape;
 
 				self._private.classes[cls] = true;
 			}
+		}
+
+		if( params.css ){
+			cy.style().applyBypass( this, params.css );
 		}
 		
 		if( restore === undefined || restore ){
@@ -6650,12 +6792,23 @@ var cytoscape;
 				break;
 			}
 			
-			if( properties == null || (properties.position == null && properties.css == null && properties.delay == null) ){
+			if( properties == null || (properties.position == null && properties.renderedPosition == null && properties.css == null && properties.delay == null) ){
 				return this; // nothing to animate
 			}
 
 			if( properties.css ){
 				properties.css = style.getValueStyle( properties.css );
+			}
+
+			if( properties.renderedPosition ){
+				var rpos = properties.renderedPosition;
+				var pan = cy.pan();
+				var zoom = cy.zoom();
+
+				properties.position = {
+					x: ( rpos.x - pan.x ) /zoom,
+					y: ( rpos.y - pan.y ) /zoom
+				};
 			}
 
 			for( var i = 0; i < this.length; i++ ){
@@ -6895,10 +7048,7 @@ var cytoscape;
 			var style = cy.style();
 			notifyRenderer = notifyRenderer || notifyRenderer === undefined ? true : false;
 
-			for( var i = 0; i < this.length; i++ ){
-				var ele = this[i];
-				style.apply( ele );
-			}
+			style.updateMappers( this );
 
 			if( notifyRenderer ){
 				this.rtrigger("style"); // let renderer know we changed style
@@ -7024,27 +7174,47 @@ var cytoscape;
 			return this; // chaining
 		},
 
-		// get the rendered (i.e. on screen) positon of the element
-		// TODO allow setting
-		renderedPosition: function( dim ){
+		// get/set the rendered (i.e. on screen) positon of the element
+		renderedPosition: function( dim, val ){
 			var ele = this[0];
 			var cy = this.cy();
 			var zoom = cy.zoom();
 			var pan = cy.pan();
+			var rpos = $$.is.plainObject( dim ) ? dim : undefined;
+			var setting = rpos !== undefined || ( val !== undefined && $$.is.string(dim) );
 
 			if( ele && ele.isNode() ){ // must have an element and must be a node to return position
-				var pos = ele._private.position;
-				var rpos = {
-					x: pos.x * zoom + pan.x,
-					y: pos.y * zoom + pan.y
-				};
+				if( setting ){
+					for( var i = 0; i < this.length; i++ ){
+						var ele = this[i];
 
-				if( dim === undefined ){ // then return the whole rendered position
-					return rpos;
-				} else { // then return the specified dimension
-					return rpos[ dim ];
+						if( val !== undefined ){ // set one dimension
+							ele._private.position[dim] = ( val - pan[dim] )/zoom;
+						} else if( rpos !== undefined ){ // set whole position
+							ele._private.position = {
+								x: ( rpos.x - pan.x ) /zoom,
+								y: ( rpos.y - pan.y ) /zoom
+							};
+						}
+					}
+
+					this.rtrigger("position");
+				} else { // getting
+					var pos = ele._private.position;
+					rpos = {
+						x: pos.x * zoom + pan.x,
+						y: pos.y * zoom + pan.y
+					};
+
+					if( dim === undefined ){ // then return the whole rendered position
+						return rpos;
+					} else { // then return the specified dimension
+						return rpos[ dim ];
+					}
 				}
 			}
+
+			return this; // chaining
 		},
 
 		// get the specified css property as a rendered value (i.e. on-screen value)
@@ -7453,18 +7623,6 @@ var cytoscape;
 					y2 = ly2 > y2 ? ly2 : y2;
 				}
 			} // for
-
-			// testing on debug page
-			// $('#bb').remove();
-			// $('#cytoscape').css('position', 'relative').append('<div id="bb"></div>');
-			// $('#bb').css({
-			// 	'position': 'absolute',
-			// 	'left': x1,
-			// 	'top': y1,
-			// 	'width': x2 - x1,
-			// 	'height': y2 - y1,
-			// 	'background': 'rgba(255, 0, 0, 0.5)'
-			// })
 
 			return {
 				x1: x1,
@@ -8838,7 +8996,7 @@ var cytoscape;
 				
 				metaCompare: {
 					query: true,
-					regex: "\\{\\s*("+ meta +")\\s*("+ comparatorOp +")\\s*("+ number +")\\s*\\}",
+					regex: "\\[\\[\\s*("+ meta +")\\s*("+ comparatorOp +")\\s*("+ number +")\\s*\\]\\]",
 					populate: function( meta, comparatorOp, number ){
 						this.meta.push({
 							field: cleanMetaChars(meta),
@@ -9480,7 +9638,6 @@ var cytoscape;
 		CanvasRenderer.CANVAS_LAYERS = 5;
 		CanvasRenderer.SELECT_BOX = 0;
 		CanvasRenderer.DRAG = 2;
-		CanvasRenderer.OVERLAY = 3;
 		CanvasRenderer.NODE = 4;
 		CanvasRenderer.BUFFER_COUNT = 2;
 
@@ -9492,7 +9649,6 @@ var cytoscape;
 			renderer: this, cy: options.cy, container: options.cy.container(),
 			
 			canvases: new Array(CanvasRenderer.CANVAS_LAYERS),
-			canvasRedrawReason: new Array(CanvasRenderer.CANVAS_LAYERS),
 			canvasNeedsRedraw: new Array(CanvasRenderer.CANVAS_LAYERS),
 			
 			bufferCanvases: new Array(CanvasRenderer.BUFFER_COUNT)
@@ -9528,21 +9684,26 @@ var cytoscape;
 
 		this.bindings = [];
 		
+		this.data.canvasContainer = document.createElement("div");
+		var containerStyle = this.data.canvasContainer.style;
+		containerStyle.position = "absolute";
+		containerStyle.zIndex = "0";
+
+		this.data.container.appendChild( this.data.canvasContainer );
+
 		for (var i = 0; i < CanvasRenderer.CANVAS_LAYERS; i++) {
 			this.data.canvases[i] = document.createElement("canvas");
 			this.data.canvases[i].style.position = "absolute";
 			this.data.canvases[i].setAttribute("data-id", "layer" + i);
 			this.data.canvases[i].style.zIndex = String(CanvasRenderer.CANVAS_LAYERS - i);
-			this.data.container.appendChild(this.data.canvases[i]);
+			this.data.canvasContainer.appendChild(this.data.canvases[i]);
 			
-			this.data.canvasRedrawReason[i] = new Array();
 			this.data.canvasNeedsRedraw[i] = false;
 		}
 
 		this.data.canvases[CanvasRenderer.NODE].setAttribute("data-id", "layer" + CanvasRenderer.NODE + '-node');
 		this.data.canvases[CanvasRenderer.SELECT_BOX].setAttribute("data-id", "layer" + CanvasRenderer.SELECT_BOX + '-selectbox');
 		this.data.canvases[CanvasRenderer.DRAG].setAttribute("data-id", "layer" + CanvasRenderer.DRAG + '-drag');
-		this.data.canvases[CanvasRenderer.OVERLAY].setAttribute("data-id", "layer" + CanvasRenderer.OVERLAY + '-overlay');
 		
 		for (var i = 0; i < CanvasRenderer.BUFFER_COUNT; i++) {
 			this.data.bufferCanvases[i] = document.createElement("canvas");
@@ -9550,36 +9711,7 @@ var cytoscape;
 			this.data.bufferCanvases[i].setAttribute("data-id", "buffer" + i);
 			this.data.bufferCanvases[i].style.zIndex = String(-i - 1);
 			this.data.bufferCanvases[i].style.visibility = "hidden";
-			this.data.container.appendChild(this.data.bufferCanvases[i]);
-		}
-
-		var overlay = document.createElement('div');
-		this.data.container.appendChild( overlay );
-		this.data.overlay = overlay;
-		overlay.style.position = 'absolute';
-		overlay.style.zIndex = 1000;
-
-		if( options.showOverlay ){
-
-			var link = document.createElement('a');
-			overlay.appendChild( link );
-			this.data.link = link;
-
-			link.innerHTML = 'cytoscape.js';
-			link.style.font = '14px helvetica';
-			link.style.position = 'absolute';
-			link.style.right = 0;
-			link.style.bottom = 0;
-			link.style.padding = '1px 3px';
-			link.style.paddingLeft = '5px';
-			link.style.paddingTop = '5px';
-			link.style.opacity = 0;
-			link.style['-webkit-tap-highlight-color'] = 'transparent';
-			link.style.background = 'red';
-
-			link.href = 'http://cytoscape.github.io/cytoscape.js/';
-			link.target = '_blank';
-
+			this.data.canvasContainer.appendChild(this.data.bufferCanvases[i]);
 		}
 
 		this.hideEdgesOnViewport = options.hideEdgesOnViewport;
@@ -9606,13 +9738,11 @@ var cytoscape;
 
 		if (params.type == "viewport") {
 			this.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
-			this.data.canvasRedrawReason[CanvasRenderer.SELECT_BOX].push("viewchange");
 		}
 		
-		this.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true; this.data.canvasRedrawReason[CanvasRenderer.DRAG].push("notify");
-		this.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; this.data.canvasRedrawReason[CanvasRenderer.NODE].push("notify");
+		this.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true; 
+		this.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true;
 
-		this.redraws++;
 		this.redraw();
 	};
 
@@ -9967,17 +10097,17 @@ var cytoscape;
 		var x, y; var offsetLeft = 0; var offsetTop = 0; var n; n = this.data.container;
 		
 		// Stop checking scroll past the level of the DOM tree containing document.body. At this point, scroll values do not have the same impact on pageX/pageY.
-	    var stopCheckingScroll = false;
+		var stopCheckingScroll = false;
 		
 		while (n != null) {
 			var style = window.getComputedStyle(n); 
-/*
 			if( style.getPropertyValue('position').toLowerCase() === 'fixed' ){
-			    offsetLeft = n.offsetLeft + window.scrollX;
-			    offsetTop = n.offsetTop + window.scrollY;
-			    n = null; // don't want to check any more parents after position:fixed
+				offsetLeft += n.offsetLeft + window.scrollX;
+				offsetTop += n.offsetTop + window.scrollY;
+				n = null; // don't want to check any more parents after position:fixed
+			
 
-			} else */ if (typeof(n.offsetLeft) == "number") {
+			} else if (typeof(n.offsetLeft) == "number") {
 				// The idea is to add offsetLeft/offsetTop, subtract scrollLeft/scrollTop, ignoring scroll values for elements in DOM tree levels 2 and higher.
 				offsetLeft += n.offsetLeft; offsetTop += n.offsetTop;
 				
@@ -10500,7 +10630,7 @@ var cytoscape;
 		}
 		else
 		{
-			return node._private.style["width"].value;
+			return node._private.style["width"].pxValue;
 		}
 	};
 
@@ -10520,7 +10650,7 @@ var cytoscape;
 		}
 		else
 		{
-			return node._private.style["height"].value;
+			return node._private.style["height"].pxValue;
 		}
 	};
 
@@ -10586,10 +10716,10 @@ var cytoscape;
 
 	CanvasRenderer.prototype.getNodePadding = function(node)
 	{
-		var left = node._private.style["padding-left"].value;
-		var right = node._private.style["padding-right"].value;
-		var top = node._private.style["padding-top"].value;
-		var bottom = node._private.style["padding-bottom"].value;
+		var left = node._private.style["padding-left"].pxValue;
+		var right = node._private.style["padding-right"].pxValue;
+		var top = node._private.style["padding-top"].pxValue;
+		var bottom = node._private.style["padding-bottom"].pxValue;
 
 		if (isNaN(left))
 		{
@@ -11142,7 +11272,7 @@ var cytoscape;
 			return;
 		}
 		
-		var overlayPadding = edge._private.style["overlay-padding"].value;
+		var overlayPadding = edge._private.style["overlay-padding"].pxValue;
 		var overlayOpacity = edge._private.style["overlay-opacity"].value;
 		var overlayColor = edge._private.style["overlay-color"].value;
 
@@ -11164,11 +11294,11 @@ var cytoscape;
 		}
 
 		// Edge line width
-		if (edge._private.style["width"].value <= 0) {
+		if (edge._private.style["width"].pxValue <= 0) {
 			return;
 		}
 		
-		var edgeWidth = edge._private.style["width"].value + (drawOverlayInstead ? 2 * overlayPadding : 0);
+		var edgeWidth = edge._private.style["width"].pxValue + (drawOverlayInstead ? 2 * overlayPadding : 0);
 		var lineStyle = drawOverlayInstead ? "solid" : edge._private.style["line-style"].value;
 		context.lineWidth = edgeWidth;
 		
@@ -11532,17 +11662,20 @@ var cytoscape;
 		dispX = startX - edge.source().position().x;
 		dispY = startY - edge.source().position().y;
 		
-		//this.context.strokeStyle = "rgba("
-		context.fillStyle = "rgba("
-			+ edge._private.style["source-arrow-color"].value[0] + ","
-			+ edge._private.style["source-arrow-color"].value[1] + ","
-			+ edge._private.style["source-arrow-color"].value[2] + ","
-			+ edge._private.style.opacity.value + ")";
-		
-		context.lineWidth = edge._private.style["width"].value;
-		
-		this.drawArrowShape(context, edge._private.style["source-arrow-shape"].value, 
-			startX, startY, dispX, dispY);
+		if( !isNaN(startX) && !isNaN(startY) && !isNaN(dispX) && !isNaN(dispY) ){
+
+			//this.context.strokeStyle = "rgba("
+			context.fillStyle = "rgba("
+				+ edge._private.style["source-arrow-color"].value[0] + ","
+				+ edge._private.style["source-arrow-color"].value[1] + ","
+				+ edge._private.style["source-arrow-color"].value[2] + ","
+				+ edge._private.style.opacity.value + ")";
+			
+			context.lineWidth = edge._private.style["width"].pxValue;
+			
+			this.drawArrowShape(context, edge._private.style["source-arrow-shape"].value, 
+				startX, startY, dispX, dispY);
+		}
 		
 		var endX = edge._private.rscratch.arrowEndX;
 		var endY = edge._private.rscratch.arrowEndY;
@@ -11550,17 +11683,20 @@ var cytoscape;
 		dispX = endX - edge.target().position().x;
 		dispY = endY - edge.target().position().y;
 		
-		//this.context.strokeStyle = "rgba("
-		context.fillStyle = "rgba("
-			+ edge._private.style["target-arrow-color"].value[0] + ","
-			+ edge._private.style["target-arrow-color"].value[1] + ","
-			+ edge._private.style["target-arrow-color"].value[2] + ","
-			+ edge._private.style.opacity.value + ")";
-		
-		context.lineWidth = edge._private.style["width"].value;
-		
-		this.drawArrowShape(context, edge._private.style["target-arrow-shape"].value,
-			endX, endY, dispX, dispY);
+		if( !isNaN(endX) && !isNaN(endY) && !isNaN(dispX) && !isNaN(dispY) ){
+
+			//this.context.strokeStyle = "rgba("
+			context.fillStyle = "rgba("
+				+ edge._private.style["target-arrow-color"].value[0] + ","
+				+ edge._private.style["target-arrow-color"].value[1] + ","
+				+ edge._private.style["target-arrow-color"].value[2] + ","
+				+ edge._private.style.opacity.value + ")";
+			
+			context.lineWidth = edge._private.style["width"].pxValue;
+
+			this.drawArrowShape(context, edge._private.style["target-arrow-shape"].value,
+				endX, endY, dispX, dispY);
+		}
 	}
 	
 	// Draw arrowshape
@@ -11874,7 +12010,7 @@ var cytoscape;
 
 		// Font style
 		var labelStyle = element._private.style["font-style"].strValue;
-		var labelSize = element._private.style["font-size"].value + "px";
+		var labelSize = element._private.style["font-size"].pxValue + "px";
 		var labelFamily = element._private.style["font-family"].strValue;
 		var labelVariant = element._private.style["font-variant"].strValue;
 		var labelWeight = element._private.style["font-weight"].strValue;
@@ -11996,9 +12132,7 @@ var cytoscape;
 							
 //							console.log(e);
 							r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true;
-							r.data.canvasRedrawReason[CanvasRenderer.NODE].push("image finished load");
 							r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true;
-							r.data.canvasRedrawReason[CanvasRenderer.DRAG].push("image finished load");
 							
 							// Replace Image object with Canvas to solve zooming too far
 							// into image graphical errors (Jan 10 2013)
@@ -12041,7 +12175,7 @@ var cytoscape;
 			this.drawPie(context, node);
 
 			// Border width, draw border
-			if (node._private.style["border-width"].value > 0) {
+			if (node._private.style["border-width"].pxValue > 0) {
 				CanvasRenderer.nodeShapes[this.getNodeShape(node)].drawPath(
 					context,
 					node._private.position.x,
@@ -12056,7 +12190,7 @@ var cytoscape;
 		// draw the overlay
 		} else {
 
-			var overlayPadding = node._private.style["overlay-padding"].value;
+			var overlayPadding = node._private.style["overlay-padding"].pxValue;
 			var overlayOpacity = node._private.style["overlay-opacity"].value;
 			var overlayColor = node._private.style["overlay-color"].value;
 			if( overlayOpacity > 0 ){
@@ -12094,8 +12228,8 @@ var cytoscape;
 
 		if( !this.hasPie(node) ){ return; } // exit early if not needed
 
-		var nodeW = node._private.style['width'].value;
-		var nodeH = node._private.style['height'].value;
+		var nodeW = this.getNodeWidth( node );
+		var nodeH = this.getNodeHeight( node );
 		var x = node._private.position.x;
 		var y = node._private.position.y;
 		var radius = Math.min( nodeW, nodeH ) / 2; // must fit in node
@@ -12188,6 +12322,10 @@ var cytoscape;
 		canvasWidth *= pixelRatio;
 		canvasHeight *= pixelRatio;
 
+		var canvasContainer = data.canvasContainer;
+		canvasContainer.style.width = width + 'px';
+		canvasContainer.style.height = height + 'px';
+
 		for (var i = 0; i < CanvasRenderer.CANVAS_LAYERS; i++) {
 
 			canvas = data.canvases[i];
@@ -12213,8 +12351,6 @@ var cytoscape;
 			}
 		}
 
-		this.data.overlay.style.width = width + 'px';
-		this.data.overlay.style.height = height + 'px';
 	}
 
 	// Redraw frame
@@ -12332,7 +12468,7 @@ var cytoscape;
 
 		// console.time('drawing'); for( var looper = 0; looper <= looperMax; looper++ ){
 		if (data.canvasNeedsRedraw[CanvasRenderer.NODE] || drawAllLayers) {
-			// console.log("redrawing node layer", data.canvasRedrawReason[CanvasRenderer.NODE]);
+			// console.log("redrawing node layer");
 		  
 		  	if( !elesInDragLayer || !elesNotInDragLayer ){
 				elesInDragLayer = [];
@@ -12394,7 +12530,7 @@ var cytoscape;
 			}
 			
 			if( !drawAllLayers ){
-				data.canvasNeedsRedraw[CanvasRenderer.NODE] = false; data.canvasRedrawReason[CanvasRenderer.NODE] = [];
+				data.canvasNeedsRedraw[CanvasRenderer.NODE] = false; 
 			}
 		}
 		
@@ -12461,12 +12597,12 @@ var cytoscape;
 			}
 			
 			if( !drawAllLayers ){
-				data.canvasNeedsRedraw[CanvasRenderer.DRAG] = false; data.canvasRedrawReason[CanvasRenderer.DRAG] = [];
+				data.canvasNeedsRedraw[CanvasRenderer.DRAG] = false;
 			}
 		}
 		
 		if (data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX]) {
-			// console.log("redrawing selection box", data.canvasRedrawReason[CanvasRenderer.SELECT_BOX]);
+			// console.log("redrawing selection box");
 		  
 			var context = forcedContext || data.canvases[CanvasRenderer.SELECT_BOX].getContext("2d");
 			
@@ -12534,33 +12670,8 @@ var cytoscape;
 			}
 			
 			if( !drawAllLayers ){
-				data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = false; data.canvasRedrawReason[CanvasRenderer.SELECT_BOX] = [];
+				data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = false; 
 			}
-		}
-
-		if( r.options.showOverlay && !forcedContext ){
-			var context = data.canvases[CanvasRenderer.OVERLAY].getContext("2d");
-
-			context.lineJoin = 'round';
-			context.font = '14px helvetica';
-			context.strokeStyle = '#fff';
-			context.lineWidth = '4';
-			context.fillStyle = '#666';
-			context.textAlign = 'right';
-
-			var text = 'cytoscape.js';
-			
-			var w = context.canvas.width;
-			var h = context.canvas.height;
-			var p = 4;
-			var tw = context.measureText(text).width;
-			var th = 14; 
-
-			context.clearRect(0, 0, w, h);
-			context.strokeText(text, w - p, h - p);
-			context.fillText(text, w - p, h - p);
-
-			data.overlayDrawn = true;
 		}
 
 		// } console.timeEnd('drawing')
@@ -12892,7 +13003,6 @@ var cytoscape;
 		// auto resize
 		r.registerBinding(window, "resize", function(e) { 
 			r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true;
-			r.data.canvasNeedsRedraw[CanvasRenderer.OVERLAY] = true;
 			r.matchCanvasSize( r.data.container );
 			r.redraw();
 		}, true);
@@ -12996,8 +13106,8 @@ var cytoscape;
 							.trigger(new $$.Event(e, {type: "vmousedown"}))
 						;
 						
-						// r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true; r.data.canvasRedrawReason[CanvasRenderer.DRAG].push("Single node moved to drag layer"); 
-						// r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; r.data.canvasRedrawReason[CanvasRenderer.NODE].push("Single node moved to drag layer");
+						// r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true; 
+						// r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; 
 						
 					} else if (near == null) {
 						cy
@@ -13029,7 +13139,7 @@ var cytoscape;
 						};
 
 						r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
-						r.data.canvasRedrawReason[CanvasRenderer.SELECT_BOX].push("bgactive");
+		
 
 						r.redraw();
 					}, timeUntilActive);
@@ -13112,7 +13222,7 @@ var cytoscape;
 			} else if (r.hoverData.dragging) {
 				preventDefault = true;
 
-				if( cy.panningEnabled() ){
+				if( cy.panningEnabled() && cy.userPanningEnabled() ){
 					var deltaP = {x: disp[0] * cy.zoom(), y: disp[1] * cy.zoom()};
 
 					cy.panBy( deltaP );
@@ -13125,7 +13235,7 @@ var cytoscape;
 			} else if (select[4] == 1 && (down == null || down.isEdge())
 					&& ( !cy.boxSelectionEnabled() || +new Date - r.hoverData.downTime >= CanvasRenderer.panOrBoxSelectDelay )
 					&& (Math.abs(select[3] - select[1]) + Math.abs(select[2] - select[0]) < 4)
-					&& cy.panningEnabled() ) {
+					&& cy.panningEnabled() && cy.userPanningEnabled() ) {
 				
 				r.hoverData.dragging = true;
 				select[4] = 0;
@@ -13134,6 +13244,7 @@ var cytoscape;
 				// deactivate bg on box selection
 				if (cy.boxSelectionEnabled() && Math.pow(select[2] - select[0], 2) + Math.pow(select[3] - select[1], 2) > 7 && select[4]){
 					clearTimeout( r.bgActiveTimeout );
+					r.data.bgActivePosistion = undefined;
 				}
 				
 				if( down && down.isEdge() && down.active() ){ down.unactivate(); }
@@ -13170,16 +13281,13 @@ var cytoscape;
 
 					if (select[2] == select[0] && select[3] == select[1]) {
 						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true;
-						r.data.canvasRedrawReason[CanvasRenderer.NODE].push("Node(s) and edge(s) moved to drag layer");
 					}
 					
 					r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true;
-					r.data.canvasRedrawReason[CanvasRenderer.DRAG].push("Nodes dragged");
 				}
 				
 				if( cy.boxSelectionEnabled() ){
 					r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
-					r.data.canvasRedrawReason[CanvasRenderer.SELECT_BOX].push("Mouse moved, redraw selection box");
 				}
 
 				// prevent the dragging from triggering text selection on the page
@@ -13193,8 +13301,6 @@ var cytoscape;
 			if( preventDefault ){ 
 				if(e.stopPropagation) e.stopPropagation();
     			if(e.preventDefault) e.preventDefault();
-   				e.cancelBubble=true;
-    			e.returnValue=false;
     			return false;
     		}
 		}, false);
@@ -13259,7 +13365,7 @@ var cytoscape;
 	//				console.log("unselect", time() - a);
 					
 					if (draggedElements.length > 0) {
-						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; r.data.canvasRedrawReason[CanvasRenderer.NODE].push("De-select");
+						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true;
 					}
 					
 					r.dragData.possibleDragElements = draggedElements = [];
@@ -13328,7 +13434,7 @@ var cytoscape;
 
 						updateAncestorsInDragLayer(near, false);
 						
-						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; r.data.canvasRedrawReason[CanvasRenderer.NODE].push("sglslct");
+						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; 
 						
 					}
 				// Ungrab single drag
@@ -13382,7 +13488,7 @@ var cytoscape;
 					}
 					
 					if (box.length > 0) { 
-						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; r.data.canvasRedrawReason[CanvasRenderer.NODE].push("Selection");
+						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; 
 					}
 				}
 				
@@ -13413,15 +13519,15 @@ var cytoscape;
 					if( down){ down.trigger(freeEvent); }
 
 	//				draggedElements = r.dragData.possibleDragElements = [];
-					r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true; r.data.canvasRedrawReason[CanvasRenderer.DRAG].push("Node/nodes back from drag");
-					r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; r.data.canvasRedrawReason[CanvasRenderer.NODE].push("Node/nodes back from drag");
+					r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true; 
+					r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; 
 				}
 			
 			} // else not right mouse
 
 			select[4] = 0; r.hoverData.down = null;
 			
-			r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true; r.data.canvasRedrawReason[CanvasRenderer.SELECT_BOX].push("Mouse up, selection box gone");
+			r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true; 
 			
 //			console.log("mu", pos[0], pos[1]);
 //			console.log("ss", select);
@@ -13438,7 +13544,7 @@ var cytoscape;
 			var unpos = [pos[0] * cy.zoom() + cy.pan().x,
 			              pos[1] * cy.zoom() + cy.pan().y];
 			
-			if( cy.panningEnabled() && cy.zoomingEnabled() ){
+			if( cy.panningEnabled() && cy.userPanningEnabled() && cy.zoomingEnabled() && cy.userZoomingEnabled() ){
 				e.preventDefault();
 			
 				var diff = e.wheelDeltaY / 1000 || e.wheelDelta / 1000 || e.detail / -32 || -e.deltaY / 500;
@@ -13670,7 +13776,6 @@ var cytoscape;
 					};
 
 					r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
-					r.data.canvasRedrawReason[CanvasRenderer.SELECT_BOX].push("bgactive");
 
 				}
 				
@@ -13773,7 +13878,6 @@ var cytoscape;
 				this.lastThreeTouch = +new Date;
 
 				r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
-				r.data.canvasRedrawReason[CanvasRenderer.SELECT_BOX].push("Touch moved, redraw selection box");
 
 				if( !select || select.length === 0 || select[0] === undefined ){
 					select[0] = (now[0] + now[2] + now[4])/3;
@@ -13787,7 +13891,7 @@ var cytoscape;
 
 				select[4] = 1;
 
-			} else if ( capture && e.touches[1] && cy.zoomingEnabled() && cy.panningEnabled() ) { // two fingers => pinch to zoom
+			} else if ( capture && e.touches[1] && cy.zoomingEnabled() && cy.panningEnabled() && cy.userZoomingEnabled() && cy.userPanningEnabled() ) { // two fingers => pinch to zoom
 				r.data.bgActivePosistion = undefined;
 				r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
 
@@ -13896,13 +14000,11 @@ var cytoscape;
 					;
 					
 					r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true;
-					r.data.canvasRedrawReason[CanvasRenderer.DRAG].push("touchdrag node");
 
 					if (r.touchData.startPosition[0] == earlier[0]
 						&& r.touchData.startPosition[1] == earlier[1]) {
 						
 						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true;
-						r.data.canvasRedrawReason[CanvasRenderer.NODE].push("node drag started");
 					}
 					
 				}
@@ -13935,7 +14037,7 @@ var cytoscape;
 					}
 				}
 				
-				if ( capture && (start == null || start.isEdge()) && cy.panningEnabled() ) {
+				if ( capture && (start == null || start.isEdge()) && cy.panningEnabled() && cy.userPanningEnabled() ) {
 					if( start ){
 						start.unactivate();
 
@@ -13947,7 +14049,6 @@ var cytoscape;
 						}
 
 						r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
-						r.data.canvasRedrawReason[CanvasRenderer.SELECT_BOX].push("bgactive");
 					}
 
 					cy.panBy({x: disp[0] * cy.zoom(), y: disp[1] * cy.zoom()});
@@ -14028,7 +14129,6 @@ var cytoscape;
 					select[4] = 0;
 
 					r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
-					r.data.canvasRedrawReason[CanvasRenderer.SELECT_BOX].push("Touch moved, redraw selection box");
 
 					// console.log(box);
 					var event = new $$.Event(e, {type: "select"});
@@ -14047,7 +14147,7 @@ var cytoscape;
 					newlySelCol.select();
 					
 					if (box.length > 0) { 
-						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; r.data.canvasRedrawReason[CanvasRenderer.NODE].push("Selection");
+						r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; 
 					}
 
 				//}, 100);
@@ -14105,8 +14205,8 @@ var cytoscape;
 						}
 					}
 
-					r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true; r.data.canvasRedrawReason[CanvasRenderer.DRAG].push("touchdrag node end");
-					r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; r.data.canvasRedrawReason[CanvasRenderer.NODE].push("touchdrag node end");
+					r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true; 
+					r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; 
 					
 					start
 						.trigger(new $$.Event(e, {type: "touchend"}))
@@ -14156,7 +14256,7 @@ var cytoscape;
 					updateStartStyle = true;
 
 					
-					r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; r.data.canvasRedrawReason[CanvasRenderer.NODE].push("sglslct");
+					r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; 
 				}
 				
 				// Tap event, roughly same as mouse click event for touch

@@ -26,39 +26,53 @@
 
 	    var network = JSON.parse(this.options.network);
 
+	    var layout = { name: "arbor",
+			   maxSimulationTime: 1000,
+			   fit: true,
+			   liveUpdate: false };
+	    self.needResize = false;
+	    if (network.nodes.length==1) {
+		self.needResize = true;
+		layout = { name: "grid",
+			   fit: true };
+	    }
 	    $('#cytoscape').html('');
 	    $('#cytoscape').cytoscape({
 		showOverlay: false,
-		layout: { "name": "arbor",
-			  "maxSimulationTime": 10000,
-			  "fit": true,
-			  "liveUpdate": false },
 		elements: network,
+		layout: layout,
                 style: cytoscape.stylesheet().
-                    selector("node").css({
-                        "content": "data(label)",
-			"height": "data(width)",
-			"width": "data(width)",
-                        "border-color": "black",
-			"border-width": 1,
-                        "text-halign": "center",
-                        "text-valign": "center",
-                        "color" : "black",
-                        "background-color" : "data(color)",
+                    selector('node').css({
+                        'content': 'data(label)',
+			'height': 'data(width)',
+			'width': 'data(width)',
+                        'border-color': 'black',
+			'border-width': 1,
+                        'text-halign': 'center',
+                        'text-valign': 'center',
+                        'color': 'black',
+                        'background-color': 'data(color)',
                     }).
-                    selector("edge").css({
-                        "line-color": "data(color)",
-                        "width": "data(width)",
+                    selector('edge').css({
+                        'line-color': 'data(color)',
+                        'width': 'data(width)',
+                    }).
+                    selector('edge[directed=1]').css({
+			'target-arrow-shape': 'triangle',
+			'target-arrow-color': 'black',
                     }),
+		ready: function(e){
+		    if (self.needResize)
+			self.cy.fit();
+		},
 	    });
 
             $("#cytoscape").cytoscapePanzoom();
 	    this.cy = $("#cytoscape").cytoscape("get");
-	    // self.cy.fit();
 
             $(window).on("resize", function() {
 		self.cy.reset();
-		// self.cy.fit();
+		self.cy.fit();
             });
 
             return this;

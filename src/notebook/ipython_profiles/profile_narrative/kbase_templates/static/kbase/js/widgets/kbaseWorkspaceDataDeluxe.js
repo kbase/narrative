@@ -45,8 +45,6 @@
             $(document).on(
                 'dataLoadedQuery.Narrative', $.proxy(function(e, params, callback) {
                     var objList = this.getLoadedData(params);
-                    console.log('caught dataLoadedQuery.Narrative');
-                    console.log(objList);
                     if (callback) {
                         callback(objList);
                     }
@@ -298,7 +296,6 @@
          * Should.
          */
         refresh: function() {
-            console.log('refreshing');
             if (!this.wsClient) return;
 
             this.showLoadingPanel();

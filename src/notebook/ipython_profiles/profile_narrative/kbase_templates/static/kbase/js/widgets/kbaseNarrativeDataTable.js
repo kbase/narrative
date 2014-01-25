@@ -45,7 +45,7 @@
                 iDisplayLength: -1,
                 bPaginate: false,
                 oLanguage: {
-                    sZeroRecords: '<div style="text-align: center">No data found. Click <a href="http://kbase.us" target="_new">Here</a> to upload or use the search bar above.</div>',
+                    sZeroRecords: '<div style="text-align: center">No data found. Click <a href="http://kbase.us" target="_new">Here</a> to upload.</div>',
                 },
                 aoColumns: [
                     { "sTitle": "Workspace", bVisible: false},
@@ -58,7 +58,7 @@
                         mRender: function(data, type, row) {
                             return data + 
                                    "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
-                                   "data-ws='" + row[7] + "' " +
+                                   "data-ws='" + row[0] + "' " +
                                    "data-id='" + row[1] + "' " + 
                                    "style='margin-top: -3px'></span>";
                         },
@@ -79,12 +79,19 @@
             return this;
         },
 
+        /**
+         * Sets the data to be shown in this widget.
+         * @param {Array} data - this is expected to be an Array of Arrays, which each sub-array representing
+         * a single object. It is expected to have the fields: [workspace, ID, type] (though type isn't currently used)
+         */
         setData: function(data) {
             this.$dataSelect.empty();
             this.$dataSelect.append('<option value="">All Types</option>');
 
             var dataList = [];
-            $.each(Object.keys(data), $.proxy(function(idx, key) {
+            var dataKeys = Object.keys(data);
+            dataKeys.sort();
+            $.each(dataKeys, $.proxy(function(idx, key) {
                 this.$dataSelect.append($('<option>')
                                           .attr('value', key)
                                           .append(key + ' (' + data[key].length + ')'));

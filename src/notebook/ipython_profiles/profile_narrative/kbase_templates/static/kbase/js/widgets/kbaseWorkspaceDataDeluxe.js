@@ -111,7 +111,14 @@
             // header bar.
             this.$elem.append($('<div>')
                               .addClass('kb-function-header')
-                              .append('Data'));
+                              .append('Data')
+                              .append($('<button>')
+                                      .addClass('btn btn-xs btn-default pull-right')
+                                      .css({'margin-top': '-4px',
+                                            'margin-right': '4px'})
+                                      .click($.proxy(function(event) { this.refresh(); }, this))
+                                      .append($('<span>')
+                                              .addClass('glyphicon glyphicon-refresh'))));
 
             // encapsulating data panel - all the data-related stuff goes in here.
             // this way, it can all be hidden easily.
@@ -129,6 +136,7 @@
                                  .addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">')
                                  .hide();
+            this.$infoModalError = $('<div>').hide();
 
             // The error panel should overlap everything.
             this.$errorPanel = $('<div>')
@@ -225,6 +233,7 @@
                                                       )
                                               .append($('<div>')
                                                       .addClass('modal-body')
+                                                      .append(this.$infoModalError)
                                                       .append(this.$infoModalLoadingPanel)
                                                       .append(this.$infoModalPanel
                                                               .append($('<div>')
@@ -283,11 +292,13 @@
          * Should.
          */
         refresh: function() {
+            console.log('refreshing');
             if (!this.wsClient) return;
 
             this.showLoadingPanel();
-            // Refresh the workspace client to work with the current token.
 
+
+            // Fetch data from the current workspace.
             this.wsClient.list_objects( 
                 {
                     workspaces : [this.wsId],
@@ -298,6 +309,7 @@
                     // would give me nightmares.
 
                     this.loadedData = {};
+                    var renderedData = {};
                     for (var i=0; i<list.length; i++) {
                         var type = list[i][2];
                         if (type.indexOf('KBaseNarrative.Narrative') !== -1) {
@@ -305,13 +317,16 @@
                             i--;
                         }
                         else {
-                            if (!this.loadedData[type])
+                            if (!this.loadedData[type]) {
                                 this.loadedData[type] = [];
+                                renderedData[type] = [];
+                            }
                             this.loadedData[type].push(list[i]);
+                            renderedData[type].push([list[i][7], list[i][1], list[i][2]]);
                         }
                     }
 
-                    this.$myDataDiv.kbaseNarrativeDataTable('setData', this.loadedData);
+                    this.$myDataDiv.kbaseNarrativeDataTable('setData', renderedData);
 
                     this.trigger('dataUpdated.Narrative');
                     this.showDataPanel();
@@ -321,11 +336,36 @@
                     this.showError(error);
                 }, this)
             );
+
+
+            // Fetch dependent data from the narrative
+            // XXX: this should be pushed in from the main narrative javascript! Maybe later.
+            var narrData = IPython.notebook.metadata.data_dependencies;
+            var dataList = {};
+            if (narrData) {
+                // format things to be how we want them.
+                $.each(narrData, function(idx, val) {
+                    val = val.split(/\s+/);
+                    val.push('NarrativeData');
+                    if (!dataList[type])
+                        dataList[type] = [];
+                    dataList[type].push(val);
+                });
+            }
+            dataList = {
+                'NarrativeData' : [
+                    [ this.wsId, 'Object1', 'NarrativeData' ],
+                    [ this.wsId, 'Object2', 'NarrativeData' ],
+                    [ this.wsId, 'Object3', 'NarrativeData' ],
+                ]
+            }
+            this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
         },
 
         showInfoModal: function(workspace, id) {
             this.$infoModal.find('.modal-title').html(id);
             this.$infoModalPanel.hide();
+            this.$infoModalError.hide();
             this.$infoModalLoadingPanel.show();
             this.$infoModal.modal();
 
@@ -368,8 +408,10 @@
                 }, this),
 
                 $.proxy(function(error) {
-                    var $errorPanel = this.buildWorkspaceErrorPanel("Sorry, an error occurred while loading object data", error);
-                    this.$infoModal.find('.modal-body').empty().append($errorPanel);
+                    this.$infoModalError.empty().append(this.buildWorkspaceErrorPanel("Sorry, an error occurred while loading object data", error));
+                    this.$infoModalLoadingPanel.hide();
+                    this.$infoModalPanel.hide();
+                    this.$infoModalError.show();
                 }, this)
             );
         },

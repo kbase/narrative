@@ -378,19 +378,31 @@
                 // format things to be how we want them.
                 $.each(narrData, function(idx, val) {
                     val = val.split(/\s+/);
-                    val.push('NarrativeData');
+                    var type = val[0];
+                    var identifier = val[1];
+
+                    // if there's a forward slash, it'll be ws/name
+                    // otherwise, it'll be ws.XXX.obj.YYY
+                    var ws = "";
+                    var name = "";
+
+                    if (identifer.indexOf('/') !== -1) {
+                        var arr = identifier.split('/');
+                        ws = arr[0];
+                        name = arr[1];
+                    }
+                    else {
+                        var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(identifier);
+                        if (qualId.length === 3) {
+                            ws = qualId[1];
+                            name = qualId[2];
+                        }
+                    }
                     if (!dataList[type])
                         dataList[type] = [];
-                    dataList[type].push(val);
+                    dataList[type].push([ws, name, type]);
                 });
             }
-            // dataList = {
-            //     'NarrativeData' : [
-            //         [ this.wsId, 'Object1', 'NarrativeData' ],
-            //         [ this.wsId, 'Object2', 'NarrativeData' ],
-            //         [ this.wsId, 'Object3', 'NarrativeData' ],
-            //     ]
-            // }
             this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
         },
 

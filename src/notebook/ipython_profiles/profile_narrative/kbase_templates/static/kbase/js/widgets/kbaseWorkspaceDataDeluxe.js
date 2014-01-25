@@ -423,7 +423,7 @@
 
 
             var obj = {};
-            // if workspace is all numeric assume its a workspace id, not a name.
+            // if workspace is all numeric, assume its a workspace id, not a name.
             if (/^\d+$/.exec(workspace))
                 obj['wsid'] = workspace;
             else
@@ -455,12 +455,14 @@
 
                     this.$infoModalLoadingPanel.hide();
                     this.$infoModalPanel.show();
+                    this.$infoModal.find('.modal-footer .btn-default').show();
                 }, this),
 
                 $.proxy(function(error) {
                     this.$infoModalError.empty().append(this.buildWorkspaceErrorPanel("Sorry, an error occurred while loading object data", error));
                     this.$infoModalLoadingPanel.hide();
                     this.$infoModalPanel.hide();
+                    this.$infoModal.find('.modal-footer .btn-default').hide();
                     this.$infoModalError.show();
                 }, this)
             );

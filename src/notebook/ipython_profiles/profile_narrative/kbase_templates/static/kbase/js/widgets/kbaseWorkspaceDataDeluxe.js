@@ -127,6 +127,7 @@
         },
 
         /**
+         * @method createStructure
          * Create the overall apparatus for the widget.
          * Makes the header, table, etc. DOM elements.
          * @returns this
@@ -219,6 +220,7 @@
 
             var $infoAccordion = $('<div>');
 
+            // The footer should have 3 buttons - a link to the type spec, object landing page, and a close button.
             var $footerButtons = $('<div>')
                                  .append($('<button>')
                                          .attr({
@@ -242,6 +244,8 @@
                                          })
                                          .append('Close'));
 
+            // The overall info modal structure.
+            // Thanks, Bootstrap!
             this.$infoModal = $('<div>')
                               .addClass('modal fade')
                               .append($('<div>')
@@ -294,8 +298,10 @@
         },
 
         /**
-         * Create the message element.
+         * @method createMessages
+         * Create the message elements.
          * @returns this
+         * @private
          */
         createMessages: function() {
             this.$loginMessage = $('<span>')
@@ -308,19 +314,15 @@
         },
 
         /**
-         * Create the 'loading' element.
-         * @returns this
-         */
-        createLoading: function() {
-            this.$loading = $('<img>').attr('src', this.options.loadingImage)
-                .css({display: 'none'})
-            this.$tbl.append(this.$loading);
-            return this;
-        },
-
-        /**
-         * Should reload all data without destroying stuff.
-         * Should.
+         * @method refresh
+         * This reloads any data that this panel should display.
+         * It uses the existing workspace client to fetch data from workspaces and populates the
+         * panel. It then fetches anything that's a part of the narrative (using the Narrative's metadata)
+         * and displays that
+         *
+         * XXX: THIS SHOULD NOT HAPPEN. It should be fetched by event through the main narrative controller.
+         *
+         * @public
          */
         refresh: function() {
             if (!this.wsClient) return;
@@ -392,6 +394,14 @@
             this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
         },
 
+        /**
+         * @method showInfoModal
+         * Populates and shows an informative modal window with metadata about the given object.
+         * This has links out to the landing pages for that object, as well.
+         * @param {String} workspace - the NAME (not id) of the workspace for the given object.
+         * @param {String} id - the NAME (not numerical id... I know.) of the object to display.
+         * @private
+         */
         showInfoModal: function(workspace, id) {
             this.$infoModal.find('.modal-title').html(id);
             this.$infoModalPanel.hide();
@@ -399,17 +409,6 @@
             this.$infoModalLoadingPanel.show();
             this.$infoModal.modal();
 
-    // funcdef get_object_info(list<ObjectIdentity> object_ids,
-    //     boolean includeMetadata) returns (list<object_info> info);
-
-    // typedef structure {
-    //     ws_name workspace;
-    //     ws_id wsid;
-    //     obj_name name;
-    //     obj_id objid;
-    //     obj_ver ver;
-    //     obj_ref ref;
-    // } ObjectIdentity;
             var obj = {
                 'workspace' : workspace,
                 'name' : id, 

@@ -42,6 +42,9 @@
             this._super(options);
             this.wsId = options.wsId;
 
+            /**
+             * This should be triggered if something wants to know what data is loaded from the current workspace
+             */
             $(document).on(
                 'dataLoadedQuery.Narrative', $.proxy(function(e, params, callback) {
                     var objList = this.getLoadedData(params);
@@ -52,6 +55,10 @@
                 this)
             );
 
+            /**
+             * This should be triggered when something updates the available data in either the narrative or
+             * in the workspace.
+             */
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
                     this.refresh();
@@ -59,6 +66,9 @@
                 this )
             );
 
+            /**
+             * This should be triggered when something wants to know what workspace this widget is currently linked to.
+             */
             $(document).on(
                 'workspaceQuery.Narrative', $.proxy(function(e, callback) {
                     if (callback) {
@@ -68,6 +78,10 @@
                 this)
             );
 
+            /**
+             * This should be triggered whenever something clicks on a data info button (or just
+             * wants the info modal to appear).
+             */
             $(document).on(
                 'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
                     this.showInfoModal(workspace, id);
@@ -83,6 +97,13 @@
             return this;
         },
 
+        /**
+         * @method loggedInCallback
+         * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
+         * is triggered when a login event occurs.
+         * It associates the new auth token with this widget and refreshes the data panel.
+         * @private
+         */
         loggedInCallback: function(event, auth) {
             this.authToken = auth;
             this.wsClient = new Workspace(this.options.workspaceURL, this.authToken);
@@ -91,6 +112,12 @@
             return this;
         },
 
+        /**
+         * @method loggedOutCallback
+         * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
+         * It throws away the auth token and workspace client, and refreshes the widget
+         * @private
+         */
         loggedOutCallback: function(event, auth) {
             this.authToken = null;
             this.wsClient = null;

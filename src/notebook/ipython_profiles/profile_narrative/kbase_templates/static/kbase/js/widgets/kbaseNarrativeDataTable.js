@@ -7,6 +7,7 @@
             workspaceURL: "http://140.221.84.209:7058", // "http://kbase.us/services/ws",
             wsBrowserURL: "http://140.221.85.168/landing-pages/#/ws/",
             landingPageURL: "http://140.221.85.168/landing-pages/#/",
+            noDataText: "No data found",
             data: null
         },
 
@@ -45,7 +46,7 @@
                 iDisplayLength: -1,
                 bPaginate: false,
                 oLanguage: {
-                    sZeroRecords: '<div style="text-align: center">No data found. Click <a href="http://kbase.us" target="_new">Here</a> to upload.</div>',
+                    sZeroRecords: '<div style="text-align: center">' + this.options.noDataText + '</div>',
                 },
                 aoColumns: [
                     { "sTitle": "Workspace", bVisible: false},

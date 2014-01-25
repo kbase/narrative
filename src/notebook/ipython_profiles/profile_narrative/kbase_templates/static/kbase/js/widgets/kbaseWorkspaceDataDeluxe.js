@@ -108,6 +108,7 @@
          * @private
          */
         createStructure: function() {
+            /*********** OUTER STRUCTURE ***********/
             // header bar.
             this.$elem.append($('<div>')
                               .addClass('kb-function-header')
@@ -132,6 +133,7 @@
                                  .hide();
             this.$elem.append(this.$loadingPanel);
 
+            // Something similar for the info modal
             this.$infoModalLoadingPanel = $('<div>')
                                  .addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">')
@@ -144,6 +146,8 @@
                                .hide();
             this.$elem.append(this.$errorPanel);
 
+
+            /*********** MAIN DATA TABLES ***********/
             // Contains all of a user's data
             // XXX: Initially just data from the current workspace.
             this.$myDataDiv = $('<div id="my-data">');
@@ -167,9 +171,11 @@
                 }
             );
 
-            this.$myDataDiv.kbaseNarrativeDataTable();
-            this.$narrativeDiv.kbaseNarrativeDataTable();
+            this.$myDataDiv.kbaseNarrativeDataTable({ noDataText: 'No data found! Click <a href="http://kbase.us/" target="_new">here</a> to upload.'});
+            this.$narrativeDiv.kbaseNarrativeDataTable({ noDataText: 'No data used in this Narrative yet!'});
 
+
+            /************ OBJECT DETAILS MODAL *************/
             // separate so it can be hidden
             this.$infoModalPanel = $('<div>');
 
@@ -352,13 +358,13 @@
                     dataList[type].push(val);
                 });
             }
-            dataList = {
-                'NarrativeData' : [
-                    [ this.wsId, 'Object1', 'NarrativeData' ],
-                    [ this.wsId, 'Object2', 'NarrativeData' ],
-                    [ this.wsId, 'Object3', 'NarrativeData' ],
-                ]
-            }
+            // dataList = {
+            //     'NarrativeData' : [
+            //         [ this.wsId, 'Object1', 'NarrativeData' ],
+            //         [ this.wsId, 'Object2', 'NarrativeData' ],
+            //         [ this.wsId, 'Object3', 'NarrativeData' ],
+            //     ]
+            // }
             this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
         },
 

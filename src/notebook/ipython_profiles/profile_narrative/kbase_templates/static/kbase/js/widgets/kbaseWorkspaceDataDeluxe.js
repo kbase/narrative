@@ -84,6 +84,7 @@
              */
             $(document).on(
                 'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
+                    console.log('invoked dataInfoClicked.Narrative on ' + workspace + ' ' + id);
                     this.showInfoModal(workspace, id);
                 }, 
                 this)
@@ -329,7 +330,6 @@
 
             this.showLoadingPanel();
 
-
             // Fetch data from the current workspace.
             this.wsClient.list_objects( 
                 {
@@ -379,20 +379,19 @@
                 $.each(narrData, function(idx, val) {
                     val = val.split(/\s+/);
                     var type = val[0];
-                    var identifier = val[1];
 
                     // if there's a forward slash, it'll be ws/name
                     // otherwise, it'll be ws.XXX.obj.YYY
                     var ws = "";
                     var name = "";
 
-                    if (identifer.indexOf('/') !== -1) {
-                        var arr = identifier.split('/');
+                    if (val[1].indexOf('/') !== -1) {
+                        var arr = val[1].split('/');
                         ws = arr[0];
                         name = arr[1];
                     }
                     else {
-                        var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(identifier);
+                        var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(val[1]);
                         if (qualId.length === 3) {
                             ws = qualId[1];
                             name = qualId[2];
@@ -403,6 +402,7 @@
                     dataList[type].push([ws, name, type]);
                 });
             }
+            console.log(dataList);
             this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
         },
 
@@ -421,10 +421,19 @@
             this.$infoModalLoadingPanel.show();
             this.$infoModal.modal();
 
-            var obj = {
-                'workspace' : workspace,
-                'name' : id, 
-            };
+
+            var obj = {};
+            // if workspace is all numeric assume its a workspace id, not a name.
+            if (/^\d+$/.exec(workspace))
+                obj['wsid'] = workspace;
+            else
+                obj['workspace'] = workspace;
+
+            // same for the id
+            if (/^\d+$/.exec(id))
+                obj['objid'] = id;
+            else
+                obj['name'] = id;
 
             // Fetch the workspace object.
             this.wsClient.get_object_history(obj, 

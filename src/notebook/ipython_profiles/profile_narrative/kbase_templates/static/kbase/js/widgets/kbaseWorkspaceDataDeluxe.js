@@ -378,31 +378,35 @@
             var dataList = {};
             if (narrData) {
                 // format things to be how we want them.
-                $.each(narrData, function(idx, val) {
+                $.each(narrData, $.proxy(function(idx, val) {
                     val = val.split(/\s+/);
                     var type = val[0];
 
-                    // if there's a forward slash, it'll be ws/name
-                    // otherwise, it'll be ws.XXX.obj.YYY
                     var ws = "";
                     var name = "";
 
+                    // if there's a forward slash, it'll be ws/name
                     if (val[1].indexOf('/') !== -1) {
                         var arr = val[1].split('/');
                         ws = arr[0];
                         name = arr[1];
                     }
-                    else {
+                    else if (/ws\.(\d+)\.obj\.(\d+)/.exec(val[1])) {
                         var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(val[1]);
                         if (qualId.length === 3) {
                             ws = qualId[1];
                             name = qualId[2];
                         }
                     }
+                    // otherwise-otherwise, it'll be just name, and we provide the workspace
+                    else {
+                        ws = this.wsId;
+                        name = val[1];
+                    }
                     if (!dataList[type])
                         dataList[type] = [];
                     dataList[type].push([ws, name, type]);
-                });
+                }, this));
             }
             console.log(dataList);
             this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);

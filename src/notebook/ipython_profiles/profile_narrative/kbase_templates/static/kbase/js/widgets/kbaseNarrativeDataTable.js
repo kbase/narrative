@@ -130,6 +130,9 @@
          */
         setData: function(data) {
             this.$dataSelect.empty();
+            if (!data || data.length === 0)
+                return;
+            
             // Add an 'all types' filter option that just shows everything.
             this.$dataSelect.append('<option value="">All Types</option>');
 
@@ -157,6 +160,7 @@
                 }, 
                 this)
             );
+            // this.$datatable.find('td').attr('nowrap', 'nowrap');
         },
     })
 

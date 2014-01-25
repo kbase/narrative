@@ -408,7 +408,6 @@
                     dataList[type].push([ws, name, type]);
                 }, this));
             }
-            console.log(dataList);
             this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
         },
 

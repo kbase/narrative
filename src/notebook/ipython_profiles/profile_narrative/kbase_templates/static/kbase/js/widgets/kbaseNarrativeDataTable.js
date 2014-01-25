@@ -85,7 +85,8 @@
                     { 'bSortable': false, 'aTargets': [ 0 ] },
                     {
                         mRender: function(data, type, row) {
-                            console.log(data + " " + type + " " + row);
+                            // if the 'data' (name) is too long,
+                            // truncate it and give it a tooltip with the full name.
                             if (data.length > 36) {
                                 var title = data;
                                 var abbrev = data.substring(0, 33);

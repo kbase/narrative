@@ -9,6 +9,9 @@
  * Triggers events:
  * dataUpdated.Narrative - when the loaded data table gets updated.
  * workspaceUpdated.Narrative - when the current workspace ID gets updated
+ * @author Bill Riehl <wjriehl@lbl.gov>
+ * @author Dan Gunger <dkgunter@lbl.gov>
+ * @public
  */
 (function( $, undefined ) {
 
@@ -23,7 +26,6 @@
         $errorMessage: null,
         $loading: null,
         isLoggedIn: false,
-//        authToken: null,
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
@@ -468,17 +470,26 @@
             );
         },
 
+        /**
+         * @method populateInfoModal
+         * Populates the info modal with currently loaded metadata from the given version index.
+         * This assumes this.objInfoList has a metadata array at versionIndex.
+         * It currently doesn't catch errors very well.
+         * @param {Integer} versionIndex - the index of the metadata version to show.
+         * @private
+         */
         populateInfoModal: function(versionIndex) {
             if (!versionIndex || versionIndex < 0 || versionIndex >= this.objInfoList.length)
                 versionIndex = 0;
 
             var info = this.objInfoList[versionIndex];
 
+            // A simple table row builder for two elements. The first column is bold.
             var addRow = function(a, b) {
                 return "<tr><td><b>" + a + "</b></td><td>" + b + "</td></tr>";
             };
 
-
+            /* Fill in the property table */
             this.$infoModalPropTable.empty()
                                     .append(addRow('ID', info[0]))
                                     .append(addRow('Name', info[1]))
@@ -505,12 +516,10 @@
 
             this.$infoModal.find('.modal-footer > div > button#obj-type-btn').off('click').click(function(event) { window.open(specPage); });
             this.$infoModal.find('.modal-footer > div > button#obj-details-btn').off('click').click(function(event) { window.open(landingPage); });
-
-
         },
 
         /**
-         * Returns a jQuery object containing information about the given error that's been passed from the workspace.
+         * Returns a jQuery div object containing information about the given error that's been passed from the workspace.
          */
         buildWorkspaceErrorPanel: function(msg, error) {
             var $errorPanel = $('<div>');
@@ -551,7 +560,7 @@
 
         /**
          * Returns the set of currently loaded data objects from the workspace.
-         * These are returned as ______
+         * These are returned as described below.
          *
          * If 'type' is a string, then it returns only objects matching that
          * object type (this is case-sensitive!).
@@ -585,12 +594,20 @@
             return dataSet;
         },
 
+        /**
+         * Shows the loading panel and hides all others
+         * @private
+         */
         showLoadingPanel: function() {
             this.$dataPanel.hide();
             this.$errorPanel.hide();
             this.$loadingPanel.show();
         },
 
+        /**
+         * Shows the full-size data panel and hides all others.
+         * @private
+         */
         showDataPanel: function() {
             this.$loadingPanel.hide();
             this.$errorPanel.hide();
@@ -604,13 +621,18 @@
          */
         showError: function(error) {
             this.$errorPanel = this.buildWorkspaceErrorPanel("Sorry, an error occurred while loading data.", error);
-
-
             this.$dataPanel.hide();
             this.$loadingPanel.hide();
             this.$errorPanel.show();
         },
 
+        /**
+         * @method prettyJson
+         * Prettifies a JSON string or object into a nicely formatted, colorized block.
+         * @param {String|Object} s - either a JSON string or a Javascript object
+         * @return {String} a prettified JSON string with some nice HTML color tags.
+         * @private
+         */
         prettyJson: function(s) {
             if (typeof s != 'string') {
                 s = JSON.stringify(s, undefined, 2);
@@ -636,6 +658,14 @@
             return s;
         },
 
+        /**
+         * Formats a given timestamp to look pretty.
+         * Takes any timestamp that the Javascript Date object can handle, and 
+         * returns it formatted as: MM/DD/YYYY, HH:MM:SS (in 24-hour time)
+         * @param {String} timestamp - the timestamp string
+         * @returns a formatted timestamp
+         * @private
+         */
         prettyTimestamp: function(timestamp) {
             var format = function(x) {
                 if (x < 10)
@@ -654,9 +684,6 @@
 
             return month + "/" + day + "/" + year + ", " + hours + ":" + minutes + ":" + seconds;
         },
-
-
-
     });
 
 })( jQuery );

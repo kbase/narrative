@@ -4,7 +4,9 @@ For data in KBase workspace
 .modal-body {
     max-height: 100%;
 }
-
+div[class="tooltip-inner"] {
+    max-width: 350px;
+}
 #kb-ws {
     background-color: #fff;
     width: 100%;

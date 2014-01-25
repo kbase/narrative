@@ -85,11 +85,18 @@
                     { 'bSortable': false, 'aTargets': [ 0 ] },
                     {
                         mRender: function(data, type, row) {
-                            return data + 
+                            console.log(data + " " + type + " " + row);
+                            if (data.length > 36) {
+                                var title = data;
+                                var abbrev = data.substring(0, 33);
+                                data = "<span data-toggle='tooltip' title='" + title + "'>" + abbrev + "..." + "</span>";
+                            }
+
+                            return "<div>" + data + 
                                    "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
                                    "data-ws='" + row[0] + "' " +
                                    "data-id='" + row[1] + "' " + 
-                                   "style='margin-top: -3px'></span>";
+                                   "style='margin-top: -3px'></span></div>";
                         },
                         aTargets: [1]
                     },
@@ -132,7 +139,7 @@
             this.$dataSelect.empty();
             if (!data || data.length === 0)
                 return;
-            
+
             // Add an 'all types' filter option that just shows everything.
             this.$dataSelect.append('<option value="">All Types</option>');
 
@@ -160,7 +167,7 @@
                 }, 
                 this)
             );
-            // this.$datatable.find('td').attr('nowrap', 'nowrap');
+            this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right'});
         },
     })
 

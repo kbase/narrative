@@ -23,6 +23,7 @@ c.NotebookApp.notebook_manager_class="biokbase.narrative.kbasewsmanager.KBaseWSN
 
 # The IP address the notebook server will listen on.
 # c.NotebookApp.ip = '127.0.0.1'
+c.NotebookApp.ip = '0.0.0.0'
 
 # The base URL for the notebook server
 # c.NotebookApp.base_project_url = '/'
@@ -45,6 +46,7 @@ c.NotebookApp.notebook_manager_class="biokbase.narrative.kbasewsmanager.KBaseWSN
 
 # The port the notebook server will listen on.
 # c.NotebookApp.port = 8888
+c.NotebookApp.port = 80
 
 # Whether to overwrite existing config files when copying
 # c.NotebookApp.overwrite = False

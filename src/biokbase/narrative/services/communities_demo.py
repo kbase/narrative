@@ -317,6 +317,7 @@ def _redo_annot(meth, workspace, in_seq, out_id):
         return json.dumps({'header': 'ERROR: %s'%stderr})
     param_nid = json.loads(stdout)['id']
     pwf = picrustWF.format(URLS.shock, seq_nid, param_nid)
+    return json.dumps({'header': pwf})
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     job = _submit_awe(pwf)
@@ -454,6 +455,9 @@ def _redo_annot(meth, workspace, model1, model2):
     :param model2: workspace ID of model 2
     :type model2: kbtypes.WorkspaceObjectId
     :ui_name model2: Model 2 Name
+    :param names: workspace ID of list of models, use if comparing more than two
+    :type names: kbtypes.Unicode
+    :ui_name names: Model List
     :return: Metagenome Model Comparison
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
@@ -462,12 +466,16 @@ def _redo_annot(meth, workspace, model1, model2):
     meth.stages = 2
     meth.advance("Processing inputs")
     # validate
-    if not (model1 and model2):
-        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
+    if names != '':
+        model_list = _get_ws(workspace, names).strip().split('\n')
+    elif (model1 != '') and (model2 != ''):
+        model_list = [model1, model2]
+    else:
+        return json.dumps({'header': 'ERROR: missing model1 and model2 names'})
     
     meth.advance("Compare Models")
-    cmd = "fba-compare-mdls %s;%s %s"%(model1, model2, workspace)
+    cmd = "fba-compare-mdls %s %s"%(';'.join(model_list), workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR: %s'%stderr})

@@ -24,6 +24,7 @@ from biokbase.mglib import tab_to_matrix
 ## Globals
 VERSION = (0, 0, 1)
 NAME = "communities"
+default_ws = 'communitiesdemo:home'
 
 class URLS:
     shock = "http://shock1.chicago.kbase.us"
@@ -246,6 +247,8 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
         return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     # set defaults since unfilled options are empty strings
     if top == '':
         top = 10
@@ -300,6 +303,8 @@ def _redo_annot(meth, workspace, in_seq, out_id):
         return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     
     meth.advance("Retrieve Data from Workspace")
     seq_nid = _get_ws(workspace, in_seq)['ID']
@@ -349,6 +354,8 @@ def _redo_annot(meth, workspace, in_name, out_name):
         return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     
     meth.advance("Building annotation set BIOM from abundance profile")
     cmd = "mg-kegg2ss --input %s --output text"%(in_name)
@@ -388,6 +395,8 @@ def _redo_annot(meth, workspace, in_name, out_name):
         return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     
     meth.advance("Retrieve Data from Workspace")
     _put_invo(in_name, _get_ws(workspace, in_name))
@@ -428,6 +437,8 @@ def _redo_annot(meth, workspace, in_name):
         return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     
     meth.advance("Gapfill Model Starting")
     cmd = "kbfba-gapfill %s --numsol 5 --timepersol 3600 --intsol -w %s"%(in_name, workspace)
@@ -462,6 +473,8 @@ def _redo_annot(meth, workspace, model1, model2):
         return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     
     meth.advance("Compare Models")
     cmd = "fba-compare-mdls %s;%s %s"%(model1, model2, workspace)
@@ -533,6 +546,8 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
         return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     # set defaults since unfilled options are empty strings
     if annot == '':
         annot = 'taxa'
@@ -614,6 +629,8 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
         return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     # set defaults since unfilled options are empty strings
     if stat_test == '':
         stat_test = 'Kruskal-Wallis'
@@ -680,6 +697,8 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     meth.advance("Processing inputs")
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     # set defaults since unfilled options are empty strings
     if direction == '':
         direction = 'desc'
@@ -737,6 +756,8 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
         json.dumps({'header': 'ERROR:<br>missing input'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     # set defaults since unfilled options are empty strings
     if gpos == '':
         gpos = 1
@@ -806,6 +827,8 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
         json.dumps({'header': 'ERROR:<br>missing input'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     # set defaults since unfilled options are empty strings
     if gpos == '':
         gpos = 1
@@ -879,6 +902,8 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
         return json.dumps({'header': 'ERROR:<br>missing input'})
     if not workspace:
         workspace = meth.workspace_id
+    if not meth.workspace_id:
+        workspace = default_ws
     # set defaults since unfilled options are empty strings
     if gpos == '':
         gpos = 1

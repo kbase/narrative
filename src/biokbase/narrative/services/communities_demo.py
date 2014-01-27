@@ -323,7 +323,7 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     job = _submit_awe(wf_str)
     if not job:
-        return json.dumps({'header': 'ERROR: AWE submission failed'%})
+        return json.dumps({'header': 'ERROR: AWE submission failed'})
     job_id = job['data']['id']
     
     meth.advance("Storing status in Workspace")

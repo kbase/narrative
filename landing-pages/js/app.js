@@ -127,11 +127,11 @@ var app = angular.module('landing-pages',
 
     $stateProvider
        .state('gptype', {
-            url: '/gwaspopulation/:id',
+            url: '/KBaseGwasData.GwasPopulation/:ws/:id',
             templateUrl: 'views/objects/gptype.html',
             controller: 'GPTypeDetail'})  
        .state('gttype', {
-            url: '/gwastraits/:id',
+            url: '/gwastraits/:ws/:id',
             templateUrl: 'views/objects/gttype.html',
             controller: 'GTTypeDetail'})  
 

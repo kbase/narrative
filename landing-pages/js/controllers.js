@@ -185,11 +185,11 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 .controller('GPTypeDetail', function($scope, $stateParams) {
-    $scope.params = {'gwaspopulationId': $stateParams.id}
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
 })
 
 .controller('GTTypeDetail', function($scope, $stateParams) {
-    $scope.params = {'gwastraitId': $stateParams.id}
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
 })
 
 

@@ -51,21 +51,35 @@
 
        <div class="page-header"><h3 id="gwas">GWAS Population</h3></div>
         <h4>URLs</h4>
-            <a href="#/gwas">#/gwas</a>
+            <a href="#/gwaspopulation/">#/gwaspopulation/</a>
             <span class="glyphicon glyphicon-check"></span><br>
 
         <h5>Params</h5>        
-            #/gwas/gwaspopulation/$workspaceId/$objId<br>
+            #/gwaspopulation/$objId<br>
         <h5>Examples</h5>        
-            <form class="form-inline" role="form" type="gwas">
-              #/gwas/gwaspopulation/
+            <form class="form-inline" role="form" type="gwaspopulation">
+              #/gwaspopulation/
               <div class="form-group">
-                <label class="sr-only" for="input1">Workspace</label>
-                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
-              </div> /
+                <label class="sr-only" for="input1">Object</label>
+                <input class="form-control" id="input1" placeholder="Object Id" value="Id">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Traits</h3></div>
+        <h4>URLs</h4>
+            <a href="#/gwastraits/">#/gwastraits/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/gwastraits/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="gwastraits">
+              #/gwastraits/
               <div class="form-group">
-                <label class="sr-only" for="input2">Object</label>
-                <input class="form-control" id="input2" placeholder="Object Id" value="kb|mastrunresult.2">
+                <label class="sr-only" for="input1">Object</label>
+                <input class="form-control" id="input1" placeholder="Object Id" value="Id">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>

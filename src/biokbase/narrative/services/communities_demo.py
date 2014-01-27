@@ -173,9 +173,9 @@ def _put_ws(wsname, name, data=None, ref=None):
     token = os.environ['KB_AUTH_TOKEN']
     ws = workspaceService(URLS.workspace)
     wtype = 'Communities.DataHandle-1.0' if ref else 'Communities.Data-1.0'
-    if data not None:
+    if data is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': 'Communities.Data-1.0', 'data': data})
-    elif ref not None:
+    elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': 'Communities.DataHandle-1.0', 'data': ref})
 
 def _label_ws_meta(meta):

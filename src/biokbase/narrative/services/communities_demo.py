@@ -393,13 +393,13 @@ def _redo_annot(meth, workspace, in_name, out_name):
     _put_invo(in_name, _get_ws(workspace, in_name))
     
     meth.advance("Create Metagenome Annotation Object")
-    cmd "fba-import-meta-anno %s -u %s.annot -n %s.annot -w %s"%(in_name, in_name, in_name, workspace)
+    cmd = "fba-import-meta-anno %s -u %s.annot -n %s.annot -w %s"%(in_name, in_name, in_name, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR:<br>%s'%stderr})
     
     meth.advance("Create Metagenome Model Object")
-    cmd "fba-metaanno-to-models %s.annot -m 1 -w %s -e %s"%(in_name, workspace, workspace)
+    cmd = "fba-metaanno-to-models %s.annot -m 1 -w %s -e %s"%(in_name, workspace, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR:<br>%s'%stderr})

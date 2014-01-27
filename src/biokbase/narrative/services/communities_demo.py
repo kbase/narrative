@@ -133,7 +133,7 @@ def _submit_awe(wf):
         f.write(wf)
     try:
         url = '%s/job'%(URLS.awe)
-        req = urllib2.Request(URLS.awe+'/job', data=urllib.urlencode({'upload': tmpfile}), headers=header)
+        req = urllib2.Request(URLS.awe+'/job', data=urllib.urlencode({'upload': tmpfile}), headers=headers)
         res = urllib2.urlopen(req)
         return json.loads(res.read())
     except:
@@ -322,6 +322,8 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     job = _submit_awe(wf_str)
+    if not job:
+        return json.dumps({'header': 'ERROR: AWE submission failed'%})
     job_id = job['data']['id']
     
     meth.advance("Storing status in Workspace")

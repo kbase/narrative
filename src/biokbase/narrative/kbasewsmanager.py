@@ -82,6 +82,10 @@ class KBaseWSNotebookManager(NotebookManager):
     # regex for parsing out workspace_id and object_id from
     # a "ws.{workspace}.{object}" string
     ws_regex = re.compile( '^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
+    # regex for parsing out fully qualified workspace name and object name
+    ws_regex2 = re.compile( '^(?P<wsname>[\w:]+)/(?P<objname>[\w]+)')
+    # regex for par
+    kbid_regex = re.compile( '^(kb\|[a-zA-Z]+\..+)')
 
     # This is a regular expression to make sure that the workspace ID doesn't contain
     # non-legit characters in the object ID field
@@ -197,7 +201,7 @@ class KBaseWSNotebookManager(NotebookManager):
         try:
             wsobj = ws_util.get_wsobj( self.wsclient(), notebook_id, self.ws_type)
         except ws_util.BadWorkspaceID, e:
-            raise web.HTTPError(500, u'Notebook % not found: %' % (notebook_id, e))
+            raise web.HTTPError(500, u'Notebook %s not found: %s' % (notebook_id, e))
         jsonnb = json.dumps(wsobj['data'])
         #self.log.debug("jsonnb = %s" % jsonnb)
         nb = current.reads(jsonnb,u'json')
@@ -206,7 +210,53 @@ class KBaseWSNotebookManager(NotebookManager):
         last_modified = dateutil.parser.parse(wsobj['metadata']['save_date'])
         self.log.debug("Notebook successfully read" )
         return last_modified, nb
-    
+
+    def extract_data_dependencies(self, nb):
+        """
+        This is an internal method that parses out the cells in the notebook nb
+        and returns an array of type:value parameters based on the form input
+        specification and the values entered by the user.
+
+        I the cell metadata, we look under:
+        kb-cell.method.properties.parameters.paramN.type
+
+        for anything that isn't a string or numeric, and we combine that type with
+        the corresponding value found under 
+        kb-cell.widget_state[0].state.paramN
+
+        We create an array of type:value pairs from the params and return that
+        """
+        # set of types that we ignore
+        ignore = set(['string','Unicode','Numeric','Integer','List'])
+        deps = set()
+        # What default workspace are we going to use?
+        ws = os.environ.get('KB_WORKSPACE_ID',nb.metadata.ws_name)
+        for wksheet in nb.get('worksheets'):
+            for cell in wksheet.get('cells'):
+                try:
+                    allparams = cell['metadata']['kb-cell']['method']['properties']['parameters']
+                except KeyError:
+                    continue
+                params = [ param for param in allparams.keys() if allparams[param]['type'] not in ignore]
+                try:
+                    paramvals = cell['metadata']['kb-cell']['widget_state'][0]['state']
+                except KeyError:
+                    continue
+                for param in params:
+                    try:
+                        paramval = paramvals[param]
+                        # Is this a fully qualified workspace name?
+                        if (self.ws_regex.match(paramval) or
+                            self.ws_regex2.match(paramval) or
+                            self.kbid_regex.match(paramval)):
+                            dep = "%s %s" % ( allparams[param]['type'], paramval)
+                        else:
+                            dep = "%s %s/%s" % ( allparams[param]['type'], ws, paramval)
+                        deps.add(dep)
+                    except KeyError:
+                        continue
+        return list(deps)
+
     def write_notebook_object(self, nb, notebook_id=None):
         """Save an existing notebook object by notebook_id."""
         self.log.debug("writing notebook %s." % notebook_id)
@@ -226,15 +276,14 @@ class KBaseWSNotebookManager(NotebookManager):
         # Carry over some of the metadata stuff from ShockNBManager
         try:
             if not hasattr(nb.metadata, 'ws_name'):
-                nb.metadata.ws_name = homews
+                nb.metadata.ws_name = os.environ.get('KB_WORKSPACE_ID',homews)
             if not hasattr(nb.metadata, 'creator'):
                 nb.metadata.creator = user_id
             if not hasattr(nb.metadata, 'type'):
                 nb.metadata.type = self.ws_type
             if not hasattr(nb.metadata, 'description'):
                 nb.metadata.description = ''
-            if not hasattr(nb.metadata, 'data_dependencies'):
-                nb.metadata.data_dependencies = []
+            nb.metadata.data_dependencies = self.extract_data_dependencies(nb)
             nb.metadata.format = self.node_format
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)

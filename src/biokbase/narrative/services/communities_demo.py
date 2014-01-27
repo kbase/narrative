@@ -252,7 +252,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     meth.advance("Processing inputs")
     # validate
     if not (mgid and out_name):
-        return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR:  missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if top == '':
@@ -274,7 +274,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
         cmd += " --rest"
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
     rows = len(stdout.strip().split('\n')) - 1
@@ -305,7 +305,7 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     meth.advance("Processing inputs")
     # validate
     if not (in_seq and out_id):
-        return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
@@ -314,7 +314,7 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     _run_invo("echo 'pick_otus:similarity 0.97' >> picrust.params")
     stdout, stderr = _run_invo("mg-upload2shock %s picrust.params"%(URLS.shock))
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     param_nid = json.loads(stdout)['id']
     pwf = picrustWF.format(URLS.shock, seq_nid, param_nid)
     
@@ -353,14 +353,14 @@ def _redo_annot(meth, workspace, in_name, out_name):
     meth.advance("Processing inputs")
     # validate
     if not (in_name and out_name):
-        return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Building annotation set BIOM from abundance profile")
     cmd = "mg-kegg2ss --input %s --output text"%(in_name)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
     rows = len(stdout.strip().split('\n')) - 1
@@ -391,7 +391,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     meth.advance("Processing inputs")
     # validate
     if not (in_name and out_name):
-        return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
@@ -401,13 +401,13 @@ def _redo_annot(meth, workspace, in_name, out_name):
     cmd = "fba-import-meta-anno %s -u %s.annot -n %s.annot -w %s"%(in_name, in_name, in_name, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Create Metagenome Model Object")
     cmd = "fba-metaanno-to-models %s.annot -m 1 -w %s -e %s"%(in_name, workspace, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     htmltext = "<br>".join( stdout.strip().split('\n') )
     return json.dumps({'header': htmltext})
 
@@ -430,14 +430,14 @@ def _redo_annot(meth, workspace, in_name):
     meth.advance("Processing inputs")
     # validate
     if not in_name:
-        return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Gapfill Model Starting")
     cmd = "kbfba-gapfill %s --numsol 5 --timepersol 3600 --intsol -w %s"%(in_name, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     htmltext = "<br>".join( stdout.strip().split('\n') )
     return json.dumps({'header': htmltext})
 
@@ -463,14 +463,14 @@ def _redo_annot(meth, workspace, model1, model2):
     meth.advance("Processing inputs")
     # validate
     if not (model1 and model2):
-        return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Compare Models")
     cmd = "fba-compare-mdls %s;%s %s"%(model1, model2, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     htmltext = "<br>".join( stdout.strip().split('\n') )
     return json.dumps({'header': htmltext})
 
@@ -533,7 +533,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     meth.advance("Processing inputs")
     # validate
     if not (ids and out_name):
-        return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if annot == '':
@@ -564,7 +564,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     meth.advance("Building abundance profile from communitites API")
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
     rows = len(stdout.strip().split('\n')) - 1
@@ -613,7 +613,7 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
     meth.advance("Processing inputs")
     # validate
     if not (in_name and groups and out_name):
-        return json.dumps({'header': 'ERROR:<br>missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if stat_test == '':
@@ -637,7 +637,7 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
         cmd += ' --order %d'%int(order)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
     rows = len(stdout.strip().split('\n')) - 1
@@ -697,7 +697,6 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
         cmd += ' --rows %d'%int(rows)
     stdout, stderr = _run_invo(cmd)
     table = [[c for c in r.split('\t')] for r in stdout.rstrip().split('\n')]
-    table[0].insert(0, 'Annotation')
     
     if out_name:
         meth.advance("Storing in Workspace")
@@ -734,7 +733,7 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
     meth.advance("Processing inputs")
     # validate
     if not in_name:
-        json.dumps({'header': 'ERROR:<br>missing input'})
+        json.dumps({'header': 'ERROR: missing input'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if gpos == '':
@@ -752,7 +751,7 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
     cmd = "mg-compare-boxplot-plot --input %s --plot %s.boxplot --format text"%(in_name, in_name)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Displaying Boxplot")
     text = 'Boxplot was produced for abundace profile %s.'%in_name
@@ -802,7 +801,7 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
     meth.advance("Processing inputs")
     # validate
     if not in_name:
-        json.dumps({'header': 'ERROR:<br>missing input'})
+        json.dumps({'header': 'ERROR: missing input'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if gpos == '':
@@ -832,7 +831,7 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
         cmd += ' --label'
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Displaying Heatmap")
     text = "A heatmap-dendrogram was produced from the abundance profile %s. The %s distance/dissimilarity was used to compute distances and %s was used to cluster the data. Rows (annotations) were sorted; columns were%s sorted."%(in_name, distance, cluster, '' if order.lower() == 'yes' else ' not')
@@ -874,7 +873,7 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
     meth.advance("Processing inputs")
     # validate
     if not in_name:
-        return json.dumps({'header': 'ERROR:<br>missing input'})
+        return json.dumps({'header': 'ERROR: missing input'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if gpos == '':
@@ -899,7 +898,7 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
         cmd += ' --three'
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR:<br>%s'%stderr})
+        return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Displaying PCoA")
     text = "A %s dimensional PCoA calculated from %s distance/dissimilarity was created from %s."%('three' if three.lower() == 'yes' else 'two', distance, in_name)

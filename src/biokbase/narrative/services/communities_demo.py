@@ -685,18 +685,22 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
         direction = 'desc'
 
     meth.advance("Retrieve Data from Workspace")
-    _put_invo(in_name, _get_ws(workspace, in_name))
+    data_table = _get_ws(workspace, in_name)
+    _put_invo(in_name, data_table)
     
     meth.advance("Manipulating Abundance Table")
-    cmd = "mg-select-significance --input %s --direction %s"%(in_name, direction)
-    if order != '':
-        cmd += ' --order %d'%int(order)
-    if cols != '':
-        cmd += ' --cols %d'%int(cols)
-    if rows != '':
-        cmd += ' --rows %d'%int(rows)
-    stdout, stderr = _run_invo(cmd)
-    table = [[c for c in r.split('\t')] for r in stdout.rstrip().split('\n')]
+    if not (order or cols or rows):
+        table = [[c for c in r.split('\t')] for r in data_table.rstrip().split('\n')]
+    else:
+        cmd = "mg-select-significance --input %s --direction %s"%(in_name, direction)
+        if order != '':
+            cmd += ' --order %d'%int(order)
+        if cols != '':
+            cmd += ' --cols %d'%int(cols)
+        if rows != '':
+            cmd += ' --rows %d'%int(rows)
+        stdout, stderr = _run_invo(cmd)
+        table = [[c for c in r.split('\t')] for r in stdout.rstrip().split('\n')]
     
     if out_name:
         meth.advance("Storing in Workspace")

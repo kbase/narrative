@@ -141,7 +141,7 @@ def _submit_awe(wf):
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
     invo = InvocationService(url=URLS.invocation, token=token)
-    stdout, stderr = invo.run_pipeline("", cmd, [], 1000, '/')
+    stdout, stderr = invo.run_pipeline("", cmd, [], 100000, '/')
     return "".join(stdout), "".join(stderr)
 
 def _get_invo(name):

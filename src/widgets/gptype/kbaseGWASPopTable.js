@@ -17,13 +17,13 @@
 
             var self = this;
 
-            this.workspaceClient = new workspaceService(this.workspaceURL);
+            this.workspaceClient = new Workspace(this.workspaceURL);
 
             //this.workspaceClient.get_object({"id" : 'arabidopsis_population_atwell_et_al', "type" : this.options.type, "workspace": 'genotype_phenotype'}, 
-            this.workspaceClient.get_object({"id" : this.options.id, "type" : this.options.type, "workspace": this.options.ws}, 
+            this.workspaceClient.get_objects([{name : this.options.id, workspace: this.options.ws}], 
                 function(data){
                     console.log(data);
-                    self.collection = data;
+                    self.collection = data[0];
                     //self.$elem.append("<h3>GWAS Population Ecotype Details</h3>");
 
                     var $domainTable = $("<table/>").addClass("table table-bordered table-striped");                        

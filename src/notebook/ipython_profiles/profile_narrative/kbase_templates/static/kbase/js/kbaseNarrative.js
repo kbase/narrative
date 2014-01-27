@@ -6,6 +6,7 @@
 (function( $ ) {
 
     var narr_ws = null;
+    var authToken = null;
 
     /**
      * Connecting to KBase..
@@ -22,12 +23,9 @@
         console.debug("kbaseConnected!");
         $('#main-container').removeClass('pause');
         $('#kb-ws-guard').removeClass('pause').css("display", "none");
-        if (narr_ws) {
-            var token = $("#login-widget").kbaseLogin("session", "token");
-            narr_ws.loggedIn(token);
-        }
+        authToken = $("#login-widget").kbaseLogin("session", "token");
     };
-    
+
     /**
      * main function.
      */
@@ -53,18 +51,23 @@
          * Once everything else is loaded and the Kernel is idle,
          * Go ahead and fill in the rest of the Javascript stuff.
          */
-        $([IPython.events]).on('status_idle.Kernel', function() {
-            if (narr_ws == null) {
-                $('#kb-ws').kbaseWorkspaceDataDeluxe({ wsId: IPython.notebook.metadata.ws_name });
+        $([IPython.events]).one('status_idle.Kernel', function() {
+            var workspaceId = IPython.notebook.metadata.ws_name;
 
-                // XXX: Should be renamed.... eventually?
-                narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
-                    loadingImage: "/static/kbase/images/ajax-loader.gif",
-                    ws_id: IPython.notebook.metadata.ws_name
-                });
-            }
-            if (token)
-                narr_ws.loggedIn(token);
+            $('#kb-ws').kbaseWorkspaceDataDeluxe({ 'wsId': workspaceId });
+
+            // XXX: Should be renamed.... eventually?
+            narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
+                loadingImage: "/static/kbase/images/ajax-loader.gif",
+                ws_id: IPython.notebook.metadata.ws_name
+            });
+
+
+            narr_ws.loggedIn(token);
+            var cmd = "import os\n" +
+                      "os.environ['KB_AUTH_TOKEN'] = '" + token + "'\n" +
+                      "os.environ['KB_WORKSPACE_ID'] = '" + workspaceId + "'\n";
+            IPython.notebook.kernel.execute(cmd, {}, {'silent' : true});
         });
 
     });

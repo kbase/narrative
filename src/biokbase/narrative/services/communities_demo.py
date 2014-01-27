@@ -689,8 +689,11 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     _put_invo(in_name, data_table)
     
     meth.advance("Manipulating Abundance Table")
-    if not (order or cols or rows):
-        table = [[c for c in r.split('\t')] for r in data_table.rstrip().split('\n')]
+    if (order == '') and (cols == ''):
+        if rows != '':
+            table = [[c for c in r.split('\t')] for r in data_table.rstrip().split('\n')[:int(rows)]]
+        else:
+            table = [[c for c in r.split('\t')] for r in data_table.rstrip().split('\n')]
     else:
         cmd = "mg-select-significance --input %s --direction %s"%(in_name, direction)
         if order != '':

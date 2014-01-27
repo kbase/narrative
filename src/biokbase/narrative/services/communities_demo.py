@@ -12,6 +12,7 @@ import os
 import base64
 import urllib
 import urllib2
+from string import Template
 from collections import defaultdict
 # Local
 from biokbase.narrative.common.service import init_service, method, finalize_service
@@ -34,8 +35,7 @@ class URLS:
     #invocation = "https://kbase.us/services/invocation"
     invocation = "http://140.221.85.110:443"
 
-picrustWF = """
-{
+picrustWF = """{
    "info" : {
       "clientgroups" : "qiime-wolfgang",
       "noretry" : true,
@@ -53,18 +53,18 @@ picrustWF = """
          "outputs" : {
             "otu_table.biom" : {
                "directory" : "ucr",
-               "host" : "{0}"
+               "host" : "$shock"
             }
          },
          "taskid" : "0",
          "inputs" : {
             "input.fas" : {
-               "node" : "{1}",
-               "host" : "{0}"
+               "node" : "$seq",
+               "host" : "$shock"
             },
             "otu_picking_params.txt" : {
-               "node" : "{2}",
-               "host" : "{0}"
+               "node" : "$param",
+               "host" : "$shock"
             }
          }
       },
@@ -75,7 +75,7 @@ picrustWF = """
          },
          "outputs" : {
             "normalized.biom" : {
-               "host" : "{0}"
+               "host" : "$shock"
             }
          },
          "dependsOn" : [
@@ -85,7 +85,7 @@ picrustWF = """
          "inputs" : {
             "otu_table.biom" : {
                "origin" : "0",
-               "host" : "{0}"
+               "host" : "$shock"
             }
          }
       },
@@ -96,7 +96,7 @@ picrustWF = """
          },
          "outputs" : {
             "prediction.biom" : {
-               "host" : "{0}"
+               "host" : "$shock"
             }
          },
          "dependsOn" : [
@@ -106,7 +106,7 @@ picrustWF = """
          "inputs" : {
             "normalized.biom" : {
                "origin" : "1",
-               "host" : "{0}"
+               "host" : "$shock"
             }
          }
       }
@@ -317,10 +317,11 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     if stderr:
         return json.dumps({'header': 'ERROR: %s'%stderr})
     param_nid = json.loads(stdout)['id']
-    pwf = picrustWF.format(URLS.shock, seq_nid, param_nid)
+    wf_tmp = Template(picrustWF)
+    wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_nid, param=param_nid)
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
-    job = _submit_awe(pwf)
+    job = _submit_awe(wf_str)
     job_id = job['data']['id']
     
     meth.advance("Storing status in Workspace")

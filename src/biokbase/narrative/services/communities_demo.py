@@ -34,7 +34,8 @@ class URLS:
     #invocation = "https://kbase.us/services/invocation"
     invocation = "http://140.221.85.110:443"
 
-picrustWF = """{
+picrustWF = """
+{
    "info" : {
       "clientgroups" : "qiime-wolfgang",
       "noretry" : true,
@@ -317,7 +318,6 @@ def _redo_annot(meth, workspace, in_seq, out_id):
         return json.dumps({'header': 'ERROR: %s'%stderr})
     param_nid = json.loads(stdout)['id']
     pwf = picrustWF.format(URLS.shock, seq_nid, param_nid)
-    return json.dumps({'header': pwf})
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     job = _submit_awe(pwf)

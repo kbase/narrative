@@ -91,7 +91,6 @@
                                         'print root.service.get_all_services(as_json_schema=True)\n';
 
             var self = this;
-            // We really only need the 'output' callback here.
             var callbacks = {
                 'output' : function(msgType, content) { 
                     self.parseKernelResponse(msgType, content); 
@@ -115,8 +114,8 @@
         },
 
         handleCallback: function(call, content) {
-            this.dbg("kbaseNarrativeFunctionPanel.handleCallback - " + call);
-            this.dbg(content);
+            // this.dbg("kbaseNarrativeFunctionPanel.handleCallback - " + call);
+            // this.dbg(content);
 
             if (content.status === "error") {
                 this.showError(content);
@@ -132,8 +131,8 @@
          */
         parseKernelResponse: function(msgType, content) {
             // if it's not a datastream, display some kind of error, and return.
-            this.dbg("kbaseNarrativeFunctionPanel.parseKernelResponse");
-            this.dbg(content);
+            // this.dbg("kbaseNarrativeFunctionPanel.parseKernelResponse");
+            // this.dbg(content);
 
             if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the function list.');
@@ -254,7 +253,6 @@
          * @private
          */
         showHelpPopup: function(method) {
-            console.log(method);
             this.$helpPanel.empty();
             this.$helpPanel.append($('<h1>').append(method.title + ' Help'))
                            .append(method.description)

@@ -9,6 +9,9 @@
  * Triggers events:
  * dataUpdated.Narrative - when the loaded data table gets updated.
  * workspaceUpdated.Narrative - when the current workspace ID gets updated
+ * @author Bill Riehl <wjriehl@lbl.gov>
+ * @author Dan Gunger <dkgunter@lbl.gov>
+ * @public
  */
 (function( $, undefined ) {
 
@@ -23,15 +26,15 @@
         $errorMessage: null,
         $loading: null,
         isLoggedIn: false,
-//        authToken: null,
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
-            workspaceURL: "http://140.221.84.209:7058",// "http://kbase.us/services/ws",
+            workspaceURL: "http://140.221.84.209:7058", // "http://kbase.us/services/ws",
+            wsBrowserURL: "http://140.221.85.168/landing-pages/#/ws/",
+            landingPageURL: "http://140.221.85.168/landing-pages/#/",
             container: null,
-            ws_id: null
         },
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
@@ -40,12 +43,10 @@
         init: function(options) {
             this._super(options);
             this.wsId = options.wsId;
-            this.$tbl = options.container;
-            // this.createTable()
-            //     .createMessages()
-            //     .createLoading()
-            //     .render();
 
+            /**
+             * This should be triggered if something wants to know what data is loaded from the current workspace
+             */
             $(document).on(
                 'dataLoadedQuery.Narrative', $.proxy(function(e, params, callback) {
                     var objList = this.getLoadedData(params);
@@ -56,13 +57,20 @@
                 this)
             );
 
+            /**
+             * This should be triggered when something updates the available data in either the narrative or
+             * in the workspace.
+             */
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
-                    this.render();
+                    this.refresh();
                 },
                 this )
             );
 
+            /**
+             * This should be triggered when something wants to know what workspace this widget is currently linked to.
+             */
             $(document).on(
                 'workspaceQuery.Narrative', $.proxy(function(e, callback) {
                     if (callback) {
@@ -72,13 +80,33 @@
                 this)
             );
 
+            /**
+             * This should be triggered whenever something clicks on a data info button (or just
+             * wants the info modal to appear).
+             */
+            $(document).on(
+                'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
+                    console.log('invoked dataInfoClicked.Narrative on ' + workspace + ' ' + id);
+                    this.showInfoModal(workspace, id);
+                }, 
+                this)
+            );
+
             this.createStructure()
-                .createMessages()
-                .render();
+                .createMessages();
+
+            this.trigger('workspaceUpdated.Narrative', this.wsId);
 
             return this;
         },
 
+        /**
+         * @method loggedInCallback
+         * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
+         * is triggered when a login event occurs.
+         * It associates the new auth token with this widget and refreshes the data panel.
+         * @private
+         */
         loggedInCallback: function(event, auth) {
             this.authToken = auth;
             this.wsClient = new Workspace(this.options.workspaceURL, this.authToken);
@@ -87,6 +115,12 @@
             return this;
         },
 
+        /**
+         * @method loggedOutCallback
+         * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
+         * It throws away the auth token and workspace client, and refreshes the widget
+         * @private
+         */
         loggedOutCallback: function(event, auth) {
             this.authToken = null;
             this.wsClient = null;
@@ -96,34 +130,62 @@
         },
 
         /**
+         * @method createStructure
          * Create the overall apparatus for the widget.
          * Makes the header, table, etc. DOM elements.
          * @returns this
          * @private
          */
         createStructure: function() {
+            /*********** OUTER STRUCTURE ***********/
+            // header bar.
             this.$elem.append($('<div>')
                               .addClass('kb-function-header')
-                              .append('Data'));
-            this.$dataTabs = $('<div id="data-tabs">');
-            this.$elem.append(this.$dataTabs);
+                              .append('Data')
+                              .append($('<button>')
+                                      .addClass('btn btn-xs btn-default pull-right')
+                                      .css({'margin-top': '-4px',
+                                            'margin-right': '4px'})
+                                      .click($.proxy(function(event) { this.refresh(); }, this))
+                                      .append($('<span>')
+                                              .addClass('glyphicon glyphicon-refresh'))));
 
-            this.$messagePanel = $('<div>').append("blahblah").hide();
-            this.$elem.append(this.$messagePanel);
+            // encapsulating data panel - all the data-related stuff goes in here.
+            // this way, it can all be hidden easily.
+            this.$dataPanel = $('<div id="data-tabs">');
+            this.$elem.append(this.$dataPanel);
 
+            // a loading panel that just has a spinning gif sitting in the middle.
+            this.$loadingPanel = $('<div>')
+                                 .addClass('kb-data-loading')
+                                 .append('<img src="' + this.options.loadingImage + '">')
+                                 .hide();
+            this.$elem.append(this.$loadingPanel);
+
+            // Something similar for the info modal
+            this.$infoModalLoadingPanel = $('<div>')
+                                 .addClass('kb-data-loading')
+                                 .append('<img src="' + this.options.loadingImage + '">')
+                                 .hide();
+            this.$infoModalError = $('<div>').hide();
+
+            // The error panel should overlap everything.
+            this.$errorPanel = $('<div>')
+                               .addClass('kb-error')
+                               .hide();
+            this.$elem.append(this.$errorPanel);
+
+
+            /*********** MAIN DATA TABLES ***********/
             // Contains all of a user's data
             // XXX: Initially just data from the current workspace.
             this.$myDataDiv = $('<div id="my-data">');
-            this.$myDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">');
-            this.$myDataDiv.append(this.$myDataTable);
 
             // Contains all data in the current narrative.
             this.$narrativeDiv = $('<div id="narrative-data">');
-            this.$narrativeDataTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table kb-data-table">');
-            this.$narrativeDiv.append(this.$narrativeDataTable);
 
             // Put these into tabs.
-            this.$dataTabs.kbaseTabs(
+            this.$dataPanel.kbaseTabs(
                 {
                     tabs : [
                         {
@@ -138,76 +200,55 @@
                 }
             );
 
-            // Initialize the datatables.
-            this.$myDataTable.dataTable({
-                sScrollX: '100%',
-                iDisplayLength: -1,
-                bPaginate: false,
-                oLanguage: {
-                    sZeroRecords: '<div style="text-align: center">No data found. Click <a href="http://kbase.us" target="_new">Here</a> to upload or use the search bar above.</div>',
-                },
-                aoColumns: [
-                    { "sTitle": "Workspace", bVisible: false},
-                    { "sTitle": "ID" },
-                    { "sTitle": "Type", bVisible: false },
-                ],
-                aoColumnDefs: [
-                    { 'bSortable': false, 'aTargets': [ 0 ] },
-                    {
-                        mRender: function(data, type, row) {
-                            // console.log(data + " - " + type + " - " + row);
-                            // var $div = $('<div>')
-                            //            .append(data)
-                            //            .append($('<span>')
-                            //                    .addClass('kb-function-help')
-                            //                    .append('?')
-                            //                    .click(function(event) { console.debug('clicked function link!'); }));
-                            // return $div;
-                            return data + 
-                                   "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
-                                   "data-ws='" + row[7] + "' " +
-                                   "data-id='" + row[1] + "' " + 
-                                   "style='margin-top: -3px'></span>";
-                        },
-                        aTargets: [1]
-                    },
-                ],
-                bInfo: false,
-                bLengthChange: false,
-                bPaginate: false,
-                bAutoWidth: true,
-                bScrollCollapse: true,
-                sScrollY: '240px',
-            });
+            this.$myDataDiv.kbaseNarrativeDataTable({ noDataText: 'No data found! Click <a href="http://kbase.us/" target="_new">here</a> to upload.'});
+            this.$narrativeDiv.kbaseNarrativeDataTable({ noDataText: 'No data used in this Narrative yet!'});
 
-            this.$narrativeDataTable.dataTable({
-                sScrollX: '100%',
-                iDisplayLength: -1,
-                bPaginate: false,
-                oLanguage: {
-                    sZeroRecords: '<div style="text-align: center">You haven\'t used any data in this narrative yet.</div>',
-                },
-                aoColumns: [
-                    { "sTitle": "ID" },
-                    { "sTitle": "Type", bVisible: false },
-                ],
-                aoColumnDefs: [
-                    { 'bSortable': false, 'aTargets': [ 0 ] },
-                    {
-                        mRender: function(data, type, row) {
-                            return data + "<span class='glyphicon glyphicon-question-sign kb-function-help' style='margin-top: -3px'></span>";
-                        },
-                        aTargets: [1]
-                    },
-                ],
-                bInfo: false,
-                bLengthChange: false,
-                bPaginate: false,
-                bAutoWidth: true,
-                bScrollCollapse: true,
-                sScrollY: '270px'
-            });
 
+            /************ OBJECT DETAILS MODAL *************/
+            // separate so it can be hidden
+            this.$infoModalPanel = $('<div>');
+
+            // the properties table
+            this.$infoModalPropTable = $('<table>')
+                                       .addClass('table table-bordered table-striped');
+            // the metadata div
+            this.$metadataDiv = $('<pre>');
+
+            // the version selector
+            this.$versionSelect = $('<select>')
+                                  .addClass('form-control')
+                                  .change($.proxy(function(event) {
+                                      this.populateInfoModal(this.$versionSelect.find('option:selected').val()); 
+                                  }, this));
+
+            var $infoAccordion = $('<div>');
+
+            // The footer should have 3 buttons - a link to the type spec, object landing page, and a close button.
+            var $footerButtons = $('<div>')
+                                 .append($('<button>')
+                                         .attr({
+                                             'type' : 'button',
+                                             'class' : 'btn btn-default',
+                                             'id' : 'obj-details-btn'
+                                         })
+                                         .append('Object Details'))
+                                 .append($('<button>')
+                                         .attr({
+                                             'type' : 'button',
+                                             'class' : 'btn btn-default',
+                                             'id' : 'obj-type-btn',
+                                         })
+                                         .append('Object Type Details'))
+                                 .append($('<button>')
+                                         .attr({
+                                             'type' : 'button',
+                                             'class' : 'btn btn-primary',
+                                             'data-dismiss' : 'modal'
+                                         })
+                                         .append('Close'));
+
+            // The overall info modal structure.
+            // Thanks, Bootstrap!
             this.$infoModal = $('<div>')
                               .addClass('modal fade')
                               .append($('<div>')
@@ -229,472 +270,300 @@
                                                               .addClass('modal-title'))
                                                       )
                                               .append($('<div>')
-                                                      .addClass('modal-body'))
+                                                      .addClass('modal-body')
+                                                      .append(this.$infoModalError)
+                                                      .append(this.$infoModalLoadingPanel)
+                                                      .append(this.$infoModalPanel
+                                                              .append($('<div>')
+                                                                      .append($('<h3>')
+                                                                              .append('Properties'))
+                                                                      .append(this.$infoModalPropTable))
+                                                              .append($infoAccordion)
+                                                              .append($('<form class="form-inline">')
+                                                                      .append('Version: ')
+                                                                      .append(this.$versionSelect))))
                                               .append($('<div>')
                                                       .addClass('modal-footer')
-                                                      .append($('<button>')
-                                                              .attr({
-                                                                'type' : 'button',
-                                                                'class' : 'btn btn-primary',
-                                                                'data-dismiss' : 'modal',
-                                                              })
-                                                              .append('Close'))
-                                                      )
-                                              )
-                                     );
+                                                      .append($footerButtons))));
 
             this.$elem.append(this.$infoModal);
+            $infoAccordion.kbaseAccordion(
+                {
+                    elements:
+                    [
+                        { 'title' : 'Metadata', 'body' : $('<div>').append(this.$metadataDiv) }
+                    ]
+                }
+            );
 
             return this;
 
         },
 
         /**
-         * Create the message element.
+         * @method createMessages
+         * Create the message elements.
          * @returns this
+         * @private
          */
         createMessages: function() {
             this.$loginMessage = $('<span>')
                 .text(this.options.notLoggedInMsg);
-            this.$loadingMessage = $('<div style="text-align:center">').append($('<img src="' + this.options.loadingImage + '">'));
+            this.$loadingMessage = $('<div>')
+                                   .css({'text-align': 'center'})
+                                   .append($('<img>')
+                                           .attr('src', this.options.loadingImage));
             return this;
         },
 
         /**
-         * Create the 'loading' element.
-         * @returns this
-         */
-        createLoading: function() {
-            this.$loading = $('<img>').attr('src', this.options.loadingImage)
-                .css({display: 'none'})
-            this.$tbl.append(this.$loading);
-            return this;
-        },
-
-        /**
-         * Should reload all data without destroying stuff.
-         * Should.
+         * @method refresh
+         * This reloads any data that this panel should display.
+         * It uses the existing workspace client to fetch data from workspaces and populates the
+         * panel. It then fetches anything that's a part of the narrative (using the Narrative's metadata)
+         * and displays that
+         *
+         * XXX: THIS SHOULD NOT HAPPEN. It should be fetched by event through the main narrative controller.
+         *
+         * @public
          */
         refresh: function() {
-            this.dbg("workspaceDataDeluxe.refresh");
+            if (!this.wsClient) return;
 
-            // Refresh the workspace client to work with the current token.
-            this.wsClient = new Workspace(this.workspaceURL, this.authToken);
+            this.showLoadingPanel();
 
+            // Fetch data from the current workspace.
             this.wsClient.list_objects( 
                 {
                     workspaces : [this.wsId],
                 }, 
                 $.proxy(function(list) {
+                    // first, go through the list and pull out Narrative objects.
+                    // otherwise it's a little recursive. Including a Narrative within its narrative 
+                    // would give me nightmares.
+
                     this.loadedData = {};
+                    var renderedData = {};
                     for (var i=0; i<list.length; i++) {
                         var type = list[i][2];
-                        if (!this.loadedData[type])
-                            this.loadedData[type] = [];
-                        this.loadedData[type].push(list[i]);
+                        if (type.indexOf('KBaseNarrative.Narrative') !== -1) {
+                            list.splice(i, 1);
+                            i--;
+                        }
+                        else {
+                            if (!this.loadedData[type]) {
+                                this.loadedData[type] = [];
+                                renderedData[type] = [];
+                            }
+                            this.loadedData[type].push(list[i]);
+                            renderedData[type].push([list[i][7], list[i][1], list[i][2]]);
+                        }
                     }
 
-                    console.debug(list);
-                    this.$myDataTable.fnClearTable();
-                    this.$myDataTable.fnAddData(list);
-                    this.$myDataTable.find('.kb-function-help').click(
-                        $.proxy(function(event) {
-                            var ws = $(event.target).attr('data-ws');
-                            var id = $(event.target).attr('data-id');
-                            this.showInfoModal(ws, id);
-                        }, 
-                        this)
-                    );
+                    this.$myDataDiv.kbaseNarrativeDataTable('setData', renderedData);
+
+                    this.trigger('dataUpdated.Narrative');
+                    this.showDataPanel();
 
                 }, this), 
                 $.proxy(function(error) {
                     this.showError(error);
                 }, this)
             );
+
+
+            // Fetch dependent data from the narrative
+            // XXX: this should be pushed in from the main narrative javascript! Maybe later.
+            var narrData = IPython.notebook.metadata.data_dependencies;
+            var dataList = {};
+            if (narrData) {
+                // format things to be how we want them.
+                $.each(narrData, $.proxy(function(idx, val) {
+                    val = val.split(/\s+/);
+                    var type = val[0];
+
+                    var ws = "";
+                    var name = "";
+
+                    // if there's a forward slash, it'll be ws/name
+                    if (val[1].indexOf('/') !== -1) {
+                        var arr = val[1].split('/');
+                        ws = arr[0];
+                        name = arr[1];
+                    }
+                    else if (/ws\.(\d+)\.obj\.(\d+)/.exec(val[1])) {
+                        var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(val[1]);
+                        if (qualId.length === 3) {
+                            ws = qualId[1];
+                            name = qualId[2];
+                        }
+                    }
+                    // otherwise-otherwise, it'll be just name, and we provide the workspace
+                    else {
+                        ws = this.wsId;
+                        name = val[1];
+                    }
+                    if (!dataList[type])
+                        dataList[type] = [];
+                    dataList[type].push([ws, name, type]);
+                }, this));
+            }
+            this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
         },
 
+        /**
+         * @method showInfoModal
+         * Populates and shows an informative modal window with metadata about the given object.
+         * This has links out to the landing pages for that object, as well.
+         * @param {String} workspace - the NAME (not id) of the workspace for the given object.
+         * @param {String} id - the NAME (not numerical id... I know.) of the object to display.
+         * @private
+         */
         showInfoModal: function(workspace, id) {
             this.$infoModal.find('.modal-title').html(id);
-            this.$infoModal.find('.modal-body').empty().append(this.$loadingMessage);
+            this.$infoModalPanel.hide();
+            this.$infoModalError.hide();
+            this.$infoModalLoadingPanel.show();
             this.$infoModal.modal();
-        },
 
-        /* Convert object metadata from list to object */
-        // _meta2obj: function(m) {
-        //     var md;
-        //     if (m[10] != undefined && m[10].length > 0) {
-        //         eval("md = " + m[10] + ";");
-        //     }
-        //     return {
-        //         'id': m[0], // an object_id
-        //         'type': m[1], //an object_type
-        //         'moddate': m[2].replace('T',' '), // a timestamp
-        //         'instance': m[3], // instance int
-        //         'command': m[4], // command string
-        //         'lastmodifier': m[5], // a username string
-        //         'owner': m[6], // a username string
-        //         'workspace': m[7], // a workspace_id string
-        //         'ref': m[8], // a workspace_ref string
-        //         'chsum': m[9], // a string
-        //         'metadata': md // an object
-        //     };
-        // },
 
-        infoPanel: function(name, type, callback) {
-            console.debug("infoPanel.begin");
-            // Load history for this obj
-            var key = this._item_key(name, type);
-            var meta = this._meta2obj(this.table_meta[key]);
-            var opts = {workspace: this.ws_id, auth: this.ws_auth, id: meta.id, type: meta.type};
-            //console.debug("get history, opts=",opts);
-            var self = this;
-            this.ws_client.object_history(opts,
-                function (results) {
-                    var $elem = $('#kb-obj');
-                    $elem.find(".modal-title").text(name);
-                    var objlist = _.map(results, self._meta2obj);
-                    var versions = _.map(objlist, function(m) {
-                            return [m.instance, m.moddate, m.lastmodifier]; 
-                    });
-                    self.infoTable(versions, objlist);
-                    callback($elem);
-                },
-                function () {
-                    alert("Failed to get info for '" + name + "'");
-                }
+            var obj = {};
+            // if workspace is all numeric, assume its a workspace id, not a name.
+            if (/^\d+$/.exec(workspace))
+                obj['wsid'] = workspace;
+            else
+                obj['workspace'] = workspace;
+
+            // same for the id
+            if (/^\d+$/.exec(id))
+                obj['objid'] = id;
+            else
+                obj['name'] = id;
+
+            // Fetch the workspace object.
+            this.wsClient.get_object_history(obj, 
+                $.proxy(function(infoList) {
+                    infoList.sort(function(a, b) { return b[4]-a[4]; });
+                    this.objInfoList = infoList;
+
+                    this.$versionSelect.empty();
+                    for (var i=0; i<this.objInfoList.length; i++) {
+                        var verStr = this.objInfoList[i][4] + ' - ' + this.prettyTimestamp(this.objInfoList[i][3]);
+                        if (i === 0)
+                            verStr += ' (most recent)';
+                        this.$versionSelect.append($('<option>')
+                                                   .attr('value', i)
+                                                   .append(verStr));
+                    }
+
+                    this.populateInfoModal(i);
+
+                    this.$infoModalLoadingPanel.hide();
+                    this.$infoModalPanel.show();
+                    this.$infoModal.find('.modal-footer .btn-default').show();
+                }, this),
+
+                $.proxy(function(error) {
+                    this.$infoModalError.empty().append(this.buildWorkspaceErrorPanel("Sorry, an error occurred while loading object data", error));
+                    this.$infoModalLoadingPanel.hide();
+                    this.$infoModalPanel.hide();
+                    this.$infoModal.find('.modal-footer .btn-default').hide();
+                    this.$infoModalError.show();
+                }, this)
             );
         },
 
-        infoTable : function(data, objlist) {
-            console.debug("infotable for objects",objlist);
-            var t = $('#kb-obj .kb-table table').dataTable();
-            t.fnDestroy();
-            t.dataTable({
-                aaData: data,
-                aoColumns : [
-                    { sTitle: 'Version', sWidth: "8em", bSortable: true, },
-                    { sTitle: 'Date', sWidth: "15em", bSortable: true },
-                    { sTitle: 'User', sWidth: "20em", bSortable: false }
-                ],
-                aaSorting: [[0, 'desc']],
-                bAutoWidth: false,
-                bFilter: false,
-                bInfo: false,
-                bLengthChange: false,
-                bPaginate: true,
-                iDisplayLength: 5,
-                sPaginationType: "bootstrap"                
-            });
-            // Add click handler for rows
-            var self = this;
-            var _tr = "#kb-obj .kb-table tbody tr";
-            var $rows = $(_tr); 
-            $rows.on("mouseover", function( e ) {
-                if ( $(this).hasClass('row_selected') ) {
-                    $(this).removeClass('row_selected');
-                }
-                else {
-                    t.$('tr.row_selected').removeClass('row_selected');
-                    $(this).addClass('row_selected');
-                }
-            });
-            var get_selected = function(tbl) {
-                return tbl.$('tr.row_selected');
-            }
+        /**
+         * @method populateInfoModal
+         * Populates the info modal with currently loaded metadata from the given version index.
+         * This assumes this.objInfoList has a metadata array at versionIndex.
+         * It currently doesn't catch errors very well.
+         * @param {Integer} versionIndex - the index of the metadata version to show.
+         * @private
+         */
+        populateInfoModal: function(versionIndex) {
+            if (!versionIndex || versionIndex < 0 || versionIndex >= this.objInfoList.length)
+                versionIndex = 0;
 
-            $rows.on("click", function( e ) {
-                if ( $(this).hasClass('row_selected') ) {
-                    var row = $(this)[0];
-                    var version = row.children[0].textContent * 1;
-                    // pick out instance that matches version
-                    var info = _.reduce(objlist, function(memo, val) {
-                        return val.instance == version ? val : memo;
-                    }, null);
-                    // populate and show description
-                    if (info != null) {
-                        self.descriptionPanel($("#kb-obj table.kb-info"), info);
-                    }
-                    else {
-                        // XXX: internal error
-                        alert("Object version " + version + " not found!");
-                    }
-                }
-            });
-            // Auto-select first row
-            $(_tr + ':first-of-type').mouseover().click();
+            var info = this.objInfoList[versionIndex];
+
+            // A simple table row builder for two elements. The first column is bold.
+            var addRow = function(a, b) {
+                return "<tr><td><b>" + a + "</b></td><td>" + b + "</td></tr>";
+            };
+
+            /* Fill in the property table */
+            this.$infoModalPropTable.empty()
+                                    .append(addRow('ID', info[0]))
+                                    .append(addRow('Name', info[1]))
+                                    .append(addRow('Type', info[2]))
+                                    .append(addRow('Save Date', this.prettyTimestamp(info[3])))
+                                    .append(addRow('Version', info[4]))
+                                    .append(addRow('Saved By', info[5]))
+                                    .append(addRow('Workspace ID', info[6]))
+                                    .append(addRow('Workspace Name', info[7]))
+                                    .append(addRow('Checksum', info[8]))
+                                    .append(addRow('Size (B)', info[9]));
+
+            // Parse the user metadata field.
+            var metadataJson = this.prettyJson(info[10]);
+            if (metadataJson === "{}")
+                metadataJson = "No metadata found for this object.";
+            this.$metadataDiv.empty().append(metadataJson);
+
+            var dataType = info[2];
+            var workspace = info[7];
+            var id = info[1];
+            var landingPage = this.options.landingPageURL + dataType + '/' + workspace + '/' + id;
+            var specPage = this.options.landingPageURL + 'spec/type/' + dataType;
+
+            this.$infoModal.find('.modal-footer > div > button#obj-type-btn').off('click').click(function(event) { window.open(specPage); });
+            this.$infoModal.find('.modal-footer > div > button#obj-details-btn').off('click').click(function(event) { window.open(landingPage); });
         },
-
-        descriptionPanel: function($elem, data) {
-            console.log("Populate descriptionPanel desc=",data);
-            var $footer = $('#kb-obj .modal-footer');
-            // remove old button bindings
-            $('#kb-obj .modal-footer button.btn').unbind();
-            $('#kb-obj .modal-footer button.btn').hide();
-            var self = this;
-            var body = $elem.find('tbody');
-            body.empty();
-            $.each(data, function(key, value) {
-                if (key != 'metadata') {
-                    var tr = body.append($('<tr>'));    
-                    tr.append($('<td>').text(key));
-                    tr.append($('<td>').text(value));
-                }
-            });
-            // Add metadata, if there is any
-            var $meta_elem = $('#kb-obj table.kb-metainfo');
-            var body = $meta_elem.find('tbody')
-            body.empty();
-            console.debug("Metadata:", data.metadata);
-            if (data.metadata !== undefined && Object.keys(data.metadata).length > 0) {
-                $.each(data.metadata, function(key, value) {
-                    console.debug("MD key=" + key + ", value=",value);
-                    // expect keys with '_' to mark sub-sections
-                    if (key.substr(0,1) == '_') {
-                        var pfx = key.substr(1, key.length);
-                        console.debug("Prefix: " + pfx);
-                        $.each(value, function(key2, value2) {
-                            var tr = body.append($('<tr>'));    
-                            // key
-                            var td = $('<td>');
-                            var $prefix = $('<span>').addClass("text-muted").text(pfx + " ");
-                            td.append($prefix);
-                            td.append($('<span>').text(key2));
-                            tr.append(td);
-                            // value
-                            tr.append($('<td>').text(value2));
-                        });
-                    }
-                    else {
-                        var tr = body.append($('<tr>'));    
-                        tr.append($('<td>').text(key));
-                        tr.append($('<td>').text(value));                        
-                    }
-                });
-            }
-            else {
-                body.append($('<tr>')).append($('<td>').text("No metadata"));
-            }
-            // XXX: hack! add button for viz if network
-            if (data.type == 'Networks') {
-                this.addNetworkVisualization(data);
-            }
-            else {
-                body.append($('<tr>')).append($('<td>').text("No metadata"));
-            }
-            // XXX: hack! add button for viz if network
-            // (slightly less of a hack now? --Bill)
-            this.addVisualizationButton(data);
-
-
-            // if (data.type === 'Networks') {
-            //     this.addNetworkVisualization(data);
-            // }
-
-
-        },
-
-//         addVisualizationButton: function(data) {
-//             var oid = data.id, oinst = data.instance;
-//             var $footer = $('#kb-obj .modal-footer');
-//             var $btn = $footer.find('button.kb-network');
-//             $btn.show();
-//             // add new button/binding
-//             var self = this;
-//             $btn.click(function(e) {
-//                 // Figure out the viz function for the data type.
-//                 // If it doesn't exist throw an error/warning and stop here.
-//                 // Later-- have it autogen/insert some kind of table for unregistered data types.
-//                 // Or maybe just insert the metadata?
-
-//                 var type = data.type;
-//                 type = type.trim().replace(/\s+/g, "_");
-
-//                 console.debug('making viz for ' + type);
-//                 var typeVizFunction = "_add" + type + "Visualization";
-//                 if (!self[typeVizFunction])
-//                     typeVizFunction = "_addDefaultVisualization";
-
-// //                console.debug("creating vis. for object: " + oid + "." + oinst);
-//                 var cell = IPython.notebook.insert_cell_at_bottom('markdown');
-//                 // put div inside cell with an addr
-//                 var eid = self._uuidgen();
-//                 var content = "<div id='" + eid + "'></div>";
-//                 cell.set_text(content);
-//                 // re-render cell to make <div> appear
-//                 cell.rendered = false;
-//                 cell.render();
-//                 // slap network into div by addr
-//                 var $target = $('#' + eid);
-//                 $target.css({'margin': '-10px'});
-
-//                 self[typeVizFunction](data, $target);
-
-//                 // $target.ForceDirectedNetwork({
-//                 //     workspaceID: self.ws_id + "." + oid + "#" + oinst,
-//                 //     token: self.ws_auth,
-//                 // });
-//             });
-//         },
-
-        // _addNetworksVisualization: function(data, $target) {
-        //     var oid = data.id;
-        //     var oinst = data.instance;
-        //     // var workspaceID = self.ws_id + "." + oid + "#" + oinst;
-        //     // var token = self.ws_auth;
-        //     $target.ForceDirectedNetwork({
-        //         workspaceID: this.ws_id + "." + oid + "#" + oinst,
-        //         token: this.ws_auth,
-        //     });
-
-        // },
-
-        // _addGenomeVisualization: function(data, $target) {
-        //     var tableRow = function(a, b) {
-        //         return $("<tr>")
-        //                .append("<td>" + a + "</td>")
-        //                .append("<td>" + b + "</td>");
-        //     };
-
-        //     var calcGC = function(gc, total) {
-        //         if (gc > 1)
-        //             gc = gc/total;
-        //         return (100*gc).toFixed(2);
-        //     };
-
-        //     var $metaTable = $("<table>")
-        //                      .addClass("table table-striped table-bordered")
-        //                      .css({"margin-left":"auto", "margin-right":"auto", "width":"100%"})
-        //                      .append(tableRow("<b>ID</b>", "<b>" + data.id + "</b>"))
-        //                      .append(tableRow("Scientific Name", data.metadata.scientific_name))
-        //                      .append(tableRow("Size", data.metadata.size + " bp"))
-        //                      .append(tableRow("GC Content", calcGC(data.metadata.gc, data.metadata.size) + "%"))
-        //                      .append(tableRow("Number Features", data.metadata.number_features))
-        //                      .append(tableRow("Workspace", data.workspace));
-
-        //     $target.append("<h3>Genome</h3>")
-        //            .append($metaTable);
-        // },
-
-        // _addMediaVisualization: function(data, $target) {
-        //     $target.kbaseMediaEditorNarrative({
-        //         ws: this.ws_id,
-        //         auth: this.ws_auth,
-        //         id: data.id,
-        //     });
-        // },
-
-        // _addModelVisualization: function(data, $target) {
-        //     var loading = $("<div>")
-        //                   .addClass("loading")
-        //                   .append("<img src='" + this.options.loadingImage + "' />Loading...");
-        //     $target.append(loading);
-
-        //     var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
-        //     var modelAJAX = fba.get_models_async(
-        //         {
-        //             models: [data.id], 
-        //             workspaces: [this.ws_id], 
-        //             auth: this.ws_auth
-        //         },
-        //         function(data) {
-        //             $target.find(".loading").remove();
-        //             $target.kbaseModelTabs({ modelsData: data });
-        //         });
-        // },
-
-        // _addFBAVisualization: function(data, $target) {
-        //     var loading = $("<div>")
-        //                   .addClass("loading")
-        //                   .append("<img src='" + this.options.loadingImage + "' />Loading...");
-        //     $target.append(loading);
-
-        //     var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
-        //     var modelAJAX = fba.get_fbas_async(
-        //         {
-        //             fbas: [data.id], 
-        //             workspaces: [this.ws_id], 
-        //             auth: this.ws_auth
-        //         },
-        //         function(data) {
-        //             $target.find(".loading").remove();
-        //             $target.kbaseFbaTabsNarrative({ fbaData: data });
-        //         });
-        // },
-
-        // // _addContigSetVisualization: function(data, $target) {
-
-        // // },
-
-        // // Just adds a simple table with ID, datatype, owner, and ws location for now.
-        // // Maybe something fancier later.
-        // _addDefaultVisualization: function(data, $target) {
-        //     var $metaTable = $("<table>")
-        //                      .addClass("table table-striped table-bordered")
-        //                      .css({"margin-left" : "auto", "margin-right" : "auto"});
-
-        //     var makeRow = function(a, b) {
-        //         var row = $("<tr>")
-        //                   .append("<td>" + a + "</td>")
-        //                   .append("<td>" + b + "</td>");
-
-        //         return row;
-        //     };
-
-        //     console.log(data);
-
-        //     $metaTable.append(makeRow("ID", data.id))
-        //               .append(makeRow("Type", data.type))
-        //               .append(makeRow("Owner", data.owner))
-        //               .append(makeRow("Workspace", data.workspace));
-
-        //     $target.append("<h3>Data Object</h3>(No visualization available)")
-        //            .append($metaTable);
-
-        // },
-
-        _uuidgen: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);});
-         },
 
         /**
-         * Render the widget.
-         * This fetches the list of data sets for the workspace.
-         *
-         * @returns this
+         * Returns a jQuery div object containing information about the given error that's been passed from the workspace.
          */
-        render: function() {
-            this.hideMessages();
-            if (!this.isLoggedIn) {
-                this.clearTable();
-                this.$loginMessage.show();
-            }
-//             else {
-// //                this.$loading.show();
-//                 var that = this;
+        buildWorkspaceErrorPanel: function(msg, error) {
+            var $errorPanel = $('<div>');
+            var $errorHeader = $('<div>')
+                               .addClass('alert alert-danger')
+                               .append('<b>' + msg + '</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20data%20loading%20error">help@kbase.us</a> with the information below.');
 
-//                 this.setWs(function() {
-//                     var opts = {workspace: that.ws_id, auth: that.ws_auth};
-//                     that.ws_client.list_workspace_objects(opts,
-//                         function(results) {
-//                             that.updateResults(results);
-//                             that.createTable();
-//                         },
-//                         function(err) {
-//                             that.$loading.hide();
-//                             that.$errorMessage.show();
-//                         }
-//                     )
-// //                    that.$loading.hide();
-//                 });
-//             }
-            return this;
+            $errorPanel.append($errorHeader);
+
+            // If it's a string, just dump the string.
+            if (typeof error === 'string') {
+                $errorPanel.append($('<div>').append(error));
+            }
+
+            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            else if (typeof error === 'object') {
+                var $details = $('<div>');
+                $details.append($('<div>').append('<b>Code:</b> ' + error.error.code))
+                        .append($('<div>').append('<b>Message:</b> ' + error.error.message));
+
+                var $tracebackDiv = $('<div>')
+                                 .addClass('kb-function-error-traceback')
+                                 .append(error.error.error);
+                // for (var i=0; i<error.traceback.length; i++) {
+                //     $tracebackDiv.append(error.traceback[i] + "<br>");
+                // }
+
+                var $tracebackPanel = $('<div>');
+                var tracebackAccordion = [{'title' : 'Details', 'body' : $tracebackDiv}];
+
+                $errorPanel.append($details);
+                //                 .append($tracebackPanel);
+                // $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+            }
+
+            return $errorPanel;
         },
 
         /**
          * Returns the set of currently loaded data objects from the workspace.
-         * These are returned as ______
+         * These are returned as described below.
          *
          * If 'type' is a string, then it returns only objects matching that
          * object type (this is case-sensitive!).
@@ -729,154 +598,23 @@
         },
 
         /**
-         * Set or create workspace
-         *
-         * Sets this.ws_id to name of workspace.
-         * Also puts this into Notebook metadata.
-         *
-         * @returns this
-         */
-        setWs: function(set_cb) {
-            console.debug("setWs.begin");
-            if (this.ws_id != null) {
-                console.debug("setWs.end already-set ws_id=" + this.ws_id);
-                set_cb();
-                return;
-            }
-            var name = null;
-            // Get workspace name from metadata, or create new
-            var nb = IPython.notebook;
-            var md = nb.metadata;
-            if (md.hasOwnProperty(this.WS_NAME_KEY)) {
-                // use existing name from notebook metadata
-                name = md[this.WS_NAME_KEY];
-            }
-            else {
-                // use "home" workspace
-                name = md[this.WS_NAME_KEY] = this.getHomeWorkspace();
-            }
-            console.debug("Ensuring workspace", name);
-            this.ensureWorkspace(name,
-                function() { set_cb(); },
-                function(err) {
-                    console.error("Cannot get/create workspace: " + name, err);
-                });
-            this.ws_id = name;
-            this.trigger('workspaceUpdated.Narrative', this.ws_id);
-            // Set the title of the UI element showing the data
-            //$('#kb-wsname').text(name);
-            
-            return this;
-        },
-
-        getHomeWorkspace: function() {
-            var _fn = "getHomeWorkspace."
-            var user = "hdresden";
-            if (this.ws_auth != null) {
-                var un = this.ws_auth.match(/un=[\w_]+|/);
-                user = un[0].substr(3, un[0].length - 3);
-                console.debug(_fn + "extract user_name=" + user);
-            }
-            else {
-                console.warn(_fn + "auth-not-set user_name=" + user);
-            }
-            return user + "_home";
-        },
-
-        /**
-         * Ensure that workspace `name` exists, by trying to
-         * create it. The provided errorCallback will only be called
-         * if the call to create the workspace failed for some reason
-         * _other_ than the prior existence of the workspace.
-         */
-        ensureWorkspace: function(name, _callback, _errorCallback) {
-            var _fn = "ensureWorkspace.";
-            var params = {auth: this.ws_auth, workspace: name};
-            console.debug(_fn + "create name=" + name);
-            return this.ws_client.create_workspace(params, _callback, function(result) {
-                var error_text = result.error.message;
-                if (error_text.indexOf("exists") >= 0) {
-                    // The error message will have 'exists' if the workspace already exists.
-                    // XXX: String checks are fragile, but we have no error type codes.
-                    return _callback(result); // stay calm and carry on
-                }
-                else {
-                    // Something other than workspace already existing;
-                    // pass to user-provided error handler.
-                    console.warn(_fn + "failed");
-                    return _errorCallback(result);
-                }
-            });
-        },
-
-
-        /**
-         * Display new data in the table.
-         *
-         * @param results The new data
-         * @returns this
-         */
-//         updateResults: function(results) {
-//             /* Store the current set of loaded metadata as:
-//              * { 
-//              *    type1 : [ [metadata1], [metadata2], [metadata3], ... ],
-//              *    type2 : [ [metadata4], [metadata5], [metadata6], ... ]
-//              * }
-//              */
-//             this.loadedData = {};
-//             for (var i=0; i<results.length; i++) {
-//                 var type = results[i][1];
-//                 if (!this.loadedData[type])
-//                     this.loadedData[type] = [];
-//                 this.loadedData[type].push(results[i]);
-//             }
-// //            console.log(this.loadedData);
-
-//             var mdstring = '';
-//             $.each(IPython.notebook.metadata, function(key, val) {
-//                 mdstring = mdstring + key + "=" + val + "\n";
-//             });
-// //            console.log('notebook metadata = ' + mdstring);
-//             // just columns shown
-//             this.tableData = [ ];
-//             // all data from table, keyed by object name + type
-//             this.table_meta = { }; // *all* data from table
-//             this.table_meta_versions = {}; /* all versions of selected objects, empty for now */
-//             // Extract selected columns from full result set
-//             var i1 = this.NAME_IDX, i2 = this.TYPE_IDX;
-//             for (var i=0; i < results.length; i++) {
-//                 var name = results[i][i1], type = results[i][i2];
-//                 this.tableData.push([name, type]);
-//                 this.table_meta[this._item_key(name, type)] = results[i];
-//             }
-
-//             this.trigger('dataUpdated.Narrative');
-//         },
-
-        /**
-         * Get key for one row in the object table.
-         *
-         * @param name (string): object name
-         * @param type (string): object type
-         * @return (string) key
+         * Shows the loading panel and hides all others
          * @private
          */
-        // _item_key: function(name, type) {
-
-        //     return name + '/' + type;
-        // },
-
-        clearTable: function() {
-            if (this.table) {
-                this.table.fnDestroy();
-                this.table = null;
-            }
-            return this;
+        showLoadingPanel: function() {
+            this.$dataPanel.hide();
+            this.$errorPanel.hide();
+            this.$loadingPanel.show();
         },
 
-        hideMessages: function() {
-            // this.$errorMessage.hide();
-            // this.$loginMessage.hide();
+        /**
+         * Shows the full-size data panel and hides all others.
+         * @private
+         */
+        showDataPanel: function() {
+            this.$loadingPanel.hide();
+            this.$errorPanel.hide();
+            this.$dataPanel.show();
         },
 
         /**
@@ -885,41 +623,69 @@
          * @private
          */
         showError: function(error) {
-            var $errorHeader = $('<div>')
-                               .addClass('alert alert-danger')
-                               .append('<b>Sorry, an error occurred while loading data.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20data%20loading%20error">help@kbase.us</a> with the information below.');
-
-            this.$errorPanel.empty();
-            this.$errorPanel.append($errorHeader);
-
-            // If it's a string, just dump the string.
-            if (typeof error === 'string') {
-                this.$errorPanel.append($('<div>').append(error));
-            }
-
-            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
-            else if (typeof error === 'object') {
-                var $details = $('<div>');
-                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
-                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
-
-                var $tracebackDiv = $('<div>')
-                                 .addClass('kb-function-error-traceback');
-                for (var i=0; i<error.traceback.length; i++) {
-                    $tracebackDiv.append(error.traceback[i] + "<br>");
-                }
-
-                var $tracebackPanel = $('<div>');
-                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
-
-                this.$errorPanel.append($details)
-                                .append($tracebackPanel);
-                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
-            }
-
-            this.$functionPanel.hide();
+            this.$errorPanel = this.buildWorkspaceErrorPanel("Sorry, an error occurred while loading data.", error);
+            this.$dataPanel.hide();
             this.$loadingPanel.hide();
             this.$errorPanel.show();
+        },
+
+        /**
+         * @method prettyJson
+         * Prettifies a JSON string or object into a nicely formatted, colorized block.
+         * @param {String|Object} s - either a JSON string or a Javascript object
+         * @return {String} a prettified JSON string with some nice HTML color tags.
+         * @private
+         */
+        prettyJson: function(s) {
+            if (typeof s != 'string') {
+                s = JSON.stringify(s, undefined, 2);
+            }
+            s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+                function (match) {
+                    var cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'key';
+                        } else {
+                            cls = 'string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                }
+            );
+            return s;
+        },
+
+        /**
+         * Formats a given timestamp to look pretty.
+         * Takes any timestamp that the Javascript Date object can handle, and 
+         * returns it formatted as: MM/DD/YYYY, HH:MM:SS (in 24-hour time)
+         * @param {String} timestamp - the timestamp string
+         * @returns a formatted timestamp
+         * @private
+         */
+        prettyTimestamp: function(timestamp) {
+            var format = function(x) {
+                if (x < 10)
+                    x = '0' + x;
+                return x;
+            };
+
+            var d = new Date(timestamp);
+            var hours = format(d.getHours());
+
+            var minutes = format(d.getMinutes());
+            var seconds = format(d.getSeconds());
+            var month = d.getMonth()+1;
+            var day = format(d.getDate());
+            var year = d.getFullYear();
+
+            return month + "/" + day + "/" + year + ", " + hours + ":" + minutes + ":" + seconds;
         },
     });
 

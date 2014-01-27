@@ -178,22 +178,7 @@ class="notebook_app"
 
     <div id="left-column">
         <div id="kb-ws">
-<!--             <div class="kb-header"><span id='kb-wsname'>Data</span></div>
-            <div class="kb-controls"><span id='kb-ws-upload-dialog'></span>
-            </div>
-            <div class="kb-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
- -->        </div>
+        </div>
         <!-- <div class="kb-ws-browser-link">
             See more in the 
             <a href="http://140.221.84.142/" target="_blank">workspace browser</a>.
@@ -206,7 +191,6 @@ class="notebook_app"
 
      <div id="content-column">
         <div id="menubar-container">
-            
             <div id="maintoolbar" class="navbar" style="z-index:100">
               <div class="toolbar-inner navbar-nobg">
                 <div id="maintoolbar-container" class="container"></div>
@@ -216,16 +200,15 @@ class="notebook_app"
 
 
         <div id="narrative-title">
-      <span id="save_widget" class="nav pull-left">
-        <span id="notebook_name"></span>
-        <span id="checkpoint_status"></span>
-        <span id="autosave_status"></span>
-      </span>
-      <span> &nbsp;</span>
+            <span id="save_widget" class="nav pull-left">
+                <span id="notebook_name"></span>
+                <span id="checkpoint_status"></span>
+                <span id="autosave_status"></span>
+            </span>
+            <span> &nbsp;</span>
         </div>
 
         <div id="ipython-main-app">
-
             <div id="notebook_panel">
                 <div id="notebook"></div>
                 <div id="pager_splitter"></div>
@@ -296,7 +279,7 @@ class="notebook_app"
   </div><!-- /.modal -->
 
 <div id='tooltip' class='ipython_tooltip' style='display:none'></div>
-
+<div id='widget-tooltip' class='ipython_tooltip' style='display:none; min-height: 25px;'>Test message</div>
 
 {% endblock %}
 
@@ -323,6 +306,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/kbaseAccordion.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeFunctionPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceDataDeluxe.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseDeletePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -353,6 +337,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeComparison.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGeneTable.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseImageView.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaModelComparison.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>

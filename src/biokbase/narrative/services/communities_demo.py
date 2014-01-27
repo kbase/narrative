@@ -127,12 +127,11 @@ def _get_wsname(meth, ws):
 def _submit_awe(wf):
     tmpfile = 'awewf.json'
     headers = { 'Accept': 'application/json',
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
                 'Datatoken': os.environ['KB_AUTH_TOKEN'] }
     with open(tmpfile, 'w') as f:
         f.write(wf)
     try:
-        url = '%s/job'%(URLS.awe)
         req = urllib2.Request(URLS.awe+'/job', data=urllib.urlencode({'upload': tmpfile}), headers=headers)
         res = urllib2.urlopen(req)
         return json.loads(res.read())

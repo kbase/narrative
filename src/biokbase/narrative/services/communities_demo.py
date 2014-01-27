@@ -642,7 +642,7 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
     meth.advance("Storing in Workspace")
     rows = len(stdout.strip().split('\n')) - 1
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': stdout}
-    text = "The %s test was applied to %s to find annotations that exhibited the most significant differences in abundance. Column %d of the metadata file %s was used to create sample groupings. Analysis results are in %s; these were sorted in %s order by column %d. The last three columns of the result file contain the test statistic, statistic p, and statistic fdr respectively."%(stat_test, in_name, int(gpos), groups, out_name, direction, int(order))
+    text = "The %s test was applied to %s to find annotations that exhibited the most significant differences in abundance. Column %d of the metadata file %s was used to create sample groupings. Analysis results are in %s; these were sorted in %s order by column %d. The last three columns of the result file contain the test statistic, statistic p, and statistic fdr respectively."%(stat_test, in_name, int(gpos), groups, out_name, direction, -1 if order == '' else int(order))
     _put_ws(workspace, out_name, data=data)
     return json.dumps({'header': text})
 

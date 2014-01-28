@@ -12,6 +12,8 @@ import os
 import base64
 import urllib
 import urllib2
+import cStringIO
+import pycurl
 from string import Template
 from collections import defaultdict
 # Local
@@ -129,12 +131,19 @@ def _get_wsname(meth, ws):
 
 def _submit_awe(wf):
     tmpfile = 'awewf.json'
-    header  = {'Content-Type': 'multipart/form-data', 'Datatoken': os.environ['KB_AUTH_TOKEN']}
     with open(tmpfile, 'w') as f:
         f.write(wf)
-    req = urllib2.Request(URLS.awe+'/job', data=urllib.urlencode({'upload': tmpfile}), headers=header)
-    res = urllib2.urlopen(req)
-    return json.loads(res.read())
+    response = cStringIO.StringIO()
+    headers = ['Content-Type: multipart/form-data', 'Datatoken: %s'%os.environ['KB_AUTH_TOKEN']]
+    c = pycurl.Curl()
+    c.setopt(c.POST, 1)
+    c.setopt(c.URL, URLS.awe+"/job")
+    c.setopt(c.HTTPPOST, [("upload", (c.FORM_FILE, tmpfile))])
+    c.setopt(c.HTTPHEADER, header)
+    c.setopt(c.WRITEFUNCTION, response.write)
+    c.perform()
+    c.close()
+    return json.loads(response.getvalue())
     
 def _get_awe_job(jobid):
     req = urllib2.Request('%s/job/%s'%(URLS.awe, jobid))
@@ -324,8 +333,6 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     job = _submit_awe(wf_str)
-    if not job:
-        return json.dumps({'header': 'ERROR: AWE submission failed'})
     job_id = job['data']['id']
     
     meth.advance("Storing job in Workspace")

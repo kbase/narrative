@@ -297,7 +297,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     _put_ws(workspace, out_name, data=data)
     return json.dumps({'header': text})
 
-@method(name="Predict PICRUSt Abundance Profile")
+@method(name="PICRUSt Predicted Abundance Profile")
 def _redo_annot(meth, workspace, in_seq, out_id):
     """Create a KEGG annotated functional abundance profile BIOM for 16S data using PICRUSt.
 

@@ -39,7 +39,7 @@
                     var leg_src = "data:image/"+this.options.type+";base64,"+this.options.legend;
                     var leg_img = $('<img>')
                         .attr({'src': leg_src, 'alt': 'Embedded Image'})
-                        .css({'height': 'auto', 'width': 'auto', 'max-width': '150px'});
+                        .css({'height': 'auto', 'width': 'auto', 'max-width': '175px'});
                     var table = $('<table>')
                         .css({'margin-left': 'auto', 'margin-right': 'auto', 'border': '0'});
                     var tr = $('<tr>');

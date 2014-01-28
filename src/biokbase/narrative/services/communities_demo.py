@@ -517,7 +517,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :param out_name: workspace ID of abundance profile table
     :type out_name: kbtypes.WorkspaceObjectId
     :ui_name out_name: Output Name
-    :param annot: annotation of abundance profile, one of 'taxa' or 'function'
+    :param annot: annotation of abundance profile, one of 'taxa' or 'functions'
     :type annot: kbtypes.Unicode
     :ui_name annot: Annotation Type
     :default annot: taxa

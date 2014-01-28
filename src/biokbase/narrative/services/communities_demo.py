@@ -284,13 +284,15 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     cmd = "mg-get-annotation-set --id %s --top %d --level %s --evalue %d --identity %d --length %d"%(mgid, int(top), level, int(evalue), int(identity), int(length))
     if rest.lower() == 'yes':
         cmd += " --rest"
+    cmd += " > "+out_name
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
-    rows = len(stdout.strip().split('\n')) - 1
-    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': stdout}
+    anno = _get_invo(out_name)
+    rows = len(anno.strip().split('\n')) - 1
+    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': anno}
     text = "Annotation sets for the top %d %s from SEED/Subsystems were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d)."%(int(top), level, out_name, int(evalue), int(identity), int(length))
     _put_ws(workspace, out_name, data=data)
     return json.dumps({'header': text})
@@ -380,14 +382,15 @@ def _redo_annot(meth, workspace, in_name, out_name):
     _put_invo(in_name, biom)
     
     meth.advance("Building annotation set from abundance profile BIOM")
-    cmd = "mg-kegg2ss --input %s --output text"%(in_name)
+    cmd = "mg-kegg2ss --input %s --output text > %s"%(in_name, out_name)
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
-    rows = len(stdout.strip().split('\n')) - 1
-    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': stdout}
+    anno = _get_invo(out_name)
+    rows = len(anno.strip().split('\n')) - 1
+    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': anno}
     text = "Annotation set %s from SEED/Subsystems was created from KEGG abundance profile BIOM %s."%(out_name, in_name)
     _put_ws(workspace, out_name, data=data)
     return json.dumps({'header': text})

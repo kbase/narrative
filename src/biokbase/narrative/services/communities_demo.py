@@ -214,7 +214,7 @@ def _relabel_cols(data, groups, pos):
         gmap[grows[r]] = row[gidx]
     for i in range(len(head)):
         if head[i] in gmap:
-            head[i] = gmap[head[i]]+'_'+str(i+1)
+            head[i] = gmap[head[i]]
     rows[0] = "\t".join(head)
     return "\n".join(rows)+"\n"
 
@@ -654,7 +654,11 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
         direction = 'desc'
 
     meth.advance("Retrieve Data from Workspace")
-    _put_invo(in_name, _get_ws(workspace, in_name))
+    # abundace profile
+    adata = _get_ws(workspace, in_name)
+    acols = adata.split('\n')[0].strip().split('\t')
+    _put_invo(in_name, adata)
+    # groups
     grows, gcols, gdata = tab_to_matrix( _get_ws(workspace, groups) )
     gindex = int(gpos) - 1
     gjson = defaultdict(list)
@@ -672,7 +676,7 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
     meth.advance("Storing in Workspace")
     rows = len(stdout.strip().split('\n')) - 1
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': stdout}
-    text = "The %s test was applied to %s to find annotations that exhibited the most significant differences in abundance. Column %d of the metadata file %s was used to create sample groupings. Analysis results are in %s; these were sorted in %s order by column %d. The last three columns of the result file contain the test statistic, statistic p, and statistic fdr respectively."%(stat_test, in_name, int(gpos), groups, out_name, direction, -1 if order == '' else int(order))
+    text = "The %s test was applied to %s to find annotations that exhibited the most significant differences in abundance. Column %d of the metadata file %s was used to create sample groupings. Analysis results are in %s; these were sorted in %s order by column %d. The last three columns of the result file contain the test statistic, statistic p, and statistic fdr respectively."%(stat_test, in_name, int(gpos), groups, out_name, direction, len(acols) if order == '' else int(order))
     _put_ws(workspace, out_name, data=data)
     return json.dumps({'header': text})
 
@@ -942,9 +946,9 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
     if groups:
         text += " Samples were colored by metadata in column %d of the %s metadata file."%(int(gpos), groups)
     fig_rawpng = _get_invo(in_name+'.pcoa.png')
-    fig_b64png = base64.b64encode(rawpng)
+    fig_b64png = base64.b64encode(fig_rawpng)
     leg_rawpng = _get_invo(in_name+'.pcoa.png.legend.png')
-    leg_b64png = base64.b64encode(rawpng)
+    leg_b64png = base64.b64encode(leg_rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': fig_b64png, 'legend': leg_b64png})
 
 @method(name="Retrieve AWE Results")
@@ -968,16 +972,16 @@ def _redo_annot(meth, workspace, in_name, out_name):
     meth.stages = 3
     meth.advance("Processing inputs")
     # validate
-    if not (in_name and out_name):
-        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
+    if not in_name:
+        return json.dumps({'header': 'ERROR: missing input workspace ID'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve AWE Job Status")
     aweref = _get_ws(workspace, in_name)
     awejob = _get_awe_job(aweref['ID'])
     
-    # job not done
-    if awejob['data']['state'] != 'completed':
+    # job not done or no output name
+    if (awejob['data']['state'] != 'completed') or (not out_name):
         text = "AWE job %s is in state '%s'. %s"%(in_name, awejob['data']['state'], awejob['data']['notes'])
         return json.dumps({'header': text})
     

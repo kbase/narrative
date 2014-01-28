@@ -47,7 +47,8 @@ picrustWF = """{
    "tasks" : [
       {
          "cmd" : {
-            "args" : "pick_closed_reference_otus.py -i @input.fas -o ucr -p @otu_picking_params.txt -r /home/ubuntu/data/gg_13_5_otus/rep_set/97_otus.fasta",
+            "args" : "-i @input.fas -o ucr -p @otu_picking_params.txt -r /home/ubuntu/data/gg_13_5_otus/rep_set/97_otus.fasta",
+            "name" : "pick_closed_reference_otus.py",
             "description" : "0_pick_closed_reference_otus"
          },
          "outputs" : {
@@ -70,7 +71,8 @@ picrustWF = """{
       },
       {
          "cmd" : {
-            "args" : "normalize_by_copy_number.py -i @otu_table.biom -o normalized.biom",
+            "args" : "-i @otu_table.biom -o normalized.biom",
+            "name" : "normalize_by_copy_number.py",
             "description" : "1_normalize_by_copy_number"
          },
          "outputs" : {
@@ -91,7 +93,8 @@ picrustWF = """{
       },
       {
          "cmd" : {
-            "args" : "predict_metagenomes.py -i @normalized.biom -o prediction.biom",
+            "args" : "-i @normalized.biom -o prediction.biom",
+            "name" : "predict_metagenomes.py",
             "description" : "2_predict_metagenomes"
          },
          "outputs" : {
@@ -126,8 +129,7 @@ def _get_wsname(meth, ws):
 
 def _submit_awe(wf):
     tmpfile = 'awewf.json'
-    headers = { 'Accept': 'application/json',
-                'Content-Type': 'application/x-www-form-urlencoded',
+    headers = { 'Content-Type': 'multipart/form-data',
                 'Datatoken': os.environ['KB_AUTH_TOKEN'] }
     with open(tmpfile, 'w') as f:
         f.write(wf)

@@ -11,8 +11,8 @@ $.KBWidget({
     },
 
     wsUrl: "http://140.221.84.209:7058/",
-    jobSrvUrl: "http://140.221.84.180:7083/",
-    cmpImgUrl: "http://140.221.85.98:8284/image",
+    jobSrvUrl: "https://kbase.us/services/userandjobstate/",
+    cmpImgUrl: "http://140.221.85.58:8283/image",
     timer: null,
     geneRows: 21,
     geneRowH: 21,
@@ -22,7 +22,7 @@ $.KBWidget({
         this._super(options);
         var container = this.$elem;
     	var pref = (new Date()).getTime();
-        var kbws = new workspaceService(this.wsUrl);
+        var kbws = new Workspace(this.wsUrl, {'token': options.token});
         var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': options.token});
         var size = 500;
         var imgI = 0;
@@ -35,10 +35,9 @@ $.KBWidget({
         var dirJ = 1;
 
         var dataIsReady = function() {
-            kbws.get_object({auth: options.token, workspace: options.ws_name, id: options.ws_id, 
-            				 type: 'ProteomeComparison'}, function(data) {
+            kbws.get_objects([{ref: options.ws_name + "/" + options.ws_id}], function(data) {
             	$('.loader-table').remove();
-            	var cmp = data.data;
+            	var cmp = data[0].data;
             	var table = $('<table/>')
             		.addClass('table table-bordered')
             		.css({'margin-left': 'auto', 'margin-right': 'auto'});

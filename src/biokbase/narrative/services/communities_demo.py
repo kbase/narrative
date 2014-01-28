@@ -129,16 +129,25 @@ def _get_wsname(meth, ws):
 
 def _submit_awe(wf):
     tmpfile = 'awewf.json'
-    headers = { 'Content-Type': 'multipart/form-data',
-                'Datatoken': os.environ['KB_AUTH_TOKEN'] }
+    header  = {'Content-Type': 'multipart/form-data', 'Datatoken': os.environ['KB_AUTH_TOKEN']}
     with open(tmpfile, 'w') as f:
         f.write(wf)
-    try:
-        req = urllib2.Request(URLS.awe+'/job', data=urllib.urlencode({'upload': tmpfile}), headers=headers)
-        res = urllib2.urlopen(req)
-        return json.loads(res.read())
-    except:
-        return None
+    req = urllib2.Request(URLS.awe+'/job', data=urllib.urlencode({'upload': tmpfile}), headers=header)
+    res = urllib2.urlopen(req)
+    return json.loads(res.read())
+    
+def _get_awe_job(jobid):
+    req = urllib2.Request('%s/job/%s'%(URLS.awe, jobid))
+    res = urllib2.urlopen(req)
+    return json.loads(res.read())
+
+def _get_shock_data(nodeid):
+    token  = os.environ['KB_AUTH_TOKEN']
+    header = {'Accept': 'application/json', 'Authorization': 'OAuth %s'%token}
+    url = '%s/node/%s?download'%(URLS.shock, nodeid)
+    req = urllib2.Request(url, headers=header)
+    res = urllib2.urlopen(req)
+    return res.read()
 
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
@@ -151,15 +160,7 @@ def _get_invo(name):
     stdout, stderr = _run_invo("mg-upload2shock %s %s"%(URLS.shock, name))
     node = json.loads(stdout)
     # get file content from shock
-    token  = os.environ['KB_AUTH_TOKEN']
-    header = {'Accept': 'application/json', 'Authorization': 'OAuth %s'%token}
-    try:
-        url = '%s/node/%s?download'%(URLS.shock, node['id'])
-        req = urllib2.Request(url, headers=header)
-        res = urllib2.urlopen(req)
-        return res.read()
-    except:
-        return ''
+    return _get_shock_data(node['id'])
 
 def _put_invo(name, data):
     token = os.environ['KB_AUTH_TOKEN']
@@ -327,7 +328,7 @@ def _redo_annot(meth, workspace, in_seq, out_id):
         return json.dumps({'header': 'ERROR: AWE submission failed'})
     job_id = job['data']['id']
     
-    meth.advance("Storing status in Workspace")
+    meth.advance("Storing job in Workspace")
     data = { 'name': out_id,
              'created': time.strftime("%Y-%m-%d %H:%M:%S"),
              'type': 'awe_job',
@@ -354,14 +355,24 @@ def _redo_annot(meth, workspace, in_name, out_name):
     :output_widget: ImageViewWidget
     """
     
-    meth.stages = 3
+    meth.stages = 4
     meth.advance("Processing inputs")
     # validate
     if not (in_name and out_name):
         return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
-    meth.advance("Building annotation set BIOM from abundance profile")
+    meth.advance("Retrieve Data from Workspace")
+    biom = _get_ws(workspace, in_name)
+    # get data if is shock refrence
+    try:
+        shockid = biom['ID']
+        biom = _get_shock_data(shockid)
+    except:
+        pass
+    _put_invo(in_name, biom)
+    
+    meth.advance("Building annotation set from abundance profile BIOM")
     cmd = "mg-kegg2ss --input %s --output text"%(in_name)
     stdout, stderr = _run_invo(cmd)
     if stderr:
@@ -927,7 +938,53 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '550', 'data': b64png})
 
+@method(name="Retrieve AWE Results")
+def _redo_annot(meth, workspace, in_name, out_name):
+    """Query an AWE DataHandle type and create a Shock DataHandle for the results.
 
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param in_name: workspace ID of AWE job handle
+    :type in_name: kbtypes.WorkspaceObjectId
+    :ui_name in_name: AWE Job
+    :param in_name: workspace ID of Shock data handle
+    :type in_name: kbtypes.WorkspaceObjectId
+    :ui_name in_name: AWE Job
+    :return: AWE Job Status
+    :rtype: kbtypes.Unicode
+    :output_widget: ImageViewWidget
+    """
+    
+    meth.stages = 3
+    meth.advance("Processing inputs")
+    # validate
+    if not (in_name and out_name):
+        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
+    workspace = _get_wsname(meth, workspace)
+    
+    meth.advance("Retrieve AWE Job Status")
+    aweref = _get_ws(workspace, in_name)
+    awejob = _get_awe_job(awejob['ID'])
+    
+    # job not done
+    if awejob['data']['state'] != 'completed':
+        text = "AWE job %s is in state '%s'. %s"%(in_name, awejob['data']['state'], awejob['data']['notes'])
+        return json.dumps({'header': text})
+    
+    meth.advance("Storing in Workspace")
+    last_task = awejob['tasks'][-1]
+    out_num = len(last_task['outputs'].keys())
+    for name, info in last_task['outputs'].iteritems():
+        append = '' if out_num == 1 else '_'+name
+        data = { 'name': name,
+                 'created': time.strftime("%Y-%m-%d %H:%M:%S"),
+                 'type': 'shock_node',
+                 'ref': {'ID': info['node'], 'URL': info['host']+'/node/'+info['node']} }
+        _put_ws(workspace, out_name+append, ref=data)
+
+    text = "Shock DataHandle%s created for AWE job %s"%('s' if outnum > 1 else '', in_name)
+    return json.dumps({'header': text})
 
 # Finalization
 finalize_service()

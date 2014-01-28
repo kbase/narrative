@@ -139,7 +139,7 @@ def _submit_awe(wf):
     c.setopt(c.POST, 1)
     c.setopt(c.URL, URLS.awe+"/job")
     c.setopt(c.HTTPPOST, [("upload", (c.FORM_FILE, tmpfile))])
-    c.setopt(c.HTTPHEADER, header)
+    c.setopt(c.HTTPHEADER, headers)
     c.setopt(c.WRITEFUNCTION, response.write)
     c.perform()
     c.close()

@@ -99,7 +99,7 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     This should be run before trying to annotate a Genome. [3]
 
     :param contig_set: An object with contig data [3.1]
-    :type contig_set: kbtypes.ContigSet
+    :type contig_set: kbtypes.KBaseGenomesContigSet1
     :ui_name contig_set: Contig Set Object
     :param scientific_name: enter the scientific name to assign to your new genome [3.2]
     :type scientific_name: kbtypes.Unicode

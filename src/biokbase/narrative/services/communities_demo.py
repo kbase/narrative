@@ -657,7 +657,7 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
         direction = 'desc'
 
     meth.advance("Retrieve Data from Workspace")
-    # abundace profile
+    # abundance profile
     adata = _get_ws(workspace, in_name)
     acols = adata.split('\n')[0].strip().split('\t')
     _put_invo(in_name, adata)
@@ -798,7 +798,7 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
         json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Displaying Boxplot")
-    text = 'Boxplot was produced for abundace profile %s.'%in_name
+    text = 'Boxplot was produced for abundance profile %s.'%in_name
     rawpng = _get_invo(in_name+'.boxplot.png')
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})

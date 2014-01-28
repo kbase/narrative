@@ -276,16 +276,16 @@ def _view_model_details(meth, fba_model_id):
     token, workspaceName = meth.token, meth.workspace_id;
     fbaClient = fbaModelServices(service.URLS.fba)
     
-    meth.advance("Loading the model")
-    get_models_params = {
-        'models' : [fba_model_id],
-        'workspaces' : [workspaceName],
-        'auth' : token
-    }
-    modeldata = fbaClient.get_models(get_models_params)
+    ws = workspaceService(service.URLS.workspace)
     
-    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': modeldata})
-
+    meth.advance("Loading the model")
+    get_objects_params = [{
+        'workspace' : workspaceName,
+        'name' : fba_model_id
+    }]
+    data = ws.get_objects(get_objects_params)
+    
+    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': [data[0]['data']]})
 
 
 @method(name="Build Media")

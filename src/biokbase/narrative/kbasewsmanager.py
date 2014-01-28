@@ -139,13 +139,50 @@ class KBaseWSNotebookManager(NotebookManager):
         data = sorted(data, key=lambda item: item['name'])
         return data
 
-    def new_notebook_id(self, name):
+    def new_notebook(self):
         """
-        Generate a new notebook_id for a name and store its mappings.
-        We don't use this, because we can use workspace id and obj id for a
-        stable, bookmarkable URL
+        Create an empty notebook and push it into the workspace without an object_id
+        or name, so that the WSS generates a new object ID for us. Then return
+        that.
         """
-        pass
+        nb = current.new_notebook()
+        # Verify that our own home workspace exists, note that we aren't doing this
+        # as a general thing for other workspaces
+        wsclient = self.wsclient()
+        user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
+        (homews,homews_id) = ws_util.check_homews( wsclient, user_id)
+        new_name = normalize('NFC', u"Untitled %s" % (datetime.datetime.now().strftime("%y%m%d_%H%M%S")))
+        new_name = self._clean_id( new_name)
+        # Carry over some of the metadata stuff from ShockNBManager
+        try:
+            nb.metadata.ws_name = os.environ.get('KB_WORKSPACE_ID',homews)
+            nb.metadata.creator = user_id
+            nb.metadata.type = self.ws_type
+            nb.metadata.description = ''
+            nb.metadata.name = new_name
+            nb.metadata.data_dependencies = []
+            nb.metadata.format = self.node_format
+        except Exception as e:
+            raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
+        try:
+            wsobj = { 'type' : self.ws_type,
+                      'data' : nb,
+                      'provenance' : [],
+                      'meta' : nb.metadata.copy(),
+                    }
+            # We flatten the data_dependencies array into a json string so that the
+            # workspace service will accept it
+            wsobj['meta']['data_dependencies'] = json.dumps( wsobj['meta']['data_dependencies'])
+            wsid = homews_id
+            self.log.debug("calling ws_util.put_wsobj")
+            res = ws_util.put_wsobj( wsclient, wsid, wsobj)
+            self.log.debug("save_object returned %s" % res)
+        except Exception as e:
+            raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
+        # use "ws.ws_id.obj.object_id" as the identifier
+        id = "ws.%s.obj.%s" % ( res['wsid'], res['objid'])
+        return id
+
 
     def delete_notebook_id(self, notebook_id):
         """Delete a notebook's id in the mapping."""

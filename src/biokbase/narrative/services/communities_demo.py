@@ -616,12 +616,12 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
     :param out_name: workspace ID of abundance profile table with significance
     :type out_name: kbtypes.WorkspaceObjectId
     :ui_name out_name: Output Name
-    :param groups: workspace ID of groups table
+    :param groups: workspace ID of metadata table
     :type groups: kbtypes.Unicode
-    :ui_name groups: Groups
-    :param gpos: position of group to use, default is first
+    :ui_name groups: Metadata
+    :param gpos: column of metadata to use, default is first
     :type gpos: kbtypes.Unicode
-    :ui_name gpos: Group Position
+    :ui_name gpos: Metadata Column
     :default gpos: 1
     :param stat_test: supported statistical tests, one of: Kruskal-Wallis, t-test-paired, Wilcoxon-paired, t-test-unpaired, Mann-Whitney-unpaired-Wilcoxon, ANOVA-one-way, default is Kruskal-Wallis
     :type stat_test: kbtypes.Unicode
@@ -754,12 +754,12 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
     :param in_name: workspace ID of abundance profile table
     :type in_name: kbtypes.WorkspaceObjectId
     :ui_name in_name: Input Name
-    :param groups: workspace ID of groups table
-    :type groups: kbtypes.WorkspaceObjectId
-    :ui_name groups: Groups
-    :param gpos: position of group to use, default is first
+    :param groups: workspace ID of metadata table
+    :type groups: kbtypes.Unicode
+    :ui_name groups: Metadata
+    :param gpos: column of metadata to use, default is first
     :type gpos: kbtypes.Unicode
-    :ui_name gpos: Group Position
+    :ui_name gpos: Metadata Column
     :default gpos: 1
     :return: Metagenome Abundance Profile Significance Info
     :rtype: kbtypes.Unicode
@@ -794,7 +794,7 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
     text = 'Boxplot was produced for abundace profile %s.'%in_name
     rawpng = _get_invo(in_name+'.boxplot.png')
     b64png = base64.b64encode(rawpng)
-    return json.dumps({'header': text, 'type': 'png', 'width': '550', 'data': b64png})
+    return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})
 
 @method(name="Heatmap-dendrogram of Abundance Profile")
 def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, order, label):
@@ -806,12 +806,12 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
     :param in_name: workspace ID of abundance profile table
     :type in_name: kbtypes.WorkspaceObjectId
     :ui_name in_name: Input Name
-    :param groups: workspace ID of groups table
-    :type groups: kbtypes.WorkspaceObjectId
-    :ui_name groups: Groups
-    :param gpos: position of group to use, default is first
+    :param groups: workspace ID of metadata table
+    :type groups: kbtypes.Unicode
+    :ui_name groups: Metadata
+    :param gpos: column of metadata to use, default is first
     :type gpos: kbtypes.Unicode
-    :ui_name gpos: Group Position
+    :ui_name gpos: Metadata Column
     :default gpos: 1
     :param distance: distance metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
     :type distance: kbtypes.Unicode
@@ -874,7 +874,7 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
     text = "A heatmap-dendrogram was produced from the abundance profile %s. The %s distance/dissimilarity was used to compute distances and %s was used to cluster the data. Rows (annotations) were sorted; columns were%s sorted."%(in_name, distance, cluster, '' if order.lower() == 'yes' else ' not')
     rawpng = _get_invo(in_name+'.heatmap.png')
     b64png = base64.b64encode(rawpng)
-    return json.dumps({'header': text, 'type': 'png', 'width': '550', 'data': b64png})
+    return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
 @method(name="PCoA Plot of Abundance Profile")
 def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
@@ -886,12 +886,12 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
     :param in_name: workspace ID of abundance profile table
     :type in_name: kbtypes.WorkspaceObjectId
     :ui_name in_name: Input Name
-    :param groups: workspace ID of groups table
-    :type groups: kbtypes.WorkspaceObjectId
-    :ui_name groups: Groups
-    :param gpos: position of group to use, default is first
+    :param groups: workspace ID of metadata table
+    :type groups: kbtypes.Unicode
+    :ui_name groups: Metadata
+    :param gpos: column of metadata to use, default is first
     :type gpos: kbtypes.Unicode
-    :ui_name gpos: Group Position
+    :ui_name gpos: Metadata Column
     :default gpos: 1
     :param distance: distance metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
     :type distance: kbtypes.Unicode
@@ -941,9 +941,11 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
     text = "A %s dimensional PCoA calculated from %s distance/dissimilarity was created from %s."%('three' if three.lower() == 'yes' else 'two', distance, in_name)
     if groups:
         text += " Samples were colored by metadata in column %d of the %s metadata file."%(int(gpos), groups)
-    rawpng = _get_invo(in_name+'.pcoa.png')
-    b64png = base64.b64encode(rawpng)
-    return json.dumps({'header': text, 'type': 'png', 'width': '550', 'data': b64png})
+    fig_rawpng = _get_invo(in_name+'.pcoa.png')
+    fig_b64png = base64.b64encode(rawpng)
+    leg_rawpng = _get_invo(in_name+'.pcoa.png.legend.png')
+    leg_b64png = base64.b64encode(rawpng)
+    return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': fig_b64png, 'legend': leg_b64png})
 
 @method(name="Retrieve AWE Results")
 def _redo_annot(meth, workspace, in_name, out_name):
@@ -955,9 +957,9 @@ def _redo_annot(meth, workspace, in_name, out_name):
     :param in_name: workspace ID of AWE job handle
     :type in_name: kbtypes.WorkspaceObjectId
     :ui_name in_name: AWE Job
-    :param in_name: workspace ID of Shock data handle
-    :type in_name: kbtypes.WorkspaceObjectId
-    :ui_name in_name: AWE Job
+    :param out_name: workspace ID of Shock data handle
+    :type out_name: kbtypes.WorkspaceObjectId
+    :ui_name out_name: Shock Data
     :return: AWE Job Status
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
@@ -972,7 +974,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     
     meth.advance("Retrieve AWE Job Status")
     aweref = _get_ws(workspace, in_name)
-    awejob = _get_awe_job(awejob['ID'])
+    awejob = _get_awe_job(aweref['ID'])
     
     # job not done
     if awejob['data']['state'] != 'completed':

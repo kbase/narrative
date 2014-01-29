@@ -292,7 +292,7 @@ function projectapi() {
             console.log(data);
         })*/
 
-        var prom = project.ws_client.list_objects({workspaces: ws_ids, type: 'KBaseNarrative.Metadata'});
+        var prom = project.ws_client.list_objects({workspaces: ws_ids, type: 'KBaseNarrative.Metadata', showHidden: 1});
         $.when(prom).done(function(proj_list) {
              p.callback(proj_list);
 

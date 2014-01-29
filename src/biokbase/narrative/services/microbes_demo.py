@@ -21,7 +21,7 @@ from biokbase.GenomeComparison.Client import GenomeComparison
 ## Globals
 
 VERSION = (0, 0, 1)
-NAME = "microbes"
+NAME = "Microbes Services"
 
 # Initialize
 init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)

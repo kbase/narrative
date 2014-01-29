@@ -41,7 +41,7 @@
             // Make and append the header.
             this.$elem.append($('<div>')
                               .addClass('kb-function-header')
-                              .append('Functions'));
+                              .append('Services'));
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')

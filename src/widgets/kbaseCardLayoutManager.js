@@ -545,6 +545,20 @@
             return [];
         },
 
+        _exportRegulome: function(data, workspace) {
+            this.dbg("Exporting Regulome");
+            this.dbg(data);
+
+            return [];
+        },
+
+        _exportMAKResult: function(data, workspace) {
+            this.dbg("Exporting MAK result");
+            this.dbg(data);
+
+            return [];
+        },
+
         _exportBambiRunResult: function(data, workspace) {
             this.dbg("Exporting BAMBI run result");
             this.dbg(data);
@@ -586,6 +600,10 @@
                 this.showCmonkeyCards();
             else if (this.options.template.toLowerCase() === "inferelator")
                 this.showInferelatorCards();
+            else if (this.options.template.toLowerCase() === "regprecise")
+                this.showRegpreciseCards();
+            else if (this.options.template.toLowerCase() === "mak")
+                this.showMAKCards();
             else if (this.options.template.toLowerCase() === "bambi")
                 this.showBambiCards();
             else if (this.options.template.toLowerCase() === "gene")
@@ -594,6 +612,8 @@
                 this.showModelCards();
             else if (this.options.template.toLowerCase() === "spec")
                 this.showSpecCards();
+            else if (this.options.template.toLowerCase() === "ppid")
+                this.showPPICards();
             else {
                 // throw an error for an unknown template. modal dialog, maybe?
             }
@@ -778,11 +798,70 @@
         	    return this;
         },
 
+        showRegpreciseCards: function() {
+            	this.addNewCard("KBaseRegulomeCard",
+                        {
+                            id: this.options.data.id,
+                            ws: this.options.data.ws,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
+                            loadingImage: this.options.loadingImage,
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        },
+
+        showMAKCards: function() {
+            	this.addNewCard("KBaseMAKResultCard",
+                        {
+                            id: this.options.data.id,
+                            ws: this.options.data.ws,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
+                            loadingImage: this.options.loadingImage,
+                            isInCard: true
+                        },
+                        {
+                            my: "left top",
+                            at: "left bottom",
+                            of: "#app"
+                        }
+                    );
+        	    return this;
+        },
+
+	showPPICards: function() {
+	    this.addNewCard("KBasePPICard",
+			    {
+				id: this.options.data.id,
+				ws: this.options.data.ws,
+				auth: this.options.auth,
+				userId: this.options.userId,
+				loadingImage: this.options.loadingImage,
+				isInCard: true
+			    },
+			    {
+				my: "left top",
+				at: "left bottom",
+				of: "#app"
+			    }
+			   );
+	    return this;
+	},
+
         showBambiCards: function() {
             	this.addNewCard("KBaseBambiRunResultCard",
                         {
                             bambi_run_result_id: this.options.data.bambi_run_result_id,
                             workspace_id: this.options.data.workspace_id,
+                            auth: this.options.auth,
+                            userId: this.options.userId,
                             loadingImage: this.options.loadingImage,
                             isInCard: true
                         },
@@ -834,6 +913,7 @@
             this.registeredEvents = ["featureClick", 
                                      "showContig",
                                      "showGenome", 
+				     "showFeature",
                                      "showGenomeDescription",
                                      "showDomains", 
                                      "showOperons", 
@@ -849,6 +929,9 @@
                                      "showCmonkeyCluster", 
                                      "showCmonkeyMotif",
                                      "showInferelatorHits",
+				     "showNetwork",
+                                     "showRegulon",
+                                     "showMAKCluster", 
                                      "showBambiMotif",
                                      "showBambiRunParameters", 
                                      "showBambiRawOutput"];
@@ -955,6 +1038,24 @@
                     }
                 );
             });
+
+            /**
+             * Event: showFeature
+             * -----------------
+             * Adds new KBaseGeneInfo card for a given Feature ID
+             */
+	    $(document).on("showFeature", function(event, data) {
+		self.addNewCard("KBaseGeneInfo",
+				{
+				    featureID: data.featureID
+				},
+				{
+				    my: "left top",
+				    at: "center",
+				    of: data.event
+				}
+			       );
+	    });
 
             /**
              * Event: showGenome
@@ -1195,6 +1296,48 @@
             });
 
             /**
+             * Event: showRegulon
+             * -------------------
+             * Adds card with Regulon.
+             */
+
+            $(document).on("showRegulon", function(event, data) {
+                self.addNewCard("KBaseRegulonCard",
+                    {
+                        regulon: data.regulon,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+600 bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
+             * Event: showMAKBicluster
+             * -------------------
+             * Adds card with MAK bi-cluster.
+             */
+
+            $(document).on("showMAKBicluster", function(event, data) {
+                self.addNewCard("KBaseMAKBiclusterCard",
+                    {
+                        bicluster: data.bicluster,
+                        showButtons: true,
+                        centerFeature: data.centerFeature
+                    },
+                    {
+                        my: "left top",
+                        at: "left+600 bottom",
+                        of: "#app"
+                    }
+                );
+            });
+
+            /**
              * Event: showBambiMotif
              * -------------------
              * Adds new BAMBI Motif card.
@@ -1283,6 +1426,25 @@
                     of: data.event
                 });
             });
+
+            /**
+             * Event: showNetwork
+             * -------------------
+             * Adds card with Cytoscape.js view of a network
+             */
+	    $(document).on("showNetwork", function(event, data) {
+		self.addNewCard("KBaseNetworkCard",
+				{
+				    network: data.network,
+				    netname: data.netname,
+				},
+				{
+				    my: "left top",
+				    at: "left+600 bottom",
+				    of: "#app"
+				}
+			       );
+	    });
 
             $(document).on("helloClick", function(event, data) {
                 window.alert(data.message);

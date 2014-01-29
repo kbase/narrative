@@ -16,7 +16,7 @@
         },
 
 //        workspaceURL: "https://kbase.us/services/workspace",
-        newWorkspaceServiceUrl: "http://140.221.84.209:7058/",
+        newWorkspaceServiceUrl: "https://kbase.us/services/ws",//"http://140.221.84.209:7058/",
 
         init: function(options) {
             this._super(options);
@@ -95,8 +95,8 @@
         getData: function() {
             return {
                 type: "MastRunResult",
-                id: this.options.mast_run_result_id,
-                workspace: this.options.workspace_id,
+                id: this.options.id,
+                workspace: this.options.ws,
                 auth: this.options.auth,
                 userId: this.options.userId,
                 title: "MAST Run Result Overview"

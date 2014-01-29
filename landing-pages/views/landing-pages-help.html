@@ -12,6 +12,7 @@
             <li><a ng-click="gotoAnchor('models')">Models</a></li>
             <li><a ng-click="gotoAnchor('fbas')">FBAs</a></li>
             <li><a ng-click="gotoAnchor('meme')">MEME</a></li>
+            <li><a ng-click="gotoAnchor('ppi')">PPI</a></li>
         </ul>
     </div>
     <div class="col-md-10">
@@ -232,7 +233,7 @@
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">meme_run_result</label>
-                <input class="form-control" id="input2" placeholder="Meme Run Result Id" value="kb|memerunresult.15">
+                <input class="form-control" id="input2" placeholder="Meme Run Result Id" value="kb|memerunresult.187">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>
@@ -245,7 +246,7 @@
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">tomtom_run_result</label>
-                <input class="form-control" id="input2" placeholder="Tomtom Run Result Id" value="kb|tomtomrunresult.7">
+                <input class="form-control" id="input2" placeholder="Tomtom Run Result Id" value="kb|tomtomrunresult.61">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>
@@ -258,7 +259,7 @@
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">mast_run_result</label>
-                <input class="form-control" id="input2" placeholder="Mast Run Result Id" value="kb|mastrunresult.2">
+                <input class="form-control" id="input2" placeholder="Mast Run Result Id" value="kb|mastrunresult.72">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>
@@ -286,7 +287,29 @@
                   <span class="glyphicon glyphicon-check"></span>
             </form>
 
-       <div class="page-header"><h3 id="cmonkey">cMonkey</h3></div>
+       <div class="page-header"><h3 id="mak">MAK</h3></div>
+        <h4>URLs</h4>
+            #/mak
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/mak/$workspaceName/$makResultName<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="mak">
+              #/mak/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="networks_typed_objects_examples">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">mak_result</label>
+                <input class="form-control" id="input2" placeholder="MAK Result name" value="MAKResult_example">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+        <div class="page-header"><h3 id="cmonkey">cMonkey</h3></div>
         <h4>URLs</h4>
             #/cmonkey
             <span class="glyphicon glyphicon-check"></span><br>
@@ -302,7 +325,7 @@
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">cmonkey_run_result</label>
-                <input class="form-control" id="input2" placeholder="Cmonkey Run Result Id" value="kb|cmonkeyrunresult.132">
+                <input class="form-control" id="input2" placeholder="Cmonkey Run Result Id" value="kb|cmonkeyrunresult.157">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>
@@ -324,7 +347,51 @@
               </div> /
               <div class="form-group">
                 <label class="sr-only" for="input2">inferelator_run_result</label>
-                <input class="form-control" id="input2" placeholder="Inferelator Run Result Id" value="kb|inferelatorrunresult.25">
+                <input class="form-control" id="input2" placeholder="Inferelator Run Result Id" value="kb|inferelatorrunresult.52">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+      <div class="page-header"><h3 id="regprecise">RegPrecise</h3></div>
+        <h4>URLs</h4>
+            #/regprecise
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/regprecise/$workspaceName/$regulomeName<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="regprecise">
+              #/regprecise/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="KBASE_Networks">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">regulome</label>
+                <input class="form-control" id="input2" placeholder="Regulome name" value="regprecise_regulome.8">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+      <div class="page-header"><h3 id="ppi">PPI</h3></div>
+        <h4>URLs</h4>
+            #/ppid
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/ppid/$workspaceName/$dataset_name<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="ppid">
+              #/ppid/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="KBASE_Networks">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">ppi_dataset</label>
+                <input class="form-control" id="input2" placeholder="PPI dataset name" value="kb|ppid.3">
               </div>
               <a class="btn btn-default api-url-submit">Go</a>
                   <span class="glyphicon glyphicon-check"></span>

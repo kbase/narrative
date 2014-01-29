@@ -15,8 +15,7 @@
             width: 400
         },
 
-//        workspaceURL: "https://kbase.us/services/workspace",
-        newWorkspaceServiceUrl: "http://140.221.84.209:7058/",
+        newWorkspaceServiceUrl: "https://kbase.us/services/ws",//"http://140.221.84.209:7058/",
 
         init: function(options) {
             this._super(options);
@@ -30,8 +29,7 @@
                                 .addClass("kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-  //          this.workspaceClient = new workspaceService(this.workspaceURL);
-              this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, { 'token' : this.options.auth, 'user_id' : this.options.userId});
+            this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, { 'token' : this.options.auth, 'user_id' : this.options.userId});
 
             return this.render();
         },
@@ -46,7 +44,6 @@
              * Number of hits
              */
             var self = this;
-//            this.workspaceClient.get_object({"id" : this.options.tomtom_run_result_id, "type" : "TomtomRunResult", "workspace": this.options.workspace_id},
             this.workspaceClient.get_objects([{workspace: this.options.ws, name: this.options.id}], 
 	    		function(data){
 					self.tomtomresult = data[0];
@@ -92,7 +89,7 @@
             return {
                 type: "TomtomRunResult",
                 id: this.options.id,
-                ws: this.options.ws,
+                workspace: this.options.ws,
                 auth: this.options.auth,
                 userId: this.options.userId,
                 title: "TOMTOM Run Result Overview"

@@ -15,7 +15,7 @@
         },
 
 //        workspaceURL: "https://kbase.us/services/workspace",
-        newWorkspaceServiceUrl: "http://140.221.84.209:7058/",
+        newWorkspaceServiceUrl: "https://kbase.us/services/ws",//"http://140.221.84.209:7058/",
 
         init: function(options) {
             this._super(options);
@@ -97,7 +97,9 @@
             return {
                 type: "CmonkeyRunResult",
                 id: this.options.id,
-                ws: this.options.ws,
+                workspace: this.options.ws,
+                auth: this.options.auth,
+                userId: this.options.userId,
                 title: "cMonkey Run Result Overview"
             };
         },

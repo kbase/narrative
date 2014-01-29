@@ -59,6 +59,26 @@ angular.module('card-directives')
             }
         };
     })
+    .directive('regprecisecards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "regprecise", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
+    .directive('makcards', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "mak", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
     .directive('bambicards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
@@ -68,6 +88,18 @@ angular.module('card-directives')
                                                    userId: $rootScope.USER_ID});
             }
         };
+    })
+    .directive('ppid', function($rootScope) {
+	return {
+	    link: function(scope, element, attrs) {
+		$(element).KBaseCardLayoutManager({
+		    template: 'ppid',
+		    data: scope.params,
+		    auth: $rootScope.USER_TOKEN,
+		    userId: $rootScope.USER_ID
+		});
+	    }
+	};
     })
     .directive('modelcards', function($rootScope, $location) {
         return {

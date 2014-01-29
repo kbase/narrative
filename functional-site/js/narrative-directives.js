@@ -113,10 +113,20 @@ angular.module('narrative-directives')
 
                     var p = project.get_projects({
                         callback: function(projs) {
+                            console.log('projects',projs)
+                            var projects = [];
 
+                            for (var key in projs) {
+                                //projects.push([key, 'blah']);
+                                proj_ids.push(projs[key][7]); // project is a workspace, this is the workspace name
+                            }
+
+                            // get narratives for each projectr //fixme: optimize
+                            getNarratives(proj_ids);
+                        
                         }
                     })
-
+                    /*
                     $.when(p).done(function(){
                             console.log('projects',projs)
                             var projects = [];
@@ -129,7 +139,7 @@ angular.module('narrative-directives')
                             // get narratives for each projectr //fixme: optimize
                             getNarratives(proj_ids);
                         
-                    })
+                    })*/
 
                 }
 

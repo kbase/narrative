@@ -350,7 +350,7 @@ function projectapi() {
         var META_ws;
         if ( p.workspace_id ) {
             META_ws = project.ws_client.get_workspacemeta( { workspace : p.workspace_id } );
-            $.when( META_ws).then( function(result) {
+            return $.when( META_ws).then( function(result) {
                            filter_wsobj( { res: [result],
                                    callback : p.callback,
                                    perms: p.perms });
@@ -358,7 +358,7 @@ function projectapi() {
                        p.error_callback);
         } else {
             META_ws = project.ws_client.list_workspaces( {} );
-            $.when( META_ws).then( function(result) {
+            return $.when( META_ws).then( function(result) {
                            filter_wsobj( { res: result,
                                    callback : p.callback,
                                    perms: p.perms });

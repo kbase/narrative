@@ -111,9 +111,13 @@ angular.module('narrative-directives')
                     var proj_ids = []
                     $(element).loading();
 
-                    project.get_projects({
+                    var p = project.get_projects({
                         callback: function(projs) {
 
+                        }
+                    })
+
+                    $.when(p).done(function(){
                             console.log('projects',projs)
                             var projects = [];
 
@@ -124,8 +128,9 @@ angular.module('narrative-directives')
 
                             // get narratives for each projectr //fixme: optimize
                             getNarratives(proj_ids);
-                        }
+                        
                     })
+
                 }
 
                 scope.loadData();

@@ -999,7 +999,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
                  'ref': {'ID': info['node'], 'URL': info['host']+'/node/'+info['node']} }
         _put_ws(workspace, out_name+append, ref=data)
 
-    text = "Shock DataHandle%s created for AWE job %s"%('s' if outnum > 1 else '', in_name)
+    text = "Shock DataHandle%s created for AWE job %s"%('s' if out_num > 1 else '', in_name)
     return json.dumps({'header': text})
 
 # Finalization

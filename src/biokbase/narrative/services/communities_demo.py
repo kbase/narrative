@@ -507,7 +507,7 @@ def _redo_annot(meth, workspace, model1, model2, names):
     htmltext = "<br>".join( stdout.strip().split('\n') )
     return json.dumps({'header': htmltext})
 
-@method(name="Retrieve Abundance Profile")
+@method(name="Download Annotation Abundance Profiles")
 def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, int_level, int_source, evalue, identity, length, norm):
     """Retrieve an abundance profile of the inputted metagenome IDs based in inputted options.
 
@@ -532,15 +532,15 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :type source: kbtypes.Unicode
     :ui_name source: Source Name
     :default source: SEED
-    :param int_name: workspace ID of list of intersecting names to filter results by
+    :param int_name: workspace ID of list of names to filter results by
     :type int_name: kbtypes.Unicode
-    :ui_name int_name: Intersection List
-    :param int_level: intersecting hierarchal level to filter results by
+    :ui_name int_name: Filter List
+    :param int_level: hierarchal level of filter names list
     :type int_level: kbtypes.Unicode
-    :ui_name int_level: Intersection Level
-    :param int_source: intersecting datasource to filter results by
+    :ui_name int_level: Filter Level
+    :param int_source: datasource of filter names list
     :type int_source: kbtypes.Unicode
-    :ui_name int_source: Intersection Source
+    :ui_name int_source: Filter Source
     :param evalue: negative exponent value for maximum e-value cutoff, default is 5
     :type evalue: kbtypes.Unicode
     :ui_name evalue: E-Value
@@ -606,9 +606,9 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     _put_ws(workspace, out_name, data=data)
     return json.dumps({'header': text})
 
-@method(name="Group Abundance Profile with Significance")
+@method(name="Statistical Significance Test")
 def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, order, direction):
-    """Apply matR-based statistical tests to grouped metagenomic abundance profiles
+    """Apply matR-based statistical tests to grouped metagenomic abundance profiles.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -630,12 +630,12 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
     :type stat_test: kbtypes.Unicode
     :ui_name stat_test: Stat Test
     :default stat_test: Kruskal-Wallis
-    :param order: column number to order output by, default is last column
+    :param order: column number to sort output by, default is last column
     :type order: kbtypes.Unicode
-    :ui_name order: Order by Column
-    :param direction: direction of order. 'asc' for ascending order, 'desc' for descending order
+    :ui_name order: Sort by Column
+    :param direction: direction of sorting. 'asc' for ascending sort, 'desc' for descending sort
     :type direction: kbtypes.Unicode
-    :ui_name direction: Direction
+    :ui_name direction: Sort Direction
     :default direction: desc
     :return: Metagenome Abundance Profile Significance Info
     :rtype: kbtypes.Unicode
@@ -683,9 +683,9 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
     _put_ws(workspace, out_name, data=data)
     return json.dumps({'header': text})
 
-@method(name="Select Abundance Profile")
+@method(name="View Data Table")
 def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, rows):
-    """Order and/or sub-select metagenomic abundance profile
+    """Sort and/or sub-select metagenomic abundance profile table.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -696,12 +696,12 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     :param out_name: workspace ID of altered table, if empty display table
     :type out_name: kbtypes.WorkspaceObjectId
     :ui_name out_name: Output Name
-    :param order: column number to order output by (0 for last column), default is no ordering
+    :param order: column number to sort output by, (0 for last column), default is no sorting
     :type order: kbtypes.Unicode
-    :ui_name order: Order by Column
-    :param direction: direction of order. 'asc' for ascending order, 'desc' for descending order
+    :ui_name order: Sort by Column
+    :param direction: direction of sorting. 'asc' for ascending sort, 'desc' for descending sort
     :type direction: kbtypes.Unicode
-    :ui_name direction: Direction
+    :ui_name direction: Sort Direction
     :default direction: desc
     :param cols: number of columns from the left to return from input table, default is all
     :type cols: kbtypes.Unicode
@@ -751,9 +751,9 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
         meth.advance("Displaying Abundance Table")
         return json.dumps({'table': table})
 
-@method(name="Boxplot of Abundance Profile")
+@method(name="Boxplots from Abundance Profile")
 def _plot_boxplot(meth, workspace, in_name, groups, gpos):
-    """Generate boxplot vizualization from metagenome abundance profile
+    """Generate boxplot visualization from metagenome abundance profile.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -803,9 +803,9 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})
 
-@method(name="Heatmap-dendrogram of Abundance Profile")
+@method(name="Heatmap from Abundance Profiles")
 def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, order, label):
-    """Generate heatmap-dendrogram vizualization from metagenome abundance profile
+    """Generate heatmap-dendrogram visualization from metagenome abundance profile.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -820,7 +820,7 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
     :type gpos: kbtypes.Unicode
     :ui_name gpos: Metadata Column
     :default gpos: 1
-    :param distance: distance metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
+    :param distance: distance/dissimilarity metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
     :type distance: kbtypes.Unicode
     :ui_name distance: Distance
     :default distance: euclidean
@@ -828,9 +828,9 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
     :type cluster: kbtypes.Unicode
     :ui_name cluster: Cluster
     :default cluster: ward
-    :param order: sort columns 
+    :param order: order columns
     :type order: kbtypes.Unicode
-    :ui_name order: Sort
+    :ui_name order: Order
     :default order: yes
     :param label: label rows 
     :type label: kbtypes.Unicode
@@ -883,9 +883,9 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
-@method(name="PCoA Plot of Abundance Profile")
+@method(name="PCoA from Abundance Profiles")
 def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
-    """Generate PCoA (Principal Coordinate Analysis) from metagenome abundance profile
+    """Generate PCoA (Principal Coordinate Analysis) from metagenome abundance profile.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -900,7 +900,7 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
     :type gpos: kbtypes.Unicode
     :ui_name gpos: Metadata Column
     :default gpos: 1
-    :param distance: distance metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
+    :param distance: distance/dissimilarity metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
     :type distance: kbtypes.Unicode
     :ui_name distance: Distance
     :default distance: euclidean
@@ -956,7 +956,7 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
 
 @method(name="Retrieve AWE Results")
 def _redo_annot(meth, workspace, in_name, out_name):
-    """Query an AWE DataHandle type and create a Shock DataHandle for the results.
+    """Query an AWE job DataHandle and create a Shock DataHandle for the results.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode

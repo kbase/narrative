@@ -293,7 +293,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     anno = _get_invo(out_name)
     rows = len(anno.strip().split('\n')) - 1
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': anno}
-    text = "Annotation sets for the top %d %s from SEED/Subsystems were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d)."%(int(top), level, out_name, int(evalue), int(identity), int(length))
+    text = "Annotation sets for the %s %s from SEED/Subsystems were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d)."%('top '+str(top) if int(top) > 0 else 'merged', level, out_name, int(evalue), int(identity), int(length))
     _put_ws(workspace, out_name, data=data)
     return json.dumps({'header': text})
 
@@ -468,8 +468,8 @@ def _redo_annot(meth, workspace, in_name):
     return json.dumps({'header': htmltext})
 
 @method(name="Compare Metabolic Model")
-def _redo_annot(meth, workspace, model1, model2):
-    """Gapfill a metagenomic metabolic model.
+def _redo_annot(meth, workspace, model1, model2, names):
+    """Compare two or more metabolic models.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -497,7 +497,7 @@ def _redo_annot(meth, workspace, model1, model2):
     elif (model1 != '') and (model2 != ''):
         model_list = [model1, model2]
     else:
-        return json.dumps({'header': 'ERROR: missing model1 and model2 names'})
+        return json.dumps({'header': 'ERROR: missing model 1 and model 2, or model name list'})
     
     meth.advance("Compare Models")
     cmd = "fba-compare-mdls %s %s"%(';'.join(model_list), workspace)

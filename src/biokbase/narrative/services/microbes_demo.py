@@ -767,7 +767,7 @@ def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
     job_id = fbaClient.queue_wildtype_phenotype_reconciliation(wildtype_phenotype_reconciliation_params)['id']
     return json.dumps({'token': token, 'ws_name': workspace, 'model_id': out_model_id, 'job_id': job_id})
 
-@method(name="Compare Two Genome Proteomes")
+@method(name="Compare Two Proteomes")
 def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space. [16]
@@ -800,7 +800,7 @@ def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
         'output_id': out_proteome_cmp, 
     }
     job_id = cmpClient.blast_proteomes(blast_proteomes_params)
-    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_proteome_cmp, 'job_id': job_id})
+    return json.dumps({'ws_name': workspace, 'ws_id': out_proteome_cmp, 'job_id': job_id})
 
 @method(name="View Proteome Comparison")
 def _view_proteome_cmp(meth, proteome_cmp):
@@ -817,7 +817,7 @@ def _view_proteome_cmp(meth, proteome_cmp):
     meth.stages = 1  # for reporting progress
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': proteome_cmp})
+    return json.dumps({'ws_name': workspace, 'ws_id': proteome_cmp})
 
 @method(name="Compare Two Fba Models")
 def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):

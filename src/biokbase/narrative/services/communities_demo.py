@@ -989,7 +989,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
         return json.dumps({'header': text})
     
     meth.advance("Storing in Workspace")
-    last_task = awejob['tasks'][-1]
+    last_task = awejob['data']['tasks'][-1]
     out_num = len(last_task['outputs'].keys())
     for name, info in last_task['outputs'].iteritems():
         append = '' if out_num == 1 else '_'+name

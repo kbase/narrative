@@ -439,7 +439,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
 
 @method(name="Gapfill Metabolic Model")
 def _redo_annot(meth, workspace, in_name):
-    """Gapfill a draft metagenomic metabolic model.
+    """Fill in missing core metabolism functions in a draft model.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -469,7 +469,7 @@ def _redo_annot(meth, workspace, in_name):
 
 @method(name="Compare Metabolic Model")
 def _redo_annot(meth, workspace, model1, model2, names):
-    """Compare two or more metabolic models.
+    """Compare two or more metabolic models with appropriate statistical tests.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -509,7 +509,7 @@ def _redo_annot(meth, workspace, model1, model2, names):
 
 @method(name="Download Annotation Abundance Profiles")
 def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, int_level, int_source, evalue, identity, length, norm):
-    """Retrieve an abundance profile of the inputted metagenome IDs based in inputted options.
+    """Download annotation abundance data for selected metagenomes.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -608,7 +608,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
 
 @method(name="Statistical Significance Test")
 def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, order, direction):
-    """Apply matR-based statistical tests to grouped metagenomic abundance profiles.
+    """Apply matR-based statistical tests to abundance profile data.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -685,7 +685,7 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
 
 @method(name="View Data Table")
 def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, rows):
-    """Sort and/or sub-select metagenomic abundance profile table.
+    """Sort and/or subselect annotation abundance data and outputs from statistical analyses.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -753,7 +753,7 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
 
 @method(name="Boxplots from Abundance Profile")
 def _plot_boxplot(meth, workspace, in_name, groups, gpos):
-    """Generate boxplot visualization from metagenome abundance profile.
+    """Generate boxplots from annotation abundance data.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -805,7 +805,7 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
 
 @method(name="Heatmap from Abundance Profiles")
 def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, order, label):
-    """Generate heatmap-dendrogram visualization from metagenome abundance profile.
+    """Generate a heatmap-dendrogram from annotation abundance data.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -885,7 +885,7 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
 
 @method(name="PCoA from Abundance Profiles")
 def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
-    """Generate PCoA (Principal Coordinate Analysis) from metagenome abundance profile.
+    """Generate a PCoA from annotation abundance data - color with metadata.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode

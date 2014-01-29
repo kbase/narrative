@@ -619,12 +619,12 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
     :param out_name: workspace ID of abundance profile table with significance
     :type out_name: kbtypes.WorkspaceObjectId
     :ui_name out_name: Output Name
-    :param groups: workspace ID of metadata table
+    :param groups: workspace ID of group table
     :type groups: kbtypes.Unicode
-    :ui_name groups: Metadata
-    :param gpos: column of metadata to use, default is first
+    :ui_name groups: Groups
+    :param gpos: position of group to use, default is first
     :type gpos: kbtypes.Unicode
-    :ui_name gpos: Metadata Column
+    :ui_name gpos: Group Position
     :default gpos: 1
     :param stat_test: supported statistical tests, one of: Kruskal-Wallis, t-test-paired, Wilcoxon-paired, t-test-unpaired, Mann-Whitney-unpaired-Wilcoxon, ANOVA-one-way, default is Kruskal-Wallis
     :type stat_test: kbtypes.Unicode
@@ -761,12 +761,12 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
     :param in_name: workspace ID of abundance profile table
     :type in_name: kbtypes.WorkspaceObjectId
     :ui_name in_name: Input Name
-    :param groups: workspace ID of metadata table
+    :param groups: workspace ID of group table
     :type groups: kbtypes.Unicode
-    :ui_name groups: Metadata
-    :param gpos: column of metadata to use, default is first
+    :ui_name groups: Groups
+    :param gpos: position of group to use, default is first
     :type gpos: kbtypes.Unicode
-    :ui_name gpos: Metadata Column
+    :ui_name gpos: Group Position
     :default gpos: 1
     :return: Metagenome Abundance Profile Significance Info
     :rtype: kbtypes.Unicode
@@ -813,12 +813,12 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
     :param in_name: workspace ID of abundance profile table
     :type in_name: kbtypes.WorkspaceObjectId
     :ui_name in_name: Input Name
-    :param groups: workspace ID of metadata table
+    :param groups: workspace ID of group table
     :type groups: kbtypes.Unicode
-    :ui_name groups: Metadata
-    :param gpos: column of metadata to use, default is first
+    :ui_name groups: Groups
+    :param gpos: position of group to use, default is first
     :type gpos: kbtypes.Unicode
-    :ui_name gpos: Metadata Column
+    :ui_name gpos: Group Position
     :default gpos: 1
     :param distance: distance/dissimilarity metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
     :type distance: kbtypes.Unicode
@@ -885,7 +885,7 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
 
 @method(name="PCoA from Abundance Profiles")
 def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
-    """Generate a PCoA from annotation abundance data - color with metadata.
+    """Generate a PCoA from annotation abundance data.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -893,12 +893,12 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
     :param in_name: workspace ID of abundance profile table
     :type in_name: kbtypes.WorkspaceObjectId
     :ui_name in_name: Input Name
-    :param groups: workspace ID of metadata table
+    :param groups: workspace ID of group table
     :type groups: kbtypes.Unicode
-    :ui_name groups: Metadata
-    :param gpos: column of metadata to use, default is first
+    :ui_name groups: Groups
+    :param gpos: position of group to use, default is first
     :type gpos: kbtypes.Unicode
-    :ui_name gpos: Metadata Column
+    :ui_name gpos: Group Position
     :default gpos: 1
     :param distance: distance/dissimilarity metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
     :type distance: kbtypes.Unicode
@@ -947,7 +947,7 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
     meth.advance("Displaying PCoA")
     text = "A %s dimensional PCoA calculated from %s distance/dissimilarity was created from %s."%('three' if three.lower() == 'yes' else 'two', distance, in_name)
     if groups:
-        text += " Samples were colored by metadata in column %d of the %s metadata file."%(int(gpos), groups)
+        text += " Samples were colored by groups in position %d of the %s groups table."%(int(gpos), groups)
     fig_rawpng = _get_invo(in_name+'.pcoa.png')
     fig_b64png = base64.b64encode(fig_rawpng)
     leg_rawpng = _get_invo(in_name+'.pcoa.png.legend.png')

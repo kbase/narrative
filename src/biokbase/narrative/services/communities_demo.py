@@ -218,9 +218,9 @@ def _relabel_cols(data, groups, pos):
     rows[0] = "\t".join(head)
     return "\n".join(rows)+"\n"
 
-@method(name="Retrieve Annotation Set")
+@method(name="Retrieve Subsytems Annotation")
 def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, length, rest):
-    """Retrieve a Subsystems annotation set based on the top N taxa of the inputted metagenome ID.
+    """Retrieve all SEED/Subsystems functional annotations for a given metagenome ID. Alternatively, filter annotations for specific taxa.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -299,7 +299,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
 
 @method(name="PICRUSt Predicted Abundance Profile")
 def _redo_annot(meth, workspace, in_seq, out_id):
-    """Create a KEGG annotated functional abundance profile BIOM for 16S data using PICRUSt.
+    """Create a KEGG annotated functional abundance profile for 16S data in BIOM format using PICRUSt. The input OTUs are created by QIIME using a closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -346,9 +346,9 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     _put_ws(workspace, out_id, ref=data)
     return json.dumps({'header': text})
 
-@method(name="Annotation Set from Abundance Profile")
+@method(name="Map KEGG annotation to Subsystems annotation")
 def _redo_annot(meth, workspace, in_name, out_name):
-    """Create a Subsystems annotation set from a KEGG metagenome abundance profile.
+    """Create SEED/Subsystems annotations from a KEGG metagenome abundance profile.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -397,7 +397,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
 
 @method(name="Create Metabolic Model")
 def _redo_annot(meth, workspace, in_name, out_name):
-    """Create a metabolic model from a metagenome annotation set.
+    """Create a draft metabolic model from metagenome Subsystems annotations.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -439,7 +439,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
 
 @method(name="Gapfill Metabolic Model")
 def _redo_annot(meth, workspace, in_name):
-    """Gapfill a metagenomic metabolic model.
+    """Gapfill a draft metagenomic metabolic model.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode

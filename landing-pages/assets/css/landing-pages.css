@@ -367,6 +367,15 @@ div::-webkit-scrollbar-thumb {
     overflow: hidden
 }
 
+.ws-descript {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 400px;
+    overflow: hidden;
+    display: inline-block;
+}
+
+
 
 /* custom checkboxes (prototyped) */
 .ncheck {

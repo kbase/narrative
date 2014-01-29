@@ -30,7 +30,7 @@
             <div class="narrative-sidebar-section">
                 <div class="sidebar-header">RECENT NARRATIVES</div>
                 <div recentnarratives>
-                    <ul class="recent-narratives" ng-repeat="nar in narratives | orderBy:'timestamp':false | limitTo:5">
+                    <ul class="recent-narratives" ng-repeat="nar in narratives | orderBy:'timestamp':true | limitTo:5">
                         <li><a href="{{nar_url}}/{{nar.workspace}}.{{nar.id}}">{{nar.id}}</a> 
                             <span class="text-mutted pull-right">{{nar.nealtime}}</span>
                         </li>
@@ -41,8 +41,8 @@
                 <hr>
                 <h3 class="sidebar-header">RECENT PROJECTS</h3>
                 <div recentprojects>
-                    <ul class="recent-projects" ng-repeat="nar in projects | orderBy:'timestamp':false | limitTo:5">
-                        <li>{{nar.id}}<span class="text-mutted pull-right">{{nar.nealtime}}</span>
+                    <ul class="recent-projects" ng-repeat="nar in projects | orderBy:'timestamp':true | limitTo:5">
+                        <li>{{nar.name}}<span class="text-mutted pull-right">{{nar.nealtime}}</span>
                         </li>
                     </ul>
                 </div>

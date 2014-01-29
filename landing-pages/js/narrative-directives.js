@@ -46,20 +46,28 @@ angular.module('narrative-directives')
                 $(element).loading()
                 project.get_projects({
                     callback: function(projs) {
+                        console.log('projects', projs)
 
                         $(element).rmLoading();
-                        console.log('projects', projs)                        
-                        if (Object.keys(projs).length > 0) {
+
+
+                        if (projs.length > 0) {
+                            var projects = []
                             //first sort
                             for (var i in projs) {
-                                projs[i].timestamp = getTimestamp(projs[i].moddate);
-                                projs[i].nealtime = formateDate(projs[i].timestamp) 
-                                                ? formateDate(projs[i].timestamp) : projs[i].moddate.replace('T',' ');
+                                var project = {};
+                                project.timestamp = getTimestamp(projs[i][3]); // moddate to timestamp
+                                console.log(project.timestamp)
+                                if (!project.timestamp) continue;
+                                project.nealtime = formateDate(project.timestamp) 
+                                                ? formateDate(project.timestamp) : projs[i][3].replace('T',' ');
+                                project.name = projs[i][7]; 
+                                projects.push(project)
                             }
 
+                            console.log(projects)
                             scope.$apply(function() {
-                                scope.projects = projs;
-                                console.log('projects after')
+                                scope.projects = projects;
                             })
 
                         } else {
@@ -102,13 +110,16 @@ angular.module('narrative-directives')
                     // get all projects
                     var proj_ids = []
                     $(element).loading();
+
                     project.get_projects({
                         callback: function(projs) {
+
+                            console.log('projects',projs)
                             var projects = [];
 
                             for (var key in projs) {
-                                projects.push([key, 'blah']);
-                                proj_ids.push(projs[key].id);
+                                //projects.push([key, 'blah']);
+                                proj_ids.push(projs[key][7]); // project is a workspace, this is the workspace name
                             }
 
                             // get narratives for each projectr //fixme: optimize
@@ -136,7 +147,6 @@ angular.module('narrative-directives')
                                 // projects are workspaces right now
                                 nar.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
                                                  Project <b>'+proj+'</b></span>';//<b>Project:</b>
-
 
                                 nar.timestamp = getTimestamp(nar.moddate)
                                 nar.moddate = formateDate(nar.timestamp) ? formateDate(nar.timestamp) : nar.moddate.replace('T',' ')
@@ -731,16 +741,15 @@ angular.module('narrative-directives')
     })
 
 
-
-
 //
 // utility functions 
 //
-
 function getTimestamp(datetime){
+    if (!datetime) return; 
     var ymd = datetime.split('T')[0].split('-');
     var hms = datetime.split('T')[1].split(':');
-    return Date.UTC(ymd[0],ymd[1]-1,ymd[2],hms[0],hms[1],hms[2]);                     
+    hms[2] = hms[2].split('+')[0];  
+    return Date.UTC(ymd[0],ymd[1]-1,ymd[2],hms[0],hms[1],hms[2]);  
 }
 
 

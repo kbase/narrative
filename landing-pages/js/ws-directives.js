@@ -97,7 +97,7 @@ angular.module('ws-directives')
                       '</div>'
                       ,
 
-            link: function(scope, element, attrs, routeParams) {
+            link: function(scope, element, attrs) {
 
                 var perm_dict = {'a': 'Admin',
                                  'r': 'Read',
@@ -105,13 +105,17 @@ angular.module('ws-directives')
                                  'o': 'Owner',
                                  'n': 'None'};
 
-
-                //global list and dict of fetched workspaces
-                var workspaces = [];
+                // Global list and dict of fetched workspaces
+                var workspaces = []; 
                 scope.workspace_dict = {};
 
                 var nav_height = 100;//238;
 
+
+                console.log('route params', scope.selected_ws)
+
+                // This method loads the sidebar data.  
+                // Note: this is only called after instantiation when sidebar needs to be refreshed
                 scope.loadData = function() {
                     $('#select-box .table').remove();
                     $('#select-box').append('<table class="table table-bordered table-condensed table-hover"></table>');
@@ -175,6 +179,7 @@ angular.module('ws-directives')
 
                         workspaces = data;
 
+
                         $('.scroll-pane').css('height', $(window).height()-
                             $('.ws-selector-header').height() - nav_height )                     
                         events();
@@ -235,6 +240,7 @@ angular.module('ws-directives')
                         var ws = $(this).data('ws');
                         $('.select-ws').removeClass('selected-ws');
                         $(this).addClass('selected-ws');
+
                         scope.$apply( $location.path('/ws/objtable/'+ws) );
                     });
 
@@ -342,24 +348,9 @@ angular.module('ws-directives')
                                 }, {
                                 name : 'Save',
                                 type : 'primary',
-                                callback : function(e, $prompt) {
+                                callback : function(e, $prompt) { //Fixme: yyyeeeahh.
                                     $prompt.addCover();
                                     $prompt.getCover().loading();
-
-
-                                    // if description textarea is showing, saving description
-                                    if ($('#ws-description textarea').length > 0) {
-                                        var d = $('#ws-description textarea').val();
-                                        var prom = kb.kbwsAPI().set_workspace_description({workspace: ws_name, 
-                                            description: d})
-
-                                        $.when(prom).done(function() {
-                                            $prompt.addCover('Saved.');
-                                        }).fail(function(){
-                                            $prompt.addCover(e.error.message, 'danger');
-                                        })
-                                    }
-
 
                                     var settings = scope.workspace_dict[ws_name];
 
@@ -420,14 +411,30 @@ angular.module('ws-directives')
                                         } 
                                     }
                                     prompt = $prompt;
+
+                                    // save permissions
                                     $.when.apply($, promises).done(function() {
-                                        prompt.addCover('Saved.');
+                                        // if description textarea is showing, saving description
+                                        if ($('#ws-description textarea').length > 0) {
+                                            var d = $('#ws-description textarea').val();
+                                            var prom = kb.kbwsAPI().set_workspace_description({workspace: ws_name, 
+                                                description: d})
+
+                                            $.when(prom).done(function() {
+                                                prompt.addCover('Saved.');
+                                                prompt.closePrompt();
+                                                manageModal(ws_name);                                            
+                                            }).fail(function(){
+                                                prompt.addCover(e.error.message, 'danger');
+                                            })
+                                        } else {
+                                            prompt.addCover('Saved.');
+                                            prompt.closePrompt();
+                                            manageModal(ws_name);
+                                        }
                                     }).fail(function(e){
                                         prompt.addCover(e.error.message, 'danger');
                                     })
-
-
-
                                 }
                             }]
                         })
@@ -461,7 +468,6 @@ angular.module('ws-directives')
 
                         $('#btn-edit-descript').unbind('click');
                         $('#btn-edit-descript').click(function(){
-                            console.log('length', $('#ws-description textarea').length )
                             if ($('#ws-description textarea').length > 0) {
                                 $('#ws-description').html(descript);
                                 $(this).text('Edit');                          
@@ -612,7 +618,7 @@ angular.module('ws-directives')
                         // if there are no user permissions, display 'none'
                         // (excluding ~global 'user' and owner)
                         var perm_count = Object.keys(data).length;
-                        console.log(perm_count)
+
                         if (perm_count <= 2) {
                             var row = $('<tr><td>(None)</td></tr>');
                             table.append(row);
@@ -753,7 +759,6 @@ angular.module('ws-directives')
                                         var ws_id = $('.create-id').val();
                                         var perm = $('.create-permission option:selected').val();
                                         var descript = $('.create-descript').val();
-                                        console.log(ws_id)
 
                                         var params = {
                                             //auth: USER_TOKEN,  //wsdeluxe
@@ -913,10 +918,6 @@ angular.module('ws-directives')
     })
 
 
-
-
-
-
     .directive('objtable', function($location) {
         return {
 
@@ -925,83 +926,107 @@ angular.module('ws-directives')
                 var showObjOpts = false;
                 var checkedList = []
 
-                var tableSettings = {
-                    "sPaginationType": "bootstrap",
-                    //"sPaginationType": "full_numbers",
-                    "iDisplayLength": 10,
-                    "aaData": [],
-                    "fnDrawCallback": events,
-                    "aaSorting": [[ 3, "desc" ]],
-                  "aoColumns": [
-                      { "sTitle": ""},
-                      { "sTitle": "Name"}, //"sWidth": "10%"
-                      { "sTitle": "Type", "sWidth": "20%"},
-                      { "sTitle": "Last Modified", "iDataSort": 5},
-                      { "sTitle": "Owner"},
-                      { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}                   
+                scope.loadObjTable = function() {
+                    showObjOpts = false;
+                    checkedList = []
 
-                  ],                         
-                    "oLanguage": {
-                        "sEmptyTable": "No objects in workspace",
-                        "sSearch": "Search:"
-                    }
-                }
+                    var tableSettings = {
+                        "sPaginationType": "bootstrap",
+                        //"sPaginationType": "full_numbers",
+                        "iDisplayLength": 10,
+                        "aaData": [],
+                        "fnDrawCallback": events,
+                        "aaSorting": [[ 3, "desc" ]],
+                      "aoColumns": [
+                          { "sTitle": ""},
+                          { "sTitle": "Name"}, //"sWidth": "10%"
+                          { "sTitle": "Type", "sWidth": "20%"},
+                          { "sTitle": "Last Modified", "iDataSort": 5},
+                          { "sTitle": "Owner"},
+                          { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}                   
 
-                // clear object view every load
-                $(element).html('')
-                $(element).loading('loading '+ws+'...')
-
-                // load workspace objects
-                var prom = kb.req('ws', 'list_objects', 
-                                        {workspaces: [ws]});
-                $.when(prom).done(function(data){
-                    $(element).rmLoading();
-                    $(element).append('<table id="obj-table-'+ws+'" \
-                        class="table table-bordered table-striped" style="width: 100%;"></table>')    
-
-                    var tableobjs = formatObjs(data);
-                    var wsobjs = tableobjs[0];
-                    var type_counts = tableobjs[1];
-
-                    tableSettings.aaData = wsobjs;
-
-                    // load object table
-                    var table = $('#obj-table-'+ws).dataTable(tableSettings);
-
-                    // if there are objects, add 'select all' button, type filter,
-                    // and trash bin.
-                    if (data.length > 0) {
-                        $('.table-options').append('<button class="btn btn-default btn-select-all">\
-                            <div class="ncheck check-option"></div></button> ');
-
-                        var select = $('<select class=" type-filter form-control">\
-                                            <option selected="selected">All Types</option> \
-                                        </select>')
-                        for (var type in type_counts) {
-                            select.append('<option data-type="'+type+'">'+type+' ('+type_counts[type]+')</option>');
+                      ],                         
+                        "oLanguage": {
+                            "sEmptyTable": "No objects in workspace",
+                            "sSearch": "Search:"
                         }
-                        $('.table-options').append(select);
-
-                        $('.type-filter').change( function () {
-                            if ($(this).val() == "All Types") {
-                                table.fnFilter('', 2)
-                            } else {
-                                table.fnFilter( $(this).find('option:selected').data('type'), 2);
-                            }    
-                        });
-
-                        // trash bin link
-                        //var trash_btn = $('<a class="btn-trash pull-right">Trash \
-                        //            <span class="badge trash-count">0</span><a>');
-                        //trash_btn.on('click', displayTrashBin);
-                        //$('.dataTables_filter').append(trash_btn);
-
-                        checkBoxObjectClickEvent('.obj-check-box');
                     }
-                }).fail(function(e){
-                    $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
-                })
 
+                    // clear object view every load
+                    $(element).html('')
+                    $(element).loading('loading '+ws+'...')
+
+                    // load workspace objects
+                    var prom = kb.kbwsAPI().list_objects({workspaces: [ws]});
+                    var prom2 = kb.kbwsAPI().list_objects({workspaces: [ws], showOnlyDeleted: 1})
+                    $.when(prom, prom2).done(function(data, deleted_objs){
+                        $(element).rmLoading();
+                        $(element).append('<table id="obj-table-'+ws+'" \
+                            class="table table-bordered table-striped" style="width: 100%;"></table>')    
+
+                        var tableobjs = formatObjs(data);
+                        var wsobjs = tableobjs[0];
+                        var type_counts = tableobjs[1];
+
+                        tableSettings.aaData = wsobjs;
+
+                        // load object table
+                        var table = $('#obj-table-'+ws).dataTable(tableSettings);
+
+                        // if there are objects, add 'select all' button, type filter,
+                        // and trash bin.
+                        if (data.length > 0) {
+                            // add select all button to table options datatables.bootstrap file for template
+                            $('.table-options').append('<button class="btn btn-default btn-select-all">\
+                                <div class="ncheck check-option"></div></button> ');
+
+                            // add type filter
+                            var select = $('<select class=" type-filter form-control">\
+                                                <option selected="selected">All Types</option> \
+                                            </select>')
+                            for (var type in type_counts) {
+                                select.append('<option data-type="'+type+'">'+type+'  ('+type_counts[type]+')</option>');
+                            }
+                            $('.table-options').append(select);
+
+                            // event for type filter
+                            $('.type-filter').change( function () {
+                                if ($(this).val() == "All Types") {
+                                    table.fnFilter('', 2)
+                                } else {
+                                    table.fnFilter( $(this).find('option:selected').data('type'), 2);
+                                }    
+                            });
+
+                            // trash bin link
+                            var trash_btn = $('<a class="btn-trash pull-right">Trash \
+                                        <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
+                            trash_btn.click(function(){
+                                displayTrashBin(deleted_objs)
+                            })
+                            $('.dataTables_filter').append(trash_btn);
+
+                            // event for when an object checkbox is clicked
+                            checkBoxObjectClickEvent('.obj-check-box');
+
+                            // load description above table if there is one.
+                            var p = kb.kbwsAPI().get_workspace_description({workspace: ws})
+                            $.when(p).done(function(d){
+                                if (d != null) {
+                                    $(element).parent().prepend('<div class="text-muted ws-descript" \
+                                        style="line-height: 2.2em">'+d+'</div>');
+                                }
+                            })
+                        }
+                    }).fail(function(e){
+                        $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
+                    })
+
+                    // resinstantiate all events.
+                    events();
+                } // end scope.loadObjTable
+
+                scope.loadObjTable();
 
                 // function that takes json for the object table and formats
                 function formatObjs(objs) {
@@ -1011,9 +1036,9 @@ angular.module('ws-directives')
                     for (var i in objs) {
                         var obj = objs[i];
                         var id = obj[1];
-                        var type = obj[2].slice(obj[2].indexOf('.')+1)
+                        var type = obj[2].slice(obj[2].indexOf('.')+1);
                         var timestamp = getTimestamp(obj[3].split('+')[0]);
-                        var date = formateDate(timestamp)
+                        var date = formateDate(timestamp);
                         var instance = obj[4];
                         var owner = obj[5];
                         var ws = obj[7]
@@ -1100,10 +1125,8 @@ angular.module('ws-directives')
                     $('.btn-show-info').click(function() {
 //                        var type = $(this).prev('.obj-id').data('.obj-type').split('.')[0];
                         var id = $(this).parent('td').find('.obj-id').data('obj-id');
-                        console.log(id)
+
                         showObjectInfo(ws, id);
-
-
                     })
 
                     // event for adding a object to, say, model viewer
@@ -1244,7 +1267,7 @@ angular.module('ws-directives')
                 function addOptionButtons() {
                     var options = $('<span class="object-options">');
 
-                    options.append('<button class="btn btn-danger btn-delete-obj" disabled>\
+                    options.append('<button class="btn btn-danger btn-delete-obj">\
                         <span class="glyphicon glyphicon-trash"></span></button> ');
 
                     options.append('<div class="btn-group"><button class="btn btn-default btn-mv-dd" \
@@ -1274,15 +1297,15 @@ angular.module('ws-directives')
                 function objOptClick() {
                     $('.btn-delete-obj').unbind('click')
                     $('.btn-delete-obj').click(function(){
-                        deleteObjects(checkedList)
+                        deleteObjects()
                     });
 
                     $('.opt-dropdown ul li').unbind('click')
                     $('.opt-dropdown ul li').click(function(){
                         if ($(this).attr('opt') == 'copy'){
-                            copyObjects(checkedList);
+                            copyObjects();
                         } else if ($(this).attr('opt') == 'move'){
-                            moveObjects(checkedList);
+                            moveObjects();
                         }
                     })
                 }
@@ -1372,16 +1395,78 @@ angular.module('ws-directives')
 
                 }
 
+                var trashbin;
+                function displayTrashBin(objs) {
+                    var tableSettings = {
+                        "sPaginationType": "bootstrap",
+                        //"sPaginationType": "full_numbers",
+                        "iDisplayLength": 10,
+                        "aaData": [],
+                        //"fnDrawCallback": events,
+                        "aaSorting": [[ 3, "desc" ]],
+                      "aoColumns": [
+                          { "sTitle": ""},
+                          { "sTitle": "Name"}, //"sWidth": "10%"
+                          { "sTitle": "Type", "sWidth": "20%"},
+                          { "sTitle": "Last Modified", "iDataSort": 5},
+                          { "sTitle": "Owner"},
+                          { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}                   
 
-                function displayTrashBin() {
+                      ],                         
+                        "oLanguage": {
+                            "sEmptyTable": "No objects in workspace",
+                            "sSearch": "Search:"
+                        }
+                    }
 
+                    // hide the objecttable, add back button
+                    $('#obj-table-'+ws+'_wrapper').hide();
+                    $(element).prepend('<h4 class="trash-header"><a class="btn btn-primary">\
+                        <span class="glyphicon glyphicon-circle-arrow-left"></span> Back</a> '+ws+' \
+                        <span class="text-danger">Trash Bin</span></h4>');
+
+                    // event for back to workspace button
+                    $('.trash-header .btn').unbind('click');
+                    $('.trash-header .btn').click(function() {
+                        if (typeof trashbin) trashbin.fnDestroy();
+                        $('.trash-header').remove();
+                        $('#obj-table-'+ws+'_wrapper').show();
+                    })
+
+                    // if trash table hasn't already been rendered, render it
+                    console.log(typeof trashbin)
+                    if (typeof trashbin == 'undefined') {
+                        $(element).append('<table id="obj-table-'+ws+'-trash" \
+                            class="table table-bordered table-striped" style="width: 100%;"></table>');
+
+                        var tableobjs = formatObjs(objs);
+                        var wsobjs = tableobjs[0];
+                        var type_counts = tableobjs[1];
+
+                        tableSettings.aaData = wsobjs;
+
+                        // load object table
+                        trashbin = $('#obj-table-'+ws+'-trash').dataTable(tableSettings);
+                    } else {
+                        $('#obj-table-'+ws+'-trash_wrapper').show()
+                    }
 
                 }
 
-                function deteleObjects() {
-                    var params = {}
-                    var prom = kb.kbwsAPI().delete_workspace(params)
+
+                function deleteObjects() {
+                    var params = {};
+                    var obj_ids = [];
+                    for (var i in checkedList) {
+                        var obj = {};
+                        obj.workspace = checkedList[i][1];
+                        obj.name = checkedList[i][0];
+                        obj_ids.push(obj);
+                    }
+
+                    var prom = kb.kbwsAPI().delete_objects(obj_ids)
                     $.when(prom).done(function(data){
+                        scope.loadObjTable();
                     })
                 }
 
@@ -1419,7 +1504,6 @@ angular.module('ws-directives')
 
                     copyObjectsModal.openPrompt();
                 }
-
 
 
                 function copyObjectsToNarrative() {
@@ -1460,8 +1544,9 @@ angular.module('ws-directives')
                                         var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                         btn.click(function() { $prompt.closePrompt(); })
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);
-                                    }).fail(function() {
-                                        $prompt.addCover('Could not copy some or all of the objects.', 'danger');
+                                    }).fail(function(e) {
+                                        $prompt.addCover('Could not copy some or all of the objects. '
+                                                            +e.error.message, 'danger');
                                     })
                                 }
                             }]

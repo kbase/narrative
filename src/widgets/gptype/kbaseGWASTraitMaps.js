@@ -9,7 +9,6 @@
         },
 
         workspaceURL: "https://kbase.us/services/ws",
-
         init: function(options) {
             this._super(options);
 

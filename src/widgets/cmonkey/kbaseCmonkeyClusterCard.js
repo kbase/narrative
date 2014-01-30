@@ -11,49 +11,44 @@
        },
         init: function(options) {
             this._super(options);
+            var self = this;
+
             if (this.options.cluster === null) {
                 //throw an error
                 return;
             }
 
-            this.$messagePane = $("<div/>")
-                    .addClass("kbwidget-message-pane")
-                    .addClass("kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);
-
-            return this.render();
-        },
-        render: function(options) {
-
-            var self = this;
             self.cluster = this.options.cluster;
             
             self.$elem.append($("<div />")
-                    .append("<h3>ID " + this.options.cluster.id + "</h3>"));
+                    .append($("<h4 />").append("Cluster info")));
             
-            self.$elem.append($("<div />")
-                    .append("<h4>Cluster info</h4>"));
+                            self.$elem.append($("<div />").
+                                    append($("<table/>").addClass("invtable")
+                                            .append($("<tr/>")
+                                                    .append($("<td/>").append("Cluster ID"))
+                                                    .append($("<td/>").addClass("invtable-boldcell").append(self.cluster.id)))
+                                            .append($("<tr/>")
+                                                    .append($("<td/>").append("Number of genes"))
+                                                    .append($("<td/>").addClass("invtable-emcell").append(self.cluster.gene_ids.length)))
+                                            .append($("<tr/>")
+                                                    .append($("<td/>").append("Number of conditions"))
+                                                    .append($("<td/>").addClass("invtable-emcell").append(self.cluster.sample_ws_ids.length)))
+                                            .append($("<tr/>")
+                                                    .append($("<td/>").append("Number of motifs"))
+                                                    .append($("<td/>").addClass("invtable-emcell").append(self.cluster.motifs.length)))
+                                            .append($("<tr/>")
+                                                    .append($("<td/>").append("Residual"))
+                                                    .append($("<td/>").addClass("invtable-boldcell").append(self.cluster.residual)))
+                                            ));
 
-            self.$elem.append($("<div />")
-						.append($("<table/>").addClass("kbgo-table")
-//					    .append($("<tr/>")
-//					    	.append("<td>Cluster id</td><td>" + self.cluster.id + "</td>"))
-					    .append($("<tr/>").
-					    	append("<td>Number of genes</td><td>" + self.cluster.gene_ids.length + "</td>"))
-					    .append($("<tr/>").
-					    	append("<td>Number of conditions</td><td>" + self.cluster.sample_ws_ids.length + "</td>"))
-					    .append($("<tr/>").
-					    	append("<td>Number of motifs</td><td>" + self.cluster.motifs.length + "</td>"))
-					    .append($("<tr/>").
-					    	append("<td>Residual</td><td>" + self.cluster.residual + "</td>"))
-			));
 
             //Genes
             self.$elem.append($("<div />")
-                    .append("<h4>List of genes</h4>")
-                    .append("<button id='toggle_btn1'>Toggle</button>"));
+                    .append($("<h4 />").append("Genes"))
+                    .append($("<button />").attr('id', 'toggle_genes').addClass("btn btn-default").append("Toggle")));
             
-            $("#toggle_btn1").click(function(){
+            $("#toggle_genes").click(function(){
                 $("#gene_list").toggle();
             });
             
@@ -76,23 +71,41 @@
 */
             //Conditions
             self.$elem.append($("<div />")
-                    .append("<h4>List of conditions</h4>")
-                    .append("<button id='toggle_btn2'>Toggle</button>"));
+                    .append($("<h4 />").append("Conditions"))
+                    .append($("<button />").attr('id', 'toggle_conditions').addClass("btn btn-default").append("Toggle")));
 
-            $("#toggle_btn2").click(function(){
+            $("#toggle_conditions").click(function(){
                 $("#conditions-table").toggle();
             });
-
-            var $conditionsTable = '<table ' + self.cluster.id + '" class="kbgo-table">';
-            $conditionsTable += "<tr><td>Expression sample</td></tr>";
-
-            for (var condition in self.cluster.sample_ws_ids) {
-                $conditionsTable += "<tr><td>" + self.cluster.sample_ws_ids[condition] + "</td></tr>";
-            }
-
-            $conditionsTable += "</table>";
-            self.$elem.append($("<div id='conditions-table' style='display:none'/>").append($conditionsTable));
             
+            this.conditions_table = $('<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">');
+            self.$elem.append($("<div />").attr('id', 'conditions-table').css('display', 'none').append(this.conditions_table));
+
+	    this.conditions_table.dataTable({
+		iDisplayLength: 10,
+                bFilter: false,
+		aoColumns: [
+                    { sTitle: "Sample name" },      
+		],
+		bSaveState : true,
+		fnStateSave: function (oSettings, oData) {
+		    self.tableData = JSON.stringify(oData);
+		},
+		fnStateLoad: function (oSettings) {
+		    return JSON.parse( self.tableData );
+		},
+		fnDrawCallback: function() {
+		}
+	    });
+            
+            var conditionsTableData = [];
+            for (var condition in self.cluster.sample_ws_ids) {
+               conditionsTableData.push([self.cluster.sample_ws_ids[condition]]);
+            };
+            
+            this.conditions_table.fnAddData(conditionsTableData);
+            this.conditions_table.fnAdjustColumnSizing();
+
             //Motifs
 
             var $dropdown;
@@ -129,20 +142,6 @@
                 title: "cMonkey cluster"
             };
         },
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
-
-            this.$messagePane.append(span);
-            this.$messagePane.removeClass("kbwidget-hide-message");
-        },
-        hideMessage: function() {
-            this.$messagePane.addClass("kbwidget-hide-message");
-            this.$messagePane.empty();
-        },
-        rpcError: function(error) {
-            console.log("An error occurred: " + error);
-        }
-
     });
 })(jQuery);
 

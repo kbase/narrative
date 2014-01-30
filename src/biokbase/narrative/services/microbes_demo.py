@@ -21,7 +21,7 @@ from biokbase.GenomeComparison.Client import GenomeComparison
 ## Globals
 
 VERSION = (0, 0, 1)
-NAME = "microbes"
+NAME = "Microbes Services"
 
 # Initialize
 init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
@@ -194,18 +194,25 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     """Given an annotated Genome, build a draft flux balance analysis model. [6]
 
     :param genome_id: Source genome name [6.1]
-    :type genome_id: kbtypes.Genome
+    :type genome_id: kbtypes.KBaseGenome3
     :ui_name genome_id: Genome Name
+    
     :param fba_model_id: select a name for the generated FBA Model (optional) [6.2]
     :type fba_model_id: kbtypes.Unicode
     :ui_name fba_model_id: Output FBA Model Name
+    
     :return: Generated FBA Model ID
     :rtype: kbtypes.Model
     
     :output_widget: kbaseModelMetaNarrative
     """
-    
-    meth.stages = 3  # for reporting progress
+    """
+    THIS OPTION
+    :param fba_model_template_id: specify a custom template for building the model (optional) [6.3]
+    :type fba_model_template_id: kbtypes.Unicode
+    :ui_name fba_model_template_id: FBA Model Template
+    """
+    meth.stages = 2  # for reporting progress
     meth.advance("Starting")
     meth.advance("Building your new FBA model")
     
@@ -219,42 +226,40 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
         'workspace': workspaceName,
         'auth': token,
     }
-    fba_meta_data = fbaClient.genome_to_fbamodel(build_fba_params)
-    generated_model_id = fba_meta_data[0]
-    
-    #rename the object if requested
-    meth.advance("Saving the new model data object")
-    fba_model_id = fba_model_id.strip()
     if fba_model_id:
-        wsClient  = workspaceService(service.URLS.workspace)
-
-        # THIS FUNCTION IS NO LONGER AVAILABLE
-        #move_obj_params = {
-        #    'new_id':fba_model_id,
-        #    'new_workspace':workspaceName,
-        #    'source_id':generated_model_id,
-        #    'type':'Model',
-        #    'source_workspace':workspaceName,
-        #    'auth':token
-        #}
-        #fba_meta_data = wsClient.move_object(move_obj_params)
-        rename_obj_params = {
-            'obj' : {
-                'ws_name' : workspaceName,
-                'name':generated_model_id,
-                },
-            'new_name' : fba_model_id
-        }
-        tmp = wsClient.rename_object(rename_obj_params)
-        # we need to convert the new object_info array back to the
-        # old object meta style - let the workspace service do it for
-        # us, to avoid messing with 'instance'
-        get_objmeta_params = { 'workspace' : workspaceName,
-                               'id' : fba_model_id,
-                               'auth' : token }
-        fba_meta_data = wsClient.get_objectmeta( get_objmeta_params)
+        fba_model_id = fba_model_id.strip()
+        build_fba_params['model']=fba_model_id;
+        
+    # other options that are not exposed
+    #bool probannoOnly - a boolean indicating if only the probabilistic annotation should be used in building the model (an optional argument; default is '0')
+    #fbamodel_id model - ID that should be used for the newly constructed model (an optional argument; default is 'undef')
+    #bool coremodel - indicates that a core model should be constructed instead of a genome scale model (an optional argument; default is '0')
     
-    return json.dumps({"data":fba_meta_data})
+    fba_meta_data = fbaClient.genome_to_fbamodel(build_fba_params)
+    model_wsobj_id = fba_meta_data[0]
+    model_name = fba_meta_data[1]
+    
+    
+    #fetch the object so we can display something useful about it
+    wsClient  = workspaceService(service.URLS.workspace)
+    objdata = wsClient.get_objects([{'ref':workspaceName+'/'+model_wsobj_id}])
+    fbaModel = objdata[0]['data']
+    meth.debug(json.dumps(fbaModel['modelreactions']))
+    
+    # compute the number of genes- crazy, i know!  is this actually correct?
+    n_features_mapped = 0
+    for rxns in fbaModel['modelreactions'] :
+        for prots in rxns['modelReactionProteins'] :
+            for subunits in prots['modelReactionProteinSubunits']:
+                n_features_mapped += len(subunits['feature_refs'])
+    
+    return json.dumps({"data":{
+                             'name': model_name,
+                             'number_genes':n_features_mapped,
+                             'number_reactions':len(fbaModel['modelreactions']),
+                             'number_compounds':len(fbaModel['modelcompounds']),
+                             'number_compartments':len(fbaModel['modelcompartments'])
+                        }})
 
 
 @method(name="View FBA Model Details")

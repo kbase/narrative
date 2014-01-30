@@ -151,6 +151,22 @@ class VariationDataset(JsonTraits):
 
 ######### Microbes Narrative ###########
 
+# Override __str__ to get a fully qualified type name.
+class KBaseGenome1(tls.Unicode, TypeMeta):
+    info_text = "KBaseGenomes.Genome-1.0"
+    def __str__(self):
+        return "KBaseGenomes.Genome-1.0"
+
+class KBaseGenome3(tls.Unicode, TypeMeta):
+    info_text = "KBaseGenomes.Genome-3.0"
+    def __str__(self):
+        return "KBaseGenomes.Genome-3.0"
+
+class KBaseGenomesContigSet1(tls.Unicode, TypeMeta):
+    info_text = "KBaseGenomes.ContigSet-1.0"
+    def __str__(self):
+        return "KBaseGenomes.ContigSet-1.0"
+
 class Genome(tls.Unicode, TypeMeta):
     info_text = "a genome"
 

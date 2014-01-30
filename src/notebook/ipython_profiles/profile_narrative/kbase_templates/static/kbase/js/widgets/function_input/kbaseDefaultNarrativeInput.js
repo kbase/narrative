@@ -26,8 +26,6 @@
          * @private
          */
         render: function() {
-
-            console.log('rendering input widget');
             // figure out all types from the method
             var method = this.options.method;
             
@@ -39,9 +37,6 @@
             }
             this.trigger('dataLoadedQuery.Narrative', [lookupTypes, $.proxy(
                 function(objects) {
-                    console.log('fetched data from panel');
-                    console.log(objects);
-
                     var inputDiv = "<div class='kb-cell-params'><table class='table'>";
                     for (var i=0; i<Object.keys(params).length; i++) {
                         var pid = 'param' + i;

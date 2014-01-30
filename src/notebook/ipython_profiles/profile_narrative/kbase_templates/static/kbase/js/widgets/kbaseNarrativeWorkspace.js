@@ -79,6 +79,8 @@
                         // to track when some event occurred.
                         // So, dirty bit it is.
                         this.refreshFunctionInputs(!this.inputsRendered);
+                        if (!this.inputsRendered)
+                            this.loadAllRecentCellStates();
                         this.inputsRendered = true;
                     }
                 },
@@ -105,119 +107,11 @@
             $("#function-panel").kbaseNarrativeFunctionPanel({});
 
             // Initialize the data table.
-            this.initControls(options.controlsElem);
-
-            // bind search to data table
-            // XXX: This is BROKEN, so skip it!
-            // XXX: At some point, 'this.dataTableWidget' went away..
-            if ( false ) {
-                $search_inp = options.controlsElem.find(':input');
-                var that = this;
-                $search_inp.on('change keyup', function(e) {
-                    var tbl = that.dataTableWidget.table;
-                    tbl.fnFilter($search_inp.val());
-                    tbl.fnDraw();
-                });
-            }
-
-            // **DEPRECATED** Initializes controls.
-            //this.initFuncs();
 
             this.render();
             return this;
         },
         
-        /**
-         * Initialize controls at top of workspace view.
-         *
-         * @param elem Workspace view element
-         * @returns this
-         */
-        initControls: function(elem) {
-//            this.dbg('initControls.begin');
-            // var $search = $('<div>').addClass('kb-search')
-            // var $search_inp = $('<input>').attr('type', 'text');
-            // $search.append($search_inp);
-            // $search.append($('<i>').addClass('icon-search'));
-            // elem.append($search);
-            // // populate the dropdown
-            // var $dd_menu = $('<div>').addClass('dropdown').attr({id:'kb-ws-upload-pulldown'});
-            // var $dd_toggle = $('<a>').addClass("dropdown-toggle").attr({'data-toggle':'dropdown',
-            //                 href: '#', id: 'kb-ws-add-data'}).text('+ Add');
-            // $dd_menu.append($dd_toggle);
-            // var ul = $('<ul>').addClass('dropdown-menu').attr({role: 'menu', 'aria-labelledby': 'dLabel'});
-            // ul.append($('<li>').addClass('nav-header').text('Add data from..'));
-            // ul.append($('<li>').addClass('divider'));
-            // var dd_items = { // key: [label, element_id]
-            //     'upload': {label:'Local file', id: 'kb-ws-upload-local'},
-            //     'cds': {label:'Central Data Store', id:'kb-ws-upload-cds'}
-            // }
-            // $.each(dd_items, function(key, info) {
-            //     var item = $('<li>');
-            //     item.append($('<a>').attr({'href': '#', 'id': info.id}).text(info.label));
-            //     ul.append(item);
-            // })
-            // $dd_menu.append(ul);
-            // // add to element
-            // elem.append($dd_menu);
-            // // activate the dropdown
-            // $dd_toggle.dropdown();
-            // // bind the upload action
-            // var $dlg = $('#kb-ws-upload-dialog');
-            // var opts = {$anchor: $('#' + dd_items.upload.id),
-            //             ws_parent: this};
-            // this.uploadWidget_dlg = $dlg //$dlg.kbaseUploadWidget;
-            // this.uploadWidget_opts = opts;
-            // // Add a 'refresh' button, bound to this widget's render() function
-            // var $refresh = $('<button>')
-            //     .addClass('btn btn-default btn-sm')
-            //     .attr({'type': 'button', 'id': 'kb-ws-refresh'});
-            //     //.text("Refresh");
-            // $refresh.append($('<span>').addClass("glyphicon glyphicon-refresh"));
-            // elem.append($refresh);
-            // var self = this;
-            // elem.on('click', function(e) {
-            //     // this.dbg("refresh.begin");
-            //     self.render();
-            //     // this.dbg("refresh.end");
-            // });
-            // // done
-
-            return this;
-        },
-
-        /**
-         * Set up interactive features of the function-list panel.
-         */
-        initFuncs: function() {
-            var env = this;
-            $('.kb-function-body ul li').each(function(index) {
-                var $anchor = $(this).find('a');
-                this.name = $anchor.data('name');
-                var self = this;
-                // Add cell for function
-                $anchor.click(function() {
-                    env.addCellForFunction(self.name);
-                });
-                // Help for function
-                var $anchor2 = $(this).find('span.kb-function-help');
-                this.help = $anchor2.data('help');
-                this.help_title = $anchor2.data('name');
-                $anchor2.click(function() {
-//                    console.debug("help asked for");
-                    var $elt = $('#kb-function-help');
-                    $elt.addClass("alert alert-info");
-                    $elt.html("<h1>" + self.help_title + " help</h1>" + 
-                              self.help + 
-                              "<h2>Click to hide</h2>");
-                    $elt.click(function() {
-                        $(this).hide();
-                    });
-                    $elt.show();
-                });
-            });
-        },
-
         /**
          * @method buildFunctionCell
          * @param {Object} method - the JSON schema version of the method to invoke. This will

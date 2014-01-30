@@ -8,7 +8,6 @@
             width: 780,
             type: "KBaseGwasData.GwasPopulation"
         },
-        //workspaceURL: "https://kbase.us/services/workspace",
         workspaceURL: "https://kbase.us/services/ws",
 
 
@@ -24,7 +23,6 @@
                 function(data){
                     self.collection = data[0];
 
-                    // var $contTable = $("<dir/>").css('height', '450px').css('overflow-y', 'scroll');
                     var $contTable = $("<dir/>").css('height', 'auto').css('overflow-y', 'scroll');
 
                     $contTable.attr('id', 'popTable');
@@ -48,12 +46,6 @@
                     $domainTable.dataTable();
 
                     self.$elem.append($contTable);
-
-
-
-
-
-                   
                 },
 
                 self.rpcError

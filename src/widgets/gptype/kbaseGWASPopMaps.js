@@ -28,9 +28,7 @@
                 function(data){
                     
                     self.collection = data[0];
-                    //console.log(data[0]);
-                    
-                    
+
                     for (var i=0, cnt=0; i<self.collection.data.ecotype_details.length; i++) {
                         var marker = new Object();
                         var lat = parseFloat(self.collection.data.ecotype_details[i].latitude);
@@ -39,7 +37,6 @@
                         if ( lat && lng) {
                             cnt++; 
                             marker.latLng = [ lat, lng ];
-                            //marker.lng = lng;
                             marker.data = self.collection.data.ecotype_details[i].nativename;
                             allMarkers.push(marker);
                         }                                                

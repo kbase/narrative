@@ -1,1 +1,0 @@
-http://localhost:8001/landing-pages/index.html#/KBaseGwasData.GwasPopulation/KBasePublicGwasData/arabidopsis_population_atwell_et_al

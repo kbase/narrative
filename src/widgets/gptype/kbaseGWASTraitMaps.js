@@ -30,7 +30,6 @@
                     
                     self.collection = data[0];
 
-                    console.log(data[0]);
 
                     var id = self.collection.data.GwasPopulation_obj_id;
 
@@ -52,16 +51,11 @@
                         traitsKeys[trait[0]] = trait[1];
                     });
 
-                    console.log(traitsKeys);
                     
-                    console.log(traitsKeys[key]);
-                    console.log(maxValue);
-                    console.log(minValue);
 
                     var numBins = 10;
                     var bins = ['0.0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0'];
                     var factor = ( maxValue - minValue ) / numBins;
-                    console.log(factor);
 
                     var innerSelf = self;
 
@@ -81,7 +75,6 @@
                                 cnt++; 
                                 marker.latLng = [ lat, lng ];
 
-                                if (i == 0 ) console.log(innerSelf.collection.data.ecotype_details[i]);
 
                                 traitId = innerSelf.collection.data.ecotype_details[i].ecotype_id;
                                 traitValue = traitsKeys[traitId];
@@ -89,7 +82,6 @@
                                 if ( traitValue != 'NA') {
                                     iconFile = bins[Math.round(((traitValue - minValue) / factor))];
                                     printoing = printoing + ', ' + iconFile;
-                                    //console.log(iconFile);
                                 }
 
                                 marker.data = innerSelf.collection.data.ecotype_details[i].nativename;
@@ -103,7 +95,6 @@
 
                         innerSelf.options.allMarkers = allMarkers;
                         innerSelf.options.markerCount = cnt;
-                        console.log(printoing);
 
                         return innerSelf.render();
                     });

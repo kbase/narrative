@@ -715,7 +715,7 @@
                 { my: "left top",
                   at: "left bottom",
                   of: "#app"});
-            this.addNewCard("KBaseGWASPopTable",
+            this.addNewCard("KBaseGWASTraitTable",
                 { id: this.options.data.id, ws: this.options.data.ws},
                 { my: "left top",
                   at: "left bottom+600",

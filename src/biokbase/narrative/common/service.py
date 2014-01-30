@@ -20,20 +20,11 @@ import time
 import IPython.utils.traitlets as trt
 from IPython.core.application import Application
 # Local
-from biokbase.narrative.common import kbtypes
+from biokbase.narrative.common import kbtypes, kblogging
 
-## Logging boilerplate
 
+# Init logging.
 _log = logging.getLogger(__name__)
-# turn on debugging by setting environment variable KBASE_DEBUG
-if os.environ.get("KBASE_DEBUG", None):
-    _log.setLevel(logging.DEBUG)
-else:
-    _log.setLevel(logging.WARN)
-# set custom log format
-_h = logging.StreamHandler()
-_h.setFormatter(logging.Formatter("%(levelname)s %(asctime)s %(module)s: %(message)s"))
-_log.addHandler(_h)
 
 ## Globals
 

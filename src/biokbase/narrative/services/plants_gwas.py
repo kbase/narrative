@@ -108,7 +108,7 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 from IPython.display import display, HTML
 # Other KBase
 from biokbase.GWAS.Client import GWAS
-from biokbase.narrative.common.kbutil import AweJob, Workspace
+from biokbase.narrative.common.util import AweJob, Workspace2
 
 
 ## Exceptions
@@ -129,7 +129,7 @@ class URLS:
     shock = "http://140.221.84.236:8000"
     awe = "http://140.221.85.171:7080"
     expression = "http://{}:7075".format(_host)
-    workspace = "http://140.221.84.209:7058/"
+    #workspace = "http://140.221.84.209:7058/"
     ids = "http://kbase.us/services/idserver"
     cdmi = "http://kbase.us/services/cdmi_api"
     ontology = "http://kbase.us/services/ontology_service"
@@ -440,8 +440,8 @@ def gene_table(meth, workspace_id=None, obj_id=None):
     if not workspace_id:
         meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
         workspace_id = meth.workspace_id
-    ws = Workspace(url=URLS.workspace, token=meth.token, name=workspace_id)
-    raw_data = ws.get(obj_id, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
+    ws = Workspace2(token=meth.token, wsid=workspace_id)
+    raw_data = ws.get(obj_id) #, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
     genes = raw_data['data']['genes']
     header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"]
     data = {'table': [header] + genes}

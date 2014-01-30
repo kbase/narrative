@@ -157,6 +157,7 @@
 		iDisplayLength: 10,
                 bFilter: false,
 		aoColumns: [
+                    { sTitle: "Position" },
                     { sTitle: "A" },      
                     { sTitle: "C" },      
                     { sTitle: "G" },      
@@ -175,7 +176,9 @@
             
             var pssmTableData = [];
             for (var row in self.motif.pssm_rows) {
-               pssmTableData.push([self.motif.pssm_rows[row][0],
+                var position = row;
+               pssmTableData.push([++position,
+                                    self.motif.pssm_rows[row][0],
                                     self.motif.pssm_rows[row][1],
                                     self.motif.pssm_rows[row][2],
                                     self.motif.pssm_rows[row][3]]);

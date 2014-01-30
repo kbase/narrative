@@ -24,6 +24,7 @@ $.KBWidget({
         this.fba_model1 = options.fba_model1;
         this.fba_model2 = options.fba_model2;
         this.proteome_cmp = options.proteome_cmp;
+        console.log(options.key1);
         return this;
     },
     
@@ -72,8 +73,8 @@ $.KBWidget({
                 tab_pane.append(tableDiv);
             }
             container.append(tab_pane)
-        	var model1 = self.modelTrans(self.fba_model1);
-        	var model2 = self.modelTrans(self.fba_model2);
+        	var model1 = self.fba_model1;
+        	var model2 = self.fba_model2;
         	var model1map = {};
         	for (var i in model1.reactions) {
         		var r = model1.reactions[i];
@@ -244,31 +245,6 @@ $.KBWidget({
         return this;
     },
 
-    modelTrans: function(old) {
-    	var reactList = [];
-    	for (var rPos in old.modelreactions) {
-    		var oldR = old.modelreactions[rPos];
-    		var features = [];
-    		for (var pPos in oldR.modelReactionProteins) {
-    			var prot = oldR.modelReactionProteins[pPos];
-    			for (var sPos in prot.modelReactionProteinSubunits) {
-    				var sub = prot.modelReactionProteinSubunits[sPos];
-    				for (var fPos in sub.feature_refs) {
-    					var fId = sub.feature_refs[fPos];
-    					fId = fId.substr(fId.lastIndexOf("/") + 1);
-    					features.push(fId);
-    				}
-    			}
-    		}
-    		var usPos = oldR.id.indexOf("_");
-    		var r = {id: oldR.id, reaction: oldR.id.substr(0,usPos), 
-    				compartment: oldR.id.substr(usPos + 1), definition: "", 
-    				features: features, name: ""};
-    		reactList.push(r);
-    	}
-    	return {reactions: reactList};
-    },
-    
     loggedInCallback: function(event, auth) {
         this.token = auth.token;
         this.render();

@@ -41,7 +41,7 @@ _log.addHandler(_h)
 class URLS:
     workspace = "http://140.221.84.209:7058/"
     invocation = "https://kbase.us/services/invocation"
-    fba = "https://kbase.us/services/fba_model_services"
+    fba = "http://140.221.84.183:7036"
     genomeCmp = "http://140.221.85.58:8283/jsonrpc"
 
 ## Exceptions

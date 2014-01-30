@@ -165,10 +165,22 @@ function projectapi() {
     // Fields in an workspace object metadata object
     project.obj_meta_fields = ['id','type','moddate','instance','command',
                'lastmodifier','owner','workspace','ref','chsum',
-               'metadata'];
+               'metadata', 'objid'];
 
     // function to map obj_meta array into a dict
     var obj_meta_dict = function (obj_meta) {
+    return obj_meta.reduce( function( prev, curr, index){
+                    prev[project.obj_meta_fields[index]] = curr;
+                    return(prev);
+                },{});
+    };
+    // Fields in an workspace object metadata object
+    project.obj_meta_fields2 = ['id','type','moddate','instance','command',
+               'lastmodifier','owner','workspace','ref','chsum',
+               'metadata'];
+
+    // function to map obj_meta array into a dict
+    var obj_meta_dict2 = function (obj_meta) {
     return obj_meta.reduce( function( prev, curr, index){
                     prev[project.obj_meta_fields[index]] = curr;
                     return(prev);
@@ -612,6 +624,8 @@ function projectapi() {
                                   var results = [].slice.call(arguments);
                                   var merged = [].concat.apply([],results);
                                   var dict = merged.map( obj_meta_dict);
+				  console.log( "all_my_narratives dict:");
+				  console.log( dict);
                                   p.callback( dict);
                                   // merge all the results into a single array
                               },

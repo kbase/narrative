@@ -500,6 +500,7 @@ user_permission: "a"
                                   var results = [].slice.call(arguments);
                                   var merged = [].concat.apply([],results);
                                   var dict = merged.map( obj_meta_dict);
+				  console.log( "Merged results: " + dict);
                                   p.callback( dict);
                                   // merge all the results into a single array
                               },

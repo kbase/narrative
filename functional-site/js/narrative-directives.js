@@ -18,7 +18,7 @@ angular.module('narrative-directives')
                 project.get_narratives({
                     callback: function(results) {
                         $(element).rmLoading();
-
+			console.log( "in recentnarratives",results);
                         if (Object.keys(results).length > 0) {
                             //first sort
                             for (var i in results) {
@@ -29,13 +29,13 @@ angular.module('narrative-directives')
 
                             scope.$apply(function() {
                                 scope.narratives = results;
-                            })
+                            });
                         } else {
                             $(element).append('no narratives');
                         }
                     }
-                })
-
+                });
+		
             }  /* end link */
         };
     })
@@ -108,7 +108,7 @@ angular.module('narrative-directives')
                     }
 
                     // get all projects
-                    var proj_ids = []
+                    var proj_ids = {};
                     $(element).loading();
 
                     var p = project.get_projects({
@@ -118,7 +118,8 @@ angular.module('narrative-directives')
 
                             for (var key in projs) {
                                 //projects.push([key, 'blah']);
-                                proj_ids.push(projs[key][7]); // project is a workspace, this is the workspace name
+                                proj_ids[projs[key][7]] = projs[key][6]; // project is a workspace, this is the workspace name
+
                             }
 
                             // get narratives for each projectr //fixme: optimize
@@ -145,37 +146,40 @@ angular.module('narrative-directives')
 
                 scope.loadData();
 
-                function getNarratives(proj_ids) {
+                function getNarratives(projects) {
+		    var proj_ids = Object.keys(projects);
                     project.get_narratives({project_ids:proj_ids, 
                         callback: function(nars){
                             $(element).rmLoading();                                
 
                             var narratives = nars.slice(0);
-
+			    console.log( "narratives:");
+			    console.log( narratives);
                             var nar_projs = []
                             for (var i in narratives) {
                                 var nar = narratives[i];
-                                var nar_id = nar.id;
+                                var nar_id = nar.objid;
+                                var nar_name = nar.id;
                                 var proj = nar.workspace; // projects are workspaces right now
-                                nar.id = '<a href="http://narrative.kbase.us/'
-                                            +proj+'.'+nar_id+'" >'+nar_id+'</a>';
+                                nar.id = '<a href="http://narrative.kbase.us/narrative/ws.'
+                                            +projects[proj]+'.obj.'+nar_id+'" >'+nar_name+'</a>';
                                 // projects are workspaces right now
                                 nar.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
                                                  Project <b>'+proj+'</b></span>';//<b>Project:</b>
 
-                                nar.timestamp = getTimestamp(nar.moddate)
-                                nar.moddate = formateDate(nar.timestamp) ? formateDate(nar.timestamp) : nar.moddate.replace('T',' ')
+                                nar.timestamp = getTimestamp(nar.moddate);
+                                nar.moddate = formateDate(nar.timestamp) ? formateDate(nar.timestamp) : nar.moddate.replace('T',' ');
 
                                 //nar.moddate = nar.moddate
 
-                                nar.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" class="glyphicon glyphicon-trash btn-delete-narrative"></span>'
+                                nar.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" class="glyphicon glyphicon-trash btn-delete-narrative"></span>';
 
                                 //fixme: wow!  This is horrible.
                                 nar.users = '<span id="'+ nar.workspace+"-"+nar_id+'_users" >loading...</span>';
-                                addUserColumn(nar.workspace, nar_id)
+                                addUserColumn(nar.workspace, nar_id);
 
                 
-                                nar_projs.push(nar.workspace)
+                                nar_projs.push(nar.workspace);
                                 //nar.users = 
                             }
 

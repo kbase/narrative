@@ -19,15 +19,10 @@
 
             this.workspaceClient = new Workspace(this.workspaceURL);
 
-            console.log(this.options);
-
-
-            // this.workspaceClient.get_object({"id" : 'arabidopsis_population_atwell_et_al', "type" : this.options.type, "workspace": 'genotype_phenotype'}, 
-            //this.workspaceClient.get_object({"id" : this.options.id, "type" : this.options.type, "workspace": this.options.ws}, 
             this.workspaceClient.get_objects([{name : this.options.id, workspace: this.options.ws}], 
                 function(data){
                     self.collection = data[0];
-                    console.log(data[0]);
+                    
                     self.$elem.append($("<div />").
                     append($("<table/>").addClass("kbgo-table")
                         .append($("<tr/>").append("<td>ID</td><td>" + self.collection.data.genome.kbase_genome_id + "</td>"))

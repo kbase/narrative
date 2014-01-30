@@ -22,15 +22,18 @@
             //this.workspaceClient.get_object({"id" : 'arabidopsis_population_atwell_et_al', "type" : this.options.type, "workspace": 'genotype_phenotype'}, 
             this.workspaceClient.get_objects([{name : this.options.id, workspace: this.options.ws}], 
                 function(data){
-                    console.log(data);
                     self.collection = data[0];
-                    //self.$elem.append("<h3>GWAS Population Ecotype Details</h3>");
+
+                    // var $contTable = $("<dir/>").css('height', '450px').css('overflow-y', 'scroll');
+                    var $contTable = $("<dir/>").css('height', 'auto').css('overflow-y', 'scroll');
+
+                    $contTable.attr('id', 'popTable');
 
                     var $domainTable = $("<table/>").addClass("table table-bordered table-striped");                        
                     var ecotypeDetails = self.collection.data.ecotype_details;
                     $domainTable.append('<thead><tr><th>Country</th><th>Ecotype Id</th><th>Native Name</th><th>Region</th><th>Site</th><th>Stock Parent</th></tr></thead>');
 
-                    for (var i=0; i<ecotypeDetails.length && i < 100; i++) {
+                    for (var i=0; i<ecotypeDetails.length /*&& i < 100*/; i++) {
                         $domainTable.append($("<tr>")
                             .append($("<td>").append(ecotypeDetails[i].country))
                             .append($("<td>").append(ecotypeDetails[i].ecotype_id))
@@ -39,7 +42,14 @@
                             .append($("<td>").append(ecotypeDetails[i].site))
                             .append($("<td>").append(ecotypeDetails[i].stockparent)));
                     }
-                    self.$elem.append($domainTable);
+
+                    $contTable.append($domainTable);
+
+                    $domainTable.dataTable();
+
+                    self.$elem.append($contTable);
+
+
 
 
 

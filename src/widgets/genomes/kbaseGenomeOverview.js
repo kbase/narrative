@@ -77,8 +77,16 @@
                                  .click(function(event) {
                                     self.$elem.find("select option:selected").each(function() {
                                         var contigId = $(this).attr("id");
-                                        if (contigId !== self.noContigs)
-                                            self.trigger("showContig", { contig: $(this).attr("id"), event: event });
+                                        if (contigId !== self.noContigs) {
+                                            self.trigger("showContig", 
+                                                { 
+                                                    contig: $(this).attr("id"), 
+                                                    workspaceID: self.options.workspaceID,
+                                                    genomeID: self.options.genomeID,
+                                                    event: event,
+                                                }
+                                            );
+                                        }
                                     })
                                  });
 
@@ -161,6 +169,7 @@
                     }
 
                     this.hideMessage();
+                    this.$infoPanel.show();
 
                 }, this),
 
@@ -170,6 +179,7 @@
         },
 
         populateContigSelector: function(contigsToLengths) {
+            console.log(contigsToLengths);
             this.$contigSelect.empty();
             if (!contigsToLengths || contigsToLengths.length == 0)
                 this.$contigSelect.append($("<option>")
@@ -235,13 +245,25 @@
                                .append(this.addInfoRow("ID", genome.id))
                                .append(this.addInfoRow("Name", genome.scientific_name))
                                .append(this.addInfoRow("Domain", genome.domain))
-//                               .append(this.addInfoRow("Complete?", (genome.complete ? "Yes" : "No")))
                                .append(this.addInfoRow("DNA Length", dnaLength))
                                .append(this.addInfoRow("Source ID", genome.source + ": " + genome.source_id))
                                .append(this.addInfoRow("Number of Contigs", genome.contig_ids.length))
                                .append(this.addInfoRow("GC Content", gcContent))
                                .append(this.addInfoRow("Genetic Code", genome.genetic_code))
                                .append(this.addInfoRow("Number of features", genome.features.length));
+
+                var contigsToLengths = {};
+                if (genome.contig_ids && genome.contig_ids.length > 0) {
+                    for (var i=0; i<genome.contig_ids.length; i++) {
+                        var len = "Unknown";
+                        if (genome.contig_lengths && genome.contig_lengths[i])
+                            len = genome.contig_lengths[i];
+                        contigsToLengths[genome.contig_ids[i]] = len;
+                    }
+                }
+
+                this.populateContigSelector(contigsToLengths);
+
                 this.hideMessage();
                 this.$infoPanel.show();
 

@@ -50,9 +50,7 @@
 
             var self = this;
 
-
-
-            this.$table = $("<table />")
+            this.$table = $("<table>")
                          .addClass("table table-striped table-bordered");
             
             // Data fetching!

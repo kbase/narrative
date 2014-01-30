@@ -129,9 +129,14 @@ def clear_token():
 class kbasemagics(Magics):
 
     @line_magic
-    def kblogin(self,user):
+    def kblogin(self,line):
+        """Login using username and password to KBase and then push necessary info into the environment"""
+        try:
+            (user,password) = line.split();
+        except ValueError:
+            user = line
+            password = None
         global user_id, token, user_profile, inv_client, inv_session
-        "Login using username and password to KBase and then push necessary info into the environment"
         # display(Javascript("IPython.notebook.kernel.execute( 'biokbase.narrative.have_browser = 1')"))
         if user_id is not None:
             print "Already logged in as %s. Please kblogout first if you want to re-login" % user_id
@@ -142,7 +147,8 @@ class kbasemagics(Magics):
                 # try to login with only user_id in case there is an ssh_agent running
                 t = biokbase.auth.Token( user_id = user)
                 if t.token is None:
-                    password = raw_input( "Please enter the KBase password for %s : " % user)
+                    if password is None:
+                        password = raw_input( "Please enter the KBase password for %s : " % user)
                     t = biokbase.auth.Token( user_id = user, password = password)
                 if t.token:
                     set_token( t.token)
@@ -158,9 +164,15 @@ class kbasemagics(Magics):
 
 
     @line_magic
-    def kb_nblogin(self,user):
+    def kb_nblogin(self,line):
+        """Notebook interface specific Login using username and password to KBase and then push necessary info into the environment"""
         global user_id, token, user_profile, inv_client, inv_session
-        "Notebook interface specific Login using username and password to KBase and then push necessary info into the environment"
+        try:
+            (user,password) = line.split();
+        except ValueError:
+            user = line
+            password = None
+
         if user_id is not None:
             raise Exception( "Already logged in as %s. Please logout first if you want to re-login" % user_id)
         if user is None:

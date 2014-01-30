@@ -2,30 +2,43 @@
 
 $.KBWidget({
     name: "FbaModelComparisonWidget",     
+    parent: "kbaseAuthenticatedWidget",
     version: "1.0.0",
+	token: null,
+	ws_name: null,
+	fba_model1: null, 
+	fba_model2: null,
+	proteome_cmp: null,
     options: {
-    	token: null,
     	ws_name: null,
     	fba_model1: null, 
     	fba_model2: null,
     	proteome_cmp: null
     },
 
-    wsUrl: "http://kbase.us/services/workspace/",
+    wsUrl: "http://140.221.84.209:7058/",
 
     init: function(options) {
-        var self = this;
         this._super(options);
+        this.ws_name = options.ws_name;
+        this.fba_model1 = options.fba_model1;
+        this.fba_model2 = options.fba_model2;
+        this.proteome_cmp = options.proteome_cmp;
+        return this;
+    },
+    
+    render: function() {
+        var self = this;
         var container = this.$elem;
     	var panel = $('<div class="loader-table">Please wait...</div>');
     	container.append(panel);
     	var pref = (new Date()).getTime();
-        var kbws = new workspaceService(this.wsUrl);
+        var kbws = new Workspace(this.wsUrl, {'token': self.token});
 
         var cmp = null;
         
-        kbws.get_object({auth: options.token, workspace: options.ws_name, id: options.proteome_cmp, type: 'ProteomeComparison'}, function(data) {
-        	cmp = data.data;
+        kbws.get_objects([{ref: self.ws_name + "/" + self.proteome_cmp}], function(data) {
+        	cmp = data[0].data;
         	dataIsReady();
         }, function(data) {
         	alert("Error: " + data.error.message)
@@ -33,10 +46,8 @@ $.KBWidget({
 
         var dataIsReady = function() {
         	$('.loader-table').remove();
-        	var headTable = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" style="margin:0;">');
-        	container.append(headTable);
-        	var tables = ['Common reactions', 'Model1 only', 'Model2 only'];
-            var tableIds = [pref+'common', pref+'model1', pref+'model2'];
+        	var tables = ['Statistics', 'Common reactions', 'Model1 only', 'Model2 only'];
+            var tableIds = [pref+'stat', pref+'common', pref+'model1', pref+'model2'];
             // build tabs
             var tabs = $('<ul id="'+pref+'table-tabs" class="nav nav-tabs"> \
                             <li class="active" > \
@@ -61,8 +72,8 @@ $.KBWidget({
                 tab_pane.append(tableDiv);
             }
             container.append(tab_pane)
-        	var model1 = options.fba_model1;
-        	var model2 = options.fba_model2;
+        	var model1 = self.modelTrans(self.fba_model1);
+        	var model2 = self.modelTrans(self.fba_model2);
         	var model1map = {};
         	for (var i in model1.reactions) {
         		var r = model1.reactions[i];
@@ -94,11 +105,16 @@ $.KBWidget({
                     }
                 };
         	//////////////////////////////////////////// Common tab /////////////////////////////////////////////
-            var stat = [0,0];
+            for (var key in model1) {
+            	console.log(key);
+            }
+        	var stat = [0,0];
             var dataDict = formatRxnObjs(model1.reactions, model2map, stat);
-            headTable.append("<tr><td></td><td>Reactions in genome1</td><td>Reactions in genome2</td><td>Common reactions</td><td>Reactions with same features</td></tr>");
-            headTable.append("<tr><td>Statistics:</td><td><center>" + model1.reactions.length + "</center></td><td><center>" + model2.reactions.length + "</center></td>" +
-            		"<td><center>" + stat[0] + "</center></td><td><center>" + stat[1] + "</center></td></tr>");
+        	var headTable = $('#'+pref+'stat-table');
+            headTable.append("<tr><td>Reactions in genome1</td><td><center>" + model1.reactions.length + "</center></td></tr>" +
+            		"<tr><td>Reactions in genome2</td><td><center>" + model2.reactions.length + "</center></td></tr>" +
+            		"<tr><td>Common reactions</td><td><center>" + stat[0] + "</center></td></tr>" +
+            		"<tr><td>Reactions with same features</td><td><center>" + stat[1] + "</center></td></tr>");
             var keys = ["reaction", "definition", "features1", "features2", "name"];
             var labels = ["Reaction", "Equation", "Features from genome1", "Features from genome2", "Name"];
             var cols = getColumns(keys, labels);
@@ -124,7 +140,7 @@ $.KBWidget({
             rxnTableSettings.aoColumns = cols;
             var table = $('#'+pref+'model2-table').dataTable(rxnTableSettings);
             table.fnAddData(dataDict);
-            container.append($('<table><tr><td>(*) color legend: sub-best bidirectional hits are marked by <font color="blue">blue</font>, '+
+            $('#'+pref+'common').append($('<table><tr><td>(*) color legend: sub-best bidirectional hits are marked by <font color="blue">blue</font>, '+
             		'orphan features are marked by <font color="red">red</font>.</td></tr></table>'));
             
             function formatRxnObjs(rxnObjs, map2, stat) {
@@ -226,7 +242,44 @@ $.KBWidget({
             }
     	};
         return this;
-    }  //end init
+    },
+
+    modelTrans: function(old) {
+    	var reactList = [];
+    	for (var rPos in old.modelreactions) {
+    		var oldR = old.modelreactions[rPos];
+    		var features = [];
+    		for (var pPos in oldR.modelReactionProteins) {
+    			var prot = oldR.modelReactionProteins[pPos];
+    			for (var sPos in prot.modelReactionProteinSubunits) {
+    				var sub = prot.modelReactionProteinSubunits[sPos];
+    				for (var fPos in sub.feature_refs) {
+    					var fId = sub.feature_refs[fPos];
+    					fId = fId.substr(fId.lastIndexOf("/") + 1);
+    					features.push(fId);
+    				}
+    			}
+    		}
+    		var usPos = oldR.id.indexOf("_");
+    		var r = {id: oldR.id, reaction: oldR.id.substr(0,usPos), 
+    				compartment: oldR.id.substr(usPos + 1), definition: "", 
+    				features: features, name: ""};
+    		reactList.push(r);
+    	}
+    	return {reactions: reactList};
+    },
+    
+    loggedInCallback: function(event, auth) {
+        this.token = auth.token;
+        this.render();
+        return this;
+    },
+
+    loggedOutCallback: function(event, auth) {
+        this.token = null;
+        this.render();
+        return this;
+    }
 
 })
 }( jQuery ) );

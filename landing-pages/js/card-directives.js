@@ -19,10 +19,10 @@ angular.module('card-directives')
             }
         };
     })
-    .directive('gwaspopulationcards', function($rootScope) {
+    .directive('gptype', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "gwaspopulation", 
+                $(element).KBaseCardLayoutManager({template: "gptype", 
                                                    data: scope.params, 
                                                    auth: $rootScope.USER_TOKEN,
                                                    userId: $rootScope.USER_ID});
@@ -33,6 +33,16 @@ angular.module('card-directives')
         return {
             link: function(scope, element, attrs) {
                 $(element).KBaseCardLayoutManager({template: "gttype", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })    
+    .directive('gvtype', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "gvtype", 
                                                    data: scope.params, 
                                                    auth: $rootScope.USER_TOKEN,
                                                    userId: $rootScope.USER_ID});

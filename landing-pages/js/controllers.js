@@ -126,10 +126,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                      'workspaceID': $stateParams.ws}
 })
 
-.controller('GWASPopDetail', function($scope, $stateParams) {
-    $scope.params = {'id': $stateParams.id,
-                     'workspaceID': $stateParams.ws}
-})
 
 .controller('MediaDetail', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
@@ -189,6 +185,10 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 
 .controller('GTTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
+.controller('GVTypeDetail', function($scope, $stateParams) {
     $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
 })
 

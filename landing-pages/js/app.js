@@ -134,6 +134,10 @@ var app = angular.module('landing-pages',
             url: '/KBaseGwasData.GwasPopulationTrait/:ws/:id',
             templateUrl: 'views/objects/gttype.html',
             controller: 'GTTypeDetail'})  
+       .state('gvtype', {
+            url: '/KBaseGwasData.GwasPopulationVariation/:ws/:id',
+            templateUrl: 'views/objects/gvtype.html',
+            controller: 'GVTypeDetail'})  
 
     $stateProvider
         .state('fbasbyws', {

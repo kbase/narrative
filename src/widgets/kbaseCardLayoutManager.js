@@ -594,12 +594,12 @@
 
             if (this.options.template.toLowerCase() === "genome")
                 this.showGenomeCards();
-            else if (this.options.template.toLowerCase() === "gwaspopulation")
-                this.showGWASPopCards();
             else if (this.options.template.toLowerCase() === "gptype")
                 this.showGWASPopCards();
             else if (this.options.template.toLowerCase() === "gttype")
                 this.showGWASTraitCards();
+            else if (this.options.template.toLowerCase() === "gvtype")
+                this.showGWASVarCards();
             else if (this.options.template.toLowerCase() === "meme")
                 this.showMemeCards();
             else if (this.options.template.toLowerCase() === "cmonkey")
@@ -722,6 +722,16 @@
                   of: "#app"});
         },
 
+        /**
+         * Template to show GWAS variation data
+         */
+        showGWASVarCards: function() {
+            this.addNewCard("KBaseGWASVarTable",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+        },
 
         /**
          * Template for showing model cards.
@@ -1138,47 +1148,6 @@
                     }
                 );
             });
-
-            /**
-             * Event: showGWASPopDetails
-             * -----------------
-             * Adds a GWAS Population overview overview card for the given object ID
-             */
-            $(document).on("showGWASPopDetails", function(event, data) {
-                self.addNewCard("KBasePopulationDetails",
-                    {
-                        genomeID: data.id,
-                        workspaceID: data.workspaceID,
-                        isInCard: true
-                    },
-                    {
-                        my: "left top",
-                        at: "center",
-                        of: data.event
-                    }
-                );
-            });
-
-            $(document).on('showGWASPopCards ', function(event,data) {
-
-                self.addNewCard("KBaseGWASPop",
-                { gwaspopulationId: "Id"},
-                { my: "left top",
-                  at: "left bottom",
-                  of: "#app"});
-
-            });
-
-            $(document).on('showGWASTraitCards ', function(event,data) {
-
-                self.addNewCard("KBaseGWASTrait",
-                { gwastraitId: "Id"},
-                { my: "left top",
-                  at: "left bottom",
-                  of: "#app"});
-
-            });
-
 
 
             /**

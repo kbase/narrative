@@ -94,9 +94,9 @@ def set_token( newtoken):
     global user_id, token, user_profile, inv_client, inv_session
     if newtoken:
         token = newtoken
-        print "Calling biokbase.auth.set_environ_token"
+        #print "Calling biokbase.auth.set_environ_token"
         biokbase.auth.set_environ_token( token)
-        print "%s = %s" % (biokbase.auth.tokenenv, os.environ[ biokbase.auth.tokenenv])
+        #print "%s = %s" % (biokbase.auth.tokenenv, os.environ[ biokbase.auth.tokenenv])
         user_profile = biokbase.auth.User( token = token)
         user_id = user_profile.user_id
         # If we had a previous session, clear it out
@@ -148,7 +148,7 @@ class kbasemagics(Magics):
                 t = biokbase.auth.Token( user_id = user)
                 if t.token is None:
                     if password is None:
-                        password = raw_input( "Please enter the KBase password for %s : " % user)
+                        password = getpass.getpass( "Please enter the KBase password for %s : " % user)
                     t = biokbase.auth.Token( user_id = user, password = password)
                 if t.token:
                     set_token( t.token)

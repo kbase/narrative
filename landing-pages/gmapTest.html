@@ -26,6 +26,8 @@
         <script src="assets/js/dataTables.bootstrap.js"></script>
 
         <script src="assets/js/jquery.cookie.min.js"></script>
+
+        <script src="assets/js/lodash.min.js"></script>
         <script src="assets/js/viz/raphael-min.js"></script>
         <!--<script src="assets/js/jquery.jscrollpane.min.js"></script>
         <script src="assets/js/jquery.mousewheel.js"></script>-->
@@ -75,6 +77,30 @@
     <script type="text/javascript">
     
       $(function(){
+
+
+		var traits = [  [ '1234', '1.0' ], ['3454', '0.3'], [ '1234', '1.3' ], ['3454', '0.0']];
+		var traitsKeys = {};
+
+		var key = '3454';
+
+		var values = [];
+		var maxValue = parseFloat(traits[0][1]);
+		var minValue = parseFloat(traits[0][1]);
+
+		traits.forEach(function(trait) {
+			console.log(trait[0]);
+			console.log(trait[1]);
+			traitsKeys[trait[0]] = trait[1];
+			if ( parseFloat(trait[1]) > maxValue ) maxValue = parseFloat(trait[1]);
+			if ( parseFloat(trait[1]) < minValue ) minValue = parseFloat(trait[1]);
+		});
+		console.log(traitsKeys);
+
+		console.log(traitsKeys[key]);
+		console.log(maxValue);
+		console.log(minValue);
+
         
         // init the map and create a cluster with some markers
         $('#test1').gmap3({

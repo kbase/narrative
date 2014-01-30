@@ -28,6 +28,7 @@
                 function(data){
                     
                     self.collection = data[0];
+                    //console.log(data[0]);
                     
                     
                     for (var i=0, cnt=0; i<self.collection.data.ecotype_details.length; i++) {
@@ -37,8 +38,8 @@
 
                         if ( lat && lng) {
                             cnt++; 
-                            marker.lat = lat;
-                            marker.lng = lng;
+                            marker.latLng = [ lat, lng ];
+                            //marker.lng = lng;
                             marker.data = self.collection.data.ecotype_details[i].nativename;
                             allMarkers.push(marker);
                         }                                                
@@ -106,13 +107,14 @@
               },
               events:{
                   mouseover: function(marker, event, context){
-                    var map = $(this).gmap3("get"),
-                    infowindow = $(this).gmap3({get:{name:"infowindow"}});
+                    console.log(context);
+                    var map = $('#mapElement').gmap3("get"),
+                    infowindow = $('#mapElement').gmap3({get:{name:"infowindow"}});
                     if (infowindow){
                       infowindow.open(map, marker);
                       infowindow.setContent(context.data);
                     } else {
-                      $(this).gmap3({
+                      $('#mapElement').gmap3({
                         infowindow:{
                           anchor:marker, 
                           options:{content: context.data}
@@ -121,7 +123,7 @@
                     }
                   },
                   mouseout: function(){
-                    var infowindow = $(this).gmap3({get:{name:"infowindow"}});
+                    var infowindow = $('#mapElement').gmap3({get:{name:"infowindow"}});
                     if (infowindow){
                       infowindow.close();
                     }

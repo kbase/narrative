@@ -131,7 +131,7 @@ var app = angular.module('landing-pages',
             templateUrl: 'views/objects/gptype.html',
             controller: 'GPTypeDetail'})  
        .state('gttype', {
-            url: '/gwastraits/:ws/:id',
+            url: '/KBaseGwasData.GwasPopulationTrait/:ws/:id',
             templateUrl: 'views/objects/gttype.html',
             controller: 'GTTypeDetail'})  
 

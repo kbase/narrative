@@ -711,12 +711,12 @@
          */
         showGWASTraitCards: function() {
             this.addNewCard("KBaseGWASTraitMaps",
-                { gwastraitsId: this.options.data.gwastraitsId},
+                { id: this.options.data.id, ws: this.options.data.ws},
                 { my: "left top",
                   at: "left bottom",
                   of: "#app"});
             this.addNewCard("KBaseGWASPopTable",
-                { gwaspopulationId: this.options.data.gwaspopulationId},
+                { id: this.options.data.id, ws: this.options.data.ws},
                 { my: "left top",
                   at: "left bottom+600",
                   of: "#app"});

@@ -571,4 +571,23 @@ div::-webkit-scrollbar-thumb {
     color: #2a6496;
 }
 
+/*
+ * InvisibleTable styles
+ */
+
+.invtable {
+	color:#000000;
+        border-style: none;
+        margin-bottom: 25px;
+}
+
+.invtable-boldcell {
+	font-weight:bold;
+        padding-left: 25px;
+}
+
+.invtable-emcell {
+	font-style:italic;
+        padding-left: 25px;
+}
 

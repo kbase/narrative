@@ -20,7 +20,7 @@
             data: {},
             auth: null,
             userId: null,
-            loadingImage: "http://narrative.kbase.us/landing/widgets/images/ajax-loader.gif",
+            loadingImage: "./assets/images/ajax-loader.gif",
         },
         cardIndex: 0,
         cards: {},

@@ -124,7 +124,8 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 .controller('GenomeDetail', function($scope, $stateParams) {
     $scope.params = {'genomeID': $stateParams.id,
-                     'workspaceID': $stateParams.ws}
+                     'workspaceID': $stateParams.ws,
+                     'kbCache' : kb}
 })
 
 .controller('MediaDetail', function($scope, $stateParams) {

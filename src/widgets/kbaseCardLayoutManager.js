@@ -20,7 +20,7 @@
             data: {},
             auth: null,
             userId: null,
-            loadingImage: "http://narrative.kbase.us/landing/widgets/images/ajax-loader.gif",
+            loadingImage: "../../widgets/images/ajax-loader.gif",
         },
         cardIndex: 0,
         cards: {},
@@ -37,9 +37,6 @@
          */
         init: function(options) {
             this._super(options);
-
-            this.dbg('user:' + this.options.userId);
-            this.dbg('token:' + this.options.auth);
 
             this.workspaceClient = new workspaceService(this.workspaceURL);
             this.fbaClient = new fbaModelServices(this.fbaURL);
@@ -624,10 +621,15 @@
          * Shows a genome overview and a description card.
          */
         showGenomeCards: function() {
+            console.log(this.options.data);
+            if (this.options.data.workspaceID === "CDS")
+                this.options.data.workspaceID = null;
             this.addNewCard("KBaseGenomeOverview", 
-                { 
+                {
                     genomeID: this.options.data.genomeID,
                     loadingImage: this.options.loadingImage,
+                    workspaceID: this.options.data.workspaceID,
+                    kbCache: this.options.data.kbCache,
                     isInCard: true
                 },
                 {
@@ -641,6 +643,7 @@
                 {
                     genomeID: this.options.data.genomeID,
                     loadingImage: this.options.loadingImage,
+                    workspaceID: this.options.workspaceID,
                 },
                 {
                     my: "left top",

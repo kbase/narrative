@@ -35,7 +35,7 @@ var timer = null;
             //var wsUrl = "http://kbase.us/services/workspace/";	//old ws
             var container = this.$elem;
 
-            var kbws = new Workspace(wsUrl);											// WS2
+            var kbws = new Workspace(wsUrl, {'token': options.token});											// WS2
             //var kbws = new workspaceService(wsUrl);	//old ws
             
             var ready = function() {

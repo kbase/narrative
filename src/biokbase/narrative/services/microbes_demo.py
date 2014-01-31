@@ -117,7 +117,7 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     meth.stages = 1
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    fbaClient = fbaModelServices(service.URLS.fba)
+    fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
         # create the model object
     contigset_to_genome_params = {
         'auth': token,
@@ -140,7 +140,7 @@ def _annotate_genome(meth, genome, out_genome):
     :param genome: Source genome ID [4.1]
     :type genome: kbtypes.Genome
     :ui_name genome: Genome ID
-    :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly. [4.2]
+    :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [4.2]
     :type out_genome: kbtypes.Unicode
     :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
@@ -151,27 +151,18 @@ def _annotate_genome(meth, genome, out_genome):
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
     if not out_genome:
-        out_genome = "genome_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
-    if genome != out_genome:
-        wsClient  = workspaceService(service.URLS.workspace)
-        retObj = wsClient.get_object({'auth': token, 'workspace': workspace, 'id': genome, 'type': 'Genome'})
-        gnmObj = retObj['data']
-        gnmObj['id'] = out_genome
-        if '_wsWS' in gnmObj:
-            del gnmObj['_wsWS']
-        if '_wsID' in gnmObj:
-            del gnmObj['_wsID']
-        wsClient.save_object({'auth': token, 'workspace': workspace, 'id': out_genome, 'type': 'Genome', 'data': gnmObj})
-    fbaClient = fbaModelServices(service.URLS.fba)
+        out_genome = genome
+    fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
     annotate_workspace_genome_params = {
         'auth': token, 
         'Genome_ws': workspace, 
-        'Genome_uid': out_genome, 
+        'Genome_uid': genome, 
         'workspace':workspace, 
         'new_uid': out_genome,
+        'annotation_parameters': {'call_genes': 1}
     }
-    job_id = fbaClient.annotate_workspace_Genome(annotate_workspace_genome_params)['id']
-    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
+    fbaClient.annotate_workspace_Genome(annotate_workspace_genome_params)
+    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_genome})
 
 @method(name="View Annotated Genome")
 def _show_genome(meth, genome):
@@ -894,6 +885,24 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     model1 = modeldata[0]
     model2 = modeldata[1]
     return json.dumps({'ws_name': workspace, 'fba_model1': model1, 'fba_model2': model2, 'proteome_cmp': proteome_cmp, 'key1': 'val1'})
+
+@method(name="Upload Contigs")
+def _upload_contigs(meth, contig_set):
+    """This wraps a ContigSet by a Genome object in your data space.
+    This should be run before trying to annotate a Genome. [3]
+
+    :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly.
+    :type contig_set: kbtypes.Unicode
+    :ui_name contig_set: Contig Set Object ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: ContigSetUploadWidget
+    """
+    if not contig_set:
+        contig_set = "contigset_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    meth.stages = 1
+    workspace = os.environ['KB_WORKSPACE_ID']
+    return json.dumps({'ws_name': workspace, 'contig_set': contig_set})
 
 
 #

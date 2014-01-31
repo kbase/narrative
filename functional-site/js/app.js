@@ -22,7 +22,7 @@
 var app = angular.module('landing-pages', 
     ['lp-directives', 'card-directives',
      'mv-directives', 'trees-directives', 
-     'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin'])
+     'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin', 'FeedLoad'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
 
@@ -275,6 +275,14 @@ var kbaseLogin = angular.module('kbaseLogin', []);
 kbaseLogin.factory('kbaseLogin', function() {
   return $('#signin-button').kbaseLogin(); // assumes underscore has already been loaded on the page
 });
+
+//add the Google Feeds API as a module
+var Feed = angular.module('FeedLoad', ['ngResource'])
+    .factory('FeedLoad', function ($resource) {
+        return $resource('http://ajax.googleapis.com/ajax/services/feed/load', {}, {
+            fetch: { method: 'JSONP', params: {v: '1.0', callback: 'JSON_CALLBACK'} }
+        });
+    });
 
 
 HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \

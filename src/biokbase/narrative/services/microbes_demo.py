@@ -198,7 +198,7 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     :ui_name genome_id: Genome Name
     
     :param fba_model_id: select a name for the generated FBA Model (optional) [6.2]
-    :type fba_model_id: kbtypes.Unicode
+    :type fba_model_id: kbtypes.KBaseFBA_FBAModel
     :ui_name fba_model_id: Output FBA Model Name
     
     :return: Generated FBA Model ID
@@ -234,6 +234,7 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     #bool probannoOnly - a boolean indicating if only the probabilistic annotation should be used in building the model (an optional argument; default is '0')
     #fbamodel_id model - ID that should be used for the newly constructed model (an optional argument; default is 'undef')
     #bool coremodel - indicates that a core model should be constructed instead of a genome scale model (an optional argument; default is '0')
+    #selecting a model template
     
     fba_meta_data = fbaClient.genome_to_fbamodel(build_fba_params)
     model_wsobj_id = fba_meta_data[0]
@@ -267,7 +268,7 @@ def _view_model_details(meth, fba_model_id):
     """Bring up a detailed view of your FBA Model within the narrative. [7]
     
     :param fba_model_id: the FBA Model to view [7.1]
-    :type fba_model_id: kbtypes.Model
+    :type fba_model_id: kbtypes.KBaseFBA_FBAModel
     :ui_name fba_model_id: FBA Model
     
     :return: FBA Model Data
@@ -336,14 +337,14 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     """Run Flux Balance Analysis on a metabolic model. [9]
 
     :param fba_model_id: the FBA model you wish to run [9.1]
-    :type fba_model_id: kbtypes.Model
+    :type fba_model_id: kbtypes.KBaseFBA_FBAModel
     :ui_name fba_model_id: FBA Model
     :param media_id: the media condition in which to run FBA [9.2]
-    :type media_id: kbtypes.Media
+    :type media_id: kbtypes.KBaseBiochem_Media
     :ui_name media_id: Media
     
     :param fba_result_id: select a name for the FBA result object (optional) [9.3]
-    :type fba_result_id: kbtypes.Unicode
+    :type fba_result_id: kbtypes.KBaseFBA_FBA
     :ui_name fba_result_id: Output FBA Result Name
     
     :return: something 
@@ -431,8 +432,15 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     }
     fbadata = fbaClient.get_fbas(get_fbas_params)
     
+    # a hack: get object info so we can have the object name (instead of the id number)
+    ws = workspaceService(service.URLS.workspace)
+    meth.advance("Loading the model")
+    get_objects_params = [{
+        'ref' : workspaceName+"/"+generated_fba_id
+    }]
+    info = ws.get_object_info(get_objects_params,0)
     
-    return json.dumps({ "ids":[generated_fba_id],"workspaces":[workspaceName],"fbaData":fbadata })
+    return json.dumps({ "ids":[info[0][1]],"workspaces":[workspaceName],"fbaData":fbadata })
 
 
 
@@ -441,7 +449,7 @@ def _view_fba_result_details(meth, fba_id):
     """This brings up a detailed view of your FBA Model within the narrative. [10]
     
     :param fba_id: the FBA Result to view [10.1]
-    :type fba_id: kbtypes.FBA
+    :type fba_id: kbtypes.KBaseFBA_FBA
     :ui_name fba_id: FBA Result
     
     :return: something 

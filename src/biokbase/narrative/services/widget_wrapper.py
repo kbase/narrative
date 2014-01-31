@@ -29,24 +29,23 @@ NAME = "WidgetWrapper"
 # Initialize
 init_service(name=NAME, desc="widget wrapper service", version=VERSION)
 
-@method(name="Trait Manhattan Plot")
-def trait_manhattan_plot(meth, workspaceID=None, gwasObjectID=None):
+@method(name="Network Plot")
+def network_plot(meth, workspaceID=None, networkObjectID=None):
     """
+    visualize force directed network.
+
     :param workspaceID: workspaceID
     :type workspaceID: kbtypes.Unicode
-    :param gwasObjectID: gwas result objectID
-    :type gwasObjectID: kbtypes.Unicode
-    :return: Workspace objectID of gwas results
+    :param networkObjectID: network result objectID
+    :type networkObjectID: kbtypes.Unicode
+    :return: Workspace objectID of netowrk results
     :rtype: kbtypes.Unicode
-    :output_widget: Manhattan
+    :output_widget: ForceDirectedNetwork
     """
-    # XXX: What (other) parameters are needed?
-    # XXX: What gets executed and returned?
-    meth.debug("starting function")
     meth.stages = 1
-    meth.advance("doing something..")
+    meth.advance("Network plot")
     token = meth.token
-    return json.dumps({ 'token': token, 'workspaceID' : workspaceID, 'gwasObjectID' : gwasObjectID })
+    return json.dumps({'token': token, 'workspaceID': workspaceID, 'networkObjectID': networkObjectID })
 
 # Finalize (registers service)
 finalize_service()

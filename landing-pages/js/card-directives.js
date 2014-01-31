@@ -58,6 +58,16 @@ angular.module('card-directives')
                                                    userId: $rootScope.USER_ID});
             }
         };
+    })    
+    .directive('gtvtype', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "gtvtype", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
     })
     .directive('genecards', function($rootScope) {
         return {

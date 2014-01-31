@@ -196,6 +196,10 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
 })
 
+.controller('GTVTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
 
 .controller('GeneDetail', function($scope, $stateParams) {
     $scope.params = {'geneID': $stateParams.id,

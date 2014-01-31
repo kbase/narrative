@@ -602,6 +602,8 @@
                 this.showGWASVarCards();
             else if (this.options.template.toLowerCase() === "ggltype")
                 this.showGWASGeneListCards();
+            else if (this.options.template.toLowerCase() === "gtvtype")
+                this.showGWASTopVariationsCards();
             else if (this.options.template.toLowerCase() === "meme")
                 this.showMemeCards();
             else if (this.options.template.toLowerCase() === "cmonkey")
@@ -745,6 +747,22 @@
                   at: "left bottom",
                   of: "#app"});
          },
+
+        /**
+         * Template for showing GWAS Top Variations
+         */
+         showGWASTopVariationsCards: function() {
+            this.addNewCard("KBaseGWASTopVariations",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+            this.addNewCard("KBaseGWASTopVariationsTable",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left+410 bottom",
+                  of: "#app"});
+        },
 
         /**
          * Template for showing model cards.

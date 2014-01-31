@@ -14,7 +14,6 @@
             this._super(options);
 
             var self = this;
-            console.log('inside init function')
 
             this.workspaceClient = new Workspace(this.workspaceURL);
 

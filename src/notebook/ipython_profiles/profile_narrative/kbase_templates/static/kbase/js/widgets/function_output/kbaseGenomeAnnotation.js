@@ -25,33 +25,28 @@ var timer = null;
             job_id: null,
             width: 1150
         },
+        jobSrvUrl: "https://kbase.us/services/userandjobstate/",
 
         init: function(options) {
             this._super(options);
             var self = this;
         	var pref = (new Date()).getTime();
 
-            var wsUrl = 'http://140.221.84.209:7058/';								// WS2
-            //var wsUrl = "http://kbase.us/services/workspace/";	//old ws
+            var wsUrl = 'http://140.221.84.209:7058/';
             var container = this.$elem;
 
-            var kbws = new Workspace(wsUrl, {'token': options.token});											// WS2
-            //var kbws = new workspaceService(wsUrl);	//old ws
+            var kbws = new Workspace(wsUrl, {'token': options.token});
             
             var ready = function() {
             
-            var request = [{ref: options.ws_name +"/"+ options.ws_id}];		// WS2
-            //var request = {auth: options.token, workspace: options.ws_name, id: options.ws_id, type: 'Genome'};  //old ws
-            kbws.get_objects(request, function(data) {								// WS2
-            //kbws.get_object(request, function(data) {		//old ws
+            var request = [{ref: options.ws_name +"/"+ options.ws_id}];
+            kbws.get_objects(request, function(data) {
             	$('.loader-table').remove();
-            	var type = data[0].info[2];											// WS2
-            	//var type = data.metadata[1];		//old ws
+            	var type = data[0].info[2];
                 if (type.indexOf('-') >= 0) {
                 	type = type.substring(0, type.indexOf('-'));
                 }
-                var reqType = 'KBaseGenomes.Genome';											// WS2
-                //var reqType = 'Genome';		//old ws
+                var reqType = 'KBaseGenomes.Genome';
                 if (!(type === reqType)) {
                     container.append('<p>[Error] Object is of type "' + type + '" but expected type is "' + reqType + '"</p>');
                     return;
@@ -113,6 +108,8 @@ var timer = null;
             		}
             		var geneType = gene.type;
             		var geneFunc = gene['function'];
+            		if (!geneFunc)
+            			geneFunc = '-';
             		genesData[genesData.length] = {id: '<a onclick="onGeneClick(this); return false;" data-geneid="'+geneId+'">'+geneId+'</a>', 
             				contig: contigName, start: geneStart, dir: geneDir, len: geneLen, type: geneType, func: geneFunc};
             		geneMap[geneId] = gene;
@@ -287,6 +284,7 @@ var timer = null;
             };
             
             if (options.job_id) {
+                var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': options.token});
             	var panel = $('<div class="loader-table"/>');
             	container.append(panel);
             	var table = $('<table class="table table-striped table-bordered" \
@@ -296,24 +294,26 @@ var timer = null;
             	table.append('<tr><td>Genome will have the id</td><td>'+options.ws_id+'</td></tr>');
             	table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
             	var timeLst = function(event) {
-            		kbws.get_jobs({auth: options.token, jobids: [options.job_id]}, function(data) {
-            			var status = data[0]['status'];
-            			if (status === 'done') {
+            		jobSrv.get_job_status(options.job_id, function(data) {
+            			var status = data[2];
+            			var complete = data[5];
+            			var wasError = data[6];
+        				var tdElem = $('#'+pref+'job');
+        				tdElem.html(status);
+            			if (complete === 1) {
             				clearInterval(timer);
-            				ready();
-            			} else {
-            				var tdElem = $('#'+pref+'job');
-            				tdElem.html(status);
-            				if (status === 'error') {
-            					clearInterval(timer);
+            				if (wasError === 0) {
+                				ready();
             				}
             			}
             		}, function(data) {
-            			alert("Error: " + data.error.message)
+        				clearInterval(timer);
+        				var tdElem = $('#'+pref+'job');
+        				tdElem.html("Error accessing job status: " + data.error.message);
             		});
             	};
-            	timeLst();
             	timer = setInterval(timeLst, 5000);
+            	timeLst();
             } else {
             	ready();
             }

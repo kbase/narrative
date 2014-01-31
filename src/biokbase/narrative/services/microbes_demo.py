@@ -152,17 +152,15 @@ def _annotate_genome(meth, genome, out_genome):
     workspace = os.environ['KB_WORKSPACE_ID']
     if not out_genome:
         out_genome = genome
-    fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
-    annotate_workspace_genome_params = {
-        'auth': token, 
-        'Genome_ws': workspace, 
-        'Genome_uid': genome, 
-        'workspace':workspace, 
-        'new_uid': out_genome,
-        'annotation_parameters': {'call_genes': 1}
+    cmpClient = GenomeComparison(url = service.URLS.genomeCmp, token = token)
+    annotate_genome_params = {
+        'in_genome_ws': workspace, 
+        'in_genome_id': genome, 
+        'out_genome_ws': workspace, 
+        'out_genome_id': out_genome, 
     }
-    fbaClient.annotate_workspace_Genome(annotate_workspace_genome_params)
-    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_genome})
+    job_id = cmpClient.annotate_genome(annotate_genome_params)
+    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
 
 @method(name="View Annotated Genome")
 def _show_genome(meth, genome):

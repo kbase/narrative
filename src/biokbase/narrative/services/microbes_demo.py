@@ -359,7 +359,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     :param fba_model_id: the FBA model you wish to run [9.1]
     :type fba_model_id: kbtypes.KBaseFBA_FBAModel
     :ui_name fba_model_id: FBA Model
-    :param media_id: the media condition in which to run FBA [9.2]
+    :param media_id: the media condition in which to run FBA (optional, default is an artificial complete media) [9.2]
     :type media_id: kbtypes.KBaseBiochem_Media
     :ui_name media_id: Media
     
@@ -423,10 +423,14 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
         bool minthermoerror;
     } FBAFormulation;
     """
-    fba_formulation = {
-        'media' : media_id,
-        'media_workspace' : workspaceName,
-    }
+    if media_id:
+        fba_formulation = {
+            'media' : media_id,
+            'media_workspace' : workspaceName,
+        }
+    else:
+        fba_formulation = {}
+        
     fba_params = {
         'model' : fba_model_id,
         'model_workspace' : workspaceName,

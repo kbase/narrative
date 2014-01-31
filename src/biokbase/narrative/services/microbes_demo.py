@@ -203,16 +203,18 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     
     :return: Generated FBA Model ID
     :rtype: kbtypes.Model
+    :output_widget: kbaseModelTabs
     
+    """
+    """
     :output_widget: kbaseModelMetaNarrative
-    """
-    """
+    
     THIS OPTION
     :param fba_model_template_id: specify a custom template for building the model (optional) [6.3]
     :type fba_model_template_id: kbtypes.Unicode
     :ui_name fba_model_template_id: FBA Model Template
     """
-    meth.stages = 2  # for reporting progress
+    meth.stages = 3  # for reporting progress
     meth.advance("Starting")
     meth.advance("Building your new FBA model")
     
@@ -240,27 +242,37 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     model_wsobj_id = fba_meta_data[0]
     model_name = fba_meta_data[1]
     
+    # fetch via fba client
+    meth.advance("Fetching your new FBA model details")
+    fbaClient = fbaModelServices(service.URLS.fba)
+    get_models_params = {
+        'models' : [model_name],
+          'workspaces' : [workspaceName],
+          'auth' : token
+    }
+    modeldata = fbaClient.get_models(get_models_params)
+    return json.dumps({'id': model_name, 'ws': workspaceName, 'modelsData': modeldata})
     
     #fetch the object so we can display something useful about it
-    wsClient  = workspaceService(service.URLS.workspace)
-    objdata = wsClient.get_objects([{'ref':workspaceName+'/'+model_wsobj_id}])
-    fbaModel = objdata[0]['data']
-    meth.debug(json.dumps(fbaModel['modelreactions']))
-    
-    # compute the number of genes- crazy, i know!  is this actually correct?
-    n_features_mapped = 0
-    for rxns in fbaModel['modelreactions'] :
-        for prots in rxns['modelReactionProteins'] :
-            for subunits in prots['modelReactionProteinSubunits']:
-                n_features_mapped += len(subunits['feature_refs'])
-    
-    return json.dumps({"data":{
-                             'name': model_name,
-                             'number_genes':n_features_mapped,
-                             'number_reactions':len(fbaModel['modelreactions']),
-                             'number_compounds':len(fbaModel['modelcompounds']),
-                             'number_compartments':len(fbaModel['modelcompartments'])
-                        }})
+    #wsClient  = workspaceService(service.URLS.workspace)
+    #objdata = wsClient.get_objects([{'ref':workspaceName+'/'+model_wsobj_id}])
+    #fbaModel = objdata[0]['data']
+    #meth.debug(json.dumps(fbaModel['modelreactions']))
+    #
+    ## compute the number of genes- crazy, i know!  is this actually correct?
+    #n_features_mapped = 0
+    #for rxns in fbaModel['modelreactions'] :
+    #    for prots in rxns['modelReactionProteins'] :
+    #        for subunits in prots['modelReactionProteinSubunits']:
+    #            n_features_mapped += len(subunits['feature_refs'])
+    #
+    #return json.dumps({"data":{
+    #                         'name': model_name,
+    #                         'number_genes':n_features_mapped,
+    #                         'number_reactions':len(fbaModel['modelreactions']),
+    #                         'number_compounds':len(fbaModel['modelcompounds']),
+    #                         'number_compartments':len(fbaModel['modelcompartments'])
+    #                    }})
 
 
 @method(name="View FBA Model Details")
@@ -280,18 +292,27 @@ def _view_model_details(meth, fba_model_id):
     
     #grab token and workspace info, setup the client
     token, workspaceName = meth.token, meth.workspace_id;
-    fbaClient = fbaModelServices(service.URLS.fba)
-    
-    ws = workspaceService(service.URLS.workspace)
-    
     meth.advance("Loading the model")
-    get_objects_params = [{
-        'workspace' : workspaceName,
-        'name' : fba_model_id
-    }]
-    data = ws.get_objects(get_objects_params)
     
-    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': [data[0]['data']]})
+    # fetch directly from WS
+    #ws = workspaceService(service.URLS.workspace)
+    #meth.advance("Loading the model")
+    #get_objects_params = [{
+    #    'workspace' : workspaceName,
+    #    'name' : fba_model_id
+    #}]
+    #data = ws.get_objects(get_objects_params)
+    #return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': [data[0]['data']]})
+
+    # fetch via fba client
+    fbaClient = fbaModelServices(service.URLS.fba)
+    get_models_params = {
+        'models' : [fba_model_id],
+          'workspaces' : [workspaceName],
+          'auth' : token
+    }
+    modeldata = fbaClient.get_models(get_models_params)
+    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': modeldata})
 
 
 @method(name="Build Media")

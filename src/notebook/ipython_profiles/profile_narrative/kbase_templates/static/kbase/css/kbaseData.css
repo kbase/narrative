@@ -11,10 +11,14 @@ div[class="tooltip-inner"] {
     background-color: #fff;
     width: 100%;
     height: 425px !important;
-    border: 1px solid #b6e9f8;
-    padding: 1px;
+    padding-bottom: 5px;
 }
 
+.kb-ws-refresh-btn {
+    position: absolute;
+    right: 5px;
+
+}
 
 /* header area */
 #kb-ws .kb-header {

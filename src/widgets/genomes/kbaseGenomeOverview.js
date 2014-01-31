@@ -13,7 +13,7 @@
 
         token: null,
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "http://140.221.84.209:7058",
+//        workspaceURL: "http://140.221.84.209:7058",
 //        workspaceURL: "https://kbase.us/services/ws",
         $infoTable: null,
         noContigs: "No Contigs",
@@ -29,8 +29,6 @@
                                 .addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-            this.workspaceClient = new workspaceService(this.workspaceURL);
-
             this.render();
             if (this.options.workspaceID === null)
                 this.renderCentralStore();
@@ -40,10 +38,7 @@
         render: function() {
             var self = this;
 
-            this.$elem.append(this.$loadingPanel);
-
             this.$infoPanel = $("<div>");
-
             this.$infoPanel.append($("<button>")
                            .addClass("btn btn-primary")
                            .append("Show Description")

@@ -25,6 +25,7 @@
 }
 
 .ui-dialog {
+	position: absolute;
 	-webkit-box-sizing: content-box;
 	   -moz-box-sizing: content-box;
             box-sizing: content-box;	
@@ -45,7 +46,7 @@
 }
 
 .kblpc-control-box {
-	position: absolute;
+	position: fixed;
 	right: 0px;
 	top: 61px;
 	width: 300px;

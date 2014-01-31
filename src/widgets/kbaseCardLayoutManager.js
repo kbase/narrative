@@ -658,23 +658,26 @@
          * Template for showing gene cards.
          */
         showGeneCards: function() {
-            this.addNewCard("KBaseGeneInfo",
+            // this.addNewCard("KBaseGeneInfo",
+            //     {
+            //         featureID: this.options.data.featureID,
+            //     },
+            //     {
+            //         my: "left top",
+            //         at: "left bottom",
+            //         of: "#app"
+            //     }
+            // );
+            this.addNewCard("KBaseGeneInstanceInfo",
                 {
                     featureID: this.options.data.featureID,
+                    genomeID: this.options.data.genomeID,
+                    workspaceID: this.options.data.workspaceID,
+                    kbCache: this.options.data.kbCache
                 },
                 {
                     my: "left top",
                     at: "left bottom",
-                    of: "#app"
-                }
-            );
-            this.addNewCard("KBaseGeneInstanceInfo",
-                {
-                    featureID: this.options.data.featureID,
-                },
-                {
-                    my: "left top",
-                    at: "left+330 bottom",
                     of: "#app"
                 }
             );
@@ -997,16 +1000,16 @@
              * Adds cards based on clicking on a feature.
              */
             $(document).on("featureClick", function(event, data) {
-                self.addNewCard("KBaseGeneInfo", 
-                    { 
-                        featureID: data.feature.feature_id, 
-                    },
-                    {
-                        my: "left top",
-                        at: "center",
-                        of: data.featureElement
-                    }
-                );
+                // self.addNewCard("KBaseGeneInfo", 
+                //     { 
+                //         featureID: data.feature.feature_id, 
+                //     },
+                //     {
+                //         my: "left top",
+                //         at: "center",
+                //         of: data.featureElement
+                //     }
+                // );
 
                 self.addNewCard("KBaseGeneInstanceInfo",
                     {

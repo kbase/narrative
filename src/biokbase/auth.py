@@ -122,7 +122,11 @@ def SetConfigs( configs):
     LoadConfig()
 
 def set_environ_token(token):
-    os.environ[tokenenv] = token
+    if token:
+        os.environ[tokenenv] = token
+    elif tokenenv in os.environ:
+        del os.environ[tokenenv]
+
 
 
 class AuthCredentialsNeeded( Exception ):

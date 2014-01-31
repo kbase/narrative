@@ -131,7 +131,8 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 .controller('GeneDetail', function($scope, $stateParams) {
     $scope.params = {'genomeID' : $stateParams.gid,
                      'featureID' : $stateParams.fid,
-                     'genomeID' : $stateParams.ws,
+                     'workspaceID' : $stateParams.ws,
+                     'version' : $stateParams.ver,
                      'kbCache' : kb}
 })
 

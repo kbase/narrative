@@ -37,7 +37,7 @@
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
 
             this.render();
-            if (this.workspaceID)
+            if (this.options.workspaceID)
                 this.renderWorkspace();
             else
                 this.renderCentralStore();
@@ -68,7 +68,7 @@
                 return $("<button>")
                        .attr("id", id)
                        .attr("type", "button")
-                       .addClass("btn btn-default")
+                       .addClass("btn btn-primary")
                        .append(btnName);
 
             };
@@ -181,6 +181,103 @@
             });
         },
 
+        renderWorkspace: function() {
+            this.$infoPanel.hide();
+            this.showMessage("<img src='" + this.options.loadingImage + "'>");
+
+            var obj = this.buildObjectIdentity(this.options.workspaceID, this.options.genomeID);
+
+            var prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
+            $.when(prom).fail($.proxy(function(error) {
+                this.renderError(error);
+            }, this));
+            $.when(prom).done($.proxy(function(genome) {
+                genome = genome[0];
+                feature = null;
+                if (genome.data.features) {
+                    for (var i=0; i<genome.data.features.length; i++) {
+                        if (genome.data.features[i].id === this.options.featureID) {
+                            feature = genome.data.features[i];
+                            break;
+                        }
+                    }
+
+                    if (feature) {
+                        // FINALLY we have the feature! Hooray!
+                        this.$infoTable.empty();
+                        /* Function
+                         * Genome + button
+                         * Length
+                         * Location + button
+                         * GC Content (maybe)
+                         * Protein Families
+                         */
+
+                        // Figure out the function.
+                        var func = feature['function'];
+                        if (!func) 
+                            func = "Unknown";
+                        this.$infoTable.append(this.makeRow("Function", func));
+
+                        // Show the genome and a button for it.
+                        this.$infoTable.append(this.makeRow("Genome", $("<div/>")
+                                                                      .append(genome.data.scientific_name)
+                                                                      .append("<br>")
+                                                                      .append(this.makeGenomeButton(this.options.genomeID, this.options.workspaceID))));
+                        // Figure out the feature length
+                        var len = "Unknown";
+                        if (feature.dna_sequence_length)
+                            len = feature.dna_sequence_length + " bp";
+                        else if (feature.dna_sequence)
+                            len = feature.dna_sequence.length + " bp";
+                        else if (feature.location && feature.location.length > 0) {
+                            len = 0;
+                            for (var i=0; i<feature.location.length; i++) {
+                                len += feature.location[i][3];
+                            }
+                            len += " bp";
+                        }
+                        this.$infoTable.append(this.makeRow("Length", len));
+
+                        // Make a contig button
+                        this.$infoTable.append(this.makeRow("Location", $("<div/>")
+                                                            .append(this.parseLocation(feature.location))
+                                                            .append(this.makeContigButton(feature.location))));
+
+                        // LOL GC content. Does anyone even care these days?
+                        if (feature.dna_sequence) {
+                            var gc = this.calculateGCContent(feature.dna_sequence);
+                            this.$infoTable.append(this.makeRow("GC Content", Number(gc).toFixed(2)));
+                        }
+
+                        // Protein families list.
+                        var proteinFamilies = "None found";
+                        if (feature.protein_families) {
+                            proteinFamilies = "";
+                            for (var i=0; i<feature.protein_families.length; i++) {
+                                var fam = feature.protein_families[i];
+                                proteinFamilies += fam.id + ": " + fam.subject_description + "<br>";
+                            }
+                        }
+                        this.$infoTable.append(this.makeRow("Protein Families", proteinFamilies));
+                    }
+                    else {
+                        this.renderError({ error: "Gene '" + this.options.featureID + 
+                                                  "' not found in the genome with object id: " +
+                                                  this.options.workspaceID + "/" + this.options.genomeID });
+                    }
+
+                }
+                else {
+                    this.renderError({ error: "No genetic features found in the genome with object id: " + 
+                                              this.options.workspaceID + "/" + 
+                                              this.options.genomeID });
+                }
+
+                this.hideMessage();
+                this.$infoPanel.show();
+            }, this));
+        },
 
         makeRow: function(name, value) {
             var $row = $("<tr/>")
@@ -201,9 +298,13 @@
                              .append("Show Contig")
                              .on("click", 
                                  function(event) {
+                                    console.log(self.options.featureID);
                                     self.trigger("showContig", { 
                                         contig: contigID, 
                                         centerFeature: self.options.featureID,
+                                        genomeID: self.options.genomeID,
+                                        workspaceID: self.options.workspaceID,
+                                        kbCache: self.options.kbCache,
                                         event: event
                                     });
                                  }
@@ -225,9 +326,11 @@
                              .append("Show Genome")
                              .on("click",
                                 function(event) {
+                                    console.log(self.options);
                                     self.trigger("showGenome", {
                                         genomeID: genomeID,
                                         workspaceID: workspaceID,
+                                        kbCache: self.options.kbCache,
                                         event: event
                                     });
                                 }
@@ -236,6 +339,10 @@
             return $genomeBtn;
         },
 
+        /**
+         * Returns the GC content of a string as a percentage value.
+         * You'll still need to concat it to some number of decimal places.
+         */
         calculateGCContent: function(s) {
             var gc = 0;
             s = s.toLowerCase();
@@ -298,10 +405,28 @@
         },
 
         renderError: function(error) {
+            var $errorDiv = $("<div>")
+                            .addClass("alert alert-danger")
+                            .append("<b>Error:</b>")
+                            .append("<br>" + error.error);
             this.$elem.empty();
-            this.$elem.append("An error occurred!");
+            this.$elem.append($errorDiv);
         },
 
+        buildObjectIdentity: function(workspaceID, objectID) {
+            var obj = {};
+            if (/^\d+$/.exec(workspaceID))
+                obj['wsid'] = workspaceID;
+            else
+                obj['workspace'] = workspaceID;
+
+            // same for the id
+            if (/^\d+$/.exec(objectID))
+                obj['objid'] = objectID;
+            else
+                obj['name'] = objectID;
+            return obj;
+        },
 
     })
 })( jQuery );

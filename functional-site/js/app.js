@@ -205,14 +205,14 @@ var app = angular.module('landing-pages',
              controller: 'GeneDetail'})
 
     $stateProvider
-        .state('genesbywsgenome',
-            {url: '/genes/:ws/:gid/:fid',
+        .state('genesbyws',
+            {url: '/genes/:ws/:fid',
              templateUrl: 'views/objects/gene.html',
              controller: 'GeneDetail'})
 
     $stateProvider
-        .state('genesbyws',
-            {url: '/genes/:ws/:fid',
+        .state('genesbywsgenome',
+            {url: '/genes/:ws/:gid/:fid',
              templateUrl: 'views/objects/gene.html',
              controller: 'GeneDetail'})
 

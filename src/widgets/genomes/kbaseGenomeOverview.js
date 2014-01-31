@@ -1,20 +1,19 @@
 (function( $, undefined ) { 
     $.KBWidget({ 
         name: "KBaseGenomeOverview", 
-        parent: "kbaseAuthenticatedWidget", 
+        parent: "kbaseWidget", 
         version: "1.0.0",
 
         options: {
             genomeID: null,
             workspaceID: null,
             loadingImage: "../../widgets/images/ajax-loader.gif",
+            kbCache: null,
             isInCard: false,
         },
 
         token: null,
         cdmiURL: "https://kbase.us/services/cdmi_api",
-//        workspaceURL: "http://140.221.84.209:7058",
-//        workspaceURL: "https://kbase.us/services/ws",
         $infoTable: null,
         noContigs: "No Contigs",
 
@@ -32,6 +31,9 @@
             this.render();
             if (this.options.workspaceID === null)
                 this.renderCentralStore();
+            else
+                this.renderWorkspace();
+
             return this;
         },
 
@@ -174,7 +176,6 @@
         },
 
         populateContigSelector: function(contigsToLengths) {
-            console.log(contigsToLengths);
             this.$contigSelect.empty();
             if (!contigsToLengths || contigsToLengths.length == 0)
                 this.$contigSelect.append($("<option>")
@@ -187,43 +188,16 @@
             }
         },
 
-        /**
-         * @method loggedInCallback
-         * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
-         * is triggered when a login event occurs.
-         * It associates the new auth token with this widget and refreshes the data panel.
-         * @private
-         */
-        loggedInCallback: function(event, auth) {
-            this.token = auth;
-            this.wsClient = new Workspace(this.workspaceURL, this.token);
-            if (this.options.workspaceID && this.options.genomeID) {
-                this.renderWorkspace();
-            }
-        },
-
-        /**
-         * @method loggedOutCallback
-         * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
-         * It throws away the auth token and workspace client, and refreshes the widget
-         * @private
-         */
-        loggedOutCallback: function(event, auth) {
-            this.token = null;
-            this.wsClient = null;
-
-            return this;
-        },
 
         renderWorkspace: function() {
             this.showMessage("<img src='" + this.options.loadingImage + "'>");
             this.$infoPanel.hide();
             console.log("rendering workspace genome");
             console.log(this.options.kbCache);
-            var objIdentity = [{ workspace: this.options.workspaceID, 
-                                name: this.options.genomeID }];
+            
+            var obj = this.buildObjectIdentity(this.options.workspaceID, this.options.genomeID);
 
-            var prom = this.options.kbCache.req('ws', 'get_objects', objIdentity);
+            var prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
             $.when(prom).done($.proxy(function(genome) {
                 console.log(genome);
                 genome = genome[0].data;
@@ -284,6 +258,21 @@
 
         hideMessage: function() {
             this.$messagePane.addClass("kbwidget-hide-message");
+        },
+
+        buildObjectIdentity: function(workspaceID, objectID) {
+            var obj = {};
+            if (/^\d+$/.exec(workspaceID))
+                obj['wsid'] = workspaceID;
+            else
+                obj['workspace'] = workspaceID;
+
+            // same for the id
+            if (/^\d+$/.exec(objectID))
+                obj['objid'] = objectID;
+            else
+                obj['name'] = objectID;
+            return obj;
         },
 
         clientError: function(error) {

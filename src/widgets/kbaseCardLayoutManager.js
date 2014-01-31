@@ -1037,7 +1037,8 @@
                         workspaceID: data.workspaceID,
                         showButtons: true,
                         loadingImage: self.options.loadingImage,
-                        centerFeature: data.centerFeature
+                        centerFeature: data.centerFeature,
+                        kbCache: data.kbCache,
                     },
                     {
                         my: "left top",
@@ -1055,7 +1056,10 @@
             $(document).on("showFeature", function(event, data) {
                 self.addNewCard("KBaseGeneInfo",
                     {
-                        featureID: data.featureID
+                        featureID: data.featureID,
+                        workspaceID: data.workspaceID,
+                        genomeID: data.genomeID,
+                        kbCache: data.kbCache,
                     },
                     {
                         my: "left top",
@@ -1075,6 +1079,7 @@
                     {
                         genomeID: data.genomeID,
                         workspaceID: data.workspaceID,
+                        kbCache: data.kbCache,
                         isInCard: true
                     },
                     {

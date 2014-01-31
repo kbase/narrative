@@ -68,11 +68,10 @@
 
 /* Help on a function */
 .kb-function-help {
-    color: white;
     padding: 0 3px;
     float: right;
     cursor: pointer;
-    color: #0064b6;
+    color: #56559e;
     font-size: 14pt;
 }
 

@@ -600,6 +600,8 @@
                 this.showGWASTraitCards();
             else if (this.options.template.toLowerCase() === "gvtype")
                 this.showGWASVarCards();
+            else if (this.options.template.toLowerCase() === "ggltype")
+                this.showGWASGeneListCards();
             else if (this.options.template.toLowerCase() === "meme")
                 this.showMemeCards();
             else if (this.options.template.toLowerCase() === "cmonkey")
@@ -732,6 +734,17 @@
                   at: "left bottom",
                   of: "#app"});
         },
+
+        /**
+         * Template for showing GWAS Gene List
+         */
+         showGWASGeneListCards: function() {
+            this.addNewCard("KBaseGWASGeneListTable",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+         },
 
         /**
          * Template for showing model cards.

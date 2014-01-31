@@ -6,8 +6,7 @@
   <radialGradient id="Shiny"
     cx="0.5" cy="0.5" r="0.5" fx="0.25" fy="0.25">
    <stop offset="0%" stop-color="#ffffff" />
-   <stop offset="50%" stop-color="#ff8080" />
-   <stop offset="75%" stop-color="#ff0000" />
+   <stop offset="50%" stop-color="#E10088" />
    <stop offset="100%" stop-color="#000000" />
   </radialGradient>
  </defs>

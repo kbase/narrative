@@ -193,15 +193,21 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     :return: Generated FBA Model ID
     :rtype: kbtypes.Model
     :output_widget: kbaseModelTabs
-    
     """
     """
+    Old output widget that was used:
     :output_widget: kbaseModelMetaNarrative
     
-    THIS OPTION
+    Options that we should expose at some point:
     :param fba_model_template_id: specify a custom template for building the model (optional) [6.3]
     :type fba_model_template_id: kbtypes.Unicode
     :ui_name fba_model_template_id: FBA Model Template
+    :param prob_annot: set to 1 to indicate that probabilistic annotations should be used (optional) [6.4]
+    :type prob_annot: kbtypes.Unicode
+    :ui_name prob_annot: Use Probabilitstic Annotations?
+    :param core_model: set to 1 to indicate that a core metabolic model should be constructed instead of a full genome scale model (optional) [6.5]
+    :type core_model: kbtypes.Unicode
+    :ui_name core_model: Core Model Only?
     """
     meth.stages = 3  # for reporting progress
     meth.advance("Starting")
@@ -219,13 +225,15 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     }
     if fba_model_id:
         fba_model_id = fba_model_id.strip()
-        build_fba_params['model']=fba_model_id;
+        build_fba_params['model']=fba_model_id
+    
+    #if core_model:
+    #    build_fba_params['coremodel']=1
+    #if prob_annot:
+    #    build_fba_params['probannoOnly']=1
         
     # other options that are not exposed
-    #bool probannoOnly - a boolean indicating if only the probabilistic annotation should be used in building the model (an optional argument; default is '0')
-    #fbamodel_id model - ID that should be used for the newly constructed model (an optional argument; default is 'undef')
-    #bool coremodel - indicates that a core model should be constructed instead of a genome scale model (an optional argument; default is '0')
-    #selecting a model template
+     #selecting a model template
     
     fba_meta_data = fbaClient.genome_to_fbamodel(build_fba_params)
     model_wsobj_id = fba_meta_data[0]

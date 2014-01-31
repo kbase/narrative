@@ -58,7 +58,7 @@
                 var wsid = self.options.workspaceID;
                 var goid = self.options.gwasObjectID;
                 if (wsid !== null && wsid && goid) {
-                    var kbws = new workspaceService(WS_URL);
+                    var kbws = new Workspace(WS_URL);
                     fetchAjax = kbws.get_object({
                         auth: self.options.token,
                         workspace: wsid,

@@ -205,6 +205,12 @@ var app = angular.module('landing-pages',
              controller: 'GeneDetail'})
 
     $stateProvider
+        .state('genesbycdsgenome',
+            {url: '/genes/CDS/:gid/:fid',
+             templateUrl: 'views/objects/gene.html',
+             controller: 'GeneDetail'})
+
+    $stateProvider
         .state('genesbyws',
             {url: '/genes/:ws/:fid',
              templateUrl: 'views/objects/gene.html',

@@ -33,9 +33,6 @@
             }
 
 
-            this.cdmiClient = new CDMI_API(this.cdmiURL);
-            this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
-
             this.render();
             if (this.options.workspaceID)
                 this.renderWorkspace();
@@ -99,6 +96,10 @@
             this.showMessage("<img src='" + this.options.loadingImage + "'>");
 
             var self = this;
+
+
+            this.cdmiClient = new CDMI_API(this.cdmiURL);
+            this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
 
             // Data fetching!
             var jobsList = [];
@@ -190,10 +191,11 @@
             var prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
             $.when(prom).fail($.proxy(function(error) {
                 this.renderError(error);
+                console.log(error);
             }, this));
             $.when(prom).done($.proxy(function(genome) {
                 genome = genome[0];
-                feature = null;
+                var feature = null;
                 if (genome.data.features) {
                     for (var i=0; i<genome.data.features.length; i++) {
                         if (genome.data.features[i].id === this.options.featureID) {
@@ -260,6 +262,20 @@
                             }
                         }
                         this.$infoTable.append(this.makeRow("Protein Families", proteinFamilies));
+
+                        // bind button events
+                        this.$buttonPanel.find("button#biochemistry").click(
+                            $.proxy(function(event) { 
+                                this.trigger("showBiochemistry", { 
+                                    event: event, 
+                                    featureID: this.options.featureID,
+                                    genomeID: this.options.genomeID,
+                                    workspaceID: this.options.workspaceID,
+                                    kbCache: this.options.kbCache 
+                                });
+                            }, this)
+                        );
+
                     }
                     else {
                         this.renderError({ error: "Gene '" + this.options.featureID + 
@@ -405,10 +421,17 @@
         },
 
         renderError: function(error) {
+            errString = "Sorry, an unknown error occurred";
+            if (typeof error === "string")
+                errString = error;
+            else if (error.error && error.error.message)
+                errString = error.error.message;
+
+            
             var $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
-                            .append("<br>" + error.error);
+                            .append("<br>" + errString);
             this.$elem.empty();
             this.$elem.append($errorDiv);
         },

@@ -51,6 +51,7 @@
                                        {
                                            genomeID: self.options.genomeID,
                                            workspaceID: self.options.workspaceID,
+                                           kbCache: self.options.kbCache,
                                            event: event
                                        }
                                    );

@@ -11,6 +11,7 @@
         options: {
             genomeID: null,
             workspaceID: null,
+            kbCache: null,
             title: "Description",
             maxNumChars: 500,
             width: 500,
@@ -19,7 +20,6 @@
 
         wikiScraperURL: "http://140.221.85.43:7077",
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
 
         init: function(options) {
             this._super(options);
@@ -35,15 +35,18 @@
 
             this.cdmiClient = new CDMI_API(this.cdmiURL);
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
-            this.workspaceClient = new workspaceService(this.workspaceURL);
             this.wikiClient = new WikiScraper(this.wikiScraperURL);
 
-            return this.render();
+            if (this.options.workspaceID) {
+                this.renderWorkspace();
+            }
+            else
+                this.render();
+            return this;
         },
 
-        render: function(options) {
+        render: function() {
             this.showMessage("<img src='" + this.options.loadingImage + "'/>");
-            var self = this;
 
             /*
              * A couple nested callbacks here.
@@ -54,104 +57,145 @@
 
             if (this.options.genomeID === null) {
                 // make an error.
+                this.renderError("Error: no genome identifier given!");
                 return;
             }
 
             // step 1: get the taxonomy
             this.cdmiClient.genomes_to_taxonomies([this.options.genomeID], 
-                function(taxonomy) {
-                    taxonomy = taxonomy[self.options.genomeID];
-                    var searchTerms = [];
-                    var strainName = taxonomy.pop();
-                    searchTerms.push(strainName);
+                $.proxy(function(taxonomy) {
+                    taxonomy = taxonomy[this.options.genomeID];
+                    this.renderFromTaxonomy(taxonomy);
+                }, this),
 
-                    var tokens = strainName.split(" ");
-                    if (tokens.length > 2);
-                    searchTerms.push(tokens[0] + " " + tokens[1]);
-                    searchTerms.concat(taxonomy.reverse());
-
-                    // step 2: do the wiki scraping
-                    self.wikiClient.scrape_first_hit(searchTerms, {endpoint: "dbpedia.org"}, 
-                        function(desc) {
-                            if (desc.hasOwnProperty('description') && desc.description != null) {
-                                if (desc.description.length > self.options.maxNumChars) {
-                                    desc.description = desc.description.substr(0, self.options.maxNumChars);
-                                    var lastBlank = desc.description.lastIndexOf(" ");
-                                    desc.description = desc.description.substr(0, lastBlank) + "...";
-                                }
-
-                                var descStr = "<p style='text-align:justify;'>" + desc.description + "</p>"
-
-                                var descHtml;
-                                if (desc.term === strainName || strainName === desc.redirect_from) {
-                                    descHtml = descStr + self.descFooter(desc.wiki_uri);
-                                }
-                                else {
-                                    descHtml = self.notFoundHeader(strainName, desc.term) + descStr + self.descFooter(desc.wiki_uri);
-                                }
-
-                                var imageHtml = "Unable to find an image. If you have one, you might consider <a href='" + desc.wiki_uri + "' target='_new'>adding it to Wikipedia</a>.";
-                                if (desc.image_uri != null)
-                                    imageHtml = "<img src='" + desc.image_uri + "' />";
-
-
-                                var descId = self.uid();
-                                var imageId = self.uid();
-
-
-                                var $contentDiv = $("<div />")
-                                                  .addClass("tab-content")
-                                                  .append($("<div />")
-                                                          .attr("id", descId)
-                                                          .addClass("tab-pane fade active in")
-                                                          .append(descHtml)
-                                                  )
-                                                  .append($("<div />")
-                                                          .attr("id", imageId)
-                                                          .addClass("tab-pane fade")
-                                                          .append(imageHtml)
-                                                  );
-
-                                var $descTab = $("<a />")
-                                                 .attr("href", "#" + descId)
-                                                 .attr("data-toggle", "tab")
-                                                 .append("Description");
-
-                                var $imageTab = $("<a />")
-                                                 .attr("href", "#" + imageId)
-                                                 .attr("data-toggle", "tab")
-                                                 .append("Image");
-
-                                var $tabSet = $("<ul />")
-                                              .addClass("nav nav-tabs")
-                                              .append($("<li />")
-                                                      .addClass("active")
-                                                      .append($descTab)
-                                                     )
-                                              .append($("<li />")
-                                                      .append($imageTab)
-                                                     );
-
-
-
-                                self.$elem.append($tabSet).append($contentDiv);
-                                self.hideMessage();
-
-
-                            }
-
-                        },
-
-                        self.clientError
-                    );
-
-                },
-
-                this.clientError
+                this.renderError
             );
 
             return this;
         },
+
+        renderFromTaxonomy: function(taxonomy) {
+            var searchTerms = [];
+            var strainName = taxonomy.pop();
+            searchTerms.push(strainName);
+
+            var tokens = strainName.split(" ");
+            if (tokens.length > 2);
+            searchTerms.push(tokens[0] + " " + tokens[1]);
+            searchTerms.concat(taxonomy.reverse());
+
+            // step 2: do the wiki scraping
+            this.wikiClient.scrape_first_hit(searchTerms, {endpoint: "dbpedia.org"}, 
+                $.proxy(function(desc) {
+                    if (desc.hasOwnProperty('description') && desc.description != null) {
+                        if (desc.description.length > this.options.maxNumChars) {
+                            desc.description = desc.description.substr(0, this.options.maxNumChars);
+                            var lastBlank = desc.description.lastIndexOf(" ");
+                            desc.description = desc.description.substr(0, lastBlank) + "...";
+                        }
+
+                        var descStr = "<p style='text-align:justify;'>" + desc.description + "</p>"
+
+                        var descHtml;
+                        if (desc.term === strainName || strainName === desc.redirect_from) {
+                            descHtml = descStr + this.descFooter(desc.wiki_uri);
+                        }
+                        else {
+                            descHtml = this.notFoundHeader(strainName, desc.term) + descStr + this.descFooter(desc.wiki_uri);
+                        }
+
+                        var imageHtml = "Unable to find an image. If you have one, you might consider <a href='" + desc.wiki_uri + "' target='_new'>adding it to Wikipedia</a>.";
+                        if (desc.image_uri != null)
+                            imageHtml = "<img src='" + desc.image_uri + "' />";
+
+
+                        var descId = this.uid();
+                        var imageId = this.uid();
+
+
+                        var $contentDiv = $("<div />")
+                                          .addClass("tab-content")
+                                          .append($("<div />")
+                                                  .attr("id", descId)
+                                                  .addClass("tab-pane fade active in")
+                                                  .append(descHtml)
+                                          )
+                                          .append($("<div />")
+                                                  .attr("id", imageId)
+                                                  .addClass("tab-pane fade")
+                                                  .append(imageHtml)
+                                          );
+
+                        var $descTab = $("<a />")
+                                         .attr("href", "#" + descId)
+                                         .attr("data-toggle", "tab")
+                                         .append("Description");
+
+                        var $imageTab = $("<a />")
+                                         .attr("href", "#" + imageId)
+                                         .attr("data-toggle", "tab")
+                                         .append("Image");
+
+                        var $tabSet = $("<ul />")
+                                      .addClass("nav nav-tabs")
+                                      .append($("<li />")
+                                              .addClass("active")
+                                              .append($descTab)
+                                             )
+                                      .append($("<li />")
+                                              .append($imageTab)
+                                             );
+
+                        this.hideMessage();
+                        this.$elem.append($tabSet).append($contentDiv);
+                    }
+
+                }, this),
+
+                this.renderError
+            );
+        },
+
+        renderWorkspace: function() {
+            this.showMessage("<img src='" + this.options.loadingImage + "'>");
+            var obj = this.buildObjectIdentity(this.options.workspaceID, this.options.genomeID);
+            var prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
+
+            // if it fails, error out!
+            $.when(prom).fail($.proxy(function(error) {
+                this.renderError(error);
+            }, this));
+            // if it succeeds, grab the taxonomy (or at least the scientific name) and roll out.
+            $.when(prom).done($.proxy(function(genome) {
+                genome = genome[0];
+
+                var tax = genome.data.taxonomy;
+                var taxList = [];
+                if (!tax || tax === "Unknown") {
+                    taxList.push(genome.data.scientific_name);
+                }
+                else {
+                    // parse the taxonomy, however it's munged together. semicolons, i think?
+                }
+                this.renderFromTaxonomy(taxList);
+            }, this));
+        },
+
+        buildObjectIdentity: function(workspaceID, objectID) {
+            var obj = {};
+            if (/^\d+$/.exec(workspaceID))
+                obj['wsid'] = workspaceID;
+            else
+                obj['workspace'] = workspaceID;
+
+            // same for the id
+            if (/^\d+$/.exec(objectID))
+                obj['objid'] = objectID;
+            else
+                obj['name'] = objectID;
+            return obj;
+        },
+
 
         uid: function() {
             var id='';

@@ -643,7 +643,8 @@
                 {
                     genomeID: this.options.data.genomeID,
                     loadingImage: this.options.loadingImage,
-                    workspaceID: this.options.workspaceID,
+                    workspaceID: this.options.data.workspaceID,
+                    kbCache: this.options.data.kbCache,
                 },
                 {
                     my: "left top",
@@ -985,7 +986,10 @@
             $(document).on("showBiochemistry", function(event, data) {
                 self.addNewCard("KBaseGeneBiochemistry",
                 {
-                    featureID: data.featureID
+                    featureID: data.featureID,
+                    genomeID: data.genomeID,
+                    workspaceID: data.workspaceID,
+                    kbCache: data.kbCache,
                 },
                 {
                     my: "left top",
@@ -1094,6 +1098,8 @@
                 self.addNewCard("KBaseWikiDescription",
                     {
                         genomeID: data.genomeID,
+                        workspaceID: data.workspaceID,
+                        kbCache: data.kbCache,
                         loadingImage: self.options.loadingImage,
                     },
                     {

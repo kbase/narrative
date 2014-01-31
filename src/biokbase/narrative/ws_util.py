@@ -204,10 +204,13 @@ def check_homews( wsclient, user_id = None):
         ws_meta = wsclient.get_workspace_info( workspace_identity)
     except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
-        if e.message.find('not found'):
+        if e.message.find('not found') >= 0:
             ws_meta = wsclient.create_workspace( { 'workspace' : homews,
                                                    'globalread' : 'n',
                                                    'description' : 'User home workspace'})
+        elif e.message.find('deleted') >= 0:
+            wsclient.undelete_workspace( { 'workspace' : homews})
+            ws_meta = wsclient.get_workspace_info( workspace_identity)
         else:
             raise e
     if ws_meta:
@@ -215,4 +218,4 @@ def check_homews( wsclient, user_id = None):
         # return the textual name and the numeric ws_id
         return ws_meta[1],ws_meta[0]
     else:
-        raise Exception('Unable to find or create home workspace: %s' % homews)
+        raise Exception('Unable to find or create or undelete home workspace: %s' % homews)

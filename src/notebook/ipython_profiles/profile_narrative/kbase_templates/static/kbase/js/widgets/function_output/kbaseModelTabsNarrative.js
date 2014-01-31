@@ -26,6 +26,8 @@ $.KBWidget({
 
         var randId = this._uuidgen();
 
+        container.append("<h4>" + options.id + "</h4>")
+        
         var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfill', 'Gapgen'];
         var tableIds = [randId+'reaction', randId+'compound', randId+'compartment', randId+'biomass', randId+'gapfill', randId+'gapgen'];
 

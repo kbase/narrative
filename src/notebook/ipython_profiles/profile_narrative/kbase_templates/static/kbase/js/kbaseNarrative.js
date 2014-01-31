@@ -68,6 +68,8 @@
                       "os.environ['KB_AUTH_TOKEN'] = '" + token + "'\n" +
                       "os.environ['KB_WORKSPACE_ID'] = '" + workspaceId + "'\n";
             IPython.notebook.kernel.execute(cmd, {}, {'silent' : true});
+
+            IPython.notebook.set_autosave_interval(0);
         });
 
     });

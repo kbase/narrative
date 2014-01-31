@@ -12,14 +12,15 @@
     margin-bottom: 3px;
 }
 
+.kb-narr-panel-body {
+    padding:3px;
+}
+
 /* Container for func list */
 .kb-function-body {
-    padding: 10px;
-    padding: 0;
     height: 300px;
     overflow-y: auto;
     width: 100%;
-    border: 1px solid #b6e9f8;
 }
 
 .kb-function-body ul {

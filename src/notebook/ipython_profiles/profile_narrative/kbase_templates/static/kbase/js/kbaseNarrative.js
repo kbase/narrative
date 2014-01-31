@@ -55,6 +55,8 @@
             var workspaceId = IPython.notebook.metadata.ws_name;
 
             $('#kb-ws').kbaseWorkspaceDataDeluxe({ 'wsId': workspaceId });
+            // Build the list of available functions.
+            $('#kb-function-panel').kbaseNarrativeFunctionPanel({});
 
             // XXX: Should be renamed.... eventually?
             narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({

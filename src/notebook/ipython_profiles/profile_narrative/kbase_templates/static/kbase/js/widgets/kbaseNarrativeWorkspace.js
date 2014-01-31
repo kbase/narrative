@@ -103,8 +103,6 @@
                 self.buildFunctionCell(method);
             });
 
-            // Build the list of available functions.
-            $("#function-panel").kbaseNarrativeFunctionPanel({});
 
             // Initialize the data table.
 

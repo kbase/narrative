@@ -7,42 +7,62 @@
         options: {
             title: "MAST Hits",
             isInCard: false,
-            height: 600,
+            height: 630,
             width: 600
         },
 
         init: function(options) {
             this._super(options);
-            if (this.options.mastresult === null) {
+            var self = this;
+
+            if (this.options.inferelatorrunresult === null) {
                 //throw an error
                 return;
             }
 
-            this.$messagePane = $("<div/>")
-                                .addClass("kbwidget-message-pane")
-                                .addClass("kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);
-
-            return this.render();
-        },
-
-        render: function(options) {
-
-            var self = this;
             self.mastresult = this.options.mastresult;
-			var $hitsTable = '<table id="hits-table' + self.mastresult.data.id + '" class="kbgo-table">';
-			$hitsTable += "<tr><td>PSPM ID</td><td>Sequence ID</td><td>Strand</td><td>Start</td><td>End</td><td>Score</td><td>p-value</td></tr>";
 
-			for (var hit in self.mastresult.data.hits) {
-				$hitsTable+= "<tr><td>" + self.mastresult.data.hits[hit].pspm_id + "</td><td>" + self.mastresult.data.hits[hit].seq_id + "</td><td>" + self.mastresult.data.hits[hit].strand +
-				"</td><td>" + self.mastresult.data.hits[hit].hit_start + "</td><td>" + self.mastresult.data.hits[hit].hit_end + "</td><td>" + self.mastresult.data.hits[hit].score +
-				"</td><td>" + self.mastresult.data.hits[hit].hit_pvalue + "</td></tr>";
-			}
-			
-			$hitsTable+= "</table>";
-			self.$elem.append($("<div />").append($hitsTable));
-			
+            this.hits_table = $('<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">');
+            self.$elem.append($("<div />").attr('id', 'hits-table').append(this.hits_table));
+
+	    this.hits_table.dataTable({
+		iDisplayLength: 10,
+		aoColumns: [
+                    { sTitle: "PSPM ID" },      
+                    { sTitle: "Sequence ID" },      
+                    { sTitle: "Strand" },      
+                    { sTitle: "Start" },      
+                    { sTitle: "End" },
+                    { sTitle: "Score" },      
+                    { sTitle: "p-value" },      
+		],
+		bSaveState : true,
+		fnStateSave: function (oSettings, oData) {
+		    self.tableData = JSON.stringify(oData);
+		},
+		fnStateLoad: function (oSettings) {
+		    return JSON.parse( self.tableData );
+		},
+		fnDrawCallback: function() {
+		}
+	    });
+            
+            var hitsTableData = [];
+            for (var hit in self.mastresult.data.hits) {
+               hitsTableData.push([self.mastresult.data.hits[hit].pspm_id,
+                                    self.mastresult.data.hits[hit].seq_id,
+                                    self.mastresult.data.hits[hit].strand,
+                                    self.mastresult.data.hits[hit].hit_start,
+                                    self.mastresult.data.hits[hit].hit_end,
+                                    self.mastresult.data.hits[hit].score,
+                                    self.mastresult.data.hits[hit].hit_pvalue]);
+            };
+            
+            this.hits_table.fnAddData(hitsTableData);
+            this.hits_table.fnAdjustColumnSizing();
+
             return this;
+
         },
 
         getData: function() {
@@ -52,23 +72,7 @@
                 workspace: this.options.workspace_id,
                 title: "MAST Hits"
             };
-        },
-
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
-
-            this.$messagePane.append(span);
-            this.$messagePane.removeClass("kbwidget-hide-message");
-        },
-
-        hideMessage: function() {
-            this.$messagePane.addClass("kbwidget-hide-message");
-            this.$messagePane.empty();
-        },
-
-        rpcError: function(error) {
-            console.log("An error occurred: " + error);
         }
-	
+
     });
 })( jQuery );

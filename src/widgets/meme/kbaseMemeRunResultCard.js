@@ -56,7 +56,7 @@
                                                     .append($("<td/>").addClass("invtable-boldcell").append(self.collection.data.id)))
                                             .append($("<tr/>")
                                                     .append($("<td/>").append("Created"))
-                                                    .append($("<td/>").addClass("invtable-emcell").append(creationMonth +"/"+ d.getDate() +"/"+ d.getFullYear() +" "+ d.getHours() +":"+ d.getMinutes() +":"+ d.getSeconds())))
+                                                    .append($("<td/>").addClass("invtable-cell").append(creationMonth +"/"+ d.getDate() +"/"+ d.getFullYear() +" "+ d.getHours() +":"+ d.getMinutes() +":"+ d.getSeconds())))
                                             .append($("<tr/>")
                                                     .append($("<td/>").append("Number of motifs"))
                                                     .append($("<td/>").addClass("invtable-boldcell").append(self.collection.data.motifs.length)))

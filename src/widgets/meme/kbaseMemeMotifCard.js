@@ -27,16 +27,16 @@
             var self = this;
             self.motif = this.options.motif;
             self.$elem.append($("<div />")
-						.append($("<table/>").addClass("kbgo-table")
-					    .append($("<tr/>")
-					    	.append("<td>Motif description</td><td>" + self.motif.description + "</td>"))
-					    .append($("<tr/>").
-					    	append("<td>Motif width</td><td>" + self.motif.width + "</td>"))
-					    .append($("<tr/>").
-					    	append("<td>Number of sites</td><td>" + self.motif.sites.length + "</td>"))
-					    .append($("<tr/>").
-					    	append("<td>Motif E-value</td><td>" + self.motif.evalue + "</td>"))
-			));
+                    .append($("<table/>").addClass("kbgo-table")
+                            .append($("<tr/>")
+                                    .append("<td>Motif description</td><td>" + self.motif.description + "</td>"))
+                            .append($("<tr/>").
+                                    append("<td>Motif width</td><td>" + self.motif.width + "</td>"))
+                            .append($("<tr/>").
+                                    append("<td>Number of sites</td><td>" + self.motif.sites.length + "</td>"))
+                            .append($("<tr/>").
+                                    append("<td>Motif E-value</td><td>" + self.motif.evalue + "</td>"))
+                            ));
 
             //Logo 
 

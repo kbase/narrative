@@ -64,7 +64,7 @@
                 workspace: this.options.workspace_id,
                 title: "Inferelator Hits"
             };
-        },
+        }
 
     });
 })( jQuery );

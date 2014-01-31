@@ -11,15 +11,13 @@ import re
 from IPython.utils.traitlets import HasTraits, TraitType, TraitError
 from IPython.utils import traitlets as tls
 
-
 class TypeMeta(object):
     """Mix-in so type metadata is easy to access and use.
-    This should be added to the parent class list for all types.
     """
+    info_text = "unknown-0.0"
+
     def __str__(self):
-        """Return name of class.
-        """
-        return self.__class__.__name__
+        return self.info_text
 
 
 class JsonTraits(HasTraits, TypeMeta):
@@ -39,10 +37,10 @@ class JsonTraits(HasTraits, TypeMeta):
         return d
 
 
-#: Our alias for type errors
+#: Alias for type errors
 KBTypeError = TraitError
 
-## Types
+#: Narrative-specific types
 
 
 class VersionNumber(TraitType, TypeMeta):
@@ -120,6 +118,7 @@ class List(tls.Unicode, TypeMeta):
 class WorkspaceObjectId(tls.Unicode, TypeMeta):
     info_text = "identifier for a workspace object"
 
+
 # Plants / GWAS
 
 
@@ -143,7 +142,7 @@ class VariationDataset(JsonTraits):
     kbase_genome_name = tls.Unicode("", desc="Genome name")
     shock_node_id = tls.Unicode("", desc="Shock node ID")
     properties = tls.Instance(VariationDataProperties, ())
-    command_used = tls.Unicode("unspecified", desc= "Command")
+    command_used = tls.Unicode("unspecified", desc="Command")
 
     def __repr__(self):
         return json.dumps(self.as_json())
@@ -154,31 +153,38 @@ class VariationDataset(JsonTraits):
 # Override __str__ to get a fully qualified type name.
 class KBaseGenome1(tls.Unicode, TypeMeta):
     info_text = "KBaseGenomes.Genome-1.0"
+
     def __str__(self):
         return "KBaseGenomes.Genome-1.0"
 
 class KBaseGenome3(tls.Unicode, TypeMeta):
     info_text = "KBaseGenomes.Genome-3.0"
+
     def __str__(self):
         return "KBaseGenomes.Genome-3.0"
 
 class KBaseGenomesContigSet1(tls.Unicode, TypeMeta):
     info_text = "KBaseGenomes.ContigSet-1.0"
+
     def __str__(self):
         return "KBaseGenomes.ContigSet-1.0"
 
 class KBaseBiochem_Media(tls.Unicode, TypeMeta):
     info_text = "KBaseBiochem.Media-1.0"
+
     def __str__(self):
         return "KBaseBiochem.Media-1.0"
-    
+
 # !!!!!!!!!!!!!!!  FBAModel and FBA version numbers will have to update when we move to production
 class KBaseFBA_FBAModel(tls.Unicode, TypeMeta):
     info_text = "KBaseFBA.FBAModel-3.0"
+
     def __str__(self):
         return "KBaseFBA.FBAModel-3.0"
+
 class KBaseFBA_FBA(tls.Unicode, TypeMeta):
     info_text = "KBaseFBA.FBA-4.0"
+
     def __str__(self):
         return "KBaseFBA.FBA-4.0"
 
@@ -218,5 +224,62 @@ class PhenotypeSet(tls.Unicode, TypeMeta):
 class PhenotypeSimulationSet(tls.Unicode, TypeMeta):
     info_text = "Phenotype simulation"
 
+
 class ProteomeComparison(tls.Unicode, TypeMeta):
     info_text = "Proteome comparison result"
+
+# @AUTO_BEGIN
+
+# @AUTO_END
+
+
+def regenerate(args):
+    """Regenerate self with AUTO section filled in.
+    """
+    from util import Workspace2, WorkspaceException
+    import logging
+
+    logging.basicConfig()
+    _log = logging.getLogger("kbase.kbtypes.autogen")
+
+    # Connect to workspace and query type metadata.
+    try:
+        ws = Workspace2(url=args.url, user_id=args.user, password=args.password)
+        types = ws.types(strip_version=False, info_keys=['description'])
+    except WorkspaceException as err:
+        _log.critical("Cannot connect to workspace at '{}'".format(args.url))
+        return 1
+
+    # Open and position in output file.
+    # XXX
+
+    # Write out new type info
+    w, ind = sys.stdout, ' ' * 4
+    for modname, typeinfo in types.iteritems():
+        w.write("\nclass {c}(object):\n".format(c=modname))
+        for typename, info in typeinfo.iteritems():
+            name, ver = typename.split('-')
+            w.write("{i}class {c}(object):\n".format(i=ind, c=name))
+            pyver = "v" + ver.replace('.', '_')
+            w.write("{i}{i}class {c}(tls.Unicode, TypeMeta):\n".format(i=ind, c=pyver))
+            w.write("{i}{i}{i}info_text = '''{d}'''\n".format(i=ind, d=info['description']))
+
+    # Finish and close output file.
+    # XXX
+
+    return 0
+
+
+def main():
+    import argparse
+
+    pr = argparse.ArgumentParser("Auto-generate types")
+    pr.add_argument("-u", "--url", dest="url", help="WS url", default=None, required=True)
+    pr.add_argument("-U", "--user", dest="user", help="auth user name", required=True)
+    pr.add_argument("-P", "--password", dest="password", help="auth password", required=True)
+    args = pr.parse_args()
+    return regenerate(args)
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())

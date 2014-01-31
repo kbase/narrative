@@ -158,24 +158,40 @@ class Workspace2(WS2):
         :param wsid: Workspace ID or name
         :type wsid: str
         :param create_kw: Any extra keywords to create a new workspace
-        :type create: None or dict
+        :type create_kw: None or dict
         :raise: ValueError if workspace id is empty, KeyError if there is no workspace by that name,
                 WorkspaceException if creation of the workspace fails.
         """
-        if wsid is None:
-            raise ValueError("Workspace ID, 'wsid', cannot be empty")
         WS2.__init__(self, url=url, user_id=user_id, password=password, token=token)
+        self.has_wsid = False
+        if wsid is not None:
+            self._init_ws(wsid, create_kw)
+            self.has_wsid = True
 
-        # Get name/ID for workspace.
+    def set_ws(self, wsid, create_kw):
+        """Set workspace.
+
+        :param wsid: Workspace ID or name
+        :type wsid: str
+        :param create_kw: Any extra keywords to create a new workspace
+        :type create_kw: None or dict
+        :return: None
+        """
+        self._init_ws(wsid, create_kw)
+        self.has_wsid = True
+
+    def _init_ws(self, wsid, create_kw):
+        """Set up workspace.
+        """
         if self.is_name(wsid):
             self._ws_name, self._ws_id = wsid, None
         else:
             self._ws_name, self._ws_id = None, wsid
-        self._set_wsi()
+        self._wsi = {'workspace': self._ws_name, 'id': self._ws_id}
 
         # No workspace; create it or error.
         if self._get_ws() is None:
-            if not create:
+            if create_kw is None:
                 raise KeyError("No such workspace: '{}'".format(wsid))
             if not self.is_name(wsid):
                 raise ValueError("Create new workspace: Workspace identifier cannot be an ID")
@@ -192,11 +208,6 @@ class Workspace2(WS2):
                 return None
             raise WorkspaceException("get_workspace_info", self._wsi, err)
         return result
-
-    def _set_wsi(self):
-        """Set workspace-info mapping, used for all operations on a workspace.
-        """
-        self._wsi = {'workspace': self._ws_name, 'id': self._ws_id}
 
     def _create_ws(self, create_params):
         """Create new workspace, or raise WorkspaceException.
@@ -237,9 +248,12 @@ class Workspace2(WS2):
         :param instance: Instance (version) identifier, None for 'latest'
         :type instance: str or None
         :return: whatever the JSON for the object data parsed to, probably a dict,
-                 or None if there are no objects by that name or ID.
+                 or None if there are no objects by that name or ID, or workspace is not set.
         :raise: WorkspaceException, if command fails
         """
+        if not self.has_wsid:
+            _log.error("No workspace set")
+            return None
         params = self._make_oid_params(objid, ver=instance)
         try:
             for result in self.get_objects(params):
@@ -269,29 +283,42 @@ class Workspace2(WS2):
             'ver': ver
         }]
 
-    def types(self, module=None, strip_version=True):
+    def types(self, module=None, strip_version=True, info_keys=None):
         """Get a list of all types in a given module, or all modules.
 
         :param module: Module (namespace) to operate in
         :type module: str or None
         :param strip_version: If True (the default), strip "-x.y" version off end of type name
         :type strip_version: bool
-        :return: Type names
-        :rtype: If all modules dict keyed by module name, with a list of strings (type names) for each value.
+        :param info_keys: If None, return type name only. Otherwise return dict (see return type).
+        :type info_keys: None or list of str
+        :return: Type names, or details, depending on info_keys
+        :rtype: If all modules dict keyed by module name, with a list of strings (type names) for each,
+                or if info_keys is non-empty a dict {<type_name>:{ key:value..}} for each type.
                 If just one module, then just a list of strings (type names).
         """
         modules = [module] if module else self.list_modules({})
         result = {}
         for m in modules:
             try:
-                # get list of types, stripping redundant module prefix
-                types = [t[t.find('.') + 1:] for t in self.get_module_info({'mod': m})['types'].iterkeys()]
-                # optionally strip trailing version
-                if strip_version:
-                    types = [t.split("-", 1)[0] for t in types]
-                # encode in UTF-8
-                types = [s.encode(self.encoding) for s in types]
-                # map to module in result
+                modinfo = self.get_module_info({'mod': m})
+                if info_keys is None:
+                    # get list of types, stripping redundant module prefix
+                    types = [t[t.find('.') + 1:] for t in modinfo['types'].iterkeys()]
+                    # optionally strip trailing version
+                    if strip_version:
+                        types = [t.split("-", 1)[0] for t in types]
+                    # encode in UTF-8
+                    types = [s.encode(self.encoding) for s in types]
+                    # map to module in result
+                else:
+                    types = {}
+                    for t, raw_meta in modinfo['types'].iteritems():
+                        name = t[t.find('.') + 1:]
+                        if strip_version:
+                            name = name.split("-", 1)[0]
+                        meta = json.loads(raw_meta)
+                        types[name] = {k: meta[k] for k in info_keys}
                 result[m.encode(self.encoding)] = types
             except ServerError as err:
                 if "Module wasn't uploaded" in str(err):

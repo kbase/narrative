@@ -10,8 +10,12 @@ div[class="tooltip-inner"] {
 #kb-ws {
     background-color: #fff;
     width: 100%;
-    height: 425px !important;
     padding-bottom: 5px;
+    height: 425px !important;
+}
+
+#data-tabs {
+    height: 375px !important;
 }
 
 .kb-ws-refresh-btn {

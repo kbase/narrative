@@ -181,7 +181,7 @@ def _show_genome(meth, genome):
     return json.dumps({'token': token, 'ws_name': workspaceName, 'ws_id': genome})
 
 @method(name="Build an FBA Model for a Genome")
-def _genome_to_fba_model(meth, genome_id, fba_model_id, core_model, prob_annot):
+def _genome_to_fba_model(meth, genome_id, fba_model_id):
     """Given an annotated Genome, build a draft flux balance analysis model. [6]
 
     :param genome_id: Source genome name [6.1]
@@ -197,21 +197,19 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id, core_model, prob_annot):
     :output_widget: kbaseModelTabs
     """
     """
+    Old output widget that was used:
     :output_widget: kbaseModelMetaNarrative
     
-    THIS OPTION
+    Options that we should expose at some point:
     :param fba_model_template_id: specify a custom template for building the model (optional) [6.3]
     :type fba_model_template_id: kbtypes.Unicode
     :ui_name fba_model_template_id: FBA Model Template
-    
-    :param prob_annot: set to 1 to indicate that probabilistic annotations should be used (optional) [6.3]
+    :param prob_annot: set to 1 to indicate that probabilistic annotations should be used (optional) [6.4]
     :type prob_annot: kbtypes.Unicode
     :ui_name prob_annot: Use Probabilitstic Annotations?
-    
-    :param core_model: set to 1 to indicate that a core metabolic model should be constructed instead of a full genome scale model (optional) [6.4]
+    :param core_model: set to 1 to indicate that a core metabolic model should be constructed instead of a full genome scale model (optional) [6.5]
     :type core_model: kbtypes.Unicode
     :ui_name core_model: Core Model Only?
-    
     """
     meth.stages = 3  # for reporting progress
     meth.advance("Starting")

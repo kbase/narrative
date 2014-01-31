@@ -23,6 +23,11 @@
     width: 100%;
 }
 
+.kb-function-body .accordion .panel .panel-body {
+    padding: 0px;
+    padding-left: 5px;
+}
+
 .kb-function-body ul {
     border: 1px solid #dddddd;
     list-style-type: none;

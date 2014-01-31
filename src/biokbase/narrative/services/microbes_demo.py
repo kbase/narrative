@@ -877,7 +877,7 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     return json.dumps({'ws_name': workspace, 'fba_model1': model1, 'fba_model2': model2, 'proteome_cmp': proteome_cmp, 'key1': 'val1'})
 
 @method(name="Upload Contigs")
-def _prepare_genome(meth, contig_set):
+def _upload_contigs(meth, contig_set):
     """This wraps a ContigSet by a Genome object in your data space.
     This should be run before trying to annotate a Genome. [3]
 

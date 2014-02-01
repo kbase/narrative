@@ -14,7 +14,7 @@
     var kbaseConnecting = function() {
         console.debug("Connecting.begin");
         $("#main-container").addClass("pause");
-        $("#kb-ws-guard").addClass("pause");
+//        $("#kb-ws-guard").addClass("pause");
         console.debug("Connecting.end");
     };
 
@@ -22,8 +22,8 @@
     var kbaseConnected = function() {
         console.debug("kbaseConnected!");
         $('#main-container').removeClass('pause');
-        $('#kb-ws-guard').removeClass('pause').css("display", "none");
-        authToken = $("#login-widget").kbaseLogin("session", "token");
+//        $('#kb-ws-guard').removeClass('pause').css("display", "none");
+        authToken = $("#signin-button").kbaseLogin("session", "token");
     };
 
     /**
@@ -41,7 +41,7 @@
             kbaseConnecting();
         });
 
-        var token = $("#login-widget").kbaseLogin("session", "token");
+        var token = $("#signin-button").kbaseLogin("session", "token");
         if (token) {
             console.debug("Authorization token found");
             kbaseConnected();
@@ -55,6 +55,8 @@
             var workspaceId = IPython.notebook.metadata.ws_name;
 
             $('#kb-ws').kbaseWorkspaceDataDeluxe({ 'wsId': workspaceId });
+            // Build the list of available functions.
+            $('#kb-function-panel').kbaseNarrativeFunctionPanel({});
 
             // XXX: Should be renamed.... eventually?
             narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({

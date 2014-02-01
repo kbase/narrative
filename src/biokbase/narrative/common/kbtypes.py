@@ -167,6 +167,22 @@ class KBaseGenomesContigSet1(tls.Unicode, TypeMeta):
     def __str__(self):
         return "KBaseGenomes.ContigSet-1.0"
 
+class KBaseBiochem_Media(tls.Unicode, TypeMeta):
+    info_text = "KBaseBiochem.Media-1.0"
+    def __str__(self):
+        return "KBaseBiochem.Media-1.0"
+    
+# !!!!!!!!!!!!!!!  FBAModel and FBA version numbers will have to update when we move to production
+class KBaseFBA_FBAModel(tls.Unicode, TypeMeta):
+    info_text = "KBaseFBA.FBAModel-3.0"
+    def __str__(self):
+        return "KBaseFBA.FBAModel-3.0"
+class KBaseFBA_FBA(tls.Unicode, TypeMeta):
+    info_text = "KBaseFBA.FBA-4.0"
+    def __str__(self):
+        return "KBaseFBA.FBA-4.0"
+
+
 class Genome(tls.Unicode, TypeMeta):
     info_text = "a genome"
 

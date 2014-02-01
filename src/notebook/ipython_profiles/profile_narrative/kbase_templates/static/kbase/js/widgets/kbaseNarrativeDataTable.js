@@ -107,7 +107,7 @@
                 bPaginate: false,
                 bAutoWidth: true,
                 bScrollCollapse: true,
-                sScrollY: '240px',
+                sScrollY: '225px',
             });
 
             if (this.options.data)

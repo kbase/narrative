@@ -70,6 +70,8 @@
         render: function() {
             var printMsg = this.options.error.msg;
 
+            console.debug("Narrative function error!");
+            console.debug(this.options.error.msg);
             // for now, just truncate the error to 300 characters.
             if (printMsg.length > 300)
                 printMsg = printMsg.substring(0, 300) + "...[error truncated]";

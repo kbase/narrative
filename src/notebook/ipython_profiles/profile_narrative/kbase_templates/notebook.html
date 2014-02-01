@@ -16,7 +16,6 @@
 
     {{super()}}
     <link rel="stylesheet" href="{{ static_url("kbnetwork/css/datavis.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrativeWorkspace.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseData.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFuncResults.css") }}" type="text/css" />
@@ -174,8 +173,8 @@ class="notebook_app"
                     </div>
                 </div>
             </div>
-    <div id="kb-ws-guard">Connecting to KBase..</div>
-
+<!--     <div id="kb-ws-guard">Connecting to KBase..</div>
+ -->
     <div id="left-column">
         <div id="kb-ws">
         </div>
@@ -184,7 +183,7 @@ class="notebook_app"
             <a href="http://140.221.84.142/" target="_blank">workspace browser</a>.
         </div>
     -->
-        <div id="function-panel" class="left-pane"></div>
+        <div id="kb-function-panel" class="left-pane"></div>
         <div id="kb-function-help"></div>
         
      </div>
@@ -223,61 +222,6 @@ class="notebook_app"
     </div>
 </div>
 
-    <!-- 
-        Show details for 1 object in separate, modal, box 
-     -->
-    <div id="kb-obj" class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="object-info" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h2 class="modal-title">Object</h2>
-                </div>
-                <div class="modal-body">
-                    <div class="kb-table">
-                        <!-- DataTables index of versions -->
-                        <h3>Versions</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Version</th>
-                                    <th>Date</th>
-                                    <th>User</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Tabs for info about obj -->
-                    <div>
-                        <ul class="nav nav-pills">
-                            <li><a href="#kb-info-table" data-toggle="tab">Description</a></li>
-                            <li><a href="#kb-metainfo-table" data-toggle="tab">Metadata</a></li>
-                        </ul>
-                        <div class="tab-content">
-                            <div class="tab-pane active" id="kb-info-table">
-                                <table class="kb-info table">
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="tab-pane" id="kb-metainfo-table">
-                                <table class="kb-metainfo table">
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- <div class="modal-footer">
-                    <button type="button" class="btn btn-primary kb-network">Insert visualization</button>
-                </div> -->
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-  </div><!-- /.modal -->
-
 <div id='tooltip' class='ipython_tooltip' style='display:none'></div>
 <div id='widget-tooltip' class='ipython_tooltip' style='display:none; min-height: 25px;'>Test message</div>
 
@@ -299,9 +243,9 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/workspaceDeluxeClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbasePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- <script src="{{ static_url("kbase/js/widgets/kbasePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseLogin.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
+ --><script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/datatables-bootstrap-paging.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseAccordion.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeFunctionPanel.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -337,6 +281,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeComparison.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGeneTable.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaModelComparison.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseContigSetUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>

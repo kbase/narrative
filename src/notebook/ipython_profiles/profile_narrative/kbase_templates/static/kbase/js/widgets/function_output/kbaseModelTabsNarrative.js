@@ -26,6 +26,8 @@ $.KBWidget({
 
         var randId = this._uuidgen();
 
+        container.append("<h4>" + options.id + "</h4>")
+        
         var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfill', 'Gapgen'];
         var tableIds = [randId+'reaction', randId+'compound', randId+'compartment', randId+'biomass', randId+'gapfill', randId+'gapgen'];
 
@@ -79,7 +81,7 @@ $.KBWidget({
         console.log(model);
 
         // compartment table
-        var dataDict = model.modelcompartments;
+        var dataDict = model.compartments;
         var keys = ["id", "index", "name", "pH", "potential"];
         var labels = ["id", "index", "name", "pH", "potential"];
         var cols = getColumns(keys, labels);
@@ -88,7 +90,7 @@ $.KBWidget({
         table.fnAddData(dataDict);
 
         // reaction table
-        var dataDict = formatRxnObjs(model.modelreactions);
+        var dataDict = formatRxnObjs(model.reactions);
 
         var keys = ["reaction", "definition",
                     "features","name"];
@@ -101,7 +103,7 @@ $.KBWidget({
         table.fnAddData(dataDict);
 
         // compound table
-        var dataDict = model.modelcompounds;
+        var dataDict = model.compounds;
         var keys = ["compartment", "compound", "name"];
         var labels = ["compartment", "compound", "name"];
         var cols = getColumns(keys, labels);
@@ -131,7 +133,7 @@ $.KBWidget({
         gapFillTable(data);
 
         // gapgen table
-        var model_gapgen = model.gapgens;
+        var model_gapgen = model.gapgen;
         var keys = ["id", "index", "name", "pH","potential"];
         var labels = ["id", "index", "name", "pH","potential"];
         var cols = getColumns(keys, labels);
@@ -217,13 +219,13 @@ $.KBWidget({
                     gapTable.fnFilter( this.value, $("thead input").index(this) );
                 });
 
-                active = true;
+                active = true;                
             }
 
             this.load_table = function(models) {
                 var gaps = [];
 
-                var intGapfills = models[0].gapfillings;
+                var intGapfills = models[0].integrated_gapfillings;
 
                 for (var i in intGapfills) {
                     var intGap = intGapfills[i];
@@ -234,19 +236,19 @@ $.KBWidget({
                     }
                 }
 
-                //var unIntGapfills = models[0].unintegrated_gapfillings;
-                //for (var i in unIntGapfills) {
-                //    var unIntGap = unIntGapfills[i];
-                //    if (unIntGap.length == 6) {            
-                //        unIntGap.splice(0, 0, "No")
-                //        unIntGap.splice(2, 1, '<a class="show-gap" data-ref="'+unIntGap[2]+'" >'+
-                //            unIntGap[2]+'</a>');
-                //    }
-                //}
-                //
-                //if (unIntGapfills ) {
-                //    var gapfills = unIntGapfills.concat(intGapfills)                    
-                //}
+                var unIntGapfills = models[0].unintegrated_gapfillings;
+                for (var i in unIntGapfills) {
+                    var unIntGap = unIntGapfills[i];
+                    if (unIntGap.length == 6) {            
+                        unIntGap.splice(0, 0, "No")
+                        unIntGap.splice(2, 1, '<a class="show-gap" data-ref="'+unIntGap[2]+'" >'+
+                            unIntGap[2]+'</a>');
+                    }
+                }
+
+                if (unIntGapfills ) {
+                    var gapfills = unIntGapfills.concat(intGapfills)                    
+                }
                 var gapfills = intGapfills;
 
                 init_data.aaData = gapfills;

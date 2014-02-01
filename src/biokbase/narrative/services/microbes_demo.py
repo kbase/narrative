@@ -117,7 +117,7 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     meth.stages = 1
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    fbaClient = fbaModelServices(service.URLS.fba)
+    fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
         # create the model object
     contigset_to_genome_params = {
         'auth': token,
@@ -140,7 +140,7 @@ def _annotate_genome(meth, genome, out_genome):
     :param genome: Source genome ID [4.1]
     :type genome: kbtypes.Genome
     :ui_name genome: Genome ID
-    :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly. [4.2]
+    :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [4.2]
     :type out_genome: kbtypes.Unicode
     :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
@@ -151,26 +151,15 @@ def _annotate_genome(meth, genome, out_genome):
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
     if not out_genome:
-        out_genome = "genome_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
-    if genome != out_genome:
-        wsClient  = workspaceService(service.URLS.workspace)
-        retObj = wsClient.get_object({'auth': token, 'workspace': workspace, 'id': genome, 'type': 'Genome'})
-        gnmObj = retObj['data']
-        gnmObj['id'] = out_genome
-        if '_wsWS' in gnmObj:
-            del gnmObj['_wsWS']
-        if '_wsID' in gnmObj:
-            del gnmObj['_wsID']
-        wsClient.save_object({'auth': token, 'workspace': workspace, 'id': out_genome, 'type': 'Genome', 'data': gnmObj})
-    fbaClient = fbaModelServices(service.URLS.fba)
-    annotate_workspace_genome_params = {
-        'auth': token, 
-        'Genome_ws': workspace, 
-        'Genome_uid': out_genome, 
-        'workspace':workspace, 
-        'new_uid': out_genome,
+        out_genome = genome
+    cmpClient = GenomeComparison(url = service.URLS.genomeCmp, token = token)
+    annotate_genome_params = {
+        'in_genome_ws': workspace, 
+        'in_genome_id': genome, 
+        'out_genome_ws': workspace, 
+        'out_genome_id': out_genome, 
     }
-    job_id = fbaClient.annotate_workspace_Genome(annotate_workspace_genome_params)['id']
+    job_id = cmpClient.annotate_genome(annotate_genome_params)
     return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
 
 @method(name="View Annotated Genome")
@@ -198,21 +187,29 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     :ui_name genome_id: Genome Name
     
     :param fba_model_id: select a name for the generated FBA Model (optional) [6.2]
-    :type fba_model_id: kbtypes.Unicode
+    :type fba_model_id: kbtypes.KBaseFBA_FBAModel
     :ui_name fba_model_id: Output FBA Model Name
     
     :return: Generated FBA Model ID
     :rtype: kbtypes.Model
-    
+    :output_widget: kbaseModelTabs
+    """
+    """
+    Old output widget that was used:
     :output_widget: kbaseModelMetaNarrative
-    """
-    """
-    THIS OPTION
+    
+    Options that we should expose at some point:
     :param fba_model_template_id: specify a custom template for building the model (optional) [6.3]
     :type fba_model_template_id: kbtypes.Unicode
     :ui_name fba_model_template_id: FBA Model Template
+    :param prob_annot: set to 1 to indicate that probabilistic annotations should be used (optional) [6.4]
+    :type prob_annot: kbtypes.Unicode
+    :ui_name prob_annot: Use Probabilitstic Annotations?
+    :param core_model: set to 1 to indicate that a core metabolic model should be constructed instead of a full genome scale model (optional) [6.5]
+    :type core_model: kbtypes.Unicode
+    :ui_name core_model: Core Model Only?
     """
-    meth.stages = 2  # for reporting progress
+    meth.stages = 3  # for reporting progress
     meth.advance("Starting")
     meth.advance("Building your new FBA model")
     
@@ -228,38 +225,51 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     }
     if fba_model_id:
         fba_model_id = fba_model_id.strip()
-        build_fba_params['model']=fba_model_id;
+        build_fba_params['model']=fba_model_id
+    
+    #if core_model:
+    #    build_fba_params['coremodel']=1
+    #if prob_annot:
+    #    build_fba_params['probannoOnly']=1
         
     # other options that are not exposed
-    #bool probannoOnly - a boolean indicating if only the probabilistic annotation should be used in building the model (an optional argument; default is '0')
-    #fbamodel_id model - ID that should be used for the newly constructed model (an optional argument; default is 'undef')
-    #bool coremodel - indicates that a core model should be constructed instead of a genome scale model (an optional argument; default is '0')
+     #selecting a model template
     
     fba_meta_data = fbaClient.genome_to_fbamodel(build_fba_params)
     model_wsobj_id = fba_meta_data[0]
     model_name = fba_meta_data[1]
     
+    # fetch via fba client
+    meth.advance("Fetching your new FBA model details")
+    fbaClient = fbaModelServices(service.URLS.fba)
+    get_models_params = {
+        'models' : [model_name],
+          'workspaces' : [workspaceName],
+          'auth' : token
+    }
+    modeldata = fbaClient.get_models(get_models_params)
+    return json.dumps({'id': model_name, 'ws': workspaceName, 'modelsData': modeldata})
     
     #fetch the object so we can display something useful about it
-    wsClient  = workspaceService(service.URLS.workspace)
-    objdata = wsClient.get_objects([{'ref':workspaceName+'/'+model_wsobj_id}])
-    fbaModel = objdata[0]['data']
-    meth.debug(json.dumps(fbaModel['modelreactions']))
-    
-    # compute the number of genes- crazy, i know!  is this actually correct?
-    n_features_mapped = 0
-    for rxns in fbaModel['modelreactions'] :
-        for prots in rxns['modelReactionProteins'] :
-            for subunits in prots['modelReactionProteinSubunits']:
-                n_features_mapped += len(subunits['feature_refs'])
-    
-    return json.dumps({"data":{
-                             'name': model_name,
-                             'number_genes':n_features_mapped,
-                             'number_reactions':len(fbaModel['modelreactions']),
-                             'number_compounds':len(fbaModel['modelcompounds']),
-                             'number_compartments':len(fbaModel['modelcompartments'])
-                        }})
+    #wsClient  = workspaceService(service.URLS.workspace)
+    #objdata = wsClient.get_objects([{'ref':workspaceName+'/'+model_wsobj_id}])
+    #fbaModel = objdata[0]['data']
+    #meth.debug(json.dumps(fbaModel['modelreactions']))
+    #
+    ## compute the number of genes- crazy, i know!  is this actually correct?
+    #n_features_mapped = 0
+    #for rxns in fbaModel['modelreactions'] :
+    #    for prots in rxns['modelReactionProteins'] :
+    #        for subunits in prots['modelReactionProteinSubunits']:
+    #            n_features_mapped += len(subunits['feature_refs'])
+    #
+    #return json.dumps({"data":{
+    #                         'name': model_name,
+    #                         'number_genes':n_features_mapped,
+    #                         'number_reactions':len(fbaModel['modelreactions']),
+    #                         'number_compounds':len(fbaModel['modelcompounds']),
+    #                         'number_compartments':len(fbaModel['modelcompartments'])
+    #                    }})
 
 
 @method(name="View FBA Model Details")
@@ -267,7 +277,7 @@ def _view_model_details(meth, fba_model_id):
     """Bring up a detailed view of your FBA Model within the narrative. [7]
     
     :param fba_model_id: the FBA Model to view [7.1]
-    :type fba_model_id: kbtypes.Model
+    :type fba_model_id: kbtypes.KBaseFBA_FBAModel
     :ui_name fba_model_id: FBA Model
     
     :return: FBA Model Data
@@ -279,18 +289,27 @@ def _view_model_details(meth, fba_model_id):
     
     #grab token and workspace info, setup the client
     token, workspaceName = meth.token, meth.workspace_id;
-    fbaClient = fbaModelServices(service.URLS.fba)
-    
-    ws = workspaceService(service.URLS.workspace)
-    
     meth.advance("Loading the model")
-    get_objects_params = [{
-        'workspace' : workspaceName,
-        'name' : fba_model_id
-    }]
-    data = ws.get_objects(get_objects_params)
     
-    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': [data[0]['data']]})
+    # fetch directly from WS
+    #ws = workspaceService(service.URLS.workspace)
+    #meth.advance("Loading the model")
+    #get_objects_params = [{
+    #    'workspace' : workspaceName,
+    #    'name' : fba_model_id
+    #}]
+    #data = ws.get_objects(get_objects_params)
+    #return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': [data[0]['data']]})
+
+    # fetch via fba client
+    fbaClient = fbaModelServices(service.URLS.fba)
+    get_models_params = {
+        'models' : [fba_model_id],
+          'workspaces' : [workspaceName],
+          'auth' : token
+    }
+    modeldata = fbaClient.get_models(get_models_params)
+    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': modeldata})
 
 
 @method(name="Build Media")
@@ -336,14 +355,14 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     """Run Flux Balance Analysis on a metabolic model. [9]
 
     :param fba_model_id: the FBA model you wish to run [9.1]
-    :type fba_model_id: kbtypes.Model
+    :type fba_model_id: kbtypes.KBaseFBA_FBAModel
     :ui_name fba_model_id: FBA Model
-    :param media_id: the media condition in which to run FBA [9.2]
-    :type media_id: kbtypes.Media
+    :param media_id: the media condition in which to run FBA (optional, default is an artificial complete media) [9.2]
+    :type media_id: kbtypes.KBaseBiochem_Media
     :ui_name media_id: Media
     
     :param fba_result_id: select a name for the FBA result object (optional) [9.3]
-    :type fba_result_id: kbtypes.Unicode
+    :type fba_result_id: kbtypes.KBaseFBA_FBA
     :ui_name fba_result_id: Output FBA Result Name
     
     :return: something 
@@ -402,10 +421,14 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
         bool minthermoerror;
     } FBAFormulation;
     """
-    fba_formulation = {
-        'media' : media_id,
-        'media_workspace' : workspaceName,
-    }
+    if media_id:
+        fba_formulation = {
+            'media' : media_id,
+            'media_workspace' : workspaceName,
+        }
+    else:
+        fba_formulation = {}
+        
     fba_params = {
         'model' : fba_model_id,
         'model_workspace' : workspaceName,
@@ -431,8 +454,15 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     }
     fbadata = fbaClient.get_fbas(get_fbas_params)
     
+    # a hack: get object info so we can have the object name (instead of the id number)
+    ws = workspaceService(service.URLS.workspace)
+    meth.advance("Loading the model")
+    get_objects_params = [{
+        'ref' : workspaceName+"/"+generated_fba_id
+    }]
+    info = ws.get_object_info(get_objects_params,0)
     
-    return json.dumps({ "ids":[generated_fba_id],"workspaces":[workspaceName],"fbaData":fbadata })
+    return json.dumps({ "ids":[info[0][1]],"workspaces":[workspaceName],"fbaData":fbadata })
 
 
 
@@ -441,7 +471,7 @@ def _view_fba_result_details(meth, fba_id):
     """This brings up a detailed view of your FBA Model within the narrative. [10]
     
     :param fba_id: the FBA Result to view [10.1]
-    :type fba_id: kbtypes.FBA
+    :type fba_id: kbtypes.KBaseFBA_FBA
     :ui_name fba_id: FBA Result
     
     :return: something 
@@ -855,6 +885,24 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     model1 = modeldata[0]
     model2 = modeldata[1]
     return json.dumps({'ws_name': workspace, 'fba_model1': model1, 'fba_model2': model2, 'proteome_cmp': proteome_cmp, 'key1': 'val1'})
+
+@method(name="Upload Contigs")
+def _upload_contigs(meth, contig_set):
+    """This wraps a ContigSet by a Genome object in your data space.
+    This should be run before trying to annotate a Genome. [3]
+
+    :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly.
+    :type contig_set: kbtypes.Unicode
+    :ui_name contig_set: Contig Set Object ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: ContigSetUploadWidget
+    """
+    if not contig_set:
+        contig_set = "contigset_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    meth.stages = 1
+    workspace = os.environ['KB_WORKSPACE_ID']
+    return json.dumps({'ws_name': workspace, 'contig_set': contig_set})
 
 
 #

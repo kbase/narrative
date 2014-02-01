@@ -489,18 +489,30 @@
                 var target;
                 var widget;
 
+                // if it's labeled as a function cell do that.
                 if (this.isFunctionCell(cell)) {
                     widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
                     target = "#inputs";
                 }
+                // if it's labeled as an output cell do that.
                 else if (this.isOutputCell(cell)) {
                     // do output widget stuff.
                     widget = cell.metadata[this.KB_CELL].widget;
                     target = "#output";
                 }
-                if ($(cell.element).find(target)[widget](['prototype'])['loadState']) {
-                    $(cell.element).find(target)[widget]('loadState', state.state);
-                    // later, do something with the timestamp.
+                // it might not be either! if we don't have both a target and widget, don't do anything!
+                if (target && widget) {
+                    try {
+                        if ($(cell.element).find(target)[widget](['prototype'])['loadState']) {
+                            $(cell.element).find(target)[widget]('loadState', state.state);
+                            // later, do something with the timestamp.
+                        }
+                    } catch(err) {
+                        // just ignore it and move on.
+                        this.dbg('Unable to load cell state! Ignoring the following cell:')
+                        this.dbg(cell);
+                        this.dbg(err);
+                    }
                 }
             }
         },

@@ -14,45 +14,46 @@
 
 (function( $, undefined ) {
 
-	$(function() {
+    $(function() {
         // set the auth token by calling the kernel execute method on a function in
         // the magics module
 
-	var set_cookie = function() {
-	    var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
-	    console.log( 'Setting kbase_session cookie');
-	    $.cookie('kbase_session',
-		     'un=' + c.user_id
-		     + '|'
-		     + 'kbase_sessionid=' + c.kbase_sessionid 
-		     + '|'
-		     + 'user_id=' + c.user_id
-		     + '|'
-		     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-		     { path: '/'});
-	    $.cookie('kbase_session',
-		     'un=' + c.user_id
-		     + '|'
-		     + 'kbase_sessionid=' + c.kbase_sessionid 
-		     + '|'
-		     + 'user_id=' + c.user_id
-		     + '|'
-		     + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-		     { path: '/',
-		       domain: 'kbase.us' });
-	    $(document).trigger('cookie_set.kbase');
-	};
+        function set_cookie() {
+           var c = $("#signin-button").kbaseLogin('get_kbase_cookie');
+           $.cookie('kbase_session',
+            'un=' + c.user_id
+            + '|'
+            + 'kbase_sessionid=' + c.kbase_sessionid
+            + '|'
+            + 'user_id=' + c.user_id
+            + '|'
+            + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+            { path: '/'});
+           $.cookie('kbase_session',
+            'un=' + c.user_id
+            + '|'
+            + 'kbase_sessionid=' + c.kbase_sessionid
+            + '|'
+            + 'user_id=' + c.user_id
+            + '|'
+            + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
+            { path: '/',
+              domain: 'kbase.us' });
+        };
 
-	var clear_cookie = function() {
-	    console.log( 'Clearing kbase_session cookie');
-	    $.removeCookie('kbase_session',{ path: '/', domain: 'kbase.us' });
+        function login_change() {
+//            window.location.reload();
+            set_cookie();
+        };
 
-	};
+        var clear_cookie = function() {
+            $.removeCookie('kbase_session',{ path: '/', domain: 'kbase.us' });
+        };
 
         var set_token = function () {
             // grab the token from the handler, since it isn't passed in with args
-	    set_cookie();
-            var tok = $("#login-widget").kbaseLogin('session','token');
+            set_cookie();
+            var tok = $("#signin-button").kbaseLogin('session','token');
 
             console.log( "kbase/narrativeLogin: Logging in on back-end with token ",tok);
 
@@ -70,51 +71,48 @@
             }
         };
 
-
-        var loginWidget = $("#login-widget").kbaseLogin({ 
-            style: "narrative",
-            rePrompt: false,
+        var loginWidget = $("#signin-button").kbaseLogin({ 
+//            style: "narrative",
+//            rePrompt: false,
 
             login_callback: function(args) {
-                $(".whiteout-pane").remove();
-
-		set_cookie();
+                set_cookie();
                 // If the notebook kernel's initialized, tell it to set the token.
                 if (IPython.notebook) {
-	            set_token();
-		} else {
-		    console.log( "IPython.notebook not set, cannot set token on backend");
-		}
+                    set_token();
+                } else {
+                    console.log( "IPython.notebook not set, cannot set token on backend");
+                }
             },
 
             logout_callback: function(args) {
-                $("body").append("<div class='whiteout-pane'></div>");
-
                 // If the notebook kernel's initialized, tell it to clear the token in 
                 // the ipython kernel using special handler
                 if (IPython.notebook) {
-		        $.removeCookie( 'kbase_session');
-	                var cmd = "biokbase.narrative.magics.clear_token()";
-	                IPython.notebook.kernel.execute( cmd );
-	            }
+                    $.removeCookie( 'kbase_session');
+                    var cmd = "biokbase.narrative.magics.clear_token()";
+                    IPython.notebook.kernel.execute( cmd );
+                }
 
-	            window.location.href = "http://kbase.us";
+                window.location.href = "http://kbase.us";
             },
 
             prior_login_callback: function(args) {
                 $(".whiteout-pane").remove();
 
-		set_cookie();
+                set_cookie();
                 // Do actual login once the kernel is up - only an issue for prior_login
                 $([IPython.events]).on('status_started.Kernel', set_token);
             },
         });
 
+        $('#signin-button').css('padding', '0');  // Jim!
+
         if (loginWidget.token() === undefined) {
-	    clear_cookie();
+            clear_cookie();
             // include hiding div.
             loginWidget.openDialog();
         }
-	});
+    });
 
 })( jQuery );

@@ -124,16 +124,6 @@ span#searchspan{
 @media screen and (max-width: 590px){
     span#searchspan{width: 60%;}   
 }
-/*
-#search_terms {
-	width: 350px;
-	background-image: url(search.png);
-	background-size: 22px; 
-	background-repeat:no-repeat;
-	background-position:right center; 
-}
-
-*/
 
 #narrative-name {
 	font-weight: bold;
@@ -675,10 +665,6 @@ p span.notification{
 	min-height: 0;
 	background-image: none;
 	background-color: #f8f8f8;
-}
-.navbar-nav>li>a {
-	padding-top: 5px;
-	padding-bottom: 5px;
 }
 
 .btn-default {

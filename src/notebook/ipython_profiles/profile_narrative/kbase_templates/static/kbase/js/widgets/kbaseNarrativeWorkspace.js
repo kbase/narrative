@@ -185,20 +185,6 @@
                               "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
                                this.safeJSONStringify(method) + "'});" +
                               "</script>";
-
-                // cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
-                //                   //"<h1>" + method.title + "</h1>" +
-                //                   methodInfo +
-                //                   "<div>" +  
-                //                       inputDiv +
-                //                       buttons + 
-                //                   "</div>" +
-                //                   progressBar +
-                //               "</div>\n" + 
-                //               "<script>" + 
-                //               "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" +
-                //                this.safeJSONStringify(method) + "'});" +
-                //               "</script>";
             }
             else {
                 cellContent = "Error - the selected method is invalid.";
@@ -684,9 +670,11 @@
          */
         buildRunCommand: function(service, method, params) {
             var cmd = "import biokbase.narrative.common.service as Service\n" +
-                      "method = Service.get_service('" + service + "').get_method('" + method + "')\n" +
-                      "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
-                      "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
+                      "method = Service.get_service('" + service + "').get_method('" + method + "')\n";
+
+                      // THIS SHOULD ONLY BE SET AT STARTUP BY THE MAIN JAVASCRIPT!!
+                      // "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
+                      // "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
 
             var paramList = params.map(function(p) { return "'" + p + "'"; });
             cmd += "method(" + paramList + ")";
@@ -1080,14 +1068,18 @@
          * @returns this
          */
         loggedIn: function(token) {
-            this.ws_client = new workspaceService(this.options.workspaceURL);
-            this.ws_auth = token;
-            var un = token.match(/un=[\w_]+|/);
-            this.ws_user = un[0].substr(3, un[0].length - 3);
+            // this.ws_client = new workspaceService(this.options.workspaceURL);
+            // this.ws_auth = token;
+            // var un = token.match(/un=[\w_]+|/);
+            // this.ws_user = un[0].substr(3, un[0].length - 3);
             // grab ws_id to give to, e.g., upload widget
 
             //this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
-            this.workspace("id", this.ws_id); // add to global accessor
+
+
+            // this.workspace("id", this.ws_id); // add to global accessor
+
+
             // create/refresh the upload dialog, which needs login to populate types
 //            this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
             //this.uploadWidget.createDialog(); -- redundant

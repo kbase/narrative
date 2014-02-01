@@ -86,20 +86,6 @@
                                       .append(this.$loadingPanel)
                                       .append(this.$errorPanel)));
 
-
-            // Make and append the header.
-            // this.$elem.append($('<div>')
-            //                   .addClass('kb-function-header')
-            //                   .append('Services'));
-
-            // this.$elem.append(this.$functionPanel);
-
-            // this.$elem.append(this.$loadingPanel);
-
-
-            // this.$elem.append(this.$errorPanel);
-
-
             this.$elem.append(this.$helpPanel);
             this.refresh();
 
@@ -143,9 +129,6 @@
         },
 
         handleCallback: function(call, content) {
-            // this.dbg("kbaseNarrativeFunctionPanel.handleCallback - " + call);
-            // this.dbg(content);
-
             if (content.status === "error") {
                 this.showError(content);
             }
@@ -200,16 +183,6 @@
             }
 
             this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
-
-            /** pre-accordion code commented out below **/
-            // for (var serviceName in serviceSet) {
-            //     var service = serviceSet[serviceName];
-            //     for (var i=0; i<service.methods.length; i++) {
-            //         var method = service.methods[i];
-            //         method['service'] = serviceName;
-            //         this.addFunction(method);
-            //     }
-            // }
         },
 
         /**

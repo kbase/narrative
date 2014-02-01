@@ -24,100 +24,16 @@ div[class="tooltip-inner"] {
 
 }
 
-/* header area */
-#kb-ws .kb-header {
-    background-color: #b6e9f8;
-    width: 100%;
-    color: #ddd;
-    font-family: OxygenRegular;
-    font-size: 16px;
-    /* text-align: center; */
-    padding: 5px 5px 5px 10px;
-
-   /* border-top-left-radius: 4px;
-    border-top-right-radius: 4px; */
-}
-
-.kb-header #kb-wsname {
-    color: #0064b6;
-    margin-left: 20px;
-    font-weight: 900;
-}
-
-#kb-ws .kb-controls {
-    width: 100%;
-    height: 30px;
-    background-color: #b6e9f8;
-    padding-left: 3px;
-   /* border-bottom-right-radius: 4px;
-    border-bottom-left-radius: 4px; */
-    margin-bottom: 3px;
-}
-
-/* little search icon next to text field */
-.icon-search {
-    padding-left: 5px;
-}
-
 #kb-ws .form-control {
     width: 85%;
-    max-height: 25px;
     margin: 3px;
 }
 
-
-/* Upload pulldown */
-#kb-ws-upload-pulldown {
-    position: absolute;
-    top: 0;
-    left: 220px;
-}
-#kb-ws-add-data {
-    position: absolute;
-    top: 30px;
-    left: 20px;
-    width: 40px;
-    font-size: 100%;
-    overflow-x: hidden;
-    color: #0064b6;
-    font-family: OxygenMonoRegular;
-    text-decoration-line: underline;
-    text-decoration-color: #f5f5f5;
-    text-decoration-style: dashed;
-}
-#kb-ws-upload-pulldown .dropdown-menu {
-    margin-top: 25px;
-}
-/* end: upload pulldown */
-
-/* Refresh button */
-#kb-ws-refresh {
-    position: absolute;
-    top: 3px;
-    left: 5px;
-    padding: 0px 6px;
-    overflow: hidden;
-}
-/* end: Refresh button */
-
 /* Data table */
 .kb-data-table {
-    /*width: 100%;*/
-/*    height: 100%;
-*/
-    max-height: 270px;
+    max-height: 265px;
     width: 100% !important;
 }
-
-.kb-data-table table th {
-    background-color: white;
-    border: 1px solid gainsboro;
-}
-
-#kb-ws .kb-data-table table thead th td:first-child {
-    max-width: 80%;
-}
-
 .kb-data-table tbody tr {
     border-bottom: 1px solid gainsboro;
 }
@@ -128,16 +44,6 @@ div[class="tooltip-inner"] {
     font-size: 1em;
 
 }
-
-.kb-data-table table tr:nth-child(odd) {
-    background-color: #F7F7F7;
-}
-
-.kb-data-table table tr td:first-child {
-    max-width: 80%;
-    overflow-x: hidden;
-}
-
 .kb-data-table tbody tr:hover, .kb-data-table tbody tr td.highlighted {
     background-color: #F4F5D6;
     cursor: pointer;
@@ -153,22 +59,6 @@ div[class="tooltip-inner"] {
     vertical-align: middle;
 }
 
-/*.kb-data-table tbody tr.odd:hover, .kb-data-table tbody tr td.highlighted {
-    background-color: #F4F5D6;
-    cursor: pointer;
-}
-*/
-/* row-selected */
-/* shade entire row */
-/*.kb-table table tr.row_selected {
-    background-color: #F4F5D6; 
-}
-*//* underline name of object */
-/*#kb-ws .kb-table tr.row_selected td.sorting_1 {
-    text-decoration: underline;
-    cursor: pointer;
-}
-*/
 #kb-ws .dataTables_filter { display: none; }
 
 .sorting { background: url('../images/sort_both.png') no-repeat center right; }
@@ -179,55 +69,3 @@ div[class="tooltip-inner"] {
 .sorting_desc_disabled { background: url('../images/sort_desc_disabled.png') no-repeat center right; }
 
 /* end: data table */
-
-/* Object details window */
-#kb-obj {
-    height: 800px;
-}
-#kb-obj table {
-    font-family: OxygenRegular, Arial, sans-serif;
-}
-#kb-obj table .kb-table table {
-    height: 200px;
-}
-
-#kb-obj .kb-table > h3 {
-    margin-top: -10px;
-}
-/* underline name of object */
-#kb-obj .kb-table tr.row_selected td {
-    text-decoration: underline;
-    cursor: pointer;
-}
-/* For pagination */
-#kb-obj ul.list-group {
-    display: block;
-    margin-top: 15px;
-    list-style-type: none;
-}
-
-#kb-obj ul.list-group li {
-    display: inline-block;
-    margin: 0;
-    padding: 0 5px;
-    color: #0074C5;
-    border-top: 1px solid #DDD;
-    text-align: center;
-}
-#kb-obj .list-group li {
-    border-right: 1px solid #DDD;
-    box-sizing: border-box;
-}
-#kb-obj .list-group li:first-child {
-    border-left: 1px solid #DDD;
-}
-#kb-obj .list-group a {
-    color: #0074C5;
-    text-decoration: none;
-}
-/* by default, hide all buttons in footer */
-#kb-obj .modal-footer button {
-    display: none;
-}
-/* end: Object details window */
-

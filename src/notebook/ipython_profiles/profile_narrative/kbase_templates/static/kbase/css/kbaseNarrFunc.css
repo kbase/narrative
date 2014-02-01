@@ -234,6 +234,18 @@
     display: inline;
 }
 
+.kb-err-desc {
+    font-family: 'Roboto';
+    font-weight: bold;
+    font-size: 12pt;
+    line-height: 15px;
+    color: #A94442;
+    margin: 3px;
+    opacity: inherit;
+    display: inline;
+}
+
+
 .kb-out-header {
     background-color: #ddd;
     padding: 10px;

@@ -103,11 +103,11 @@
                             for (var cluster in self.collection.data.network.clusters) {
                                 $dropdown.append("<option id='" + cluster + "'>" + self.collection.data.network.clusters[cluster].id + "; residual = " + self.collection.data.network.clusters[cluster].residual.toFixed(4) + "; genes = " + self.collection.data.network.clusters[cluster].gene_ids.length + "; conditions = " + self.collection.data.network.clusters[cluster].sample_ws_ids.length + " </option>");
                             }
-                            self.$elem.append($dropdown);
-                            self.$elem.append($("<button class='btn btn-default'>Show Cluster</button>")
+                            self.contentDiv.append($dropdown);
+                            self.contentDiv.append($("<button class='btn btn-default'>Show Cluster</button>")
                                     .on("click",
                                             function(event) {
-                                                $(self.$elem.selector + " > select option:selected").each(function() {
+                                                $($(self.elem).find('div').selector + " > select option:selected").each(function() {
                                                     self.trigger("showCmonkeyCluster", {cluster: self.collection.data.network.clusters[$(this).attr("id")], event: event});
                                                 });
                                             })

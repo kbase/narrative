@@ -48,8 +48,8 @@
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
             $(document).on(
-                'dataLoadedQuery.Narrative', $.proxy(function(e, params, callback) {
-                    var objList = this.getLoadedData(params);
+                'dataLoadedQuery.Narrative', $.proxy(function(e, params, ignoreVersion, callback) {
+                    var objList = this.getLoadedData(params, ignoreVersion);
                     if (callback) {
                         callback(objList);
                     }
@@ -86,7 +86,6 @@
              */
             $(document).on(
                 'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
-                    console.log('invoked dataInfoClicked.Narrative on ' + workspace + ' ' + id);
                     this.showInfoModal(workspace, id);
                 }, 
                 this)
@@ -604,7 +603,7 @@
          * }
          * @returns a list of data objects
          */
-        getLoadedData: function(type) {
+        getLoadedData: function(type, ignoreVersion) {
             if (!type || type.length === 0)
                 return this.loadedData;
 
@@ -615,6 +614,13 @@
             if (Object.prototype.toString.call(type) === '[object Array]') {
                 for (var i=0; i<type.length; i++) {
                     var dataType = type[i];
+
+                    if (ignoreVersion) {
+                        var unversionType = /(\S+)-\d+\.\d+/.exec(dataType);
+                        if (unversionType && unversionType[1])
+                            dataType = unversionType[1];
+                    }
+
                     if (this.loadedData[dataType])
                         dataSet[dataType] = this.loadedData[dataType];
                 }

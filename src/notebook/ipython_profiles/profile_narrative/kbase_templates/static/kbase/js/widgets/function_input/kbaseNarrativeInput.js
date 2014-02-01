@@ -12,6 +12,7 @@
             loadingImage: "../images/ajax-loader.gif",
             method: null,
         },
+        IGNORE_VERSION: true,
 
         init: function(options) {
             this._super(options);

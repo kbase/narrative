@@ -1,7 +1,7 @@
 """
 Demo microbes service and methods
 """
-__author__ = 'Dan Gunter <dkgunter@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>'
+__author__ = 'Dan Gunter <dkgunter@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>, Michael Sneddon <mwsneddon@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>'
 __date__ = '11/15/13'
 
 ## Imports
@@ -317,10 +317,10 @@ def _build_media(meth, media):
     """Assemble a set of compounds to use as a media set for performing FBA on a model. [8]
 
     :param base_media: Base media type [8.1]
-    :type base_media: kbtypes.Media
+    :type base_media: kbtypes.KBaseBiochem_Media
     :ui_name base_media: Media ID
     :return: Metadata from new Media object
-    :rtype: kbtypes.Media
+    :rtype: kbtypes.KBaseBiochem_Media
     :input_widget: kbaseBuildMediaInput
     :output_widget: kbaseMediaViewer
     :embed: True
@@ -328,12 +328,17 @@ def _build_media(meth, media):
     meth.stages = 3
 
     meth.advance("Initializing")
-    fba = fbaModelServices(service.URLS.fba)
     token, workspace_id = meth.token, meth.workspace_id
+
+    fba = fbaModelServices(service.URLS.fba, token=token)
 
     media = json.loads(media)
     media['auth'] = token
     media['workspace'] = workspace_id
+
+    meth.debug('auth token: ' + token)
+    meth.debug('workspace id: ' + workspace_id)
+    meth.debug(json.dumps(media))
 
     meth.advance("Submitting Media to workspace")
 

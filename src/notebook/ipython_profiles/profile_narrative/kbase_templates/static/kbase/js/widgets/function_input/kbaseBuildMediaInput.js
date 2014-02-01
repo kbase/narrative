@@ -14,6 +14,7 @@
             loadingImage: "../images/ajax-loader.gif",
             fbaURL: "https://kbase.us/services/fba_model_services",
         },
+        mediaType: "KBaseBiochem.Media",
 
         init: function(options) {
             this._super(options);
@@ -312,9 +313,9 @@
         },
 
         refresh: function() {
-            this.trigger("dataLoadedQuery.Narrative", [ ["Media"], $.proxy(
-                function(objects) {
-                    var mediaList = objects["Media"];
+            this.trigger("dataLoadedQuery.Narrative", [ [ this.mediaType ], this.IGNORE_VERSION,
+                $.proxy(function(objects) {
+                    var mediaList = objects[ this.mediaType ];
                     if (mediaList && mediaList.length > 0) {
                         this.$fetchMediaDiv.find('select').empty();
                         for (var i=0; i<mediaList.length; i++) {

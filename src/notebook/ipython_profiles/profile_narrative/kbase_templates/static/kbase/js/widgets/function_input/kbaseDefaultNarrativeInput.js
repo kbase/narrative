@@ -125,7 +125,7 @@
                 lookupTypes.push(params[p].type);
             }
 
-            this.trigger('dataLoadedQuery.Narrative', [lookupTypes, $.proxy(
+            this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
                 function(objects) {
                     // we know from each parameter what each input type is.
                     // we also know how many of each type there is.

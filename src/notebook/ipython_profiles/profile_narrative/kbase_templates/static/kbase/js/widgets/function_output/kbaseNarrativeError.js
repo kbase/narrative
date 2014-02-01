@@ -68,20 +68,42 @@
         },
 
         render: function() {
-            var printMsg = this.options.error.msg;
-
             console.debug("Narrative function error!");
-            console.debug(this.options.error.msg);
+            console.debug(this.options.error);
             // for now, just truncate the error to 300 characters.
-            if (printMsg.length > 300)
-                printMsg = printMsg.substring(0, 300) + "...[error truncated]";
 
-            this.$elem.append('Sorry, an error occurred<br>')
-                      .append('In method: ' + this.options.error.method_name + '<br>')
-                      .append('of type: ' + this.options.error.type + '<br>')
-                      .append('severity: ' + this.options.error.severity + '<br>')
-                      .append('Error Message: ')
-                      .append($('<pre>').append(printMsg));
+            var addRow = function(name, value) {
+                return "<tr><td><b>" + name + "</b></td><td>" + value + "</td></tr>";
+            };
+
+            var $errorHead = $('<div>')
+                             .addClass('well well-sm')
+                             .append('<b>An error occurred while running your function!</b>');
+
+            var $errorTable = $('<table>')
+                              .addClass('table table-bordered')
+                              .css({'margin-right':'auto', 'margin-left':'auto'})
+                              .append(addRow("Function", this.options.error.method_name))
+                              .append(addRow("Error Type", this.options.error.type))
+                              .append(addRow("Severity", this.options.error.severity));
+
+            var $stackTraceAccordion = $('<div>');
+
+            this.$elem.append($errorHead)
+                      .append($errorTable)
+                      .append($stackTraceAccordion);
+
+            $stackTraceAccordion.kbaseAccordion(
+                { 
+                    elements: [
+                        {
+                            title: 'Detailed Error Message',
+                            body: $('<pre>').append(this.options.error.msg),
+                        }
+                    ]
+                }
+            );
+
             return this;
         },
     });

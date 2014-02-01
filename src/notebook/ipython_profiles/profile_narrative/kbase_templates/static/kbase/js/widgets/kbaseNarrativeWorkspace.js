@@ -796,8 +796,6 @@
                     self = this,
                     result = "";
 
-                console.log("GOT STUFF FROM SERVER");
-                console.log(lines);
                 $.each(lines, function(index, line) {
                     if (!done) {
                         if (line.length == 0) {
@@ -863,8 +861,6 @@
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
-                    console.debug("GOT RESULT");
-                    console.debug(result);
                     this.createOutputCell(cell, result);
                 }
             }

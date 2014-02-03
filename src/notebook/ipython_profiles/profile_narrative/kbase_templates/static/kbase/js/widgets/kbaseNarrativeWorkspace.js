@@ -400,6 +400,12 @@
             cell.metadata[this.KB_CELL] = cellInfo;
         },
 
+        setErrorCell: function(cell) {
+            var cellInfo = {};
+            cellInfo[this.KB_TYPE] = this.KB_ERROR_CELL;
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
+
         // Backup function code cell type (usually hidden through css... I still think this is superfluous)
         isFunctionCodeCell: function(cell) {
             return this.checkCellType(cell, this.KB_CODE_CELL);
@@ -447,16 +453,22 @@
                 target = "#output";
             }
 
-            var state;
-            if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
-                // if that widget can save state, do it!
-                state = $(cell.element).find(target)[widget]('getState');
-            }
+            try {
+                var state;
+                if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
+                    // if that widget can save state, do it!
+                    state = $(cell.element).find(target)[widget]('getState');
+                }
 
-            var timestamp = this.getTimestamp();
-            cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
-            while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
-                cell.metadata[this.KB_CELL][this.KB_STATE].pop();
+                var timestamp = this.getTimestamp();
+                cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
+                while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
+                    cell.metadata[this.KB_CELL][this.KB_STATE].pop();
+                }
+            }
+            catch(error) {
+                this.dbg("Unable to save state for cell:");
+                this.dbg(cell);
             }
         },
 
@@ -691,7 +703,6 @@
             var paramList = params.map(function(p) { return "'" + p + "'"; });
             cmd += "method(" + paramList + ")";
 
-            console.debug(cmd);
             return cmd;
         },
 
@@ -785,6 +796,8 @@
                     self = this,
                     result = "";
 
+                console.log("GOT STUFF FROM SERVER");
+                console.log(lines);
                 $.each(lines, function(index, line) {
                     if (!done) {
                         if (line.length == 0) {
@@ -794,40 +807,45 @@
                             // look for @@S, @@P, @@D, @@G, or @@E
                             var matches = line.match(/^@@([SPDGE])(.*)/);
                             if (matches) { // if we got one
-                                // if we're starting, init the progress bar.
-                                if (matches[1] === 'S') {
+                                switch(matches[1]) {
+                                    case 'S':
+                                        // if we're starting, init the progress bar.
+                                        break;
+
+                                    case 'D':
+                                        // were done, so hide the progress bar (wait like a second or two?)
+                                        self.resetProgress(cell);
+                                        break;
+
+                                    case 'P':
+                                        var progressInfo = matches[2].split(',');
+                                        if (progressInfo.length == 3) {
+                                            self.showCellProgress(cell, progressInfo[0], progressInfo[1], progressInfo[2]);
+                                            offs += line.length;
+                                            if (index < lines.length - 1)
+                                                offs += 1;
+                                        }
+                                        else
+                                            done = true;
+                                        break;
+
+                                    case 'E':
+                                        var errorJson = matches[2];
+                                        self.createErrorCell(cell, errorJson);
+                                        self.dbg("Narrative error: " + errorJson);
+                                        break;
+
+                                    case 'G':
+                                        var debug = matches[2];
+                                        self.dbg("[KERNEL] " + debug);
+                                        break;
+
+                                    default:
+                                        // by default just dump it to the console
+                                        self.dbg("[UNKNOWN TAG] " + line);
+                                        break;
                                 }
-                                // were done, so hide the progress bar (wait like a second or two?)
-                                else if (matches[1] === 'D') {
-                                    self.resetProgress(cell);
-                                }
-                                // progress! capture the progress info and pass it along.
-                                else if (matches[1] === 'P') {
-                                    var progressInfo = matches[2].split(',');
-                                    if (progressInfo.length == 3) {
-                                        self.showCellProgress(cell, progressInfo[0], progressInfo[1], progressInfo[2]);
-                                        offs += line.length;
-                                        if (index < lines.length - 1)
-                                            offs += 1;
-                                    }
-                                    else
-                                        done = true;
-                                }
-                                // Error! From the error, create an error cell.
-                                else if (matches[1] === 'E') {
-                                    var errorJson = matches[2];
-                                    self.createErrorCell(cell, errorJson);
-                                    self.dbg("Narrative error: " + errorJson);
-                                }
-                                // Debug statement. Forward this into the console.
-                                else if (matches[1] === 'G') {
-                                    var debug = matches[2];
-                                    self.dbg("[KERNEL] " + debug);
-                                }
-                                else if (matches[1] == 'G') {
-                                    // Debugging message, just repeat to console
-                                    console.debug('[APP-DBG]', matches[2]);
-                                }
+                                return;
                             }
                             // No progress marker on non-empty line => treat as final output of program.
                             else {
@@ -845,6 +863,8 @@
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
+                    console.debug("GOT RESULT");
+                    console.debug(result);
                     this.createOutputCell(cell, result);
                 }
             }
@@ -859,7 +879,45 @@
                 'data': '{"error": ' + errorJson + "}",
                 'embed': true
             };
-            this.createOutputCell(cell, error);
+
+            var widget = this.errorWidget;
+
+            var errorCell = this.addErrorCell(IPython.notebook.find_cell_index(cell), widget);
+
+            // kinda ugly, but concise. grab the method. if it's not falsy, fetch the title from it.
+            // worst case, it'll still be falsy, and we can deal with it in the header line.
+            var methodName = cell.metadata[this.KB_CELL].method;
+            if (methodName)
+                methodName = methodName.title;
+
+            var uuid = this.uuidgen();
+            var errCellId = 'kb-cell-err-' + uuid;
+
+            var widgetInvoker = this.errorWidget + "({ 'error' : " + errorJson + "});";
+
+            var header = '<span class="kb-err-desc"><b>' + 
+                            (methodName ? methodName : 'Unknown method') + 
+                            '</b> - Error</span><span class="pull-right kb-func-timestamp">' + 
+                            this.readableTimestamp(this.getTimestamp()) +
+                            '</span>' + 
+                         '';
+
+            var cellText = '<div class="kb-cell-error" id="' + errCellId + '">' +
+                                '<div class="panel panel-danger">' + 
+                                    '<div class="panel-heading">' + header + '</div>' +
+                                    '<div class="panel-body"><div id="error"></div></div>' +
+                                '</div>' +
+                           '</div>\n' +
+                           '<script>' +
+                           '$("#' + errCellId + ' > div > div > div#error").' + widgetInvoker +
+                           '</script>';
+
+            errorCell.set_text(cellText);
+            errorCell.rendered = false; // force a render
+            errorCell.render();
+
+            this.resetProgress(cell);
+            this.trigger('updateData.Narrative');
         },
 
         /**
@@ -915,15 +973,6 @@
                            '<script>' +
                            '$("#' + outCellId + ' > div > div > div#output").' + widgetInvoker +
                            '</script>';
-
-
-            // var cellText = '<div class="kb-cell-output" id="' + outCellId + '">' +
-            //                    '<div>' + header + '</div>' + // gap for header info
-            //                    '<div id="output" style="margin:-10px;"></div>' +
-            //                '</div>\n' +
-            //                '<script>' +
-            //                '$("#' + outCellId + ' > div#output").' + widgetInvoker +
-            //                '</script>';
 
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
@@ -988,13 +1037,19 @@
          * @return id of <div> inside cell where content can be placed
          */
         addOutputCell: function(currentIndex, widget) {
-            var nb = IPython.notebook;
-            var cell = nb.insert_cell_below('markdown', currentIndex);
+            var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
 
             this.setOutputCell(cell, widget);
             this.removeCellEditFunction(cell);
 
-            return( cell );
+            return cell;
+        },
+
+        addErrorCell: function(currentIndex) {
+            var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
+            this.setErrorCell(cell);
+            this.removeCellEditFunction(cell);
+            return cell;
         },
 
         /** Not really used right now. */

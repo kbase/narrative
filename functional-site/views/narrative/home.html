@@ -31,7 +31,7 @@
                 <div class="sidebar-header">RECENT NARRATIVES</div>
                 <div recentnarratives>
                     <ul class="recent-narratives" ng-repeat="nar in narratives | orderBy:'timestamp':true | limitTo:5">
-                        <li><a href="{{nar_url}}/{{nar.workspace}}.{{nar.id}}">{{nar.id}}</a> 
+                        <li><a href="{{nar_url}}/ws.{{nar.wsid}}.obj.{{nar.id}}">{{nar.name}}</a> 
                             <span class="text-mutted pull-right">{{nar.nealtime}}</span>
                         </li>
                     </ul>

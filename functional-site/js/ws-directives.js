@@ -122,7 +122,7 @@ angular.module('ws-directives')
                     workspaces = []
                     scope.workspace_dict = {}
 
-                    var prom = kb.kbwsAPI().list_workspaces({});
+                    var prom = kb.ws.list_workspaces({});
                     $('.select-box').loading();
                     $.when(prom).done(function(data) {
 
@@ -386,7 +386,7 @@ angular.module('ws-directives')
                                             //auth: USER_TOKEN
                                         };
 
-                                        var p = kb.kbwsAPI().set_permissions(params);
+                                        var p = kb.ws.set_permissions(params);
                                         promises.push(p);
                                     };
 
@@ -405,7 +405,7 @@ angular.module('ws-directives')
                                                 //auth: USER_TOKEN
                                             };
 
-                                            var p = kb.kbwsAPI().set_permissions(params);
+                                            var p = kb.ws.set_permissions(params);
                                             promises.push(p);
                                             rm_users.push(user)
                                         } 
@@ -417,7 +417,7 @@ angular.module('ws-directives')
                                         // if description textarea is showing, saving description
                                         if ($('#ws-description textarea').length > 0) {
                                             var d = $('#ws-description textarea').val();
-                                            var prom = kb.kbwsAPI().set_workspace_description({workspace: ws_name, 
+                                            var prom = kb.ws.set_workspace_description({workspace: ws_name, 
                                                 description: d})
 
                                             $.when(prom).done(function() {
@@ -459,12 +459,12 @@ angular.module('ws-directives')
                     var dialog = manage_modal.data('dialogModal');
                     var modal_body = dialog.find('.modal-body');
 
-                    var prom = kb.kbwsAPI().get_workspace_description({workspace:ws_name})
+                    var prom = kb.ws.get_workspace_description({workspace:ws_name})
                     $.when(prom).done(function(descript) {
                         var d = $('<div>');
                         d.append('<h5>Description<small> <a id="btn-edit-descript">Edit</a></small></h5>');
-                        d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>')
-                        modal_body.prepend(d)
+                        d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
+                        modal_body.prepend(d);
 
                         $('#btn-edit-descript').unbind('click');
                         $('#btn-edit-descript').click(function(){
@@ -473,7 +473,7 @@ angular.module('ws-directives')
                                 $(this).text('Edit');                          
                             } else {
                                 var editable = getEditableDescription(descript);
-                                $('#ws-description').html(editable)
+                                $('#ws-description').html(editable);
                                 $(this).text('Cancel');
                             }
                         })
@@ -486,7 +486,7 @@ angular.module('ws-directives')
                         var params = {//auth: USER_TOKEN,
                                       workspace: ws_name}
 
-                        var prom = kb.kbwsAPI().get_permissions(params);
+                        var prom = kb.ws.get_permissions(params);
 
                         //var newPerms;
                         var placeholder = $('<div></div>').loading()
@@ -568,7 +568,7 @@ angular.module('ws-directives')
                                 //auth: USER_TOKEN
                             };
 
-                            var p = kb.kbwsAPI().set_permissions(params);
+                            var p = kb.ws.set_permissions(params);
                             promises.push(p);
                         };
 
@@ -587,7 +587,7 @@ angular.module('ws-directives')
                                     //auth: USER_TOKEN
                                 };
 
-                                var p = kb.kbwsAPI().set_permissions(params);
+                                var p = kb.ws.set_permissions(params);
                                 promises.push(p);
                                 rm_users.push(user)
                             } 
@@ -667,7 +667,7 @@ angular.module('ws-directives')
                             table.append(row);
                         }                    
 
-                        var newrowhtml = '<tr class="perm-row"><td><input type="text" class="form-control perm-user-id" placeholder="Username"></td><td>'+
+                        var newrowhtml = '<tr class="perm-row"><td><input type="text" class="form-control perm-user" placeholder="Username"></td><td>'+
                                 permDropDown(data[key])+'</td></tr>'
                         var row = $(newrowhtml);
 
@@ -677,7 +677,7 @@ angular.module('ws-directives')
                         table.append(row);
                         
                         table.find('.add-perm').click(function() {
-                            var new_user_id = $(this).parents('tr').find('.perm-user-id').val();
+                            var new_user_id = $(this).parents('tr').find('.perm-user').val();
                             var new_perm = $(this).parents('tr').find('.create-permission option:selected').val();
                             //newPerms[new_user_id] = new_perm; //update model
 
@@ -774,7 +774,7 @@ angular.module('ws-directives')
                                             return;
                                         }                   
 
-                                        var prom = kb.kbwsAPI().create_workspace(params);
+                                        var prom = kb.ws.create_workspace(params);
                                         $prompt.addCover()
                                         $prompt.getCover().loading()
                                         $.when(prom).done(function(){
@@ -851,7 +851,7 @@ angular.module('ws-directives')
                                             return;
                                         }                   
 
-                                        var prom = kb.kbwsAPI().clone_workspace(params);
+                                        var prom = kb.ws.clone_workspace(params);
                                         $prompt.addCover()
                                         $prompt.getCover().loading()
                                         $.when(prom).done(function(){
@@ -893,7 +893,7 @@ angular.module('ws-directives')
                                                   //auth: kb.token()
                                                  }
 
-                                    var prom = kb.kbwsAPI().delete_workspace(params);
+                                    var prom = kb.ws.delete_workspace(params);
                                     $prompt.addCover()
                                     $prompt.getCover().loading()
                                     $.when(prom).done(function(){
@@ -957,8 +957,8 @@ angular.module('ws-directives')
                     $(element).loading('loading '+ws+'...')
 
                     // load workspace objects
-                    var prom = kb.kbwsAPI().list_objects({workspaces: [ws]});
-                    var prom2 = kb.kbwsAPI().list_objects({workspaces: [ws], showOnlyDeleted: 1})
+                    var prom = kb.ws.list_objects({workspaces: [ws]});
+                    var prom2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1})
                     $.when(prom, prom2).done(function(data, deleted_objs){
                         $(element).rmLoading();
                         $(element).append('<table id="obj-table-'+ws+'" \
@@ -1010,7 +1010,7 @@ angular.module('ws-directives')
                             checkBoxObjectClickEvent('.obj-check-box');
 
                             // load description above table if there is one.
-                            var p = kb.kbwsAPI().get_workspace_description({workspace: ws})
+                            var p = kb.ws.get_workspace_description({workspace: ws})
                             $.when(p).done(function(d){
                                 if (d != null) {
                                     $(element).parent().prepend('<div class="text-muted ws-descript" \
@@ -1077,8 +1077,8 @@ angular.module('ws-directives')
                         //            +id+'</a> (<a class="show-versions">'+instance+'</a>)\
                         //                <a class="btn-show-info hide pull-right">More</a>'
                         //} else {
-                            var new_id = '<span class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                                    +id+'</span> (<a class="show-versions">'+instance+'</a>)\
+                            var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                                    +id+'</a> (<a class="show-versions">'+instance+'</a>)\
                                         <a class="btn-show-info hide pull-right">More</a>';
                         //}
 
@@ -1156,7 +1156,7 @@ angular.module('ws-directives')
                         var modal_body = historyModal.data('dialogModal').find('.modal-body').loading();
                         historyModal.data('dialogModal').find('.modal-dialog').css('width', '800px')
 
-                        var prom = kb.kbwsAPI().get_object_history({workspace: ws, name: id});
+                        var prom = kb.ws.get_object_history({workspace: ws, name: id});
                         $.when(prom).done(function(data) {
                             modal_body.rmLoading();
                             modal_body.append('<span class="h5"><b>Name</b></span>: '+id+'<br>')                            
@@ -1322,7 +1322,7 @@ angular.module('ws-directives')
                     var modal_body = info_modal.data('dialogModal').find('.modal-body');
 
                     var params = [{workspace: ws, name: id}]
-                    var prom = kb.kbwsAPI().get_object_info(params);
+                    var prom = kb.ws.get_object_info(params);
                     modal_body.loading();
                     $.when(prom).done(function(data) {
                         modal_body.rmLoading();
@@ -1368,7 +1368,7 @@ angular.module('ws-directives')
                                 };
                             }());
 
-                            var prom = kb.kbwsAPI().get_objects([{workspace: ws, name:id}])
+                            var prom = kb.ws.get_objects([{workspace: ws, name:id}])
                             $.when(prom).done(function(json) {
                                 var fileName = id+'.'+data[4]+'.json';
                                 saveData(json[0], fileName);
@@ -1381,7 +1381,7 @@ angular.module('ws-directives')
                         open.click(function() {
                             var fileName = id+'.'+data[4]+'.json';
                             var jsonWindow = window.open(fileName,"_blank");
-                            var prom = kb.kbwsAPI().get_objects([{workspace: ws, name:id}])
+                            var prom = kb.ws.get_objects([{workspace: ws, name:id}])
                             $.when(prom).done(function(json) {
                                 jsonWindow.document.write(JSON.stringify(json[0]));
                             })                            
@@ -1464,7 +1464,7 @@ angular.module('ws-directives')
                         obj_ids.push(obj);
                     }
 
-                    var prom = kb.kbwsAPI().delete_objects(obj_ids)
+                    var prom = kb.ws.delete_objects(obj_ids)
                     $.when(prom).done(function(data){
                         scope.loadObjTable();
                     })
@@ -1534,7 +1534,7 @@ angular.module('ws-directives')
                                         var obj_name = checkedList[i][0];
                                         var params = {from: {workspace: ws, name: obj_name},
                                                       to: {workspace: new_ws, name: obj_name}}
-                                        var prom = kb.kbwsAPI().copy_object(params);
+                                        var prom = kb.ws.copy_object(params);
                                         proms.push(prom);
                                     }
 

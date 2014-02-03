@@ -82,15 +82,12 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
         });
     }
 
-    console.log('called controller')
- 
+
 
     // removes items from the selected objects view
     $scope.removeItem = function(index){
         $scope.selectedObjs.splice(index, 1);
     }
-
-    console.log('tab', tab)
 
 })
 
@@ -225,10 +222,8 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 .controller('Narrative', function($scope, $stateParams, $location, kbaseLogin) {
-    console.log('stateParams', $stateParams)
-    console.log('called narrative')
     //changeNav('narrative', 'newsfeed');
-    $scope.nar_url = 'http://narrative.kbase.us'; // used for links to narratives
+    $scope.nar_url = 'http://narrative.kbase.us/narrative'; // used for links to narratives
 
     // callback for ng-click 'loginUser':
     $scope.loginUser = function (user) {

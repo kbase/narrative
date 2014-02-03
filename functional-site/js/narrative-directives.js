@@ -13,26 +13,37 @@ angular.module('narrative-directives')
     .directive('recentnarratives', function($location) {
         return {
             link: function(scope, element, attrs) {
-
                 $(element).loading()
-                project.get_narratives({
-                    callback: function(results) {
-                        $(element).rmLoading();
-			console.log( "in recentnarratives",results);
-                        if (Object.keys(results).length > 0) {
-                            //first sort
-                            for (var i in results) {
-                                results[i].timestamp = getTimestamp(results[i].moddate);
-                                results[i].nealtime = formateDate(results[i].timestamp) 
-                                                ? formateDate(results[i].timestamp) : results[i].moddate.replace('T',' ');
-                            }
 
-                            scope.$apply(function() {
-                                scope.narratives = results;
-                            });
-                        } else {
-                            $(element).append('no narratives');
+                var p = project.get_narratives();
+                $.when(p).done(function(results){
+                    console.log('narra', results)                    
+                    $(element).rmLoading();
+
+                    var narratives = []
+
+                    if (results.length > 0) {
+                        for (var i in results) {
+                            var nar = {};
+                            nar.id = results[i][0];
+                            nar.name = results[i][1];
+                            nar.wsid = results[i][6]
+                            nar.ws = results[i][7];
+
+
+
+                            nar.timestamp = getTimestamp(results[i][3]);
+                            nar.nealtime = formateDate(nar.timestamp) 
+                                            ? formateDate(nar.timestamp) : results[i][3].replace('T',' ').split('+')[0];
+                            narratives.push(nar);
                         }
+
+                        scope.$apply(function() {
+                            console.log('narratives', narratives)
+                            scope.narratives = narratives;
+                        })
+                    } else {
+                        $(element).append('no narratives');
                     }
                 });
 		
@@ -43,38 +54,35 @@ angular.module('narrative-directives')
     .directive('recentprojects', function($location) {
         return {
             link: function(scope, element, attrs) {
+
                 $(element).loading()
-                project.get_projects({
-                    callback: function(projs) {
-                        console.log('projects', projs)
+                var prom = project.get_projects()
+                $.when(prom).done(function(projs){
 
-                        $(element).rmLoading();
-
-
-                        if (projs.length > 0) {
-                            var projects = []
-                            //first sort
-                            for (var i in projs) {
-                                var project = {};
-                                project.timestamp = getTimestamp(projs[i][3]); // moddate to timestamp
-                                console.log(project.timestamp)
-                                if (!project.timestamp) continue;
-                                project.nealtime = formateDate(project.timestamp) 
-                                                ? formateDate(project.timestamp) : projs[i][3].replace('T',' ');
-                                project.name = projs[i][7]; 
-                                projects.push(project)
-                            }
-
-                            console.log(projects)
-                            scope.$apply(function() {
-                                scope.projects = projects;
-                            })
-
-                        } else {
-                            $(element).append('no projects')
+                    $(element).rmLoading();
+                    if (projs.length > 0) {
+                        var projects = []
+                        //first sort
+                        for (var i in projs) {
+                            var project = {};
+                            project.timestamp = getTimestamp(projs[i][3]); // moddate to timestamp
+                            if (!project.timestamp) continue; //fixme
+                            project.nealtime = formateDate(project.timestamp) 
+                                                ? formateDate(project.timestamp) : 
+                                                    projs[i][3].replace('T',' ').split('+')[0];
+                            project.name = projs[i][7]; 
+                            projects.push(project)
                         }
+
+                        scope.$apply(function() {
+                            scope.projects = projects;
+                        })
+
+                    } else {
+                        $(element).append('no projects')
                     }
                 })
+
             }
 
         };
@@ -108,110 +116,98 @@ angular.module('narrative-directives')
                     }
 
                     // get all projects
-                    var proj_ids = {};
+                    var proj_ids = [];
                     $(element).loading();
+                    var p = project.get_projects()
+                    $.when(p).done(function(projs){
+                        var projects = [];
 
-                    var p = project.get_projects({
-                        callback: function(projs) {
-                            console.log('projects',projs)
-                            var projects = [];
-
-                            for (var key in projs) {
-                                //projects.push([key, 'blah']);
-                                proj_ids[projs[key][7]] = projs[key][6]; // project is a workspace, this is the workspace name
-
-                            }
-
-                            // get narratives for each projectr //fixme: optimize
-                            getNarratives(proj_ids);
-                        
+                        for (var key in projs) {
+                            proj_ids.push(projs[key][7]); // project is a workspace, this is the workspace name
                         }
+
+                        // get narratives for each projectr //fixme: optimize
+                        getNarratives(proj_ids);
                     })
-                    /*
-                    $.when(p).done(function(){
-                            console.log('projects',projs)
-                            var projects = [];
-
-                            for (var key in projs) {
-                                //projects.push([key, 'blah']);
-                                proj_ids.push(projs[key][7]); // project is a workspace, this is the workspace name
-                            }
-
-                            // get narratives for each projectr //fixme: optimize
-                            getNarratives(proj_ids);
-                        
-                    })*/
 
                 }
 
                 scope.loadData();
 
-                function getNarratives(projects) {
-		    var proj_ids = Object.keys(projects);
-                    project.get_narratives({project_ids:proj_ids, 
-                        callback: function(nars){
-                            $(element).rmLoading();                                
 
-                            var narratives = nars.slice(0);
-			    console.log( "narratives:");
-			    console.log( narratives);
-                            var nar_projs = []
-                            for (var i in narratives) {
-                                var nar = narratives[i];
-                                var nar_id = nar.objid;
-                                var nar_name = nar.id;
-                                var proj = nar.workspace; // projects are workspaces right now
-                                nar.id = '<a href="http://narrative.kbase.us/narrative/ws.'
-                                            +projects[proj]+'.obj.'+nar_id+'" >'+nar_name+'</a>';
-                                // projects are workspaces right now
-                                nar.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
-                                                 Project <b>'+proj+'</b></span>';//<b>Project:</b>
-
-                                nar.timestamp = getTimestamp(nar.moddate);
-                                nar.moddate = formateDate(nar.timestamp) ? formateDate(nar.timestamp) : nar.moddate.replace('T',' ');
-
-                                //nar.moddate = nar.moddate
-
-                                nar.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" class="glyphicon glyphicon-trash btn-delete-narrative"></span>';
-
-                                //fixme: wow!  This is horrible.
-                                nar.users = '<span id="'+ nar.workspace+"-"+nar_id+'_users" >loading...</span>';
-                                addUserColumn(nar.workspace, nar_id);
-
-                
-                                nar_projs.push(nar.workspace);
-                                //nar.users = 
-                            }
+                function getNarratives(proj_ids) {
 
 
-                            // if project is empty, add to empty_projects.
-                            var empty_projects = []
-                            for (var i in proj_ids) {
-                                if (nar_projs.indexOf(proj_ids[i]) == -1) {
-                                    //empty_projects.push(proj_ids[i])
-                                    narratives.push({project: '<span class="proj-link" data-proj="'+proj_ids[i]+'">\
-                                                                <span class="caret"></span> Project <b>'+proj_ids[i]+'</b>\
-                                                               </span>',
-                                                    id: '<span class="text-muted">Empty Project</span>', 
-                                                    owner: '', moddate: '', users: '', deleteButton: '', timestamp: ''})
-                                }
-                            }
+                    var prom = project.get_narratives({project_ids:proj_ids})
+                    $.when(prom).done(function(nars){
+                        $(element).rmLoading();                                
 
-                            buildTable(narratives);                                
+                        //var narratives = nars.slice(0); // make copy of narratives
+
+
+                        var narratives = []
+
+                        var nar_projs = []
+                        for (var i in nars) {
+                            var nar_dict = {}   
+
+                            var nar = nars[i];
+                            var nar_id = nar[1];
+                            var proj = nar[7]; // projects are workspaces right now
+
+                            nar_dict.id = '<a href="http://narrative.kbase.us/'
+                                        +proj+'.'+nar_id+'" >'+nar_id+'</a>';
+                            // projects are workspaces right now
+                            nar_dict.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
+                                             Project <b>'+proj+'</b></span>';
+                            nar_dict.owner = nar[5];
+
+
+                            var tstamp = getTimestamp(nar[3]);
+                            nar_dict.timestamp = tstamp;
+                            nar_dict.moddate = formateDate(tstamp) ? 
+                                    formateDate(tstamp) : nar[3].replace('T',' ').split('+')[0];
+
+
+                            //nar.moddate = nar.moddate
+                            nar_dict.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" \
+                                                class="glyphicon glyphicon-trash btn-delete-narrative"></span>';
+
+                            //fixme: wow!  This is horrible.
+                            nar_dict.users = '<span id="'+ proj+"-"+nar_id+'_users" >loading...</span>';
+                            addUserColumn(proj, nar_id)
+
+                            narratives.push(nar_dict)
+                            nar_projs.push(proj)
                         }
+
+
+                        // if project is empty, add to empty_projects.
+                        var empty_projects = []
+                        for (var i in proj_ids) {
+                            if (nar_projs.indexOf(proj_ids[i]) == -1) {
+                                //empty_projects.push(proj_ids[i])
+                                narratives.push({project: '<span class="proj-link" data-proj="'+proj_ids[i]+'">\
+                                                            <span class="caret"></span> Project <b>'+proj_ids[i]+'</b>\
+                                                           </span>',
+                                                id: '<span class="text-muted">Empty Project</span>', 
+                                                owner: '', moddate: '', users: '', deleteButton: '', timestamp: ''})
+                            }
+                        }
+
+                        buildTable(narratives);               
                     })
 
                 }
 
 
                 function addUserColumn(ws, id) {
-                    project.get_project_perms({
-                        project_id: ws,
-                        callback: function(results) {
-                            var user_list = formatUsers(results);
-                            $("#"+ws+"-"+id+"_users").html(user_list);
-                        }
-                    });                    
+                    console.log('user column', ws, id)
+                    var prom = project.get_project_perms({project_id: ws});
+                    $.when(prom).done(function(results) {
+                        var user_list = formatUsers(results);
+                        $("#"+ws+"-"+id+"_users").html(user_list);
+                    })
                 }
 
                 function formatUsers(perms) {
@@ -276,13 +272,14 @@ angular.module('narrative-directives')
 
                     // adding buttons to project header
                     $('.group-item-expander').each(function() {
-                        var proj = $(this).find('.proj-link').data('proj')                        
+                        var proj = $(this).find('.proj-link').data('proj');
 
                         $(this).append('<span class="proj-opts pull-right">\
                                           <a class="btn btn-default btn-xs btn-new-narrative"><span class="glyphicon glyphicon-plus"></span> Narrative</a> \
                                           <a class="btn-view-data" data-proj="'+proj+'" >Data</a> |\
                                           <a class="edit-perms">Manage</a>\
                                        </span>');
+
                     })
 
 
@@ -377,32 +374,23 @@ angular.module('narrative-directives')
 
                                     //create the new narrative in ws
                                     $prompt.addCover()
-                                    $prompt.getCover().loading()                                  
-                                    project.new_project({
-                                        project_id: proj_id,
-                                        callback: function(results) {
+                                    $prompt.getCover().loading()
+                                    var p =  project.new_project({project_id: proj_id})    
+                                    $.when(p).done(function() {
+                                        $prompt.addCover('Created project <b><i>'+proj_id+'</b></i>');
 
-                                            $prompt.addCover('Created project <b><i>'+proj_id+'</b></i>');
+                                        scope.loadData()
 
-                                            scope.loadData()
+                                        var btn = $('<button type="button" class="btn btn-primary">Close</button>');
+                                        btn.click(function() { 
+                                            $prompt.closePrompt(); 
+                                        });
 
-                                            var btn = $('<button type="button" class="btn btn-primary">Close</button>');
-                                            btn.click(function() { 
-                                                $prompt.closePrompt(); 
-                                            });
-
-                                            $prompt.data('dialogModal').find('.modal-footer').html(btn);     
-
-                                            //redirect to the narrative page
-                                            //var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
-                                            //window.location.href = "http://narrative.kbase.us/"+proj_id+"."+name;
-                                        }
-                                    }); 
-
-                                    // fixme: use promise!
-                                    //.fail(function(e) {
-                                    //    $prompt.addCover(e.error.message, 'danger');                                            
-                                    //})
+                                        $prompt.data('dialogModal').find('.modal-footer').html(btn);     
+                                    }).fail(function() {
+                                        console.log('creation failed')
+                                        $prompt.addCover('Could not create project', 'danger');                                        
+                                    })
                                 }
                             }]
                         }
@@ -454,28 +442,27 @@ angular.module('narrative-directives')
                                     //create the new narrative in ws
                                     $prompt.addCover()
                                     $prompt.getCover().loading()                                  
-                                    project.new_narrative({
-                                        narrative_id: name, 
-                                        project_id: proj_id,
-                                        callback: function(results) {
+                                    var p = project.new_narrative({narrative_id: name, 
+                                                                   project_id: proj_id})
+                                    $.when(p).done(function(results) {
 
-                                            $prompt.addCover('Created narrative <b><i>'+name
-                                                            +'</i></b> in project <b><i>'+proj_id+'</i></b>');
+                                        $prompt.addCover('Created narrative <b><i>'+name
+                                                        +'</i></b> in project <b><i>'+proj_id+'</i></b>');
 
-                                            scope.loadData()
+                                        scope.loadData()
 
-                                            var btn = $('<button type="button" class="btn btn-primary">Close</button>');
-                                            btn.click(function() { 
-                                                $prompt.closePrompt(); 
-                                            });
+                                        var btn = $('<button type="button" class="btn btn-primary">Close</button>');
+                                        btn.click(function() { 
+                                            $prompt.closePrompt(); 
+                                        });
 
-                                            $prompt.data('dialogModal').find('.modal-footer').html(btn);     
+                                        $prompt.data('dialogModal').find('.modal-footer').html(btn);     
 
-                                            //redirect to the narrative page
-                                            //var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
-                                            //window.location.href = "http://narrative.kbase.us/"+proj_id+"."+name;
-                                        }
-                                    }); 
+                                        //redirect to the narrative page
+                                        //var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
+                                        //window.location.href = "http://narrative.kbase.us/"+proj_id+"."+name;
+                                    })
+
 
                                     // fixme: use promise!
                                     //.fail(function(e) {
@@ -510,23 +497,23 @@ angular.module('narrative-directives')
                                 callback : function(e, $prompt) {
                                     $prompt.addCover();
                                     $prompt.getCover().loading();
-                                    project.delete_object({
-                                        workspace: proj_id, 
-                                        id: nar_id,
-                                        type: 'Narrative',
-                                        callback: function(results) {
-                                            $prompt.addCover('Deleted narrative: '+nar_id);
-                                            scope.loadData()
 
-                                            var btn = $('<button type="button" class="btn btn-primary">Close</button>');
-                                            btn.click(function() { 
-                                                $prompt.closePrompt(); 
-                                            });
 
-                                            $prompt.data('dialogModal').find('.modal-footer').html(btn);     
-                                        }
-                                    }); 
+                                    var prom = kb.ws.delete_objects([{workspace: proj_id, name: nar_id}] )
 
+                                    $.when(prom).done(function() {
+                                        $prompt.addCover('Deleted narrative: '+nar_id);
+                                        scope.loadData()
+
+                                        var btn = $('<button type="button" class="btn btn-primary">Close</button>');
+                                        btn.click(function() { 
+                                            $prompt.closePrompt(); 
+                                        });
+
+                                        $prompt.data('dialogModal').find('.modal-footer').html(btn);     
+                                    }).fail(function(e) {
+                                        $prompt.addCover(e.error.message, 'danger'); 
+                                    })
                                 }
                             }]
                         }
@@ -575,13 +562,14 @@ angular.module('narrative-directives')
                                         $prompt.getCover().loading();
 
                                         // save permissions
-                                        savePermissions(ws_name, function() {
-                                            $prompt.addCover('Permissions saved.', 'success');
-                                        }, function() {
-                                            $prompt.addCover(e.error.message, 'danger');                                            
-                                        })
-                                }
-                            }]
+                                        var prom = savePermissions(proj_id);
+                                        $.when(prom).done(function(){
+                                            $prompt.addCover('Permissions saved.', 'success');                                            
+                                        }).fail(function(e) {
+                                            $prompt.addCover(e.error.message, 'danger');                                             
+                                        }) 
+                                    }
+                                }]
                         })
 
                     manage_modal.openPrompt();
@@ -600,43 +588,108 @@ angular.module('narrative-directives')
                     var placeholder = $('<div></div>').loading()
                     modal_body.append(placeholder); 
 
-                    project.get_project_perms({
-                        project_id: proj_id,
-                        callback: function(data) {
-                            permData = data
+                    var prom = project.get_project_perms({project_id: proj_id})
 
-                            placeholder.rmLoading();
+                    $.when(prom).done(function(data) {
+                        permData = data
 
-                            modal_body.append('<h5>User Permissions <small><a class="edit-perms">Edit</a></small><h5>')
+                        placeholder.rmLoading();
 
-
-                            var perm_container = $('<div class="perm-container"></div>');
-                            modal_body.append(perm_container);
-
-                            var perm_table = getPermTable(data)
-                            perm_container.append(perm_table);
-
-                            $('.edit-perms').click(function() {
-                                if (perm_container.find('table.perm-table').length > 0) {
-                                    $(this).html('Cancel')
-                                    perm_table.remove()
-                                    perm_table = getEditablePermTable(data);
-                                    perm_container.html(perm_table);
-                                } else {
-                                    $(this).html('Edit')                                    
-                                    perm_table.remove()
-                                    perm_table = getPermTable(data);
-                                    perm_container.html(perm_table);                                  
-                                }
-                            })
+                        modal_body.append('<h5>User Permissions <small><a class="edit-perms">Edit</a></small><h5>')
 
 
-                            var del_proj = $('<a class="btn btn-danger pull-left">Delete</a>');
+                        var perm_container = $('<div class="perm-container"></div>');
+                        modal_body.append(perm_container);
 
-                            del_proj.click(function() { deleteProject(proj_id) });
-                            manage_modal.data('dialogModal').find('.modal-footer .text-left').append(del_proj);
-                        }
+                        console.log('getting perm table', permData)
+                        var perm_table = getPermTable(permData)
+                        perm_container.append(perm_table);
+
+                        $('.edit-perms').click(function() {
+                            if (perm_container.find('table.perm-table').length > 0) {
+                                $(this).html('Cancel')
+                                perm_table.remove()
+                                perm_table = getEditablePermTable(data);
+                                perm_container.html(perm_table);
+                            } else {
+                                $(this).html('Edit')                                    
+                                perm_table.remove()
+                                perm_table = getPermTable(data);
+                                perm_container.html(perm_table);                                  
+                            }
+                        })
+
+
+                        var del_proj = $('<a class="btn btn-danger pull-left">Delete</a>');
+
+                        del_proj.click(function() { deleteProject(proj_id) });
+                        manage_modal.data('dialogModal').find('.modal-footer .text-left').append(del_proj);
+
                     })
+
+
+
+                    function savePermissions(ws_name) {
+                        var newPerms = {};
+                        var table = $('.edit-perm-table');
+                        table.find('tr').each(function() {
+                            var user = $(this).find('.perm-user').val() ? $(this).find('.perm-user').val() :$(this).find('.perm-user').text();
+                            var perm = $(this).find('option:selected').val();
+                            console.log(user, perm)
+                            if (!user) return;
+                            if ( (user in permData) && perm == permData[user]) {
+                                return;
+                            } 
+                            
+                            newPerms[user] = perm
+                        })
+
+                        // create new permissions for each user that does not currently have 
+                        // permsissions.
+                        var promises = [];
+                        for (var new_user in newPerms) {
+                            // ignore these
+                            if (new_user == '*' || new_user == USER_ID) continue;   
+
+                            // if perms have not change, do not request change
+                            if ( (new_user in permData) && newPerms[new_user] == permData[new_user]) {
+                                continue;
+                            }
+
+                            var params = {
+                                workspace: ws_name,
+                                new_permission: newPerms[new_user],
+                                users: [new_user],
+                                //auth: USER_TOKEN
+                            };
+
+                            var p = kb.ws.set_permissions(params);
+                            promises.push(p);
+                        };
+
+                        var rm_users = [];
+
+
+                        // if user was removed from user list, change permission to 'n'
+                        for (var user in permData) {
+                            if (user == '*' || user == USER_ID) continue;                            
+
+                            if ( !(user in newPerms) ) {
+                                var params = {
+                                    workspace: ws_name,
+                                    new_permission: 'n',
+                                    users: [user],
+                                    //auth: USER_TOKEN
+                                };
+
+                                var p = kb.ws.set_permissions(params);
+                                promises.push(p);
+                                rm_users.push(user)
+                            } 
+                        }
+
+                        return $.when.apply($, promises)
+                    }
 
 
 
@@ -647,13 +700,13 @@ angular.module('narrative-directives')
                         // (excluding ~global 'user' and owner)
                         var perm_count = Object.keys(data).length;
 
-                        if (perm_count <= 2) {
+                        if (perm_count <= 1) {
                             var row = $('<tr><td>None</td></tr>');
                             table.append(row);
                             return table;
                         }
 
-
+                        console.log('perm data', data)
                         // create table of permissions
                         for (var key in data) {
                             // ignore user's perm, ~global, and users with no permissions
@@ -695,7 +748,7 @@ angular.module('narrative-directives')
                             table.append(row);
                         }                    
 
-                        var newrowhtml = '<tr class="perm-row"><td><input type="text" class="form-control perm-user-id" placeholder="Username"></td><td>'+
+                        var newrowhtml = '<tr class="perm-row"><td><input type="text" class="form-control perm-user" placeholder="Username"></td><td>'+
                                 permDropDown(data[key])+'</td></tr>'
                         var row = $(newrowhtml);
 
@@ -705,7 +758,7 @@ angular.module('narrative-directives')
                         table.append(row);
                         
                         table.find('.add-perm').click(function() {
-                            var new_user_id = $(this).parents('tr').find('.perm-user-id').val();
+                            var new_user_id = $(this).parents('tr').find('.perm-user').val();
                             var new_perm = $(this).parents('tr').find('.create-permission option:selected').val();
                             //newPerms[new_user_id] = new_perm; //update model
 
@@ -750,6 +803,9 @@ angular.module('narrative-directives')
                         return $('<div>').append(dd).html();
                     }
                 }  // end manageModal
+
+
+
 
 
             } // end link

@@ -36,32 +36,32 @@
             // DOM structure setup here.
             // After this, just need to update the function list
 
-//            this.$functionList = $('<ul>');
-
-            // Make and append the header.
-            this.$elem.append($('<div>')
-                              .addClass('kb-function-header')
-                              .append('Services'));
+            /* There's a few bits here.
+             * 1. It's all in a Bootstrap Panel scaffold.
+             * 2. The panel-body section contains the core of the widget:
+             *    a. loading panel (just a blank thing with a spinning gif)
+             *    b. error panel
+             *    c. actual function widget setup.
+             *
+             * So, initialize the scaffold, bind the three core pieces in the
+             * panel-body, make sure the right one is being shown at the start,
+             * and off we go.
+             */
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body');
-//                                  .append(this.$functionList);
-            this.$elem.append(this.$functionPanel);
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
                                  .addClass('kb-loading')
                                  .append('<img src="' + this.options.loadingImage + '">')
                                  .hide();
-            this.$elem.append(this.$loadingPanel);
 
-            // The error panel should overlap everything.
+            // The error panel should be empty for now.
             this.$errorPanel = $('<div>')
                                .addClass('kb-error')
                                .hide();
-
-            this.$elem.append(this.$errorPanel);
 
             // The help element should be outside of the panel itself, so it can be manipulated separately.
             // It should hide itself when clicked.
@@ -70,6 +70,21 @@
                               .addClass('kb-function-help-popup alert alert-info')
                               .hide()
                               .click(function(event) { self.$helpPanel.hide(); });
+
+
+            this.$elem.append($('<div>')
+                              .addClass('panel panel-primary')
+                              .append($('<div>')
+                                      .addClass('panel-heading')
+                                      .append($('<div>')
+                                              .addClass('panel-title')
+                                              .css({'text-align': 'center'})
+                                              .append('Services')))
+                              .append($('<div>')
+                                      .addClass('panel-body kb-narr-panel-body')
+                                      .append(this.$functionPanel)
+                                      .append(this.$loadingPanel)
+                                      .append(this.$errorPanel)));
 
             this.$elem.append(this.$helpPanel);
             this.refresh();
@@ -114,9 +129,6 @@
         },
 
         handleCallback: function(call, content) {
-            // this.dbg("kbaseNarrativeFunctionPanel.handleCallback - " + call);
-            // this.dbg(content);
-
             if (content.status === "error") {
                 this.showError(content);
             }
@@ -171,16 +183,6 @@
             }
 
             this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
-
-            /** pre-accordion code commented out below **/
-            // for (var serviceName in serviceSet) {
-            //     var service = serviceSet[serviceName];
-            //     for (var i=0; i<service.methods.length; i++) {
-            //         var method = service.methods[i];
-            //         method['service'] = serviceName;
-            //         this.addFunction(method);
-            //     }
-            // }
         },
 
         /**

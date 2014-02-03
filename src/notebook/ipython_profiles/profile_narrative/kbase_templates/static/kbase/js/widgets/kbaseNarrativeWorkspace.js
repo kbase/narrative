@@ -928,7 +928,13 @@
             if (typeof result === 'string')
                 result = JSON.parse(result);
 
-            if (!result.embed) {
+            // If result.embed is false,
+            // or if the result doesn't have any data to put into a widget,
+            // don't make a widget! Assume that this will have thrown an error somewhere
+            // along the way.
+            //
+            // Note that an empty object is not null! So if result.data = {}, it'll still do something.
+            if (!result.embed || result.data === null || result.data === undefined) {
                 //do something.
                 return;
             }

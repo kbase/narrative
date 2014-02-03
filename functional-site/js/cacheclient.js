@@ -647,6 +647,77 @@ function projectapi() {
         }
     };
 
+    // Examine a narrative object's metadata and return all it's dependencies
+    // The inputs are based on the numeric workspace id and numeric objid, which
+    // are using the narrative URLs. Alternative you can just pass in a string
+    // like "ws.637.obj.1" in the fq_id (fully qualified id) and this will parse
+    // it out into the necessary components.
+    // what is returns is a dictionary with the following keys
+    // fq_id - the fully qualified id of the form "ws.####.obj.###"
+    // description - the description of the narrative
+    // name - the name of the narrative
+    // deps - a dictionary keyed on the dependencies names (based on ws.####.obj.### format)
+    //        where the subkeys are:
+    //        name - textual name
+    //        type - textual type of the object
+    //        overwrite - a boolean that indicates if there is already
+    project.get_narrative_deps = function ( p_in) {
+        var def_params = { callback : undefined,
+			   project_id : undefined, // numeric workspace id
+			   narrative_id : undefined, //numeric object id
+			   fq_id : undefined, // string of the form "ws.{numeric ws id}.obj.{numeric obj id}"
+			   error_callback: error_handler };
+        var p = $.extend( def_params, p_in);
+	if (p.fq_id != undefined) {
+	    // we should parse out the fq_id here, but not implemented yet
+	    
+	}
+	var metadata_fn = project.ws_client.get_object_info( [ { wsid: p.project_id, objid : p.narrative_id}], 1);
+	$.when( metadata_fn).then( function( obj_meta) {
+				       if (obj_meta.length != 1) {
+					   p.error_callback( "Error: " + obj_meta.length + " narratives found");
+				       } else {
+					   var res = {};
+					   var nar = obj_meta[0];
+					   var meta = nar[10]
+					   res.fq_id = "ws." + nar[6] + ".obj." + nar[0];
+					   res.description = meta.description;
+					   res.name = meta.name;
+					   var temp = $.parseJSON(meta.data_dependencies);
+					   var deps = temp.reduce( function(prev,curr,index) {
+								       var dep = curr.split(" ");
+								       prev[dep[1]] = dep[0];
+								       return(prev);
+								   },{});
+					   var alpha = /\D/;
+					   var src_objs = Object.keys(deps).map( function(obj) {
+										     if (obj.match(alpha)) {
+											 return(project.ws_client.get_object_info( [ { wsid : p.project_id, name : obj }], 1));
+										     } else {
+											 return(project.ws_client.get_object_info( [ { wsid : p.project_id, objid : obj }], 1));
+										     }
+										 });
+					   $.when.apply( null, src_objs)
+					       .done( function() {
+							  var res = [].slice.call(arguments);
+							  console.log( "after check_objs", res);
+						      })
+					       .fail( function() {
+						      console.log("not found");
+						      });
+					   var homews = USER_ID+":home";
+					   var dest_objs = Object.keys(deps).map( function(obj) {
+										     if (obj.match(alpha)) {
+											 return( { workspace : homews, name : obj });
+										     } else {
+											 return( { workspace : homews, objid : obj});
+										     }
+										 });
+					   console.log( src_objs, dest_objs);
+				       }
+				   });
+    };
+
     // Create an empty narrative object with the specified name. The name
     // *must" conform to the future workspace rules about object naming,
     // the it can only contain [a-zA-Z0-9_]. We show the error prompt
@@ -669,8 +740,10 @@ function projectapi() {
             nar.name = p.narrative_id; 
             nar.data.metadata.name = p.narrative_id; 
             nar.data.metadata.creator = USER_ID;
-            //nar.metadata = nar.data.metadata;
-
+            nar.meta = nar.data.metadata;
+	    // Flatten meta.data_dependencies
+	    nar.meta.data_dependencies = JSON.stringify( nar.meta.data_dependencies);
+	    console.log(nar);
             var ws_fn = project.ws_client.save_objects( {workspace: p.project_id, objects: [nar]});
             $.when( ws_fn ).then( function(obj_meta) {
                           p.callback( obj_meta_dict(obj_meta));

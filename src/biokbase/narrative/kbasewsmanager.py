@@ -288,7 +288,7 @@ class KBaseWSNotebookManager(NotebookManager):
                             self.kbid_regex.match(paramval)):
                             dep = "%s %s" % ( allparams[param]['type'], paramval)
                         else:
-                            dep = "%s %s/%s" % ( allparams[param]['type'], ws, paramval)
+                            dep = "%s %s" % ( allparams[param]['type'], paramval)
                         deps.add(dep)
                     except KeyError:
                         continue

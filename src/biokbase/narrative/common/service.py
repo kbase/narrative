@@ -41,8 +41,8 @@ _log.addHandler(_h)
 class URLS:
     workspace = "http://140.221.84.209:7058/"
     invocation = "https://kbase.us/services/invocation"
-    fba = "https://kbase.us/services/fba_model_services"
-    genomeCmp = "http://140.221.85.98:8284/jsonrpc"
+    fba = "http://140.221.84.183:7036"
+    genomeCmp = "http://140.221.85.58:8283/jsonrpc"
 
 ## Exceptions
 
@@ -797,8 +797,10 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             self.done()
         except ServiceMethodError as err:
             self.error(-2, err)
+            return
         except Exception as err:
             self.error(-1, ServiceMethodError(self, err))
+            return
 
         # output object contains:
         # data

@@ -138,42 +138,68 @@
          */
         createStructure: function() {
             /*********** OUTER STRUCTURE ***********/
+
+            /**
+             * The outer structure is now a Bootstrap Panel.
+             * So it's got a panel-heading (just the blue Data part and refresh button)
+             * a panel-body - everything else
+             * - no footer
+             */
+
+
+
             // header bar.
-            this.$elem.append($('<div>')
-                              .addClass('kb-function-header')
+            var $headerDiv = $('<div>')
                               .append('Data')
                               .append($('<button>')
-                                      .addClass('btn btn-xs btn-default pull-right')
+                                      .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
                                       .css({'margin-top': '-4px',
                                             'margin-right': '4px'})
                                       .click($.proxy(function(event) { this.refresh(); }, this))
                                       .append($('<span>')
-                                              .addClass('glyphicon glyphicon-refresh'))));
+                                              .addClass('glyphicon glyphicon-refresh')));
 
             // encapsulating data panel - all the data-related stuff goes in here.
             // this way, it can all be hidden easily.
             this.$dataPanel = $('<div id="data-tabs">');
-            this.$elem.append(this.$dataPanel);
+//            this.$elem.append(this.$dataPanel);
 
             // a loading panel that just has a spinning gif sitting in the middle.
             this.$loadingPanel = $('<div>')
                                  .addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">')
                                  .hide();
-            this.$elem.append(this.$loadingPanel);
+//            this.$elem.append(this.$loadingPanel);
 
             // Something similar for the info modal
             this.$infoModalLoadingPanel = $('<div>')
                                  .addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">')
                                  .hide();
+
+            // this just sits outside and gets crammed into the info modal if necessary.
             this.$infoModalError = $('<div>').hide();
 
             // The error panel should overlap everything.
             this.$errorPanel = $('<div>')
                                .addClass('kb-error')
                                .hide();
-            this.$elem.append(this.$errorPanel);
+//            this.$elem.append(this.$errorPanel);
+
+            this.$elem.append($('<div>')
+                              .addClass('panel panel-primary')
+                              .append($('<div>')
+                                      .addClass('panel-heading')
+                                      .append($('<div>')
+                                              .addClass('panel-title')
+                                              .css({'text-align': 'center'})
+                                              .append($headerDiv)))
+                              .append($('<div>')
+                                      .addClass('panel-body kb-narr-panel-body')
+                                      .append(this.$dataPanel)
+                                      .append(this.$loadingPanel)
+                                      .append(this.$errorPanel)));
+            
 
 
             /*********** MAIN DATA TABLES ***********/

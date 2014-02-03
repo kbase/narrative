@@ -544,7 +544,7 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     
     #grab token and workspace info, setup the client
     token, workspaceName = meth.token, meth.workspace_id;
-    
+
     fbaClient = fbaModelServices(service.URLS.fba)
 
     """
@@ -894,9 +894,9 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
 @method(name="Upload Contigs")
 def _upload_contigs(meth, contig_set):
     """This wraps a ContigSet by a Genome object in your data space.
-    This should be run before trying to annotate a Genome. [3]
+    This should be run before trying to annotate a Genome. [19]
 
-    :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly.
+    :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly. [19.1]
     :type contig_set: kbtypes.Unicode
     :ui_name contig_set: Contig Set Object ID
     :return: Preparation message

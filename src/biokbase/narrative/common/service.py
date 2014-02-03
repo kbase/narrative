@@ -788,10 +788,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             self.done()
         except ServiceMethodError as err:
             self.error(-2, err)
-            return
         except Exception as err:
             self.error(-1, ServiceMethodError(self, err))
-            return
 
         # output object contains:
         # data

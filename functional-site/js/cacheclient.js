@@ -149,6 +149,8 @@ function projectapi() {
 
 
     var legit_ws_id = /^\w+$/;
+    // regex for a numeric workspace id of the form "ws.####.obj.###"
+    var legit_narr_ws_id = /^ws\.(\d+)\.obj\.(\d+)$/;
 
     // Fields in a workspace metadata object
     project.ws_meta_fields = ['id','owner','moddate','objects',
@@ -624,8 +626,6 @@ function projectapi() {
                                   var results = [].slice.call(arguments);
                                   var merged = [].concat.apply([],results);
                                   var dict = merged.map( obj_meta_dict);
-				  console.log( "all_my_narratives dict:");
-				  console.log( dict);
                                   p.callback( dict);
                                   // merge all the results into a single array
                               },
@@ -645,6 +645,17 @@ function projectapi() {
                         }
                       });
         }
+    };
+
+    project.copy_narrative = function (p_in) {
+        var def_params = { callback : undefined,
+			   project_id : undefined, // numeric workspace id
+			   narrative_id : undefined, //numeric object id
+			   fq_id : undefined, // string of the form "ws.{numeric ws id}.obj.{numeric obj id}"
+			   error_callback: error_handler };
+        var p = $.extend( def_params, p_in);
+	
+	p.callback( 1);
     };
 
     // Examine a narrative object's metadata and return all it's dependencies
@@ -669,8 +680,13 @@ function projectapi() {
 			   error_callback: error_handler };
         var p = $.extend( def_params, p_in);
 	if (p.fq_id != undefined) {
-	    // we should parse out the fq_id here, but not implemented yet
-	    
+	    var re = p.fq_id.match( legit_narr_ws_id);
+	    if (re) {
+		p.project_id = re[1];
+		p.narrative_id = re[2];
+	    } else {
+		p.error_callback("Cannot parse fq_id: " + p.fq_id);
+	    }
 	}
 	var metadata_fn = project.ws_client.get_object_info( [ { wsid: p.project_id, objid : p.narrative_id}], 1);
 	$.when( metadata_fn).then( function( obj_meta) {
@@ -686,9 +702,15 @@ function projectapi() {
 					   var temp = $.parseJSON(meta.data_dependencies);
 					   var deps = temp.reduce( function(prev,curr,index) {
 								       var dep = curr.split(" ");
-								       prev[dep[1]] = dep[0];
+								       prev[dep[1]] = {};
+								       prev[dep[1]].type = dep[0];
+								       prev[dep[1]].name = dep[1];
+								       prev[dep[1]].overwrite = false;
 								       return(prev);
 								   },{});
+					   res.deps = deps;
+					   p.callback(res);
+					   /*
 					   var alpha = /\D/;
 					   var src_objs = Object.keys(deps).map( function(obj) {
 										     if (obj.match(alpha)) {
@@ -714,6 +736,7 @@ function projectapi() {
 										     }
 										 });
 					   console.log( src_objs, dest_objs);
+					    */
 				       }
 				   });
     };

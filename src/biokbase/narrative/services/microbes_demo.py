@@ -94,6 +94,24 @@ def _assemble_genome(meth, contig_file, out_genome):
     meth.advance("Rendering Genome Information")
     return json.dumps(genome_meta)
 
+@method(name="Upload Contigs")
+def _upload_contigs(meth, contig_set):
+    """This wraps a ContigSet by a Genome object in your data space.
+    This should be run before trying to annotate a Genome. [19]
+
+    :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly. [19.1]
+    :type contig_set: kbtypes.Unicode
+    :ui_name contig_set: Contig Set Object ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: ContigSetUploadWidget
+    """
+    if not contig_set:
+        contig_set = "contigset_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    meth.stages = 1
+    workspace = os.environ['KB_WORKSPACE_ID']
+    return json.dumps({'ws_name': workspace, 'contig_set': contig_set})
+
 @method(name="Convert Contigs to a Genome")
 def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     """This wraps a ContigSet by a Genome object in your data space.
@@ -161,7 +179,7 @@ def _annotate_genome(meth, genome, out_genome):
         'out_genome_id': out_genome, 
     }
     job_id = cmpClient.annotate_genome(annotate_genome_params)
-    return json.dumps({'token': token, 'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
+    return json.dumps({'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
 
 @method(name="View Annotated Genome")
 def _show_genome(meth, genome):
@@ -177,7 +195,7 @@ def _show_genome(meth, genome):
     meth.stages = 1  # for reporting progress
     meth.advance("Loading the genome")
     token, workspaceName = meth.token, meth.workspace_id
-    return json.dumps({'token': token, 'ws_name': workspaceName, 'ws_id': genome})
+    return json.dumps({'ws_name': workspaceName, 'ws_id': genome})
 
 @method(name="Build an FBA Model for a Genome")
 def _genome_to_fba_model(meth, genome_id, fba_model_id):
@@ -901,24 +919,6 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     model1 = modeldata[0]
     model2 = modeldata[1]
     return json.dumps({'ws_name': workspace, 'fba_model1': model1, 'fba_model2': model2, 'proteome_cmp': proteome_cmp, 'key1': 'val1'})
-
-@method(name="Upload Contigs")
-def _upload_contigs(meth, contig_set):
-    """This wraps a ContigSet by a Genome object in your data space.
-    This should be run before trying to annotate a Genome. [19]
-
-    :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly. [19.1]
-    :type contig_set: kbtypes.Unicode
-    :ui_name contig_set: Contig Set Object ID
-    :return: Preparation message
-    :rtype: kbtypes.Unicode
-    :output_widget: ContigSetUploadWidget
-    """
-    if not contig_set:
-        contig_set = "contigset_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
-    meth.stages = 1
-    workspace = os.environ['KB_WORKSPACE_ID']
-    return json.dumps({'ws_name': workspace, 'contig_set': contig_set})
 
 
 #

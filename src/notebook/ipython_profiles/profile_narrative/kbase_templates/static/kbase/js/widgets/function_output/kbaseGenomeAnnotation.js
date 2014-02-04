@@ -16,32 +16,45 @@ var timer = null;
 (function( $, undefined ) {
     $.KBWidget({
         name: "GenomeAnnotation",
-        parent: "kbaseWidget",
+        parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
+        ws_id: null,
+        ws_name: null,
+        token: null,
+        job_id: null,
+        width: 1150,
         options: {
             ws_id: null,
             ws_name: null,
-            token: null,
-            job_id: null,
-            width: 1150
+            job_id: null
         },
         jobSrvUrl: "https://kbase.us/services/userandjobstate/",
 
         init: function(options) {
             this._super(options);
+            this.ws_name = options.ws_name;
+            this.ws_id = options.ws_id;
+            if (options.job_id)
+            	this.job_id = options.job_id;
+            return this;
+        },
+        
+        render: function() {
             var self = this;
         	var pref = (new Date()).getTime();
+        	console.log('Before Genome Annotation Widget init('+pref+')');
 
             var wsUrl = 'http://140.221.84.209:7058/';
             var container = this.$elem;
+        	container.empty();
 
-            var kbws = new Workspace(wsUrl, {'token': options.token});
+            var kbws = new Workspace(wsUrl, {'token': self.token});
             
             var ready = function() {
             
-            var request = [{ref: options.ws_name +"/"+ options.ws_id}];
+            var request = [{ref: self.ws_name +"/"+ self.ws_id}];
             kbws.get_objects(request, function(data) {
-            	$('.loader-table').remove();
+            	container.empty();
             	var type = data[0].info[2];
                 if (type.indexOf('-') >= 0) {
                 	type = type.substring(0, type.indexOf('-'));
@@ -252,7 +265,7 @@ var timer = null;
                     }
                     var cgb = new ContigBrowserPanel();
                     cgb.data.options.contig = contig;
-                    cgb.data.options.svgWidth = self.options.width - 28;
+                    cgb.data.options.svgWidth = self.width - 28;
                     cgb.data.options.onClickFunction = function(svgElement, feature) {
                     	showGene(feature.feature_id);
                     };
@@ -283,18 +296,18 @@ var timer = null;
             });            	
             };
             
-            if (options.job_id) {
-                var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': options.token});
+            if (self.job_id) {
+                var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.token});
             	var panel = $('<div class="loader-table"/>');
             	container.append(panel);
             	var table = $('<table class="table table-striped table-bordered" \
             			style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
             	panel.append(table);
-            	table.append('<tr><td>Job was created with id</td><td>'+options.job_id+'</td></tr>');
-            	table.append('<tr><td>Genome will have the id</td><td>'+options.ws_id+'</td></tr>');
+            	table.append('<tr><td>Job was created with id</td><td>'+self.job_id+'</td></tr>');
+            	table.append('<tr><td>Genome will have the id</td><td>'+self.ws_id+'</td></tr>');
             	table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
             	var timeLst = function(event) {
-            		jobSrv.get_job_status(options.job_id, function(data) {
+            		jobSrv.get_job_status(self.job_id, function(data) {
             			var status = data[2];
             			var complete = data[5];
             			var wasError = data[6];
@@ -317,16 +330,29 @@ var timer = null;
             } else {
             	ready();
             }
+        	console.log('After Genome Annotation Widget init('+pref+')');
             return this;
         },
         
         getData: function() {
-                    return {
-                        type: "NarrativeTempCard",
-                        id: this.options.ws_name + "." + this.options.ws_id,
-                        workspace: this.options.ws_name,
-                        title: "Temp Widget"
-                    };
+        	return {
+        		type: "NarrativeTempCard",
+        		id: this.ws_name + "." + this.ws_id,
+        		workspace: this.ws_name,
+        		title: "Temp Widget"
+        	};
+        },
+
+        loggedInCallback: function(event, auth) {
+            this.token = auth.token;
+            this.render();
+            return this;
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.token = null;
+            this.render();
+            return this;
         }
     });
 })( jQuery );

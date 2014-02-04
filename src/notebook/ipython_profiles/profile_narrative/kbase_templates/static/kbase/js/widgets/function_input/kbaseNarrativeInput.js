@@ -5,7 +5,7 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "kbaseNarrativeInput", 
+        name: "kbaseNarrativeInput",
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {

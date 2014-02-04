@@ -11,10 +11,12 @@
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
-            fbaURL: "https://kbase.us/services/fba_model_services",
+            loadingImage: "static/kbase/images/ajax-loader.gif",
+            //fbaURL: "https://kbase.us/services/fba_model_services",
+            fbaURL: "http://140.221.84.183:7036",
         },
-        mediaType: "KBaseBiochem.Media",
+        mediaType: "KBaseBiochem.Media-1.0",
+        IGNORE_VERSION: false,
 
         init: function(options) {
             this._super(options);
@@ -57,18 +59,35 @@
                                .click($.proxy(
                                     function(event) {
                                         var mediaName = this.$elem.find("div > select").val();
+
+                                        if (!mediaName || !this.wsId) {
+                                            this.fetchMediaError();
+                                        }
+                                        $fetchMediaDiv.find("img").show();
                                         this.fbaClient.get_media({
                                                 auth: this.authToken(),
                                                 medias: [mediaName],
                                                 workspaces: [this.wsId],
                                             },
-                                            $.proxy(function(media) { this.updateMediaTable(media); }, this)
+                                            $.proxy(function(media) { 
+                                                this.updateMediaTable(media);
+                                                $fetchMediaDiv.find("img").hide();
+
+                                            }, this),
+                                            $.proxy(function(error) {
+                                                this.fetchMediaError(error);
+                                                $fetchMediaDiv.find("img").hide();
+                                            }, this)
                                         );
                                     },
                                     this));
 
             $fetchMediaDiv.append($mediaList)
-                          .append($fetchButton);
+                          .append($fetchButton)
+                          .append($("<img>")
+                                  .attr("src", this.options.loadingImage)
+                                  .css("margin-left", "10px")
+                                  .hide());
 
             $mediaList.append("<option>No media found</option>");
             $fetchButton.hide();
@@ -146,6 +165,9 @@
             return $button;
         },
 
+        /**
+         * Just a convenience function to add a media row with no elements.
+         */
         addEmptyMediaRow: function() {
             this.addMediaRow();
         },
@@ -309,6 +331,7 @@
                 cpd.max_flux = cpd.max;
                 this.addMediaRow(cpd);
             }
+            this.addEmptyMediaRow();
 
         },
 

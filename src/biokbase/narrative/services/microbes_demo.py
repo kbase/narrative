@@ -9,6 +9,7 @@ __date__ = '11/15/13'
 import json
 import os
 import random
+import numbers
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
@@ -543,9 +544,9 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     meth.advance("Setting up gapfill parameters")
     
     #grab token and workspace info, setup the client
-    token, workspaceName = meth.token, meth.workspace_id;
+    userToken, workspaceName = meth.token, meth.workspace_id;
 
-    fbaClient = fbaModelServices(service.URLS.fba)
+    fbaClient = fbaModelServices(service.URLS.fba,token=userToken)
 
     """
     typedef structure {
@@ -621,6 +622,15 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
             'media_workspace' : workspaceName
         }
 
+    # set some default values
+    if not solution_limit:
+        solution_limit = 5 #10*60 #10 minutes
+    if not solution_time_limit:
+        solution_time_limit = 10*60 #10 minutes
+    if not total_time_limit:
+        total_time_limit = 10*60 #10 minutes
+        
+    
     gapfill_formulation = {
         'formulation' : fba_formulation,
         'num_solutions' : int(solution_limit),
@@ -631,8 +641,8 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
         'formulation' : gapfill_formulation,
         'workspace' : workspaceName,
         'timePerSolution' : int(solution_time_limit),
-        'totalTimeLimit' : int(total_time_limit),
-        'auth' : token
+        'totalTimeLimit' : int(total_time_limit)
+        #'auth' : token
     }
     #if(output_model_id):
     #    gapfill_params['out_model'] = output_model_id,
@@ -641,18 +651,19 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     job_data = fbaClient.queue_gapfill_model(gapfill_params);
 
     job_id = job_data['id'].strip()
-    total_time_hrs = int(total_time_limit) / 3600.0
+    total_time_hrs = round(int(total_time_limit) / 3600.0,3)
     hour_suffix = ""
     if (total_time_hrs is not 1):
         hour_suffix = "s"
 
     return json.dumps(
         {
-            'job_id':job_id,
+            #'job_data':job_data
+            #'job_id':job_id,
             'estimated_time_str': str(total_time_hrs) + " hour" + str(hour_suffix),
-            'output_data_id' : str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip()),
-            'token' : token,
-            #'job_data' : job_data,
+            #'output_data_id' : str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip()),
+            #'token' : token,
+            'job_data' : job_data
         })
 
 @method(name="Integrate Gapfill Solution")

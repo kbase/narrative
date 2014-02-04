@@ -227,6 +227,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.nar_url = 'http://narrative.kbase.us'; // used for links to narratives
     
 
+
     // callback for ng-click 'loginUser':
     $scope.loginUser = function (user) {
         console.log("username is " + user.username);

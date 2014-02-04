@@ -32,10 +32,9 @@ function KBCacheClient(token) {
 
     var auth = {};
     auth.token = token;
-    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
-    //var kbws = new workspaceService('http://kbase.us/services/workspace_service/', auth);
-    var kbws = new Workspace('http://140.221.84.209:7058', auth);
-    //var kbws = new Workspace('http://kbase.us/services/ws/', auth);
+    console.log(configJSON.fba_url)
+    var fba = new fbaModelServices(configJSON.fba_url);
+    var kbws = new Workspace(configJSON.workspace_url, auth);
   
     var cache = new Cache();    
 

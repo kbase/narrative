@@ -225,7 +225,8 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 .controller('Narrative', function($scope, $stateParams, $location, kbaseLogin, $modal, FeedLoad) {
     //changeNav('narrative', 'newsfeed');
-    $scope.nar_url = 'http://narrative.kbase.us'; // used for links to narratives    
+    $scope.nar_url = 'http://narrative.kbase.us/narrative'; // used for links to narratives    
+
     var feedUrl = 'http://yogi.lbl.gov/eprojectbuilder/misc/kbasefeed2.xml';
 
     FeedLoad.fetch({q: feedUrl, num: 50}, {}, function (data) {
@@ -332,8 +333,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 
 .controller('NarrativeProjects', function($scope, $stateParams) {
-    //changeNav('narrative', 'projects');
-
 })
 
 
@@ -369,22 +368,6 @@ function Navigation($scope, $location) {
         return viewLocation === $location.path();
     };
 }
-
-function changeNav(nav, subnav) {
-    if (nav) {
-        $('.navbar-nav li').removeClass('active');
-        $('.navbar-nav .nav-'+nav).addClass('active');
-    } else {
-        $('.navbar-nav li').removeClass('active');
-        return;
-    }
-
-    if (subnav) {
-        $('.nav-sidebar li').removeClass('active');
-        $('.nav-sidebar .nav-'+subnav).addClass('active');
-    }
-}
-
 
 function LPHelp($scope, $stateParams, $location) {
     // Fixme: move out of controller

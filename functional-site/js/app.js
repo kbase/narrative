@@ -284,45 +284,18 @@ var Feed = angular.module('FeedLoad', ['ngResource'])
         });
     });
 
-
-HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
-                 <ul class="dropdown-menu"> \
-                 <li><a href="#/landing-pages-help">Landing Page Documentation</a></li> \
-              </ul>';
+configJSON = $.parseJSON( $.ajax({url: "config.json", 
+                             async: false, 
+                             dataType: 'json'}).responseText )
 
 
 app.run(function ($rootScope, $state, $stateParams, $location) {
-    // use partials nav_func.html for narrative/functional website look
-    // Fixme: this should be a template, loaded with ui-router the same way
-    // as the rest of the app.
 
-    //$('#navigation').load('partials/nav.html', function(){
-    //    navbar_cb();
-    //});
-
-    /*
-    $rootScope.$on('$stateChangeStart',
-        function (event, toState, toParams, fromState, fromParams) {
-            contr = toState.controller;
-
-            var nav = $('#navigation');
-            if (contr == 'Narrative' || contr == 'NarrativeProjects') {
-                nav.load('partials/nav-narrative.html', navbar_cb);
-                // if user isn't logged in, redirect to login page.
-            } else if (contr == 'Trees') {
-                nav.load('partials/nav-trees.html', navbar_cb);
-            } else if (contr == 'ModelViewer') {
-                nav.load('partials/nav-mv.html', navbar_cb);
-            } else if (contr == 'WorkspaceBrowser') {
-                nav.load('partials/nav-narrative.html', navbar_cb);
-            } else {
-                nav.load('partials/nav.html', navbar_cb);              
-            }
-
-        });
-    */
-
-    navbar_cb();
+    var HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
+                 <ul class="dropdown-menu"> \
+                 <li><a href="#/landing-pages-help">Landing Page Documentation</a></li> \
+              </ul>';
+    $('.help-dropdown').html(HELP_DROPDOWN);              
 
     //  Things that need to happen when a view changes.
     $rootScope.$on('$stateChangeSuccess', function() {
@@ -330,44 +303,22 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         removeCards();
     })
 
-    // here's a workaround so that ui-router doesn't remove query strings.
-    /*
-    $rootScope.$on('$stateChangeStart',
-    function (event, toState, toParams, fromState, fromParams) {
-        this.locationSearch = $location.search();
-    });
-    $rootScope.$on('$stateChangeSuccess',
-        function (event, toState, toParams, fromState, fromParams) {
-            $location.search(this.locationSearch);
-        });
-    */
+    // sign in button
+    $('#signin-button').kbaseLogin({login_callback: login_change,
+                                    logout_callback: login_change});
+    $('#signin-button').css('padding', '0');  // Jim!
 
-    function navbar_cb() {
-        // sign in button
-        $('#signin-button').kbaseLogin({login_callback: login_change,
-                                        logout_callback: login_change});
-        $('#signin-button').css('padding', '0');  // Jim!
+    USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+    USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+    kb = new KBCacheClient(USER_TOKEN);
 
-        $('.help-dropdown').html(HELP_DROPDOWN);
+    // Fixme, check before load
+    if (typeof USER_ID == 'undefined') $rootScope.$apply($location.path( '/narrative/' ) );
 
-        $rootScope.USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-        $rootScope.USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+    // global state object to store state
+    state = new State();
 
-        // hack
-        USER_ID = $rootScope.USER_ID;
-        USER_TOKEN = $rootScope.USER_TOKEN;
-        kb = new KBCacheClient(USER_TOKEN);
-
-        // Fixme, check before load
-        if (typeof USER_ID == 'undefined') $rootScope.$apply($location.path( '/narrative/' ) );
-
-        // global state object to store state
-        state = new State();
-
-        // set the currently selected workspace.
-        set_selected_workspace();
-    }
-
+    // Critical: used for navigation urls and highlighting
     $rootScope.$state = $state;
     $rootScope.$stateParams = $stateParams;
 });
@@ -376,6 +327,7 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
 /*
  *   landing page app helper functions
  */
+
 
 function login_change() {
     window.location.reload();
@@ -388,11 +340,6 @@ function get_selected_ws() {
     }
 }
 
-function set_selected_workspace() {
-    if (state.get('selected')) {
-        $('#selected-workspace').html(state.get('selected')[0]);
-    }
-}
 
 function removeCards() {
     $(".ui-dialog").remove();    
@@ -425,6 +372,10 @@ function set_cookie() {
 };
 
 
+
+// These are some jquery plugs that you can use to add and remove a 
+// loading giff to a dom element.  This is easier to maintain, and likely less 
+// code that using CSS classes.
 $.fn.loading = function(text) {
     $(this).rmLoading()
 
@@ -445,7 +396,7 @@ $.fn.rmLoading = function() {
 
 
 /*
- *  Object to store state in local storage.
+ *  Object to store state in local storage.  We should use this.
  */
 function State() {
     // Adapted from here: http://diveintohtml5.info/storage.html

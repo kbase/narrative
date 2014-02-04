@@ -17,7 +17,6 @@ angular.module('narrative-directives')
 
                 var p = project.get_narratives();
                 $.when(p).done(function(results){
-                    console.log('narra', results)                    
                     $(element).rmLoading();
 
                     var narratives = []
@@ -39,7 +38,6 @@ angular.module('narrative-directives')
                         }
 
                         scope.$apply(function() {
-                            console.log('narratives', narratives)
                             scope.narratives = narratives;
                         })
                     } else {
@@ -156,8 +154,8 @@ angular.module('narrative-directives')
                             var nar_id = nar[1];
                             var proj = nar[7]; // projects are workspaces right now
 
-                            nar_dict.id = '<a href="http://narrative.kbase.us/'
-                                        +proj+'.'+nar_id+'" >'+nar_id+'</a>';
+                            nar_dict.id = '<a href="'+scope.nar_url+'/ws.'
+                                        +proj+'.obj.'+nar_id+'" >'+nar_id+'</a>';
                             // projects are workspaces right now
                             nar_dict.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
                                              Project <b>'+proj+'</b></span>';
@@ -203,7 +201,6 @@ angular.module('narrative-directives')
 
 
                 function addUserColumn(ws, id) {
-                    console.log('user column', ws, id)
                     var prom = project.get_project_perms({project_id: ws});
                     $.when(prom).done(function(results) {
                         var user_list = formatUsers(results);
@@ -602,7 +599,6 @@ angular.module('narrative-directives')
                         var perm_container = $('<div class="perm-container"></div>');
                         modal_body.append(perm_container);
 
-                        console.log('getting perm table', permData)
                         var perm_table = getPermTable(permData)
                         perm_container.append(perm_table);
 
@@ -636,7 +632,6 @@ angular.module('narrative-directives')
                         table.find('tr').each(function() {
                             var user = $(this).find('.perm-user').val() ? $(this).find('.perm-user').val() :$(this).find('.perm-user').text();
                             var perm = $(this).find('option:selected').val();
-                            console.log(user, perm)
                             if (!user) return;
                             if ( (user in permData) && perm == permData[user]) {
                                 return;
@@ -707,7 +702,6 @@ angular.module('narrative-directives')
                             return table;
                         }
 
-                        console.log('perm data', data)
                         // create table of permissions
                         for (var key in data) {
                             // ignore user's perm, ~global, and users with no permissions

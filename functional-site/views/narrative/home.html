@@ -56,12 +56,12 @@
                 <h2 class="small">Featured Narratives <span class="glyphicon glyphicon-question-sign narrative-help" style="color: #0088CC; font-size: 16px; padding-left: 5px"></span></h2>
                 <div class="newsfeed_section">
                         
-                    <div featurednarratives>
-                    <!-- in feed.entries" ng-bind-html-unsafe="narr.content" -->
-    
+                    <div  class="narr-featured-narrative"  ng-repeat="narr in feed.entries" >
+
+                    <div ng-bind-html-unsafe="narr.content"></div>
+                    <a ng-click="copyNarrativeForm(narr.title)">copy narrative {{narr.title}}</a>
                     </div>
-                    
-                            
+     
                 </div>	
             </div>
         </div>

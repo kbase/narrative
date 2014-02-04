@@ -22,7 +22,7 @@
 var app = angular.module('landing-pages', 
     ['lp-directives', 'card-directives',
      'mv-directives', 'trees-directives', 
-     'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin', 'FeedLoad'])
+     'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin', 'FeedLoad', 'ui.bootstrap'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
 

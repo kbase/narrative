@@ -222,11 +222,38 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 
-.controller('Narrative', function($scope, $stateParams, $location, kbaseLogin) {
+
+.controller('Narrative', function($scope, $stateParams, $location, kbaseLogin, $modal, FeedLoad) {
     //changeNav('narrative', 'newsfeed');
-    $scope.nar_url = 'http://narrative.kbase.us'; // used for links to narratives
+    $scope.nar_url = 'http://narrative.kbase.us'; // used for links to narratives    
+    var feedUrl = 'http://yogi.lbl.gov/eprojectbuilder/misc/kbasefeed2.xml';
+
+    FeedLoad.fetch({q: feedUrl, num: 50}, {}, function (data) {
+        $scope.feed = data.responseData.feed;
+    });
+
+    
+    //$scope.narr = {};
+    //$scope.narr.title = "test title";
     
 
+
+    //to open the copy narrative dialog
+    $scope.copyNarrativeForm = function (title) {
+
+        //$scope.narr.title = title;
+
+        var modalInstance = $modal.open({
+          templateUrl: 'views/narrative/dialogboxes/copynarrative.html',
+          controller: CopyNarrativeModalCtrl,
+          resolve: {
+                narr: function () {
+                    return title;
+                    }
+                
+            }
+        });
+    };
 
     // callback for ng-click 'loginUser':
     $scope.loginUser = function (user) {
@@ -279,10 +306,43 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 })
 
+.controller('CopyNarrativeModalCtrl1', ['$scope', '$modalInstance', 'narr', function ($scope, $modalInstance, narr) {
+
+        $scope.narr = narr;
+        // callback for ng-click 'copy narrative':
+        $scope.copyNarrative = function () {
+            //console.log("got here " + $scope.narr);    
+        }
+    }])
+
+
+.controller('CopyNarrativeModalCtrl', function ($scope, $modalInstance) {
+/* controller for the modals to copy a featured narrative */
+  $scope.save = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+})
+
 .controller('NarrativeProjects', function($scope, $stateParams) {
     //changeNav('narrative', 'projects');
 
 })
+
+
+/* controller for the modals */
+var CopyNarrativeModalCtrl = function ($scope, $modalInstance, narr) {
+
+  $scope.narr = narr;
+console.log("dod yu get here?")
+        // callback for ng-click 'copy narrative':
+        $scope.copyNarrative = function () {
+            console.log("got here " + $scope.narr);    
+        }
+};
 
 
 

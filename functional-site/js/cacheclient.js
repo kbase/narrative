@@ -608,7 +608,8 @@ function projectapi() {
         var def_params = { callback : undefined,
 			   project_id : undefined, // numeric workspace id
 			   narrative_id : undefined, //numeric object id
-			   fq_id : undefined, // string of the form "ws.{numeric ws id}.obj.{numeric obj id}"
+			   fq_id : undefined, // string of the form "ws.{numeric ws id}.obj.{numeric obj id}",
+         callback: undefined,
 			   error_callback: error_handler };
         var p = $.extend( def_params, p_in);
 	if (p.fq_id != undefined) {

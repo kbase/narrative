@@ -108,7 +108,7 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 from IPython.display import display, HTML
 # Other KBase
 from biokbase.GWAS.Client import GWAS
-from biokbase.narrative.common.kbutil import AweJob, Workspace
+from biokbase.narrative.common.util import AweJob, Workspace2
 
 
 ## Exceptions
@@ -129,7 +129,7 @@ class URLS:
     shock = "http://140.221.84.236:8000"
     awe = "http://140.221.85.171:7080"
     expression = "http://{}:7075".format(_host)
-    workspace = "http://140.221.84.209:7058/"
+    #workspace = "http://140.221.84.209:7058/"
     ids = "http://kbase.us/services/idserver"
     cdmi = "http://kbase.us/services/cdmi_api"
     ontology = "http://kbase.us/services/ontology_service"
@@ -155,19 +155,34 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
     """Create Gwas Population object from an uploaded Population file in the workspace.
 
     :param GwasPopulation_file_id:workspace_object_id of the uploaded Population file
-    :type GwasPopulation_file_id: kbtypes.WorkspaceObjectId
-    :param output_population_object_name:population id that will appear in workspace  
-    :type output_population_object_name:kbtypes.WorkspaceObjectId
-    :param GwasPopulation_description:A brief description of the population  
-    :type GwasPopulation_description:kbtypes.Unicode
-    :param kbase_genome_id: kbase genome id of the genome  
-    :type kbase_genome_id: kbtypes.Genome
+    :type GwasPopulation_file_id: kbtypes.KBaseGwasData.GwasPopulation
+    :param output_population_object_name: Population id that will appear in workspace
+    :type output_population_object_name: kbtypes.Unicode
+    :param GwasPopulation_description: A brief description of the population
+    :type GwasPopulation_description: kbtypes.Unicode
+    :param kbase_genome_id: kbase genome id of the genome
+    :type kbase_genome_id: kbtypes.KBaseGenomes.Genome
     :default kbase_genome_id: kb|g.3899
-    :param comment: Comment 
-    :type comment:kbtypes.Unicode
-    :return: Number of jobs that were run
-    :rtype: kbtypes.Unicode
+    :param comment: Comment
+    :type comment: kbtypes.Unicode
+    :return: Created object (workspace id)
+    :rtype: kbtypes.KBaseGwasData.GwasPopulation
     """
+    # OLD
+    # :param GwasPopulation_file_id:workspace_object_id of the uploaded Population file
+    # :type GwasPopulation_file_id: kbtypes.WorkspaceObjectId
+    # :param output_population_object_name:population id that will appear in workspace
+    # :type output_population_object_name:kbtypes.WorkspaceObjectId
+    # :param GwasPopulation_description:A brief description of the population
+    # :type GwasPopulation_description:kbtypes.Unicode
+    # :param kbase_genome_id: kbase genome id of the genome
+    # :type kbase_genome_id: kbtypes.Genome
+    # :default kbase_genome_id: kb|g.3899
+    # :param comment: Comment
+    # :type comment:kbtypes.Unicode
+    # :return: Number of jobs that were run
+    # :rtype: kbtypes.Unicode
+
     meth.stages = 3
 
     meth.advance("init GWAS service")
@@ -365,7 +380,7 @@ def gwas_run_gwas2(meth,  genotype_obj_id=None,  kinship_obj_id=None, trait_obj_
         raise GWASException(2, "submit job failed, no job id")
 
     AweJob(meth, started="GWAS analysis using tassel", running="GWAS analysis using tassel").run(jid[0])
-    return _output_object('TopVariations' + trait_obj_id + pvalue_cutoff)
+    return _output_object('TopVariations' + trait_obj_id + '-' + pvalue_cutoff)
 
 
 @method(name="Trait Manhattan Plot")
@@ -415,14 +430,12 @@ def gwas_variation_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=None
         raise GWASException(2, "submit job failed, no job id")
 
     meth.advance("Creating object")
-    h= gwasObjectID + '.genelist' 
+    h= 'Genelist.' + gwasObjectID + '-' + pmin 
     return json.dumps({ 'output':  h })
 
 
 
-GENE_TABLE_OBJECT_TYPE = "GwasTopGenes"
-
-
+GENE_TABLE_OBJECT_TYPE = "KBaseGwasData.GwasGeneList"
 @method(name="Gene table")
 def gene_table(meth, workspace_id=None, obj_id=None):
     """Make a browsable table of gene data.
@@ -440,8 +453,8 @@ def gene_table(meth, workspace_id=None, obj_id=None):
     if not workspace_id:
         meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
         workspace_id = meth.workspace_id
-    ws = Workspace(url=URLS.workspace, token=meth.token, name=workspace_id)
-    raw_data = ws.get(obj_id, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
+    ws = Workspace2(token=meth.token, wsid=workspace_id)
+    raw_data = ws.get(obj_id) #, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
     genes = raw_data['data']['genes']
     header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"]
     data = {'table': [header] + genes}

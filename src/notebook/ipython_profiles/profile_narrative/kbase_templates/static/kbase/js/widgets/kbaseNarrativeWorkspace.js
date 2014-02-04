@@ -796,8 +796,6 @@
                     self = this,
                     result = "";
 
-                console.log("GOT STUFF FROM SERVER");
-                console.log(lines);
                 $.each(lines, function(index, line) {
                     if (!done) {
                         if (line.length == 0) {
@@ -863,8 +861,6 @@
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
-                    console.debug("GOT RESULT");
-                    console.debug(result);
                     this.createOutputCell(cell, result);
                 }
             }
@@ -932,7 +928,13 @@
             if (typeof result === 'string')
                 result = JSON.parse(result);
 
-            if (!result.embed) {
+            // If result.embed is false,
+            // or if the result doesn't have any data to put into a widget,
+            // don't make a widget! Assume that this will have thrown an error somewhere
+            // along the way.
+            //
+            // Note that an empty object is not null! So if result.data = {}, it'll still do something.
+            if (!result.embed || result.data === null || result.data === undefined) {
                 //do something.
                 return;
             }

@@ -12,9 +12,11 @@
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
-            fbaURL: "https://kbase.us/services/fba_model_services",
+            //fbaURL: "https://kbase.us/services/fba_model_services",
+            fbaURL: "http://140.221.84.183:7036",
         },
-        mediaType: "KBaseBiochem.Media",
+        mediaType: "KBaseBiochem.Media-1.0",
+        IGNORE_VERSION: false,
 
         init: function(options) {
             this._super(options);

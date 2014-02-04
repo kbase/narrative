@@ -140,17 +140,6 @@
                         var $input = $($(this.$elem).find("[name=" + pid + "]"));
                         var objList = [];
 
-                        // /*
-                        //  * Old sorting - alphabetically
-                        //  */
-                        // if (objects[p.type] && objects[p.type].length > 0) {
-                        //     objList = objects[p.type];
-                        //     objList.sort(function(a, b) {
-                        //         if (a[1] < b[1]) return -1;
-                        //         if (a[1] > b[1]) return 1;
-                        //         return 0;
-                        //     });
-                        // }
                         /*
                          * New sorting - by date, then alphabetically within dates.
                          */

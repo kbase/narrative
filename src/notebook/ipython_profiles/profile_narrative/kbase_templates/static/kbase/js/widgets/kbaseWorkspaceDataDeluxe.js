@@ -2,7 +2,7 @@
  * Widget to display a table of data objects from a kbase workspace.
  *
  * Options:
- *    ws_id - the name of the workspace to show in this widget
+ *    wsId - the name of the workspace to show in this widget
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    notLoggedInMsg - a string to put in the middle of the widget when not logged in.
  *
@@ -74,7 +74,7 @@
             $(document).on(
                 'workspaceQuery.Narrative', $.proxy(function(e, callback) {
                     if (callback) {
-                        callback(this.ws_id);
+                        callback(this.wsId);
                     }
                 }, 
                 this)

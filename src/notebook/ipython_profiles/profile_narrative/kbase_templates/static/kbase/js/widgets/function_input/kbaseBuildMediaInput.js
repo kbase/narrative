@@ -132,7 +132,9 @@
             this.$errorPanel.find("#error-accordion").kbaseAccordion({
                     elements: [{ 
                         title: "Error Details", 
-                        body: $("<pre>").addClass('kb-err-msg').append("ERROR'D!"),
+                        body: $("<pre>")
+                              .addClass('kb-err-msg')
+                              .append("ERROR'D!"),
                     }]
                 });
 
@@ -409,12 +411,19 @@
                 return "<tr><td><b>" + name + "</b></td><td>" + val + "</td></tr>";
             };
 
+            var esc = function(s) { 
+                return String(s).replace(/'/g, "&apos;")
+                                .replace(/"/g, "&quot;")
+                                .replace(/</g, "&gt;")
+                                .replace(/>/g, "&lt;");
+            };
+
             $( this.$errorPanel.find('table') ).empty()
-                                               .append(addRow('Status', error.status))
-                                               .append(addRow('Code', error.error.code))
-                                               .append(addRow('Name', error.error.name));
+                                               .append(addRow('Status', esc(error.status)))
+                                               .append(addRow('Code', esc(error.error.code)))
+                                               .append(addRow('Name', esc(error.error.name)));
             $( this.$errorPanel.find('.kb-err-msg') ).empty()
-                                                     .append(error.error.error);
+                                                     .append(esc(error.error.error));
 
             this.$errorPanel.show();
         }

@@ -68,12 +68,17 @@
         },
 
         render: function() {
-            console.debug("Narrative function error!");
-            console.debug(this.options.error);
-            // for now, just truncate the error to 300 characters.
-
             var addRow = function(name, value) {
                 return "<tr><td><b>" + name + "</b></td><td>" + value + "</td></tr>";
+            };
+
+            // Shamelessly lifted from kbaseNarrativeWorkspace.
+            // Thanks Dan!
+            var esc = function(s) { 
+                return s.replace(/'/g, "&apos;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/</g, "&gt;")
+                        .replace(/>/g, "&lt;");
             };
 
             var $errorHead = $('<div>')
@@ -83,9 +88,9 @@
             var $errorTable = $('<table>')
                               .addClass('table table-bordered')
                               .css({'margin-right':'auto', 'margin-left':'auto'})
-                              .append(addRow("Function", this.options.error.method_name))
-                              .append(addRow("Error Type", this.options.error.type))
-                              .append(addRow("Severity", this.options.error.severity));
+                              .append(addRow("Function", esc(this.options.error.method_name)))
+                              .append(addRow("Error Type", esc(this.options.error.type)))
+                              .append(addRow("Severity", esc(this.options.error.severity)));
 
             var $stackTraceAccordion = $('<div>');
 
@@ -100,7 +105,7 @@
                             title: 'Detailed Error Message',
                             body: $('<pre>')
                                   .addClass('kb-err-msg')
-                                  .append(this.options.error.msg),
+                                  .append(esc(this.options.error.msg)),
                         }
                     ]
                 }

@@ -153,7 +153,16 @@ def _submit_awe(wf):
 def _get_awe_job(jobid):
     req = urllib2.Request('%s/job/%s'%(URLS.awe, jobid))
     res = urllib2.urlopen(req)
-    return json.loads(res.read())
+    return json.loads(res.read())['data']
+
+def _get_awe_results(jobid, pause=60):
+    ajob = _get_awe_job(jobid)
+    while ajob['state'] != 'completed':
+        if ajob['state'] == 'suspend':
+            return None
+        time.sleep(pause)
+        ajob = _get_awe_job(jobid)
+    return ajob
 
 def _get_shock_data(nodeid, binary=False):
     token = os.environ['KB_AUTH_TOKEN']
@@ -202,25 +211,6 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': data})
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
-
-def _label_ws_meta(meta):
-    meta_keys = ['id', 'type', 'moddate', 'instance', 'command', 'lastmodifier', 'owner', 'workspace', 'ref', 'checksum']
-    return list(zip(meta_keys, meta))
-
-# replace mgids with group names
-def _relabel_cols(data, groups, pos):
-    grows, gcols, gdata = tab_to_matrix(groups)
-    rows = data.strip().split('\n')
-    head = rows[0].strip().split('\t')
-    gidx = int(pos) - 1
-    gmap = {}
-    for r, row in enumerate(gdata):
-        gmap[grows[r]] = row[gidx]
-    for i in range(len(head)):
-        if head[i] in gmap:
-            head[i] = gmap[head[i]]
-    rows[0] = "\t".join(head)
-    return "\n".join(rows)+"\n"
 
 @method(name="Retrieve Subsytems Annotation")
 def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, length, rest):
@@ -303,7 +293,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     return json.dumps({'header': text})
 
 @method(name="PICRUSt Predicted Abundance Profile")
-def _redo_annot(meth, workspace, in_seq, out_id):
+def _redo_annot(meth, workspace, in_seq, out_name):
     """Create a KEGG annotated functional abundance profile for 16S data in BIOM format using PICRUSt. The input OTUs are created by QIIME using a closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
 
     :param workspace: name of workspace, default is current
@@ -312,15 +302,15 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     :param in_seq: workspace ID of input sequence file
     :type in_seq: kbtypes.Communities.SequenceFile.v1_0
     :ui_name in_seq: Input Sequence
-    :param out_id: workspace ID of running AWE ID
-    :type out_id: kbtypes.Unicode
-    :ui_name out_id: Output ID
+    :param out_name: workspace ID of resulting BIOM profile
+    :type out_name: kbtypes.Unicode
+    :ui_name out_name: Output Name
     :return: PICRUSt Prediction Info
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
     """
     
-    meth.stages = 4
+    meth.stages = 5
     meth.advance("Processing inputs")
     # validate
     if not (in_seq and out_id):
@@ -339,16 +329,19 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_nid, param=param_nid)
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
-    job = _submit_awe(wf_str)
-    job_id = job['data']['id']
+    ajob = _submit_awe(wf_str)
     
-    meth.advance("Storing job in Workspace")
-    data = { 'name': out_id,
-             'created': time.strftime("%Y-%m-%d %H:%M:%S"),
-             'type': 'awe',
-             'ref': {'ID': job_id, 'URL': URLS.awe+'/job/'+job_id} }
-    text = "PICRUSt prediction of %s running under AWE job %s. Status available here: %s"%(in_seq, job_id, URLS.awe+'/job/'+job_id)
-    _put_ws(workspace, out_id, CWS.handle, ref=data)
+    meth.advance("Waiting on PICRUSt prediction of KEGG BIOM")
+    aresult = _get_awe_results(ajob['id'])
+    if not aresult:
+        return json.dumps({'header': 'ERROR: AWE error running PICRUSt'})
+    
+    meth.advance("Storing Profile BIOM in Workspace")
+    last_task = aresult['tasks'][-1]
+    name, info = last_task['outputs'].items()[0]
+    data = {'name': name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': _get_shock_data(info['node'])}
+    _put_ws(workspace, out_name, CWS.profile, data=data)
+    text = "Abundance Profile BIOM %s created for PICRUSt prediction of %s"%(out_name, in_seq)
     return json.dumps({'header': text})
 
 @method(name="Map KEGG annotation to Subsystems annotation")
@@ -965,69 +958,6 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     leg_rawpng = _get_invo(in_name+'.pcoa.png.legend.png', binary=True)
     leg_b64png = base64.b64encode(leg_rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': fig_b64png, 'legend': leg_b64png})
-
-@method(name="Retrieve AWE Results")
-def _redo_annot(meth, workspace, in_name, out_name, is_profile):
-    """Query an AWE job DataHandle and create a Shock DataHandle for the results.
-
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
-    :param in_name: workspace ID of AWE job handle
-    :type in_name: kbtypes.Communities.DataHandle.v1_0
-    :ui_name in_name: AWE Job
-    :param out_name: workspace ID of AWE results
-    :type out_name: kbtypes.Unicode
-    :ui_name out_name: Results
-    :param is_profile: results of AWE job is an abundance profile BIOM
-    :type is_profile: kbtypes.Unicode
-    :ui_name is_profile: Profile
-    :default is_profile: yes
-    :return: AWE Job Status
-    :rtype: kbtypes.Unicode
-    :output_widget: ImageViewWidget
-    """
-    
-    meth.stages = 3
-    meth.advance("Processing inputs")
-    # validate
-    if not in_name:
-        return json.dumps({'header': 'ERROR: missing input workspace ID'})
-    workspace = _get_wsname(meth, workspace)
-    # set defaults since unfilled options are empty strings
-    if is_profile == '':
-        is_profile = 'yes'
-    
-    meth.advance("Retrieve AWE Job Status")
-    aweref = _get_ws(workspace, in_name, CWS.handle)
-    awejob = _get_awe_job(aweref['ID'])
-    
-    # job not done or no output name
-    if (awejob['data']['state'] != 'completed') or (not out_name):
-        text = "AWE job %s is in state '%s'. %s"%(in_name, awejob['data']['state'], awejob['data']['notes'])
-        return json.dumps({'header': text})
-    
-    meth.advance("Storing in Workspace")
-    last_task = awejob['data']['tasks'][-1]
-    if is_profile.lower() == 'yes':
-        name, info = last_task['outputs'].items()[0]
-        data = { 'name': name,
-                 'created': time.strftime("%Y-%m-%d %H:%M:%S"),
-                 'type': 'biom',
-                 'data': _get_shock_data(info['node']) }
-        _put_ws(workspace, out_name, CWS.profile, data=data)
-        text = "Abundance Profile BIOM %s created for AWE job %s"%(out_name, in_name)
-    else:
-        out_num = len(last_task['outputs'].keys())
-        for name, info in last_task['outputs'].iteritems():
-            append = '' if out_num == 1 else '_'+name
-            data = { 'name': name,
-                     'created': time.strftime("%Y-%m-%d %H:%M:%S"),
-                     'type': 'shock',
-                     'ref': {'ID': info['node'], 'URL': info['host']+'/node/'+info['node']} }
-            _put_ws(workspace, out_name+append, CWS.handle, ref=data)
-        text = "Shock DataHandle%s created for AWE job %s"%('s' if out_num > 1 else '', in_name)
-    return json.dumps({'header': text})
 
 # Finalization
 finalize_service()

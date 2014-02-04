@@ -146,8 +146,66 @@ Types
 ^^^^^
 KBase data types are represented with classes in the `kbtypes` module.
 
+These classes are, currently, a mix of some "old" manual classes and "new" auto-generated
+classes. Narrative functions should try to use the new classes, because these match
+the actual names of the types in the workspace service. For instructions on how to update the
+auto-generated types, see :ref:`updating types`.
+
+
+You can recognize the new classes
+by the nesting of Module, Type, and Version as 3 classes. For example, the type
+MemePSPMCollection in module MEME, version 1.0 is represented like this::
+
+    class MEME(object):
+        """MEME module"""
+        class MemePSPMCollection(tls.Unicode, TypeMeta):
+            """MemePSPMCollection type"""
+            info_text = "MEME.MemePSPMCollection"
+            class v1_0(tls.Unicode, TypeMeta):
+                """Represents collection of MemePSPMs"""
+                info_text = "MEME.MemePSPMCollection-1.0"
+
+Notice that you can refer to the type in your narrative functions either with or
+without the version. For example, either of these would be possible::
+
+    (1) With the version
+
+    @method(name="Do Some Biology")
+    def dobiology(meth, meme_coll):
+        """Do some useful thing.
+
+        :param meme_coll: Input collection of MEME PSPM's
+        :type meme_coll: kbtypes.MEME.MemePSPMCollection.v1_0
+        """
+
+    (2) Without the version
+
+    @method(name="Do Some Biology")
+    def dobiology(meth, meme_coll):
+        """Do some useful thing.
+
+        :param meme_coll: Input collection of MEME PSPM's
+        :type meme_coll: kbtypes.MEME.MemePSPMCollection
+        """
+
+Utility types
+^^^^^^^^^^^^^
+
+.. class:: KBTypeError
+
+    Raised for any error instantiating or using a type.
+    This is really just an alias for the IPython 'traitlets' exception class, `TraitError`.
+
+KBase workspace types
+^^^^^^^^^^^^^^^^^^^^^
+
 .. automodule:: biokbase.narrative.common.kbtypes
     :members:
+    :exclude-members: TypeMeta, JsonTraits, VersionNumber, Numeric, Integer, Unicode, List, WorkspaceObjectId,
+                      VariationDataProperties, VariationDataset, KBaseGenome1, KBaseGenome3, KBaseGenomesContigSet1,
+                      KBaseBiochem_Media, KBaseFBA_FBAModel, KBaseFBA_FBA, Genome, Media, Model, ContigSet, FBAResult,
+                      FBA, Gapfill, PhenotypeSet, PhenotypeSimulationSet, ProteomeComparison, Regenerator, KBTypeError
+
 
 .. _exceptions-api:
 

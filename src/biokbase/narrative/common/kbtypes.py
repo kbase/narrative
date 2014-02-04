@@ -220,3 +220,51 @@ class PhenotypeSimulationSet(tls.Unicode, TypeMeta):
 
 class ProteomeComparison(tls.Unicode, TypeMeta):
     info_text = "Proteome comparison result"
+
+######### Communities Narrative ###########
+
+# Override __str__ to get a fully qualified type name.
+class CommunitiesSequenceFile(tls.Unicode, TypeMeta):
+    info_text = "Communities.SequenceFile-1.0"
+    def __str__(self):
+        return "Communities.SequenceFile-1.0"
+
+class CommunitiesProject(tls.Unicode, TypeMeta):
+    info_text = "Communities.Project-1.0"
+    def __str__(self):
+        return "Communities.Project-1.0"
+
+class CommunitiesMetagenome(tls.Unicode, TypeMeta):
+    info_text = "Communities.Metagenome-1.0"
+    def __str__(self):
+        return "Communities.Metagenome-1.0"
+
+class CommunitiesCollection(tls.Unicode, TypeMeta):
+    info_text = "Communities.Collection-1.0"
+    def __str__(self):
+        return "Communities.Collection-1.0"
+
+class CommunitiesProfile(tls.Unicode, TypeMeta):
+    info_text = "Communities.Profile-1.0"
+    def __str__(self):
+        return "Communities.Profile-1.0"
+
+class CommunitiesProfileTable(tls.Unicode, TypeMeta):
+    info_text = "Communities.ProfileTable-1.0"
+    def __str__(self):
+        return "Communities.ProfileTable-1.0"
+
+class CommunitiesProfileStats(tls.Unicode, TypeMeta):
+    info_text = "Communities.ProfileStats-1.0"
+    def __str__(self):
+        return "Communities.ProfileStats-1.0"
+
+class CommunitiesData(tls.Unicode, TypeMeta):
+    info_text = "Communities.Data-1.0"
+    def __str__(self):
+        return "Communities.Data-1.0"
+
+class CommunitiesDataHandle(tls.Unicode, TypeMeta):
+    info_text = "Communities.DataHandle-1.0"
+    def __str__(self):
+        return "Communities.DataHandle-1.0"

@@ -415,12 +415,12 @@ def gwas_variation_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=None
         raise GWASException(2, "submit job failed, no job id")
 
     meth.advance("Creating object")
-    h= gwasObjectID + '.genelist' 
+    h= 'Genelist.' + gwasObjectID + '-' + pmin 
     return json.dumps({ 'output':  h })
 
 
 
-GENE_TABLE_OBJECT_TYPE = "GwasGeneList"
+GENE_TABLE_OBJECT_TYPE = "KBaseGwasData.GwasGeneList"
 @method(name="Gene table")
 def gene_table(meth, workspace_id=None, obj_id=None):
     """Make a browsable table of gene data.

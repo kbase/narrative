@@ -53,7 +53,11 @@
     <div id="newsfeed_column" class="col-sm-9" ui-view>
         <div id="newsfeed_inner" >
             <div id="feed_section" >
-                <h2 class="small">Featured Narratives <span class="glyphicon glyphicon-question-sign narrative-help" style="color: #0088CC; font-size: 16px; padding-left: 5px"></span></h2>
+                <div style="overflow: auto;"><h2 class="small pull-left">Featured Narratives </h2><span class="glyphicon glyphicon-question-sign pull-left" style="color: #0088CC; font-size: 16px; padding-left: 5px"
+                popover="Featured Narratives are exemplar narratives that demonstrate the types of analyses you can build in the user interface. Click on the title to view the narrative or click the copy narrative link to copy the narrative and its datasets to your home workspace." 
+                popover-trigger="mouseenter"
+                popover-placement="bottom" 
+                    ></span></div>
                 <div class="newsfeed_section">
                         
                     <div  class="narr-featured-narrative"  ng-repeat="narr in feed.entries" >

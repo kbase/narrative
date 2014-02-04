@@ -87,6 +87,28 @@ angular.module('narrative-directives')
 
         };
     })
+    .directive('featurednarratives', function($location, FeedLoad) {
+        return {
+            link: function(scope, element, attrs) {
+
+                var feedUrl = 'http://yogi.lbl.gov/eprojectbuilder/misc/kbasefeed2.xml';
+
+                FeedLoad.fetch({q: feedUrl, num: 50}, {}, function (data) {
+                    feed = data.responseData.feed;
+                    
+                    for (var i=0; i < feed.entries.length; i++) {
+                        $(element).append(
+                            "<div class=\"narr-featured-narrative\">" +
+                            feed.entries[i].content +
+                            "</div>"
+                        );
+                    }
+                });
+
+            }
+
+        };
+    })   
 
     .directive('projectlist', function($location) {
         return {

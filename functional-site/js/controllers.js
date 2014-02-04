@@ -222,16 +222,10 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 
-.controller('Narrative', function($scope, $stateParams, $location, kbaseLogin, FeedLoad) {
+.controller('Narrative', function($scope, $stateParams, $location, kbaseLogin) {
     //changeNav('narrative', 'newsfeed');
     $scope.nar_url = 'http://narrative.kbase.us'; // used for links to narratives
-    var feedUrl = 'http://yogi.lbl.gov/eprojectbuilder/misc/kbasefeed2.xml';
-
-    FeedLoad.fetch({q: feedUrl, num: 50}, {}, function (data) {
-            $scope.feed = data.responseData.feed;
-            console.log("feed");
-            console.log($scope.feed);
-        });
+    
 
     // callback for ng-click 'loginUser':
     $scope.loginUser = function (user) {

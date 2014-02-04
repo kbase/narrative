@@ -8,7 +8,7 @@
 */
 
 
-angular.module('narrative-directives', []);
+var narrativeDirectives = angular.module('narrative-directives', []);
 angular.module('narrative-directives')
     .directive('recentnarratives', function($location) {
         return {
@@ -87,35 +87,7 @@ angular.module('narrative-directives')
 
         };
     })
-    .directive('copyfiles', function($location) {
-        return {
-            
-            link: function(scope, element, attrs) {
 
-                console.log('calling copy files');
-                var deps = project.get_narrative_deps({
-                    fq_id: "ws.643.obj.13",
-                    callback: function(results) {
-                        
-                        $(element).append("<tr><td>" + results.name + "</td><td>Narrative</td></tr>");
-                        for (dep in results.deps) {
-                            $(element).append("<tr><td>" + results.deps[dep].name + "</td><td>" + results.deps[dep].type + "</td></tr>");
-                        }
-                    },
-                    error_callback: function() {
-                        console.log("error occurred");
-                    }
-                })
-
-                
-                
-
-            } 
-
-
-
-        };
-    })   
 
     .directive('projectlist', function($location) {
         return {
@@ -908,3 +880,40 @@ function formateDate(timestamp) {
 
 var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
                      4:'Thurs', 5:'Fri', 6: 'Sat'}
+
+
+
+narrativeDirectives.directive('copyfiles', function($parse) {
+        return  {
+            scope: {
+                narr: '='
+            },
+            link: function(scope, element, attrs) {
+                attrs.$observe('narr', function(val) {
+                      
+                });                
+
+                var deps = project.get_narrative_deps({
+                    fq_id: scope.narr,
+                    callback: function(results) {
+                        
+                        $(element).append("<tr><td>" + results.name + "</td><td>Narrative</td></tr>");
+                        for (dep in results.deps) {
+                            $(element).append("<tr><td>" + results.deps[dep].name + "</td><td>" + results.deps[dep].type + "</td></tr>");
+                        }
+                    },
+                    error_callback: function() {
+                        console.log("error occurred");
+                    }
+                })
+
+                
+                
+
+            } 
+
+
+
+        };
+    })   
+

@@ -336,12 +336,25 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 /* controller for the modals */
 var CopyNarrativeModalCtrl = function ($scope, $modalInstance, narr) {
 
-  $scope.narr = narr;
-console.log("dod yu get here?")
-        // callback for ng-click 'copy narrative':
-        $scope.copyNarrative = function () {
-            console.log("got here " + $scope.narr);    
-        }
+    $scope.narr = narr;
+    // callback for ng-click 'copy narrative':
+    $scope.copyNarrative = function () {
+        console.log("got here " + $scope.narr);  
+        project.copy_narrative({
+            fq_id: $scope.narr,
+            callback: function(results) {
+                
+                console.log("copied narrative");
+                $modalInstance.dismiss();
+            },
+            error_callback: function() {
+                console.log("error occurred");
+            }
+        })
+    }
+    $scope.cancel = function () {
+        $modalInstance.dismiss('cancel');
+    };
 };
 
 

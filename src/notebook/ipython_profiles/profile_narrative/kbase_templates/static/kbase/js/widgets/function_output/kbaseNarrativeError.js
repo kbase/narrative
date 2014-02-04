@@ -98,7 +98,9 @@
                     elements: [
                         {
                             title: 'Detailed Error Message',
-                            body: $('<pre>').append(this.options.error.msg),
+                            body: $('<pre>')
+                                  .addClass('kb-err-msg')
+                                  .append(this.options.error.msg),
                         }
                     ]
                 }

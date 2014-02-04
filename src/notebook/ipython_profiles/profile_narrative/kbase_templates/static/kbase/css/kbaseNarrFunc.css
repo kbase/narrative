@@ -245,6 +245,9 @@
     display: inline;
 }
 
+.kb-err-msg {
+    font-size: 80% !important;
+}
 
 .kb-out-header {
     background-color: #ddd;

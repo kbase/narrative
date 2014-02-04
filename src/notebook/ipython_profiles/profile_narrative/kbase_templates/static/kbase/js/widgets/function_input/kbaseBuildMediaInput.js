@@ -88,7 +88,7 @@
                                         $fetchMediaDiv.find("img").show();
                                         $fetchMediaDiv.find("button.btn-danger").hide();
                                         this.fbaClient.get_media({
-                                                auth: null, //this.authToken(),
+                                                auth: this.authToken(),
                                                 medias: [mediaName],
                                                 workspaces: [this.wsId],
                                             },
@@ -132,7 +132,7 @@
             this.$errorPanel.find("#error-accordion").kbaseAccordion({
                     elements: [{ 
                         title: "Error Details", 
-                        body: $("<pre>").addClass('kb-error-message').append("ERROR'D!"),
+                        body: $("<pre>").addClass('kb-err-msg').append("ERROR'D!"),
                     }]
                 });
 
@@ -413,8 +413,8 @@
                                                .append(addRow('Status', error.status))
                                                .append(addRow('Code', error.error.code))
                                                .append(addRow('Name', error.error.name));
-            $( this.$errorPanel.find('.kb-error-message') ).empty()
-                                                        .append(error.error.error);
+            $( this.$errorPanel.find('.kb-err-msg') ).empty()
+                                                     .append(error.error.error);
 
             this.$errorPanel.show();
         }

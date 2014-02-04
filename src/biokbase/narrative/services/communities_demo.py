@@ -143,20 +143,12 @@ def _get_wsname(meth, ws):
         return default_ws
 
 def _submit_awe(wf):
-    tmpfile = 'awewf.json'
-    with open(tmpfile, 'w') as f:
-        f.write(wf)
-    response = cStringIO.StringIO()
-    headers = ['Content-Type: multipart/form-data', 'Datatoken: %s'%os.environ['KB_AUTH_TOKEN']]
-    c = pycurl.Curl()
-    c.setopt(c.POST, 1)
-    c.setopt(c.URL, URLS.awe+"/job")
-    c.setopt(c.HTTPPOST, [("upload", (c.FORM_FILE, tmpfile))])
-    c.setopt(c.HTTPHEADER, headers)
-    c.setopt(c.WRITEFUNCTION, response.write)
-    c.perform()
-    c.close()
-    return json.loads(response.getvalue())
+    headers = {'Content-Type': 'multipart/form-data', 'Datatoken': os.environ['KB_AUTH_TOKEN']}
+    files = {'upload': ('awe_workflow', cStringIO.StringIO(wf))}
+    url = URLS.awe+"/job"
+    req = requests.post(url, headers=self.auth_header, files=files, allow_redirects=True)
+    res = req.json()
+    return res['data']
     
 def _get_awe_job(jobid):
     req = urllib2.Request('%s/job/%s'%(URLS.awe, jobid))

@@ -13,7 +13,7 @@ import base64
 import urllib
 import urllib2
 import cStringIO
-import pycurl
+import requests
 from string import Template
 from collections import defaultdict
 # Local
@@ -163,13 +163,10 @@ def _get_awe_job(jobid):
     res = urllib2.urlopen(req)
     return json.loads(res.read())
 
-def _get_shock_data(nodeid):
-    token  = os.environ['KB_AUTH_TOKEN']
-    header = {'Accept': 'application/json', 'Authorization': 'OAuth %s'%token}
-    url = '%s/node/%s?download'%(URLS.shock, nodeid)
-    req = urllib2.Request(url, headers=header)
-    res = urllib2.urlopen(req)
-    return res.read()
+def _get_shock_data(nodeid, binary=False):
+    token = os.environ['KB_AUTH_TOKEN']
+    shock = shockService(URLS.shock, token)
+    return shock.download_to_string(nodeid, binary=binary)
 
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
@@ -177,12 +174,12 @@ def _run_invo(cmd):
     stdout, stderr = invo.run_pipeline("", cmd, [], 100000, '/')
     return "".join(stdout), "".join(stderr)
 
-def _get_invo(name):
+def _get_invo(name, binary=False):
     # upload from invo server
     stdout, stderr = _run_invo("mg-upload2shock %s %s"%(URLS.shock, name))
     node = json.loads(stdout)
     # get file content from shock
-    return _get_shock_data(node['id'])
+    return _get_shock_data(node['id'], binary=binary)
 
 def _put_invo(name, data):
     token = os.environ['KB_AUTH_TOKEN']
@@ -306,7 +303,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
         return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
-    anno = _get_invo(out_name)
+    anno = _get_invo(out_name, binary=False)
     rows = len(anno.strip().split('\n')) - 1
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': anno}
     text = "Annotation sets for the %s %s from SEED/Subsystems were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d)."%('top '+str(top) if int(top) > 0 else 'merged', level, out_name, int(evalue), int(identity), int(length))
@@ -404,7 +401,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
         return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
-    anno = _get_invo(out_name)
+    anno = _get_invo(out_name, binary=False)
     rows = len(anno.strip().split('\n')) - 1
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': anno}
     text = "Annotation set %s from SEED/Subsystems was created from KEGG abundance profile BIOM %s."%(out_name, in_name)
@@ -838,7 +835,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     
     meth.advance("Displaying Boxplot")
     text = 'Boxplot was produced for abundance profile %s.'%in_name
-    rawpng = _get_invo(in_name+'.boxplot.png')
+    rawpng = _get_invo(in_name+'.boxplot.png', binary=True)
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})
 
@@ -912,7 +909,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     
     meth.advance("Displaying Heatmap")
     text = "A heatmap-dendrogram was produced from the abundance profile %s. The %s distance/dissimilarity was used to compute distances and %s was used to cluster the data. Rows (annotations) were sorted; columns were%s sorted."%(in_name, distance, cluster, '' if order.lower() == 'yes' else ' not')
-    rawpng = _get_invo(in_name+'.heatmap.png')
+    rawpng = _get_invo(in_name+'.heatmap.png', binary=True)
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
@@ -971,9 +968,9 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     text = "A %s dimensional PCoA calculated from %s distance/dissimilarity was created from %s."%('three' if three.lower() == 'yes' else 'two', distance, in_name)
     if groups:
         text += " Samples were colored by groups in position %d of the %s groups table."%(int(gpos), groups)
-    fig_rawpng = _get_invo(in_name+'.pcoa.png')
+    fig_rawpng = _get_invo(in_name+'.pcoa.png', binary=True)
     fig_b64png = base64.b64encode(fig_rawpng)
-    leg_rawpng = _get_invo(in_name+'.pcoa.png.legend.png')
+    leg_rawpng = _get_invo(in_name+'.pcoa.png.legend.png', binary=True)
     leg_b64png = base64.b64encode(leg_rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': fig_b64png, 'legend': leg_b64png})
 

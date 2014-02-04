@@ -22,6 +22,7 @@ from biokbase.narrative.common import kbtypes
 #from biokbase.workspaceService.Client import workspaceService
 from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
 from biokbase.InvocationService.Client import InvocationService
+from biokbase.shock import Client as shockService
 from biokbase.mglib import tab_to_matrix
 
 ## Globals

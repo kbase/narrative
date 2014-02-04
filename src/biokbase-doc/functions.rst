@@ -188,12 +188,23 @@ without the version. For example, either of these would be possible::
         :type meme_coll: kbtypes.MEME.MemePSPMCollection
         """
 
-Most of the types documented below are the 'new' types.
+Utility types
+^^^^^^^^^^^^^
 
+.. class:: KBTypeError
+
+    Raised for any error instantiating or using a type.
+    This is really just an alias for the IPython 'traitlets' exception class, `TraitError`.
+
+KBase workspace types
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: biokbase.narrative.common.kbtypes
     :members:
-    :exclude-members: TypeMeta, JsonTraits, VersionNumber, Numeric, Integer, Unicode, List, WorkspaceObjectId, VariationDataProperties, VariationDataset, KBaseGenome1, KBaseGenome3, KBaseGenomesContigSet1, KBaseBiochem_Media, KBaseFBA_FBAModel, KBaseFBA_FBA, Genome, Media, Model, ContigSet, FBAResult, FBA, Gapfill, PhenotypeSet, PhenotypeSimulationSet, ProteomeComparison, Regenerator
+    :exclude-members: TypeMeta, JsonTraits, VersionNumber, Numeric, Integer, Unicode, List, WorkspaceObjectId,
+                      VariationDataProperties, VariationDataset, KBaseGenome1, KBaseGenome3, KBaseGenomesContigSet1,
+                      KBaseBiochem_Media, KBaseFBA_FBAModel, KBaseFBA_FBA, Genome, Media, Model, ContigSet, FBAResult,
+                      FBA, Gapfill, PhenotypeSet, PhenotypeSimulationSet, ProteomeComparison, Regenerator, KBTypeError
 
 
 .. _exceptions-api:

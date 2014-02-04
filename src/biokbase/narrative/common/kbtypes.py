@@ -1,6 +1,7 @@
-"""
-KBase data types
-"""
+
+# KBase data types
+# (no docstring because this module is autodoc-ed).
+
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 __date__ = '11/15/13'
 
@@ -10,6 +11,7 @@ import re
 # Third-party
 from IPython.utils.traitlets import HasTraits, TraitType, TraitError
 from IPython.utils import traitlets as tls
+
 
 class TypeMeta(object):
     """Mix-in so type metadata is easy to access and use.

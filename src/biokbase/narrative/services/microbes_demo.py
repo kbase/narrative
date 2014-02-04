@@ -202,11 +202,11 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     """Given an annotated Genome, build a draft flux balance analysis model. [6]
 
     :param genome_id: Source genome name [6.1]
-    :type genome_id: kbtypes.KBaseGenome3
+    :type genome_id: kbtypes.KBaseGenomes.Genome.v1_0
     :ui_name genome_id: Genome Name
     
     :param fba_model_id: select a name for the generated FBA Model (optional) [6.2]
-    :type fba_model_id: kbtypes.KBaseFBA_FBAModel
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel.v2_0
     :ui_name fba_model_id: Output FBA Model Name
     
     :return: Generated FBA Model ID
@@ -233,14 +233,13 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     meth.advance("Building your new FBA model")
     
     #grab token and workspace info, setup the client
-    token, workspaceName = meth.token, meth.workspace_id
-    fbaClient = fbaModelServices(service.URLS.fba)
+    userToken, workspaceName = meth.token, meth.workspace_id
+    fbaClient = fbaModelServices(service.URLS.fba,token=userToken)
     
     # create the model object
     build_fba_params = {
         'genome': genome_id,
-        'workspace': workspaceName,
-        'auth': token,
+        'workspace': workspaceName
     }
     if fba_model_id:
         fba_model_id = fba_model_id.strip()
@@ -253,42 +252,19 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
         
     # other options that are not exposed
      #selecting a model template
-    
     fba_meta_data = fbaClient.genome_to_fbamodel(build_fba_params)
     model_wsobj_id = fba_meta_data[0]
     model_name = fba_meta_data[1]
     
-    # fetch via fba client
+    # fetch the model via fba client
     meth.advance("Fetching your new FBA model details")
     fbaClient = fbaModelServices(service.URLS.fba)
     get_models_params = {
         'models' : [model_name],
-          'workspaces' : [workspaceName],
-          'auth' : token
+          'workspaces' : [workspaceName]
     }
     modeldata = fbaClient.get_models(get_models_params)
     return json.dumps({'id': model_name, 'ws': workspaceName, 'modelsData': modeldata})
-    
-    #fetch the object so we can display something useful about it
-    #wsClient  = workspaceService(service.URLS.workspace)
-    #objdata = wsClient.get_objects([{'ref':workspaceName+'/'+model_wsobj_id}])
-    #fbaModel = objdata[0]['data']
-    #meth.debug(json.dumps(fbaModel['modelreactions']))
-    #
-    ## compute the number of genes- crazy, i know!  is this actually correct?
-    #n_features_mapped = 0
-    #for rxns in fbaModel['modelreactions'] :
-    #    for prots in rxns['modelReactionProteins'] :
-    #        for subunits in prots['modelReactionProteinSubunits']:
-    #            n_features_mapped += len(subunits['feature_refs'])
-    #
-    #return json.dumps({"data":{
-    #                         'name': model_name,
-    #                         'number_genes':n_features_mapped,
-    #                         'number_reactions':len(fbaModel['modelreactions']),
-    #                         'number_compounds':len(fbaModel['modelcompounds']),
-    #                         'number_compartments':len(fbaModel['modelcompartments'])
-    #                    }})
 
 
 @method(name="View FBA Model Details")

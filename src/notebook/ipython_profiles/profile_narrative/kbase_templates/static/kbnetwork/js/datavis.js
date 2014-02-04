@@ -37450,6 +37450,8 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
             }
             return false;
         }
+        var hub_x = 120;
+        var hub_y = 120;
         
         function update() {
             filterCache = {};
@@ -37499,6 +37501,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
                     self.emit("dblclick-node", [d, this]);
                 })
                 .on("mouseover", function (d) {
+//                  var thisobj = JSON.stringify(d);
                     self.emit("mouseover-node", [d, this]);
                 })
                 .on("mousedown", function (d) {
@@ -37544,8 +37547,8 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
 
         var originalFill,
             hud = new HUD({
-                position: { bottom: 20, left: 20 },
-                width: 300,
+                position: { bottom: 300, left: 300 },
+                width: 500,
                 title: "Node Properties",
                 z: 2000
             });
@@ -37597,7 +37600,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
             if (options.nodeInfo === undefined) {
                 row("Name", d.name);
                 row("Type", d.type);
-                row("KBase ID", d.entityId);
+                row("KBase ID", d.entity_id);
                 row("Neighbors", self.neighbors(d).length);
             } else {
                 options.nodeInfo(d, row);
@@ -43604,8 +43607,8 @@ function (JQ, _, template) {
 KBVis.define('transformers/netindex',["underscore"], function (_) {
     
     var defaults = {
-        maxNodes: 500,
-        maxEdges: 2000,
+        maxNodes: 50000,
+        maxEdges: 100000,
         nodeFilter: function () { return true; },
         edgeFilter: function () { return true; }
     };
@@ -43638,13 +43641,13 @@ KBVis.define('transformers/netindex',["underscore"], function (_) {
         }
         i = 0;
         while (result.edges.length < numEdges && i < data.edges.length) {
-            if (nodeMap[data.edges[i].nodeId1] !== undefined &&
-                nodeMap[data.edges[i].nodeId2] !== undefined &&
+            if (nodeMap[data.edges[i].node_id1] !== undefined &&
+                nodeMap[data.edges[i].node_id2] !== undefined &&
                 options.edgeFilter(data.edges[i])
             ) {
                 var edge = _.extend({}, data.edges[i]);
-                edge.source = parseInt(nodeMap[edge.nodeId1], 0);
-                edge.target = parseInt(nodeMap[edge.nodeId2], 0);
+                edge.source = parseInt(nodeMap[edge.node_id1], 0);
+                edge.target = parseInt(nodeMap[edge.node_id2], 0);
                 edge.weight = 1;
                 result.edges.push(edge);
             }

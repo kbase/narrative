@@ -1,1 +1,1 @@
-__all__ = ['microbes_demo', 'plants_gwas', 'communities_demo']
+__all__ = ['microbes_demo', 'plants_gwas', 'widget_wrapper', 'communities_demo']

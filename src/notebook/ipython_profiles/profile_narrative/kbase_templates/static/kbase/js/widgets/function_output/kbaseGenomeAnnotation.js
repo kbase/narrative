@@ -1,18 +1,3 @@
-var geneClickListener = null;
-var contigClickListener = null;
-
-function onGeneClick(data) {
-	if (geneClickListener != null)
-		geneClickListener(data);
-}
-
-function onContigClick(data) {
-	if (contigClickListener != null)
-		contigClickListener(data);
-}
-
-var timer = null;
-
 (function( $, undefined ) {
     $.KBWidget({
         name: "GenomeAnnotation",
@@ -29,6 +14,7 @@ var timer = null;
             job_id: null
         },
         jobSrvUrl: "https://kbase.us/services/userandjobstate/",
+        timer: null,
 
         init: function(options) {
             this._super(options);
@@ -102,10 +88,14 @@ var timer = null;
             	var geneMap = {};
             	var contigMap = {};
             	
-            	geneClickListener = function(aHref) {
-            		showGene($(aHref).data('geneid'));
-            	};
-            	
+                function geneEvents() {
+                    $('.'+pref+'gene-click').unbind('click');
+                    $('.'+pref+'gene-click').click(function() {
+                        var geneId = [$(this).data('geneid')];
+                        showGene(geneId);
+                    });            
+                }
+
             	for (var genePos in gnm.features) {
             		var gene = gnm.features[genePos];
             		var geneId = gene.id;
@@ -123,7 +113,7 @@ var timer = null;
             		var geneFunc = gene['function'];
             		if (!geneFunc)
             			geneFunc = '-';
-            		genesData[genesData.length] = {id: '<a onclick="onGeneClick(this); return false;" data-geneid="'+geneId+'">'+geneId+'</a>', 
+            		genesData[genesData.length] = {id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>', 
             				contig: contigName, start: geneStart, dir: geneDir, len: geneLen, type: geneType, func: geneFunc};
             		geneMap[geneId] = gene;
             		var contig = contigMap[contigName];
@@ -155,7 +145,8 @@ var timer = null;
                         "oLanguage": {
                             "sSearch": "Search gene:",
                             "sEmptyTable": "No genes found."
-                        }
+                        },
+                        "fnDrawCallback": geneEvents
                     };
                 var genesTable = $('#'+pref+'genes-table').dataTable(genesSettings);
                 genesTable.fnAddData(genesData);
@@ -165,13 +156,17 @@ var timer = null;
                 		class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
             	var contigsData = [];
             	
-            	contigClickListener = function(aHref) {
-            		showContig($(aHref).data('contigname'));
-            	};
+                function contigEvents() {
+                    $('.'+pref+'contig-click').unbind('click');
+                    $('.'+pref+'contig-click').click(function() {
+                        var contigId = [$(this).data('contigname')];
+                        showContig(contigId);
+                    });            
+                }
 
             	for (var key in contigMap) {
             		var contig = contigMap[key];
-            		contigsData.push({name: '<a onclick="onContigClick(this); return false;" data-contigname="'+contig.name+'">'+contig.name+'</a>', 
+            		contigsData.push({name: '<a class="'+pref+'contig-click" data-contigname="'+contig.name+'">'+contig.name+'</a>', 
             				length: contig.length, genecount: contig.genes.length});
             		
             	}
@@ -187,7 +182,8 @@ var timer = null;
                         "oLanguage": {
                             "sSearch": "Search contig:",
                             "sEmptyTable": "No contigs found."
-                        }
+                        },
+                        "fnDrawCallback": contigEvents
                     };
                 var contigsTable = $('#'+pref+'contigs-table').dataTable(contigsSettings);
                 contigsTable.fnAddData(contigsData);
@@ -227,15 +223,21 @@ var timer = null;
             		}
             		var geneType = gene.type;
             		var geneFunc = gene['function'];
+            		var geneAnn = '';
+            		if (gene['annotations'])
+            			geneAnn = gene['annotations'];
                 	$('#'+tabId).append('<table class="table table-striped table-bordered" \
                             style="margin-left: auto; margin-right: auto;" id="'+tabId+'-table"/>');
-                	var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function"];
-                	var elemData = [geneId, '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc];
+                	var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
+                	var elemData = [geneId, '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
                     var elemTable = $('#'+tabId+'-table');
                     for (var i=0; i<elemData.length; i++) {
                     	if (elemLabels[i] === 'Function') {
                         	elemTable.append('<tr><td>' + elemLabels[i] + '</td> \
-                        			<td><textarea style="width:100%;" cols="2" rows="5" readonly>'+elemData[i]+'</textarea></td></tr>');
+                        			<td><textarea style="width:100%;" cols="2" rows="3" readonly>'+elemData[i]+'</textarea></td></tr>');
+                    	} else if (elemLabels[i] === 'Annotations') {
+                    		elemTable.append('<tr><td>' + elemLabels[i] + '</td> \
+                    				<td><textarea style="width:100%;" cols="2" rows="3" readonly>'+elemData[i]+'</textarea></td></tr>');
                     	} else {
                     		elemTable.append('<tr><td>'+elemLabels[i]+'</td> \
                     				<td>'+elemData[i]+'</td></tr>');
@@ -314,18 +316,18 @@ var timer = null;
         				var tdElem = $('#'+pref+'job');
         				tdElem.html(status);
             			if (complete === 1) {
-            				clearInterval(timer);
+            				clearInterval(self.timer);
             				if (wasError === 0) {
                 				ready();
             				}
             			}
             		}, function(data) {
-        				clearInterval(timer);
+        				clearInterval(self.timer);
         				var tdElem = $('#'+pref+'job');
         				tdElem.html("Error accessing job status: " + data.error.message);
             		});
             	};
-            	timer = setInterval(timeLst, 5000);
+            	self.timer = setInterval(timeLst, 5000);
             	timeLst();
             } else {
             	ready();

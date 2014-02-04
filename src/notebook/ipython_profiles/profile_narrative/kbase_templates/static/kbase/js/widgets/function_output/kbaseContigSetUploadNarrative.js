@@ -28,6 +28,7 @@ $.KBWidget({
     	var pref = (new Date()).getTime();
         var kbws = new Workspace(this.wsUrl, {'token': self.token});
     	var panel = $('<div>'+
+    			'Contig Set Target ID: ' + self.contig_set + '<br><br>' +
     			'<form id="'+pref+'form" action="' + self.uploadUrl + '" enctype="multipart/form-data" method="post" target="'+pref+'hidden-iframe">'+
     			'<input type="hidden" name="token" value="' + self.token + '">'+
     			'<input type="hidden" name="ws" value="' + self.ws_name + '">'+

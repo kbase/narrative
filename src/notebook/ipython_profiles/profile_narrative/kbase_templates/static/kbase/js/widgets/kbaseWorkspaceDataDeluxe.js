@@ -2,7 +2,7 @@
  * Widget to display a table of data objects from a kbase workspace.
  *
  * Options:
- *    ws_id - the name of the workspace to show in this widget
+ *    wsId - the name of the workspace to show in this widget
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    notLoggedInMsg - a string to put in the middle of the widget when not logged in.
  *
@@ -48,8 +48,8 @@
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
             $(document).on(
-                'dataLoadedQuery.Narrative', $.proxy(function(e, params, callback) {
-                    var objList = this.getLoadedData(params);
+                'dataLoadedQuery.Narrative', $.proxy(function(e, params, ignoreVersion, callback) {
+                    var objList = this.getLoadedData(params, ignoreVersion);
                     if (callback) {
                         callback(objList);
                     }
@@ -74,7 +74,7 @@
             $(document).on(
                 'workspaceQuery.Narrative', $.proxy(function(e, callback) {
                     if (callback) {
-                        callback(this.ws_id);
+                        callback(this.wsId);
                     }
                 }, 
                 this)
@@ -86,7 +86,6 @@
              */
             $(document).on(
                 'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
-                    console.log('invoked dataInfoClicked.Narrative on ' + workspace + ' ' + id);
                     this.showInfoModal(workspace, id);
                 }, 
                 this)
@@ -604,7 +603,11 @@
          * }
          * @returns a list of data objects
          */
-        getLoadedData: function(type) {
+        getLoadedData: function(type, ignoreVersion) {
+            console.log("kbaseWorkspaceDataDeluxe.getLoadedData start");
+            console.log(type);
+            console.log(ignoreVersion);
+
             if (!type || type.length === 0)
                 return this.loadedData;
 
@@ -615,11 +618,37 @@
             if (Object.prototype.toString.call(type) === '[object Array]') {
                 for (var i=0; i<type.length; i++) {
                     var dataType = type[i];
-                    if (this.loadedData[dataType])
-                        dataSet[dataType] = this.loadedData[dataType];
+
+                    // If we're ignoring the version, strip the version off
+                    // the end of the query data type
+                    if (ignoreVersion) {
+                        var unversionType = /(\S+)-\d+\.\d+/.exec(dataType);
+
+                        if (unversionType && unversionType[1])
+                            dataType = unversionType[1];
+
+                        // turn the dataType's . into \.
+                        // then build the regex /^datatype/
+                        // so it'll look like /^KBaseGenomes\.Genome/ for example
+                        var typeRegex = new RegExp("^" + dataType.replace(/\./g, '\\.'));
+
+                        for (var typeName in this.loadedData) {
+                            if (typeRegex.test(typeName)) {
+                                if (!dataSet[dataType])
+                                    dataSet[dataType] = [];
+                                dataSet[dataType] = dataSet[dataType].concat(this.loadedData[typeName]);
+                            }
+                        }
+                    }
+                    // Otherwise, just look for the match.
+                    else {
+                        if (this.loadedData[dataType])
+                            dataSet[dataType] = this.loadedData[dataType];
+                    }
                 }
             }
 
+            console.log(dataSet);
             return dataSet;
         },
 

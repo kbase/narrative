@@ -5,13 +5,14 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "kbaseNarrativeInput", 
+        name: "kbaseNarrativeInput",
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
             method: null,
         },
+        IGNORE_VERSION: true,
 
         init: function(options) {
             this._super(options);

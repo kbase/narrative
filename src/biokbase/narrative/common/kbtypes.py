@@ -191,6 +191,11 @@ class KBaseFBA_FBA(tls.Unicode, TypeMeta):
         return "KBaseFBA.FBA-4.0"
 
 
+class KBaseBiochem_Media(tls.Unicode, TypeMeta):
+    info_text = "KBaseBiochem.Media-1.0"
+    def __str__(self):
+        return "KBaseBiochem.Media-1.0"
+
 class Genome(tls.Unicode, TypeMeta):
     info_text = "a genome"
 

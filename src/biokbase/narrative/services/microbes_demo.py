@@ -1,7 +1,7 @@
 """
 Demo microbes service and methods
 """
-__author__ = 'Dan Gunter <dkgunter@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>'
+__author__ = 'Dan Gunter <dkgunter@lbl.gov>, Bill Riehl <wjriehl@lbl.gov>, Michael Sneddon <mwsneddon@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>'
 __date__ = '11/15/13'
 
 ## Imports
@@ -9,6 +9,7 @@ __date__ = '11/15/13'
 import json
 import os
 import random
+import numbers
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
@@ -317,10 +318,10 @@ def _build_media(meth, media):
     """Assemble a set of compounds to use as a media set for performing FBA on a model. [8]
 
     :param base_media: Base media type [8.1]
-    :type base_media: kbtypes.Media
+    :type base_media: kbtypes.KBaseBiochem_Media
     :ui_name base_media: Media ID
     :return: Metadata from new Media object
-    :rtype: kbtypes.Media
+    :rtype: kbtypes.KBaseBiochem_Media
     :input_widget: kbaseBuildMediaInput
     :output_widget: kbaseMediaViewer
     :embed: True
@@ -328,12 +329,17 @@ def _build_media(meth, media):
     meth.stages = 3
 
     meth.advance("Initializing")
-    fba = fbaModelServices(service.URLS.fba)
     token, workspace_id = meth.token, meth.workspace_id
+
+    fba = fbaModelServices(service.URLS.fba, token=token)
 
     media = json.loads(media)
     media['auth'] = token
     media['workspace'] = workspace_id
+
+    meth.debug('auth token: ' + token)
+    meth.debug('workspace id: ' + workspace_id)
+    meth.debug(json.dumps(media))
 
     meth.advance("Submitting Media to workspace")
 
@@ -538,9 +544,9 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     meth.advance("Setting up gapfill parameters")
     
     #grab token and workspace info, setup the client
-    token, workspaceName = meth.token, meth.workspace_id;
-    
-    fbaClient = fbaModelServices(service.URLS.fba)
+    userToken, workspaceName = meth.token, meth.workspace_id;
+
+    fbaClient = fbaModelServices(service.URLS.fba,token=userToken)
 
     """
     typedef structure {
@@ -616,6 +622,15 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
             'media_workspace' : workspaceName
         }
 
+    # set some default values
+    if not solution_limit:
+        solution_limit = 5 #10*60 #10 minutes
+    if not solution_time_limit:
+        solution_time_limit = 10*60 #10 minutes
+    if not total_time_limit:
+        total_time_limit = 10*60 #10 minutes
+        
+    
     gapfill_formulation = {
         'formulation' : fba_formulation,
         'num_solutions' : int(solution_limit),
@@ -626,8 +641,8 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
         'formulation' : gapfill_formulation,
         'workspace' : workspaceName,
         'timePerSolution' : int(solution_time_limit),
-        'totalTimeLimit' : int(total_time_limit),
-        'auth' : token
+        'totalTimeLimit' : int(total_time_limit)
+        #'auth' : token
     }
     #if(output_model_id):
     #    gapfill_params['out_model'] = output_model_id,
@@ -636,18 +651,19 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     job_data = fbaClient.queue_gapfill_model(gapfill_params);
 
     job_id = job_data['id'].strip()
-    total_time_hrs = int(total_time_limit) / 3600.0
+    total_time_hrs = round(int(total_time_limit) / 3600.0,3)
     hour_suffix = ""
     if (total_time_hrs is not 1):
         hour_suffix = "s"
 
     return json.dumps(
         {
-            'job_id':job_id,
+            #'job_data':job_data
+            #'job_id':job_id,
             'estimated_time_str': str(total_time_hrs) + " hour" + str(hour_suffix),
-            'output_data_id' : str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip()),
-            'token' : token,
-            #'job_data' : job_data,
+            #'output_data_id' : str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip()),
+            #'token' : token,
+            'job_data' : job_data
         })
 
 @method(name="Integrate Gapfill Solution")
@@ -889,9 +905,9 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
 @method(name="Upload Contigs")
 def _upload_contigs(meth, contig_set):
     """This wraps a ContigSet by a Genome object in your data space.
-    This should be run before trying to annotate a Genome. [3]
+    This should be run before trying to annotate a Genome. [19]
 
-    :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly.
+    :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly. [19.1]
     :type contig_set: kbtypes.Unicode
     :ui_name contig_set: Contig Set Object ID
     :return: Preparation message

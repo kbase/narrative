@@ -29,6 +29,18 @@ VERSION = (0, 0, 1)
 NAME = "communities"
 default_ws = 'communitiesdemo:home'
 
+class CWS:
+    data = 'Communities.Data-1.0'
+    handle = 'Communities.DataHandle-1.0'
+    profile = 'Communities.Profile-1.0'
+    annot = 'Communities.ProfileTable-1.0'
+    mg = 'Communities.Metagenome-1.0'
+    coll = 'Communities.Collection-1.0'
+    proj = 'Communities.Project-1.0'
+    seq = 'Communities.SequenceFile-1.0'
+    model = 'KBaseFBA.FBAModel-3.1'
+    mg_an = 'KBaseGenomes.MetagenomeAnnotation-1.0'
+
 class URLS:
     shock = "http://shock1.chicago.kbase.us"
     awe = "http://140.221.85.36:8000"
@@ -177,27 +189,29 @@ def _put_invo(name, data):
     # data is a string
     invo.put_file("", name, data, '/')
 
-def _get_ws(wsname, name):
+def _get_ws(wsname, name, wtype):
     token = os.environ['KB_AUTH_TOKEN']
     ws = workspaceService(URLS.workspace)
-    obj = ws.get_object({'auth': token, 'workspace': wsname, 'id': name, 'type': 'Communities.Data-1.0'})
+    obj = ws.get_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype})
     data = None
-    # CommunitiesData format
+    # Data format
     if 'data' in obj['data']:
         data = obj['data']['data']
-    # CommunitiesDataHandle format
+    # Handle format
     elif 'ref' in obj['data']:
         data = obj['data']['ref']
+    # Collection format
+    elif 'members' in obj['data']:
+        data = [m['ID'] for m in obj['data']['members']]
     return data
 
-def _put_ws(wsname, name, data=None, ref=None):
+def _put_ws(wsname, name, wtype, data=None, ref=None):
     token = os.environ['KB_AUTH_TOKEN']
     ws = workspaceService(URLS.workspace)
-    wtype = 'Communities.DataHandle-1.0' if ref else 'Communities.Data-1.0'
     if data is not None:
-        ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': 'Communities.Data-1.0', 'data': data})
+        ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': data})
     elif ref is not None:
-        ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': 'Communities.DataHandle-1.0', 'data': ref})
+        ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
 
 def _label_ws_meta(meta):
     meta_keys = ['id', 'type', 'moddate', 'instance', 'command', 'lastmodifier', 'owner', 'workspace', 'ref', 'checksum']
@@ -226,10 +240,10 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param mgid: metagenome ID
-    :type mgid: kbtypes.Unicode
+    :type mgid: kbtypes.Communities.Metagenome.v1_0
     :ui_name mgid: Metagenome ID
     :param out_name: workspace ID of annotation set table
-    :type out_name: kbtypes.WorkspaceObjectId
+    :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :param top: produce annotations for top N abundant taxa
     :type top: kbtypes.Unicode
@@ -281,7 +295,8 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
         rest = 'no'
     
     meth.advance("Building annotation set from communitites API")
-    cmd = "mg-get-annotation-set --id %s --top %d --level %s --evalue %d --identity %d --length %d"%(mgid, int(top), level, int(evalue), int(identity), int(length))
+    mg = _get_ws(workspace, in_name, CWS.mg)
+    cmd = "mg-get-annotation-set --id %s --top %d --level %s --evalue %d --identity %d --length %d"%(mg['ID'], int(top), level, int(evalue), int(identity), int(length))
     if rest.lower() == 'yes':
         cmd += " --rest"
     cmd += " > "+out_name
@@ -294,7 +309,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     rows = len(anno.strip().split('\n')) - 1
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': anno}
     text = "Annotation sets for the %s %s from SEED/Subsystems were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d)."%('top '+str(top) if int(top) > 0 else 'merged', level, out_name, int(evalue), int(identity), int(length))
-    _put_ws(workspace, out_name, data=data)
+    _put_ws(workspace, out_name, CWS.annot, data=data)
     return json.dumps({'header': text})
 
 @method(name="PICRUSt Predicted Abundance Profile")
@@ -305,10 +320,10 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_seq: workspace ID of input sequence file
-    :type in_seq: kbtypes.WorkspaceObjectId
+    :type in_seq: kbtypes.Communities.SequenceFile.v1_0
     :ui_name in_seq: Input Sequence
     :param out_id: workspace ID of running AWE ID
-    :type out_id: kbtypes.WorkspaceObjectId
+    :type out_id: kbtypes.Unicode
     :ui_name out_id: Output ID
     :return: PICRUSt Prediction Info
     :rtype: kbtypes.Unicode
@@ -323,7 +338,7 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
-    seq_nid = _get_ws(workspace, in_seq)['ID']
+    seq_nid = _get_ws(workspace, in_seq, CWS.seq)['ID']
     _run_invo("echo 'pick_otus:enable_rev_strand_match True' > picrust.params")
     _run_invo("echo 'pick_otus:similarity 0.97' >> picrust.params")
     stdout, stderr = _run_invo("mg-upload2shock %s picrust.params"%(URLS.shock))
@@ -340,10 +355,10 @@ def _redo_annot(meth, workspace, in_seq, out_id):
     meth.advance("Storing job in Workspace")
     data = { 'name': out_id,
              'created': time.strftime("%Y-%m-%d %H:%M:%S"),
-             'type': 'awe_job',
+             'type': 'awe',
              'ref': {'ID': job_id, 'URL': URLS.awe+'/job/'+job_id} }
     text = "PICRUSt prediction of %s running under AWE job %s. Status available here: %s"%(in_seq, job_id, URLS.awe+'/job/'+job_id)
-    _put_ws(workspace, out_id, ref=data)
+    _put_ws(workspace, out_id, CWS.handle, ref=data)
     return json.dumps({'header': text})
 
 @method(name="Map KEGG annotation to Subsystems annotation")
@@ -354,10 +369,10 @@ def _redo_annot(meth, workspace, in_name, out_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile BIOM
-    :type in_name: kbtypes.WorkspaceObjectId
+    :type in_name: kbtypes.Communities.Profile.v1_0
     :ui_name in_name: Input Name
     :param out_name: workspace ID of annotation set table
-    :type out_name: kbtypes.WorkspaceObjectId
+    :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :return: Metagenome Annotation Set Info
     :rtype: kbtypes.Unicode
@@ -372,7 +387,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
-    biom = _get_ws(workspace, in_name)
+    biom = _get_ws(workspace, in_name, CWS.profile)
     # get data if is shock refrence
     try:
         shockid = biom['ID']
@@ -392,7 +407,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     rows = len(anno.strip().split('\n')) - 1
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': anno}
     text = "Annotation set %s from SEED/Subsystems was created from KEGG abundance profile BIOM %s."%(out_name, in_name)
-    _put_ws(workspace, out_name, data=data)
+    _put_ws(workspace, out_name, CWS.annot, data=data)
     return json.dumps({'header': text})
 
 @method(name="Create Metabolic Model")
@@ -403,10 +418,10 @@ def _redo_annot(meth, workspace, in_name, out_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of annotation set table
-    :type in_name: kbtypes.WorkspaceObjectId
+    :type in_name: kbtypes.Communities.ProfileTable.v1_0
     :ui_name in_name: Input Name
     :param out_name: workspace ID of model
-    :type out_name: kbtypes.WorkspaceObjectId
+    :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :return: Metagenome Model
     :rtype: kbtypes.Unicode
@@ -421,7 +436,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
-    _put_invo(in_name, _get_ws(workspace, in_name))
+    _put_invo(in_name, _get_ws(workspace, in_name, CWS.annot))
     
     meth.advance("Create Metagenome Annotation Object")
     cmd = "fba-import-meta-anno %s -u %s.annot -n %s.annot -w %s"%(in_name, in_name, in_name, workspace)
@@ -445,7 +460,7 @@ def _redo_annot(meth, workspace, in_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of model
-    :type in_name: kbtypes.WorkspaceObjectId
+    :type in_name: kbtypes.KBaseFBA.FBAModel.v3_1
     :ui_name in_name: Model Name
     :return: Gapfilled Metagenome Model
     :rtype: kbtypes.Unicode
@@ -468,21 +483,18 @@ def _redo_annot(meth, workspace, in_name):
     return json.dumps({'header': htmltext})
 
 @method(name="Compare Metabolic Model")
-def _redo_annot(meth, workspace, model1, model2, names):
+def _redo_annot(meth, workspace, model1, model2):
     """Compare two or more metabolic models with appropriate statistical tests.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param model1: workspace ID of model 1
-    :type model1: kbtypes.WorkspaceObjectId
+    :type model1: kbtypes.KBaseFBA.FBAModel.v3_1
     :ui_name model1: Model 1 Name
     :param model2: workspace ID of model 2
-    :type model2: kbtypes.WorkspaceObjectId
+    :type model2: kbtypes.KBaseFBA.FBAModel.v3_1
     :ui_name model2: Model 2 Name
-    :param names: workspace ID of list of models, use if comparing more than two
-    :type names: kbtypes.Unicode
-    :ui_name names: Model List
     :return: Metagenome Model Comparison
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
@@ -492,12 +504,8 @@ def _redo_annot(meth, workspace, model1, model2, names):
     meth.advance("Processing inputs")
     # validate
     workspace = _get_wsname(meth, workspace)
-    if names != '':
-        model_list = _get_ws(workspace, names).strip().split('\n')
-    elif (model1 != '') and (model2 != ''):
-        model_list = [model1, model2]
-    else:
-        return json.dumps({'header': 'ERROR: missing model 1 and model 2, or model name list'})
+    if not (model1 and model1):
+        return json.dumps({'header': 'ERROR: missing model 1 and model 2'})
     
     meth.advance("Compare Models")
     cmd = "fba-compare-mdls %s %s"%(';'.join(model_list), workspace)
@@ -507,18 +515,18 @@ def _redo_annot(meth, workspace, model1, model2, names):
     htmltext = "<br>".join( stdout.strip().split('\n') )
     return json.dumps({'header': htmltext})
 
-@method(name="Download Annotation Abundance Profiles")
+@method(name="Retrieve Annotation Abundance Profile")
 def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, int_level, int_source, evalue, identity, length, norm):
-    """Download annotation abundance data for selected metagenomes.
+    """Retrieve annotation abundance data for selected metagenomes.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param ids: workspace ID of metagenome list
-    :type ids: kbtypes.Unicode
+    :type ids: kbtypes.Communities.Collection.v1_0
     :ui_name ids: Metagenome List
     :param out_name: workspace ID of abundance profile table
-    :type out_name: kbtypes.WorkspaceObjectId
+    :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :param annot: annotation of abundance profile, one of 'taxa' or 'functions'
     :type annot: kbtypes.Unicode
@@ -533,7 +541,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :ui_name source: Source Name
     :default source: SEED
     :param int_name: workspace ID of list of names to filter results by
-    :type int_name: kbtypes.Unicode
+    :type int_name: kbtypes.Communities.Data.v1_0
     :ui_name int_name: Filter List
     :param int_level: hierarchal level of filter names list
     :type int_level: kbtypes.Unicode
@@ -585,14 +593,14 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
         norm = 'yes'
     
     meth.advance("Retrieve Data from Workspace")
-    id_list = _get_ws(workspace, ids).strip().split('\n')
-    cmd = "mg-compare-%s --format text --ids %s --level %s --source %s --evalue %d --identity %d --length %d"%(annot, ','.join(id_list), level, source, int(evalue), int(identity), int(length))
+    id_list = _get_ws(workspace, ids, CWS.coll)
+    cmd = "mg-compare-%s --format biom --ids %s --level %s --source %s --evalue %d --identity %d --length %d"%(annot, ','.join(id_list), level, source, int(evalue), int(identity), int(length))
     # optional intersection
     if int_name and int_level and int_source:
-        _put_invo(int_name, _get_ws(workspace, int_name))
+        _put_invo(int_name, _get_ws(workspace, int_name, CWS.data))
         cmd += " --intersect_name %s --intersect_level %s --intersect_source %s"%(int_name, int_level, int_source)
     if norm.lower() == 'yes':
-        cmd += " | mg-compare-normalize --input - --format text --output text"
+        cmd += " | mg-compare-normalize --input - --format biom --output biom"
     
     meth.advance("Building abundance profile from communitites API")
     stdout, stderr = _run_invo(cmd)
@@ -601,31 +609,27 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     
     meth.advance("Storing in Workspace")
     rows = len(stdout.strip().split('\n')) - 1
-    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': stdout}
+    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
     text = "%s abundance data for %d samples listed in %s were downloaded. %d %s level %s annotations from the %s database were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d). Annotations with an overall abundance of 1 were removed by singleton filtering. Values did%s undergo normalization."%(annot, len(id_list), ids, rows, level, annot, source, out_name, int(evalue), int(identity), int(length), '' if norm.lower() == 'yes' else ' not')
-    _put_ws(workspace, out_name, data=data)
+    _put_ws(workspace, out_name, CWS.profile, data=data)
     return json.dumps({'header': text})
 
 @method(name="Statistical Significance Test")
-def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, order, direction):
+def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order, direction):
     """Apply matR-based statistical tests to abundance profile data.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.WorkspaceObjectId
+    :type in_name: kbtypes.Communities.Profile.v1_0
     :ui_name in_name: Input Name
     :param out_name: workspace ID of abundance profile table with significance
-    :type out_name: kbtypes.WorkspaceObjectId
+    :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
-    :param groups: workspace ID of group table
-    :type groups: kbtypes.Unicode
-    :ui_name groups: Groups
-    :param gpos: position of group to use, default is first
-    :type gpos: kbtypes.Unicode
-    :ui_name gpos: Group Position
-    :default gpos: 1
+    :param metadata: metadata field to group metagenomes by
+    :type metadata: kbtypes.Unicode
+    :ui_name metadata: Metadata
     :param stat_test: supported statistical tests, one of: Kruskal-Wallis, t-test-paired, Wilcoxon-paired, t-test-unpaired, Mann-Whitney-unpaired-Wilcoxon, ANOVA-one-way, default is Kruskal-Wallis
     :type stat_test: kbtypes.Unicode
     :ui_name stat_test: Stat Test
@@ -645,31 +649,21 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
     meth.stages = 4
     meth.advance("Processing inputs")
     # validate
-    if not (in_name and groups and out_name):
+    if not (in_name and metadata and out_name):
         return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if stat_test == '':
         stat_test = 'Kruskal-Wallis'
-    if gpos == '':
-        gpos = 1
     if direction == '':
         direction = 'desc'
 
     meth.advance("Retrieve Data from Workspace")
     # abundance profile
-    adata = _get_ws(workspace, in_name)
-    acols = adata.split('\n')[0].strip().split('\t')
-    _put_invo(in_name, adata)
-    # groups
-    grows, gcols, gdata = tab_to_matrix( _get_ws(workspace, groups) )
-    gindex = int(gpos) - 1
-    gjson = defaultdict(list)
-    for r, row in enumerate(gdata):
-        gjson[ row[gindex] ].append(grows[r])
+    _put_invo(in_name, _get_ws(workspace, in_name, CWS.profile))
     
     meth.advance("Computing Significance")
-    cmd = "mg-group-significance --input %s --format text --stat_test %s --groups '%s' --direction %s"%(in_name, stat_test, json.dumps(gjson), direction)
+    cmd = "mg-group-significance --input %s --stat_test %s --metadata '%s' --direction %s --format biom --output biom"%(in_name, stat_test, metadata, direction)
     if order != '':
         cmd += ' --order %d'%int(order)
     stdout, stderr = _run_invo(cmd)
@@ -677,13 +671,12 @@ def _group_matrix(meth, workspace, in_name, out_name, groups, gpos, stat_test, o
         return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
-    rows = len(stdout.strip().split('\n')) - 1
-    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': stdout}
-    text = "The %s test was applied to %s to find annotations that exhibited the most significant differences in abundance. Column %d of the metadata file %s was used to create sample groupings. Analysis results are in %s; these were sorted in %s order by column %d. The last three columns of the result file contain the test statistic, statistic p, and statistic fdr respectively."%(stat_test, in_name, int(gpos), groups, out_name, direction, len(acols) if order == '' else int(order))
-    _put_ws(workspace, out_name, data=data)
+    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
+    text = "The %s test was applied to %s to find annotations that exhibited the most significant differences in abundance. Metadata values for %s were used to create sample groupings. Analysis results are in %s. The rows of the BIOM file contain the test statistic, statistic p, and statistic fdr respectively."%(stat_test, in_name, metadata, out_name)
+    _put_ws(workspace, out_name, CWS.profile, data=data)
     return json.dumps({'header': text})
 
-@method(name="View Data Table")
+@method(name="Sub-select Abundance Profile")
 def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, rows):
     """Sort and/or subselect annotation abundance data and outputs from statistical analyses.
 
@@ -691,10 +684,10 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.WorkspaceObjectId
+    :type in_name: kbtypes.Communities.Profile.v1_0
     :ui_name in_name: Input Name
-    :param out_name: workspace ID of altered table, if empty display table
-    :type out_name: kbtypes.WorkspaceObjectId
+    :param out_name: workspace ID of altered profile
+    :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :param order: column number to sort output by, (0 for last column), default is no sorting
     :type order: kbtypes.Unicode
@@ -711,7 +704,7 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     :ui_name rows: Rows
     :return: Metagenome Abundance Profile Significance Info
     :rtype: kbtypes.Unicode
-    :output_widget: GeneTableWidget
+    :output_widget: ImageViewWidget
     """
     
     meth.stages = 4
@@ -722,52 +715,100 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
         direction = 'desc'
 
     meth.advance("Retrieve Data from Workspace")
-    data_table = _get_ws(workspace, in_name)
-    _put_invo(in_name, data_table)
+    _put_invo(in_name, _get_ws(workspace, in_name, CWS.profile))
     
     meth.advance("Manipulating Abundance Table")
-    if (order == '') and (cols == ''):
-        if rows != '':
-            table = [[c for c in r.split('\t')] for r in data_table.rstrip().split('\n')[:int(rows)]]
-        else:
-            table = [[c for c in r.split('\t')] for r in data_table.rstrip().split('\n')]
-    else:
-        cmd = "mg-select-significance --input %s --direction %s"%(in_name, direction)
-        if order != '':
-            cmd += ' --order %d'%int(order)
-        if cols != '':
-            cmd += ' --cols %d'%int(cols)
-        if rows != '':
-            cmd += ' --rows %d'%int(rows)
-        stdout, stderr = _run_invo(cmd)
-        table = [[c for c in r.split('\t')] for r in stdout.rstrip().split('\n')]
+    cmd = "mg-select-significance --input %s --direction %s --format biom --output biom"%(in_name, direction)
+    txt = "%s was saved as %s."%(in_name, out_name)
+    if order != '':
+        cmd += ' --order %d'%int(order)
+        txt += " Rows were ordered by column %d."%int(order)
+    if cols != '':
+        cmd += ' --cols %d'%int(cols)
+        txt += " All but first %d columns were removed."%int(cols)
+    if rows != '':
+        cmd += ' --rows %d'%int(rows)
+        txt += " All but first %d rows were removed."%int(cols)
+    stdout, stderr = _run_invo(cmd)
     
-    if out_name:
-        meth.advance("Storing in Workspace")
-        data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'table', 'data': stdout}
-        _put_ws(workspace, out_name, data=data)
-        return json.dumps({'table': table[:10]})
-    else:
-        meth.advance("Displaying Abundance Table")
-        return json.dumps({'table': table})
+    meth.advance("Storing in Workspace")
+    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
+    _put_ws(workspace, out_name, CWS.profile, data=data)
+    return json.dumps({'header': txt})
+
+@method(name="View Abundace Profile")
+def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_end, stats):
+    """View a slice of a BIOM format abundance profile as a table
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param in_name: workspace ID of abundance profile table
+    :type in_name: kbtypes.Communities.Profile.v1_0
+    :ui_name in_name: Input Name
+    :param row_start: row position to start table with, default is first
+    :type row_start: kbtypes.Unicode
+    :ui_name row_start: Row Start
+    :param row_end: row position to end table with, default is last
+    :type row_end: kbtypes.Unicode
+    :ui_name row_end: Row End
+    :param col_start: column position to start table with, default is first
+    :type col_start: kbtypes.Unicode
+    :ui_name col_start: Column Start
+    :param col_end: column position to end table with, default is last
+    :type col_end: kbtypes.Unicode
+    :ui_name col_end: Column End
+    :param stats: include significance stats in table view
+    :type stats: kbtypes.Unicode
+    :ui_name stats: Show Stats
+    :default stats: yes
+    :return: Metagenome Abundance Profile Table
+    :rtype: kbtypes.Unicode
+    :output_widget: GeneTableWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    workspace = _get_wsname(meth, workspace)
+    # set defaults since unfilled options are empty strings
+    if stats == '':
+        stats = 'yes'
+
+    meth.advance("Retrieve Data from Workspace")
+    _put_invo(in_name, _get_ws(workspace, in_name, CWS.profile))
+    
+    meth.advance("Manipulating Table")
+    cmd = "mg-biom-view --input %s"%in_name
+    if row_start != '':
+        cmd += ' --row_start %d'%int(row_start)
+    if row_end != '':
+        cmd += ' --row_end %d'%int(row_end)
+    if col_start != '':
+        cmd += ' --col_start %d'%int(col_start)
+    if col_end != '':
+        cmd += ' --col_end %d'%int(col_end)
+    if stats.lower() == 'yes':
+        cmd += ' --stats'
+    stdout, stderr = _run_invo(cmd)
+    
+    meth.advance("Displaying Table")
+    table = [[c for c in r.split('\t')] for r in stdout.rstrip().split('\n')]
+    return json.dumps({'table': table})
 
 @method(name="Boxplots from Abundance Profile")
-def _plot_boxplot(meth, workspace, in_name, groups, gpos):
+def _plot_boxplot(meth, workspace, in_name, use_name):
     """Generate boxplots from annotation abundance data.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.WorkspaceObjectId
+    :type in_name: kbtypes.Communities.Profile.v1_0
     :ui_name in_name: Input Name
-    :param groups: workspace ID of group table
-    :type groups: kbtypes.Unicode
-    :ui_name groups: Groups
-    :param gpos: position of group to use, default is first
-    :type gpos: kbtypes.Unicode
-    :ui_name gpos: Group Position
-    :default gpos: 1
+    :param use_name: label by metagenome name and not ID
+    :type use_name: kbtypes.Unicode
+    :ui_name use_name: Label Name
+    :default use_name: no
     :return: Metagenome Abundance Profile Significance Info
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
@@ -780,19 +821,16 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
         json.dumps({'header': 'ERROR: missing input'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
-    if gpos == '':
-        gpos = 1
+    if use_name == '':
+        use_name = 'no'
     
     meth.advance("Retrieve Data from Workspace")
-    matrix = _get_ws(workspace, in_name)
-    if groups:
-        gdata = _get_ws(workspace, groups)
-        matrix = _relabel_cols(matrix, gdata, gpos)
-        _put_invo(groups, gdata)
-    _put_invo(in_name, matrix)
-
+    _put_invo(in_name, _get_ws(workspace, in_name, CWS.profile))
+    
     meth.advance("Calculating Boxplot")
-    cmd = "mg-compare-boxplot-plot --input %s --plot %s.boxplot --format text"%(in_name, in_name)
+    cmd = "mg-compare-boxplot-plot --input %s --plot %s.boxplot --format biom"%(in_name, in_name)
+    if use_name.lower() == 'yes':
+        cmd += ' --name'
     stdout, stderr = _run_invo(cmd)
     if stderr:
         json.dumps({'header': 'ERROR: %s'%stderr})
@@ -804,22 +842,19 @@ def _plot_boxplot(meth, workspace, in_name, groups, gpos):
     return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})
 
 @method(name="Heatmap from Abundance Profiles")
-def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, order, label):
+def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, label):
     """Generate a heatmap-dendrogram from annotation abundance data.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.WorkspaceObjectId
+    :type in_name: kbtypes.Communities.Profile.v1_0
     :ui_name in_name: Input Name
-    :param groups: workspace ID of group table
-    :type groups: kbtypes.Unicode
-    :ui_name groups: Groups
-    :param gpos: position of group to use, default is first
-    :type gpos: kbtypes.Unicode
-    :ui_name gpos: Group Position
-    :default gpos: 1
+    :param use_name: label by metagenome name and not ID
+    :type use_name: kbtypes.Unicode
+    :ui_name use_name: Label Name
+    :default use_name: no
     :param distance: distance/dissimilarity metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
     :type distance: kbtypes.Unicode
     :ui_name distance: Distance
@@ -848,8 +883,8 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
         json.dumps({'header': 'ERROR: missing input'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
-    if gpos == '':
-        gpos = 1
+    if use_name == '':
+        use_name = 'no'
     if distance == '':
         distance = 'euclidean'
     if cluster == '':
@@ -860,15 +895,12 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
         label = 'no'
     
     meth.advance("Retrieve Data from Workspace")
-    matrix = _get_ws(workspace, in_name)
-    if groups:
-        gdata = _get_ws(workspace, groups)
-        matrix = _relabel_cols(matrix, gdata, gpos)
-        _put_invo(groups, gdata)
-    _put_invo(in_name, matrix)
-
+    _put_invo(in_name, _get_ws(workspace, in_name, CWS.profile))
+    
     meth.advance("Calculating Heatmap")
-    cmd = "mg-compare-heatmap-plot --input %s --plot %s.heatmap --distance %s --cluster %s --format text"%(in_name, in_name, distance, cluster)
+    cmd = "mg-compare-heatmap-plot --input %s --plot %s.heatmap --distance %s --cluster %s --format biom"%(in_name, in_name, distance, cluster)
+    if use_name.lower() == 'yes':
+        cmd += ' --name'
     if order.lower() == 'yes':
         cmd += ' --order'
     if label.lower() == 'yes':
@@ -884,22 +916,18 @@ def _plot_heatmap(meth, workspace, in_name, groups, gpos, distance, cluster, ord
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
 @method(name="PCoA from Abundance Profiles")
-def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
+def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     """Generate a PCoA from annotation abundance data.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.WorkspaceObjectId
+    :type in_name: kbtypes.Communities.Profile.v1_0
     :ui_name in_name: Input Name
-    :param groups: workspace ID of group table
-    :type groups: kbtypes.Unicode
-    :ui_name groups: Groups
-    :param gpos: position of group to use, default is first
-    :type gpos: kbtypes.Unicode
-    :ui_name gpos: Group Position
-    :default gpos: 1
+    :param metadata: metadata field to group metagenomes by
+    :type metadata: kbtypes.Unicode
+    :ui_name metadata: Metadata
     :param distance: distance/dissimilarity metric, one of: bray-curtis, euclidean, maximum, manhattan, canberra, minkowski, difference
     :type distance: kbtypes.Unicode
     :ui_name distance: Distance
@@ -920,24 +948,18 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
         return json.dumps({'header': 'ERROR: missing input'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
-    if gpos == '':
-        gpos = 1
     if distance == '':
         distance = 'euclidean'
     if three == '':
         three = 'no'
     
     meth.advance("Retrieve Data from Workspace")
-    matrix = _get_ws(workspace, in_name)
-    if groups:
-        gdata = _get_ws(workspace, groups)
-        _put_invo(groups, gdata)
-    _put_invo(in_name, matrix)
-
+    _put_invo(in_name, _get_ws(workspace, in_name, CWS.profile))
+    
     meth.advance("Computing PCoA")
-    cmd = "mg-compare-pcoa-plot --input %s --plot %s.pcoa --distance %s --format text"%(in_name, in_name, distance)
-    if groups:
-        cmd += ' --color_group %s --color_pos %d --color_auto'%(groups, int(gpos))
+    cmd = "mg-compare-pcoa-plot --input %s --plot %s.pcoa --distance %s --format biom"%(in_name, in_name, distance)
+    if metadata != '':
+        cmd += " --metadata '%s'"%metadata
     if three.lower() == 'yes':
         cmd += ' --three'
     stdout, stderr = _run_invo(cmd)
@@ -955,18 +977,22 @@ def _plot_pcoa(meth, workspace, in_name, groups, gpos, distance, three):
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': fig_b64png, 'legend': leg_b64png})
 
 @method(name="Retrieve AWE Results")
-def _redo_annot(meth, workspace, in_name, out_name):
+def _redo_annot(meth, workspace, in_name, out_name, is_profile):
     """Query an AWE job DataHandle and create a Shock DataHandle for the results.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of AWE job handle
-    :type in_name: kbtypes.WorkspaceObjectId
+    :type in_name: kbtypes.Communities.DataHandle.v1_0
     :ui_name in_name: AWE Job
-    :param out_name: workspace ID of Shock data handle
-    :type out_name: kbtypes.WorkspaceObjectId
-    :ui_name out_name: Shock Data
+    :param out_name: workspace ID of AWE results
+    :type out_name: kbtypes.Unicode
+    :ui_name out_name: Results
+    :param is_profile: results of AWE job is an abundance profile BIOM
+    :type is_profile: kbtypes.Unicode
+    :ui_name is_profile: Profile
+    :default is_profile: yes
     :return: AWE Job Status
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
@@ -978,9 +1004,12 @@ def _redo_annot(meth, workspace, in_name, out_name):
     if not in_name:
         return json.dumps({'header': 'ERROR: missing input workspace ID'})
     workspace = _get_wsname(meth, workspace)
+    # set defaults since unfilled options are empty strings
+    if is_profile == '':
+        is_profile = 'yes'
     
     meth.advance("Retrieve AWE Job Status")
-    aweref = _get_ws(workspace, in_name)
+    aweref = _get_ws(workspace, in_name, CWS.handle)
     awejob = _get_awe_job(aweref['ID'])
     
     # job not done or no output name
@@ -990,16 +1019,24 @@ def _redo_annot(meth, workspace, in_name, out_name):
     
     meth.advance("Storing in Workspace")
     last_task = awejob['data']['tasks'][-1]
-    out_num = len(last_task['outputs'].keys())
-    for name, info in last_task['outputs'].iteritems():
-        append = '' if out_num == 1 else '_'+name
+    if is_profile.lower() == 'yes':
+        name, info = last_task['outputs'].items()[0]
         data = { 'name': name,
                  'created': time.strftime("%Y-%m-%d %H:%M:%S"),
-                 'type': 'shock_node',
-                 'ref': {'ID': info['node'], 'URL': info['host']+'/node/'+info['node']} }
-        _put_ws(workspace, out_name+append, ref=data)
-
-    text = "Shock DataHandle%s created for AWE job %s"%('s' if out_num > 1 else '', in_name)
+                 'type': 'biom',
+                 'data': _get_shock_data(info['node']) }
+        _put_ws(workspace, out_name, CWS.profile, data=data)
+        text = "Abundance Profile BIOM %s created for AWE job %s"%(out_name, in_name)
+    else:
+        out_num = len(last_task['outputs'].keys())
+        for name, info in last_task['outputs'].iteritems():
+            append = '' if out_num == 1 else '_'+name
+            data = { 'name': name,
+                     'created': time.strftime("%Y-%m-%d %H:%M:%S"),
+                     'type': 'shock',
+                     'ref': {'ID': info['node'], 'URL': info['host']+'/node/'+info['node']} }
+            _put_ws(workspace, out_name+append, CWS.handle, ref=data)
+        text = "Shock DataHandle%s created for AWE job %s"%('s' if out_num > 1 else '', in_name)
     return json.dumps({'header': text})
 
 # Finalization

@@ -16,6 +16,7 @@ What this document is **not**
 * :ref:`services`
 * :ref:`wrapping functions`
 * :ref:`output widgets`
+* :ref:`updating types`
 * :ref:`locations`
 
 
@@ -267,6 +268,32 @@ If you’re developing locally in some branch of the narrative repo (you probabl
 #. Restart your narrative as usual:
    $ run_notebook.sh notebook
    
+
+.. _updating types:
+
+Updating the KBase types
+------------------------
+
+Most of the types, and certainly almost all the ones you should use in your narrative functions, are auto-generated
+in the `biokbase.narrative.common.kbtypes` module. This function has the rather odd property of being able to update
+itself, by running it from the command-line like this::
+
+    python -m biokbase.narrative.common.kbtypes -U 'user' -P 'xxx' -u 'http://kbase.us/services/ws'
+
+For more information about how to run the function, see the `-h` option. What this command does is run the
+kbtypes "main", which in turn performs the following actions:
+
+* Contact the Workspace Service at the given URL, login with the given user/pass
+* Retrieve the list of types registered for every module
+* Create a (named) temporary file that is a copy of the existing source code of "kbtypes.py" *except* the section
+  between the markers `#@AUTO_START` and `#@AUTO_END` are changed to contain Python classes mirroring the
+  list of types we just retrieved.
+* Optionally, with the `-b/--backup` option, also make a backup of the original file.
+* Move the temporary file onto the original file, replacing it.
+
+Failure to contact the workspace service, etc. will not change the original file. The only case where the original
+might get mangled is if the OS `mv` operation fails part-way. If `mv` doesn't work on your system, you probably
+have bigger problems.
 
 .. _locations:
 

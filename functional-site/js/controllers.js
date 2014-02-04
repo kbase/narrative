@@ -257,7 +257,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
     // callback for ng-click 'loginUser':
     $scope.loginUser = function (user) {
-        console.log("username is " + user.username);
+        $("#loading-indicator").show();
         kbaseLogin.login(
             user.username,
             user.password,
@@ -296,7 +296,11 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     $scope.$apply();
                     
                 } else {
-                            console.log("error logging in");
+                    console.log("error logging in");
+                    $("#loading-indicator").hide();
+                    $("#login_error").html(args.message);
+                    $("#login_error").show();
+
                 }
 
             }

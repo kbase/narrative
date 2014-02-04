@@ -17,20 +17,20 @@
         	var pref = (new Date()).getTime();
 
             var wsUrl = "http://140.221.84.209:7058/";
-            var fmUrl = "https://kbase.us/services/fba_model_services/";
+            //var fmUrl = "https://kbase.us/services/fba_model_services/";
             var container = this.$elem;
         	var panel = $('<div class="loader-table">Please wait...</div>');
         	container.append(panel);
 
-            //var kbws = new Workspace(wsUrl);											// WS2
-            var kbws = new workspaceService(wsUrl);
+            var kbws = new Workspace(this.wsUrl, {'token': options.token});
+            //var kbws = new workspaceService(wsUrl);
             
-            var request = {auth: options.token, workspace: options.ws_name, type: 'Media'};
-            kbws.list_workspace_objects(request, function(data) {
+            var request = {workspaces: [options.ws_name], type: 'KBaseBiochem.Media'};
+            kbws.list_objects(request, function(data) {
             	$('.loader-table').remove();
             	var medias = [];
             	for (var tuplePos in data) {
-            		var media = data[tuplePos][0];
+            		var media = data[tuplePos][1];
             		medias.push(media);
             	}
             	container.append('<table class="table table-striped table-bordered" \
@@ -40,7 +40,8 @@
             	table.append('<tr><td>Genome object ID</td><td>' + options.genome_id + '</td></tr>');
             	table.append('<tr><td>Your tab delimited data<br>(first line is header)</td> \
             			<td><textarea id="'+pref+'pheno-ta" style="width:100%;" cols="80" rows="25"></textarea></td></tr>');
-            	container.append('<button class="btn" id="'+pref+'pheno-btn">Save in workspace</button>')
+            	container.append('<button class="btn" id="'+pref+'pheno-btn">Save in workspace</button>');
+            	container.append('&nbsp;<button class="btn" id="'+pref+'xmpl-btn">Show an example in text area above</button>');
             	$('#'+pref+'pheno-btn').click(function() {
             		var val = $('#'+pref+'pheno-ta').val();
             		var lines = val.split(/\r\n|\r|\n/g);
@@ -85,6 +86,7 @@
             			}
             			phenotype.push(additionalCpd);
             			phenotype.push(Number(parts[2]) + 0.0);
+            			phenotype.push('');
             			phenotypes.push(phenotype);
             		}
             		if (good) {
@@ -106,20 +108,37 @@
                         	alert('Error storing data: ' + data.error.message);
                         });*/
             			var pset = {
-            					id: options.phenotype_id,
-            					genome: options.genome_id,
-            					genome_workspace: options.ws_name,
+            					phenotype_set_id: options.phenotype_id,
+            					genome_id: options.genome_id,
+            					workspace_id: options.ws_name,
             					phenotypes: phenotypes,
-            					source: 'Narrative uploader',
+            					source: 'Narrative phenotype uploader',
             					name: options.phenotype_id,
             					importErrors: ''
             			};
-            			kbws.save_object({auth: options.token, workspace: options.ws_name, type: 'PhenotypeSet', id: options.phenotype_id, data: pset}, function(data) {
+            			kbws.save_objects({workspace: options.ws_name, objects: [{type: 'KBaseFBA.PhenotypeSet', name: options.phenotype_id, data: pset}]}, function(data) {
             				alert('Data was stored in workspace');
                         }, function(data) {
                         	alert('Error: ' + data.error.message);
                         });            	
             		}
+            	});
+            	$('#'+pref+'xmpl-btn').click(function() {
+            		var ws = options.ws_name;
+            		var text = "media	mediaws	growth	geneko	addtlCpd\n" +
+            				"C-L-serine	"+ws+"	1	none	cpd00367,cpd00009,cpd00048\n" +
+            				"C-L-serine	"+ws+"	1	none	cpd00023,cpd00009,cpd00048\n" +
+            				"C-L-serine	"+ws+"	1	none	cpd00221,cpd00159,cpd00013,cpd00048,cpd00046\n" +
+            				"C-L-serine	"+ws+"	1	none	cpd00221,cpd00159,cpd00013,cpd00048,cpd00080\n" +
+            				"C-L-serine	"+ws+"	0	none	cpd00122,cpd00013,cpd00009,cpd00048\n" +
+            				"C-L-serine	"+ws+"	0	none	cpd00013,cpd00009,cpd00048,cpd00141\n" +
+            				"C-L-serine	"+ws+"	0	none	cpd00122,cpd00009,cpd00048\n" +
+            				"C-L-serine	"+ws+"	0	none	cpd00161,cpd00009,cpd00048\n";
+            		var val = $('#'+pref+'pheno-ta').val();
+            		if (val != "")
+            			val += "\n";
+            		val += text;
+            		$('#'+pref+'pheno-ta').val(val);
             	});
             }, function(data) {
             	$('.loader-table').remove();

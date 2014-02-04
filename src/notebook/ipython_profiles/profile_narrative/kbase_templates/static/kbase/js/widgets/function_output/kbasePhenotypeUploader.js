@@ -39,7 +39,7 @@
             	table.append('<tr><td>Storing phenotype set ID</td><td>' + options.phenotype_id + '</td></tr>');
             	table.append('<tr><td>Genome object ID</td><td>' + options.genome_id + '</td></tr>');
             	table.append('<tr><td>Your tab delimited data<br>(first line is header)</td> \
-            			<td><textarea id="'+pref+'pheno-ta" style="width:100%;" cols="80" rows="25"></textarea></td></tr>');
+            			<td><textarea id="'+pref+'pheno-ta" style="width:100%;" cols="80" rows="15"></textarea></td></tr>');
             	container.append('<button class="btn" id="'+pref+'pheno-btn">Save in workspace</button>');
             	container.append('&nbsp;<button class="btn" id="'+pref+'xmpl-btn">Show an example in text area above</button>');
             	$('#'+pref+'pheno-btn').click(function() {
@@ -51,6 +51,8 @@
             			if (pos == 0)
             				continue;
             			var line = lines[pos];
+            			if (line == '')
+            				continue;
             			var parts = line.split(/\t/g);
             			if (parts.length != 5) {
             				good = false;
@@ -72,21 +74,22 @@
             				alert('Data line contains wrong growth value: [' + line + ']. It should be 0 or 1');
             				break;
             			}
-            			var phenotype = []; // tuple<list<feature_id> geneKO,media_id baseMedia,workspace_id media_workspace,list<compound_id> additionalCpd,float normalizedGrowth,string label>
+            			var phenotype = {}; // tuple<list<feature_id> geneKO,media_id baseMedia,workspace_id media_workspace,list<compound_id> additionalCpd,float normalizedGrowth,string label>
             			var geneKO = [];
             			if (parts[3] != 'none') {
             				geneKO = parts[3].split(',');
             			}
-            			phenotype.push(geneKO);
-            			phenotype.push(parts[0]);
-            			phenotype.push(parts[1]);
+            			// ","","id","","
+            			phenotype['geneko_refs'] = geneKO;
+            			phenotype['media_ref'] = parts[1] + "/" + parts[0];
+            			//phenotype['workspace'] = parts[1];
             			var additionalCpd = [];
             			if (parts[4] != 'none') {
             				additionalCpd = parts[4].split(',');
             			}
-            			phenotype.push(additionalCpd);
-            			phenotype.push(Number(parts[2]) + 0.0);
-            			phenotype.push('');
+            			phenotype['additionalcompound_refs'] = additionalCpd;
+            			phenotype['normalizedGrowth'] = Number(parts[2]) + 0.0;
+            			phenotype['id'] = 'phenotype_' + options.phenotype_id + "_" + pos;
             			phenotypes.push(phenotype);
             		}
             		if (good) {
@@ -108,15 +111,18 @@
                         	alert('Error storing data: ' + data.error.message);
                         });*/
             			var pset = {
+            					id: options.phenotype_id,
+            					genome_ref: options.ws_name + '/' + options.genome_id,
             					phenotype_set_id: options.phenotype_id,
             					genome_id: options.genome_id,
             					workspace_id: options.ws_name,
             					phenotypes: phenotypes,
             					source: 'Narrative phenotype uploader',
+            					source_id: 'NarrativePhenotypeUploader',
             					name: options.phenotype_id,
             					importErrors: ''
             			};
-            			kbws.save_objects({workspace: options.ws_name, objects: [{type: 'KBaseFBA.PhenotypeSet', name: options.phenotype_id, data: pset}]}, function(data) {
+            			kbws.save_objects({workspace: options.ws_name, objects: [{type: 'KBasePhenotypes.PhenotypeSet', name: options.phenotype_id, data: pset}]}, function(data) {
             				alert('Data was stored in workspace');
                         }, function(data) {
                         	alert('Error: ' + data.error.message);

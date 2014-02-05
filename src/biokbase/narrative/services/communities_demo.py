@@ -146,7 +146,7 @@ def _submit_awe(wf):
     headers = {'Content-Type': 'multipart/form-data', 'Datatoken': os.environ['KB_AUTH_TOKEN']}
     files = {'upload': ('awe_workflow', cStringIO.StringIO(wf))}
     url = URLS.awe+"/job"
-    req = requests.post(url, headers=self.auth_header, files=files, allow_redirects=True)
+    req = requests.post(url, headers=headers, files=files, allow_redirects=True)
     res = req.json()
     return res['data']
     
@@ -293,7 +293,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     return json.dumps({'header': text})
 
 @method(name="PICRUSt Predicted Abundance Profile")
-def _redo_annot(meth, workspace, in_seq, out_name):
+def _run_picrust(meth, workspace, in_seq, out_name):
     """Create a KEGG annotated functional abundance profile for 16S data in BIOM format using PICRUSt. The input OTUs are created by QIIME using a closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
 
     :param workspace: name of workspace, default is current
@@ -345,7 +345,7 @@ def _redo_annot(meth, workspace, in_seq, out_name):
     return json.dumps({'header': text})
 
 @method(name="Map KEGG annotation to Subsystems annotation")
-def _redo_annot(meth, workspace, in_name, out_name):
+def _map_annot(meth, workspace, in_name, out_name):
     """Create SEED/Subsystems annotations from a KEGG metagenome abundance profile.
 
     :param workspace: name of workspace, default is current
@@ -394,7 +394,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     return json.dumps({'header': text})
 
 @method(name="Create Metabolic Model")
-def _redo_annot(meth, workspace, in_name, out_name):
+def _make_model(meth, workspace, in_name, out_name):
     """Create a draft metabolic model from metagenome Subsystems annotations.
 
     :param workspace: name of workspace, default is current
@@ -436,7 +436,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     return json.dumps({'header': htmltext})
 
 @method(name="Gapfill Metabolic Model")
-def _redo_annot(meth, workspace, in_name):
+def _gapfill_model(meth, workspace, in_name):
     """Fill in missing core metabolism functions in a draft model.
 
     :param workspace: name of workspace, default is current
@@ -466,7 +466,7 @@ def _redo_annot(meth, workspace, in_name):
     return json.dumps({'header': htmltext})
 
 @method(name="Compare Metabolic Model")
-def _redo_annot(meth, workspace, model1, model2):
+def _compare_model(meth, workspace, model1, model2):
     """Compare two or more metabolic models with appropriate statistical tests.
 
     :param workspace: name of workspace, default is current

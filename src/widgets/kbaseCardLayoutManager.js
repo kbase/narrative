@@ -1018,6 +1018,9 @@
                 self.addNewCard("KBaseGeneInstanceInfo",
                     {
                         featureID: data.feature.feature_id,
+                        workspaceID: data.workspaceId,
+                        genomeID: data.genomeId,
+                        kbCache: data.kbCache,
                     },
                     {
                         my: "left top",
@@ -1037,8 +1040,8 @@
                 self.addNewCard("KBaseContigBrowser",
                     {
                         contig: data.contig,
-                        genomeID: data.genomeID,
-                        workspaceID: data.workspaceID,
+                        genomeId: data.genomeId,
+                        workspaceId: data.workspaceId,
                         showButtons: true,
                         loadingImage: self.options.loadingImage,
                         centerFeature: data.centerFeature,

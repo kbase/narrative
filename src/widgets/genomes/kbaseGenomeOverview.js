@@ -79,8 +79,9 @@
                                             self.trigger("showContig", 
                                                 { 
                                                     contig: $(this).attr("id"), 
-                                                    workspaceID: self.options.workspaceID,
-                                                    genomeID: self.options.genomeID,
+                                                    workspaceId: self.options.workspaceID,
+                                                    genomeId: self.options.genomeID,
+                                                    kbCache: self.options.kbCache,
                                                     event: event,
                                                 }
                                             );

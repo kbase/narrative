@@ -45,7 +45,7 @@ c.NotebookApp.ip = '0.0.0.0'
 # c.NotebookApp.base_kernel_url = '/'
 
 # The port the notebook server will listen on.
-# c.NotebookApp.port = 8888
+c.NotebookApp.port = 8888
 
 # Whether to overwrite existing config files when copying
 # c.NotebookApp.overwrite = False

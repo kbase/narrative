@@ -21,8 +21,6 @@
         },
 
         cdmiURL: "https://kbase.us/services/cdmi_api",
-//        workspaceURL: "http://140.221.84."
-//        workspaceURL: "https://kbase.us/services/workspace",
 
         init: function(options) {
             this._super(options);
@@ -314,12 +312,11 @@
                              .append("Show Contig")
                              .on("click", 
                                  function(event) {
-                                    console.log(self.options.featureID);
                                     self.trigger("showContig", { 
                                         contig: contigID, 
                                         centerFeature: self.options.featureID,
-                                        genomeID: self.options.genomeID,
-                                        workspaceID: self.options.workspaceID,
+                                        genomeId: self.options.genomeID,
+                                        workspaceId: self.options.workspaceID,
                                         kbCache: self.options.kbCache,
                                         event: event
                                     });

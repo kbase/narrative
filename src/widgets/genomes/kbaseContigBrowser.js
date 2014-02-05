@@ -152,16 +152,17 @@
                 self.resize();
             });
 
-            // Kickstart the whole thing
-            if (this.options.centerFeature != null)
-                this.setCenterFeature(this.options.centerFeature);
-
             if (this.options.workspaceId && this.options.genomeId) {
                 this.setWorkspaceContig(this.options.workspaceId, this.options.genomeId, this.options.contig);
             }
             else {
                 this.setCdmiContig();
             }
+
+            // Kickstart the whole thing
+            if (this.options.centerFeature != null)
+                this.setCenterFeature(this.options.centerFeature);
+
 
             return this;
         },
@@ -567,9 +568,7 @@
         },
 
         renderFromRange : function(features) {
-            console.log(features);
             features = this.processFeatures(features);
-            console.log(features);
 
             // expose 'this' to d3 anonymous functions through closure
             var self = this;

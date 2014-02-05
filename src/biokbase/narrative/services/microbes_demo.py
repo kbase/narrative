@@ -417,12 +417,13 @@ def _view_media(meth, media_id):
     return json.dumps(result)
 
 @method(name="Run Flux Balance Analysis")
-def _run_fba(meth, fba_model_id, media_id, fba_result_id):
+def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, defaultmaxflux, defaultminuptake, defaultmaxuptake, minimizeFlux, maximizeObjective, allreversible):
     """Run Flux Balance Analysis on a metabolic model. [10]
 
     :param fba_model_id: the FBA model you wish to run [10.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model_id: FBA Model
+    
     :param media_id: the media condition in which to run FBA (optional, default is an artificial complete media) [10.2]
     :type media_id: kbtypes.KBaseBiochem.Media
     :ui_name media_id: Media
@@ -431,14 +432,55 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     :type fba_result_id: kbtypes.KBaseFBA.FBA
     :ui_name fba_result_id: Output FBA Result Name
     
+    :param geneko: specify gene knockouts by the gene's feature ID delimited by semicolons(;) (optional) [10.4]
+    :type geneko: kbtypes.Unicode
+    :ui_name geneko: Gene Knockouts
+    
+    :param rxnko: specify reaction knockouts by reaction ID delimited by semicolons(;) (optional) [10.5]
+    :type rxnko: kbtypes.Unicode
+    :ui_name rxnko: Reaction Knockouts
+    
+    :param defaultmaxflux: specify the default maximum intracellular flux (optional) [10.6]
+    :type defaultmaxflux: kbtypes.Unicode
+    :ui_name defaultmaxflux: Default Maximum flux
+    :default defaultmaxflux: 100
+    
+    :param defaultminuptake: specify the default minumum nutrient uptake flux (optional) [10.7]
+    :type defaultminuptake: kbtypes.Unicode
+    :ui_name defaultminuptake: Default Min Uptake
+    :default defaultminuptake: -100
+    
+    :param defaultmaxuptake: specify the default maximum nutrient uptake flux (optional) [10.8]
+    :type defaultmaxuptake: kbtypes.Unicode
+    :ui_name defaultmaxuptake: Default Max Uptake
+    :default defaultmaxuptake: 0
+    
+    :param minimizeFlux: set to 'yes' or '1' to run FBA by minimizing flux (optional) [10.9]
+    :type minimizeFlux: kbtypes.Unicode
+    :ui_name minimizeFlux: Minimize Flux?
+    :default minimizeFlux: no
+    
+    :param maximizeObjective: set to 'no' or '0' to run FBA without maximizing the objective function (optional) [10.10]
+    :type maximizeObjective: kbtypes.Unicode
+    :ui_name maximizeObjective: Maximize Objective?
+    :default maximizeObjective: yes
+    
+    :param allreversible: set to 'yes' or '1' to allow all model reactions to be reversible (optional) [10.11]
+    :type allreversible: kbtypes.Unicode
+    :ui_name allreversible: All rxns reversible?
+    :default allreversible: no
+    
     :return: something 
     :rtype: kbtypes.Unicode
-    
     :output_widget: kbaseFbaTabsNarrative
     """
     
+    ## !! Important note!  the default values set here are for display only, so we actually revert to the
+    ## default values in the FBA modeling service.  Thus, if default values are updated there, the default values
+    ## displayed to the end user will be incorrect!
+    
     meth.stages = 3
-    meth.advance("Setting up FBA parameters")
+    meth.advance("Setting up and validating FBA parameters")
     
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id;
@@ -446,6 +488,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     
     # setup the parameters
     """
+    bool minimizeflux - a flag indicating if flux variability should be run (an optional argument: default is '0')
     typedef structure {
         fbamodel_id model;
         workspace_id model_workspace;
@@ -486,6 +529,11 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
         bool minthermoerror;
     } FBAFormulation;
     """
+    
+    # handle and/or validate parameters...
+    if not fba_model_id:
+        raise Exception("Error in running FBA: model name was not specified")
+    
     if media_id:
         fba_formulation = {
             'media' : media_id,
@@ -504,6 +552,51 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     fba_result_id = fba_result_id.strip()
     if fba_result_id:
         fba_params['fba'] = fba_result_id
+    if geneko:
+        fba_params['simulateko'] = 1
+        fba_params['formulation']['geneko']=geneko.split(";")
+    if rxnko:
+        fba_params['simulateko'] = 1
+        fba_params['formulation']['rxnko']=rxnko.split(";")
+    if maximizeObjective=='0' or maximizeObjective=='false' or maximizeObjective=='no':
+        fba_params['formulation']['maximizeObjective'] = 0
+    else:
+        fba_params['formulation']['maximizeObjective'] = 1
+        
+    if minimizeFlux=='1' or minimizeFlux=='true' or minimizeFlux=='yes':
+        fba_params['minimizeflux'] = 1
+    else:
+        fba_params['minimizeflux'] = 0
+        
+    if allreversible=='1' or allreversible=='true' or allreversible=='yes':   
+        fba_params['formulation']['allreversible'] = 1
+    else:  
+        fba_params['formulation']['allreversible'] = 0
+        
+
+    if defaultmaxflux:
+        try:
+            fba_params['formulation']['defaultmaxflux'] = float(defaultmaxflux)
+        except:
+            raise Exception("Default maximum flux must be a valid number.")
+    else:
+        fba_params['formulation']['defaultmaxflux'] = 100
+    if defaultminuptake:
+        try:
+            fba_params['formulation']['defaultminuptake'] = float(defaultminuptake)
+        except:
+            raise Exception("Default minimum uptake must be a valid number.")
+    else:
+        fba_params['formulation']['defaultminuptake'] = -100
+    if defaultmaxflux:
+        try:
+            fba_params['formulation']['defaultmaxuptake'] = float(defaultmaxuptake)
+        except:
+            raise Exception("Default maximum uptake must be a valid number.")
+    else:
+        fba_params['formulation']['defaultmaxuptake'] = 0
+    
+    meth.debug(json.dumps(fba_params))
 
     meth.advance("Running FBA")
     result_meta = fbaClient.runfba(fba_params)
@@ -577,14 +670,17 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     :param solution_limit: select the number of solutions you want to find [12.3]
     :type solution_limit: kbtypes.Unicode
     :ui_name solution_limit: Number of Solutions
+    :default solution_limit: 5
     
     :param total_time_limit: the total time you want to run gapfill [12.4]
     :type total_time_limit: kbtypes.Unicode
     :ui_name total_time_limit: Total Time Limit (s)
+    :default total_time_limit: 18000
     
     :param solution_time_limit: the max time you want to spend per solution [12.5]
     :type solution_time_limit: kbtypes.Unicode
     :ui_name solution_time_limit: Solution Time Limit (s)
+    :default solution_time_limit: 3600
     
     :return: job ID string
     :rtype: kbtypes.Unicode
@@ -595,7 +691,6 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     #:type output_model_id: kbtypes.Unicode
     #:ui_name output_model_id: Output FBA Result Name
     
-
     meth.stages = 2
     meth.advance("Setting up gapfill parameters")
     

@@ -5,7 +5,7 @@
     {% if mathjax_url %}
         <script type="text/javascript" src="{{mathjax_url}}?config=TeX-AMS_HTML-full&delayStartupUntil=configured" charset="utf-8"></script>
     {% endif %}
-    
+
     <script type="text/javascript">
         // MathJax disabled, set as null to distingish from *missing* MathJax,
         // where it will be undefined, and should prompt a dialog later.
@@ -77,7 +77,7 @@ class="notebook_app"
                                             </ul>
                                         </li>
                                         <li class="divider"></li>
-                                        
+
                                         <li id="kill_and_exit"><a href="#" >Close and halt</a></li>
                                     </ul>
                                 </li>
@@ -179,13 +179,13 @@ class="notebook_app"
         <div id="kb-ws">
         </div>
         <!-- <div class="kb-ws-browser-link">
-            See more in the 
+            See more in the
             <a href="http://140.221.84.142/" target="_blank">workspace browser</a>.
         </div>
     -->
         <div id="kb-function-panel" class="left-pane"></div>
         <div id="kb-function-help"></div>
-        
+
      </div>
 
      <div id="content-column">
@@ -287,6 +287,40 @@ class="notebook_app"
 <script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<script>
+
+$(function() {
+  var original = $;
+  require(['kbvis/src/kbpaths'], function() {
+  /*console.log('got paths');
+  console.log(requirejs.s.contexts._.config);
+  console.log(require.toUrl('kbaseLinechart' + '.js'));
+  console.log(require.toUrl('vis' + '.js'));
+  console.log(require.toUrl('d3' + '.js'));
+  console.log(require.toUrl('bootstrap' + '.js'));
+  console.log(require.toUrl('jqueryui' + '.js'));*/
+    require(['jquery','vis'], function() {
+      //console.log('got vis');
+      var newJQ = $;
+      $ = original;
+      for (prop in newJQ.fn) {
+        if (prop.match(/^kbase/)) {
+          $[prop] = newJQ.fn[prop];
+          $.fn[prop] = newJQ.fn[prop];
+        }
+      }
+/*console.log($.kbaseAccordion);
+console.log($.kbasePlantsNetworkNarrative);
+console.log($.kbaseBarchart);
+console.log($.kbaseLinechart);
+console.log('plants network narrative');
+console.log($.kbasePlantsNetworkNarrative);*/
+    });
+  });
+});
+
+</script>
 
 <!-- Standard IPython Notebook Javascript -->
 

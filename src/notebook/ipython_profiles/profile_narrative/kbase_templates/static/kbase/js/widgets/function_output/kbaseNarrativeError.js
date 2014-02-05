@@ -84,6 +84,30 @@
                 //         .replace(/>/g, "&lt;");
             };
 
+            // Reformat a TB as a list
+            var format_tb = function(err) {
+                var s = "\n";
+                var ind = ""; // keep in case change of mind
+                if (err.traceback === undefined) {
+                    s += "No traceback available.\n";
+                }
+                else {
+                    s += "Traceback (most recent call last):\n";
+                    var tb = err.traceback;
+                    for (var i= 0, ctr=0; i < tb.length; i++) {
+                        var entry = tb[i];
+                        if (entry.function == "__call__")
+                            continue;  // ignore wrapper
+                        ctr++;
+                        var txt = ctr + ") ";
+                        txt += "in '" + entry.function + "' line " + entry.line + ": ";
+                        txt += entry.text;
+                        s += ind + txt + "\n";
+                    }
+                }
+                return s;
+            };
+
             var $errorHead = $('<div>')
                              .addClass('well well-sm')
                              .append('<b>An error occurred while running your function!</b>');
@@ -108,7 +132,8 @@
                             title: 'Detailed Error Message',
                             body: $('<pre>')
                                   .addClass('kb-err-msg')
-                                  .append(esc(this.options.error.msg)),
+                                  .append(esc(this.options.error.msg))
+                                  .append(format_tb(this.options.error)),
                         }
                     ]
                 }

@@ -948,7 +948,7 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     if stderr:
         return json.dumps({'header': 'ERROR: %s'%stderr})
     
-    meth.advance("Displaying PCoA") Metadata values for %s were used to create sample groupings
+    meth.advance("Displaying PCoA")
     text = "A %s dimensional PCoA calculated from %s distance/dissimilarity was created from %s."%('three' if three.lower() == 'yes' else 'two', distance, in_name)
     if metadata:
         text += " Samples were colored by metadata values for %s."%metadata

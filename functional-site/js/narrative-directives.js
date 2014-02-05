@@ -865,8 +865,9 @@ function formateDate(timestamp) {
         var day = dayOfWeek[d.getDay()]
         var t = d.toLocaleTimeString().split(':');
         return 'Last '+ day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
-    } else {
-        return false;
+    } else  {
+        var d = new Date(timestamp);        
+        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); //check
     }
 }
 
@@ -875,6 +876,8 @@ function formateDate(timestamp) {
 var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
                      4:'Thurs', 5:'Fri', 6: 'Sat'}
 
+var months = {0: 'Jan', 1: 'Feb', 2: 'March', 3: 'April', 4: 'May',
+                5:'June', 6: 'July', 7: 'Aug', 8: 'Sept', 9: 'Oct', 10: 'Nov', 11: 'Dec'}
 
 narrativeDirectives.directive('newsfeed', function(FeedLoad, $compile) {
         return  {

@@ -61,6 +61,8 @@
              */
             this._super(options);
 
+            console.debug(options);
+
             /*
              * It is required to return this.
              */
@@ -75,10 +77,11 @@
             // Shamelessly lifted from kbaseNarrativeWorkspace.
             // Thanks Dan!
             var esc = function(s) { 
-                return s.replace(/'/g, "&apos;")
-                        .replace(/"/g, "&quot;")
-                        .replace(/</g, "&gt;")
-                        .replace(/>/g, "&lt;");
+                return s;
+                // return s.replace(/'/g, "&apos;")
+                //         .replace(/"/g, "&quot;")
+                //         .replace(/</g, "&gt;")
+                //         .replace(/>/g, "&lt;");
             };
 
             var $errorHead = $('<div>')

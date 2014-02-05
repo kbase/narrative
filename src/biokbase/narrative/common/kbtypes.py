@@ -235,7 +235,117 @@ class PhenotypeSimulationSet(tls.Unicode, TypeMeta):
 class ProteomeComparison(tls.Unicode, TypeMeta):
     info_text = "Proteome comparison result"
 
+######### Communities Narrative ###########
+# Override __str__ to get a fully qualified type name.
+class CommunitiesSequenceFile(tls.Unicode, TypeMeta):
+    info_text = "Communities.SequenceFile-1.0"
+    def __str__(self):
+        return "Communities.SequenceFile-1.0"
+
+class CommunitiesProject(tls.Unicode, TypeMeta):
+    info_text = "Communities.Project-1.0"
+    def __str__(self):
+        return "Communities.Project-1.0"
+
+class CommunitiesMetagenome(tls.Unicode, TypeMeta):
+    info_text = "Communities.Metagenome-1.0"
+    def __str__(self):
+        return "Communities.Metagenome-1.0"
+
+class CommunitiesCollection(tls.Unicode, TypeMeta):
+    info_text = "Communities.Collection-1.0"
+    def __str__(self):
+        return "Communities.Collection-1.0"
+
+class CommunitiesProfile(tls.Unicode, TypeMeta):
+    info_text = "Communities.Profile-1.0"
+    def __str__(self):
+        return "Communities.Profile-1.0"
+
+class CommunitiesProfileTable(tls.Unicode, TypeMeta):
+    info_text = "Communities.ProfileTable-1.0"
+    def __str__(self):
+        return "Communities.ProfileTable-1.0"
+
+class CommunitiesProfileStats(tls.Unicode, TypeMeta):
+    info_text = "Communities.ProfileStats-1.0"
+    def __str__(self):
+        return "Communities.ProfileStats-1.0"
+
+class CommunitiesData(tls.Unicode, TypeMeta):
+    info_text = "Communities.Data-1.0"
+    def __str__(self):
+        return "Communities.Data-1.0"
+
+class CommunitiesDataHandle(tls.Unicode, TypeMeta):
+    info_text = "Communities.DataHandle-1.0"
+    def __str__(self):
+        return "Communities.DataHandle-1.0"
+
 #@AUTO_BEGIN
+
+class Communities(object):
+    """Communities module"""
+    class Profile(tls.Unicode, TypeMeta):
+        """Profile type"""
+        info_text = "Communities.Profile"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Profile is a general data type while Profile::Stats and Profile::Table are based on Profile but with additional data and methods"""
+            info_text = "Communities.Profile-1.0"
+    class DataHandle(tls.Unicode, TypeMeta):
+        """DataHandle type"""
+        info_text = "Communities.DataHandle"
+        class v1_0(tls.Unicode, TypeMeta):
+            """DataHandle object"""
+            info_text = "Communities.DataHandle-1.0"
+    class Metagenome(tls.Unicode, TypeMeta):
+        """Metagenome type"""
+        info_text = "Communities.Metagenome"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Metagenome object"""
+            info_text = "Communities.Metagenome-1.0"
+    class ProfileTable(tls.Unicode, TypeMeta):
+        """ProfileTable type"""
+        info_text = "Communities.ProfileTable"
+        class v1_0(tls.Unicode, TypeMeta):
+            """ProfileTable object"""
+            info_text = "Communities.ProfileTable-1.0"
+    class List(tls.Unicode, TypeMeta):
+        """List type"""
+        info_text = "Communities.List"
+        class v1_0(tls.Unicode, TypeMeta):
+            """List object"""
+            info_text = "Communities.List-1.0"
+    class Collection(tls.Unicode, TypeMeta):
+        """Collection type"""
+        info_text = "Communities.Collection"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Collection object"""
+            info_text = "Communities.Collection-1.0"
+    class Project(tls.Unicode, TypeMeta):
+        """Project type"""
+        info_text = "Communities.Project"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Project object"""
+            info_text = "Communities.Project-1.0"
+    class SequenceFile(tls.Unicode, TypeMeta):
+        """SequenceFile type"""
+        info_text = "Communities.SequenceFile"
+        class v1_0(tls.Unicode, TypeMeta):
+            """SequenceFile object"""
+            info_text = "Communities.SequenceFile-1.0"
+    class ProfileStats(tls.Unicode, TypeMeta):
+        """ProfileStats type"""
+        info_text = "Communities.ProfileStats"
+        class v1_0(tls.Unicode, TypeMeta):
+            """ProfileStats object"""
+            info_text = "Communities.ProfileStats-1.0"
+    class Data(tls.Unicode, TypeMeta):
+        """Data type"""
+        info_text = "Communities.Data"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Data object"""
+            info_text = "Communities.Data-1.0"
 
 class MEME(object):
     """MEME module"""

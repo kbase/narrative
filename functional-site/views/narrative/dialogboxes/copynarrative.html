@@ -1,0 +1,20 @@
+<div >
+        <div class="modal-header">
+            <button type="button" class="close" ng-click="cancel()" aria-hidden="true">&times;</button>
+            <h4>Copy Narrative </h4>
+        </div>
+        <div class="modal-body">
+            The following files are about to be copied into your home workspace : 
+            <table class="table" copyfiles narr="narr" style="margin-top: 20px !important">
+              <tr><th><b>Name</b></th><th><b>File Type</b></th></tr>
+            </table>  
+
+          
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+            <button class="btn btn-primary" ng-click="copyNarrative()">Copy Narrative</button>
+            
+        </div>
+
+</div>

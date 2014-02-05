@@ -82,15 +82,12 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
         });
     }
 
-    console.log('called controller')
- 
+
 
     // removes items from the selected objects view
     $scope.removeItem = function(index){
         $scope.selectedObjs.splice(index, 1);
     }
-
-    console.log('tab', tab)
 
 })
 
@@ -228,15 +225,44 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 
 
-.controller('Narrative', function($scope, $stateParams, $location, kbaseLogin) {
-    console.log('stateParams', $stateParams)
-    console.log('called narrative')
+
+
+.controller('Narrative', function($scope, $stateParams, $location, kbaseLogin, $modal, FeedLoad) {
     //changeNav('narrative', 'newsfeed');
-    $scope.nar_url = 'http://narrative.kbase.us'; // used for links to narratives
+    $scope.nar_url = 'http://narrative.kbase.us/narrative'; // used for links to narratives    
+
+ /*   var feedUrl = 'http://yogi.lbl.gov/eprojectbuilder/misc/kbasefeed2.xml';
+
+    FeedLoad.fetch({q: feedUrl, num: 50}, {}, function (data) {
+        $scope.feed = data.responseData.feed;
+    });
+
+ */   
+    //$scope.narr = {};
+    //$scope.narr.title = "test title";
+    
+
+
+    //to open the copy narrative dialog
+    $scope.copyNarrativeForm = function (title) {
+
+        //$scope.narr.title = title;
+
+        var modalInstance = $modal.open({
+          templateUrl: 'views/narrative/dialogboxes/copynarrative.html',
+          controller: CopyNarrativeModalCtrl,
+          resolve: {
+                narr: function () {
+                    return title;
+                    }
+                
+            }
+        });
+    };
 
     // callback for ng-click 'loginUser':
     $scope.loginUser = function (user) {
-        console.log("username is " + user.username);
+        $("#loading-indicator").show();
         kbaseLogin.login(
             user.username,
             user.password,
@@ -275,7 +301,11 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     $scope.$apply();
                     
                 } else {
-                            console.log("error logging in");
+                    console.log("error logging in");
+                    $("#loading-indicator").hide();
+                    $("#login_error").html(args.message);
+                    $("#login_error").show();
+
                 }
 
             }
@@ -285,10 +315,54 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 })
 
-.controller('NarrativeProjects', function($scope, $stateParams) {
-    //changeNav('narrative', 'projects');
+.controller('CopyNarrativeModalCtrl1', ['$scope', '$modalInstance', 'narr', function ($scope, $modalInstance, narr) {
 
+        $scope.narr = narr;
+        // callback for ng-click 'copy narrative':
+        $scope.copyNarrative = function () {
+            //console.log("got here " + $scope.narr);    
+        }
+    }])
+
+
+.controller('CopyNarrativeModalCtrl', function ($scope, $modalInstance) {
+/* controller for the modals to copy a featured narrative */
+  $scope.save = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
 })
+
+.controller('NarrativeProjects', function($scope, $stateParams) {
+})
+
+
+/* controller for the modals */
+var CopyNarrativeModalCtrl = function ($scope, $modalInstance, narr) {
+
+    $scope.narr = narr;
+    // callback for ng-click 'copy narrative':
+    $scope.copyNarrative = function () {
+        console.log("got here " + $scope.narr);  
+        project.copy_narrative({
+            fq_id: $scope.narr,
+            callback: function(results) {
+                
+                console.log("copied narrative");
+                $modalInstance.dismiss();
+            },
+            error_callback: function() {
+                console.log("error occurred");
+            }
+        })
+    }
+    $scope.cancel = function () {
+        $modalInstance.dismiss('cancel');
+    };
+};
 
 
 
@@ -298,22 +372,6 @@ function Navigation($scope, $location) {
         return viewLocation === $location.path();
     };
 }
-
-function changeNav(nav, subnav) {
-    if (nav) {
-        $('.navbar-nav li').removeClass('active');
-        $('.navbar-nav .nav-'+nav).addClass('active');
-    } else {
-        $('.navbar-nav li').removeClass('active');
-        return;
-    }
-
-    if (subnav) {
-        $('.nav-sidebar li').removeClass('active');
-        $('.nav-sidebar .nav-'+subnav).addClass('active');
-    }
-}
-
 
 function LPHelp($scope, $stateParams, $location) {
     // Fixme: move out of controller

@@ -12,59 +12,6 @@ angular.module('ws-directives', []);
 angular.module('ws-directives')
     .directive('wsselector', function($location) {
         return {
-            controller: function($scope) {
-                /*
-               // model for storing selected objects
-                $scope.selectedObjs = []
-
-                // add objects from urls
-                for (var i in $scope.ws) {
-                    var found;
-                    var entry = {ws: $scope.ws[i], id: $scope.ids[i]};
-
-                    for (var j in $scope.selectedObjs) {
-                        if (angular.equals($scope.selectedObjs[j], entry)) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (found) continue;
-                    
-                    $scope.selectedObjs.push(entry)
-                }
-
-                $scope.$watch('selectedObjs', function() {
-                    console.log('watched')
-                    // update url strings
-                    $scope.ws = [];
-                    $scope.ids = [];
-                    for (var i in $scope.selectedObjs) {
-                        var obj = $scope.selectedObjs[i];
-                         $scope.ws.push(obj.ws);
-                         $scope.ids.push(obj.id);  
-                    }
-                    $scope.ws_param =  $scope.ws.join('+');
-                    $scope.ids_param =  $scope.ids.join('+');
-
-                    $location.search({selected_ws: $scope.selected_ws,
-                      ws: $scope.ws_param, 
-                      ids: $scope.ids_param});
-
-                    // show object selection sidebar
-
-                    if (!$('.selectedobjs').is(':visible')) {
-                        $('.side-bar-switch').children('button').removeClass('active');            
-                        $('.show-objs').addClass('active');
-                        $scope.showSelectedObjs();
-                    }
-                
-
-                }, true); 
-                */
-
-            },            
-
             template: '<div class="ws-selector">'+
                         '<div class="ws-selector-header">'+
                             '<a class="show-filters">Filter <span class="caret"></span></a>'+
@@ -112,8 +59,6 @@ angular.module('ws-directives')
                 var nav_height = 100;//238;
 
 
-                console.log('route params', scope.selected_ws)
-
                 // This method loads the sidebar data.  
                 // Note: this is only called after instantiation when sidebar needs to be refreshed
                 scope.loadData = function() {
@@ -122,7 +67,7 @@ angular.module('ws-directives')
                     workspaces = []
                     scope.workspace_dict = {}
 
-                    var prom = kb.kbwsAPI().list_workspaces({});
+                    var prom = kb.ws.list_workspaces({});
                     $('.select-box').loading();
                     $.when(prom).done(function(data) {
 
@@ -336,7 +281,7 @@ angular.module('ws-directives')
                     // modal for managing workspace permissions, clone, and delete
                     var permData; 
                     var manage_modal = $('<div></div>').kbasePrompt({
-                            title : 'Manage Workspace',
+                            title : 'Manage Workspace <a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>',
                             body : content,
                             modalClass : '', 
                             controls : [{
@@ -352,79 +297,25 @@ angular.module('ws-directives')
                                     $prompt.addCover();
                                     $prompt.getCover().loading();
 
-                                    var settings = scope.workspace_dict[ws_name];
-
-                                    var newPerms = {};
-                                    var table = $('.edit-perm-table');
-                                    table.find('tr').each(function() {
-                                        var user = $(this).find('.perm-user').val()
-                                        var perm = $(this).find('option:selected').val();
-                                        if (!user) return;
-                                        if ( (user in permData) && perm == permData[user]) {
-                                            return;
-                                        } 
-                                        
-                                        newPerms[user] = perm
-                                    })
-
-                                    // create new permissions for each user that does not currently have 
-                                    // permsissions.
-                                    var promises = [];
-                                    for (var new_user in newPerms) {
-                                        // ignore these
-                                        if (new_user == '*' || new_user == USER_ID) continue;   
-
-                                        // if perms have not change, do not request change
-                                        if ( (new_user in permData) && newPerms[new_user] == permData[new_user]) {
-                                            continue;
-                                        }
-
-                                        var params = {
-                                            workspace: ws_name,
-                                            new_permission: newPerms[new_user],
-                                            users: [new_user],
-                                            //auth: USER_TOKEN
-                                        };
-
-                                        var p = kb.kbwsAPI().set_permissions(params);
-                                        promises.push(p);
-                                    };
-
-                                    var rm_users = [];
-
-
-                                    // if user was removed from user list, change permission to 'n'
-                                    for (var user in permData) {
-                                        if (user == '*' || user == USER_ID) continue;                            
-
-                                        if ( !(user in newPerms) ) {
-                                            var params = {
-                                                workspace: ws_name,
-                                                new_permission: 'n',
-                                                users: [user],
-                                                //auth: USER_TOKEN
-                                            };
-
-                                            var p = kb.kbwsAPI().set_permissions(params);
-                                            promises.push(p);
-                                            rm_users.push(user)
-                                        } 
-                                    }
+                                    var prom = savePermissions(ws_name);
                                     prompt = $prompt;
 
-                                    // save permissions
-                                    $.when.apply($, promises).done(function() {
+                                    // save permissions, then save description
+                                    console.log('saving permissions')
+                                    $.when(prom).done(function() {
                                         // if description textarea is showing, saving description
                                         if ($('#ws-description textarea').length > 0) {
                                             var d = $('#ws-description textarea').val();
-                                            var prom = kb.kbwsAPI().set_workspace_description({workspace: ws_name, 
+
+                                            // saving description
+                                            var prom = kb.ws.set_workspace_description({workspace: ws_name, 
                                                 description: d})
 
                                             $.when(prom).done(function() {
                                                 prompt.addCover('Saved.');
                                                 prompt.closePrompt();
                                                 manageModal(ws_name);                                            
-                                            }).fail(function(){
+                                            }).fail(function(e){
                                                 prompt.addCover(e.error.message, 'danger');
                                             })
                                         } else {
@@ -442,7 +333,11 @@ angular.module('ws-directives')
                     manage_modal.openPrompt();
                     var dialog = manage_modal.data('dialogModal').find('.modal-dialog');
                     dialog.css('width', '500px');
-                    var modal_body = dialog.find('.modal-body');                    
+                    var modal_body = dialog.find('.modal-body');  //fixme: an api to the 
+                                                                  // widget would be nice for this stuff
+                    var modal_footer = dialog.find('.modal-footer');
+                    var save_btn = modal_footer.find('.btn-primary');
+                    save_btn.attr('disabled', true);
 
                     var cloneWS = $('<button class="btn btn-link pull-left">Clone</button>');
                     cloneWS.click(function() {
@@ -459,25 +354,30 @@ angular.module('ws-directives')
                     var dialog = manage_modal.data('dialogModal');
                     var modal_body = dialog.find('.modal-body');
 
-                    var prom = kb.kbwsAPI().get_workspace_description({workspace:ws_name})
+                    var prom = kb.ws.get_workspace_description({workspace:ws_name})
                     $.when(prom).done(function(descript) {
                         var d = $('<div>');
-                        d.append('<h5>Description<small> <a id="btn-edit-descript">Edit</a></small></h5>');
-                        d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>')
-                        modal_body.prepend(d)
+                        d.append('<h5>Description<small></h5>');
+                        d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
+                        modal_body.prepend(d);
 
-                        $('#btn-edit-descript').unbind('click');
-                        $('#btn-edit-descript').click(function(){
+                        var save_disabled = true;
+
+                        // add btn that allows the user to edit any content
+//                        modal_body.prepend('')
+
+                        $('.btn-edit').click(function(){
                             if ($('#ws-description textarea').length > 0) {
                                 $('#ws-description').html(descript);
-                                $(this).text('Edit');                          
+                                $(this).text('Edit');
+                                save_btn.attr('disabled', true);
                             } else {
                                 var editable = getEditableDescription(descript);
-                                $('#ws-description').html(editable)
+                                $('#ws-description').html(editable);
                                 $(this).text('Cancel');
+                                save_btn.attr('disabled', false)                               
                             }
                         })
-
                     })
 
 
@@ -486,7 +386,7 @@ angular.module('ws-directives')
                         var params = {//auth: USER_TOKEN,
                                       workspace: ws_name}
 
-                        var prom = kb.kbwsAPI().get_permissions(params);
+                        var prom = kb.ws.get_permissions(params);
 
                         //var newPerms;
                         var placeholder = $('<div></div>').loading()
@@ -498,7 +398,7 @@ angular.module('ws-directives')
                             placeholder.rmLoading();
 
                             if (isAdmin) {
-                                modal_body.append('<hr><h5>User Permissions <small><a class="edit-perms">Edit</a></small><h5>')
+                                modal_body.append('<hr><h5>User Permissions<h5>')
                             } else {
                                 modal_body.append('<h5>User Permissions</h5>');                                
                             }
@@ -509,50 +409,48 @@ angular.module('ws-directives')
                             var perm_table = getPermTable(data)
                             perm_container.append(perm_table);
 
-                            if (isAdmin) {
-                                $('.edit-perms').click(function() {
-                                    if (perm_container.find('table.perm-table').length > 0) {
-                                        $(this).html('Cancel')
-                                        perm_table.remove()
-                                        perm_table = getEditablePermTable(data);
-                                        perm_container.html(perm_table);
-                                    } else {
-                                        $(this).html('Edit')                                    
-                                        perm_table.remove()
-                                        perm_table = getPermTable(data);
-                                        perm_container.html(perm_table);                                  
-                                    }
-                                })
-                            }
+
+                            $('.btn-edit').click(function() {
+                                if (perm_container.find('table.perm-table').length > 0) {
+                                    $(this).html('Cancel')
+                                    perm_table.remove()
+                                    perm_table = getEditablePermTable(data);
+                                    perm_container.html(perm_table);
+                                    save_btn.attr('disabled', false);                                        
+                                } else {
+                                    $(this).html('Edit')                                    
+                                    perm_table.remove()
+                                    perm_table = getPermTable(data);
+                                    perm_container.html(perm_table);
+                                    save_btn.attr('disabled', true);                                        
+                                }
+                            })
+
 
                             modal_body.append(cloneWS);
-                            modal_body.append(deleteWS);                                
-
+                            modal_body.append(deleteWS);
                         })
                     // if logged in and admin
                     }
 
 
-                    function savePermissions(ws_name, cb, fail_cb) {
-                        var settings = scope.workspace_dict[ws_name];
-
+                    function savePermissions(ws_name) {
                         var newPerms = {};
                         var table = $('.edit-perm-table');
                         table.find('tr').each(function() {
                             var user = $(this).find('.perm-user').val()
                             var perm = $(this).find('option:selected').val();
                             if (!user) return;
-                            if ( (user in permData) && perm == permData[user]) {
-                                return;
-                            } 
                             
                             newPerms[user] = perm
                         })
 
                         // create new permissions for each user that does not currently have 
                         // permsissions.
+                        console.log('newPerms', newPerms)
                         var promises = [];
                         for (var new_user in newPerms) {
+                            console.log('newuser', new_user)
                             // ignore these
                             if (new_user == '*' || new_user == USER_ID) continue;   
 
@@ -561,6 +459,7 @@ angular.module('ws-directives')
                                 continue;
                             }
 
+
                             var params = {
                                 workspace: ws_name,
                                 new_permission: newPerms[new_user],
@@ -568,37 +467,37 @@ angular.module('ws-directives')
                                 //auth: USER_TOKEN
                             };
 
-                            var p = kb.kbwsAPI().set_permissions(params);
+                            console.log('params1', params)
+                            var p = kb.ws.set_permissions(params);
                             promises.push(p);
                         };
 
                         var rm_users = [];
 
-
+                        console.log()
                         // if user was removed from user list, change permission to 'n'
+                        console.log('permdata', permData)
                         for (var user in permData) {
+                            console.log('user', user)
                             if (user == '*' || user == USER_ID) continue;                            
 
                             if ( !(user in newPerms) ) {
+
                                 var params = {
                                     workspace: ws_name,
                                     new_permission: 'n',
                                     users: [user],
                                     //auth: USER_TOKEN
                                 };
+                                console.log('params2', params)                                
 
-                                var p = kb.kbwsAPI().set_permissions(params);
+                                var p = kb.ws.set_permissions(params);
                                 promises.push(p);
                                 rm_users.push(user)
                             } 
                         }
 
-                        $.when.apply($, promises).done(function() {
-                            // update model to remove
-                            cb();
-                        }).fail(function() {
-                            fail_cb;
-                        });
+                        return $.when.apply($, promises);
                     }
 
                     function getEditableDescription(d) {
@@ -619,7 +518,7 @@ angular.module('ws-directives')
                         // (excluding ~global 'user' and owner)
                         var perm_count = Object.keys(data).length;
 
-                        if (perm_count <= 2) {
+                        if (perm_count <= 1 || (perm_count == 2 && '*' in data)) {
                             var row = $('<tr><td>(None)</td></tr>');
                             table.append(row);
                             return table;
@@ -667,7 +566,7 @@ angular.module('ws-directives')
                             table.append(row);
                         }                    
 
-                        var newrowhtml = '<tr class="perm-row"><td><input type="text" class="form-control perm-user-id" placeholder="Username"></td><td>'+
+                        var newrowhtml = '<tr class="perm-row"><td><input type="text" class="form-control perm-user" placeholder="Username"></td><td>'+
                                 permDropDown(data[key])+'</td></tr>'
                         var row = $(newrowhtml);
 
@@ -677,13 +576,13 @@ angular.module('ws-directives')
                         table.append(row);
                         
                         table.find('.add-perm').click(function() {
-                            var new_user_id = $(this).parents('tr').find('.perm-user-id').val();
+                            var new_user_id = $(this).parents('tr').find('.perm-user').val();
                             var new_perm = $(this).parents('tr').find('.create-permission option:selected').val();
                             //newPerms[new_user_id] = new_perm; //update model
 
                             newRow(new_user_id, new_perm);
 
-                            $(this).parents('tr').find('.perm-user-id').val('')
+                            $(this).parents('tr').find('.perm-user').val('')
 
                             if (table.find('tr').length == 0) {
                                table.append('<tr>None</tr>');
@@ -774,7 +673,7 @@ angular.module('ws-directives')
                                             return;
                                         }                   
 
-                                        var prom = kb.kbwsAPI().create_workspace(params);
+                                        var prom = kb.ws.create_workspace(params);
                                         $prompt.addCover()
                                         $prompt.getCover().loading()
                                         $.when(prom).done(function(){
@@ -851,7 +750,7 @@ angular.module('ws-directives')
                                             return;
                                         }                   
 
-                                        var prom = kb.kbwsAPI().clone_workspace(params);
+                                        var prom = kb.ws.clone_workspace(params);
                                         $prompt.addCover()
                                         $prompt.getCover().loading()
                                         $.when(prom).done(function(){
@@ -893,7 +792,7 @@ angular.module('ws-directives')
                                                   //auth: kb.token()
                                                  }
 
-                                    var prom = kb.kbwsAPI().delete_workspace(params);
+                                    var prom = kb.ws.delete_workspace(params);
                                     $prompt.addCover()
                                     $prompt.getCover().loading()
                                     $.when(prom).done(function(){
@@ -957,8 +856,8 @@ angular.module('ws-directives')
                     $(element).loading('loading '+ws+'...')
 
                     // load workspace objects
-                    var prom = kb.kbwsAPI().list_objects({workspaces: [ws]});
-                    var prom2 = kb.kbwsAPI().list_objects({workspaces: [ws], showOnlyDeleted: 1})
+                    var prom = kb.ws.list_objects({workspaces: [ws]});
+                    var prom2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1})
                     $.when(prom, prom2).done(function(data, deleted_objs){
                         $(element).rmLoading();
                         $(element).append('<table id="obj-table-'+ws+'" \
@@ -1010,7 +909,7 @@ angular.module('ws-directives')
                             checkBoxObjectClickEvent('.obj-check-box');
 
                             // load description above table if there is one.
-                            var p = kb.kbwsAPI().get_workspace_description({workspace: ws})
+                            var p = kb.ws.get_workspace_description({workspace: ws})
                             $.when(p).done(function(d){
                                 if (d != null) {
                                     $(element).parent().prepend('<div class="text-muted ws-descript" \
@@ -1077,8 +976,8 @@ angular.module('ws-directives')
                         //            +id+'</a> (<a class="show-versions">'+instance+'</a>)\
                         //                <a class="btn-show-info hide pull-right">More</a>'
                         //} else {
-                            var new_id = '<span class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                                    +id+'</span> (<a class="show-versions">'+instance+'</a>)\
+                            var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                                    +id+'</a> (<a class="show-versions">'+instance+'</a>)\
                                         <a class="btn-show-info hide pull-right">More</a>';
                         //}
 
@@ -1097,7 +996,6 @@ angular.module('ws-directives')
                         var type = $(this).data('obj-type').split('-')[0];
                         var id = $(this).data('obj-id');
                         var ws = $(this).data('ws');
-                        console.log(ws, id, type)
 
                         if (type == 'Genome') {
                             scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
@@ -1156,7 +1054,7 @@ angular.module('ws-directives')
                         var modal_body = historyModal.data('dialogModal').find('.modal-body').loading();
                         historyModal.data('dialogModal').find('.modal-dialog').css('width', '800px')
 
-                        var prom = kb.kbwsAPI().get_object_history({workspace: ws, name: id});
+                        var prom = kb.ws.get_object_history({workspace: ws, name: id});
                         $.when(prom).done(function(data) {
                             modal_body.rmLoading();
                             modal_body.append('<span class="h5"><b>Name</b></span>: '+id+'<br>')                            
@@ -1322,7 +1220,7 @@ angular.module('ws-directives')
                     var modal_body = info_modal.data('dialogModal').find('.modal-body');
 
                     var params = [{workspace: ws, name: id}]
-                    var prom = kb.kbwsAPI().get_object_info(params);
+                    var prom = kb.ws.get_object_info(params);
                     modal_body.loading();
                     $.when(prom).done(function(data) {
                         modal_body.rmLoading();
@@ -1368,7 +1266,7 @@ angular.module('ws-directives')
                                 };
                             }());
 
-                            var prom = kb.kbwsAPI().get_objects([{workspace: ws, name:id}])
+                            var prom = kb.ws.get_objects([{workspace: ws, name:id}])
                             $.when(prom).done(function(json) {
                                 var fileName = id+'.'+data[4]+'.json';
                                 saveData(json[0], fileName);
@@ -1381,7 +1279,7 @@ angular.module('ws-directives')
                         open.click(function() {
                             var fileName = id+'.'+data[4]+'.json';
                             var jsonWindow = window.open(fileName,"_blank");
-                            var prom = kb.kbwsAPI().get_objects([{workspace: ws, name:id}])
+                            var prom = kb.ws.get_objects([{workspace: ws, name:id}])
                             $.when(prom).done(function(json) {
                                 jsonWindow.document.write(JSON.stringify(json[0]));
                             })                            
@@ -1434,7 +1332,6 @@ angular.module('ws-directives')
                     })
 
                     // if trash table hasn't already been rendered, render it
-                    console.log(typeof trashbin)
                     if (typeof trashbin == 'undefined') {
                         $(element).append('<table id="obj-table-'+ws+'-trash" \
                             class="table table-bordered table-striped" style="width: 100%;"></table>');
@@ -1464,7 +1361,7 @@ angular.module('ws-directives')
                         obj_ids.push(obj);
                     }
 
-                    var prom = kb.kbwsAPI().delete_objects(obj_ids)
+                    var prom = kb.ws.delete_objects(obj_ids)
                     $.when(prom).done(function(data){
                         scope.loadObjTable();
                     })
@@ -1534,7 +1431,7 @@ angular.module('ws-directives')
                                         var obj_name = checkedList[i][0];
                                         var params = {from: {workspace: ws, name: obj_name},
                                                       to: {workspace: new_ws, name: obj_name}}
-                                        var prom = kb.kbwsAPI().copy_object(params);
+                                        var prom = kb.ws.copy_object(params);
                                         proms.push(prom);
                                     }
 

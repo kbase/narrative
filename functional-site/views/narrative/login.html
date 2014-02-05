@@ -1,32 +1,36 @@
 
     <div class="row">
-    <div class="col-md-4 col-md-offset-2">
+    <div class="col-md-4 col-md-offset-1">
         <div>
-            <p id="doodle"><img src="assets/images/doodle.png" /></p>
-            <h1>Your science, your way.</h1>
+            <p id="doodle" class="text-center"><img src="assets/images/doodle.png" /></p>
+            <div style="padding-left: 30px">
+            <h1 style="font-size: 1.6em">Your science, your way.</h1>
             <p>Build narratives that capture your analyses, including rich annotations, visualization widgets, reusable workflows, and custom scripts. Share your work and your data with colleagues. Follow the field through the people, organisms, and projects that matter to you. </p>
-        </div>
-        <div>
             <p>Building narratives not your style? You can still work with KBase tools via <a href="http://www.kbase.us/services/docs/invocation/Iris/">Iris</a>, our web-based command-line interface, or access your workspaces with the <a href="http://140.221.84.142">Workspace Browser</a>.</p>
-        </div>                  
+            </div>  
+        </div>
+                        
     </div>
-    <div class="col-md-4">
-        <form id="login-form">
+    <div class="col-md-4 col-md-offset-1" >
+        <form id="login-form" class="well" ng-submit="loginUser(user)">
             <div>
                 <legend>Please Sign in</legend>
-                <p id="login_error" class="text-error" style="display:none"></p>
+                <p id="login_error" class="text-danger" style="display:none"></p>
                 <div class="form-group">
+                   
                     <label for="kbase_username">Username:</label>
-                    <input type="text" placeholder="username" id="kbase_username" class=" form-control" tabindex="1" ng-model="user.username">
+                    <input name="kbase_username" type="text" placeholder="username" id="kbase_username" class=" form-control" tabindex="1" ng-model="user.username" required>
                 </div>
                 <div class="form-group">
-                    <label for="kbase_password" class="full-width">Password:<span class="pull-right"> <a target="_blank" href="http://gologin.kbase.us/ResetPassword" tabindex="4">Forgot password?</a></span></label>
-                    <input type="password" placeholder="password" id="kbase_password" class="form-control" tabindex="2" ng-model="user.password">
+                    <label for="kbase_password" class="full-width">Password:<span class="pull-right"> <a target="_blank" href="http://gologin.kbase.us/ResetPassword" tabindex="4">&nbsp;Forgot password?</a></span></label>
+                    <input type="password" placeholder="password" id="kbase_password" class="form-control" tabindex="2" ng-model="user.password" required>
                 </div>
 
-                <button id="signinbtn" type="button" class="btn btn-primary" tabindex="3" ng-click="loginUser(user)" >Sign In</button> <img src="./assets/images/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
+                <button id="signinbtn" type="submit" class="btn btn-primary" tabindex="3" >Sign In</button> <img src="./assets/images/ajax-loader.gif" id="loading-indicator" style="display: none;"  />
             </div>
+            <BR>
+            <span>New to KBase? <a target="_blank" href="http://gologin.kbase.us/Signup">Register now</a></span>
         </form>
-        <span>New to KBase? <a target="_blank" href="http://gologin.kbase.us/Signup">Register now</a></span>
+        
     </div>
 </div>

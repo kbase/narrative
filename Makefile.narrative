@@ -21,7 +21,7 @@ ipython-install:
 biokbase-install:
 	@printf "Installing biokbase, log in ${log}\n"
 	@printf "  Installing requirements from src/requirements.txt with 'pip'\n"
-	@while read s; do pip install $$s; done < src/requirements.txt >> ../${log} 2>&1
+	@while read s; do pip install -U $$s; done < src/requirements.txt >> ../${log} 2>&1
 	@printf "  Running local 'setup.py'\n"
 	@cd src ; python setup.py install >> ../${log} 2>&1
 	@printf "Done installing biokbase.\n"

@@ -604,10 +604,6 @@
          * @returns a list of data objects
          */
         getLoadedData: function(type, ignoreVersion) {
-            console.log("kbaseWorkspaceDataDeluxe.getLoadedData start");
-            console.log(type);
-            console.log(ignoreVersion);
-
             if (!type || type.length === 0)
                 return this.loadedData;
 
@@ -648,7 +644,6 @@
                 }
             }
 
-            console.log(dataSet);
             return dataSet;
         },
 

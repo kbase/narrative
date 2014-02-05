@@ -829,8 +829,8 @@
 
                                     case 'E':
                                         var errorJson = matches[2];
+                                        errorJson = errorJson.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\$/g, "&#36;");
                                         self.createErrorCell(cell, errorJson);
-                                        self.dbg("Narrative error: " + errorJson);
                                         break;
 
                                     case 'G':
@@ -889,7 +889,7 @@
             var uuid = this.uuidgen();
             var errCellId = 'kb-cell-err-' + uuid;
 
-            var widgetInvoker = this.errorWidget + "({ 'error' : " + errorJson + "});";
+            var widgetInvoker = this.errorWidget + "({ \"error\" : " + errorJson + "});";
 
             var header = '<span class="kb-err-desc"><b>' + 
                             (methodName ? methodName : 'Unknown method') + 

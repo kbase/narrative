@@ -28,13 +28,23 @@ function Cache() {
 
 
 function KBCacheClient(token) {
-    var token = token;
-
     var auth = {};
     auth.token = token;
-    console.log(configJSON.fba_url)
-    var fba = new fbaModelServices(configJSON.fba_url);
-    var kbws = new Workspace(configJSON.workspace_url, auth);
+
+    if (configJSON.setup == 'dev') {
+        fba_url = configJSON.dev.fba_url;
+        ws_url = configJSON.dev.workspace_url;
+    } else {
+        fba_url = configJSON.prod.fba_url;
+        ws_url = configJSON.prod.workspace_url;         
+    }
+
+    console.log('FBA URL is:', fba_url)
+    console.log('Workspace URL is:', ws_url)
+
+    var fba = new fbaModelServices(fba_url);
+    var kbws = new Workspace(ws_url, auth);
+
   
     var cache = new Cache();    
 
@@ -63,18 +73,15 @@ function KBCacheClient(token) {
         return prom;
     }
 
-    this.fbaAPI = function() {
-        return fba;
-    }
-
+    // make publically accessible methods that 
+    this.fba = fba;
     this.ws = kbws;
 
-    this.token = function() {
-        return token;
-    }
+    this.project = new ProjectAPI(ws_url);
+    project = new ProjectAPI(ws_url);  // let's deprecate this. It'd be nice to avoid the
+                                       // global varriable in the future....
 
-    //fixme: hacks
-    projectapi()
+    this.token = token;
 }
 
 
@@ -130,18 +137,12 @@ function getBio(type, loaderDiv, callback) {
 
 
 
-function projectapi() {
-    // workspace service endpoint & client
-    //project.ws_url = "https://kbase.us/services/workspace";
-    //project.ws_client = new workspaceService(project.ws_url);
-    project ={}
-    var auth = {}
-    var token = USER_TOKEN;
-    auth.token = token;
+function ProjectAPI(ws_url, token) {
+    var self = this;
 
-    //project.ws_url = "https://kbase.us/services/ws";
-    project.ws_url = 'http://140.221.84.209:7058';
-    project.ws_client = new Workspace(project.ws_url, auth);
+    var auth = {}
+    auth.token = token;
+    var ws_client = new Workspace(ws_url, auth);
 
 
     var legit_ws_id = /^\w+$/;
@@ -149,55 +150,55 @@ function projectapi() {
     var legit_narr_ws_id = /^ws\.(\d+)\.obj\.(\d+)$/;
 
     // Fields in a workspace metadata object
-    project.ws_meta_fields = ['id','owner','moddate','objects',
+    var ws_meta_fields = ['id','owner','moddate','objects',
               'user_permission','global_permission'];
 
     // function used in reduce() to map ws_meta array into a dict
     var ws_meta_dict = function (ws_meta){
-    return ws_meta.reduce ( function( prev, curr, index){
-                    prev[project.ws_meta_fields[index]] = curr;
-                    return(prev);
+        return ws_meta.reduce ( function( prev, curr, index){
+                        prev[ws_meta_fields[index]] = curr;
+                        return(prev);
                 },{});
     };
 
     // Fields in an workspace object metadata object
-    project.obj_meta_fields = ['id','type','moddate','instance','command',
+    obj_meta_fields = ['id','type','moddate','instance','command',
                'lastmodifier','owner','workspace','ref','chsum',
                'metadata', 'objid'];
 
     // function to map obj_meta array into a dict
     var obj_meta_dict = function (obj_meta) {
-    return obj_meta.reduce( function( prev, curr, index){
-                    prev[project.obj_meta_fields[index]] = curr;
-                    return(prev);
-                },{});
+        return obj_meta.reduce( function( prev, curr, index){
+                        prev[obj_meta_fields[index]] = curr;
+                        return(prev);
+                    },{});
     };
     // Fields in an workspace object metadata object
-    project.obj_meta_fields2 = ['id','type','moddate','instance','command',
+    obj_meta_fields2 = ['id','type','moddate','instance','command',
                'lastmodifier','owner','workspace','ref','chsum',
                'metadata'];
 
     // function to map obj_meta array into a dict
     var obj_meta_dict2 = function (obj_meta) {
-    return obj_meta.reduce( function( prev, curr, index){
-                    prev[project.obj_meta_fields[index]] = curr;
-                    return(prev);
-                },{});
+        return obj_meta.reduce( function( prev, curr, index){
+                        prev[obj_meta_fields[index]] = curr;
+                        return(prev);
+                    },{});
     };
 
     // We are tagging workspaces with _SOMETHING objects to distinguish
     // project workspaces from other containers. Using this in case we
     // decide to include other types of workspaces
-    project.ws_tag = {
+    var ws_tag = {
         project : '_project'
     };
 
-    project.ws_tag_type = 'KBaseNarrative.Metadata';
-    project.narrative_type = 'KBaseNarrative.Narrative';
+    var ws_tag_type = 'KBaseNarrative.Metadata';
+    var narrative_type = 'KBaseNarrative.Narrative';
 
 
     // Fields in an empty narrative
-    var empty_narrative = {type: project.narrative_type,
+    var empty_narrative = {type: narrative_type,
                            data: {nbformat: 3,
                                   nbformat_minor: 0,
                                   metadata: { format: "ipynb", 
@@ -231,8 +232,8 @@ function projectapi() {
 
     // Empty project tag template
     var empty_proj_tag = {
-        id : project.ws_tag.project,
-        type : project.ws_tag_type,
+        id : ws_tag.project,
+        type : ws_tag_type,
         data : { description : 'Tag! You\'re a project!' },
         workspace : undefined,
         metadata : {},
@@ -242,8 +243,7 @@ function projectapi() {
 
     // id of the div containing the kbase login widget to query for auth
     // info. Set this to a different value if the div has been named differently.
-    //project.auth_div = 'login-widget';
-    project.auth_div = '#signin-button';
+
     // Common error handler callback
     var error_handler = function() {
         // neat trick to pickup all arguments passed in
@@ -263,7 +263,7 @@ function projectapi() {
 
         var def_params = {callback : undefined,
                    perms : ['a'],
-                   filter_tag : project.ws_tag.project};
+                   filter_tag : ws_tag.project};
         var p = $.extend( def_params, p_in);
 
         var ignore = /^core/;
@@ -286,7 +286,7 @@ function projectapi() {
         // extract workspace ids into a list
         var ws_ids = ws_match.map( function(v) { return v[0]});
 
-        var prom = project.ws_client.list_objects({workspaces: ws_ids, 
+        var prom = ws_client.list_objects({workspaces: ws_ids, 
                                                    type: 'KBaseNarrative.Metadata', 
                                                    showHidden: 1});
         return prom
@@ -300,7 +300,9 @@ function projectapi() {
     // name, where the values are dictionaries keyed on ws_meta_fields
     // if a specific workspace name is given its metadata will be
     // returned
-    project.get_projects = function( p_in ) {
+    this.get_projects = function( p_in ) {
+
+        console.log('getting projects')
         var def_params = { perms : ['a'],
                            workspace_id : undefined };
 
@@ -308,13 +310,13 @@ function projectapi() {
 
         var META_ws;
         if ( p.workspace_id ) {
-            META_ws = project.ws_client.get_workspacemeta( { workspace : p.workspace_id } );
+            META_ws = ws_client.get_workspacemeta( { workspace : p.workspace_id } );
             var prom =  $.when( META_ws).then( function(result) {
                            return filter_wsobj( {res: [result], perms: p.perms });
                        });
             return prom
         } else {
-            META_ws = project.ws_client.list_workspaces( {} );
+            META_ws = ws_client.list_workspaces( {} );
             var prom = $.when( META_ws).then( function(result) {
                             return filter_wsobj( { res: result, perms: p.perms });
                        });
@@ -326,13 +328,13 @@ function projectapi() {
     // Get the object metadata for the specified workspace id and return a
     // dictionary keyed on "objectId" where the
     // value is a dictionary keyed on obj_meta_fields
-    project.get_project = function( p_in ) {
+    this.get_project = function( p_in ) {
         var def_params = { callback : undefined,
                    workspace_id : undefined };
 
         var p = $.extend( def_params, p_in);
 
-        var ws_meta = project.ws_client.list_workspace_objects( {workspace: p.workspace_id});
+        var ws_meta = ws_client.list_workspace_objects( {workspace: p.workspace_id});
         $.when( ws_meta).then( function (results) {
                        var res = {};
                        $.each( results, function (index, val) {
@@ -353,7 +355,7 @@ function projectapi() {
     // if the type is given, it will save one RPC call,
     // otherwise we fetch the metadata for it and then
     // grab the type
-    project.get_object = function( p_in ) {
+    this.get_object = function( p_in ) {
         var def_params = { callback : undefined,
                    workspace_id : undefined,
                    object_id : undefined,
@@ -362,9 +364,9 @@ function projectapi() {
                  };
         var p = $.extend( def_params, p_in);
 
-        var del_fn = project.ws_client.get_object( { type: p.type,
-                                                     workspace: p.workspace,
-                                                     id: p.object_id });
+        var del_fn = ws_client.get_object( { type: p.type,
+                                             workspace: p.workspace,
+                                             id: p.object_id });
 
         $.when( del_fn).then( p.callback, p.error_callback);
     
@@ -374,18 +376,8 @@ function projectapi() {
 
     // Delete the object in the specified workspace/object id and return a
     // dictionary keyed on the obj_meta_fields for the result
-    project.delete_object = function( p_in ) {
+    this.delete_object = function( p_in ) {
         console.error('project.delete_object was removed since due to redundancy . use set_workspace_permissions in workspace api');
-        /*
-        var def_params = {workspace : undefined,
-                          id : undefined,
-                          //type: undefined,
-                          error_callback: error_handler };
-        var p = $.extend( def_params, p_in);
-        console.log(p.workspace, p.id)
-        var del_fn = project.ws_client.delete_objects( [{workspace: p.workspace, name: p.id }] );
-        return $.when( del_fn).fail(function() { p.error_callback });
-        */
     };
 
 
@@ -396,7 +388,7 @@ function projectapi() {
     // if it fails to conform
     // If it is passed the id of an existing workspace, add the _project
     // tag object to it
-    project.new_project = function( p_in ) {
+    this.new_project = function( p_in ) {
         var def_params = { project_id : undefined,
                            def_perm : 'n',
                            error_callback: error_handler };
@@ -413,7 +405,7 @@ function projectapi() {
 
                 proj.workspace = p.project_id;
 
-                var ws_fn2 = project.ws_client.save_object( proj);
+                var ws_fn2 = ws_client.save_object( proj);
                 //var prom = $.when( ws_fn2 ).
                 //.then( function(obj_meta) {
                 //               return  obj_meta_dict(obj_meta); 
@@ -421,11 +413,10 @@ function projectapi() {
                 return ws_fn2;
             };
 
-            console.log('getting '+p.project_id)
-            var ws_exists = project.ws_client.get_workspacemeta( {workspace : p.project_id });
+            var ws_exists = ws_client.get_workspacemeta( {workspace : p.project_id });
             var prom =  $.when( ws_exists).then(tag_ws, function() {
 
-                var ws_fn = project.ws_client.create_workspace( { workspace : p.project_id,
+                var ws_fn = ws_client.create_workspace( { workspace : p.project_id,
                                                                   globalread : p.def_perm })
 
                 return $.when( ws_fn).then( tag_ws, function() {
@@ -444,7 +435,7 @@ function projectapi() {
     // will wipe out everything there, so make sure you prompt "Are you REALLY SURE?"
     // before calling this.
     // the callback gets the workspace metadata object of the deleted workspace
-    project.delete_project = function( p_in ) {
+    this.delete_project = function( p_in ) {
         var def_params = { callback : undefined,
                            project_id : undefined,
                            error_callback: error_handler };
@@ -452,7 +443,7 @@ function projectapi() {
         var p = $.extend( def_params, p_in);
 
        if ( legit_ws_id.test(p.project_id)) {
-            var ws_def_fun = project.ws_client.delete_workspace({
+            var ws_def_fun = ws_client.delete_workspace({
                                       workspace: p.project_id});
             $.when( ws_def_fun).then( p.callback,
                           p.error_callback
@@ -468,14 +459,14 @@ function projectapi() {
     // 'user_id1' : perm1 // special permission for user_id1
     // ...
     // 'user_idN' : permN // special permission for user_idN
-    project.get_project_perms = function( p_in ) {
+    this.get_project_perms = function( p_in ) {
         var def_params = { callback : undefined,
                    project_id : undefined,
                    error_callback : error_handler
                  };
         var p = $.extend( def_params, p_in);
 
-        var perm_fn =  project.ws_client.get_permissions( {
+        var perm_fn =  ws_client.get_permissions( {
                                           workspace : p.project_id });
         return $.when( perm_fn).fail(function(){p.error_callback});
 
@@ -490,55 +481,9 @@ function projectapi() {
     // ...
     // 'user_idN' : permN // special permission for user_idN
     // The return results seem to be broken
-    project.set_project_perms = function( p_in ) {
+    this.set_project_perms = function( p_in ) {
         console.error('set_project_perms was removed since due to redundancy . use set_workspace_permissions in workspace api')
-        /*
-        var def_params = { callback : undefined,
-                   project_id : undefined,
-                   perms : {},
-                   error_callback : error_handler}; 
 
-        var p = $.extend( def_params, p_in);
-
-        var set_perm_fn =  [];
-        // If a new default permission was given push a set_global_workspace_permissions
-        // call onto the function stack
-        if ('default' in p.perms) {
-            set_perm_fn.push( project.ws_client
-                      .set_global_workspace_permissions( {
-                                       workspace : p.project_id,
-                                       new_permission : p.perms['default']
-                                     }));
-            delete( p.perms['default']);
-        }
-        // sort users into lists based on the permissions we are giving them
-        var user_by_perm = Object.keys(p.perms).reduce(
-            function(prev,curr,index) {
-            if (p.perms[curr] in prev) {
-                prev[p.perms[curr]].push( curr);
-                return prev;
-            } else {
-                prev[p.perms[curr]] = [curr];
-                return prev;
-            }
-            },
-            {});
-
-        var by_perms_fn = Object.keys( user_by_perm).map(
-            function(perm) {
-            return project.ws_client.set_workspace_permissions( {users: user_by_perm[perm],
-                                         new_permission : perm,
-                                         workspace: p.project_id
-                                         });
-            });
-        set_perm_fn = set_perm_fn.concat(by_perms_fn);
-        $.when.apply( set_perm_fn).then( function() {
-                             var results = [].slice.call(arguments);
-                             p.callback( results);
-                         },
-                         p.error_callback
-                           );
-        */
     };
 
 
@@ -547,10 +492,10 @@ function projectapi() {
     // if no project_ids are given, then all a call will be made to get_projects
     // first - avoid doing this if possible as it will be miserably slow.
     // an array of obj_meta dictionaries will be handed to the callback
-    project.get_narratives = function(p_in) {
+    this.get_narratives = function(p_in) {
         var def_params = { project_ids : undefined,
                            error_callback : error_handler,
-                           type: project.narrative_type,
+                           type: narrative_type,
                            error_callback: error_handler };
 
         var p = $.extend( def_params, p_in);
@@ -559,7 +504,7 @@ function projectapi() {
         if (p.project_ids) {
             return all_my_narratives( p.project_ids);
         } else {
-            var proj_prom = project.get_projects().then( function(pdict) {
+            var proj_prom = self.get_projects().then( function(pdict) {
                 var project_names = []
                 for (var i=0; i <pdict.length;i++) {
                     project_names.push(pdict[i][7])
@@ -570,7 +515,7 @@ function projectapi() {
         }
 
         function all_my_narratives(project_ids) {
-            var prom = project.ws_client.list_objects({
+            var prom = ws_client.list_objects({
                      workspaces: project_ids, type: p.type, showHidden: 1});
             return prom
         };
@@ -578,7 +523,7 @@ function projectapi() {
     };
 
 
-    project.copy_narrative = function (p_in) {
+    this.copy_narrative = function (p_in) {
         var def_params = { callback : undefined,
 			   project_id : undefined, // numeric workspace id
 			   narrative_id : undefined, //numeric object id
@@ -604,7 +549,7 @@ function projectapi() {
     //        name - textual name
     //        type - textual type of the object
     //        overwrite - a boolean that indicates if there is already
-    project.get_narrative_deps = function ( p_in) {
+    this.get_narrative_deps = function ( p_in) {
         var def_params = { callback : undefined,
 			   project_id : undefined, // numeric workspace id
 			   narrative_id : undefined, //numeric object id
@@ -621,7 +566,7 @@ function projectapi() {
 		p.error_callback("Cannot parse fq_id: " + p.fq_id);
 	    }
 	}
-	var metadata_fn = project.ws_client.get_object_info( [ { wsid: p.project_id, objid : p.narrative_id}], 1);
+	var metadata_fn = ws_client.get_object_info( [ { wsid: p.project_id, objid : p.narrative_id}], 1);
 	$.when( metadata_fn).then( function( obj_meta) {
 				       if (obj_meta.length != 1) {
 					   p.error_callback( "Error: " + obj_meta.length + " narratives found");
@@ -647,9 +592,9 @@ function projectapi() {
 					   var alpha = /\D/;
 					   var src_objs = Object.keys(deps).map( function(obj) {
 										     if (obj.match(alpha)) {
-											 return(project.ws_client.get_object_info( [ { wsid : p.project_id, name : obj }], 1));
+											 return(ws_client.get_object_info( [ { wsid : p.project_id, name : obj }], 1));
 										     } else {
-											 return(project.ws_client.get_object_info( [ { wsid : p.project_id, objid : obj }], 1));
+											 return(ws_client.get_object_info( [ { wsid : p.project_id, objid : obj }], 1));
 										     }
 										 });
 					   $.when.apply( null, src_objs)
@@ -678,7 +623,7 @@ function projectapi() {
     // *must" conform to the future workspace rules about object naming,
     // the it can only contain [a-zA-Z0-9_]. We show the error prompt
     // if it fails to conform
-    project.new_narrative = function( p_in ) {
+    this.new_narrative = function( p_in ) {
         var def_params = { project_id : USER_ID+":home",
                            narrative_id : undefined,
                            description : "A KBase narrative" };
@@ -692,7 +637,7 @@ function projectapi() {
             nar.data.metadata.name = p.narrative_id; 
             nar.data.metadata.creator = USER_ID;
 
-            var ws_fn = project.ws_client.save_objects( {workspace: p.project_id, objects: [nar]});
+            var ws_fn = ws_client.save_objects( {workspace: p.project_id, objects: [nar]});
             return $.when( ws_fn ).then( function(obj_meta) {
                           return obj_meta_dict(obj_meta);
                       });

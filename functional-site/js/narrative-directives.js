@@ -155,7 +155,7 @@ angular.module('narrative-directives')
                             var proj = nar[7]; // projects are workspaces right now
 
                             nar_dict.id = '<a href="'+scope.nar_url+'/ws.'
-                                        +proj+'.obj.'+nar_id+'" >'+nar_id+'</a>';
+                                        +nar[6]+'.obj.'+nar[0]+'" >'+nar_id+'</a>';
                             // projects are workspaces right now
                             nar_dict.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
                                              Project <b>'+proj+'</b></span>';

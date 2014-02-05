@@ -54,10 +54,10 @@ def _assemble_genome(meth, contig_file, out_genome):
     :type contig_file: kbtypes.Unicode
     :ui_name contig_file: Contig File ID
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly. [2.2]
-    :type out_genome: kbtypes.Genome
+    :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
     :return: Assembled output genome ID
-    :rtype: kbtypes.Genome
+    :rtype: kbtypes.KBaseGenomes.Genome
     """
     # Regarding annotation, here's the latest. You want to take the fasta file that the above command
     # created ("contigs.fasta"), and load it to the workspace as a contig set:
@@ -100,7 +100,7 @@ def _upload_contigs(meth, contig_set):
     This should be run before trying to annotate a Genome. [19]
 
     :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly. [19.1]
-    :type contig_set: kbtypes.Unicode
+    :type contig_set: kbtypes.KBaseGenomes.ContigSet
     :ui_name contig_set: Contig Set Object ID
     :return: Preparation message
     :rtype: kbtypes.Unicode
@@ -118,7 +118,7 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     This should be run before trying to annotate a Genome. [3]
 
     :param contig_set: An object with contig data [3.1]
-    :type contig_set: kbtypes.KBaseGenomesContigSet1
+    :type contig_set: kbtypes.KBaseGenomes.ContigSet
     :ui_name contig_set: Contig Set Object
     :param scientific_name: enter the scientific name to assign to your new genome [3.2]
     :type scientific_name: kbtypes.Unicode
@@ -157,13 +157,13 @@ def _annotate_genome(meth, genome, out_genome):
     When it finishes, the annotated Genome will be stored in your data space. [4]
     
     :param genome: Source genome ID [4.1]
-    :type genome: kbtypes.Genome
+    :type genome: kbtypes.KBaseGenomes.Genome
     :ui_name genome: Genome ID
     :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [4.2]
     :type out_genome: kbtypes.Unicode
     :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
-    :rtype: kbtypes.Genome
+    :rtype: kbtypes.KBaseGenomes.Genome
     :output_widget: GenomeAnnotation
     """
     meth.stages = 1  # for reporting progress
@@ -186,10 +186,10 @@ def _show_genome(meth, genome):
     """View and explore an annotated Genome in your Workspace. [5]
     
     :param genome: select the genome you want to view [5.1]
-    :type genome: kbtypes.Genome
+    :type genome: kbtypes.KBaseGenomes.Genome
     :ui_name genome: Genome
     :return: Same genome ID
-    :rtype: kbtypes.Genome
+    :rtype: kbtypes.KBaseGenomes.Genome
     :output_widget: GenomeAnnotation
     """
     meth.stages = 1  # for reporting progress
@@ -210,7 +210,7 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     :ui_name fba_model_id: Output FBA Model Name
     
     :return: Generated FBA Model ID
-    :rtype: kbtypes.Model
+    :rtype: kbtypes.KBaseFBA.FBAModel
     :output_widget: kbaseModelTabs
     """
     """
@@ -301,10 +301,10 @@ def _build_media(meth, media):
     """Assemble a set of compounds to use as a media set for performing FBA on a model. [8]
 
     :param base_media: Base media type [8.1]
-    :type base_media: kbtypes.KBaseBiochem.Media.v1_0
+    :type base_media: kbtypes.KBaseBiochem.Media
     :ui_name base_media: Media ID
     :return: Metadata from new Media object
-    :rtype: kbtypes.KBaseBiochem.Media.v1_0
+    :rtype: kbtypes.KBaseBiochem.Media
     :input_widget: kbaseBuildMediaInput
     :output_widget: kbaseMediaViewer
     :embed: True
@@ -340,10 +340,10 @@ def _view_media(meth, media_id):
     """Bring up a detailed view of a Media set within the narrative. [9]
 
     :param media_id: Media type [9.1]
-    :type media_id: kbtypes.KBaseBiochem.Media.v1_0
+    :type media_id: kbtypes.KBaseBiochem.Media
     :ui_name media_id: Media ID
     :return: A Media object
-    :rtype: kbtypes.KBaseBiochem.Media.v1_0
+    :rtype: kbtypes.KBaseBiochem.Media
     :output_widget: kbaseMediaViewer
     :embed: True
     """
@@ -372,14 +372,14 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     """Run Flux Balance Analysis on a metabolic model. [10]
 
     :param fba_model_id: the FBA model you wish to run [10.1]
-    :type fba_model_id: kbtypes.KBaseFBA_FBAModel
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model_id: FBA Model
     :param media_id: the media condition in which to run FBA (optional, default is an artificial complete media) [10.2]
-    :type media_id: kbtypes.KBaseBiochem_Media
+    :type media_id: kbtypes.KBaseBiochem.Media
     :ui_name media_id: Media
     
     :param fba_result_id: select a name for the FBA result object (optional) [10.3]
-    :type fba_result_id: kbtypes.KBaseFBA_FBA
+    :type fba_result_id: kbtypes.KBaseFBA.FBA
     :ui_name fba_result_id: Output FBA Result Name
     
     :return: something 
@@ -484,7 +484,7 @@ def _view_fba_result_details(meth, fba_id):
     """This brings up a detailed view of your FBA Model within the narrative. [11]
     
     :param fba_id: the FBA Result to view [11.1]
-    :type fba_id: kbtypes.KBaseFBA_FBA
+    :type fba_id: kbtypes.KBaseFBA.FBA
     :ui_name fba_id: FBA Result
     
     :return: something 
@@ -518,11 +518,11 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     """Run Gapfilling on an FBA Model [12]
 
     :param fba_model_id: the FBA Model to gapfill [12.1]
-    :type fba_model_id: kbtypes.Model
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model_id: FBA Model
     
     :param media_id: the media condition in which to gapfill [12.2]
-    :type media_id: kbtypes.Media
+    :type media_id: kbtypes.KBaseBiochem.Media
     :ui_name media_id: Media
     
     :param solution_limit: select the number of solutions you want to find [12.3]
@@ -678,11 +678,11 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
     """Integrate a Gapfill solution into your FBA model [13]
 
     :param fba_model_id: the FBA Model to integrate gapfill solutions into [13.1]
-    :type fba_model_id: kbtypes.Model
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model_id: FBA Model
     
     :param gapfill_id: select the ID of the gapfill solution (found in the Gapfilling tab in the model viewer) [13.2]
-    :type gapfill_id: kbtypes.Unicode
+    :type gapfill_id: kbtypes.KBaseFBA.Gapfilling
     :ui_name gapfill_id: Gapfill ID
 
     :param output_model_id: select a name for the gapfilled object (optional) [13.3]
@@ -739,10 +739,10 @@ def _upload_phenotype(meth, genome_id, phenotype_id):
     """Upload phenotype data for FBA analysis [14]
 
     :param genome_id: a genome id [14.1]
-    :type genome_id: kbtypes.Genome
+    :type genome_id: kbtypes.KBaseGenomes.Genome
     :ui_name genome_id: Genome ID
     :param phenotype_id: a phenotype ID [14.2]
-    :type phenotype_id: kbtypes.Unicode
+    :type phenotype_id: kbtypes.KBasePhenotypes.PhenotypeSet
     :ui_name phenotype_id: Phenotype Dataset ID
     :return: something
     :rtype: kbtypes.Unicode
@@ -760,13 +760,13 @@ def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
     """Simulate some phenotype on an FBA model [15]
 
     :param fba_model_id: an FBA model id [15.1]
-    :type fba_model_id: kbtypes.Model
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model_id: FBA Model ID
     :param phenotype_id: a phenotype ID [15.2]
-    :type phenotype_id: kbtypes.PhenotypeSet
+    :type phenotype_id: kbtypes.KBasePhenotypes.PhenotypeSet
     :ui_name phenotype_id: Phenotype Dataset ID
     :param simulation_id: an output simulation ID [15.3]
-    :type simulation_id: kbtypes.Unicode
+    :type simulation_id: kbtypes.KBasePhenotypes.PhenotypeSimulationSet
     :ui_name simulation_id: Phenotype Simulation ID
     :return: something
     :rtype: kbtypes.Unicode
@@ -795,13 +795,13 @@ def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
     """Run Gapfilling on an FBA Model [16]
 
     :param fba_model_id: an FBA model id [16.1]
-    :type fba_model_id: kbtypes.Model
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model_id: FBA Model ID
     :param phenotype_id: a phenotype simulation ID [16.2]
-    :type phenotype_id: kbtypes.PhenotypeSimulationSet
+    :type phenotype_id: kbtypes.KBasePhenotypes.PhenotypeSimulationSet
     :ui_name phenotype_id: Phenotype Simulation Dataset ID
     :param out_model_id: a name for the generated FBA Model (optional) [16.3]
-    :type out_model_id: kbtypes.Unicode
+    :type out_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name out_model_id: Output FBA Model Name
     :return: something
     :rtype: kbtypes.Unicode
@@ -831,10 +831,10 @@ def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
     When it finishes, the annotated Genome will be stored in your data space. [17]
      
     :param genome1: Source genome1 ID [17.1]
-    :type genome1: kbtypes.Genome
+    :type genome1: kbtypes.KBaseGenomes.Genome
     :ui_name genome1: Genome1 ID
     :param genome2: Source genome2 ID [17.2]
-    :type genome2: kbtypes.Genome
+    :type genome2: kbtypes.KBaseGenomes.Genome
     :ui_name genome2: Genome2 ID
     :param out_proteome_cmp: Output proteome comparison ID. If empty, an ID will be chosen randomly. [17.3]
     :type out_proteome_cmp: kbtypes.Unicode
@@ -883,10 +883,10 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     When it finishes, the annotated Genome will be stored in your data space. [19]
      
     :param fba_model1: an FBA model id from first genome [19.1]
-    :type fba_model1: kbtypes.Model
+    :type fba_model1: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model1: FBA Model 1 ID
     :param fba_model2: an FBA model id from second genome [19.2]
-    :type fba_model2: kbtypes.Model
+    :type fba_model2: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model2: FBA Model 2 ID
     :param proteome_cmp: Proteome comparison ID [19.3]
     :type proteome_cmp: kbtypes.ProteomeComparison

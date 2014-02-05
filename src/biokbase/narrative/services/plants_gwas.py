@@ -219,13 +219,13 @@ def gwas_create_population_trait_object(meth, GwasPopulation_obj_id=None, popula
     :type population_trait_file_id: kbtypes.WorkspaceObjectId
     :param protocol: A brief description of the experimental protocol used for measuring the trait
     :type protocol: kbtypes.Unicode
-    :param comment: Comment 
+    :param comment: Comment
     :type comment: kbtypes.Unicode
     :param originator: Name of lab or PI
     :type originator: kbtypes.Unicode
     :param output_trait_object_name: object_id that will appear in workspace
     :type output_trait_object_name: kbtypes.WorkspaceObjectId
-    :param kbase_genome_id: kbase genome id of the genome  
+    :param kbase_genome_id: kbase genome id of the genome
     :type kbase_genome_id: kbtypes.Genome
     :param trait_ontology_id: Trait ontology id
     :type trait_ontology_id:kbtypes.Unicode
@@ -257,23 +257,23 @@ def gwas_create_population_trait_object(meth, GwasPopulation_obj_id=None, popula
 def gwas_create_population_variation_object(meth,population_variation_file_shock_url=None, population_variation_file_shock_id=None, GwasPopulation_obj_id=None, assay=None, filetype=None,comment=None,  originator=None, output_variation_object_name=None, kbase_genome_id=None):
     """Create the GWAS variation object
 
-    :param population_variation_file_shock_url:Shock URL  of the population variation file 140.221.84.236:8000 
+    :param population_variation_file_shock_url:Shock URL  of the population variation file 140.221.84.236:8000
     :type population_variation_file_shock_url: kbtypes.Unicode
     :param population_variation_file_shock_id:Shock id of the population variation file 6ae1267f-ba2d-4e7b-9c10-72eb137e8633
     :type population_variation_file_shock_id: kbtypes.Unicode
     :param GwasPopulation_obj_id:Object id of the population data with latitude, longitude etc.
     :type GwasPopulation_obj_id: kbtypes.WorkspaceObjectId
-    :param assay:Assay used for genotyping (eg. short read sequencing, SNP array)  
+    :param assay:Assay used for genotyping (eg. short read sequencing, SNP array)
     :type assay:kbtypes.Unicode
-    :param filetype:type of file (eg. VCF). Only VCF currently supported  
+    :param filetype:type of file (eg. VCF). Only VCF currently supported
     :type filetype:kbtypes.Unicode
-    :param comment: Comment 
+    :param comment: Comment
     :type comment:kbtypes.Unicode
-    :param originator:Name of lab or PI  
+    :param originator:Name of lab or PI
     :type originator:kbtypes.Unicode
-    :param output_variation_object_name:object_id that will appear in workspace  
+    :param output_variation_object_name:object_id that will appear in workspace
     :type output_variation_object_name:kbtypes.WorkspaceObjectId
-    :param kbase_genome_id: kbase genome id of the genome  
+    :param kbase_genome_id: kbase genome id of the genome
     :type kbase_genome_id:kbtypes.Genome
     :return: Number of jobs that were run
     :rtype: kbtypes.Unicode
@@ -367,7 +367,7 @@ def gwas_run_gwas2(meth,  genotype_obj_id=None,  kinship_obj_id=None, trait_obj_
    :rtype: kbtypes.Unicode
     """
     meth.stages = 3
-    
+
     meth.advance("init GWAS service")
     gc = GWAS(URLS.gwas, token=meth.token)
 
@@ -417,7 +417,7 @@ def gwas_variation_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=None
     :return: Workspace objectID of gwas results
     :rtype: kbtypes.Unicode
     """
-    meth.stages = 3 
+    meth.stages = 3
 
     meth.advance("init GWAS service")
     gc = GWAS(URLS.gwas, token=meth.token)
@@ -430,7 +430,7 @@ def gwas_variation_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=None
         raise GWASException(2, "submit job failed, no job id")
 
     meth.advance("Creating object")
-    h= 'Genelist.' + gwasObjectID + '-' + pmin 
+    h= 'Genelist.' + gwasObjectID + '-' + pmin
     return json.dumps({ 'output':  h })
 
 
@@ -459,6 +459,31 @@ def gene_table(meth, workspace_id=None, obj_id=None):
     header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"]
     data = {'table': [header] + genes}
     return json.dumps(data)
+
+GENE_NETWORK_OBJECT_TYPE = "KBaseGwasData.GwasGeneList"
+
+@method(name="Gene network")
+def gene_network(meth, workspace_id=None, obj_id=None):
+    """See a gene network.
+
+    :param workspace_id: Workspace name (if empty, defaults to current workspace)
+    :type workspace_id: kbtypes.Unicode
+    :param obj_id: Gene's workspace object identifier.
+    :type obj_id: kbtypes.Unicode
+    :return: Rows for display
+    :rtype: kbtypes.Unicode
+    :output_widget: kbasePlantsNetworkNarrative
+    """
+    meth.stages = 1
+    meth.advance("Retrieve gene from workspace")
+    if not workspace_id:
+        meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
+        workspace_id = meth.workspace_id
+    ws = Workspace2(token=meth.token, wsid=workspace_id)
+    raw_data = ws.get(obj_id) #, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
+    data = {'input': raw_data}
+    return json.dumps(data)
+
 
 
 # Finalize (registers service)

@@ -121,8 +121,12 @@
             var method = this.options.method;
             var params = method.properties.parameters;
             var lookupTypes = [];
+            var tempObj = {};
             for (var p in params) {
-                lookupTypes.push(params[p].type);
+                if (!tempObj.hasOwnProperty(params[p].type)) {
+                    lookupTypes.push(params[p].type);
+                    tempObj[params[p].type] = 1;
+                }
             }
 
             this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(

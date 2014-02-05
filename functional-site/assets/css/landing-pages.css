@@ -517,7 +517,8 @@ div::-webkit-scrollbar-thumb {
     text-align: left;
     padding-left: 20px;
     padding-right: 20px;
-    border: 1px solid #A5D4E1;
+    /*border: 1px solid #A5D4E1;*/
+    border: 1px solid #428bca;
     font-family: OxygenBold;
     font-size: 14px;
 }

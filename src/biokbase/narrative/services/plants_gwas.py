@@ -454,7 +454,7 @@ def gene_table(meth, workspace_id=None, obj_id=None):
         meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
         workspace_id = meth.workspace_id
     ws = Workspace2(token=meth.token, wsid=workspace_id)
-    raw_data = ws.get(obj_id) #, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
+    raw_data = ws.get(obj_id)     #, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
     genes = raw_data['data']['genes']
     header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"]
     data = {'table': [header] + genes}

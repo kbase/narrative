@@ -16,6 +16,7 @@ import logging
 import os
 import sys
 import time
+import traceback
 # Third-party
 import IPython.utils.traitlets as trt
 from IPython.core.application import Application
@@ -65,10 +66,28 @@ class DuplicateServiceError(ServiceError):
 class ServiceMethodError(ServiceError):
     """Base class for all ServiceMethod errors"""
 
-    def __init__(self, method, errmsg):
+    def __init__(self, method, errmsg, tb=None):
         msg = "in function '{}': {}".format(method.name, errmsg)
         ServiceError.__init__(self, msg)
         self.add_info('method_name', method.name)
+        if tb is not None:
+            self.add_info('traceback',
+                          self.traceback_dict(tb))
+
+    TB_KEYS = 'filename', 'line', 'function', 'text'
+
+    def traceback_dict(self, tb):
+        """Extract and reformat traceback as a dict, for reporting in narrative.
+
+        :param tb: List of stack trace entries.
+        :type tb: list
+        :return: List where each entry is converted into a dict with
+                 key/value pairs corresponding to the quadruple given above.
+        :rtype: dict
+        """
+        etb = traceback.extract_tb(tb)
+        return [{self.TB_KEYS[i]: entry[i] for i in xrange(len(entry))}
+                for entry in etb]
 
 
 class ServiceMethodParameterError(ServiceMethodError):
@@ -789,7 +808,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         except ServiceMethodError as err:
             self.error(-2, err)
         except Exception as err:
-            self.error(-1, ServiceMethodError(self, err))
+            tb = traceback.sys.exc_traceback
+            self.error(-1, ServiceMethodError(self, err, tb=tb))
 
         # output object contains:
         # data

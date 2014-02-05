@@ -220,7 +220,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param mgid: metagenome ID
-    :type mgid: kbtypes.Communities.Metagenome.v1_0
+    :type mgid: kbtypes.Communities.Metagenome
     :ui_name mgid: Metagenome ID
     :param out_name: workspace ID of annotation set table
     :type out_name: kbtypes.Unicode
@@ -300,7 +300,7 @@ def _redo_annot(meth, workspace, in_seq, out_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_seq: workspace ID of input sequence file
-    :type in_seq: kbtypes.Communities.SequenceFile.v1_0
+    :type in_seq: kbtypes.Communities.SequenceFile
     :ui_name in_seq: Input Sequence
     :param out_name: workspace ID of resulting BIOM profile
     :type out_name: kbtypes.Unicode
@@ -352,7 +352,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile BIOM
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param out_name: workspace ID of annotation set table
     :type out_name: kbtypes.Unicode
@@ -401,7 +401,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of annotation set table
-    :type in_name: kbtypes.Communities.ProfileTable.v1_0
+    :type in_name: kbtypes.Communities.ProfileTable
     :ui_name in_name: Input Name
     :param out_name: workspace ID of model
     :type out_name: kbtypes.Unicode
@@ -443,7 +443,7 @@ def _redo_annot(meth, workspace, in_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of model
-    :type in_name: kbtypes.KBaseFBA.FBAModel.v3_1
+    :type in_name: kbtypes.KBaseFBA.FBAModel
     :ui_name in_name: Model Name
     :return: Gapfilled Metagenome Model
     :rtype: kbtypes.Unicode
@@ -473,10 +473,10 @@ def _redo_annot(meth, workspace, model1, model2):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param model1: workspace ID of model 1
-    :type model1: kbtypes.KBaseFBA.FBAModel.v3_1
+    :type model1: kbtypes.KBaseFBA.FBAModel
     :ui_name model1: Model 1 Name
     :param model2: workspace ID of model 2
-    :type model2: kbtypes.KBaseFBA.FBAModel.v3_1
+    :type model2: kbtypes.KBaseFBA.FBAModel
     :ui_name model2: Model 2 Name
     :return: Metagenome Model Comparison
     :rtype: kbtypes.Unicode
@@ -506,7 +506,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param ids: workspace ID of metagenome list
-    :type ids: kbtypes.Communities.Collection.v1_0
+    :type ids: kbtypes.Communities.Collection
     :ui_name ids: Metagenome List
     :param out_name: workspace ID of abundance profile table
     :type out_name: kbtypes.Unicode
@@ -524,7 +524,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :ui_name source: Source Name
     :default source: SEED
     :param int_name: workspace ID of list of names to filter results by
-    :type int_name: kbtypes.Communities.Data.v1_0
+    :type int_name: kbtypes.Communities.Data
     :ui_name int_name: Filter List
     :param int_level: hierarchal level of filter names list
     :type int_level: kbtypes.Unicode
@@ -605,7 +605,7 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param out_name: workspace ID of abundance profile table with significance
     :type out_name: kbtypes.Unicode
@@ -667,7 +667,7 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param out_name: workspace ID of altered profile
     :type out_name: kbtypes.Unicode
@@ -727,7 +727,7 @@ def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_en
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param row_start: row position to start table with, default is first
     :type row_start: kbtypes.Unicode
@@ -786,7 +786,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param use_name: label by metagenome name and not ID
     :type use_name: kbtypes.Unicode
@@ -832,7 +832,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param use_name: label by metagenome name and not ID
     :type use_name: kbtypes.Unicode
@@ -906,7 +906,7 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param metadata: metadata field to group metagenomes by
     :type metadata: kbtypes.Unicode

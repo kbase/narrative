@@ -77,10 +77,9 @@ function KBCacheClient(token) {
     this.fba = fba;
     this.ws = kbws;
 
-    this.project = new ProjectAPI(ws_url);
-    project = new ProjectAPI(ws_url);  // let's deprecate this. It'd be nice to avoid the
-                                       // global varriable in the future....
-
+    this.nar = new ProjectAPI(ws_url, token);
+    project = new ProjectAPI(ws_url, token);  // let's deprecate this. It'd be nice to avoid the
+                                              // global varriable in the future....
     this.token = token;
 }
 

@@ -15,7 +15,7 @@ angular.module('narrative-directives')
             link: function(scope, element, attrs) {
                 $(element).loading()
 
-                var p = project.get_narratives();
+                var p = kb.nar.get_narratives();
                 $.when(p).done(function(results){
                     $(element).rmLoading();
 
@@ -54,7 +54,7 @@ angular.module('narrative-directives')
             link: function(scope, element, attrs) {
 
                 $(element).loading()
-                var prom = project.get_projects()
+                var prom = kb.nar.get_projects()
                 $.when(prom).done(function(projs){
 
                     $(element).rmLoading();
@@ -117,7 +117,7 @@ angular.module('narrative-directives')
                     // get all projects
                     var proj_ids = [];
                     $(element).loading();
-                    var p = project.get_projects()
+                    var p = kb.nar.get_projects()
                     $.when(p).done(function(projs){
                         var projects = [];
 
@@ -137,7 +137,7 @@ angular.module('narrative-directives')
                 function getNarratives(proj_ids) {
 
 
-                    var prom = project.get_narratives({project_ids:proj_ids})
+                    var prom = kb.nar.get_narratives({project_ids:proj_ids})
                     $.when(prom).done(function(nars){
                         $(element).rmLoading();                                
 
@@ -201,7 +201,7 @@ angular.module('narrative-directives')
 
 
                 function addUserColumn(ws, id) {
-                    var prom = project.get_project_perms({project_id: ws});
+                    var prom = kb.nar.get_project_perms({project_id: ws});
                     $.when(prom).done(function(results) {
                         var user_list = formatUsers(results);
                         $("#"+ws+"-"+id+"_users").html(user_list);
@@ -373,7 +373,7 @@ angular.module('narrative-directives')
                                     //create the new narrative in ws
                                     $prompt.addCover()
                                     $prompt.getCover().loading()
-                                    var p =  project.new_project({project_id: proj_id})    
+                                    var p =  kb.nar.new_project({project_id: proj_id})    
                                     $.when(p).done(function() {
                                         $prompt.addCover('Created project <b><i>'+proj_id+'</b></i>');
 
@@ -440,7 +440,7 @@ angular.module('narrative-directives')
                                     //create the new narrative in ws
                                     $prompt.addCover()
                                     $prompt.getCover().loading()                                  
-                                    var p = project.new_narrative({narrative_id: name, 
+                                    var p = kb.nar.new_narrative({narrative_id: name, 
                                                                    project_id: proj_id})
                                     $.when(p).done(function(results) {
 
@@ -586,7 +586,7 @@ angular.module('narrative-directives')
                     var placeholder = $('<div></div>').loading()
                     modal_body.append(placeholder); 
 
-                    var prom = project.get_project_perms({project_id: proj_id})
+                    var prom = kb.nar.get_project_perms({project_id: proj_id})
 
                     $.when(prom).done(function(data) {
                         permData = data
@@ -920,7 +920,7 @@ narrativeDirectives.directive('copyfiles', function($parse) {
                       
                 });                
 
-                var deps = project.get_narrative_deps({
+                var deps = kb.nar.get_narrative_deps({
                     fq_id: scope.narr,
                     callback: function(results) {
                         

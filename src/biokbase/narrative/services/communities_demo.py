@@ -275,7 +275,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
         rest = 'no'
     
     meth.advance("Building annotation set from communitites API")
-    mg = _get_ws(workspace, in_name, CWS.mg)
+    mg = _get_ws(workspace, mgid, CWS.mg)
     cmd = "mg-get-annotation-set --id %s --top %d --level %s --evalue %d --identity %d --length %d"%(mg['ID'], int(top), level, int(evalue), int(identity), int(length))
     if rest.lower() == 'yes':
         cmd += " --rest"
@@ -313,7 +313,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     meth.stages = 5
     meth.advance("Processing inputs")
     # validate
-    if not (in_seq and out_id):
+    if not (in_seq and out_name):
         return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     

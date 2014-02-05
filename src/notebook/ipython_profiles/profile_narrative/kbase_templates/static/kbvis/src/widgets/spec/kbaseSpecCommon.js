@@ -1,4 +1,4 @@
-var newWorkspaceServiceUrlForSpec = 'http://140.221.84.209:7058/';
+var newWorkspaceServiceUrlForSpec = 'https://kbase.us/services/ws/';
 //var newWorkspaceServiceUrlForSpec = 'http://Romans-MacBook-Pro-4.local:9999/';
 
 PR['registerLangHandler'](

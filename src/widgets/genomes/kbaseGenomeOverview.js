@@ -200,7 +200,7 @@
 
             var prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
             $.when(prom).done($.proxy(function(genome) {
-                console.log(genome);
+                // console.log(genome);
                 genome = genome[0].data;
 
                 var gcContent = "Unknown";

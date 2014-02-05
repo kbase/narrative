@@ -128,8 +128,6 @@
                         }
                     }
 
-                    console.log(feature);
-
                     var subsysStr = "No subsystem info found.";
                     if (feature.subsystems) {
 

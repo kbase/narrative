@@ -199,6 +199,25 @@ var app = angular.module('landing-pages',
              controller: 'GenomeDetail'})
 
     $stateProvider
+        .state('kbgenomes',
+            {url: '/KBaseGenomes.Genome/CDS/:id',
+             templateUrl: 'views/objects/genome.html',
+             controller: 'GenomeDetail'})
+
+    $stateProvider
+        .state('kbgenomesbyws',
+            {url: '/KBaseGenomes.Genome/:ws',
+             templateUrl: 'views/objects/genome.html',
+             controller: 'GenomeDetail'})
+
+    $stateProvider
+        .state('kbgenomesbyid',
+            {url: '/KBaseGenomes.Genome/:ws/:id',
+             templateUrl: 'views/objects/genome.html',
+             controller: 'GenomeDetail'})
+
+
+    $stateProvider
         .state('genes',
             {url: '/genes/CDS/:fid',
              templateUrl: 'views/objects/gene.html',

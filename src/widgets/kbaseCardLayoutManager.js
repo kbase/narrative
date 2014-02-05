@@ -621,10 +621,9 @@
          * Shows a genome overview and a description card.
          */
         showGenomeCards: function() {
-            console.log(this.options.data);
             if (this.options.data.workspaceID === "CDS")
                 this.options.data.workspaceID = null;
-            this.addNewCard("KBaseGenomeOverview", 
+                this.addNewCard("KBaseGenomeOverview", 
                 {
                     genomeID: this.options.data.genomeID,
                     loadingImage: this.options.loadingImage,

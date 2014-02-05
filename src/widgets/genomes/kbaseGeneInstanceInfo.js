@@ -261,6 +261,9 @@
                         }
                         this.$infoTable.append(this.makeRow("Protein Families", proteinFamilies));
 
+                        this.$buttonPanel.find("button#domains").click(function(event) { window.alert("Domain view unavailable for Workspace genes. Sorry!"); });
+                        this.$buttonPanel.find("button#operons").click(function(event) { window.alert("Operon view unavailable for Workspace genes. Sorry!"); });
+
                         // bind button events
                         this.$buttonPanel.find("button#biochemistry").click(
                             $.proxy(function(event) { 

@@ -189,7 +189,6 @@
             }
         },
 
-
         renderWorkspace: function() {
             this.showMessage("<img src='" + this.options.loadingImage + "'>");
             this.$infoPanel.hide();
@@ -230,6 +229,21 @@
                             len = genome.contig_lengths[i];
                         contigsToLengths[genome.contig_ids[i]] = len;
                     }
+                }
+                /************
+                 * TEMP CODE!
+                 * INFER CONTIGS FROM FEATURE LIST!
+                 * OMG THIS SUCKS THAT I HAVE TO DO THIS UNTIL FBA MODEL SERVICES IS FIXED!
+                 * LOUD NOISES!
+                 ************/
+                else if (genome.features && genome.features.length > 0) {
+                    var contigSet = {};
+                    for (var i=0; i<genome.features.length; i++) {
+                        var f = genome.features[i];
+                        if (f.location && f.location[0][0])
+                            contigsToLengths[f.location[0][0]] = "Unknown";
+                    }
+
                 }
 
                 this.populateContigSelector(contigsToLengths);

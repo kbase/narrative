@@ -94,10 +94,10 @@ def _assemble_genome(meth, contig_file, out_genome):
     meth.advance("Rendering Genome Information")
     return json.dumps(genome_meta)
 
-@method(name="Upload Contigs")
+@method(name="Upload Contigs (FASTA-file)")
 def _upload_contigs(meth, contig_set):
-    """This wraps a ContigSet by a Genome object in your data space.
-    This should be run before trying to annotate a Genome. [19]
+    """This uploads a ContigSet from FASTA-file into your data space.
+    This should be run before wrapping it by Genome and annotation. [19]
 
     :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly. [19.1]
     :type contig_set: kbtypes.Unicode
@@ -111,6 +111,24 @@ def _upload_contigs(meth, contig_set):
     meth.stages = 1
     workspace = os.environ['KB_WORKSPACE_ID']
     return json.dumps({'ws_name': workspace, 'contig_set': contig_set})
+
+@method(name="Upload Genome (GBK-file)")
+def _upload_genome(meth, genome_id):
+    """This uploads a Genome and ContigSet from GBK-file into your data space.
+    This should be run before adding seed annotations to this Genome. [20]
+
+    :param genome_id: Output Genome ID. If empty, an ID will be chosen randomly. [20.1]
+    :type genome_id: kbtypes.Unicode
+    :ui_name genome_id: Genome Object ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: GenomeUploadWidget
+    """
+    if not genome_id:
+        genome_id = "genome_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    meth.stages = 1
+    workspace = os.environ['KB_WORKSPACE_ID']
+    return json.dumps({'ws_name': workspace, 'genome_id': genome_id, 'type': 'gbk'})
 
 @method(name="Convert Contigs to a Genome")
 def _prepare_genome(meth, contig_set, scientific_name, out_genome):
@@ -177,6 +195,37 @@ def _annotate_genome(meth, genome, out_genome):
         'in_genome_id': genome, 
         'out_genome_ws': workspace, 
         'out_genome_id': out_genome, 
+    }
+    job_id = cmpClient.annotate_genome(annotate_genome_params)
+    return json.dumps({'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
+
+@method(name="Add SEED Annotation")
+def _add_seed_annotation(meth, genome, out_genome):
+    """This starts a job that might run for an hour or longer.
+    When it finishes, the Genome with SEED annotations will be stored in your data space. [21]
+    
+    :param genome: Source genome ID [21.1]
+    :type genome: kbtypes.Genome
+    :ui_name genome: Genome ID
+    :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [21.2]
+    :type out_genome: kbtypes.Unicode
+    :ui_name out_genome: Output Genome ID
+    :return: Annotated output genome ID
+    :rtype: kbtypes.Genome
+    :output_widget: GenomeAnnotation
+    """
+    meth.stages = 1  # for reporting progress
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    if not out_genome:
+        out_genome = genome
+    cmpClient = GenomeComparison(url = service.URLS.genomeCmp, token = token)
+    annotate_genome_params = {
+        'in_genome_ws': workspace, 
+        'in_genome_id': genome, 
+        'out_genome_ws': workspace, 
+        'out_genome_id': out_genome,
+        'seed_annotation_only' : 1,
     }
     job_id = cmpClient.annotate_genome(annotate_genome_params)
     return json.dumps({'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})

@@ -220,7 +220,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param mgid: metagenome ID
-    :type mgid: kbtypes.Communities.Metagenome.v1_0
+    :type mgid: kbtypes.Communities.Metagenome
     :ui_name mgid: Metagenome ID
     :param out_name: workspace ID of annotation set table
     :type out_name: kbtypes.Unicode
@@ -300,7 +300,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_seq: workspace ID of input sequence file
-    :type in_seq: kbtypes.Communities.SequenceFile.v1_0
+    :type in_seq: kbtypes.Communities.SequenceFile
     :ui_name in_seq: Input Sequence
     :param out_name: workspace ID of resulting BIOM profile
     :type out_name: kbtypes.Unicode
@@ -352,7 +352,7 @@ def _map_annot(meth, workspace, in_name, out_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile BIOM
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param out_name: workspace ID of annotation set table
     :type out_name: kbtypes.Unicode
@@ -401,7 +401,7 @@ def _make_model(meth, workspace, in_name, out_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of annotation set table
-    :type in_name: kbtypes.Communities.ProfileTable.v1_0
+    :type in_name: kbtypes.Communities.ProfileTable
     :ui_name in_name: Input Name
     :param out_name: workspace ID of model
     :type out_name: kbtypes.Unicode
@@ -443,7 +443,7 @@ def _gapfill_model(meth, workspace, in_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of model
-    :type in_name: kbtypes.KBaseFBA.FBAModel.v2_0
+    :type in_name: kbtypes.KBaseFBA.FBAModel
     :ui_name in_name: Model Name
     :return: Gapfilled Metagenome Model
     :rtype: kbtypes.Unicode
@@ -473,10 +473,10 @@ def _compare_model(meth, workspace, model1, model2):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param model1: workspace ID of model 1
-    :type model1: kbtypes.KBaseFBA.FBAModel.v2_0
+    :type model1: kbtypes.KBaseFBA.FBAModel
     :ui_name model1: Model 1 Name
     :param model2: workspace ID of model 2
-    :type model2: kbtypes.KBaseFBA.FBAModel.v2_0
+    :type model2: kbtypes.KBaseFBA.FBAModel
     :ui_name model2: Model 2 Name
     :return: Metagenome Model Comparison
     :rtype: kbtypes.Unicode
@@ -506,7 +506,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param ids: workspace ID of metagenome list
-    :type ids: kbtypes.Communities.Collection.v1_0
+    :type ids: kbtypes.Communities.Collection
     :ui_name ids: Metagenome List
     :param out_name: workspace ID of abundance profile table
     :type out_name: kbtypes.Unicode
@@ -524,7 +524,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :ui_name source: Source Name
     :default source: SEED
     :param int_name: workspace ID of list of names to filter results by
-    :type int_name: kbtypes.Communities.Data.v1_0
+    :type int_name: kbtypes.Communities.Data
     :ui_name int_name: Filter List
     :param int_level: hierarchal level of filter names list
     :type int_level: kbtypes.Unicode
@@ -591,9 +591,8 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
         return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
-    rows = len(stdout.strip().split('\n')) - 1
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
-    text = "%s abundance data for %d samples listed in %s were downloaded. %d %s level %s annotations from the %s database were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d). Annotations with an overall abundance of 1 were removed by singleton filtering. Values did%s undergo normalization."%(annot, len(id_list), ids, rows, level, annot, source, out_name, int(evalue), int(identity), int(length), '' if norm.lower() == 'yes' else ' not')
+    text = "%s abundance data for %d samples listed in %s were downloaded. %s level %s annotations from the %s database were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d). Annotations with an overall abundance of 1 were removed by singleton filtering. Values did%s undergo normalization."%(annot, len(id_list), ids, level, annot, source, out_name, int(evalue), int(identity), int(length), '' if norm.lower() == 'yes' else ' not')
     _put_ws(workspace, out_name, CWS.profile, data=data)
     return json.dumps({'header': text})
 
@@ -605,7 +604,7 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param out_name: workspace ID of abundance profile table with significance
     :type out_name: kbtypes.Unicode
@@ -667,7 +666,7 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param out_name: workspace ID of altered profile
     :type out_name: kbtypes.Unicode
@@ -727,7 +726,7 @@ def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_en
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param row_start: row position to start table with, default is first
     :type row_start: kbtypes.Unicode
@@ -786,7 +785,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param use_name: label by metagenome name and not ID
     :type use_name: kbtypes.Unicode
@@ -832,7 +831,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param use_name: label by metagenome name and not ID
     :type use_name: kbtypes.Unicode
@@ -906,7 +905,7 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_name: workspace ID of abundance profile table
-    :type in_name: kbtypes.Communities.Profile.v1_0
+    :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param metadata: metadata field to group metagenomes by
     :type metadata: kbtypes.Unicode
@@ -949,10 +948,10 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     if stderr:
         return json.dumps({'header': 'ERROR: %s'%stderr})
     
-    meth.advance("Displaying PCoA")
+    meth.advance("Displaying PCoA") Metadata values for %s were used to create sample groupings
     text = "A %s dimensional PCoA calculated from %s distance/dissimilarity was created from %s."%('three' if three.lower() == 'yes' else 'two', distance, in_name)
-    if groups:
-        text += " Samples were colored by groups in position %d of the %s groups table."%(int(gpos), groups)
+    if metadata:
+        text += " Samples were colored by metadata values for %s."%metadata
     fig_rawpng = _get_invo(in_name+'.pcoa.png', binary=True)
     fig_b64png = base64.b64encode(fig_rawpng)
     leg_rawpng = _get_invo(in_name+'.pcoa.png.legend.png', binary=True)

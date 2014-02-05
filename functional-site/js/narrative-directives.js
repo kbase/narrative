@@ -876,6 +876,36 @@ var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
                      4:'Thurs', 5:'Fri', 6: 'Sat'}
 
 
+narrativeDirectives.directive('newsfeed', function(FeedLoad, $compile) {
+        return  {
+            link: function(scope, element, attrs) {
+                var feedUrl = 'http://yogi.lbl.gov/eprojectbuilder/misc/kbasefeed2.xml';
+
+                FeedLoad.fetch({q: feedUrl, num: 50}, {}, function (data) {
+                    var feed = data.responseData.feed;
+                    var feedContent = $("<div></div>");
+                    for (entry in feed.entries) {
+
+                        var feedEntry = $("<div></div>");
+                        $(feedEntry).addClass("narr-featured-narrative");
+
+                        $(feedEntry).append(feed.entries[entry].content);
+                        var copyLink = $("<a></a>");
+                        $(copyLink).html("copy narrative");
+                        $(copyLink).attr('ng-click',"copyNarrativeForm(\""+feed.entries[entry].title + "\")");
+                        $compile(copyLink)(scope);
+                        $(feedEntry).append(copyLink);
+                        $(feedContent).append($(feedEntry));
+                    }
+                    
+                    $(element).html($(feedContent));
+
+                    
+                });
+
+            } 
+        };
+    })  
 
 narrativeDirectives.directive('copyfiles', function($parse) {
         return  {

@@ -27,7 +27,7 @@ from biokbase.mglib import tab_to_matrix
 
 ## Globals
 VERSION = (0, 0, 1)
-NAME = "communities"
+NAME = "Communities Services"
 default_ws = 'communitiesdemo:home'
 
 class CWS:

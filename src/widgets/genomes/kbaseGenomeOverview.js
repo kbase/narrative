@@ -158,11 +158,11 @@
                                     $.proxy(function(contigsToLengths) { 
                                         this.populateContigSelector(contigsToLengths); 
                                     }, this),
-                                    this.clientError
+                                    this.renderError
                                 );
                             }, this),
 
-                            this.clientError
+                            this.renderError
                         );
                     }
 
@@ -171,7 +171,7 @@
 
                 }, this),
 
-                this.clientError
+                this.renderError
             );
 
         },
@@ -238,6 +238,7 @@
                 this.$infoPanel.show();
 
             }, this));
+            $.when(prom).fail($.proxy(function(error) { this.renderError(error); }, this));
         },
 
         getData: function() {
@@ -276,7 +277,20 @@
             return obj;
         },
 
-        clientError: function(error) {
+        renderError: function(error) {
+            errString = "Sorry, an unknown error occurred";
+            if (typeof error === "string")
+                errString = error;
+            else if (error.error && error.error.message)
+                errString = error.error.message;
+
+            
+            var $errorDiv = $("<div>")
+                            .addClass("alert alert-danger")
+                            .append("<b>Error:</b>")
+                            .append("<br>" + errString);
+            this.$elem.empty();
+            this.$elem.append($errorDiv);
         },
 
     });

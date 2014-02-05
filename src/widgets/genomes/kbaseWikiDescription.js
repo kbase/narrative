@@ -77,12 +77,11 @@
         renderFromTaxonomy: function(taxonomy) {
             var searchTerms = [];
             var strainName = taxonomy.pop();
-            searchTerms.push(strainName);
 
             var tokens = strainName.split(" ");
             if (tokens.length > 2);
             searchTerms.push(tokens[0] + " " + tokens[1]);
-            searchTerms.concat(taxonomy.reverse());
+            searchTerms = searchTerms.concat(taxonomy.reverse());
 
             // step 2: do the wiki scraping
             this.wikiClient.scrape_first_hit(searchTerms, {endpoint: "dbpedia.org"}, 
@@ -176,6 +175,7 @@
                 }
                 else {
                     // parse the taxonomy, however it's munged together. semicolons, i think?
+                    taxList = tax.split(/\;\s*/);
                 }
                 this.renderFromTaxonomy(taxList);
             }, this));
@@ -244,8 +244,20 @@
             };
         },
 
-        clientError: function(error) {
-            console.debug(error);
+        renderError: function(error) {
+            errString = "Sorry, an unknown error occurred";
+            if (typeof error === "string")
+                errString = error;
+            else if (error.error && error.error.message)
+                errString = error.error.message;
+
+            
+            var $errorDiv = $("<div>")
+                            .addClass("alert alert-danger")
+                            .append("<b>Error:</b>")
+                            .append("<br>" + errString);
+            this.$elem.empty();
+            this.$elem.append($errorDiv);
         },
 
     })

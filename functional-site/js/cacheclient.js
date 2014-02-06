@@ -146,6 +146,8 @@ function ProjectAPI(ws_url, token) {
     var ws_client = new Workspace(ws_url, auth);
 
 
+    // We probably don't want to do error handeling in api functions, 
+    // so we should deprecate these as well. 
     var legit_ws_id = /^\w+$/;
     // regex for a numeric workspace id of the form "ws.####.obj.###"
     var legit_narr_ws_id = /^ws\.(\d+)\.obj\.(\d+)$/;
@@ -396,12 +398,12 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-        if ( legit_ws_id.test(p.project_id)) {
+        //if ( legit_ws_id.test(p.project_id)) {
             // Check if the workspace exists already. If it does, then 'upgrade'
             // it by adding a _project object, if it doesn't exist yet then
             // create it, then add the _project otag
 
-            function tag_ws(ws_meta) {
+            function tag_ws() {
                 var proj = $.extend(true,{},empty_proj_tag);
 
                 proj.workspace = p.project_id;
@@ -420,15 +422,17 @@ function ProjectAPI(ws_url, token) {
                 var ws_fn = ws_client.create_workspace( { workspace : p.project_id,
                                                                   globalread : p.def_perm })
 
-                return $.when( ws_fn).then( tag_ws, function() {
-                    console.log('this failed')
-                });
+                var prom = $.when(ws_fn).done(function() {
+                    return tag_ws();
+                })
+
+                return prom
             });
 
             return prom;
-        } else {
-            console.error( "Bad project id: "+p.project_id);
-        }
+        //} else {
+        //    console.error( "Bad project id: "+p.project_id);
+        //}
     };
 
 
@@ -443,15 +447,16 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-       if ( legit_ws_id.test(p.project_id)) {
+
+        //if ( legit_ws_id.test(p.project_id)) {
             var ws_def_fun = ws_client.delete_workspace({
                                       workspace: p.project_id});
             $.when( ws_def_fun).then( p.callback,
                           p.error_callback
                         );
-        } else {
-            console.error( "Bad project id: ",p.project_id);
-        }
+        //} else {
+        //    console.error( "Bad project id: ",p.project_id);
+        //}
     };
 
     // Get the permissions for a project, returns a 2 element
@@ -635,7 +640,7 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-        if ( legit_ws_id.test(p.narrative_id)) {
+        //if ( legit_ws_id.test(p.narrative_id)) {
             var nar = $.extend(true,{},empty_narrative);
             nar.data.metadata.ws_name = p.project_id;
             nar.name = p.narrative_id; 
@@ -646,9 +651,9 @@ function ProjectAPI(ws_url, token) {
             return $.when( ws_fn ).then( function(obj_meta) {
                           return obj_meta_dict(obj_meta);
                       });
-        } else {
-            console.error( "Bad narrative_id");
-        }
+        //} else {
+        //    console.error( "Bad narrative_id");
+        //}
     };
 
 }

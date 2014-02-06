@@ -39,9 +39,10 @@ local function launch_notebook( name )
    local portmap = get_notebooks()
    assert(portmap[name] == nil, "Notebook by this name already exists: " .. name)
    local conf = docker.config()
-   conf.image = docker_image
+   conf.Image = docker_image
    conf.Cmd={name}
-   conf.portSpecs = {"8888"}
+   conf.PortSpecs = {"8888"}
+   --p.dump(conf)
    local res = docker.client:create_container{ payload = conf, name = name}
    --p.dump(res)
    assert(res.status == 201, "Failed to create container: " .. json.encode(res.body))

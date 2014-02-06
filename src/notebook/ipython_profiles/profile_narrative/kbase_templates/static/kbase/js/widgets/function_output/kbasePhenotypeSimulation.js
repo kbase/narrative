@@ -14,7 +14,7 @@
             this._super(options);
             var self = this;
 
-            var wsUrl = "http://140.221.84.209:7058/";
+            var wsUrl = "https://kbase.us/services/ws/";
             var container = this.$elem;
         	var panel = $('<div class="loader-table">Please wait...</div>');
         	container.append(panel);

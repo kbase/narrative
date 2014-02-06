@@ -31,7 +31,7 @@ have_browser = None
 
 # End points for various services
 endpoint = { 'invocation' : 'https://kbase.us/services/invocation',
-             'workspace' : 'http://140.221.84.209:7058/' }
+             'workspace' : 'https://kbase.us/services/ws/' }
 
 # IPython interpreter object
 ip = None

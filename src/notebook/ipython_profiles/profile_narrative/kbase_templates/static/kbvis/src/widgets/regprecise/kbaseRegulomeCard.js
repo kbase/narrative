@@ -15,7 +15,7 @@
         },
 
 //        workspaceURL: "https://kbase.us/services/workspace",
-        newWorkspaceServiceUrl: "https://kbase.us/services/ws",//"http://140.221.84.209:7058/",
+        newWorkspaceServiceUrl: "https://kbase.us/services/ws",//"https://kbase.us/services/ws/",
 
         init: function(options) {
             this._super(options);

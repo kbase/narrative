@@ -15,7 +15,7 @@
         },
         jobSrvUrl: "https://kbase.us/services/userandjobstate/",
         loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: "http://140.221.84.209:7058/",
+        wsUrl: "https://kbase.us/services/ws/",
         timer: null,
 
         init: function(options) {
@@ -31,6 +31,9 @@
             var self = this;
         	var pref = (new Date()).getTime();
 
+
+            var wsUrl = 'https://kbase.us/services/ws/';
+	    
             var container = this.$elem;
             if (self.token == null) {
             	container.empty();

@@ -17,6 +17,7 @@ $.KBWidget({
     wsUrl: "http://140.221.84.209:7058/",
     jobSrvUrl: "https://kbase.us/services/userandjobstate/",
     cmpImgUrl: "http://140.221.85.58:8283/image",
+    loadingImage: "static/kbase/images/ajax-loader.gif",
     timer: null,
     geneRows: 21,
     geneRowH: 21,
@@ -43,12 +44,20 @@ $.KBWidget({
     render: function() {
         var self = this;
         var container = this.$elem;
+    	container.empty();
+        if (self.token == null) {
+        	container.append("<div>[Error] You're not logged in</div>");
+        	return;
+        }
+
         var kbws = new Workspace(this.wsUrl, {'token': self.token});
         var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.token});
 
         var dataIsReady = function() {
+        	container.empty();
+            container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading comparison data...</div>");
             kbws.get_objects([{ref: self.ws_name + "/" + self.ws_id}], function(data) {
-            	$('.loader-table').remove();
+            	container.empty();
             	self.cmp = data[0].data;
             	var table = $('<table/>')
             		.addClass('table table-bordered')

@@ -1042,16 +1042,16 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     meth.stages = 1  # for reporting progress
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
-    get_models_params = {
-                         'models' : [fba_model1, fba_model2],
-                         'workspaces' : [workspace, workspace],
-                         'auth' : token
-                         }
-    modeldata = fbaClient.get_models(get_models_params)
-    model1 = modeldata[0]
-    model2 = modeldata[1]
-    return json.dumps({'ws_name': workspace, 'fba_model1': model1, 'fba_model2': model2, 'proteome_cmp': proteome_cmp, 'key1': 'val1'})
+    #fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
+    #get_models_params = {
+    #                     'models' : [fba_model1, fba_model2],
+    #                     'workspaces' : [workspace, workspace],
+    #                     'auth' : token
+    #                     }
+    #modeldata = fbaClient.get_models(get_models_params)
+    #model1 = modeldata[0]
+    #model2 = modeldata[1]
+    return json.dumps({'ws_name': workspace, 'fba_model1_id': fba_model1, 'fba_model2_id': fba_model2, 'proteome_cmp': proteome_cmp})
 
 
 #

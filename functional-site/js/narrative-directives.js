@@ -135,12 +135,9 @@ angular.module('narrative-directives')
 
 
                 function getNarratives(proj_ids) {
-
-
                     var prom = kb.nar.get_narratives({project_ids:proj_ids})
                     $.when(prom).done(function(nars){
                         $(element).rmLoading();                                
-
                         //var narratives = nars.slice(0); // make copy of narratives
 
 
@@ -174,7 +171,7 @@ angular.module('narrative-directives')
 
                             //fixme: wow!  This is horrible.
                             nar_dict.users = '<span id="'+ proj+"-"+nar_id+'_users" >loading...</span>';
-                            addUserColumn(proj, nar_id)
+                            //addUserColumn(proj, nar_id)
 
                             narratives.push(nar_dict)
                             nar_projs.push(proj)
@@ -239,7 +236,7 @@ angular.module('narrative-directives')
                                   { "sTitle": "Name", "mData": "id"},
                                   { "sTitle": "Owner", "mData": "owner"},
                                   { "sTitle": "Project", "mData": "project"},  // grouped by this column
-                                  { "sTitle": "Shared With", "mData": "users"},
+                                  { "sTitle": "Shared With", "mData": "users", 'bVisible': false},
                                   { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 6},
                                   { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'},
                                   { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}  
@@ -267,17 +264,23 @@ angular.module('narrative-directives')
 
 
                 function events() {
-
                     // adding buttons to project header
                     $('.group-item-expander').each(function() {
+                        var self = this;
                         var proj = $(this).find('.proj-link').data('proj');
+
+                        var prom = kb.nar.get_project_perms({project_id: proj});
+                        $.when(prom).done(function(results) {
+                            var user_list = formatUsers(results);
+                            console.log(user_list)
+                            $(self).append(user_list);
+                        })
 
                         $(this).append('<span class="proj-opts pull-right">\
                                           <a class="btn btn-default btn-xs btn-new-narrative"><span class="glyphicon glyphicon-plus"></span> Narrative</a> \
                                           <a class="btn-view-data" data-proj="'+proj+'" >Data</a> |\
                                           <a class="edit-perms">Manage</a>\
                                        </span>');
-
                     })
 
 
@@ -350,7 +353,7 @@ angular.module('narrative-directives')
                     
 
                     var newProjModal = $('<div></div>').kbasePrompt({
-                            title : 'Create New Project</small>',
+                            title : 'Create New Project',
                             body : body,
                             modalClass : '', 
                             controls : ['cancelButton', {

@@ -45,7 +45,7 @@
 
         render: function(options) {
             console.log("Error in kbaseGapfillStatus widget: "+ JSON.stringify(options, null, 4));
-                                    
+            var self = this;
             var pref = (new Date()).getTime();
             var container = this.$elem;
             var job_data = options.job_data
@@ -71,11 +71,11 @@
                                         var status = data[0]['status'];
                                             if (status === 'done') {
                                                 clearInterval(timer);
-                                                var tdElem = $('#'+pref+'job');
+                                                var tdElem = self.$elem.find('#'+pref+'job');
                                                 tdElem.html("<span class=\"label label-success\">Done! </span> &nbsp&nbsp View model details for gapfill solutions");
                                                  //ready();
                                             } else {
-                                                var tdElem = $('#'+pref+'job');
+                                                var tdElem = self.$elem.find('#'+pref+'job');
                                                 tdElem.html(status);
                                                 if (status === 'error') {
                                                     clearInterval(timer);
@@ -83,7 +83,7 @@
                                         }
                                     }
                             }, function(data) {
-                                    var tdElem = $('#'+pref+'job');
+                                    var tdElem = self.$elem.find('#'+pref+'job');
                                     tdElem.html("<span class=\"label label-danger\">Error connecting to jobs server!</span>");
                                     console.error("Error in kbaseGapfillStatus widget: "+ JSON.stringify(data, null, 4));
                                     clearInterval(timer);

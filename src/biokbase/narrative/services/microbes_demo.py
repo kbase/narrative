@@ -277,7 +277,7 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     :type core_model: kbtypes.Unicode
     :ui_name core_model: Core Model Only?
     """
-    meth.stages = 3  # for reporting progress
+    meth.stages = 2  # for reporting progress
     meth.advance("Starting")
     meth.advance("Building your new FBA model")
     
@@ -306,14 +306,13 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     model_name = fba_meta_data[1]
     
     # fetch the model via fba client
-    fbaClient = fbaModelServices(service.URLS.fba)
-    get_models_params = {
-        'models' : [model_name],
-          'workspaces' : [workspaceName]
-    }
-    modeldata = fbaClient.get_models(get_models_params)
-    meth.advance("Displaying your new FBA model details")
-    return json.dumps({'id': model_name, 'ws': workspaceName, 'modelsData': modeldata})
+    #get_models_params = {
+    #    'models' : [model_name],
+    #      'workspaces' : [workspaceName]
+    #}
+    #modeldata = fbaClient.get_models(get_models_params)
+    #meth.advance("Displaying your new FBA model details")
+    return json.dumps({'id': model_name, 'ws': workspaceName})
 
 
 @method(name="View FBA Model Details")
@@ -335,14 +334,14 @@ def _view_model_details(meth, fba_model_id):
     userToken, workspaceName = meth.token, meth.workspace_id;
     meth.advance("Loading the model")
     
-    # fetch via fba client
-    fbaClient = fbaModelServices(service.URLS.fba, token=userToken)
-    get_models_params = {
-        'models' : [fba_model_id],
-        'workspaces' : [workspaceName]
-    }
-    modeldata = fbaClient.get_models(get_models_params)
-    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': modeldata})
+    # fetch via fba client (NOW HANDLED IN JS WIDGET)
+    #fbaClient = fbaModelServices(service.URLS.fba, token=userToken)
+    #get_models_params = {
+    #    'models' : [fba_model_id],
+    #    'workspaces' : [workspaceName]
+    #}
+    #modeldata = fbaClient.get_models(get_models_params)
+    return json.dumps({'id': fba_model_id, 'ws': workspaceName})
 
 
 @method(name="Build Media")

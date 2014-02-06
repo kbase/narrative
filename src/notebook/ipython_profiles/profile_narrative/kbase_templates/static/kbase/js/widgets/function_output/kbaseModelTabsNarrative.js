@@ -2,9 +2,14 @@
 
 $.KBWidget({
     name: "kbaseModelTabs",    
-    version: "1.0.0",
+    version: "1.0.0",  
+    parent: "kbaseAuthenticatedWidget",
     options: {
     },
+    
+    loadingImage: "static/kbase/images/ajax-loader.gif",
+    //fbaURL: "https://kbase.us/services/fba_model_services",
+    fbaURL: "http://140.221.84.183:7036",
 
     getData: function() {
         return {
@@ -14,12 +19,36 @@ $.KBWidget({
             title: "Model Details"
         };
     },
-
+    
     init: function(options) {
         this._super(options);
         var self = this;        
         var models = options.id;
         var workspaces = options.ws;
+        
+        if ('modelsData' in options) {
+            return render(options);
+        } else {
+            var container = this.$elem;
+            container.append("<div id=\"modeltabs-loading\"><img src=\""+this.loadingImage+"\">&nbsp&nbsploading model...</div>");
+            
+            var fba = new fbaModelServices(this.fbaURL);
+            fba.get_models({auth: self.authToken(), workspaces:[options.ws], models:[options.id] }, function(data) {
+                    self.$elem.find("#modeltabs-loading").remove();
+                    options.modelsData = data;
+                    self.render(options);
+                }, function(data) {
+                    var loading_tab  = $('#modeltabs-loading');
+                    self.$elem.find("#modeltabs-loading").remove();
+                    container.append("<div>Error loading FBA model.</div>");
+                    console.error("Error loading FBA model!");
+                    console.error(data);
+                });
+            
+        }
+        return this;
+    },
+    render: function(options) {
         var data = options.modelsData;
 
         var container = this.$elem;

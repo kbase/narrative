@@ -576,16 +576,16 @@ div::-webkit-scrollbar-thumb {
   min-height: 100%;
   height: auto;
   /* Negative indent footer by its height */
-  margin: 0 auto -50px;
+  margin: 0 auto -58px;
   /* Pad bottom by footer height */
-  padding: 0 0 70px;
+  padding: 0 0 80px;
 }
 /* for the footer */
 #footer {
    /* margin-top: 60px;
     position: relative;
     bottom: 0px; */
-    height: 50px;
+    height: 58px;
 }
 
 #footer ul {
@@ -612,6 +612,17 @@ div::-webkit-scrollbar-thumb {
 #footer img {
     position: relative;
     top: -3px;
+}
+
+#footer .disclaimer {
+    /*background-color: #f2dede;
+    border-top: 1px solid #ebccd1;
+    color: #a94442;*/
+    background-color: #a94442;
+    color: #fff;
+    display: block;
+    text-align: center;
+    font-weight: bold;
 }
 
 

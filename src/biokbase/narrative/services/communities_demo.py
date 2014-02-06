@@ -3,6 +3,7 @@ Demo communitites service and methods
 """
 __author__ = 'Travis Harrison'
 __date__ = '1/10/13'
+__version__ = '0.1'
 
 ## Imports
 # Stdlib
@@ -46,7 +47,7 @@ class URLS:
     shock = "http://shock1.chicago.kbase.us"
     awe = "http://140.221.85.36:8000"
     #workspace = "http://kbase.us/services/workspace"
-    workspace = "http://140.221.84.209:7058"
+    workspace = "https://kbase.us/services/ws"
     #invocation = "https://kbase.us/services/invocation"
     invocation = "http://140.221.85.110:443"
 

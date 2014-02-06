@@ -31,7 +31,7 @@
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
-            workspaceURL: "http://140.221.84.209:7058", // "http://kbase.us/services/ws",
+            workspaceURL: "https://kbase.us/services/ws", // "http://kbase.us/services/ws",
             wsBrowserURL: "http://140.221.85.168/landing-pages/#/ws/",
             landingPageURL: "http://140.221.85.168/landing-pages/#/",
             container: null,

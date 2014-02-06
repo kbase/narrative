@@ -1,5 +1,7 @@
 
 
+//https://kbase.us/services/fba_model_services/ //production fba service not deployed
+
 // This saves a request by service name, method, params, and promise
 // Todo: Make as module
 function Cache() {
@@ -61,6 +63,10 @@ function KBCacheClient(token) {
         // otherwise, make request
         var prom = undefined;
         if (service == 'fba') {
+            // use whatever workspace server that was configured.
+            // this makes it possible to use the production workspace server
+            // with the fba server
+            params.wsurl = ws_url;  
             console.log('Making request:', 'fba.'+method+'('+JSON.stringify(params)+')');
             var prom = fba[method](params);
         } else if (service == 'ws') {
@@ -89,8 +95,10 @@ function KBCacheClient(token) {
 function getBio(type, loaderDiv, callback) {
     var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
 //    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-    var kbws = new workspaceService('http://140.221.84.209:7058');    
+//    var kbws = new workspaceService('http://140.221.84.209:7058');    
 
+    var kbws = new Workspace('http://kbase.us/services/ws');
+    
     // This is not cached yet; waiting to compare performanced.
     loaderDiv.append('<div class="progress">\
           <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 3%;">\
@@ -144,6 +152,8 @@ function ProjectAPI(ws_url, token) {
     var ws_client = new Workspace(ws_url, auth);
 
 
+    // We probably don't want to do error handeling in api functions, 
+    // so we should deprecate these as well. 
     var legit_ws_id = /^\w+$/;
     // regex for a numeric workspace id of the form "ws.####.obj.###"
     var legit_narr_ws_id = /^ws\.(\d+)\.obj\.(\d+)$/;
@@ -394,12 +404,12 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-        if ( legit_ws_id.test(p.project_id)) {
+        //if ( legit_ws_id.test(p.project_id)) {
             // Check if the workspace exists already. If it does, then 'upgrade'
             // it by adding a _project object, if it doesn't exist yet then
             // create it, then add the _project otag
 
-            function tag_ws(ws_meta) {
+            function tag_ws() {
                 var proj = $.extend(true,{},empty_proj_tag);
 
                 proj.workspace = p.project_id;
@@ -418,15 +428,17 @@ function ProjectAPI(ws_url, token) {
                 var ws_fn = ws_client.create_workspace( { workspace : p.project_id,
                                                                   globalread : p.def_perm })
 
-                return $.when( ws_fn).then( tag_ws, function() {
-                    console.log('this failed')
-                });
+                var prom = $.when(ws_fn).done(function() {
+                    return tag_ws();
+                })
+
+                return prom
             });
 
             return prom;
-        } else {
-            console.error( "Bad project id: "+p.project_id);
-        }
+        //} else {
+        //    console.error( "Bad project id: "+p.project_id);
+        //}
     };
 
 
@@ -441,15 +453,16 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-       if ( legit_ws_id.test(p.project_id)) {
+
+        //if ( legit_ws_id.test(p.project_id)) {
             var ws_def_fun = ws_client.delete_workspace({
                                       workspace: p.project_id});
             $.when( ws_def_fun).then( p.callback,
                           p.error_callback
                         );
-        } else {
-            console.error( "Bad project id: ",p.project_id);
-        }
+        //} else {
+        //    console.error( "Bad project id: ",p.project_id);
+        //}
     };
 
     // Get the permissions for a project, returns a 2 element
@@ -659,7 +672,7 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-        if ( legit_ws_id.test(p.narrative_id)) {
+        //if ( legit_ws_id.test(p.narrative_id)) {
             var nar = $.extend(true,{},empty_narrative);
             nar.data.metadata.ws_name = p.project_id;
             nar.name = p.narrative_id; 
@@ -670,9 +683,9 @@ function ProjectAPI(ws_url, token) {
             return $.when( ws_fn ).then( function(obj_meta) {
                           return obj_meta_dict(obj_meta);
                       });
-        } else {
-            console.error( "Bad narrative_id");
-        }
+        //} else {
+        //    console.error( "Bad narrative_id");
+        //}
     };
 
 }

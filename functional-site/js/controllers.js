@@ -229,7 +229,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 .controller('Narrative', function($scope, $stateParams, $location, kbaseLogin, $modal, FeedLoad) {
     //changeNav('narrative', 'newsfeed');
-    $scope.nar_url = 'http://narrative.kbase.us/narrative'; // used for links to narratives    
+    $scope.nar_url = configJSON.narrative_url; // used for links to narratives    
 
     //to open the copy narrative dialog
     $scope.copyNarrativeForm = function (title) {

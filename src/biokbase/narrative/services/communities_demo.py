@@ -3,7 +3,7 @@ Demo communitites service and methods
 """
 __author__ = 'Travis Harrison'
 __date__ = '1/10/13'
-__version__ = '0.1'
+__version__ = '0.3'
 
 ## Imports
 # Stdlib
@@ -46,8 +46,8 @@ class CWS:
 class URLS:
     shock = "http://shock1.chicago.kbase.us"
     awe = "http://140.221.85.36:8000"
-    #workspace = "http://kbase.us/services/workspace"
-    workspace = "http://140.221.84.209:7058"
+    #workspace = "https://140.221.84.209:7058"
+    workspace = "https://kbase.us/services/ws"
     #invocation = "https://kbase.us/services/invocation"
     invocation = "http://140.221.85.110:443"
 
@@ -144,7 +144,7 @@ def _get_wsname(meth, ws):
         return default_ws
 
 def _submit_awe(wf):
-    headers = {'Content-Type': 'multipart/form-data', 'Datatoken': os.environ['KB_AUTH_TOKEN']}
+    headers = {'Datatoken': os.environ['KB_AUTH_TOKEN']}
     files = {'upload': ('awe_workflow', cStringIO.StringIO(wf))}
     url = URLS.awe+"/job"
     req = requests.post(url, headers=headers, files=files, allow_redirects=True)
@@ -661,7 +661,7 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     return json.dumps({'header': text})
 
 @method(name="Sub-select Abundance Profile")
-def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, rows):
+def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, rows, alist):
     """Sort and/or subselect annotation abundance data and outputs from statistical analyses.
 
     :param workspace: name of workspace, default is current
@@ -686,6 +686,10 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     :param rows: number of rows from the top to return from input table, default is all
     :type rows: kbtypes.Unicode
     :ui_name rows: Rows
+    :param alist: create only list of annotations from ordering and sub-selection
+    :type alist: kbtypes.Unicode
+    :ui_name alist: Output List
+    :default alist: no
     :return: Metagenome Abundance Profile Significance Info
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
@@ -697,27 +701,41 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     # set defaults since unfilled options are empty strings
     if direction == '':
         direction = 'desc'
+    if alist == '':
+        alist = 'no'
 
     meth.advance("Retrieve Data from Workspace")
     _put_invo(in_name, _get_ws(workspace, in_name, CWS.profile))
     
     meth.advance("Manipulating Abundance Table")
+    biom = None
     cmd = "mg-select-significance --input %s --direction %s --format biom --output biom"%(in_name, direction)
     txt = "%s was saved as %s."%(in_name, out_name)
-    if order != '':
-        cmd += ' --order %d'%int(order)
-        txt += " Rows were ordered by column %d."%int(order)
     if cols != '':
         cmd += ' --cols %d'%int(cols)
         txt += " All but first %d columns were removed."%int(cols)
     if rows != '':
         cmd += ' --rows %d'%int(rows)
         txt += " All but first %d rows were removed."%int(cols)
+    if order != '':
+        cmd += ' --order %d'%int(order)
+        txt += " Rows were ordered by column %d."%int(order)
     stdout, stderr = _run_invo(cmd)
     
     meth.advance("Storing in Workspace")
-    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
-    _put_ws(workspace, out_name, CWS.profile, data=data)
+    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': '', 'data': ''}
+    wtype = None
+    if alist.lower() == 'yes':
+        biom = json.loads(stdout)
+        data['type'] = 'list'
+        data['data'] = "\n".join([r['id'] for r in biom['rows']])
+        wtype = CWS.data
+    else:
+        data['type'] = 'biom'
+        data['data'] = stdout
+        wtype = CWS.profile
+    
+    _put_ws(workspace, out_name, wtype, data=data)
     return json.dumps({'header': txt})
 
 @method(name="View Abundace Profile")

@@ -14,8 +14,8 @@ $.KBWidget({
     	type: null
     },
 
-    // wsUrl: "http://140.221.84.209:7058/",
-    uploadUrl: "http://140.221.85.58:8283/uploader",
+    wsUrl: "http://140.221.84.209:7058/",
+    uploadUrl: "http://140.221.85.57:8283/uploader",
 
     wsUrl: "https://kbase.us/services/ws",
 

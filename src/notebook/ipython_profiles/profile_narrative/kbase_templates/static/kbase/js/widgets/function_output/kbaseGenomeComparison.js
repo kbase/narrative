@@ -16,7 +16,7 @@ $.KBWidget({
 
     wsUrl: "https://kbase.us/services/ws/",
     jobSrvUrl: "https://kbase.us/services/userandjobstate/",
-    cmpImgUrl: "http://140.221.85.58:8283/image",
+    cmpImgUrl: "http://140.221.85.57:8283/image",
     loadingImage: "static/kbase/images/ajax-loader.gif",
     timer: null,
     geneRows: 21,

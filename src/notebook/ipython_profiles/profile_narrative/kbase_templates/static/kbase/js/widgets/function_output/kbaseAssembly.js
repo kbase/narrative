@@ -108,7 +108,8 @@
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-success pull-right">Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
-            asm_btn.click(function() {
+//            asm_btn.click(function() {
+	    asm_btn.one("click", function() {
                 var assembler = asm_choose.find('select option:selected').val();
                 var desc = asm_desc.find('input').val();
                 arRequest.pipeline = [[assembler]];
@@ -167,12 +168,9 @@
                         console.log(data);
                     }
                 });
+
             });
             self.$elem.append(asm_div);
-	    
-	    var foo = function(){
-		return 'bar'
-	    };
 	    
             var make_status_table = function(job_id, desc, status) {
 		var status_box = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">')

@@ -272,7 +272,6 @@ angular.module('narrative-directives')
                         var prom = kb.nar.get_project_perms({project_id: proj});
                         $.when(prom).done(function(results) {
                             var user_list = formatUsers(results);
-                            console.log(user_list)
                             $(self).append(user_list);
                         })
 
@@ -526,7 +525,7 @@ angular.module('narrative-directives')
 
 
                 function deleteProject(proj_id)  {
-
+                    kb.ws.delete_objects({})
 
 
                 }
@@ -629,16 +628,14 @@ angular.module('narrative-directives')
 
 
 
+
                     function savePermissions(ws_name) {
                         var newPerms = {};
                         var table = $('.edit-perm-table');
                         table.find('tr').each(function() {
-                            var user = $(this).find('.perm-user').val() ? $(this).find('.perm-user').val() :$(this).find('.perm-user').text();
+                            var user = $(this).find('.perm-user').val()
                             var perm = $(this).find('option:selected').val();
                             if (!user) return;
-                            if ( (user in permData) && perm == permData[user]) {
-                                return;
-                            } 
                             
                             newPerms[user] = perm
                         })
@@ -655,6 +652,7 @@ angular.module('narrative-directives')
                                 continue;
                             }
 
+
                             var params = {
                                 workspace: ws_name,
                                 new_permission: newPerms[new_user],
@@ -668,12 +666,12 @@ angular.module('narrative-directives')
 
                         var rm_users = [];
 
-
                         // if user was removed from user list, change permission to 'n'
                         for (var user in permData) {
                             if (user == '*' || user == USER_ID) continue;                            
 
                             if ( !(user in newPerms) ) {
+
                                 var params = {
                                     workspace: ws_name,
                                     new_permission: 'n',
@@ -687,7 +685,7 @@ angular.module('narrative-directives')
                             } 
                         }
 
-                        return $.when.apply($, promises)
+                        return $.when.apply($, promises);
                     }
 
 

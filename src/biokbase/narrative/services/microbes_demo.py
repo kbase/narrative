@@ -638,7 +638,7 @@ def _view_fba_result_details(meth, fba_id):
     
     #grab token and workspace info, setup the client
     token, workspaceName = meth.token, meth.workspace_id;
-    fbaClient = fbaModelServices(service.URLS.fba)
+    #fbaClient = fbaModelServices(service.URLS.fba)
     
     meth.advance("Retrieving FBA results")
     #get_fbas_params = {

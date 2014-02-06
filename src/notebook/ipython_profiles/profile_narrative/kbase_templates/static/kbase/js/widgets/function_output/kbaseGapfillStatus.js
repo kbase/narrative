@@ -44,7 +44,7 @@
         },
 
         render: function(options) {
-            console.log("Error in kbaseGapfillStatus widget: "+ JSON.stringify(options, null, 4));
+            //console.log("Error in kbaseGapfillStatus widget: "+ JSON.stringify(options, null, 4));
             var self = this;
             var pref = (new Date()).getTime();
             var container = this.$elem;
@@ -79,6 +79,7 @@
                                                 tdElem.html(status);
                                                 if (status === 'error') {
                                                     clearInterval(timer);
+                                                    console.error("Error in kbaseGapfillStatus widget: "+ JSON.stringify(data, null, 4));
                                             }
                                         }
                                     }

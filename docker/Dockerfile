@@ -30,7 +30,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-base perl-modules mak
 # Maybe this will get all the necessary dependencies!
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4 python-pip python-setuptools ipython-notebook python-matplotlib python-dev python-scipy python-numpy python-lxml python-sklearn python-sympy python-pandas
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev libcairo2-dev texlive-latex-base texlive-fonts-recommended curl git-core libzmq-dev libreadline6-dev libreadline-dev libssl-dev libxml2-dev libxslt1-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended libcurl4-gnutls-dev
 
 # Clone in the python bootstrap and run it
 ADD ./bootstrap/kb_python_runtime /mini-bootstrap/kb_python_runtime

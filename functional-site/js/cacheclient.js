@@ -1,5 +1,7 @@
 
 
+//https://kbase.us/services/fba_model_services/ //production fba service not deployed
+
 // This saves a request by service name, method, params, and promise
 // Todo: Make as module
 function Cache() {
@@ -61,6 +63,10 @@ function KBCacheClient(token) {
         // otherwise, make request
         var prom = undefined;
         if (service == 'fba') {
+            // use whatever workspace server that was configured.
+            // this makes it possible to use the production workspace server
+            // with the fba server
+            params.wsurl = ws_url;  
             console.log('Making request:', 'fba.'+method+'('+JSON.stringify(params)+')');
             var prom = fba[method](params);
         } else if (service == 'ws') {

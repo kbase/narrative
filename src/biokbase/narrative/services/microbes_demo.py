@@ -118,7 +118,7 @@ def _upload_genome(meth, genome_id):
     This should be run before adding seed annotations to this Genome. [20]
 
     :param genome_id: Output Genome ID. If empty, an ID will be chosen randomly. [20.1]
-    :type genome_id: kbtypes.Unicode
+    :type genome_id: kbtypes.KBaseGenomes.Genome
     :ui_name genome_id: Genome Object ID
     :return: Preparation message
     :rtype: kbtypes.Unicode
@@ -142,7 +142,7 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     :type scientific_name: kbtypes.Unicode
     :ui_name scientific_name: Scientific Name
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly. [3.3]
-    :type out_genome: kbtypes.Unicode
+    :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
     :return: Preparation message
     :rtype: kbtypes.Unicode
@@ -178,7 +178,7 @@ def _annotate_genome(meth, genome, out_genome):
     :type genome: kbtypes.KBaseGenomes.Genome
     :ui_name genome: Genome ID
     :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [4.2]
-    :type out_genome: kbtypes.Unicode
+    :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
     :rtype: kbtypes.KBaseGenomes.Genome
@@ -205,10 +205,10 @@ def _add_seed_annotation(meth, genome, out_genome):
     When it finishes, the Genome with SEED annotations will be stored in your data space. [21]
     
     :param genome: Source genome ID [21.1]
-    :type genome: kbtypes.Genome
+    :type genome: kbtypes.KBaseGenomes.Genome
     :ui_name genome: Genome ID
     :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [21.2]
-    :type out_genome: kbtypes.Unicode
+    :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
     :rtype: kbtypes.Genome
@@ -981,7 +981,7 @@ def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
     :type genome2: kbtypes.KBaseGenomes.Genome
     :ui_name genome2: Genome2 ID
     :param out_proteome_cmp: Output proteome comparison ID. If empty, an ID will be chosen randomly. [17.3]
-    :type out_proteome_cmp: kbtypes.Unicode
+    :type out_proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name out_proteome_cmp: Output Proteome Comparison ID
     :return: Output Proteome Comparison ID
     :rtype: kbtypes.ProteomeComparison
@@ -1010,7 +1010,7 @@ def _view_proteome_cmp(meth, proteome_cmp):
     When it finishes, the annotated Genome will be stored in your data space. [18]
      
     :param proteome_cmp: Proteome comparison ID [18.1]
-    :type proteome_cmp: kbtypes.ProteomeComparison
+    :type proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name proteome_cmp: Proteome Comparison ID
     :return: Output Proteome Comparison ID
     :rtype: kbtypes.ProteomeComparison
@@ -1033,7 +1033,7 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     :type fba_model2: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model2: FBA Model 2 ID
     :param proteome_cmp: Proteome comparison ID [19.3]
-    :type proteome_cmp: kbtypes.ProteomeComparison
+    :type proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name proteome_cmp: Proteome Comparison ID
     :return: Output Comparison Result
     :rtype: kbtypes.Unicode

@@ -231,18 +231,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     //changeNav('narrative', 'newsfeed');
     $scope.nar_url = 'http://narrative.kbase.us/narrative'; // used for links to narratives    
 
- /*   var feedUrl = 'http://yogi.lbl.gov/eprojectbuilder/misc/kbasefeed2.xml';
-
-    FeedLoad.fetch({q: feedUrl, num: 50}, {}, function (data) {
-        $scope.feed = data.responseData.feed;
-    });
-
- */   
-    //$scope.narr = {};
-    //$scope.narr.title = "test title";
-    
-
-
     //to open the copy narrative dialog
     $scope.copyNarrativeForm = function (title) {
 
@@ -315,18 +303,9 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 })
 
-.controller('CopyNarrativeModalCtrl1', ['$scope', '$modalInstance', 'narr', function ($scope, $modalInstance, narr) {
-
-        $scope.narr = narr;
-        // callback for ng-click 'copy narrative':
-        $scope.copyNarrative = function () {
-            //console.log("got here " + $scope.narr);    
-        }
-    }])
-
-
+/*
 .controller('CopyNarrativeModalCtrl', function ($scope, $modalInstance) {
-/* controller for the modals to copy a featured narrative */
+// controller for the modals to copy a featured narrative 
   $scope.save = function () {
     $modalInstance.dismiss('cancel');
   };
@@ -335,33 +314,40 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $modalInstance.dismiss('cancel');
   };
 })
-
+*/
 .controller('NarrativeProjects', function($scope, $stateParams) {
 })
 
 
-/* controller for the modals */
+/* controller for the copy narrative modal */
 var CopyNarrativeModalCtrl = function ($scope, $modalInstance, narr) {
 
     $scope.narr = narr;
     // callback for ng-click 'copy narrative':
     $scope.copyNarrative = function () {
-        console.log("got here " + $scope.narr);  
         project.copy_narrative({
             fq_id: $scope.narr,
             callback: function(results) {
                 
                 console.log("copied narrative");
+                $scope.alerts = [];
                 $modalInstance.dismiss();
             },
             error_callback: function() {
-                console.log("error occurred");
+                //console.log("error occurred");
+                $scope.alerts = [];
+                $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace."});
             }
         })
     }
     $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
     };
+
+    $scope.closeAlert = function(index) {
+        $scope.alerts.splice(index, 1);
+    };
+
 };
 
 

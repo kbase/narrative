@@ -572,31 +572,58 @@ div::-webkit-scrollbar-thumb {
     color: #2a6496;
 }
 
-/*
- * InvisibleTable styles
- */
-
-.invtable {
-	color:#000000;
-        border-style: none;
-        margin-bottom: 25px;
-        vertical-align: top;
+#wrap {
+  min-height: 100%;
+  height: auto;
+  /* Negative indent footer by its height */
+  margin: 0 auto -58px;
+  /* Pad bottom by footer height */
+  padding: 0 0 80px;
+}
+/* for the footer */
+#footer {
+   /* margin-top: 60px;
+    position: relative;
+    bottom: 0px; */
+    height: 58px;
 }
 
-.invtable-cell {
-        padding-left: 25px;
-        vertical-align: top;
+#footer ul {
+    text-align: center;
 }
 
-.invtable-boldcell {
-	font-weight:bold;
-        padding-left: 25px;
-        vertical-align: top;
+#footer ul li {
+    display: inline;
+    padding: 7px 5px 5px 1px;
+    
 }
 
-.invtable-emcell {
-	font-style:italic;
-        padding-left: 25px;
-        vertical-align: top;
+#footer ul li:after {
+    content: "\2022";
+    padding-left: 10px;
+    color: #bbb;
+    font-size: 10px;
 }
+
+#footer ul li:last-child:after, #footer ul li:nth-last-child(2):after {
+    content: "";
+}
+
+#footer img {
+    position: relative;
+    top: -3px;
+}
+
+#footer .disclaimer {
+    /*background-color: #f2dede;
+    border-top: 1px solid #ebccd1;
+    color: #a94442;*/
+    background-color: #a94442;
+    color: #fff;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+}
+
+
 

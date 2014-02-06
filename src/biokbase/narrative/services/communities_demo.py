@@ -44,7 +44,8 @@ class CWS:
     mg_an = 'KBaseGenomes.MetagenomeAnnotation-1.0'
 
 class URLS:
-    shock = "http://shock1.chicago.kbase.us"
+    #shock = "http://shock1.chicago.kbase.us"
+    shock = "http://shock.metagenomics.anl.gov"
     awe = "http://140.221.85.36:8000"
     #workspace = "https://140.221.84.209:7058"
     workspace = "https://kbase.us/services/ws"

@@ -198,6 +198,48 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/objects/genome.html',
              controller: 'GenomeDetail'})
 
+    $stateProvider
+        .state('kbgenomes',
+            {url: '/KBaseGenomes.Genome/CDS/:id',
+             templateUrl: 'views/objects/genome.html',
+             controller: 'GenomeDetail'})
+
+    $stateProvider
+        .state('kbgenomesbyws',
+            {url: '/KBaseGenomes.Genome/:ws',
+             templateUrl: 'views/objects/genome.html',
+             controller: 'GenomeDetail'})
+
+    $stateProvider
+        .state('kbgenomesbyid',
+            {url: '/KBaseGenomes.Genome/:ws/:id',
+             templateUrl: 'views/objects/genome.html',
+             controller: 'GenomeDetail'})
+
+
+    $stateProvider
+        .state('genes',
+            {url: '/genes/CDS/:fid',
+             templateUrl: 'views/objects/gene.html',
+             controller: 'GeneDetail'})
+
+    $stateProvider
+        .state('genesbycdsgenome',
+            {url: '/genes/CDS/:gid/:fid',
+             templateUrl: 'views/objects/gene.html',
+             controller: 'GeneDetail'})
+
+    $stateProvider
+        .state('genesbyws',
+            {url: '/genes/:ws/:fid',
+             templateUrl: 'views/objects/gene.html',
+             controller: 'GeneDetail'})
+
+    $stateProvider
+        .state('genesbywsgenome',
+            {url: '/genes/:ws/:gid/:fid',
+             templateUrl: 'views/objects/gene.html',
+             controller: 'GeneDetail'})
 
     $stateProvider
         .state('meme',
@@ -294,6 +336,7 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     var HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
                  <ul class="dropdown-menu"> \
                  <li><a href="#/landing-pages-help">Landing Page Documentation</a></li> \
+                 <li><a href="mailto:help@kbase.us">Email help@kbase.us</a></li> \
               </ul>';
     $('.help-dropdown').html(HELP_DROPDOWN);              
 

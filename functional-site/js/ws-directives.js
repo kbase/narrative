@@ -357,7 +357,7 @@ angular.module('ws-directives')
                     var prom = kb.ws.get_workspace_description({workspace:ws_name})
                     $.when(prom).done(function(descript) {
                         var d = $('<div>');
-                        d.append('<h5>Description<small></h5>');
+                        d.append('<h5>Description</h5>');
                         d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
                         modal_body.prepend(d);
 
@@ -862,7 +862,9 @@ angular.module('ws-directives')
                     $.when(prom, prom2).done(function(data, deleted_objs){
                         console.log('data:',data)
                         $(element).rmLoading();
-                        $(element).append('<table id="obj-table-'+ws.replace(':',"_")+'" \
+
+                        var table_id = "obj-table-"+ws.replace(':',"_");
+                        $(element).append('<table id="'+table_id+'" \
                             class="table table-bordered table-striped" style="width: 100%;"></table>')    
 
                         var tableobjs = formatObjs(data);
@@ -873,7 +875,7 @@ angular.module('ws-directives')
                         tableSettings.aaData = wsobjs;
 
                         // load object table
-                        var table = $('#obj-table-'+ws.replace(':',"_")).dataTable(tableSettings);
+                        var table = $('#'+table_id).dataTable(tableSettings);
 
                         // if there are objects, add 'select all' button, type filter,
                         // and trash bin.
@@ -912,13 +914,13 @@ angular.module('ws-directives')
                             checkBoxObjectClickEvent('.obj-check-box');
 
                             // load description above table if there is one.
-                            var p = kb.ws.get_workspace_description({workspace: ws})
-                            $.when(p).done(function(d){
-                                if (d != null) {
-                                    $(element).parent().prepend('<div class="text-muted ws-descript" \
-                                        style="line-height: 2.2em">'+d+'</div>');
-                                }
-                            })
+                            //var p = kb.ws.get_workspace_description({workspace: ws})
+                            //$.when(p).done(function(d){
+                            //    if (d != null) {
+                            //        $(element).parent().prepend('<div class="text-muted ws-descript" \
+                            //            style="line-height: 2.2em">'+d+'</div>');
+                            //    }
+                            //})
                         }
                     }).fail(function(e){
                         $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
@@ -972,17 +974,18 @@ angular.module('ws-directives')
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
 
-                        //var match = ( type.split('-')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) !== null ? true : false);
+                        var match = ( type.split('-')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) 
+                                        !== null ? true : false);
 
-                        //if (match) {
-                        //    var new_id = '<a class="obj-id" data-ws="'+ws+'" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                        //            +id+'</a> (<a class="show-versions">'+instance+'</a>)\
-                        //                <a class="btn-show-info hide pull-right">More</a>'
-                        //} else {
-                            var new_id = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                        if (match) {
+                            var new_id = '<a class="obj-id" data-ws="'+ws+'" data-obj-id="'+id+'" data-obj-type="'+type+'">'
                                     +id+'</a> (<a class="show-versions">'+instance+'</a>)\
+                                        <a class="btn-show-info hide pull-right">More</a>'
+                        } else {
+                            var new_id = '<span class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                                    +id+'</span> (<a class="show-versions">'+instance+'</a>)\
                                         <a class="btn-show-info hide pull-right">More</a>';
-                        //}
+                        }
 
                         wsarray[1] = new_id
                         wsobjs.push(wsarray);
@@ -1321,22 +1324,30 @@ angular.module('ws-directives')
                     }
 
                     // hide the objecttable, add back button
-                    $('#obj-table-'+ws+'_wrapper').hide();
+                    var table_id = 'obj-table-'+ws.replace(':','_');
+                    $('#'+table_id+'_wrapper').hide();
                     $(element).prepend('<h4 class="trash-header"><a class="btn btn-primary">\
                         <span class="glyphicon glyphicon-circle-arrow-left"></span> Back</a> '+ws+' \
-                        <span class="text-danger">Trash Bin</span></h4>');
+                        <span class="text-danger">Trash Bin</span> <small><span class="text-muted">(Undelete option coming soon)</span></small></h4>');
 
                     // event for back to workspace button
                     $('.trash-header .btn').unbind('click');
                     $('.trash-header .btn').click(function() {
-                        if (typeof trashbin) trashbin.fnDestroy();
+                        if (typeof trashbin) { // fixme: cleanup
+                            console.log('destroy trash')
+                            trashbin.fnDestroy();
+                            $('#'+table_id+'-trash').remove();
+                            trashbin = undefined;
+                        }
+
                         $('.trash-header').remove();
-                        $('#obj-table-'+ws+'_wrapper').show();
+                        $('#'+table_id+'_wrapper').show();
                     })
 
                     // if trash table hasn't already been rendered, render it
                     if (typeof trashbin == 'undefined') {
-                        $(element).append('<table id="obj-table-'+ws+'-trash" \
+                        console.log('render trash')
+                        $(element).append('<table id="'+table_id+'-trash" \
                             class="table table-bordered table-striped" style="width: 100%;"></table>');
 
                         var tableobjs = formatObjs(objs);
@@ -1346,9 +1357,9 @@ angular.module('ws-directives')
                         tableSettings.aaData = wsobjs;
 
                         // load object table
-                        trashbin = $('#obj-table-'+ws+'-trash').dataTable(tableSettings);
+                        trashbin = $('#'+table_id+'-trash').dataTable(tableSettings);
                     } else {
-                        $('#obj-table-'+ws+'-trash_wrapper').show()
+                        $('#'+table_id+'-trash_wrapper').show()
                     }
 
                 }

@@ -19,43 +19,48 @@
 
         init: function(options) {
             this._super(options);
+            var self = this;
+
             if (this.options.id === null) {
                 //throw an error
                 return;
             }
 
-            this.$messagePane = $("<div/>")
-                                .addClass("kbwidget-message-pane")
-                                .addClass("kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);
-
             this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, { 'token' : this.options.auth, 'user_id' : this.options.userId});
 
-            return this.render();
-        },
+            var container = $('<div id="container" />');
+            this.$elem.append(container);
 
-        render: function(options) {
-            this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+            this.tableLoading = $('<div id="table-loading" style="text-align: center; margin-top: 60px;"><img src="assets/img/ajax-loader.gif" /><p class="text-muted">Loading...<p></div>');
+            container.append(this.tableLoading);
 
-            /**
-             * Fields to show:
-             * ID
-             * Timestamp
-             * Number of hits
-             */
-            var self = this;
+            this.contentDiv = $('<div id="table-container" />');
+            this.contentDiv.addClass('hide');
+            container.append(this.contentDiv);
+
+
             this.workspaceClient.get_objects([{workspace: this.options.ws, name: this.options.id}], 
 	    		function(data){
 					self.tomtomresult = data[0];
 					var d = new Date(parseInt(self.tomtomresult.data.timestamp));
 					var creationMonth = d.getMonth()+1;
-					self.$elem.append("<h3>TOMTOM Run Info</h3>");
-			        self.$elem.append($("<div />").
-					append($("<table/>").addClass("kbgo-table")
-					    .append($("<tr/>").append("<td>ID</td><td>" + self.tomtomresult.data.id + "</td>"))
-					    .append($("<tr/>").append("<td>Created: </td><td>" + creationMonth +"/"+ d.getDate() +"/"+ d.getFullYear() +" "+ d.getHours() +":"+ d.getMinutes() +":"+ d.getSeconds() + "</td>"))
-						.append($("<tr/>").append("<td>Number of hits</td><td>" + self.tomtomresult.data.hits.length + "</td>"))
-					));
+
+                            self.contentDiv.append($("<h4 />").append("TOMTOM Run Info"));
+
+                            self.contentDiv.append($("<div />").
+                                    append($("<table/>").addClass("invtable")
+                                            .append($("<tr/>")
+                                                    .append($("<td/>").append("Object name"))
+                                                    .append($("<td/>").addClass("invtable-boldcell").append(self.tomtomresult.data.id)))
+                                            .append($("<tr/>")
+                                                    .append($("<td/>").append("Created"))
+                                                    .append($("<td/>").addClass("invtable-cell").append(creationMonth +"/"+ d.getDate() +"/"+ d.getFullYear() +" "+ d.getHours() +":"+ d.getMinutes() +":"+ d.getSeconds())))
+                                            .append($("<tr/>")
+                                                    .append($("<td/>").append("Number of motifs"))
+                                                    .append($("<td/>").addClass("invtable-boldcell").append(self.tomtomresult.data.hits.length)))
+                                            ));
+
+                            
 					
 					self.$elem.append($("<span />").append("<br><button class='btn btn-default'>Show TOMTOM run parameters</button>")
 	                	.on("click", 
@@ -72,18 +77,29 @@
 								self.trigger("showTomtomHits", { tomtomresult: self.tomtomresult, event: event });
 	                    })
 	                );
+                                self.loading(false);
 			    },
 			    
 			    function(data) {
-                                $('.loader-table').remove();
+                                self.contentDiv.remove();
+                                self.loading(false);
                                 self.$elem.append('<p>[Error] ' + data.error.message + '</p>');
                                 return;
                             }
 			);
 			
-            this.hideMessage();
             return this;
 	        },
+
+        loading: function(flag) {
+            if (flag) {
+                this.tableLoading.removeClass('hide');
+                this.contentDiv.addClass('hide');
+            } else {
+                this.contentDiv.removeClass('hide');
+                this.tableLoading.addClass('hide');
+            }
+        },
 	
         getData: function() {
             return {
@@ -96,21 +112,5 @@
             };
         },
 
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
-
-            this.$messagePane.append(span);
-            this.$messagePane.removeClass("kbwidget-hide-message");
-        },
-
-        hideMessage: function() {
-            this.$messagePane.addClass("kbwidget-hide-message");
-            this.$messagePane.empty();
-        },
-
-        rpcError: function(error) {
-            console.log("An error occurred: " + error);
-        }
-	
     });
 })( jQuery );

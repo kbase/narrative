@@ -10,58 +10,63 @@
             width: 780
         },
 
-//        workspaceURL: "https://kbase.us/services/workspace",
-
         init: function(options) {
             this._super(options);
+            var self = this;
+
             if (this.options.collection === null) {
                 //throw an error
                 return;
             }
 
-            this.$messagePane = $("<div/>")
-                                .addClass("kbwidget-message-pane")
-                                .addClass("kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);
-
-//            this.workspaceClient = new workspaceService(this.workspaceURL);
-
-            return this.render();
-        },
-
-        render: function(options) {
-
-            var self = this;
             self.collection = this.options.collection;
-            
-			self.$elem.append($("<div />")
-					.append($("<table/>").addClass("kbgo-table")
 
-				   	.append($("<tr/>").append("<td>BAMBI Version</td><td>" + self.collection.data.version + "</td>"))
-				   	//.append($("<tr/>").append("<td>Input file (temporary)</td><td>" + self.collection.data.input_file_name + "</td>"))
-				   	.append($("<tr/>").append("<td>Command line</td><td>" + self.collection.data.command_line + "</td>"))
-
-
-					.append($("<tr/>").append("<td>Minimal length of a motif </td><td>" + self.collection.data.run_parameters.min_motif_length  + "</td>"))
-					.append($("<tr/>").append("<td>Maximal length of a motif </td><td>" + self.collection.data.run_parameters.max_motif_length  + "</td>"))
-					.append($("<tr/>").append("<td>Minimal length of a motif block</td><td>" + self.collection.data.run_parameters.min_motif_block_length  + "</td>"))
-					.append($("<tr/>").append("<td>Maximal length of a motif block </td><td>" + self.collection.data.run_parameters.max_motif_block_length  + "</td>"))
-					.append($("<tr/>").append("<td>Minimal length of a motif gap</td><td>" + self.collection.data.run_parameters.min_motif_gap_length  + "</td>"))
-					.append($("<tr/>").append("<td>Maximal length of a motif gap</td><td>" + self.collection.data.run_parameters.max_motif_gap_length  + "</td>"))
-
-					.append($("<tr/>").append("<td>Initialize probability of sequence w/o motif </td><td>" + self.collection.data.run_parameters.initial_rho0  + "</td>"))
-					.append($("<tr/>").append("<td>Initialize probability of sequence with motif</td><td>" + self.collection.data.run_parameters.initial_rho1  + "</td>"))
-					.append($("<tr/>").append("<td>Background probability of nucleotids [A,T,G,C] </td><td>" 
-							+ "[" + self.collection.data.run_parameters.pa  
+                                    self.$elem.append($("<div />")
+                                .append($("<table/>").addClass("invtable")
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("BAMBI Version"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.version)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Command line"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.command_line)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Minimal length of a motif"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.min_motif_length)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Maximal length of a motif"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.max_motif_length)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Minimal length of a motif block"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.min_motif_block_length)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Maximal length of a motif block"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.max_motif_block_length)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Minimal length of a motif gap"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.min_motif_gap_length)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Maximal length of a motif gap"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.max_motif_gap_length)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Initialize probability of sequence w/o motif"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.initial_rho0)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Initialize probability of sequence with motif"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.initial_rho1)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Background probability of nucleotids [A,T,G,C]"))
+                                                .append($("<td />").addClass("invtable-boldcell").append("[" + self.collection.data.run_parameters.pa  
 							+ "," + self.collection.data.run_parameters.pt  
 							+ "," + self.collection.data.run_parameters.pg  
 							+ "," + self.collection.data.run_parameters.pc  
-							+ "]"
-							+ "</td>"))
-					.append($("<tr/>").append("<td>Number of BAMBI runs to be executed </td><td>" + self.collection.data.run_parameters.number_of_runs  + "</td>"))
-					.append($("<tr/>").append("<td>Search for additional sites using the predicted motif </td><td>" + self.collection.data.run_parameters.search_for_minor_sites  + "</td>"))
-
-			));
+							+ "]")))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Number of BAMBI runs to be executed"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.number_of_runs)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Search for additional sites using the predicted motif"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.collection.data.run_parameters.search_for_minor_sites)))
+                                        ));
 
             return this;
         },

@@ -1,49 +1,67 @@
-(function( $, undefined ) { 
-    $.KBWidget({ 
-        name: "KBaseTomtomRunParametersCard", 
-        parent: "kbaseWidget", 
+(function($, undefined) {
+    $.KBWidget({
+        name: "KBaseTomtomRunParametersCard",
+        parent: "kbaseWidget",
         version: "1.0.0",
-
         options: {
             title: "TOMTOM run parameters",
             isInCard: false,
             width: 400
         },
+        newWorkspaceServiceUrl: "https://kbase.us/services/ws", //"http://140.221.84.209:7058/",
 
         init: function(options) {
             this._super(options);
+            var self = this;
+
             if (this.options.tomtomresult === null) {
                 //throw an error
                 return;
             }
 
-            this.$messagePane = $("<div/>")
-                                .addClass("kbwidget-message-pane")
-                                .addClass("kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);
+            this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, {'token': this.options.auth, 'user_id': this.options.userId});
 
-            return this.render();
-        },
-
-        render: function(options) {
-
-            var self = this;
             self.tomtomresult = this.options.tomtomresult;
-            
-			self.$elem.append($("<div />")
-					.append($("<table/>").addClass("kbgo-table")
-                                        .append($("<tr/>").append("<td>Query reference</td><td>" + self.tomtomresult.data.params.query_ref + "</td>"))
-                                        .append($("<tr/>").append("<td>Target reference</td><td>" + self.tomtomresult.data.params.target_ref + "</td>"))
-                                        .append($("<tr/>").append("<td>Threshold</td><td>" + self.tomtomresult.data.params.thresh.toString() + "</td>"))
-                                        .append($("<tr/>").append("<td>Distance scoring</td><td>" + self.tomtomresult.data.params.dist + "</td>"))
-					.append($("<tr/>").append("<td>Use evalue</td><td>" + self.tomtomresult.data.params.evalue.toString() + "</td>"))
-					.append($("<tr/>").append("<td>Use internal</td><td>" + self.tomtomresult.data.params.internal.toString() + "</td>"))
-					.append($("<tr/>").append("<td>Minimal overlap</td><td>" + self.tomtomresult.data.params.min_overlap.toString() + "</td>"))
-			));
+
+            this.workspaceClient.get_object_info([{ref: self.tomtomresult.data.params.query_ref},
+                {ref: self.tomtomresult.data.params.target_ref}],
+            0,
+                    function(data) {
+                        self.query_info = data[0];
+                        self.target_info = data[1];
+
+                        self.$elem.append($("<div />")
+                                .append($("<table/>").addClass("invtable")
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Query reference"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.query_info[7] + "/" + self.query_info[1])))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Target reference"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.target_info[7] + "/" + self.target_info[1])))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Threshold"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.tomtomresult.data.params.thresh.toString())))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Distance scoring"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.tomtomresult.data.params.dist)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Use evalue"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.tomtomresult.data.params.evalue.toString())))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Use internal"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.tomtomresult.data.params.internal.toString())))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Minimal overlap"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.tomtomresult.data.params.min_overlap.toString())))
+                                        ));
+                    },
+                    function(data) {
+                        self.$elem.append('<p>[Error] ' + data.error.message + '</p>');
+                        return;
+                    });
 
             return this;
         },
-
         getData: function() {
             return {
                 type: "TomtomRunResult",
@@ -52,23 +70,5 @@
                 title: "TOMTOM run parameters"
             };
         },
-
-
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
-
-            this.$messagePane.append(span);
-            this.$messagePane.removeClass("kbwidget-hide-message");
-        },
-
-        hideMessage: function() {
-            this.$messagePane.addClass("kbwidget-hide-message");
-            this.$messagePane.empty();
-        },
-
-        rpcError: function(error) {
-            console.log("An error occurred: " + error);
-        }
-	
     });
-})( jQuery );
+})(jQuery);

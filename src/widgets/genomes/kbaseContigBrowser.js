@@ -64,11 +64,14 @@
             onClickFunction: null,
 
             width: 550,
+
+            workspaceId: null,
+            genomeId: null,
+            kbCache: null,
         },
 
         cdmiURL: "http://kbase.us/services/cdmi_api",
         proteinInfoURL: "http://kbase.us/services/protein_info_service",
-        workspaceURL: "http://kbase.us/services/workspace",
         tooltip: null,
         operonFeatures: [],
         $messagePane: null,
@@ -87,9 +90,7 @@
             this.$elem.append(this.$messagePane);
 
             this.cdmiClient = new CDMI_API(this.cdmiURL);
-            this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
             this.proteinInfoClient = new ProteinInfo(this.proteinInfoURL);
-            this.workspaceClient = new workspaceService(this.workspaceURL);
 
             this.render();
 
@@ -99,7 +100,13 @@
             }
 
             this.options.onClickFunction = function(svgElement, feature) {
-                self.trigger("featureClick", { feature: feature, featureElement: svgElement} );
+                self.trigger("featureClick", { 
+                    feature: feature, 
+                    featureElement: svgElement,
+                    genomeId: self.options.genomeId,
+                    workspaceId: self.options.workspaceId,
+                    kbCache: self.options.kbCache,
+                } );
             }
             return this;
         },
@@ -145,11 +152,17 @@
                 self.resize();
             });
 
+            if (this.options.workspaceId && this.options.genomeId) {
+                this.setWorkspaceContig(this.options.workspaceId, this.options.genomeId, this.options.contig);
+            }
+            else {
+                this.setCdmiContig();
+            }
+
             // Kickstart the whole thing
             if (this.options.centerFeature != null)
                 this.setCenterFeature(this.options.centerFeature);
 
-            this.setContig();
 
             return this;
         },
@@ -236,7 +249,7 @@
         /**
          * Updates the internal representation of a contig to match what should be displayed.
          */
-        setContig : function(contigId) {
+        setCdmiContig : function(contigId) {
             // If we're getting a new contig, then our central feature (if we have one)
             // isn't on it. So remove that center feature and its associated operon info.
             if (contigId && this.options.contig !== contigId) {
@@ -262,23 +275,117 @@
             }
         },
 
+        calcFeatureRange: function(loc) {
+            var calcLocRange = function(loc) {
+                var firstBase = Number(loc[1]);
+                var lastBase = Number(loc[1]) + Number(loc[3]) - 1;
+                if (loc[2] === "-") {
+                    lastBase = firstBase;
+                    firstBase -= Number(loc[3]) + 1;
+                }
+                return [firstBase, lastBase];
+            };
+
+            var range = calcLocRange(loc[0]);
+            for (var i=1; i<loc.length; i++) {
+                nextRange = calcLocRange(loc[i]);
+                if (nextRange[0] < range[0])
+                    range[0] = nextRange[0];
+                if (nextRange[1] > range[1])
+                    range[1] = nextRange[1];
+            }
+            return range;
+        },
+
+        setWorkspaceContig: function(workspaceId, genomeId, contigId) {
+            if (contigId && this.options.contig !== contigId) {
+                this.options.centerFeature = null;
+                this.operonFeatures = [];
+                this.options.contig = contigId;
+            }
+
+            var obj = this.buildObjectIdentity(this.options.workspaceId, this.options.genomeId);
+
+            var prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
+            $.when(prom).fail($.proxy(function(error) {
+                this.renderError(error);
+            }, this));
+            $.when(prom).done($.proxy(function(genome) {
+                // this should pre-parse the genome's contig into a map that it can handle.
+                // no, this isn't ideal. it should stream things.
+                // but the list of features is just that - a list. we'll need an api call, eventually, that
+                // can fetch the list of features in some range.
+                genome = genome[0];
+
+                this.contigLength = -1; // LOLOLOL.
+                // figure out contig length here, while cranking out the feature mapping.
+                if (genome.data.contig_ids && genome.data.contig_ids.length > 0) {
+                    var pos = $.inArray(contigId, genome.data.contig_ids);
+                    if (pos !== -1)
+                        this.contigLength = genome.data.contig_lengths[pos];
+                }
+                // indexed by first position.
+                // takes into account direction and such.
+                this.wsFeatureSet = {};
+                for (var i=0; i<genome.data.features.length; i++) {
+                    var f = genome.data.features[i];
+                    if (f.location && f.location.length > 0) {  // assume it has at least one valid 4-tuple
+                        if (f.location[0][0] === contigId) {
+                            var range = this.calcFeatureRange(f.location);
+                            // store the range in the feature!
+                            // this HURTS MY SOUL to do, but we need to make workspace features look like CDMI features.
+                            f.feature_location = f.location;
+                            f.feature_function = f.function;
+                            f.feature_id = f.id;
+                            f.range = range;
+                            this.wsFeatureSet[f.id] = f;
+
+                            // if (!this.wsFeatureSet[range[0]])
+                            //     this.wsFeatureSet[range[0]] = [];
+                            // this.wsFeatureSet[range[0]].push(f);
+
+                            if (range[1] > this.contigLength)
+                                this.contigLength = range[1];
+                        }
+                    }
+                }
+
+                this.options.start = 0;
+                if (this.options.length > this.contigLength)
+                    this.options.length = this.contigLength;
+
+                if (this.options.centerFeature) {
+                    this.setCenterFeature();
+                }
+                else {
+                    this.update();
+                }
+
+            }, this));
+
+        },
+
         setCenterFeature : function(centerFeature) {
             // if we're getting a new center feature, make sure to update the operon features, too.
             if (centerFeature)
                 this.options.centerFeature = centerFeature;
 
-            var self = this;
-            this.proteinInfoClient.fids_to_operons([this.options.centerFeature],
-                // on success
-                function(operonGenes) {
-                    self.operonFeatures = operonGenes[self.options.centerFeature];
-                    self.update();
-                },
-                // on error
-                function(error) {
-                    self.throwError(error);
-                }
-            );
+            if (this.options.workspaceId && this.options.genomeId) {
+                this.update(true);
+            }
+            else {
+                this.proteinInfoClient.fids_to_operons([this.options.centerFeature],
+                    // on success
+                    $.proxy(function(operonGenes) {
+                        this.operonFeatures = operonGenes[this.options.centerFeature];
+                        this.update(true);
+                    }, this),
+                    // on error
+                    $.proxy(function(error) {
+                        this.throwError(error);
+                    }, this)
+                );
+            }
         },
 
         setGenome : function(genomeId) {
@@ -351,13 +458,7 @@
         },
 
         update : function(useCenter) {
-
-            // exposes 'this' to callbacks through closure.
-            // otherwise 'this' refers to the state within the closure.
-            // ... i think. This kinda tangle makes my head hurt.
-            // Either way, this is the deepest chain of callbacks in here, so it should be okay.
             var self = this;
-
             var renderFromCenter = function(feature) {
                 if (feature) {
                     feature = feature[self.options.centerFeature];
@@ -385,10 +486,75 @@
                 self.renderFromRange(features);
             };
 
-            if (self.options.centerFeature && useCenter)
-                self.cdmiClient.fids_to_feature_data([self.options.centerFeature], renderFromCenter);
-            else
-                self.cdmiClient.region_to_fids([self.options.contig, self.options.start, '+', self.options.length], getFeatureData);
+            if (self.options.workspaceId && self.options.genomeId) {
+                var region = [self.options.start, self.options.start + self.options.length - 1];
+
+                if (self.options.centerFeature && useCenter) {
+                    // make a region around the center and use it.
+                    var f = this.wsFeatureSet[self.options.centerFeature];
+                    if (f) {
+                        self.options.start = Math.max(0, Math.floor(parseInt(f.location[0][1]) + (parseInt(f.location[0][3])/2) - (self.options.length/2)));
+                        region = [self.options.start, self.options.start + self.options.length - 1];
+                    }
+                }
+                var featureList = {};
+                // Search across all features (I know...) and pull out those that map to the given range.
+                for (var fid in this.wsFeatureSet) {
+                    if (this.rangeOverlap(region, this.wsFeatureSet[fid].range)) {
+                        featureList[fid] = this.wsFeatureSet[fid];
+                    }
+                }
+                this.renderFromRange(featureList);
+            }
+            else {
+                if (self.options.centerFeature && useCenter) {
+                    self.cdmiClient.fids_to_feature_data([self.options.centerFeature], 
+                        renderFromCenter
+                    );
+                }
+                else {
+                    self.cdmiClient.region_to_fids([self.options.contig, self.options.start, '+', self.options.length], 
+                        getFeatureData
+                    );
+                }
+            }
+        },
+
+        /**
+         * Compares two numerical ranges, r1 and r2, as ordered integers. r1[0] <= r1[1] and r2[0] <= r2[1].
+         * Returns true if they overlap, false otherwise.
+         */
+        rangeOverlap : function(x, y) {
+            /* cases
+             * 1: No overlap
+             * x0-------x1
+             *                    y0----------y1
+             *
+             * 2. Overlap
+             * x0--------------x1
+             *          y0-------------y1
+             *
+             * 3. Overlap
+             * x0------------------------------x1
+             *          y0-------------y1
+             *
+             * 4. Overlap
+             *          x0-------------x1
+             * y0-------------y1
+             *
+             * 5. Overlap
+             *          x0-------------x1
+             * y0------------------------------y1
+             *
+             * 6. No overlap
+             *                       x0----------x1
+             * y0----------y1
+             */
+
+            if (( x[0] < y[0] && x[1] > y[0] ) ||
+                ( y[0] < x[0] && y[1] > x[0] ))
+                return true;
+            return false;
         },
 
         adjustHeight : function() {
@@ -691,11 +857,41 @@
             return {
                 type: "Contig",
                 id: this.options.contig,
-                workspace: this.options.workspaceID,
+                workspace: this.options.workspaceId,
                 title: "Contig Browser"
             };
         },
 
+        renderError: function(error) {
+            errString = "Sorry, an unknown error occurred";
+            if (typeof error === "string")
+                errString = error;
+            else if (error.error && error.error.message)
+                errString = error.error.message;
+
+            
+            var $errorDiv = $("<div>")
+                            .addClass("alert alert-danger")
+                            .append("<b>Error:</b>")
+                            .append("<br>" + errString);
+            this.$elem.empty();
+            this.$elem.append($errorDiv);
+        },
+
+        buildObjectIdentity: function(workspaceId, objectId) {
+            var obj = {};
+            if (/^\d+$/.exec(workspaceId))
+                obj['wsid'] = workspaceId;
+            else
+                obj['workspace'] = workspaceId;
+
+            // same for the id
+            if (/^\d+$/.exec(objectId))
+                obj['objid'] = objectId;
+            else
+                obj['name'] = objectId;
+            return obj;
+        },
     });
 
 })( jQuery );

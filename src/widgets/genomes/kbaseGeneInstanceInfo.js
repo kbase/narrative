@@ -14,25 +14,30 @@
         options: {
             featureID: null,
             workspaceID: null,
+            genomeID: null,
+            kbCache: null,
             auth: null,
+            loadingImage: "../../widgets/images/ajax-loader.gif",
         },
 
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
 
         init: function(options) {
             this._super(options);
 
-            if (this.options.featureID === null) {
-                //throw an error.
+            if (!this.options.featureID) {
+                this.renderError();
                 return this;
             }
 
-            this.cdmiClient = new CDMI_API(this.cdmiURL);
-            this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
-            this.workspaceClient = new workspaceService(this.workspaceURL);
 
-            return this.render();
+            this.render();
+            if (this.options.workspaceID)
+                this.renderWorkspace();
+            else
+                this.renderCentralStore();
+
+            return this;
         },
 
         render: function(options) {
@@ -48,34 +53,77 @@
              * subsystems
              */
 
+            var makeButton = function(btnName) {
+                var id = btnName;
+                btnName = btnName.replace(/\w\S*/g, 
+                                function(txt) {
+                                    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                                });
+
+                return $("<button>")
+                       .attr("id", id)
+                       .attr("type", "button")
+                       .addClass("btn btn-primary")
+                       .append(btnName);
+
+            };
+
+            this.$messagePane = $("<div/>")
+                                .addClass("kbwidget-message-pane kbwidget-hide-message");
+            this.$elem.append(this.$messagePane);
+
+            this.$infoPanel = $("<div>");
+            this.$infoTable = $("<table>")
+                              .addClass("table table-striped table-bordered");
+            this.$buttonPanel = $("<div>")
+                                .attr("align", "center")
+                                .addClass("btn-group")
+                                .append(makeButton("domains"))
+                                .append(makeButton("operons"))
+                                .append(makeButton("biochemistry"));
+
+            this.$infoPanel.append(this.$infoTable)
+                           .append(this.$buttonPanel);
+
+            this.$elem.append(this.$infoPanel);
+        },
+
+        renderCentralStore: function() {
+
+            this.$infoPanel.hide();
+            this.showMessage("<img src='" + this.options.loadingImage + "'>");
+
             var self = this;
 
 
+            this.cdmiClient = new CDMI_API(this.cdmiURL);
+            this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
 
-            this.$table = $("<table />")
-                         .addClass("table table-striped table-bordered");
-            
             // Data fetching!
             var jobsList = [];
             var data = {};
+            // Fids to feature data job
             jobsList.push(this.cdmiClient.fids_to_feature_data([self.options.featureID],
                 function(featureData) {
                     data.featureData = featureData[self.options.featureID];
                 },
                 this.clientError
             ));
+            // Fids to genomes job
             jobsList.push(this.cdmiClient.fids_to_genomes([self.options.featureID],
                 function(genome) {
                     data.genome = genome[self.options.featureID];
                 },
                 this.clientError
             ));
+            // Fids to DNA sequence job
             jobsList.push(this.cdmiClient.fids_to_dna_sequences([this.options.featureID],
                 function(dnaSeq) {
                     data.dnaSeq = dnaSeq[self.options.featureID];
                 },
                 this.clientError
             ));
+            // Fids to protein families job
             jobsList.push(this.cdmiClient.fids_to_protein_families([this.options.featureID],
                 function(families) {
                     data.families = families[self.options.featureID];
@@ -84,17 +132,18 @@
             ));
 
             $.when.apply($, jobsList).done(function() {
-                self.$table.append(self.makeRow("Function", data.featureData.feature_function));
-                self.$table.append(self.makeRow("Genome", $("<div/>")
+                self.$infoTable.empty();
+                self.$infoTable.append(self.makeRow("Function", data.featureData.feature_function));
+                self.$infoTable.append(self.makeRow("Genome", $("<div/>")
                                                           .append(data.featureData.genome_name)
                                                           .append("<br/>")
                                                           .append(self.makeGenomeButton(data.genome))));
-                self.$table.append(self.makeRow("Length", data.featureData.feature_length + " bp"));
-                self.$table.append(self.makeRow("Location", $("<div/>")
+                self.$infoTable.append(self.makeRow("Length", data.featureData.feature_length + " bp"));
+                self.$infoTable.append(self.makeRow("Location", $("<div/>")
                                                             .append(self.parseLocation(data.featureData.feature_location))
                                                             .append(self.makeContigButton(data.featureData.feature_location))));
 
-                self.$table.append(self.makeRow("GC Content", self.calculateGCContent(data.dnaSeq).toFixed(2) + "%"));
+                self.$infoTable.append(self.makeRow("GC Content", self.calculateGCContent(data.dnaSeq).toFixed(2) + "%"));
 
                 if (data.families && data.families.length != 0) {
                     self.cdmiClient.protein_families_to_functions(data.families,
@@ -103,135 +152,149 @@
                             for (var fam in families) {
                                 familyStr += fam + ": " + families[fam] + "<br/>";
                             }
-                            self.$table.append(self.makeRow("Protein Families", familyStr));
+                            self.$infoTable.append(self.makeRow("Protein Families", familyStr));
                         },
                         self.clientError
                     );
                 }
                 else
-                    self.$table.append(self.makeRow("Protein Families", "None found"));
+                    self.$infoTable.append(self.makeRow("Protein Families", "None found"));
+
+                self.$buttonPanel.find("button#domains").click(
+                    function(event) { 
+                        self.trigger("showDomains", { event: event, featureID: self.options.featureID }) 
+                    }
+                );
+                self.$buttonPanel.find("button#operons").click(
+                    function(event) { 
+                        self.trigger("showOperons", { event: event, featureID: self.options.featureID }) 
+                    }
+                );
+                self.$buttonPanel.find("button#biochemistry").click(
+                    function(event) { 
+                        self.trigger("showBiochemistry", { event: event, featureID: self.options.featureID }) 
+                    }
+                );
+                self.hideMessage();
+                self.$infoPanel.show();
             });
-
-
-
-
-
-
-
-            // // First, get feature data
-            // this.cdmiClient.fids_to_feature_data (
-            //     [self.options.featureID],
-
-            //     // this.populateFeatureData,
-            //     // this.clientError
-
-            //     function(featureData) {
-            //         featureData = featureData[self.options.featureID];
-
-            //         // Add this data to the table before moving on.
-            //         self.$table.append(self.makeRow("Function", featureData.feature_function));
-            //         self.$table.append(self.makeRow("Genome", featureData.genome_name)); //$("<div/>")
-            //                                                // .append(featureData.genome_name)
-            //                                                // .append(self.makeGenomeButton(self.options.)));
-            //         self.$table.append(self.makeRow("Length", featureData.feature_length + " bp"));
-            //         self.$table.append(self.makeRow("Location", $("<div/>")
-            //                                                .append(self.parseLocation(featureData.feature_location))
-            //                                                .append(self.makeContigButton(featureData.feature_location))));
-
-            //         self.cdmiClient.fids_to_dna_sequences([self.options.featureID],
-            //             function(dnaSeq) {
-            //                 self.$table.append(self.makeRow("GC Content", 
-            //                         self.calculateGCContent(dnaSeq[self.options.featureID]).toFixed(2) + "%"));
-
-            //                 self.cdmiClient.fids_to_protein_families([self.options.featureID], 
-            //                     function(families) {
-
-            //                         families = families[self.options.featureID];
-            //                         if (families) {
-            //                             self.cdmiClient.protein_families_to_functions(families, 
-            //                                 // on success
-            //                                 function(families) {
-            //                                     var familyStr = '';
-
-            //                                     if (families && families.length != 0) {
-            //                                         for (var fam in families) {
-            //                                             if (families.hasOwnProperty(fam))
-            //                                                 familyStr += fam + ": " + families[fam] + "<br/>";
-            //                                         }
-            //                                     }
-
-            //                                     self.$table.append(self.makeRow("Protein Families", familyStr));
-                                            
-            //                                 },
-
-            //                                 self.clientError
-            //                             );
-            //                         }
-            //                         else {
-            //                             self.$table.append(self.makeRow("Protein Families", "None found"));
-            //                         }
-
-            //                     },
-
-            //                     self.clientError
-            //                 );
-            //             },
-
-            //             self.clientError
-            //         );
-            //     },
-
-            //     this.clientError
-            // );
-
-            this.$elem.append(this.$table);
-
-            var $domainButton = $("<button/>")
-                               .attr("type", "button")
-                               .addClass("btn btn-default")
-                               .append("Domains")
-                               .on("click", function(event) {
-                                   self.trigger("showDomains", {
-                                       event: event,
-                                       featureID: self.options.featureID
-                                   })
-                               });
-
-            var $operonButton = $("<button/>")
-                               .attr("type", "button")
-                               .addClass("btn btn-default")
-                               .append("Operons")
-                               .on("click", function(event) {
-                                   self.trigger("showOperons", {
-                                       event: event,
-                                       featureID: self.options.featureID
-                                   })
-                               });
-
-            var $biochemButton = $("<button/>")
-                               .attr("type", "button")
-                               .addClass("btn btn-default")
-                               .append("Biochemistry")
-                               .on("click", function(event) {
-                                   self.trigger("showBiochemistry", {
-                                       event: event,
-                                       featureID: self.options.featureID
-                                   })
-                               });
-
-
-            var $buttonGroup = $("<div/>")
-                               .attr("align", "center")
-                               .append($("<div/>")
-                                       .addClass("btn-group")
-                                       .append($domainButton)
-                                       .append($operonButton)
-                                       .append($biochemButton));
-            this.$elem.append($buttonGroup);
-
-            return this;
         },
 
+        renderWorkspace: function() {
+            this.$infoPanel.hide();
+            this.showMessage("<img src='" + this.options.loadingImage + "'>");
+
+            var obj = this.buildObjectIdentity(this.options.workspaceID, this.options.genomeID);
+
+            var prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
+            $.when(prom).fail($.proxy(function(error) {
+                this.renderError(error);
+                console.log(error);
+            }, this));
+            $.when(prom).done($.proxy(function(genome) {
+                genome = genome[0];
+                var feature = null;
+                if (genome.data.features) {
+                    for (var i=0; i<genome.data.features.length; i++) {
+                        if (genome.data.features[i].id === this.options.featureID) {
+                            feature = genome.data.features[i];
+                            break;
+                        }
+                    }
+
+                    if (feature) {
+                        // FINALLY we have the feature! Hooray!
+                        this.$infoTable.empty();
+                        /* Function
+                         * Genome + button
+                         * Length
+                         * Location + button
+                         * GC Content (maybe)
+                         * Protein Families
+                         */
+
+                        // Figure out the function.
+                        var func = feature['function'];
+                        if (!func) 
+                            func = "Unknown";
+                        this.$infoTable.append(this.makeRow("Function", func));
+
+                        // Show the genome and a button for it.
+                        this.$infoTable.append(this.makeRow("Genome", $("<div/>")
+                                                                      .append(genome.data.scientific_name)
+                                                                      .append("<br>")
+                                                                      .append(this.makeGenomeButton(this.options.genomeID, this.options.workspaceID))));
+                        // Figure out the feature length
+                        var len = "Unknown";
+                        if (feature.dna_sequence_length)
+                            len = feature.dna_sequence_length + " bp";
+                        else if (feature.dna_sequence)
+                            len = feature.dna_sequence.length + " bp";
+                        else if (feature.location && feature.location.length > 0) {
+                            len = 0;
+                            for (var i=0; i<feature.location.length; i++) {
+                                len += feature.location[i][3];
+                            }
+                            len += " bp";
+                        }
+                        this.$infoTable.append(this.makeRow("Length", len));
+
+                        // Make a contig button
+                        this.$infoTable.append(this.makeRow("Location", $("<div/>")
+                                                            .append(this.parseLocation(feature.location))
+                                                            .append(this.makeContigButton(feature.location))));
+
+                        // LOL GC content. Does anyone even care these days?
+                        if (feature.dna_sequence) {
+                            var gc = this.calculateGCContent(feature.dna_sequence);
+                            this.$infoTable.append(this.makeRow("GC Content", Number(gc).toFixed(2)));
+                        }
+
+                        // Protein families list.
+                        var proteinFamilies = "None found";
+                        if (feature.protein_families) {
+                            proteinFamilies = "";
+                            for (var i=0; i<feature.protein_families.length; i++) {
+                                var fam = feature.protein_families[i];
+                                proteinFamilies += fam.id + ": " + fam.subject_description + "<br>";
+                            }
+                        }
+                        this.$infoTable.append(this.makeRow("Protein Families", proteinFamilies));
+
+                        this.$buttonPanel.find("button#domains").click(function(event) { window.alert("Domain view unavailable for Workspace genes. Sorry!"); });
+                        this.$buttonPanel.find("button#operons").click(function(event) { window.alert("Operon view unavailable for Workspace genes. Sorry!"); });
+
+                        // bind button events
+                        this.$buttonPanel.find("button#biochemistry").click(
+                            $.proxy(function(event) { 
+                                this.trigger("showBiochemistry", { 
+                                    event: event, 
+                                    featureID: this.options.featureID,
+                                    genomeID: this.options.genomeID,
+                                    workspaceID: this.options.workspaceID,
+                                    kbCache: this.options.kbCache 
+                                });
+                            }, this)
+                        );
+
+                    }
+                    else {
+                        this.renderError({ error: "Gene '" + this.options.featureID + 
+                                                  "' not found in the genome with object id: " +
+                                                  this.options.workspaceID + "/" + this.options.genomeID });
+                    }
+
+                }
+                else {
+                    this.renderError({ error: "No genetic features found in the genome with object id: " + 
+                                              this.options.workspaceID + "/" + 
+                                              this.options.genomeID });
+                }
+
+                this.hideMessage();
+                this.$infoPanel.show();
+            }, this));
+        },
 
         makeRow: function(name, value) {
             var $row = $("<tr/>")
@@ -255,6 +318,9 @@
                                     self.trigger("showContig", { 
                                         contig: contigID, 
                                         centerFeature: self.options.featureID,
+                                        genomeId: self.options.genomeID,
+                                        workspaceId: self.options.workspaceID,
+                                        kbCache: self.options.kbCache,
                                         event: event
                                     });
                                  }
@@ -276,9 +342,11 @@
                              .append("Show Genome")
                              .on("click",
                                 function(event) {
+                                    console.log(self.options);
                                     self.trigger("showGenome", {
                                         genomeID: genomeID,
                                         workspaceID: workspaceID,
+                                        kbCache: self.options.kbCache,
                                         event: event
                                     });
                                 }
@@ -287,6 +355,10 @@
             return $genomeBtn;
         },
 
+        /**
+         * Returns the GC content of a string as a percentage value.
+         * You'll still need to concat it to some number of decimal places.
+         */
         calculateGCContent: function(s) {
             var gc = 0;
             s = s.toLowerCase();
@@ -326,17 +398,58 @@
             return locStr;
         },
 
+        showMessage: function(message) {
+            var span = $("<span/>").append(message);
+
+            this.$messagePane.empty()
+                             .append(span)
+                             .removeClass("kbwidget-hide-message");
+        },
+
+        hideMessage: function() {
+            this.$messagePane.addClass("kbwidget-hide-message");
+        },
+
         getData: function() {
             return {
                 type: "Feature",
                 id: this.options.featureID,
                 workspace: this.options.workspaceID,
+                genome: this.options.genomeID,
                 title: "Gene Instance"
             };
         },
 
-        clientError: function(error) {
-            this.dbg(error);
+        renderError: function(error) {
+            errString = "Sorry, an unknown error occurred";
+            if (typeof error === "string")
+                errString = error;
+            else if (error.error && error.error.message)
+                errString = error.error.message;
+
+            
+            var $errorDiv = $("<div>")
+                            .addClass("alert alert-danger")
+                            .append("<b>Error:</b>")
+                            .append("<br>" + errString);
+            this.$elem.empty();
+            this.$elem.append($errorDiv);
         },
+
+        buildObjectIdentity: function(workspaceID, objectID) {
+            var obj = {};
+            if (/^\d+$/.exec(workspaceID))
+                obj['wsid'] = workspaceID;
+            else
+                obj['workspace'] = workspaceID;
+
+            // same for the id
+            if (/^\d+$/.exec(objectID))
+                obj['objid'] = objectID;
+            else
+                obj['name'] = objectID;
+            return obj;
+        },
+
     })
 })( jQuery );

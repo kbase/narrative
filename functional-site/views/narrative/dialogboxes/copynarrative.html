@@ -4,7 +4,10 @@
             <h4>Copy Narrative </h4>
         </div>
         <div class="modal-body">
-            The following files are about to be copied into your home workspace : 
+            <div>
+                <alert ng-repeat="alert in alerts" type="alert.type" close="closeAlert($index)">{{alert.msg}}</alert>
+            </div>
+            The following files are about to be copied into your home workspace:
             <table class="table" copyfiles narr="narr" style="margin-top: 20px !important">
               <tr><th><b>Name</b></th><th><b>File Type</b></th></tr>
             </table>  

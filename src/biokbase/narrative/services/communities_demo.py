@@ -149,7 +149,7 @@ def _submit_awe(wf):
     url = URLS.awe+"/job"
     req = requests.post(url, headers=headers, files=files, allow_redirects=True)
     res = req.json()
-    return res['data']
+    return res
     
 def _get_awe_job(jobid):
     req = urllib2.Request('%s/job/%s'%(URLS.awe, jobid))

@@ -88,7 +88,7 @@
             self.$elem.append(data_report);
 
             var asm_div = $('<div class="row">');
-            var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-2"><select class="form-control" name="assemblers"> \
+            var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
                                       <option value="sga_preprocess,bhammer,tagdust,spades,sspace">AssemblyRAST Pipeline</option> \
                                       <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">Trifecta Pipeline</option> \
                                       <option value="a6">A6 Pipeline</option> \
@@ -97,7 +97,7 @@
                                       <option value="idba">IDBA-UD Assembler</option> \
                                       <option value="kiki">Kiki Assembler</option> \
                                     </select></span>');
-            var asm_desc = $('<span class="col-md-8"><input type="text" class="form-control" placeholder="Description"></span>')
+            var asm_desc = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
@@ -149,17 +149,21 @@
                                     if (stat.search('Complete') != -1) {
                                         var report_txt = null;
                                         request_job_report(job_id).done(function(){
-                                            get_job_report_txt(job_id).done(function(quast_txt){
+                                            var report_div = '<div class="">'
+					    var result_btn_row = $('<div class="row pull-right">')
+                                            get_job_report_txt(job_id)
+						.done(function(quast_txt){
                                                 var full_link = arURL + '/static/' + user + '/job/' + job_id + '/quast/contig/report.html';
-						var full_link_log = arURL + '/static/' + user + '/job/' + job_id + '/' + job_id + '_report.txt';
                                                 var formatted = quast_txt.replace(/\n/g, '<br>')
                                                 var formatted2 = formatted.replace(/\s/g, '&nbsp')
-                                                var report_div = '<div class=""><code style="font-size:10px">'
-                                                    + formatted2 +'</code><br>'
-						    report_div += '<a href='+ full_link +' class="btn btn-success form-control" target="_blank">Full Analysis</a></div>'
-						    report_div += '<a href='+ full_link_log +' class="btn btn-success form-control" target="_blank">Assembly Log</a></div>'
+						    report_div += '<code style="font-size:4px>' + formatted2 +'</code><br>'
+						    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-success" target="_blank" style="padding:5px">Full Analysis</a></span>')
+                                            }).always(function(){
+						var full_link_log = arURL + '/static/' + user + '/job/' + job_id + '/' + job_id + '_report.txt';
+						result_btn_row.append('<span class=""><a href='+ full_link_log +' class="btn btn-info" target="_blank">Assembly Log</a></span></div>')
                                                 self.$elem.append(report_div);
-                                            })
+						self.$elem.append(result_btn_row);
+					    })
                                         })
                                     }
                                 }

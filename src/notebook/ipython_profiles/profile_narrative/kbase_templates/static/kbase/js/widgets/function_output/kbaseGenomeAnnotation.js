@@ -30,7 +30,7 @@
         	var pref = (new Date()).getTime();
         	console.log('Before Genome Annotation Widget init('+pref+')');
 
-            var wsUrl = 'http://140.221.84.209:7058/';
+            var wsUrl = 'https://kbase.us/services/ws/';
             var container = this.$elem;
         	container.empty();
 

@@ -47,7 +47,7 @@ class URLS:
     shock = "http://shock1.chicago.kbase.us"
     awe = "http://140.221.85.36:8000"
     #workspace = "http://kbase.us/services/workspace"
-    workspace = "http://140.221.84.209:7058"
+    workspace = "https://kbase.us/services/ws"
     #invocation = "https://kbase.us/services/invocation"
     invocation = "http://140.221.85.110:443"
 

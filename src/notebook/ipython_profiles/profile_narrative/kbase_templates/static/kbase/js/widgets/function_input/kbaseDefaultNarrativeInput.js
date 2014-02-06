@@ -62,7 +62,7 @@
             var paramList = [];
 
             $(this.$elem).find("[name^=param]").filter(":input").each(function(key, field) {
-                paramList.push(field.value);
+                paramList.push(field.value.trim());
             });
 
             return paramList;

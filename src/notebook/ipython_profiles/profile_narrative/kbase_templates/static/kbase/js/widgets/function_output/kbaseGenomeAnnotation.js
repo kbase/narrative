@@ -30,7 +30,7 @@
         	var pref = (new Date()).getTime();
         	console.log('Before Genome Annotation Widget init('+pref+')');
 
-            var wsUrl = 'http://140.221.84.209:7058/';
+            var wsUrl = 'https://kbase.us/services/ws/';
             var container = this.$elem;
         	container.empty();
 
@@ -69,7 +69,7 @@
             	var tax = gnm.taxonomy;
             	if (tax == null)
             		tax = '';
-            	var overviewData = [gnm.id, gnm.scientific_name, gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc, tax, gnm.size];
+            	var overviewData = [gnm.id, gnm.scientific_name, gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
                 var overviewTable = $('#'+pref+'overview-table');
                 for (var i=0; i<overviewData.length; i++) {
                 	if (overviewLabels[i] === 'Taxonomy') {

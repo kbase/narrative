@@ -7,7 +7,7 @@
     "dev": { "workspace_url": "http://140.221.84.209:7058",
              "fba_url" : "http://140.221.85.73:4043/" },
 
-    "narrative_url": "http://narrative.kbase.us/narrative/"
+    "narrative_url": "http://narrative.kbase.us/narrative"
 
 }
 

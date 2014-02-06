@@ -38,10 +38,9 @@
             var data_report = $('<div class="panel panel-info" style="padding:10px">')
 		.append('<div class="panel-heading panel-title">Assembly Service Data Set </div>');
 
-
+	    // Parses the AssemblyInput object and displays it in the table
 	    var make_data_table = function(info) {
 		var tables = $('<div>')
-
 		if (info.paired_end_libs != undefined) {
 		    for (var i = 0; i < info.paired_end_libs.length; i++) {
 			var tbl = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">');
@@ -57,7 +56,6 @@
 			tables.append(tbl)
 		    }
 		}
-
 		if (info.single_end_libs != undefined) {
 		    for (var i = 0; i < info.single_end_libs.length; i++) {
 			var tbl = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">');
@@ -70,7 +68,6 @@
 			tables.append(tbl)
 		    }
 		}
-
 		if (info.single_end_libs != undefined) {
 		    for (var i = 0; i < info.references.length; i++) {
 			var tbl = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">');
@@ -83,14 +80,10 @@
 			tables.append(tbl)
 		    }
 		}
-
-
 		return tables;
 	    }
 
-
 	    var dt = make_data_table(kb_info);
-	    console.log(dt)
 	    data_report.append(dt)
             self.$elem.append(data_report);
 
@@ -105,10 +98,9 @@
                                       <option value="kiki">Kiki Assembler</option> \
                                     </select></span>');
             var asm_desc = $('<span class="col-md-8"><input type="text" class="form-control" placeholder="Description"></span>')
-            var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-success pull-right">Assemble</button></span>');
+            var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
-//            asm_btn.click(function() {
 	    asm_btn.one("click", function() {
                 var assembler = asm_choose.find('select option:selected').val();
                 var desc = asm_desc.find('input').val();
@@ -133,7 +125,18 @@
                             // self.$elem.append(job_alert);
                         var status = 'Submitted';
                         var status_box = make_status_table(job_id, desc, status);
+			var kill_div = $('<div></div>')
+			var kill_btn = $('<span class="button btn btn-danger pull-right">Terminate</span>')
+			kill_btn.one("click", function(){
+			    kill_job(job_id, token).done(function(res){
+				console.log(res)
+				kill_btn.text('Terminating...');
+			    })
+			})
                         self.$elem.append(status_box);
+			kill_div.append(kill_btn);
+                        self.$elem.append(kill_div);
+
 			
                         var update_status = function() {
                             var prom = check_status(job_id);
@@ -142,8 +145,8 @@
 				status_box.css("border", "none")
                                 if (stat.search('Complete') != -1 || stat.search('FAIL') != -1) {
                                     clearInterval(status_updater);
+				    kill_div.html("");
                                     if (stat.search('Complete') != -1) {
-                                        // Show Report button
                                         var report_txt = null;
                                         request_job_report(job_id).done(function(){
                                             get_job_report_txt(job_id).done(function(quast_txt){
@@ -179,7 +182,7 @@
                     .append('<tbody><td>' + job_id + '</td><td>'+ desc +'</td><td>'+ status +'</td></tbody>')
                 return status_box;
             };
-	    
+
             var check_status = function(j_id) {
                 var prom = $.get(arURL + '/user/' + user + '/job/' + j_id + '/status/')
                 return prom;
@@ -194,6 +197,16 @@
                 var prom = $.get(arURL + '/static/' + user + '/job/' + job_id + '/quast/contig/report.txt');
                 return prom
             }
+
+            var kill_job = function(job_id, token) {
+                var prom = $.ajax({
+                    contentType: 'application/json',
+                    url: arURL + 'user/' + user + '/job/' + job_id + '/kill',
+                    type: 'get',
+                    headers: {Authorization: token}});
+                return prom;
+            }
+
             return this;	    
         }
 

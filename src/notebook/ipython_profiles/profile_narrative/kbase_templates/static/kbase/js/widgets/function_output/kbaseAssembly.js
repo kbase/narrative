@@ -96,13 +96,13 @@
 
             var asm_div = $('<div class="row">');
             var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-2"><select class="form-control" name="assemblers"> \
-                                      <option value="sga_preprocess bhammer tagdust spades sspace">AssemblyRAST</option> \
-                                      <option value="&quot;spades kiki&quot;">SPAdes</option> \
-                                      <option value="spades">SPAdes</option> \
-                                      <option value="a6">A6</option> \
-                                      <option value="idba">IDBA-UD</option> \
-                                      <option value="kiki">Kiki</option> \
-                                      <option value="pacbio">PacBio</option> \
+                                      <option value="sga_preprocess,bhammer,tagdust,spades,sspace">AssemblyRAST Pipeline</option> \
+                                      <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">Trifecta Pipeline</option> \
+                                      <option value="a6">A6 Pipeline</option> \
+                                      <option value="pacbio">PacBio SMRT Pipeline</option> \
+                                      <option value="spades">SPAdes Assembler</option> \
+                                      <option value="idba">IDBA-UD Assembler</option> \
+                                      <option value="kiki">Kiki Assembler</option> \
                                     </select></span>');
             var asm_desc = $('<span class="col-md-8"><input type="text" class="form-control" placeholder="Description"></span>')
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-success pull-right">Assemble</button></span>');
@@ -112,7 +112,8 @@
 	    asm_btn.one("click", function() {
                 var assembler = asm_choose.find('select option:selected').val();
                 var desc = asm_desc.find('input').val();
-                arRequest.pipeline = [[assembler]];
+		
+                arRequest.pipeline = [assembler.split(',')];
                 arRequest.message = desc;
                 asm_div.find('fieldset').attr('disabled', "true");
 		

@@ -46,7 +46,7 @@ function KBCacheClient(token) {
     var kbws = new Workspace(ws_url, auth);
 
   
-    var cache = new Cache();    
+    var cache = new Cache();
 
     this.req = function(service, method, params) {
         //if (!params) var params = {auth: auth.token};
@@ -524,17 +524,17 @@ function ProjectAPI(ws_url, token) {
 
     this.copy_narrative = function (p_in) {
         var def_params = { callback : undefined,
-			   project_id : undefined, // numeric workspace id
-			   narrative_id : undefined, //numeric object id
-			   fq_id : undefined, // string of the form "ws.{numeric ws id}.obj.{numeric obj id}"
-         callback: undefined,
-			   error_callback: error_handler };
+                project_id : undefined, // numeric workspace id
+                narrative_id : undefined, //numeric object id
+                fq_id : undefined, // string of the form "ws.{numeric ws id}.obj.{numeric obj id}"
+                callback: undefined,
+                error_callback: error_handler };
         var p = $.extend( def_params, p_in);
-	
-	p.callback( 1);
+
+        p.callback( 1);
     };
 
-    // Examine a narrative object's metadata and return all it's dependencies
+    // Examine a narrative object's metadata and return all its dependencies
     // The inputs are based on the numeric workspace id and numeric objid, which
     // are using the narrative URLs. Alternative you can just pass in a string
     // like "ws.637.obj.1" in the fq_id (fully qualified id) and this will parse
@@ -550,72 +550,76 @@ function ProjectAPI(ws_url, token) {
     //        overwrite - a boolean that indicates if there is already
     this.get_narrative_deps = function ( p_in) {
         var def_params = { callback : undefined,
-			   project_id : undefined, // numeric workspace id
-			   narrative_id : undefined, //numeric object id
-			   fq_id : undefined, // string of the form "ws.{numeric ws id}.obj.{numeric obj id}",
-         callback: undefined,
-			   error_callback: error_handler };
+                project_id : undefined, // numeric workspace id
+                narrative_id : undefined, //numeric object id
+                fq_id : undefined, // string of the form "ws.{numeric ws id}.obj.{numeric obj id}",
+                callback: undefined,
+                error_callback: error_handler };
         var p = $.extend( def_params, p_in);
-	if (p.fq_id != undefined) {
-	    var re = p.fq_id.match( legit_narr_ws_id);
-	    if (re) {
-		p.project_id = re[1];
-		p.narrative_id = re[2];
-	    } else {
-		p.error_callback("Cannot parse fq_id: " + p.fq_id);
-	    }
-	}
-	var metadata_fn = ws_client.get_object_info( [ { wsid: p.project_id, objid : p.narrative_id}], 1);
-	$.when( metadata_fn).then( function( obj_meta) {
-				       if (obj_meta.length != 1) {
-					   p.error_callback( "Error: " + obj_meta.length + " narratives found");
-				       } else {
-					   var res = {};
-					   var nar = obj_meta[0];
-					   var meta = nar[10]
-					   res.fq_id = "ws." + nar[6] + ".obj." + nar[0];
-					   res.description = meta.description;
-					   res.name = meta.name;
-					   var temp = $.parseJSON(meta.data_dependencies);
-					   var deps = temp.reduce( function(prev,curr,index) {
-								       var dep = curr.split(" ");
-								       prev[dep[1]] = {};
-								       prev[dep[1]].type = dep[0];
-								       prev[dep[1]].name = dep[1];
-								       prev[dep[1]].overwrite = false;
-								       return(prev);
-								   },{});
-					   res.deps = deps;
-					   p.callback(res);
-					   /*
-					   var alpha = /\D/;
-					   var src_objs = Object.keys(deps).map( function(obj) {
-										     if (obj.match(alpha)) {
-											 return(ws_client.get_object_info( [ { wsid : p.project_id, name : obj }], 1));
-										     } else {
-											 return(ws_client.get_object_info( [ { wsid : p.project_id, objid : obj }], 1));
-										     }
-										 });
-					   $.when.apply( null, src_objs)
-					       .done( function() {
-							  var res = [].slice.call(arguments);
-							  console.log( "after check_objs", res);
-						      })
-					       .fail( function() {
-						      console.log("not found");
-						      });
-					   var homews = USER_ID+":home";
-					   var dest_objs = Object.keys(deps).map( function(obj) {
-										     if (obj.match(alpha)) {
-											 return( { workspace : homews, name : obj });
-										     } else {
-											 return( { workspace : homews, objid : obj});
-										     }
-										 });
-					   console.log( src_objs, dest_objs);
-					    */
-				       }
-				   });
+        if (p.fq_id != undefined) {
+            var re = p.fq_id.match( legit_narr_ws_id);
+            if (re) {
+                p.project_id = re[1];
+                p.narrative_id = re[2];
+            } else {
+                p.error_callback("Cannot parse fq_id: " + p.fq_id);
+            }
+        }
+        var metadata_fn = ws_client.get_object_info([{wsid: p.project_id, objid : p.narrative_id}], 1);
+        $.when( metadata_fn).then( function( obj_meta) {
+            if (obj_meta.length != 1) {
+                p.error_callback( "Error: narrative ws." + p.project_id +
+                        ".obj." + p.narrative_id + " not found");
+            } else {
+                var res = {};
+                var nar = obj_meta[0];
+                var meta = nar[10]
+                res.fq_id = "ws." + nar[6] + ".obj." + nar[0];
+                res.description = meta.description;
+                res.name = meta.name;
+                var temp = $.parseJSON(meta.data_dependencies);
+                //deps should really be stored as an id, not a name, since names can change
+                var deps = temp.reduce( function(prev,curr,index) {
+                    var dep = curr.split(" ");
+                    prev[dep[1]] = {};
+                    prev[dep[1]].type = dep[0];
+                    prev[dep[1]].name = dep[1];
+                    prev[dep[1]].overwrite = false;
+                    return(prev);
+                },{});
+                var home = USER_ID + ":home";
+                var proms = []
+                //TODO use has_objects when it exists rather than multiple get_objects calls
+                $.each(deps, function(key, val) {
+                    proms.push(ws_client.get_object_info(
+                            [{workspace: home, name: key}], 0,
+                            function(result) { //success, the object exists
+                                deps[key].overwrite = true;
+                            },
+                            function(result) { //fail
+                                console.log(result.error.message);
+                                if (!/^No object with .+ exists in workspace [:\w]+$/
+                                        .test(result.error.message)) {
+                                    p.error_callback(result.error.message);
+                                }
+                                //everything's cool, the object doesn't exist in home
+                            })
+                    );
+                    
+                });
+                //this wraps all the promise objects in another promise object
+                //that forces all the original POs to resolve in a $.when()
+                proms = $.map(proms, function(p) {
+                    var dfd = $.Deferred();
+                    p.always(function() { dfd.resolve(); });
+                    return dfd.promise();
+                });
+                res.deps = deps;
+                $.when.apply($, proms).done(function() {
+                        p.callback(res);
+                });
+            }
+        });
     };
 
     // Create an empty narrative object with the specified name. The name

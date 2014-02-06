@@ -684,6 +684,7 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     
     :return: job ID string
     :rtype: kbtypes.Unicode
+    :output_widget: kbaseGapfillStatus
     """
     
     # setting the output id appears to not work, so for now we leave it out

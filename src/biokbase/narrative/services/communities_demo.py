@@ -148,9 +148,8 @@ def _submit_awe(wf):
     files = {'upload': ('awe_workflow', cStringIO.StringIO(wf))}
     url = URLS.awe+"/job"
     req = requests.post(url, headers=headers, files=files, allow_redirects=True)
-    res = req.json()
-    return res
-    
+    return req.json()
+
 def _get_awe_job(jobid):
     req = urllib2.Request('%s/job/%s'%(URLS.awe, jobid))
     res = urllib2.urlopen(req)
@@ -331,10 +330,11 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     ajob = _submit_awe(wf_str)
-    return json.dumps({'header': json.dumps(ajob)})
+    if ajob['status'] != 200:
+        return json.dumps({'header': 'ERROR: %d - %s'%(ajob['status'], ', '.join(ajob['error']))})
     
     meth.advance("Waiting on PICRUSt prediction of KEGG BIOM")
-    aresult = _get_awe_results(ajob['id'])
+    aresult = _get_awe_results(ajob['data']['id'])
     if not aresult:
         return json.dumps({'header': 'ERROR: AWE error running PICRUSt'})
     

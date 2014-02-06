@@ -3,14 +3,46 @@
 $.KBWidget({
     name: "kbaseFbaTabsNarrative",
     version: "1.0.0",
+    parent: "kbaseAuthenticatedWidget",
     options: {
     },
+    loadingImage: "static/kbase/images/ajax-loader.gif",
+    //fbaURL: "https://kbase.us/services/fba_model_services",
+    fbaURL: "http://140.221.84.183:7036",
+    
     init: function(options) {
         this._super(options);
         var self = this;        
         var fbas = options.ids;
         var workspaces = options.workspaces;
+        
+        if ('fbaDdata' in options) {
+            return render(options);
+        } else {
+            var container = this.$elem;
+            container.append("<div id=\"fbatabs-loading\"><img src=\""+this.loadingImage+"\">&nbsp&nbsploading fba results...</div>");
+            
+            var fba = new fbaModelServices(this.fbaURL);
+            fba.get_fbas({auth: self.authToken(), workspaces:workspaces, fbas:fbas }, function(data) {
+                    self.$elem.find("#fbatabs-loading").remove();
+                    options.fbaData = data;
+                    self.render(options);
+                }, function(data) {
+                    self.$elem.find("#fbatabs-loading").remove();
+                    container.append("<div>Error loading FBA results.</div>");
+                    console.error("Error loading FBA results!");
+                    console.error(data);
+                });
+            
+        }
+        return this;
+    },
+    
+    render: function(options) {
+        
         var data = options.fbaData;
+        var fbas = options.ids;
+        var workspaces = options.workspaces;
 
         var randId = this._uuidgen();
 

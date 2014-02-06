@@ -601,12 +601,12 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     result_meta = fbaClient.runfba(fba_params)
     generated_fba_id = result_meta[0]
     
-    meth.advance("Retrieving FBA results")
-    get_fbas_params = {
-        'fbas' : [generated_fba_id],
-        'workspaces' : [workspaceName]
-    }
-    fbadata = fbaClient.get_fbas(get_fbas_params)
+    #meth.advance("Retrieving FBA results")
+    #get_fbas_params = {
+    #    'fbas' : [generated_fba_id],
+    #    'workspaces' : [workspaceName]
+    #}
+    #fbadata = fbaClient.get_fbas(get_fbas_params)
     
     # a hack: get object info so we can have the object name (instead of the id number)
     ws = workspaceService(service.URLS.workspace, token=userToken)
@@ -616,7 +616,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     }]
     info = ws.get_object_info(get_objects_params,0)
     
-    return json.dumps({ "ids":[info[0][1]],"workspaces":[workspaceName],"fbaData":fbadata })
+    return json.dumps({ "ids":[info[0][1]],"workspaces":[workspaceName] })
 
 
 
@@ -641,15 +641,15 @@ def _view_fba_result_details(meth, fba_id):
     fbaClient = fbaModelServices(service.URLS.fba)
     
     meth.advance("Retrieving FBA results")
-    get_fbas_params = {
-        'fbas' : [fba_id],
-        'workspaces' : [workspaceName],
-        'auth' : token
-    }
-    fbadata = fbaClient.get_fbas(get_fbas_params)
+    #get_fbas_params = {
+    #    'fbas' : [fba_id],
+    #    'workspaces' : [workspaceName],
+    #    'auth' : token
+    #}
+    #fbadata = fbaClient.get_fbas(get_fbas_params)
     
     
-    return json.dumps({ "ids":[fba_id],"workspaces":[workspaceName],"fbaData":fbadata })
+    return json.dumps({ "ids":[fba_id],"workspaces":[workspaceName] })
 
 
 

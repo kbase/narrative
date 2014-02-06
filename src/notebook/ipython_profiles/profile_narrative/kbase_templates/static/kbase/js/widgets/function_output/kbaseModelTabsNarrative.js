@@ -38,7 +38,6 @@ $.KBWidget({
                     options.modelsData = data;
                     self.render(options);
                 }, function(data) {
-                    var loading_tab  = $('#modeltabs-loading');
                     self.$elem.find("#modeltabs-loading").remove();
                     container.append("<div>Error loading FBA model.</div>");
                     console.error("Error loading FBA model!");

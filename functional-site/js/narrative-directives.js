@@ -928,10 +928,13 @@ narrativeDirectives.directive('copyfiles', function($parse) {
                         $(element).append("<tr><td>" + results.name + "</td><td>Narrative</td></tr>");
                         for (dep in results.deps) {
                             $(element).append("<tr><td>" + results.deps[dep].name + "</td><td>" + results.deps[dep].type + "</td></tr>");
-                        }
+                        } 
+
                     },
                     error_callback: function() {
-                        console.log("error occurred");
+                        //console.log("error occurred");
+                        $(element).append("<tr class='danger'><td colspan='2'>We were unable to retrieve this narrative and its datasets. Please try again in a few minutes.</td></tr>");
+
                     }
                 })
 

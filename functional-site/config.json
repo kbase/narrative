@@ -1,5 +1,5 @@
 {
-    "setup": "dev",
+    "setup": "prod",
 
     "prod": {"workspace_url": "https://kbase.us/services/ws/",
              "fba_url" : "https://kbase.us/services/fba_model_services/" },

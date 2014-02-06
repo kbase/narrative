@@ -372,7 +372,6 @@ angular.module('narrative-directives')
                                     var proj_name = $(".new-project-name").val();
 
                                     //no spaces allowed in narrative name
-                                    console.log('project name before', proj_name)
                                     proj_name = proj_name.replace(/ /g,"_");
 
                                     if (proj_name === '') {
@@ -388,9 +387,7 @@ angular.module('narrative-directives')
                                     // check to see if there's a colon in the user project name already
                                     var s_proj = proj_name.split(':');
                                     var error;
-                                    console.log('s_proj', s_proj)
                                     if (s_proj.length > 1) {
-                                        console.log(s_proj[0])
                                         if (s_proj[0] == USER_ID) {
                                             var proj = USER_ID+':'+s_proj[1];
                                         } else {
@@ -401,7 +398,6 @@ angular.module('narrative-directives')
                                         var proj = USER_ID+':'+proj_name
                                     }
 
-                                    console.log('proj', proj)
                                     if (error) {
                                         $prompt.addCover(error, 'danger');
                                     } else {

@@ -15,7 +15,7 @@ $.KBWidget({
     },
 
     wsUrl: "http://140.221.84.209:7058/",
-    uploadUrl: "http://140.221.85.58:8283/uploader",
+    uploadUrl: "http://140.221.85.57:8283/uploader",
 
     init: function(options) {
         this._super(options);

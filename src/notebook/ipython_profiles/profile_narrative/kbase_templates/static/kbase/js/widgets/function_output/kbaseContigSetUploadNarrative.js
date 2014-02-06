@@ -13,7 +13,7 @@ $.KBWidget({
     },
 
     wsUrl: "https://kbase.us/services/ws/",
-    uploadUrl: "http://140.221.85.58:8283/uploader",
+    uploadUrl: "http://140.221.85.57:8283/uploader",
 
     init: function(options) {
         this._super(options);

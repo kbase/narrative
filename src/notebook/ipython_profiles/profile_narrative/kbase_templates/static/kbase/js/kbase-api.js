@@ -5917,7 +5917,7 @@ function Workspace(url, auth, auth_cb) {
     }
 
     if (typeof(_url) != "string" || _url.length == 0) {
-        _url = "http://140.221.84.209:7058/";
+        _url = "https://kbase.us/services/ws/";
     }
     var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
     var _auth_cb = auth_cb;

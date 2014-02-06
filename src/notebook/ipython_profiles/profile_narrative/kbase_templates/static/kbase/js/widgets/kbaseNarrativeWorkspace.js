@@ -6,7 +6,6 @@
  * like the CDS and local files.
  *
  * Options:
- *    workspaceURL - the location of the workspace service (default points to existing deployed service)
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    tableElem - HTML element container for the data table
  *    controlsElem - HTML element container for the controls (search/add)
@@ -25,7 +24,6 @@
         parent: "kbaseWidget",
         version: "1.0.0",
         options: {
-            workspaceURL: "http://140.221.84.209:7058/",
             loadingImage: "../images/ajax-loader.gif",
             tableElem: null,
             controlsElem: null,

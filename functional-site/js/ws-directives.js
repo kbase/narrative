@@ -856,21 +856,24 @@ angular.module('ws-directives')
                     $(element).loading('loading '+ws+'...')
 
                     // load workspace objects
+                    console.log(ws)
                     var prom = kb.ws.list_objects({workspaces: [ws]});
                     var prom2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1})
                     $.when(prom, prom2).done(function(data, deleted_objs){
+                        console.log('data:',data)
                         $(element).rmLoading();
-                        $(element).append('<table id="obj-table-'+ws+'" \
+                        $(element).append('<table id="obj-table-'+ws.replace(':',"_")+'" \
                             class="table table-bordered table-striped" style="width: 100%;"></table>')    
 
                         var tableobjs = formatObjs(data);
+                        console.log('tableobjs', tableobjs)
                         var wsobjs = tableobjs[0];
                         var type_counts = tableobjs[1];
 
                         tableSettings.aaData = wsobjs;
 
                         // load object table
-                        var table = $('#obj-table-'+ws).dataTable(tableSettings);
+                        var table = $('#obj-table-'+ws.replace(':',"_")).dataTable(tableSettings);
 
                         // if there are objects, add 'select all' button, type filter,
                         // and trash bin.

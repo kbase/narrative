@@ -15,7 +15,7 @@ angular.module('narrative-directives')
             link: function(scope, element, attrs) {
                 $(element).loading()
 
-                var p = project.get_narratives();
+                var p = kb.nar.get_narratives();
                 $.when(p).done(function(results){
                     $(element).rmLoading();
 
@@ -54,7 +54,7 @@ angular.module('narrative-directives')
             link: function(scope, element, attrs) {
 
                 $(element).loading()
-                var prom = project.get_projects()
+                var prom = kb.nar.get_projects()
                 $.when(prom).done(function(projs){
 
                     $(element).rmLoading();
@@ -117,7 +117,7 @@ angular.module('narrative-directives')
                     // get all projects
                     var proj_ids = [];
                     $(element).loading();
-                    var p = project.get_projects()
+                    var p = kb.nar.get_projects()
                     $.when(p).done(function(projs){
                         var projects = [];
 
@@ -135,12 +135,9 @@ angular.module('narrative-directives')
 
 
                 function getNarratives(proj_ids) {
-
-
-                    var prom = project.get_narratives({project_ids:proj_ids})
+                    var prom = kb.nar.get_narratives({project_ids:proj_ids})
                     $.when(prom).done(function(nars){
                         $(element).rmLoading();                                
-
                         //var narratives = nars.slice(0); // make copy of narratives
 
 
@@ -174,7 +171,7 @@ angular.module('narrative-directives')
 
                             //fixme: wow!  This is horrible.
                             nar_dict.users = '<span id="'+ proj+"-"+nar_id+'_users" >loading...</span>';
-                            addUserColumn(proj, nar_id)
+                            //addUserColumn(proj, nar_id)
 
                             narratives.push(nar_dict)
                             nar_projs.push(proj)
@@ -201,7 +198,7 @@ angular.module('narrative-directives')
 
 
                 function addUserColumn(ws, id) {
-                    var prom = project.get_project_perms({project_id: ws});
+                    var prom = kb.nar.get_project_perms({project_id: ws});
                     $.when(prom).done(function(results) {
                         var user_list = formatUsers(results);
                         $("#"+ws+"-"+id+"_users").html(user_list);
@@ -239,7 +236,7 @@ angular.module('narrative-directives')
                                   { "sTitle": "Name", "mData": "id"},
                                   { "sTitle": "Owner", "mData": "owner"},
                                   { "sTitle": "Project", "mData": "project"},  // grouped by this column
-                                  { "sTitle": "Shared With", "mData": "users"},
+                                  { "sTitle": "Shared With", "mData": "users", 'bVisible': false},
                                   { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 6},
                                   { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'},
                                   { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}  
@@ -267,17 +264,23 @@ angular.module('narrative-directives')
 
 
                 function events() {
-
                     // adding buttons to project header
                     $('.group-item-expander').each(function() {
+                        var self = this;
                         var proj = $(this).find('.proj-link').data('proj');
+
+                        var prom = kb.nar.get_project_perms({project_id: proj});
+                        $.when(prom).done(function(results) {
+                            var user_list = formatUsers(results);
+                            console.log(user_list)
+                            $(self).append(user_list);
+                        })
 
                         $(this).append('<span class="proj-opts pull-right">\
                                           <a class="btn btn-default btn-xs btn-new-narrative"><span class="glyphicon glyphicon-plus"></span> Narrative</a> \
                                           <a class="btn-view-data" data-proj="'+proj+'" >Data</a> |\
                                           <a class="edit-perms">Manage</a>\
                                        </span>');
-
                     })
 
 
@@ -350,7 +353,7 @@ angular.module('narrative-directives')
                     
 
                     var newProjModal = $('<div></div>').kbasePrompt({
-                            title : 'Create New Project</small>',
+                            title : 'Create New Project',
                             body : body,
                             modalClass : '', 
                             controls : ['cancelButton', {
@@ -373,7 +376,7 @@ angular.module('narrative-directives')
                                     //create the new narrative in ws
                                     $prompt.addCover()
                                     $prompt.getCover().loading()
-                                    var p =  project.new_project({project_id: proj_id})    
+                                    var p =  kb.nar.new_project({project_id: proj_id})    
                                     $.when(p).done(function() {
                                         $prompt.addCover('Created project <b><i>'+proj_id+'</b></i>');
 
@@ -440,7 +443,7 @@ angular.module('narrative-directives')
                                     //create the new narrative in ws
                                     $prompt.addCover()
                                     $prompt.getCover().loading()                                  
-                                    var p = project.new_narrative({narrative_id: name, 
+                                    var p = kb.nar.new_narrative({narrative_id: name, 
                                                                    project_id: proj_id})
                                     $.when(p).done(function(results) {
 
@@ -586,7 +589,7 @@ angular.module('narrative-directives')
                     var placeholder = $('<div></div>').loading()
                     modal_body.append(placeholder); 
 
-                    var prom = project.get_project_perms({project_id: proj_id})
+                    var prom = kb.nar.get_project_perms({project_id: proj_id})
 
                     $.when(prom).done(function(data) {
                         permData = data
@@ -865,8 +868,9 @@ function formateDate(timestamp) {
         var day = dayOfWeek[d.getDay()]
         var t = d.toLocaleTimeString().split(':');
         return 'Last '+ day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
-    } else {
-        return false;
+    } else  {
+        var d = new Date(timestamp);        
+        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); //check
     }
 }
 
@@ -875,7 +879,39 @@ function formateDate(timestamp) {
 var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
                      4:'Thurs', 5:'Fri', 6: 'Sat'}
 
+var months = {0: 'Jan', 1: 'Feb', 2: 'March', 3: 'April', 4: 'May',
+                5:'June', 6: 'July', 7: 'Aug', 8: 'Sept', 9: 'Oct', 10: 'Nov', 11: 'Dec'}
 
+narrativeDirectives.directive('newsfeed', function(FeedLoad, $compile) {
+        return  {
+            link: function(scope, element, attrs) {
+                var feedUrl = 'http://yogi.lbl.gov/eprojectbuilder/misc/kbasefeed2.xml';
+
+                FeedLoad.fetch({q: feedUrl, num: 50}, {}, function (data) {
+                    var feed = data.responseData.feed;
+                    var feedContent = $("<div></div>");
+                    for (entry in feed.entries) {
+
+                        var feedEntry = $("<div></div>");
+                        $(feedEntry).addClass("narr-featured-narrative");
+
+                        $(feedEntry).append(feed.entries[entry].content);
+                        var copyLink = $("<a></a>");
+                        $(copyLink).html("copy narrative");
+                        $(copyLink).attr('ng-click',"copyNarrativeForm(\""+feed.entries[entry].title + "\")");
+                        $compile(copyLink)(scope);
+                        $(feedEntry).append(copyLink);
+                        $(feedContent).append($(feedEntry));
+                    }
+                    
+                    $(element).html($(feedContent));
+
+                    
+                });
+
+            } 
+        };
+    })  
 
 narrativeDirectives.directive('copyfiles', function($parse) {
         return  {
@@ -887,7 +923,7 @@ narrativeDirectives.directive('copyfiles', function($parse) {
                       
                 });                
 
-                var deps = project.get_narrative_deps({
+                var deps = kb.nar.get_narrative_deps({
                     fq_id: scope.narr,
                     callback: function(results) {
                         

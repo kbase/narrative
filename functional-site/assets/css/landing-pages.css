@@ -623,6 +623,9 @@ div::-webkit-scrollbar-thumb {
     display: block;
     text-align: center;
     font-weight: bold;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
 }
 
 

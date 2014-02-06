@@ -330,13 +330,15 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, narr) {
             callback: function(results) {
                 
                 console.log("copied narrative");
-                $scope.alerts = [];
                 $modalInstance.dismiss();
+
+                //TODO need to get the Narrative name and redirect to the copied narrative 
             },
             error_callback: function() {
                 //console.log("error occurred");
                 $scope.alerts = [];
                 $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace."});
+                //TODO need to retrieve the actual error message 
             }
         })
     }

@@ -14,6 +14,9 @@
 		// the only options are the feature ID, whether it should be embedded in a card, and (optionally) the auth token.
 		options: {
 			featureID: null,
+			genomeID: null,
+			workspaceID: null,
+			kbCache: null,
 			embedInCard: false,
 			auth: null,
 		},
@@ -27,6 +30,7 @@
 		init: function(options) {
 			this._super(options);
 
+			console.log("here!");
 			if (this.options.featureID === null) {
 				//throw an error.
 				return this;

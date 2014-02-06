@@ -120,8 +120,17 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 .controller('GenomeDetail', function($scope, $stateParams) {
-    $scope.params = {'genomeID': $stateParams.id,
-                     'workspaceID': $stateParams.ws}
+    $scope.params = {'genomeID' : $stateParams.id,
+                     'workspaceID' : $stateParams.ws,
+                     'kbCache' : kb}
+})
+
+.controller('GeneDetail', function($scope, $stateParams) {
+    $scope.params = {'genomeID' : $stateParams.gid,
+                     'featureID' : $stateParams.fid,
+                     'workspaceID' : $stateParams.ws,
+                     'version' : $stateParams.ver,
+                     'kbCache' : kb}
 })
 
 .controller('MediaDetail', function($scope, $stateParams) {
@@ -176,11 +185,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     };
 })
 
-
-.controller('GeneDetail', function($scope, $stateParams) {
-    $scope.params = {'geneID': $stateParams.id,
-                     'workspaceID': $stateParams.ws}
-})
 
 .controller('ModelDetail', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;

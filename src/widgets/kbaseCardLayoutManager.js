@@ -20,7 +20,7 @@
             data: {},
             auth: null,
             userId: null,
-            loadingImage: "http://narrative.kbase.us/landing/widgets/images/ajax-loader.gif",
+            loadingImage: "./assets/images/ajax-loader.gif",
         },
         cardIndex: 0,
         cards: {},
@@ -37,9 +37,6 @@
          */
         init: function(options) {
             this._super(options);
-
-            this.dbg('user:' + this.options.userId);
-            this.dbg('token:' + this.options.auth);
 
             this.workspaceClient = new workspaceService(this.workspaceURL);
             this.fbaClient = new fbaModelServices(this.fbaURL);
@@ -523,7 +520,7 @@
 
             return [];
         },
-	
+    
         _exportMemeRunResult: function(data, workspace) {
             this.dbg("Exporting MEME run result");
             this.dbg(data);
@@ -624,10 +621,14 @@
          * Shows a genome overview and a description card.
          */
         showGenomeCards: function() {
-            this.addNewCard("KBaseGenomeOverview", 
-                { 
+            if (this.options.data.workspaceID === "CDS")
+                this.options.data.workspaceID = null;
+                this.addNewCard("KBaseGenomeOverview", 
+                {
                     genomeID: this.options.data.genomeID,
                     loadingImage: this.options.loadingImage,
+                    workspaceID: this.options.data.workspaceID,
+                    kbCache: this.options.data.kbCache,
                     isInCard: true
                 },
                 {
@@ -641,6 +642,8 @@
                 {
                     genomeID: this.options.data.genomeID,
                     loadingImage: this.options.loadingImage,
+                    workspaceID: this.options.data.workspaceID,
+                    kbCache: this.options.data.kbCache,
                 },
                 {
                     my: "left top",
@@ -655,23 +658,26 @@
          * Template for showing gene cards.
          */
         showGeneCards: function() {
-            this.addNewCard("kbaseGeneInfo",
+            // this.addNewCard("KBaseGeneInfo",
+            //     {
+            //         featureID: this.options.data.featureID,
+            //     },
+            //     {
+            //         my: "left top",
+            //         at: "left bottom",
+            //         of: "#app"
+            //     }
+            // );
+            this.addNewCard("KBaseGeneInstanceInfo",
                 {
-                    featureID: this.options.data.geneID,
+                    featureID: this.options.data.featureID,
+                    genomeID: this.options.data.genomeID,
+                    workspaceID: this.options.data.workspaceID,
+                    kbCache: this.options.data.kbCache
                 },
                 {
                     my: "left top",
                     at: "left bottom",
-                    of: "#app"
-                }
-            );
-            this.addNewCard("KBaseGeneInstanceInfo",
-                {
-                    featureID: this.options.data.geneID,
-                },
-                {
-                    my: "left top",
-                    at: "left+330 bottom",
                     of: "#app"
                 }
             );
@@ -699,11 +705,11 @@
          */
         
         showMemeCards: function() {
-        	var pattMeme = /MemeRunResult/i;
-        	var pattTomtom = /TomtomRunResult/i;
-        	var pattMast = /MastRunResult/i;
-        	if (this.options.data.id.match(pattMeme)){
-            	this.addNewCard("KBaseMemeRunResultCard",
+            var pattMeme = /MemeRunResult/i;
+            var pattTomtom = /TomtomRunResult/i;
+            var pattMast = /MastRunResult/i;
+            if (this.options.data.id.match(pattMeme)){
+                this.addNewCard("KBaseMemeRunResultCard",
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
@@ -718,10 +724,10 @@
                             of: "#app"
                         }
                     );
-        	    return this;
-        	}
-        	else if (this.options.data.id.match(pattTomtom)){
-            	this.addNewCard("KBaseTomtomRunResultCard",
+                return this;
+            }
+            else if (this.options.data.id.match(pattTomtom)){
+                this.addNewCard("KBaseTomtomRunResultCard",
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
@@ -736,10 +742,10 @@
                             of: "#app"
                         }
                     );
-        	    return this;
-        	}
-        	else if (this.options.data.id.match(pattMast)){
-            	this.addNewCard("KBaseMastRunResultCard",
+                return this;
+            }
+            else if (this.options.data.id.match(pattMast)){
+                this.addNewCard("KBaseMastRunResultCard",
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
@@ -754,14 +760,14 @@
                             of: "#app"
                         }
                     );
-        	    return this;
-        	} else {
-        		return this;
-        	};
+                return this;
+            } else {
+                return this;
+            };
         },
         
         showCmonkeyCards: function() {
-            	this.addNewCard("KBaseCmonkeyRunResultCard",
+                this.addNewCard("KBaseCmonkeyRunResultCard",
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
@@ -776,11 +782,11 @@
                             of: "#app"
                         }
                     );
-        	    return this;
+                return this;
         },
 
         showInferelatorCards: function() {
-            	this.addNewCard("KBaseInferelatorRunResultCard",
+                this.addNewCard("KBaseInferelatorRunResultCard",
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
@@ -795,11 +801,11 @@
                             of: "#app"
                         }
                     );
-        	    return this;
+                return this;
         },
 
         showRegpreciseCards: function() {
-            	this.addNewCard("KBaseRegulomeCard",
+                this.addNewCard("KBaseRegulomeCard",
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
@@ -814,11 +820,11 @@
                             of: "#app"
                         }
                     );
-        	    return this;
+                return this;
         },
 
         showMAKCards: function() {
-            	this.addNewCard("KBaseMAKResultCard",
+                this.addNewCard("KBaseMAKResultCard",
                         {
                             id: this.options.data.id,
                             ws: this.options.data.ws,
@@ -833,30 +839,30 @@
                             of: "#app"
                         }
                     );
-        	    return this;
+                return this;
         },
 
-	showPPICards: function() {
-	    this.addNewCard("KBasePPICard",
-			    {
-				id: this.options.data.id,
-				ws: this.options.data.ws,
-				auth: this.options.auth,
-				userId: this.options.userId,
-				loadingImage: this.options.loadingImage,
-				isInCard: true
-			    },
-			    {
-				my: "left top",
-				at: "left bottom",
-				of: "#app"
-			    }
-			   );
-	    return this;
-	},
+    showPPICards: function() {
+        this.addNewCard("KBasePPICard",
+                {
+                id: this.options.data.id,
+                ws: this.options.data.ws,
+                auth: this.options.auth,
+                userId: this.options.userId,
+                loadingImage: this.options.loadingImage,
+                isInCard: true
+                },
+                {
+                my: "left top",
+                at: "left bottom",
+                of: "#app"
+                }
+               );
+        return this;
+    },
 
         showBambiCards: function() {
-            	this.addNewCard("KBaseBambiRunResultCard",
+                this.addNewCard("KBaseBambiRunResultCard",
                         {
                             bambi_run_result_id: this.options.data.bambi_run_result_id,
                             workspace_id: this.options.data.workspace_id,
@@ -871,23 +877,23 @@
                             of: "#app"
                         }
                     );
-        	    return this;
+                return this;
         },
 
         /**
          * Template for showing spec-document elements cards.
          */
         showSpecCards: function() {
-        	var cardName = 'KBaseSpecUnknownCard';
-        	if (this.options.data.kind === "storage") {
-        		cardName = 'KBaseSpecStorageCard';
-        	} else if (this.options.data.kind === "module") {
-        		cardName = 'KBaseSpecModuleCard';
-        	} else if (this.options.data.kind === "type") {
-        		cardName = 'KBaseSpecTypeCard';
-        	} else if (this.options.data.kind === "function") {
-        		cardName = 'KBaseSpecFunctionCard';
-        	}        		
+            var cardName = 'KBaseSpecUnknownCard';
+            if (this.options.data.kind === "storage") {
+                cardName = 'KBaseSpecStorageCard';
+            } else if (this.options.data.kind === "module") {
+                cardName = 'KBaseSpecModuleCard';
+            } else if (this.options.data.kind === "type") {
+                cardName = 'KBaseSpecTypeCard';
+            } else if (this.options.data.kind === "function") {
+                cardName = 'KBaseSpecFunctionCard';
+            }               
             this.addNewCard(cardName,
                         {
                             id: this.options.data.id,
@@ -899,7 +905,7 @@
                             of: "#app"
                         }
                     );
-        	return this;
+            return this;
         },
 
         /**
@@ -913,7 +919,7 @@
             this.registeredEvents = ["featureClick", 
                                      "showContig",
                                      "showGenome", 
-				     "showFeature",
+                                     "showFeature",
                                      "showGenomeDescription",
                                      "showDomains", 
                                      "showOperons", 
@@ -929,7 +935,7 @@
                                      "showCmonkeyCluster", 
                                      "showCmonkeyMotif",
                                      "showInferelatorHits",
-				     "showNetwork",
+                                     "showNetwork",
                                      "showRegulon",
                                      "showMAKCluster", 
                                      "showBambiMotif",
@@ -979,7 +985,10 @@
             $(document).on("showBiochemistry", function(event, data) {
                 self.addNewCard("KBaseGeneBiochemistry",
                 {
-                    featureID: data.featureID
+                    featureID: data.featureID,
+                    genomeID: data.genomeID,
+                    workspaceID: data.workspaceID,
+                    kbCache: data.kbCache,
                 },
                 {
                     my: "left top",
@@ -994,20 +1003,23 @@
              * Adds cards based on clicking on a feature.
              */
             $(document).on("featureClick", function(event, data) {
-                self.addNewCard("KBaseGeneInfo", 
-                    { 
-                        featureID: data.feature.feature_id, 
-                    },
-                    {
-                        my: "left top",
-                        at: "center",
-                        of: data.featureElement
-                    }
-                );
+                // self.addNewCard("KBaseGeneInfo", 
+                //     { 
+                //         featureID: data.feature.feature_id, 
+                //     },
+                //     {
+                //         my: "left top",
+                //         at: "center",
+                //         of: data.featureElement
+                //     }
+                // );
 
                 self.addNewCard("KBaseGeneInstanceInfo",
                     {
                         featureID: data.feature.feature_id,
+                        workspaceID: data.workspaceId,
+                        genomeID: data.genomeId,
+                        kbCache: data.kbCache,
                     },
                     {
                         my: "left top",
@@ -1027,9 +1039,12 @@
                 self.addNewCard("KBaseContigBrowser",
                     {
                         contig: data.contig,
+                        genomeId: data.genomeId,
+                        workspaceId: data.workspaceId,
                         showButtons: true,
                         loadingImage: self.options.loadingImage,
-                        centerFeature: data.centerFeature
+                        centerFeature: data.centerFeature,
+                        kbCache: data.kbCache,
                     },
                     {
                         my: "left top",
@@ -1044,18 +1059,21 @@
              * -----------------
              * Adds new KBaseGeneInfo card for a given Feature ID
              */
-	    $(document).on("showFeature", function(event, data) {
-		self.addNewCard("KBaseGeneInfo",
-				{
-				    featureID: data.featureID
-				},
-				{
-				    my: "left top",
-				    at: "center",
-				    of: data.event
-				}
-			       );
-	    });
+            $(document).on("showFeature", function(event, data) {
+                self.addNewCard("KBaseGeneInfo",
+                    {
+                        featureID: data.featureID,
+                        workspaceID: data.workspaceID,
+                        genomeID: data.genomeID,
+                        kbCache: data.kbCache,
+                    },
+                    {
+                        my: "left top",
+                        at: "center",
+                        of: data.event
+                    }
+                );
+            });
 
             /**
              * Event: showGenome
@@ -1067,6 +1085,7 @@
                     {
                         genomeID: data.genomeID,
                         workspaceID: data.workspaceID,
+                        kbCache: data.kbCache,
                         isInCard: true
                     },
                     {
@@ -1081,6 +1100,8 @@
                 self.addNewCard("KBaseWikiDescription",
                     {
                         genomeID: data.genomeID,
+                        workspaceID: data.workspaceID,
+                        kbCache: data.kbCache,
                         loadingImage: self.options.loadingImage,
                     },
                     {
@@ -1405,16 +1426,16 @@
              * Adds new KBaseSpec[Storage|Module|Type|Function]Card card.
              */
             $(document).on("showSpecElement", function(event, data) {
-            	var cardName = 'KBaseSpecUnknownCard';
-            	if (data.kind === "storage") {
-            		cardName = 'KBaseSpecStorageCard';
-            	} else if (data.kind === "module") {
-            		cardName = 'KBaseSpecModuleCard';
-            	} else if (data.kind === "type") {
-            		cardName = 'KBaseSpecTypeCard';
-            	} else if (data.kind === "function") {
-            		cardName = 'KBaseSpecFunctionCard';
-            	}
+                var cardName = 'KBaseSpecUnknownCard';
+                if (data.kind === "storage") {
+                    cardName = 'KBaseSpecStorageCard';
+                } else if (data.kind === "module") {
+                    cardName = 'KBaseSpecModuleCard';
+                } else if (data.kind === "type") {
+                    cardName = 'KBaseSpecTypeCard';
+                } else if (data.kind === "function") {
+                    cardName = 'KBaseSpecFunctionCard';
+                }
                 self.addNewCard(cardName,
                 {
                     id: data.id,
@@ -1432,19 +1453,19 @@
              * -------------------
              * Adds card with Cytoscape.js view of a network
              */
-	    $(document).on("showNetwork", function(event, data) {
-		self.addNewCard("KBaseNetworkCard",
-				{
-				    network: data.network,
-				    netname: data.netname,
-				},
-				{
-				    my: "left top",
-				    at: "left+600 bottom",
-				    of: "#app"
-				}
-			       );
-	    });
+        $(document).on("showNetwork", function(event, data) {
+        self.addNewCard("KBaseNetworkCard",
+                {
+                    network: data.network,
+                    netname: data.netname,
+                },
+                {
+                    my: "left top",
+                    at: "left+600 bottom",
+                    of: "#app"
+                }
+                   );
+        });
 
             $(document).on("helloClick", function(event, data) {
                 window.alert(data.message);

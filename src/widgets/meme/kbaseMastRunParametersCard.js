@@ -1,46 +1,57 @@
-(function( $, undefined ) { 
-    $.KBWidget({ 
-        name: "KBaseMastRunParametersCard", 
-        parent: "kbaseWidget", 
+(function($, undefined) {
+    $.KBWidget({
+        name: "KBaseMastRunParametersCard",
+        parent: "kbaseWidget",
         version: "1.0.0",
-
         options: {
             title: "MAST run parameters",
             isInCard: false,
             width: 400
         },
-
         init: function(options) {
             this._super(options);
-            if (this.options.mastresult === null) {
+            var self = this;
+
+            if (this.options.collection === null) {
                 //throw an error
                 return;
             }
 
-            this.$messagePane = $("<div/>")
-                                .addClass("kbwidget-message-pane")
-                                .addClass("kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);
+            this.workspaceClient = new Workspace(this.newWorkspaceServiceUrl, {'token': this.options.auth, 'user_id': this.options.userId});
 
-            return this.render();
-        },
-
-        render: function(options) {
-
-            var self = this;
             self.mastresult = this.options.mastresult;
-            
-			self.$elem.append($("<div />")
-					.append($("<table/>").addClass("kbgo-table")
-                                        .append($("<tr/>").append("<td>Query reference</td><td>" + self.mastresult.data.params.query_ref + "</td>"))
-                                        .append($("<tr/>").append("<td>Target reference</td><td>" + self.mastresult.data.params.target_ref + "</td>"))
-                                        .append($("<tr/>").append("<td>PSPM id</td><td>" + self.mastresult.data.params.pspm_id + "</td>"))
-                                        .append($("<tr/>").append("<td>Threshold</td><td>" + self.mastresult.data.params.mt.toString() + "</td>"))
-			));
+
+
+            this.workspaceClient.get_object_info([{ref: self.mastresult.data.params.query_ref},
+                {ref: self.mastresult.data.params.target_ref}],
+            0,
+                    function(data) {
+                        self.query_info = data[0];
+                        self.target_info = data[1];
+
+                        self.$elem.append($("<div />")
+                                .append($("<table/>").addClass("invtable")
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Query reference"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.query_info[7] + "/" + self.query_info[1])))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Target reference"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.target_info[7] + "/" + self.target_info[1])))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("PSPM ID"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.mastresult.data.params.pspm_id)))
+                                        .append($("<tr/>")
+                                                .append($("<td />").append("Threshold"))
+                                                .append($("<td />").addClass("invtable-boldcell").append(self.mastresult.data.params.mt.toString())))
+                                        ));
+                    },
+                    function(data) {
+                        self.$elem.append('<p>[Error] ' + data.error.message + '</p>');
+                        return;
+                    });
 
             return this;
         },
-
         getData: function() {
             return {
                 type: "MastRunResult",
@@ -48,24 +59,7 @@
                 workspace: this.options.ws,
                 title: "MAST run parameters"
             };
-        },
-
-
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
-
-            this.$messagePane.append(span);
-            this.$messagePane.removeClass("kbwidget-hide-message");
-        },
-
-        hideMessage: function() {
-            this.$messagePane.addClass("kbwidget-hide-message");
-            this.$messagePane.empty();
-        },
-
-        rpcError: function(error) {
-            console.log("An error occurred: " + error);
         }
-	
+
     });
-})( jQuery );
+})(jQuery);

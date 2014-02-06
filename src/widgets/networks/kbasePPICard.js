@@ -15,7 +15,8 @@
             height: 450
         },
 
-        wsServiceUrl: "http://140.221.84.209:7058/",
+        // wsServiceUrl: "http://140.221.84.209:7058/",
+	wsServiceUrl: "https://kbase.us/services/ws",
 
         init: function(options) {
 	    var self = this;

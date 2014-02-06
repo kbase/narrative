@@ -72,7 +72,7 @@
                                             if (status === 'done') {
                                                 clearInterval(timer);
                                                 var tdElem = $('#'+pref+'job');
-                                                tdElem.html("<span class=\"label label-success\">Done! View model details of '"+job_data.jobdata.model+"' for gapfill solutions</span>");
+                                                tdElem.html("<span class=\"label label-success\">Done! </span> &nbsp&nbsp View model details for gapfill solutions");
                                                  //ready();
                                             } else {
                                                 var tdElem = $('#'+pref+'job');

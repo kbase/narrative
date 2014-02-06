@@ -14,7 +14,7 @@ $.KBWidget({
     glammModelTag: "mod",
     glammWorkspaceTag: "ws",
     wsBrowserURL: "http://narrative.kbase.us/landing/landing-pages/#/cards/models/",
-    wsUrl: "http://140.221.84.209:7058/",
+    wsUrl: "https://kbase.us/services/ws/",
     timer: null,
 
     init: function(options) {

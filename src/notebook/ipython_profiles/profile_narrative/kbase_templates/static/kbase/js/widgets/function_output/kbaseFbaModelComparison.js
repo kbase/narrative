@@ -16,7 +16,7 @@ $.KBWidget({
     	proteome_cmp: null
     },
 
-    wsUrl: "http://140.221.84.209:7058/",
+    wsUrl: "https://kbase.us/services/ws/",
 
     init: function(options) {
         this._super(options);

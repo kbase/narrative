@@ -16,7 +16,7 @@
             var self = this;
         	var pref = (new Date()).getTime();
 
-            var wsUrl = "http://140.221.84.209:7058/";
+            var wsUrl = "https://kbase.us/services/ws/";
             //var fmUrl = "https://kbase.us/services/fba_model_services/";
             var container = this.$elem;
         	var panel = $('<div class="loader-table">Please wait...</div>');

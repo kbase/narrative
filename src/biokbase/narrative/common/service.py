@@ -31,7 +31,7 @@ _log = logging.getLogger(__name__)
 
 
 class URLS:
-    workspace = "http://140.221.84.209:7058/"
+    workspace = "https://kbase.us/services/ws/"
     invocation = "https://kbase.us/services/invocation"
     fba = "http://140.221.84.183:7036"
     genomeCmp = "http://140.221.85.58:8283/jsonrpc"

@@ -27,7 +27,6 @@
         cdmWorkspace: "CDS",
         defaultWidth: 300,
 
-        workspaceURL: "https://www.kbase.us/services/workspace",
         fbaURL: "https://www.kbase.us/services/fba_model_services",
         workspaceClient: null,
         fbaClient: null,        // used to export CDS genomes to workspace.
@@ -38,7 +37,6 @@
         init: function(options) {
             this._super(options);
 
-            this.workspaceClient = new workspaceService(this.workspaceURL);
             this.fbaClient = new fbaModelServices(this.fbaURL);
 
             $.ui.dialog.prototype._makeDraggable = function() {

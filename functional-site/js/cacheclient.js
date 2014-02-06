@@ -89,8 +89,10 @@ function KBCacheClient(token) {
 function getBio(type, loaderDiv, callback) {
     var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
 //    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-    var kbws = new workspaceService('http://140.221.84.209:7058');    
+//    var kbws = new workspaceService('http://140.221.84.209:7058');    
 
+    var kbws = new Workspace('http://kbase.us/services/ws');
+    
     // This is not cached yet; waiting to compare performanced.
     loaderDiv.append('<div class="progress">\
           <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 3%;">\

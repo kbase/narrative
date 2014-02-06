@@ -238,7 +238,8 @@ angular.module('narrative-directives')
                                   { "sTitle": "Project", "mData": "project"},  // grouped by this column
                                   { "sTitle": "Shared With", "mData": "users", 'bVisible': false},
                                   { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 6},
-                                  { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'},
+                                  (USER_ID ? { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'} :
+                                        { "sTitle": "", "mData": "deleteButton", 'bSortable': false, bVisible: false}),
                                   { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}  
 
                               ],                         
@@ -252,10 +253,12 @@ angular.module('narrative-directives')
                             table = $('#'+tableId).dataTable(tableSettings)
                                             .rowGrouping({iGroupingColumnIndex: 2,
                                                           bExpandableGrouping: true});
-                            var new_proj_btn = $('<a class="btn btn-default pull-left">\
-                                    <span class="glyphicon glyphicon-plus"></span>New Project</a>')
-                            new_proj_btn.on('click', newProjectModal)
+                            if (USER_ID) {
+                                var new_proj_btn = $('<a class="btn btn-default pull-left">\
+                                        <span class="glyphicon glyphicon-plus"></span>New Project</a>')
+                                new_proj_btn.on('click', newProjectModal)
                             $('.table-options').append(new_proj_btn)
+                            }
 
                             new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                                  
                         }
@@ -275,11 +278,18 @@ angular.module('narrative-directives')
                             $(self).append(user_list);
                         })
 
-                        $(this).append('<span class="proj-opts pull-right">\
-                                          <a class="btn btn-default btn-xs btn-new-narrative"><span class="glyphicon glyphicon-plus"></span> Narrative</a> \
-                                          <a class="btn-view-data" data-proj="'+proj+'" >Data</a> |\
-                                          <a class="edit-perms">Manage</a>\
-                                       </span>');
+                        if (USER_ID) {
+                            $(this).append('<span class="proj-opts pull-right">\
+                                              <a class="btn btn-default btn-xs btn-new-narrative"><span class="glyphicon glyphicon-plus"></span> Narrative</a> \
+                                              <a class="btn-view-data" data-proj="'+proj+'" >Data</a> |\
+                                              <a class="edit-perms">Manage</a>\
+                                           </span>');
+                        } else {
+                            $(this).append('<span class="proj-opts pull-right">\
+                                              <a class="btn-view-data" data-proj="'+proj+'" >Data</a> \
+                                           </span>');                  
+                        }
+
                     })
 
 
@@ -329,8 +339,8 @@ angular.module('narrative-directives')
                     var body = $('<form class="form-horizontal" role="form">\
                                       <div class="form-group">\
                                         <label class="col-sm-4 control-label">Project Name</label>\
-                                        <div class="col-sm-4">\
-                                          <input type="text" class="form-control new-project-name">\
+                                        <div class="col-sm-4">'
+                                          +'<input type="text" class="form-control new-project-name">\
                                         </div>\
                                       </div>\
                                       <div class="form-group">\
@@ -387,8 +397,7 @@ angular.module('narrative-directives')
                                         });
 
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);     
-                                    }).fail(function() {
-                                        console.log('creation failed')
+                                    }).fail(function(e) {
                                         $prompt.addCover('Could not create project', 'danger');                                        
                                     })
                                 }
@@ -525,7 +534,7 @@ angular.module('narrative-directives')
 
 
                 function deleteProject(proj_id)  {
-                    kb.ws.delete_objects({})
+                    kb.ws.delete_workspace({workspace:project_id})
 
 
                 }
@@ -621,7 +630,17 @@ angular.module('narrative-directives')
 
                         var del_proj = $('<a class="btn btn-danger pull-left">Delete</a>');
 
-                        del_proj.click(function() { deleteProject(proj_id) });
+                        var prompt = $prompt;
+                        del_proj.click(function() { 
+                            var p = kb.ws.delete_workspace({workspace:project_id});
+                            $.when(p).done(function() {
+                                prompt.addCover('Deleted project <b><i>'+proj_id+'</b></i>');
+                                scope.loadData();
+                            }).fail(function(e){
+                                $prompt.addCover(e.error.message, 'danger');  
+                            })
+
+                        });
                         manage_modal.data('dialogModal').find('.modal-footer .text-left').append(del_proj);
 
                     })

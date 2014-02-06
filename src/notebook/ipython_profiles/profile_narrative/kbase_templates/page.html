@@ -61,16 +61,14 @@
 
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li class="dropdown active" ng-class="{ active: $state.includes('home')}">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
+        <li class="dropdown active">
+          <a href="../#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
           <ul class="dropdown-menu">
-            <li><a href="#/narrative/home/">Newsfeed</a></li>
-            <li><a href="#/narrative/home/projects/">Projects</a></li>
-            <!--<li class="divider"></li>
-            <li><a href="#">Profile</a></li>-->
+            <li><a href="../#/narrative/home/">Newsfeed</a></li>
+            <li><a href="../#/narrative/home/projects/">Projects</a></li>
           </ul>
         </li>
-        <li ng-class="{ active: $state.includes('ws')}"><a href="#/ws/" >Workspaces</a></li>
+        <li><a href="../#/ws/" >Workspaces</a></li>
         <li><a>Upload</a></li>
       </ul>
 
@@ -114,6 +112,13 @@
 {% block site %}
 {% endblock %}
 </div>
+
+        <div id="app" class="wrapper" ui-view></div>
+
+        </div> <!-- end wrap, this pushes the footer down -->
+            <div id="footer">
+              <div class="disclaimer">This site is for demonstration purposes only.</div>
+            </div>
 
 <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>

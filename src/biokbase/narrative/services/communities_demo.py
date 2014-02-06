@@ -331,6 +331,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     ajob = _submit_awe(wf_str)
+    return json.dumps({'header': json.dumps(ajob)})
     
     meth.advance("Waiting on PICRUSt prediction of KEGG BIOM")
     aresult = _get_awe_results(ajob['id'])

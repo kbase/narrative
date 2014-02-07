@@ -25,6 +25,11 @@ $.KBWidget({
     render: function() {
         var self = this;
         var container = this.$elem;
+    	container.empty();
+        if (self.token == null) {
+        	container.append("<div>[Error] You're not logged in</div>");
+        	return;
+        }
     	var pref = (new Date()).getTime();
         var kbws = new Workspace(this.wsUrl, {'token': self.token});
     	var panel = $('<div>'+

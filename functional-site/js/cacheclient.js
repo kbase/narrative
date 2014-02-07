@@ -38,7 +38,7 @@ function KBCacheClient(token) {
         ws_url = configJSON.dev.workspace_url;
     } else {
         fba_url = configJSON.prod.fba_url;
-        ws_url = configJSON.prod.workspace_url;         
+        ws_url = configJSON.prod.workspace_url;
     }
 
     console.log('FBA URL is:', fba_url)
@@ -70,7 +70,7 @@ function KBCacheClient(token) {
             console.log('Making request:', 'fba.'+method+'('+JSON.stringify(params)+')');
             var prom = fba[method](params);
         } else if (service == 'ws') {
-            console.log('Making request:', 'kbws.'+method+'('+JSON.stringify(params)+')');       
+            console.log('Making request:', 'kbws.'+method+'('+JSON.stringify(params)+')');
             var prom = kbws[method](params);
         }
 
@@ -559,6 +559,7 @@ function ProjectAPI(ws_url, token) {
     // the dependency is renamed by appending a timestamp. This is not currently
     // altered in the narrative or in the narrative object metadata.
     this.copy_narrative = function (p_in) {
+        //TODO all these functions need some cleanup, they're nasty
         var def_params = {
                 project_id : undefined, // numeric workspace id
                 narrative_id : undefined, //numeric object id
@@ -567,10 +568,114 @@ function ProjectAPI(ws_url, token) {
                 error_callback: error_handler
                 };
         var p = $.extend( def_params, p_in);
+        this._parse_object_id_string(p);
+        var self = this;
         var metadata_fn = ws_client.get_object_info([{wsid: p.project_id, objid : p.narrative_id}], 1);
-//        $.when( metadata_fn).then( function( obj_meta) {
-
-        p.callback( 1);
+        $.when(metadata_fn).then(function(list_obj_info) {
+            if (list_obj_info.length != 1) {
+                p.error_callback( "Error: narrative ws." + p.project_id +
+                        ".obj." + p.narrative_id + " not found");
+            } else {
+                var obj_info = list_obj_info[0];
+                var narname = obj_info[1];
+                var home = USER_ID + ":home";
+                self._get_narrative_deps_from_obj_info({
+                    obj_info: obj_info,
+                    callback: function(deps) {
+                        var nar_name_clash = false;
+                        $.when(ws_client.get_object_info(
+                            [{workspace: home, name: narname}], 0,
+                            function(result) { //success, the object exists
+                                console.log("name clash for workspace");
+                                nar_name_clash = true; //TODO not getting called
+                            },
+                            function(result) { //fail
+                                if (!/^No object with .+ exists in workspace [:\w]+$/
+                                        .test(result.error.message)) {
+                                    p.error_callback(result.error.message);
+                                }
+                                //everything's cool, the object doesn't exist in home
+                            })
+                        );
+                        var ts = self._get_time_stamp();
+                        var newname = nar_name_clash ? narname + "-" + ts : narname;
+                        
+                        $.each(deps.deps, function(key, val) {
+                            var newdep = deps.deps[key].overwrite ? deps.deps[key].name
+                                    + "-" + ts : deps.deps[key].name;
+                            self._copy_one_object(obj_info[6], key, null,
+                                    home, newdep, function() {}, p.error_callback);
+                        });
+                        self._copy_one_object(obj_info[6], obj_info[1],
+                            obj_info[4], home, newname,
+                            function(res) {
+                                console.log(res); //TODO not getting called
+                                var fq = "ws." + res[6] + ".obj." + res[0];
+                                p.callback({fq_id: fq})
+                            }, p.error_callback
+                        );
+                    }
+                });
+            }
+        });
+    };
+    
+    this._copy_one_object = function(ws, obj, ver, wstar, objtar, callback,
+            error_callback) {
+        if (ver == null) {
+            var prom = ws_client.get_object_info([{ref: ws + "/" + obj}], 0);
+            $.when(prom).done(
+                function(list_obj_info) { //TODO not getting called
+                    console.log("got obj info");
+                    if (list_obj_info.length != 1) {
+                        error_callback( "Error: narrative ws." + p.project_id +
+                                ".obj." + p.narrative_id + " not found");
+                    } else {
+                        console.log("copying dep");
+                        ver = list_obj_info[0][4];
+                        ws = list_obj_info[0][6];
+                        obj = list_obj_info[0][0];
+                        ws_client.copy_object({from: {ref: ws + "/" + obj + "/" + ver},
+                            to: {ref: wstar + "/" + objtar}},
+                            callback,
+                            function(result) {//failed
+                                error_callback(result.error.message);
+                            }
+                       );
+                    }
+                });
+            $.when(prom).fail(
+                error_callback
+            );
+            $.when(prom).always( function() { console.log("WTF!?"); });
+            console.log(prom);
+        } else {
+            ws_client.copy_object(
+                {from: {ref: ws + "/" + obj + "/" + ver},
+                 to: {ref: wstar + "/" + objtar}},
+                callback,
+                function(result) {//failed
+                    error_callback(result.error.message);
+                }
+           );
+        }
+    };
+    
+    this._get_time_stamp = function() {
+        var d = new Date();
+        var width2 = function(s) {
+            if (s.length == 1) {
+                return "0" + s;
+            }
+            return s;
+        }
+        return  d.getUTCFullYear().toString() +
+                width2((d.getUTCMonth() + 1).toString()) +
+                width2(d.getUTCDate().toString()) +
+                width2(d.getUTCHours().toString()) +
+                width2(d.getUTCMinutes().toString()) +
+                width2(d.getUTCSeconds().toString())
+                
     };
 
     // Examine a narrative object's metadata and return all its dependencies
@@ -598,12 +703,12 @@ function ProjectAPI(ws_url, token) {
         this._parse_object_id_string(p);
         var self = this;
         var metadata_fn = ws_client.get_object_info([{wsid: p.project_id, objid : p.narrative_id}], 1);
-        $.when( metadata_fn).then( function( obj_meta) {
-            if (obj_meta.length != 1) {
+        $.when( metadata_fn).then( function( obj_info) {
+            if (obj_info.length != 1) {
                 p.error_callback( "Error: narrative ws." + p.project_id +
                         ".obj." + p.narrative_id + " not found");
             } else {
-                var oi = {obj_info: obj_meta[0],
+                var oi = {obj_info: obj_info[0],
                           callback: p.callback
                           };
                 self._get_narrative_deps_from_obj_info(oi)

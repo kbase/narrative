@@ -582,12 +582,20 @@ function ProjectAPI(ws_url, token) {
                 self._get_narrative_deps_from_obj_info({
                     obj_info: obj_info,
                     callback: function(deps) {
-                        var nar_name_clash = false;
+                        var copynar = function(newname) {
+                            self._copy_one_object(obj_info[6], obj_info[1],
+                                    obj_info[4], home, newname,
+                                    function(res) {
+                                        var fq = "ws." + res[6] + ".obj." + res[0];
+                                        p.callback({fq_id: fq})
+                                    }, p.error_callback
+                                );
+                        };
+                        var ts = self._get_time_stamp();
                         $.when(ws_client.get_object_info(
                             [{workspace: home, name: narname}], 0,
                             function(result) { //success, the object exists
-                                console.log("name clash for workspace");
-                                nar_name_clash = true; //TODO not getting called
+                                copynar(narname + "-" + ts);
                             },
                             function(result) { //fail
                                 if (!/^No object with .+ exists in workspace [:\w]+$/
@@ -595,10 +603,9 @@ function ProjectAPI(ws_url, token) {
                                     p.error_callback(result.error.message);
                                 }
                                 //everything's cool, the object doesn't exist in home
+                                copynar(narname)
                             })
                         );
-                        var ts = self._get_time_stamp();
-                        var newname = nar_name_clash ? narname + "-" + ts : narname;
                         
                         $.each(deps.deps, function(key, val) {
                             var newdep = deps.deps[key].overwrite ? deps.deps[key].name
@@ -606,14 +613,6 @@ function ProjectAPI(ws_url, token) {
                             self._copy_one_object(obj_info[6], key, null,
                                     home, newdep, function() {}, p.error_callback);
                         });
-                        self._copy_one_object(obj_info[6], obj_info[1],
-                            obj_info[4], home, newname,
-                            function(res) {
-                                console.log(res); //TODO not getting called
-                                var fq = "ws." + res[6] + ".obj." + res[0];
-                                p.callback({fq_id: fq})
-                            }, p.error_callback
-                        );
                     }
                 });
             }
@@ -625,13 +624,11 @@ function ProjectAPI(ws_url, token) {
         if (ver == null) {
             var prom = ws_client.get_object_info([{ref: ws + "/" + obj}], 0);
             $.when(prom).done(
-                function(list_obj_info) { //TODO not getting called
-                    console.log("got obj info");
+                function(list_obj_info) {
                     if (list_obj_info.length != 1) {
                         error_callback( "Error: narrative ws." + p.project_id +
                                 ".obj." + p.narrative_id + " not found");
                     } else {
-                        console.log("copying dep");
                         ver = list_obj_info[0][4];
                         ws = list_obj_info[0][6];
                         obj = list_obj_info[0][0];
@@ -639,16 +636,18 @@ function ProjectAPI(ws_url, token) {
                             to: {ref: wstar + "/" + objtar}},
                             callback,
                             function(result) {//failed
+//                                console.log("error copying object");
                                 error_callback(result.error.message);
                             }
                        );
                     }
                 });
             $.when(prom).fail(
-                error_callback
+                function(res) {
+//                    console.log("error copying object: " + res.error.message);
+                    error_callback(res.error.message);
+                }
             );
-            $.when(prom).always( function() { console.log("WTF!?"); });
-            console.log(prom);
         } else {
             ws_client.copy_object(
                 {from: {ref: ws + "/" + obj + "/" + ver},

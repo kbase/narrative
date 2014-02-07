@@ -3,31 +3,39 @@
         name: "PhenotypeUploader",
         parent: "kbaseWidget",
         version: "1.0.0",
+        phenotype_id: null,
+        genome_id: null,
+        ws_name: null,
+        token: null,
+        width: 1150,
         options: {
             phenotype_id: null,
             genome_id: null,
-            ws_name: null,
-            token: null,
-            width: 1150
+            ws_name: null
         },
+        wsUrl: "https://kbase.us/services/ws/",
+        //fmUrl: "https://kbase.us/services/fba_model_services/",
+        loadingImage: "static/kbase/images/ajax-loader.gif",
 
         init: function(options) {
             this._super(options);
             var self = this;
         	var pref = (new Date()).getTime();
 
-            var wsUrl = "https://kbase.us/services/ws/";
-            //var fmUrl = "https://kbase.us/services/fba_model_services/";
             var container = this.$elem;
-        	var panel = $('<div class="loader-table">Please wait...</div>');
-        	container.append(panel);
+        	container.empty();
+            if (self.token == null) {
+            	container.append("<div>[Error] You're not logged in</div>");
+            	return;
+            }
+        	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading media data...</div>");
 
             var kbws = new Workspace(this.wsUrl, {'token': options.token});
             //var kbws = new workspaceService(wsUrl);
             
             var request = {workspaces: [options.ws_name], type: 'KBaseBiochem.Media'};
             kbws.list_objects(request, function(data) {
-            	$('.loader-table').remove();
+            	container.empty();
             	var medias = [];
             	for (var tuplePos in data) {
             		var media = data[tuplePos][1];
@@ -147,7 +155,7 @@
             		$('#'+pref+'pheno-ta').val(val);
             	});
             }, function(data) {
-            	$('.loader-table').remove();
+            	container.empty();
                 container.append('<p>[Error] ' + data.error.message + '</p>');
                 return;
             });            	

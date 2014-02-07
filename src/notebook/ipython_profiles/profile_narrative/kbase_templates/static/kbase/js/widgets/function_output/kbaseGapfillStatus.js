@@ -15,7 +15,7 @@
          * this.user_id() = the logged in user id
          * this.authToken() = the current authentication token
          */
-        parent: 'kbaseWidget',
+        parent: "kbaseAuthenticatedWidget",
 
         /*
          * (optional) Widgets should be semantically versioned.
@@ -31,6 +31,7 @@
         },
 
         wsUrl: "https://kbase.us/services/workspace",
+        loadingImage: "static/kbase/images/ajax-loader.gif",
         
         /**
          * (required) This is the only required function for a KBase Widget.
@@ -44,8 +45,7 @@
         },
 
         render: function(options) {
-            console.log("Error in kbaseGapfillStatus widget: "+ JSON.stringify(options, null, 4));
-                                    
+            var self = this;
             var pref = (new Date()).getTime();
             var container = this.$elem;
             var job_data = options.job_data
@@ -62,7 +62,7 @@
                      table.append('<tr><td>Based on your input parameters, the estimated runtime is:</td><td>'+options.estimated_time_str+'</td></tr>');
                      table.append('<tr><td>Current job state is</td><td id="'+pref+'job">'+job_data.status+'</td></tr>');
                      var timeLst = function(event) {
-                            kbws.get_jobs({auth: job_data.auth, jobids: [job_data.id]}, function(data) {
+                            kbws.get_jobs({auth: self.authToken(), jobids: [job_data.id]}, function(data) {
                                     if (data.length == 0) {
                                         var tdElem = $('#'+pref+'job');
                                         tdElem.html("<span class=\"label label-danger\">Error retrieving job status!</span>");
@@ -71,19 +71,35 @@
                                         var status = data[0]['status'];
                                             if (status === 'done') {
                                                 clearInterval(timer);
-                                                var tdElem = $('#'+pref+'job');
+                                                var tdElem = self.$elem.find('#'+pref+'job');
                                                 tdElem.html("<span class=\"label label-success\">Done! </span> &nbsp&nbsp View model details for gapfill solutions");
                                                  //ready();
                                             } else {
-                                                var tdElem = $('#'+pref+'job');
+                                                var tdElem = self.$elem.find('#'+pref+'job');
                                                 tdElem.html(status);
+                                                
+                                                if (status === 'running') {
+                                                    tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
+                                                }
                                                 if (status === 'error') {
+                                                    console.error("Error in kbaseGapfillStatus widget: "+ JSON.stringify(data, null, 4));
                                                     clearInterval(timer);
+                                                    tdElem.html("<span class=\"label label-danger\">Error</span>");
+                                                    var mssg = data[0].jobdata.error;
+                                                    var errorRegex = /_ERROR_[^]+_ERROR_/gm
+                                                    var errormssg = mssg.match(errorRegex);
+                                                    errormssg = errormssg.join("\n\n").replace(/_ERROR_/gm,'')
+                                                    self.$elem.kbaseNarrativeError({'error': {
+                                                                                        'msg' :  errormssg +"\n\n"+mssg,
+                                                                                        'method_name' : 'Gapfill an FBA Model',
+                                                                                        'type' : 'Error',
+                                                                                        'severity' : 'Low'
+                                                                                        }});
                                             }
                                         }
                                     }
                             }, function(data) {
-                                    var tdElem = $('#'+pref+'job');
+                                    var tdElem = self.$elem.find('#'+pref+'job');
                                     tdElem.html("<span class=\"label label-danger\">Error connecting to jobs server!</span>");
                                     console.error("Error in kbaseGapfillStatus widget: "+ JSON.stringify(data, null, 4));
                                     clearInterval(timer);

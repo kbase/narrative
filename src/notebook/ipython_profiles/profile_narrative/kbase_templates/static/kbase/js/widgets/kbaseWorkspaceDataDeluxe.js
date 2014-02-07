@@ -92,6 +92,18 @@
                 this)
             );
 
+            $.ajax({
+                url: '/static/kbase/js/widgets/landing_page_map.json',
+                async: true,
+                dataType: 'json',
+                success: $.proxy(function(response) {
+                    this.landingPageMap = response;
+                }, this),
+                error: $.proxy(function(error) {
+                    console.log(error);
+                })
+            });
+
             this.createStructure()
                 .createMessages();
 
@@ -108,7 +120,6 @@
          * @private
          */
         loggedInCallback: function(event, auth) {
-            console.log(auth);
             this.authToken = auth;
             this.wsClient = new Workspace(this.options.workspaceURL, this.authToken);
             this.isLoggedIn = true;
@@ -539,7 +550,18 @@
             var dataType = info[2];
             var workspace = info[7];
             var id = info[1];
-            var landingPage = this.options.landingPageURL + dataType + '/' + workspace + '/' + id;
+
+            var landingPageType = dataType;
+            var parsedType = /^(\S+)\.(\S+)-/.exec(dataType);
+            if (parsedType) {
+                // module = idx 1, type = idx 2
+                if (this.landingPageMap[parsedType[1]] && this.landingPageMap[parsedType[1]][parsedType[2]]) {
+                    landingPageType = this.landingPageMap[parsedType[1]][parsedType[2]];
+                }
+            }
+
+
+            var landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
             var specPage = this.options.landingPageURL + 'spec/type/' + dataType;
 
             this.$infoModal.find('.modal-footer > div > button#obj-type-btn').off('click').click(function(event) { window.open(specPage); });
@@ -571,16 +593,11 @@
                 var $tracebackDiv = $('<div>')
                                  .addClass('kb-function-error-traceback')
                                  .append(error.error.error);
-                // for (var i=0; i<error.traceback.length; i++) {
-                //     $tracebackDiv.append(error.traceback[i] + "<br>");
-                // }
 
                 var $tracebackPanel = $('<div>');
                 var tracebackAccordion = [{'title' : 'Details', 'body' : $tracebackDiv}];
 
                 $errorPanel.append($details);
-                //                 .append($tracebackPanel);
-                // $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
             }
 
             return $errorPanel;

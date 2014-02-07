@@ -265,7 +265,9 @@
                                          .attr({
                                              'type' : 'button',
                                              'class' : 'btn btn-default',
-                                             'id' : 'obj-details-btn'
+                                             'id' : 'obj-details-btn',
+                                             'data-placement' : 'top',
+                                             'title' : 'Sorry, no data page available for this object yet!'
                                          })
                                          .append('Object Details'))
                                  .append($('<button>')
@@ -551,7 +553,12 @@
             var workspace = info[7];
             var id = info[1];
 
-            var landingPageType = dataType;
+            // Set up the typespec page.
+            var specPage = this.options.landingPageURL + 'spec/type/' + dataType;
+            this.$infoModal.find('.modal-footer > div > button#obj-type-btn').off('click').click(function(event) { window.open(specPage); });
+
+            // Figure out the landingPageType. e.g. KBaseGenomes.Genome-1.0 should go to /genomes/
+            var landingPageType = null;
             var parsedType = /^(\S+)\.(\S+)-/.exec(dataType);
             if (parsedType) {
                 // module = idx 1, type = idx 2
@@ -560,12 +567,18 @@
                 }
             }
 
+            var detailsBtn = this.$infoModal.find('.modal-footer > div > button#obj-details-btn');
+            detailsBtn.off('click').removeAttr('data-toggle');
+            // If we don't havea a landingPageType (it's still null), then we don't have a landing page for that
+            // object. Remove the clicky function and add a tooltip.
+            if (landingPageType) {
+                var landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
+                detailsBtn.click(function(event) { window.open(landingPage); });
+            }
+            else {
+                detailsBtn.attr('data-toggle', 'tooltip');
+            }
 
-            var landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
-            var specPage = this.options.landingPageURL + 'spec/type/' + dataType;
-
-            this.$infoModal.find('.modal-footer > div > button#obj-type-btn').off('click').click(function(event) { window.open(specPage); });
-            this.$infoModal.find('.modal-footer > div > button#obj-details-btn').off('click').click(function(event) { window.open(landingPage); });
         },
 
         /**

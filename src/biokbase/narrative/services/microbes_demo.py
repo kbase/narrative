@@ -146,6 +146,7 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     :ui_name out_genome: Output Genome ID
     :return: Preparation message
     :rtype: kbtypes.Unicode
+    :output_widget: GenomeAnnotation
     """
     if not scientific_name:
         return json.dump({'error': 'output genome name should be defined'})
@@ -167,7 +168,7 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
         'genetic_code': 11,
     }
     fbaClient.ContigSet_to_Genome(contigset_to_genome_params)
-    return json.dumps({"output": "New genome was created"})
+    return json.dumps({'ws_name': workspace, 'ws_id': out_genome})
 
 @method(name="Annotate Genome")
 def _annotate_genome(meth, genome, out_genome):

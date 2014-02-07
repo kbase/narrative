@@ -159,6 +159,10 @@ class Node:
     def get_gene_list(self, cnode):
       if(cnode in self.clst2genes.keys()) : return self.clst2genes[cnode].keys()
       return []
+
+        
+        
+        
      
 AweJob.URL = URLS.awe
 
@@ -890,40 +894,63 @@ def go_enrch_net (meth, net_obj_id=None, p_value = 0.05, ec = None, domain = Non
 
     rows = sorted(rows, key=lambda x: x[1], reverse=True)
     
-    meth.debug("rows: {}".format(rows))
+    #meth.debug("rows: {}".format(rows))
     header = ["Cluster ID", "# of Genes", "Annotation1", "Annotation2", "Annotation3"]
     data = {'table': [header] + rows}
     return json.dumps(data)
     #return _output_object(net_obj_id + ".cenr")
 
-#@method(name="Construct subnetwork from user-selected genes")
-#def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
-#    """Construct subnetwork connecting genes in user-selected clusters 
-#
-#    :param net_obj_id: Cluster object id
-#    :type net_obj_id:kbtypes.WorkspaceObjectId
-#    :param cluster_id_list: Comma-separated list of user-selected cluster ids 
-#    :type cluster_id_list:kbtypes.Unicode
-#    :return: Workspace id
-#    :rtype: kbtypes.Unicode
-#    :output_widget: ForceDirectedNetwork
-#    """
-#    meth.stages = 2
-#
-#    gc = GWAS(URLS.gwas, token=meth.token)
-#    meth.advance("Extract cluster nodes")
-#    #try:
-#    #    #jid = gc.gwas_create_population_trait_object(meth.workspace_id, GwasPopulation_obj_id, population_trait_file_id, protocol, comment, originator, output_trait_object_name, kbase_genome_id, trait_ontology_id, trait_name, unit_of_measure)
-#    #except Exception as err:
-#    #    raise COEXException("submit job failed: {}".format(err))
-#    #if not jid:
-#    #    raise COEXException(2, "submit job failed, no job id")
-#
-#    meth.advance("Create plot specification")
-#
-#    workspace_id = meth.workspace_id
-#    workspaceID = "{}.{}".format("kbasetest_home", "GSE5622.g3899.filtered.edge_net")
-#    return json.dumps({'token': meth.token, 'workspaceID': workspaceID})
+@method(name="Construct subnetwork from user-selected clusters")
+def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
+    """Construct subnetwork connecting genes in user-selected clusters 
+
+    :param net_obj_id: Cluster object id
+    :type net_obj_id:kbtypes.WorkspaceObjectId
+    :param cluster_id_list: Comma-separated list of user-selected cluster ids 
+    :type cluster_id_list:kbtypes.Unicode
+    :return: Workspace id
+    :rtype: kbtypes.Unicode
+    :output_widget: ForceDirectedNetwork
+    """
+    meth.stages = 2
+
+    meth.advance("Extract cluster nodes")
+
+    cluster_id_list = cluster_id_list.replace(" ","")
+    clusters = [ i for i in cluster_id_list.split(',')]
+
+    wsd = Workspace2(token=meth.token, wsid=meth.workspace_id)
+
+    net_object = wsd.get_objects([{'workspace' : meth.workspace_id, 'name' : net_obj_id}]);
+    nc = Node(net_object[0]['data']['nodes'], net_object[0]['data']['edges'])
+
+    
+
+    keeping_ids = {}
+    for cnode in nc.clst2genes.keys():
+      if cnode in clusters :
+        keeping_ids[cnode] = 1
+        for i in nc.clst2genes[cnode].keys():
+          keeping_ids[i] = 1
+    #meth.debug("IDs to keep : {} ".format(keeping_ids))
+    nnodes = []
+    nedges = []
+    for node in nc.nodes:
+      if node['entity_id'] in keeping_ids.keys():
+        nnodes.append(node)
+    for edge in nc.edges:
+      if nc.igids[edge['node_id1']] in keeping_ids.keys() and nc.igids[edge['node_id1']] in keeping_ids.keys():
+        nedges.append(edge)
+
+    net_object[0]['data']['nodes'] = nnodes
+    net_object[0]['data']['edges'] = nedges
+    net_object[0]['data']['user_annotations']['filtered'] = cluster_id_list
+    
+    wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".trmd", 'meta' : {'orginal' : net_obj_id, 'cluster_id_list' : cluster_id_list}}]})
+
+    meth.advance("Create plot specification")
+    workspaceID = "{}.{}".format(meth.workspace_id, net_obj_id + ".trmd")
+    return json.dumps({'token': meth.token, 'workspaceID': workspaceID})
 
 @method(name="Network diagram")
 def network_diagram(meth, workspace_id=None, obj_id=None):

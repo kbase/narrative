@@ -52,12 +52,15 @@ $.KBWidget({
     },
     render: function(options) {
         var data = options.modelsData;
+        var model = data[0];
         var self = this;
         var container = this.$elem;
 
         var randId = this._uuidgen();
 
         container.append("<h4>" + options.id + "</h4>")
+        container.append("<i>"+model.reactions.length +" reactions, "+model.compounds.length+" compounds, "+
+                         parseInt(model.integrated_gapfillings.length+model.unintegrated_gapfillings.length)+" gapfill runs</i><br>")
         
         var tables = ['Reactions', 'Compounds', 'Compartment', 'Biomass', 'Gapfill', 'Gapgen'];
         var tableIds = [randId+'reaction', randId+'compound', randId+'compartment', randId+'biomass', randId+'gapfill', randId+'gapgen'];
@@ -107,7 +110,7 @@ $.KBWidget({
         }
 
 
-        model = data[0];
+        
         //console.log("kbaseModelTabsNarrative");
         //console.log(model);
 
@@ -211,7 +214,7 @@ $.KBWidget({
               "aoColumns": [
                   { "sTitle": "Integrated?", "sWidth": "10%"},
                   {"bVisible":    false},
-                  { "sTitle": "Gapfill Name (Object Reference)", "sWidth": "40%"},
+                  { "sTitle": "Gapfill Run Name (Object Reference)", "sWidth": "40%"},
                   { "sTitle": "Media"},
                   { "sTitle": "Media Object Reference", "sWidth": "20%"},
                   {"bVisible": false},
@@ -261,8 +264,8 @@ $.KBWidget({
                     var intGap = intGapfills[i];
                     if (intGap.length == 6) {
                         intGap.splice(0, 0, "Yes");
-                        intGap.splice(2, 1, '<a class="show-gap" data-ref="'+intGap[1]+')" >'+
-                            intGap[1]+" &nbsp ("+intGap[2]+')</a>');
+                        intGap.splice(2, 1, intGap[1]+"&nbsp ("+intGap[2]+')&nbsp&nbsp'+
+                                        '<a class="show-gap" data-ref="'+intGap[1]+'" >view solution details</a>');
                     }
                 }
 
@@ -271,8 +274,8 @@ $.KBWidget({
                     var unIntGap = unIntGapfills[i];
                     if (unIntGap.length == 6) {            
                         unIntGap.splice(0, 0, "No")
-                        unIntGap.splice(2, 1, '<a class="show-gap" data-ref="'+unIntGap[1]+'" >'+
-                            unIntGap[1]+" &nbsp ("+unIntGap[2]+')</a>');
+                        unIntGap.splice(2, 1,  unIntGap[1]+"&nbsp ("+unIntGap[2]+')&nbsp&nbsp'+
+                                        '<a class="show-gap" data-ref="'+unIntGap[1]+'" >view solution details</a>');
                     }
                 }
 
@@ -290,9 +293,9 @@ $.KBWidget({
 
             function events() {
                 // tooltip for version hover
-                $('.show-gap').tooltip({html: true, title:'show more info \
-                    <i class="icon-list-alt icon-white history-icon"></i>'
-                    , placement: 'right'});
+                //$('.show-gap').tooltip({html: true, title:'show more info \
+                //    <i class="icon-list-alt icon-white history-icon"></i>'
+                //    , placement: 'right'});
 
                 $('.show-gap').unbind('click');
                 $('.show-gap').click(function() {
@@ -304,7 +307,7 @@ $.KBWidget({
                     } else {
                         gapTable.fnOpen( tr, '', "info_row" );
                         $(this).closest('tr').next('tr').children('.info_row').append('<p class="muted loader-gap-sol"> \
-                            <img src="'+self.loadingImage+'"> loading possible solutions...</p>')                
+                            <img src="'+self.loadingImage+'"> loading solutions...</p>')                
                         showGapfillSolutions(tr, gapRef)   
                     }
                 });
@@ -317,6 +320,8 @@ $.KBWidget({
                 var gapAJAX = fba.get_gapfills({gapfills: [gapRef], workspaces: [self.currentws], auth: self.authToken()});
                 $.when(gapAJAX).done(function(data) {
                     $('.loader-gap-sol').remove();
+                    console.debug("gapfill:")
+                    console.debug(data);
                     var data = data[0];  // only one gap fill solution at a time is clicked
                     var sols = data.solutions;
 
@@ -326,7 +331,8 @@ $.KBWidget({
                     
                     for (var i in sols) {
                         var sol = sols[i];
-                        var solID = sol.id;
+                        //var solID = sol.id; // not correct currently, should be gapfill ID + ".gfsol.#"
+                        var solID = gapRef+".gfsol."+(parseInt(i)+1)
 
                         solList.append("<br><i>solution id:</i>&nbsp&nbsp<b>"+solID+"<b><br>")
                         

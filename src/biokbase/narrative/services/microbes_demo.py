@@ -825,26 +825,25 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model_id: FBA Model
     
-    :param gapfill_id: select the ID of the gapfill solution (found in the Gapfilling tab in the model viewer) [13.2]
+    :param gapfill_id: select the ID of the gapfill solution (found in the Gapfilling tab in the model viewer, usually in the form 'modelId.gf.2.gfsol.1') [13.2]
     :type gapfill_id: kbtypes.KBaseFBA.Gapfilling
     :ui_name gapfill_id: Gapfill ID
 
     :param output_model_id: select a name for the gapfilled object (optional) [13.3]
-    :type output_model_id: kbtypes.Unicode
+    :type output_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name output_model_id: Output FBA Result Name
     
-    :output_widget: kbaseModelMetaNarrative
-
     :return: gapfilled model ID
     :rtype: kbtypes.Unicode
     """
-
+    
+    #:output_widget: kbaseModelMetaNarrative
     meth.stages = 3
     meth.advance("Setting up parameters")
     
     #grab token and workspace info, setup the client
-    token, workspaceName = meth.token, meth.workspace_id;
-    fbaClient = fbaModelServices(service.URLS.fba)
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(service.URLS.fba, token=userToken)
 
     """
     typedef structure {
@@ -858,15 +857,18 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
         bool overwrite;
     } integrate_reconciliation_solutions_params;
     """
-
     integrate_params = {
         'model' : fba_model_id,
         'model_workspace' : workspaceName,
         'gapfillSolutions' : [gapfill_id],
         'gapgenSolutions' : [],
-        'workspace' : workspaceName,
-        'auth' : token,
+        'workspace' : workspaceName
     }
+    
+    # get the model to determine the number of reactions
+    wsClient = workspaceService(service.URLS.workspace, token=userToken)
+    firstReactionList = wsClient.get_object_subset([{'ref':workspaceName+"/"+fba_model_id, 'included':["/modelreactions/[*]/id"]}])
+    meth.debug(json.dumps(firstReactionList));
 
     output_model_id = output_model_id.strip()
     if (output_model_id):
@@ -875,8 +877,17 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
     # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);
     meth.advance("Integrating the gapfill solutions")
     model_meta = fbaClient.integrate_reconciliation_solutions(integrate_params)
+    finalReactionList = wsClient.get_object_subset([{'ref':workspaceName+"/"+output_model_id, 'included':["/modelreactions/[*]/id"]}])
 
-    return json.dumps({"data":model_meta})
+    return json.dumps( {
+        "workspaceName":workspaceName,
+        "originalModel":fba_model_id,
+        "originalModelRef":str(firstReactionList[0]['info'][6])+"/"+str(firstReactionList[0]['info'][0])+"/"+str(firstReactionList[0]['info'][4]),
+        "startingNumRxns":len(firstReactionList[0]['data']['modelreactions']),
+        "newModel":output_model_id,
+        "newModelRef":str(finalReactionList[0]['info'][6])+"/"+str(finalReactionList[0]['info'][0])+"/"+str(finalReactionList[0]['info'][4]),
+        "endingNumRxns":len(finalReactionList[0]['data']['modelreactions'])
+        })
 
 @method(name="Upload Phenotype Data")
 def _upload_phenotype(meth, genome_id, phenotype_id):

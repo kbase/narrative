@@ -797,7 +797,7 @@ def go_anno_net (meth, net_obj_id=None):
               hr_nd['user_annotations']['go.'+go+"."+`i`+".desc" ] = goen['desc']
           hr_nd['user_annotations']['go_annotation'] =  go_enr_smry
         if lid  in oan['gene_enrichment_annotations'].keys():
-          sorted(oan['gene_enrichment_annotations'][lid], key=(lambda x: x['p_value'] if  'p_value' in x.keys() else 1.0),  reverse=False)
+          oan['gene_enrichment_annotations'][lid]= sorted(oan['gene_enrichment_annotations'][lid], key=(lambda x: x['p_value'] if  'p_value' in x.keys() else 1.0),  reverse=False)
           go_enr_smry = "";
           for i in range(len(oan['gene_enrichment_annotations'][lid])):
             goen = oan['gene_enrichment_annotations'][lid][i]
@@ -829,6 +829,7 @@ def go_enrch_net (meth, net_obj_id=None, p_value = 0.05, ec = None, domain = Non
     :type domain: kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
+    :output_widget: GeneTableWidget
     """
     meth.stages = 3
 
@@ -861,6 +862,7 @@ def go_enrch_net (meth, net_obj_id=None, p_value = 0.05, ec = None, domain = Non
 
    
     meth.advance("Run enrichment test for each clusters")
+    rows = []
     for hr_nd in net_object[0]['data']['nodes']:
         gid = hr_nd['entity_id']
         if not (gid.startswith('cluster.') or 'clst' in gid ): continue
@@ -869,8 +871,9 @@ def go_enrch_net (meth, net_obj_id=None, p_value = 0.05, ec = None, domain = Non
 
         enr_list = oc.get_go_enrichment(llist, domain_list, ec_list, 'hypergeometric', 'GO')
         
-        sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
+        enr_list = sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
         go_enr_smry = "";
+        go_enr_anns = ["", "", ""]
         for i in range(len(enr_list)):
           goen = enr_list[i]
           if goen['pvalue'] > float(p_value) : continue
@@ -879,10 +882,19 @@ def go_enrch_net (meth, net_obj_id=None, p_value = 0.05, ec = None, domain = Non
           hr_nd['user_annotations']['gce.'+goen['goID']+".p_value" ] = `goen['pvalue']`
           if i < 3 :
             go_enr_smry += goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0] + "\n"
+            go_enr_anns[i] = goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0]
         hr_nd['user_annotations']['go_enrichnment_annotation'] =  go_enr_smry
+        rows.append([gid,len(glist),go_enr_anns[0],go_enr_anns[1],go_enr_anns[2]])
 
     wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".cenr", 'meta' : {'orginal' : net_obj_id}}]})
-    return _output_object(net_obj_id + ".cenr")
+
+    rows = sorted(rows, key=lambda x: x[1], reverse=True)
+    
+    meth.debug("rows: {}".format(rows))
+    header = ["Cluster ID", "# of Genes", "Annotation1", "Annotation2", "Annotation3"]
+    data = {'table': [header] + rows}
+    return json.dumps(data)
+    #return _output_object(net_obj_id + ".cenr")
 
 #@method(name="Construct subnetwork from user-selected genes")
 #def const_subnet (meth, net_obj_id=None, cluster_id_list = None):

@@ -828,18 +828,18 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
     :param gapfill_id: select the ID of the gapfill solution (found in the Gapfilling tab in the model viewer, usually in the form 'modelId.gf.2.gfsol.1') [13.2]
     :type gapfill_id: kbtypes.KBaseFBA.Gapfilling
     :ui_name gapfill_id: Gapfill ID
-    :default gapfill_id: e.g myModel.gf.2.gfsol.1
+    :default gapfill_id: e.g model.gf.2.gfsol.1
 
     :param output_model_id: select a name for the gapfilled object (optional) [13.3]
     :type output_model_id: kbtypes.KBaseFBA.FBAModel
     :ui_name output_model_id: Output FBA Result Name
     
+    :output_widget: kbaseIntegrateGapfillOutput
+    
     :return: gapfilled model ID
     :rtype: kbtypes.Unicode
     """
-    
-    #:output_widget: kbaseModelMetaNarrative
-    meth.stages = 3
+    meth.stages = 2
     meth.advance("Setting up parameters")
     
     #grab token and workspace info, setup the client
@@ -878,7 +878,7 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
         output_model_id = fba_model_id
 
     # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);
-    meth.advance("Integrating the gapfill solutions")
+    meth.advance("Integrating the gapfill solution")
     model_meta = fbaClient.integrate_reconciliation_solutions(integrate_params)
     finalReactionList = wsClient.get_object_subset([{'ref':workspaceName+"/"+output_model_id, 'included':["/modelreactions/[*]/id"]}])
 

@@ -334,6 +334,11 @@ define('kbasePlantsNetworkNarrative',
                                             if (nodeObj == undefined) {
 
                                                 node.func = cdses.locus_func_defs[cdses.cds_to_locus[node.entity_id]];
+
+                                                if (node.func.match(/unknown/i)) {
+                                                    node.func = '';
+                                                }
+
                                                 node.associations = cdses.locus_to_associations[cdses.cds_to_locus[node.entity_id]];
 
                                                 nodeObj = nodes[node.id] = {

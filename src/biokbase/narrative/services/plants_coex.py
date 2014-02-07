@@ -707,7 +707,7 @@ def go_anno_net(meth, workspace=None, net_obj_id=None):
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    meth.stages = 4
+    meth.stages = 5
 
     meth.advance("Prepare annotation service")
     #gc = GWAS(URLS.gwas, token=meth.token)
@@ -730,7 +730,8 @@ def go_anno_net(meth, workspace=None, net_obj_id=None):
     #idm = IdMap(URLS.idmap)
     gids = [i for i in sorted(nc.ugids.keys())
             if 'CDS' in i or 'locus' in i or (not 'clst' in i and not i.startswith('cluster'))]
-    
+
+    meth.advance("Get relationships from central data model")
     eids = idc.kbase_ids_to_external_ids(gids)
     mrnas_l = cdmie.get_relationship_Encompasses(gids, [], ['to_link'], [])
     mrnas = dict((i[1]['from_link'], i[1]['to_link']) for i in mrnas_l)
@@ -815,13 +816,14 @@ def annotate_nodes(net_object, ots=None, oan=None, funcs=None, eids=None,
 
 
 @method(name="Annotate clusters with enriched ontology terms")
-def go_enrch_net (meth, net_obj_id=None, p_value = 0.05, ec = None, domain = None):
+def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
     """Identify Gene Ontology terms enriched in individual network clusters
 
     :param net_obj_id: Cluster object id
-    :type net_obj_id: kbtypes.WorkspaceObjectId
+    :type net_obj_id: kbtypes.KBaseNetworks.Network
     :param p_value: p-value cutoff
     :type p_value: kbtypes.Unicode
+    :default p_value: 0.05
     :param ec: Evidence code list (comma separated, IEA, ...)
     :type ec:kbtypes.Unicode
     :param domain: Domain list (comma separated, biological_process, ...)

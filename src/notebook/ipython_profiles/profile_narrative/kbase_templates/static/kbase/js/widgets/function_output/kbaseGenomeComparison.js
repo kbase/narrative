@@ -251,8 +251,12 @@ $.KBWidget({
         			var wasError = data[6];
     				var tdElem = $('#'+self.pref+'job');
     				tdElem.html(status);
+				if (status === 'running') {
+					tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
+                                }
         			if (complete === 1) {
         				clearInterval(self.timer);
+					
         				if (wasError === 0) {
             				dataIsReady();
         				}

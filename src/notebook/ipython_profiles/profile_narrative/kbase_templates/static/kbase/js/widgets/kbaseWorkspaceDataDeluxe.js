@@ -32,8 +32,8 @@
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "https://kbase.us/services/ws", // "http://kbase.us/services/ws",
-            wsBrowserURL: "http://140.221.85.168/landing-pages/#/ws/",
-            landingPageURL: "http://140.221.85.168/landing-pages/#/",
+            wsBrowserURL: "/functional-site/#/ws/",
+            landingPageURL: "/functional-site/#/",
             uploaderURL: "http://kbase.us/services/docs/uploader/uploader.html",
             container: null,
         },
@@ -146,8 +146,6 @@
              * a panel-body - everything else
              * - no footer
              */
-
-
 
             // header bar.
             var $headerDiv = $('<div>')

@@ -108,6 +108,7 @@
          * @private
          */
         loggedInCallback: function(event, auth) {
+            console.log(auth);
             this.authToken = auth;
             this.wsClient = new Workspace(this.options.workspaceURL, this.authToken);
             this.isLoggedIn = true;

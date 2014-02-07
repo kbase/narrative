@@ -32,8 +32,9 @@
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "https://kbase.us/services/ws", // "http://kbase.us/services/ws",
-            wsBrowserURL: "http://140.221.85.168/landing-pages/#/ws/",
-            landingPageURL: "http://140.221.85.168/landing-pages/#/",
+            wsBrowserURL: "/functional-site/#/ws/",
+            landingPageURL: "/functional-site/#/",
+            uploaderURL: "http://kbase.us/services/docs/uploader/uploader.html",
             container: null,
         },
         // Constants
@@ -107,6 +108,7 @@
          * @private
          */
         loggedInCallback: function(event, auth) {
+            console.log(auth);
             this.authToken = auth;
             this.wsClient = new Workspace(this.options.workspaceURL, this.authToken);
             this.isLoggedIn = true;
@@ -144,8 +146,6 @@
              * a panel-body - everything else
              * - no footer
              */
-
-
 
             // header bar.
             var $headerDiv = $('<div>')
@@ -225,7 +225,7 @@
                 }
             );
 
-            this.$myDataDiv.kbaseNarrativeDataTable({ noDataText: 'No data found! Click <a href="http://kbase.us/" target="_new">here</a> to upload.'});
+            this.$myDataDiv.kbaseNarrativeDataTable({ noDataText: 'No data found! Click <a href="' + this.options.uploaderURL + '" target="_new">here</a> to upload.'});
             this.$narrativeDiv.kbaseNarrativeDataTable({ noDataText: 'No data used in this Narrative yet!'});
 
 
@@ -371,7 +371,7 @@
                     var renderedData = {};
                     for (var i=0; i<list.length; i++) {
                         var type = list[i][2];
-                        if (type.indexOf('KBaseNarrative.Narrative') !== -1) {
+                        if (type.indexOf('KBaseNarrative') == 0) {
                             list.splice(i, 1);
                             i--;
                         }

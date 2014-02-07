@@ -45,7 +45,7 @@ Now
  I run the GWAS workflow and provide it the id of the objects I just created. The GWAS object has list of significant SNPs, pvalue, rank and FDR.
 
  Step6:Visualize
- significant SNPs (Shiran)
+ significant SNPs (Mustafa, Shiran)
 Now
  I want to visualize the distribution of snps and pvalues on a manhattan plot where the x-axis has the chromosome and position and y-axis has the -log pvalue.
 
@@ -53,7 +53,7 @@ Now
  plot looks interesting. There are peaks on chromosome 5, 6 and 14. So the genes of interest should lie in those regions.
 
  Step7:Identify
- genes close to the SNPs (Ranjan need to be modified for  workspace)
+ genes close to the SNPs (Mustafa, Ranjan)
 I
  would like a gene list and so I use the command variations_to_genes. I want to filter by pvalue and I want to look 5 kb around the snp for any gene.
 
@@ -62,7 +62,7 @@ I
  region contains  70 genes. That is a big list of genes to work with. I want to prioritize my candidate gene list. I want to use other tools in KBase and explore that let me narrow done this gene list and help me identify the best set of genes to work with.
 
  Step8:Functional
- annotation of genes (Sunita, Shinjae, Shiran objects)
+ annotation of genes (Sunita, Shinjae, Mustafa, Shiran objects)
 I
  want to look at the functional information for these 70 genes as well as gene ontology, pathways and pfam domains. Some of the genes related to cell wall look interesting. It would be interesting to see the expression profile of these and other genes.
 

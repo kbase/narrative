@@ -20872,13 +20872,13 @@ function (JQ, EventEmitter, DragBox, Scale) {
         var canvas = JQ("<canvas>")
             .attr("width", container.width())
             .attr("height", container.height())
-            .css("position", "absolute")
+            .css("position", "30px Arial")
             .css("z-index", options.z || 1);
         container.append(canvas);
         return canvas[0].getContext('2d');
     }
     var PI2 = Math.PI * 2;
-    var AXIS_COLOR  = '#CCC';
+    var AXIS_COLOR  = '#222';
     
     function ManhattanPlot(options) {
         var self = this;
@@ -21037,6 +21037,7 @@ function (JQ, EventEmitter, DragBox, Scale) {
                 if (options.callback) {
                     options.callback(axisContext);
                 }
+                axisContext.font = "small-caps bold 12px arial";;
                 axisContext.translate(x, y);
                 axisContext.rotate(-Math.PI/2);
                 axisContext.textAlign = options.align || "right";
@@ -21047,6 +21048,7 @@ function (JQ, EventEmitter, DragBox, Scale) {
             
             function horizontalLabeler(text, x, y, options) {
                 options = (options || {})
+                axisContext.font = "small-caps bold 12px arial";;
                 axisContext.save();
                 axisContext.textAlign = "center";
                 axisContext.textBaseline = options.baseline || "top";
@@ -37501,9 +37503,11 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
                     self.emit("dblclick-node", [d, this]);
                 })
                 .on("mouseover", function (d) {
-//                  var thisobj = JSON.stringify(d);
                     self.emit("mouseover-node", [d, this]);
                 })
+                .on("mouseout", function (d) {
+                    hud.empty().dismiss();
+                })                
                 .on("mousedown", function (d) {
                     fixNodeTimer = {
                         time: new Date().getTime(),
@@ -37547,7 +37551,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
 
         var originalFill,
             hud = new HUD({
-                position: { bottom: 300, left: 300 },
+                position: { bottom: $element.x, left: $element.y },
                 width: 500,
                 title: "Node Properties",
                 z: 2000

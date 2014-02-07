@@ -47,7 +47,7 @@ def _assemble_contigs(meth, reads_files, out_contig_set):
 
 @method(name="Assemble Genome from Fasta")
 def _assemble_genome(meth, contig_file, out_genome):
-    """This assembles a ContigSet into a Genome object in your data space.
+    """This assembles a ContigSet into a Genome object in your workspace.
     This should be run before trying to annotate a Genome. [2]
 
     :param contig_file: A FASTA file with contig data [2.1]
@@ -96,8 +96,8 @@ def _assemble_genome(meth, contig_file, out_genome):
 
 @method(name="Upload Contigs (FASTA-file)")
 def _upload_contigs(meth, contig_set):
-    """This uploads a ContigSet from FASTA-file into your data space.
-    This should be run before wrapping it by Genome and annotation. [19]
+    """Upload a ContigSet from FASTA-file into your workspace.
+    This function should be run before wrapping the ContigSet as a Genome object. [19]
 
     :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly. [19.1]
     :type contig_set: kbtypes.KBaseGenomes.ContigSet
@@ -114,8 +114,8 @@ def _upload_contigs(meth, contig_set):
 
 @method(name="Upload Genome (GBK-file)")
 def _upload_genome(meth, genome_id):
-    """This uploads a Genome and ContigSet from GBK-file into your data space.
-    This should be run before adding seed annotations to this Genome. [20]
+    """Upload a Genome and ContigSet from GBK-file into your workspace.
+    This function should be run before adding SEED annotations to this Genome. [20]
 
     :param genome_id: Output Genome ID. If empty, an ID will be chosen randomly. [20.1]
     :type genome_id: kbtypes.KBaseGenomes.Genome
@@ -132,8 +132,8 @@ def _upload_genome(meth, genome_id):
 
 @method(name="Convert Contigs to a Genome")
 def _prepare_genome(meth, contig_set, scientific_name, out_genome):
-    """This wraps a ContigSet by a Genome object in your data space.
-    This should be run before trying to annotate a Genome. [3]
+    """Wrap a ContigSet as a Genome object in your workspace.
+    This function should be run before trying to annotate a Genome. [3]
 
     :param contig_set: An object with contig data [3.1]
     :type contig_set: kbtypes.KBaseGenomes.ContigSet
@@ -172,8 +172,9 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
 
 @method(name="Annotate Genome")
 def _annotate_genome(meth, genome, out_genome):
-    """This starts a job that might run for an hour or longer.
-    When it finishes, the annotated Genome will be stored in your data space. [4]
+    """Annotate a Genome object with structural and functional gene annotations.
+    The annotation job may run for an hour or longer. When the annotation job finishes,
+    the annotated Genome object will be stored in your workspace. [4]
     
     :param genome: Source genome ID [4.1]
     :type genome: kbtypes.KBaseGenomes.Genome
@@ -202,8 +203,8 @@ def _annotate_genome(meth, genome, out_genome):
 
 @method(name="Add SEED Annotation")
 def _add_seed_annotation(meth, genome, out_genome):
-    """This starts a job that might run for an hour or longer.
-    When it finishes, the Genome with SEED annotations will be stored in your data space. [21]
+    """Add SEED annotations to a genome.  This function will start a job that might run for an hour or longer.
+    When the job finishes, the Genome with SEED annotations will be stored in your workspace. [21]
     
     :param genome: Source genome ID [21.1]
     :type genome: kbtypes.KBaseGenomes.Genome
@@ -233,7 +234,7 @@ def _add_seed_annotation(meth, genome, out_genome):
 
 @method(name="View Genome")
 def _show_genome(meth, genome):
-    """View and explore a Genome in your Workspace. [5]
+    """View and explore a Genome object in your workspace. [5]
     
     :param genome: select the genome you want to view [5.1]
     :type genome: kbtypes.KBaseGenomes.Genome
@@ -255,11 +256,11 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     :type genome_id: kbtypes.KBaseGenomes.Genome
     :ui_name genome_id: Genome Name
     
-    :param fba_model_id: select a name for the generated FBA Model (optional) [6.2]
+    :param fba_model_id: select a name for the generated metabolic model (optional) [6.2]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: Output FBA Model Name
+    :ui_name fba_model_id: Output Metabolic Model Name
     
-    :return: Generated FBA Model ID
+    :return: Generated Metabolic Model ID
     :rtype: kbtypes.KBaseFBA.FBAModel
     :output_widget: kbaseModelTabs
     """
@@ -318,13 +319,13 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
 
 @method(name="View Metabolic Model Details")
 def _view_model_details(meth, fba_model_id):
-    """Bring up a detailed view of your FBA Model within the narrative. [7]
+    """Bring up a detailed view of your metabolic model within the narrative. [7]
     
-    :param fba_model_id: the FBA Model to view [7.1]
+    :param fba_model_id: the metabolic model to view [7.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: FBA Model
+    :ui_name fba_model_id: Metabolic Model
     
-    :return: FBA Model Data
+    :return: Metabolic Model Data
     :rtype: kbtypes.Model
     :output_widget: kbaseModelTabs
     """
@@ -347,7 +348,7 @@ def _view_model_details(meth, fba_model_id):
 
 @method(name="Build Media")
 def _build_media(meth, media):
-    """Assemble a set of compounds to use as a media set for performing FBA on a model. [8]
+    """Assemble a set of compounds to use as a media set for performing FBA on a metabolic model. [8]
 
     :param base_media: Base media type [8.1]
     :type base_media: kbtypes.KBaseBiochem.Media
@@ -422,7 +423,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
 
     :param fba_model_id: the metabolic model you wish to run [10.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: FBA Model
+    :ui_name fba_model_id: Metabolic Model
     
     :param media_id: the media condition in which to run FBA (optional, default is an artificial complete media) [10.2]
     :type media_id: kbtypes.KBaseBiochem.Media
@@ -623,7 +624,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
 
 @method(name="View FBA Result Details")
 def _view_fba_result_details(meth, fba_id):
-    """This brings up a detailed view of your FBA Model within the narrative. [11]
+    """Bring up a detailed view of your FBA result within the narrative. [11]
     
     :param fba_id: the FBA Result to view [11.1]
     :type fba_id: kbtypes.KBaseFBA.FBA
@@ -657,11 +658,16 @@ def _view_fba_result_details(meth, fba_id):
 
 @method(name="Gapfill a Metabolic Model")
 def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit):
-    """Run Gapfilling on an FBA Model [12]
+    """Run Gapfilling on an metabolic model.  Gapfill attempts to identify the minimal number of reactions
+    needed to add to your metabolic model in order for the model to predict growth in the
+    given media condition (or in complete media if no Media is provided).  Gapfilling is
+    an optimization procedure that can produce many possible solutions.  After a gapfilling
+    job is submitted and run, you can view the results by viewing a metabolic model details,
+    and incorporate the new reactions by running the Integrate Gapfill Solution function. [12]
 
-    :param fba_model_id: the FBA Model to gapfill [12.1]
+    :param fba_model_id: the metabolic model to gapfill [12.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: FBA Model
+    :ui_name fba_model_id: Metabolic Model
     
     :param media_id: the media condition in which to gapfill [12.2]
     :type media_id: kbtypes.KBaseBiochem.Media
@@ -820,11 +826,11 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
 
 @method(name="Integrate Gapfill Solution")
 def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
-    """Integrate a Gapfill solution into your FBA model [13]
+    """Integrate a Gapfill solution into your metabolic model [13]
 
-    :param fba_model_id: the FBA Model to integrate gapfill solutions into [13.1]
+    :param fba_model_id: the metabolic model to integrate gapfill solutions into [13.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: FBA Model
+    :ui_name fba_model_id: Metabolic Model
     
     :param gapfill_id: select the ID of the gapfill solution (found in the Gapfilling tab in the model viewer, usually in the form 'modelId.gf.2.gfsol.1') [13.2]
     :type gapfill_id: kbtypes.KBaseFBA.Gapfilling
@@ -833,7 +839,7 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
 
     :param output_model_id: select a name for the gapfilled object (optional) [13.3]
     :type output_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name output_model_id: Output FBA Result Name
+    :ui_name output_model_id: Output Model Result Name
     
     :output_widget: kbaseIntegrateGapfillOutput
     
@@ -893,7 +899,7 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
         "endingNumRxns":len(finalReactionList[0]['data']['modelreactions'])
         })
 
-@method(name="Upload Phenotype Data")
+#@method(name="Upload Phenotype Data")
 def _upload_phenotype(meth, genome_id, phenotype_id):
     """Upload phenotype data for FBA analysis [14]
 
@@ -914,7 +920,7 @@ def _upload_phenotype(meth, genome_id, phenotype_id):
     workspace = os.environ['KB_WORKSPACE_ID']
     return json.dumps({'token': token, 'ws_name': workspace, 'genome_id': genome_id, 'phenotype_id': phenotype_id})
 
-@method(name="Simulate Phenotype Data")
+#@method(name="Simulate Phenotype Data")
 def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
     """Simulate some phenotype on an FBA model [15]
 
@@ -949,7 +955,7 @@ def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
     fbaClient.simulate_phenotypes(simulate_phenotypes_params)
     return json.dumps({'token': token, 'ws_name': workspace, 'simulation_id': simulation_id})
 
-@method(name="Reconcile Phenotype Data")
+#@method(name="Reconcile Phenotype Data")
 def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
     """Run Gapfilling on an FBA Model [16]
 

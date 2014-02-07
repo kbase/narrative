@@ -13,6 +13,7 @@ import time
 import re
 import sys
 from string import Template
+from operator import itemgetter, attrgetter
 
 # Third party
 import requests
@@ -60,8 +61,8 @@ class URLS:
     awe = "http://140.221.85.171:7080"
     expression = "http://{}:7075".format(_host)
     workspace = "http://kbase.us/services/workspace"
-    #ws = "http://kbase.us/services/ws"
-    ws = "http://140.221.84.209:7058"
+    ws = "http://kbase.us/services/ws"
+    #ws = "http://140.221.84.209:7058"
     ids = "http://kbase.us/services/idserver"
     #ontology = "http://kbase.us/services/ontology_service"
     ontology = "http://140.221.85.171:7062"
@@ -460,7 +461,7 @@ def filter_expr(meth, series_ws_id='KBasePublicExpression', series_obj_id=None, 
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    meth.stages = 8
+    meth.stages = 9
 
     meth.advance("Initialize COEX service")
 
@@ -631,13 +632,12 @@ def build_net_clust (meth, series_ws_id=None, series_obj_id=None, net_method = '
 
     meth.advance("init COEX service")
 
-    wsd = Workspace(url=URLS.ws,token=meth.token)
-
-
     if not series_ws_id:
         series_ws_id = meth.workspace_id
 
-    full_obj = ws_obj2shock(meth, series_ws_id, series_obj_id)
+    wsd = Workspace2(token=meth.token, wsid=series_ws_id)
+
+    full_obj = ws_obj2shock(wsd, series_obj_id, advance=meth.advance, meth=meth)
     shock_ids = full_obj['shock_ids'];
 
     # Read & substitute values into job spec
@@ -734,7 +734,7 @@ def build_net_clust (meth, series_ws_id=None, series_obj_id=None, net_method = '
     }
 
     # Store results object into workspace
-    wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'Networks.Network', 'data' : net_object, 'name' : series_obj_id + ".netclt", 'meta' : {'org.data.csv' : shock_ids['expression'], 'org.sample.csv' : shock_ids['sample_id']}}]})
+    wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object, 'name' : series_obj_id + ".netclt", 'meta' : {'org.data.csv' : shock_ids['expression'], 'org.sample.csv' : shock_ids['sample_id']}}]})
 
     return _output_object(series_obj_id+".netclt")
 
@@ -754,7 +754,7 @@ def go_anno_net (meth, net_obj_id=None):
     gc = GWAS(URLS.gwas, token=meth.token)
 
 
-    wsd = Workspace(url=URLS.ws,token=meth.token)
+    wsd = Workspace2(token=meth.token, wsid=meth.workspace_id)
     oc = Ontology(url=URLS.ontology)
 
     net_object = wsd.get_objects([{'workspace' : meth.workspace_id, 'name' : net_obj_id}]);
@@ -784,21 +784,34 @@ def go_anno_net (meth, net_obj_id=None):
         if gid in  eids.keys() : hr_nd['user_annotations']['external_id'] = eids[gid][1]
         if lid in funcs.keys() and funcs[lid] is not None: hr_nd['user_annotations']['functions'] = funcs[lid]
         if lid in ots.keys() : 
+          lcnt = 0;
+          go_enr_smry = "";
           for go in ots[lid].keys():
+            if(lcnt < 3) : 
+              go_enr_smry += go+"(go)" + ots[lid][go][0]['desc'] + "\n"
+              lcnt = lcnt + 1
             for i in range(len(ots[lid][go])):
               goen = ots[lid][go][i]
               hr_nd['user_annotations']['go.'+go+"."+`i`+".domain" ] = goen['domain']
               hr_nd['user_annotations']['go.'+go+"."+`i`+".ec" ] = goen['ec']
               hr_nd['user_annotations']['go.'+go+"."+`i`+".desc" ] = goen['desc']
+          hr_nd['user_annotations']['go_annotation'] =  go_enr_smry
         if lid  in oan['gene_enrichment_annotations'].keys():
+          sorted(oan['gene_enrichment_annotations'][lid], key=(lambda x: x['p_value'] if  'p_value' in x.keys() else 1.0),  reverse=False)
+          go_enr_smry = "";
           for i in range(len(oan['gene_enrichment_annotations'][lid])):
             goen = oan['gene_enrichment_annotations'][lid][i]
             hr_nd['user_annotations']['gea.'+`i`+"."+goen['ontology_id']+".desc" ] = goen['ontology_description']
             if 'p_value' in goen.keys(): hr_nd['user_annotations']['gea.'+`i`+"."+goen['ontology_id']+".p_value" ] = goen['p_value'] # optional
             hr_nd['user_annotations']['gea.'+`i`+"."+goen['ontology_id']+".type" ] = goen['ontology_type'] 
+            if i < 3 :
+              if 'p_value' in goen.keys(): go_enr_smry += goen['ontology_id']+"(" + "{:6.4f}".format(float(goen['p_value'])) + ")" + goen['ontology_description'] + "\n"
+              else : go_enr_smry += goen['ontology_id']+"(go)" + goen['ontology_description'] + "\n"
+              #go_enr_smry += goen['ontology_id']+"(" + "{:6.4f}".format(goen['p_value']) + ")" + goen['ontology_description'] + "\n"
+          hr_nd['user_annotations']['go_enrichnment_annotation'] =  go_enr_smry
 
 
-    wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'Networks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".ano", 'meta' : {'orginal' : net_obj_id}}]})
+    wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".ano", 'meta' : {'orginal' : net_obj_id}}]})
     return _output_object(net_obj_id + ".ano")
 
 
@@ -807,13 +820,13 @@ def go_enrch_net (meth, net_obj_id=None, p_value = 0.05, ec = None, domain = Non
     """Identify Gene Ontology terms enriched in individual network clusters
 
     :param net_obj_id: Cluster object id
-    :type net_obj_id:kbtypes.WorkspaceObjectId
+    :type net_obj_id: kbtypes.WorkspaceObjectId
     :param p_value: p-value cutoff
-    :type p_value:kbtypes.Unicode
+    :type p_value: kbtypes.Unicode
     :param ec: Evidence code list (comma separated, IEA, ...)
     :type ec:kbtypes.Unicode
     :param domain: Domain list (comma separated, biological_process, ...)
-    :type domain:kbtypes.Unicode
+    :type domain: kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -828,7 +841,7 @@ def go_enrch_net (meth, net_obj_id=None, p_value = 0.05, ec = None, domain = Non
     domain_list = [ i for i in domain.split(',')]
 
 
-    wsd = Workspace(url=URLS.ws,token=meth.token)
+    wsd = Workspace2(token=meth.token, wsid=meth.workspace_id)
     oc = Ontology(url=URLS.ontology)
 
     net_object = wsd.get_objects([{'workspace' : meth.workspace_id, 'name' : net_obj_id}]);
@@ -856,13 +869,19 @@ def go_enrch_net (meth, net_obj_id=None, p_value = 0.05, ec = None, domain = Non
 
         enr_list = oc.get_go_enrichment(llist, domain_list, ec_list, 'hypergeometric', 'GO')
         
+        sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
+        go_enr_smry = "";
         for i in range(len(enr_list)):
           goen = enr_list[i]
-          hr_nd['user_annotations']['ge.'+goen['goID']+".desc" ] = goen['goDesc'][0]
-          hr_nd['user_annotations']['ge.'+goen['goID']+".domain" ] = goen['goDesc'][1]
-          hr_nd['user_annotations']['ge.'+goen['goID']+".p_value" ] = `goen['pvalue']`
+          if goen['pvalue'] > float(p_value) : continue
+          hr_nd['user_annotations']['gce.'+goen['goID']+".desc" ] = goen['goDesc'][0]
+          hr_nd['user_annotations']['gce.'+goen['goID']+".domain" ] = goen['goDesc'][1]
+          hr_nd['user_annotations']['gce.'+goen['goID']+".p_value" ] = `goen['pvalue']`
+          if i < 3 :
+            go_enr_smry += goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0] + "\n"
+        hr_nd['user_annotations']['go_enrichnment_annotation'] =  go_enr_smry
 
-    wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'Networks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".cenr", 'meta' : {'orginal' : net_obj_id}}]})
+    wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".cenr", 'meta' : {'orginal' : net_obj_id}}]})
     return _output_object(net_obj_id + ".cenr")
 
 #@method(name="Construct subnetwork from user-selected genes")

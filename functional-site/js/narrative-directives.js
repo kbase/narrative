@@ -29,8 +29,6 @@ angular.module('narrative-directives')
                             nar.wsid = results[i][6]
                             nar.ws = results[i][7];
 
-
-
                             nar.timestamp = getTimestamp(results[i][3]);
                             nar.nealtime = formateDate(nar.timestamp) 
                                             ? formateDate(nar.timestamp) : results[i][3].replace('T',' ').split('+')[0];
@@ -68,7 +66,7 @@ angular.module('narrative-directives')
                             project.nealtime = formateDate(project.timestamp) 
                                                 ? formateDate(project.timestamp) : 
                                                     projs[i][3].replace('T',' ').split('+')[0];
-                            project.name = projs[i][7]; 
+                            project.name = parse_name(projs[i][7]); 
                             projects.push(project)
                         }
 
@@ -154,8 +152,9 @@ angular.module('narrative-directives')
                             nar_dict.id = '<a href="'+scope.nar_url+'/ws.'
                                         +nar[6]+'.obj.'+nar[0]+'" >'+nar_id+'</a>';
                             // projects are workspaces right now
+                            console.log(proj)
                             nar_dict.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
-                                             Project <b>'+proj+'</b></span>';
+                                             Project <b>'+parse_name(proj)+'</b></span>';
                             nar_dict.owner = nar[5];
 
 
@@ -184,7 +183,7 @@ angular.module('narrative-directives')
                             if (nar_projs.indexOf(proj_ids[i]) == -1) {
                                 //empty_projects.push(proj_ids[i])
                                 narratives.push({project: '<span class="proj-link" data-proj="'+proj_ids[i]+'">\
-                                                            <span class="caret"></span> Project <b>'+proj_ids[i]+'</b>\
+                                                            <span class="caret"></span> Project <b>'+parse_name(proj_ids[i])+'</b>\
                                                            </span>',
                                                 id: '<span class="text-muted">Empty Project</span>', 
                                                 owner: '', moddate: '', users: '', deleteButton: '', timestamp: ''})
@@ -249,6 +248,7 @@ angular.module('narrative-directives')
                                 }
                             }
     
+
                             tableSettings.aaData = narratives;
                             table = $('#'+tableId).dataTable(tableSettings)
                                             .rowGrouping({iGroupingColumnIndex: 2,
@@ -607,7 +607,7 @@ angular.module('narrative-directives')
                     // modal for managing project permissions, and delete
                     var permData; 
                     var manage_modal = $('<div></div>').kbasePrompt({
-                            title : 'Manage Project',
+                            title : 'Manage Project'+' <small>'+proj_id+'</small>',
                             body : content,
                             modalClass : '', 
                             controls : [{
@@ -978,7 +978,7 @@ narrativeDirectives.directive('copyfiles', function($parse) {
             link: function(scope, element, attrs) {
                 attrs.$observe('narr', function(val) {
                       
-                });                
+            }); 
 
                 var deps = kb.nar.get_narrative_deps({
                     fq_id: scope.narr,
@@ -997,12 +997,7 @@ narrativeDirectives.directive('copyfiles', function($parse) {
                     }
                 })
 
-                
-                
-
             } 
-
-
 
         };
     })   

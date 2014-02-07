@@ -61,7 +61,7 @@ angular.module('ws-directives')
 
                 // This method loads the sidebar data.  
                 // Note: this is only called after instantiation when sidebar needs to be refreshed
-                scope.loadData = function() {
+                scope.loadObjectTable = function() {
                     $('#select-box .table').remove();
                     $('#select-box').append('<table class="table table-bordered table-condensed table-hover"></table>');
                     workspaces = []
@@ -132,7 +132,7 @@ angular.module('ws-directives')
                 }
 
                 // load the content of the ws selector
-                scope.loadData();
+                scope.loadObjectTable();
 
                 function events() {
                     var filterCollapse = $('.perm-filters');
@@ -382,8 +382,7 @@ angular.module('ws-directives')
 
                     // if user is logged in and admin 
                     if (USER_ID && isAdmin ) {
-                        var params = {//auth: USER_TOKEN,
-                                      workspace: ws_name}
+                        var params = {workspace: ws_name}
 
                         var prom = kb.ws.get_permissions(params);
 
@@ -461,7 +460,6 @@ angular.module('ws-directives')
                                 workspace: ws_name,
                                 new_permission: newPerms[new_user],
                                 users: [new_user],
-                                //auth: USER_TOKEN
                             };
 
                             var p = kb.ws.set_permissions(params);
@@ -480,7 +478,6 @@ angular.module('ws-directives')
                                     workspace: ws_name,
                                     new_permission: 'n',
                                     users: [user],
-                                    //auth: USER_TOKEN
                                 };
 
                                 var p = kb.ws.set_permissions(params);
@@ -617,10 +614,13 @@ angular.module('ws-directives')
                 function createWorkspaceModal() {
                     var body = $('<form class="form-horizontal" role="form">\
                                       <div class="form-group">\
-                                        <label class="col-sm-4 control-label">Workspace Name</label>\
-                                        <div class="col-sm-4">\
-                                          <input type="text" class="form-control create-id focusedInput">\
-                                        </div>\
+                                        <label class="col-sm-4 control-label">Workspace Name</label>'+
+                                        '<div class="col-sm-6">'+                                 
+                                            '<div class="input-group">'+
+                                                '<span class="input-group-addon">'+USER_ID+':</span>'+
+                                                '<input type="text" class="form-control create-id focusedInput">'+
+                                            '</div>'+
+                                        '</div>\
                                       </div>\
                                       <div class="form-group">\
                                         <label class="col-sm-4 control-label">Global Permsission</label>\
@@ -647,40 +647,59 @@ angular.module('ws-directives')
                                 name : 'Create',
                                 type : 'primary',
                                 callback : function(e, $prompt) {
-                                        var ws_id = $('.create-id').val();
+                                        var ws_name = $('.create-id').val();
                                         var perm = $('.create-permission option:selected').val();
                                         var descript = $('.create-descript').val();
 
-                                        var params = {
-                                            //auth: USER_TOKEN,  //wsdeluxe
-                                            workspace: ws_id,
-                                            //default_permission: perm
-                                            globalread: perm,
-                                            description: descript
-                                        };
 
-                                        if (ws_id === '') {
-                                            $prompt.addAlert('must enter');
+
+                                        if (ws_name === '') {
+                                            $prompt.addAlert('must enter a workspace name');
                                             $('.create-id').focus();
                                             return;
                                         }                   
 
-                                        var prom = kb.ws.create_workspace(params);
-                                        $prompt.addCover()
-                                        $prompt.getCover().loading()
-                                        $.when(prom).done(function(){
-                                            $prompt.addCover('Created workspace: '+ws_id, 'success');
-                                                scope.loadData()
+                                        // check to see if there's a colon in the user project name already
+                                        // if there is and it's the user's username, use it. If it's not throw error.
+                                        // Otherwise, append "username:"
+                                        var s_ws = ws_name.split(':');
+                                        var error;
+                                        if (s_ws.length > 1) {
+                                            if (s_ws[0] == USER_ID) {
+                                                var proj = USER_ID+':'+s_ws[1];
+                                            } else {
+                                                error = 'Only your username ('+USER_ID+') may be used before a colon';
+                                                
+                                            }
+                                        } else {
+                                            var name = USER_ID+':'+ws_name
+                                        }
 
-                                            var btn = $('<button type="button" class="btn btn-primary">Close</button>');
-                                            btn.click(function() { 
-                                                $prompt.closePrompt(); 
-                                            });
+                                        if (error) {
+                                            $prompt.addCover(error, 'danger');
+                                        } else {
+                                            var params = {
+                                                workspace: name,
+                                                globalread: perm,
+                                                description: descript
+                                            };                                            
+                                            var prom = kb.ws.create_workspace(params);
+                                            $prompt.addCover()
+                                            $prompt.getCover().loading()
+                                            $.when(prom).done(function(){
+                                                $prompt.addCover('Created workspace: '+ws_name, 'success');
+                                                    scope.loadObjectTable()
 
-                                            $prompt.data('dialogModal').find('.modal-footer').html(btn);                                            
-                                        }).fail(function(e) {
-                                            $prompt.addCover(e.error.message, 'danger');                                            
-                                        })
+                                                var btn = $('<button type="button" class="btn btn-primary">Close</button>');
+                                                btn.click(function() { 
+                                                    $prompt.closePrompt(); 
+                                                });
+
+                                                $prompt.data('dialogModal').find('.modal-footer').html(btn);                                            
+                                            }).fail(function(e) {
+                                                $prompt.addCover(e.error.message, 'danger');                                            
+                                            })
+                                        }
                                 }
                             }]
                         }
@@ -726,13 +745,11 @@ angular.module('ws-directives')
                                 callback : function(e, $prompt) {
                                         var new_ws_id = $('.new-ws-id').val();
                                         var perm = $('.create-permission option:selected').val();
-                                        //var id = workspace_dict[ws_name][6];
+
 
                                         var params = {
-                                            //auth: USER_TOKEN,                                            
                                             wsi: {workspace: ws_name},
                                             workspace: new_ws_id,
-                                            //default_permission: perm                                            
                                             globalread: perm
                                         };
 
@@ -747,7 +764,7 @@ angular.module('ws-directives')
                                         $prompt.getCover().loading()
                                         $.when(prom).done(function(){
                                             $prompt.addCover('Cloned workspace: '+new_ws_id);
-                                            scope.loadData();
+                                            scope.loadObjectTable();
                                         }).fail(function() {
                                             $prompt.addCover('This workspace name already exists.', 'danger');
                                         })
@@ -780,16 +797,14 @@ angular.module('ws-directives')
                                 name : 'Yes',
                                 type : 'primary',
                                 callback : function(e, $prompt) {
-                                    var params = {workspace: ws_name,
-                                                  //auth: kb.token()
-                                                 }
+                                    var params = {workspace: ws_name}
 
                                     var prom = kb.ws.delete_workspace(params);
                                     $prompt.addCover()
                                     $prompt.getCover().loading()
                                     $.when(prom).done(function(){
                                         $prompt.addCover('Deleted workspace: '+ws_name);
-                                        scope.loadData();
+                                        scope.loadObjectTable();
                                         var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                         btn.click(function() { $prompt.closePrompt(); })
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);
@@ -1438,7 +1453,7 @@ angular.module('ws-directives')
 
                                     $.when.apply($, proms).done(function() {
                                         $prompt.addCover('Copied objects to: <i>'+new_ws+'</i>');
-                                        scope.loadData();
+                                        scope.loadObjectTable();
                                         var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                         btn.click(function() { $prompt.closePrompt(); })
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);

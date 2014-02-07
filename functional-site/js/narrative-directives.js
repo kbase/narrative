@@ -392,6 +392,8 @@ angular.module('narrative-directives')
                                     $prompt.getCover().loading()
 
                                     // check to see if there's a colon in the user project name already
+                                    // if there is and it's the user's username, use it. If it's not throw error.
+                                    // Otherwise, append "username:"
                                     var s_proj = proj_name.split(':');
                                     var error;
                                     if (s_proj.length > 1) {

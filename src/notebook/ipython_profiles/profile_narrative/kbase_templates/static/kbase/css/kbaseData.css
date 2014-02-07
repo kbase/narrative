@@ -9,6 +9,9 @@ div[class="tooltip-inner"] {
     white-space: pre-wrap;
     text-align: left;
 }
+.tooltip {
+    z-index: 2000 !important;
+}
 #kb-ws {
     background-color: #fff;
     width: 100%;

@@ -267,7 +267,7 @@
                                              'class' : 'btn btn-default',
                                              'id' : 'obj-details-btn',
                                              'data-placement' : 'top',
-                                             'title' : 'Sorry, no data page available for this object yet!'
+                                             'title' : 'Sorry, no data page available for this object yet!',
                                          })
                                          .append('Object Details'))
                                  .append($('<button>')

@@ -20,6 +20,8 @@
             return this;
         },
 
+        useSelect2: true,
+
         /**
          * Builds the input div for a function cell, based on the given method object.
          * @param {Object} method - the method being constructed around.

@@ -29,7 +29,8 @@ from biokbase.cdmi.client import CDMI_API,CDMI_EntityAPI
 from biokbase.OntologyService.Client import Ontology
 #from biokbase.IdMap.Client import IdMap
 from biokbase.idserver.client import IDServerAPI
-from biokbase.narrative.common.kbutil import AweJob
+from biokbase.narrative.common.util import AweJob
+from biokbase.narrative.common.util import Workspace2
 
 ## Exceptions
 
@@ -37,10 +38,19 @@ from biokbase.narrative.common.kbutil import AweJob
 class COEXException(Exception):
     pass
 
+
+class UploadException(Exception):
+    pass
+
+
+class SubmitException(Exception):
+    pass
+
+
 ## Globals
 
 VERSION = (0, 0, 1)
-NAME = "COEX Service"
+NAME = "Plants Coexpression Service"
 
 
 class URLS:
@@ -73,9 +83,11 @@ class Node:
     gid2nt = {}
     clst2genes = {}
 
-    def __init__(self, unodes = [], uedges=[]):
-      self._register_nodes(unodes)
-      self._register_edges(uedges)
+    def __init__(self, unodes=None, uedges=None):
+        unodes = [] if unodes is None else unodes
+        uedges = [] if uedges is None else uedges
+        self._register_nodes(unodes)
+        self._register_edges(uedges)
   
     def get_node_id(self, node, nt = "GENE"):
       if not node in self.ugids.keys() :
@@ -298,6 +310,7 @@ def join_stripped(iterable):
     return ''.join((s.strip() for s in iterable))
 
 
+
 def upload_file(uri, filename, att_content):
     file_contents = open(filename).read()
     data = {'upload': (filename, file_contents),
@@ -375,68 +388,63 @@ def _output_object(name):
     return json.dumps({'output': name})
 
 
-def ws_obj2shock(meth, series_ws_id, series_obj_id):
+def ws_obj2shock(ws, obj_id, advance=None, meth=None):
+    """Put a workspace object in SHOCK.
 
+    :param ws: Workspace to get object from
+    :type ws: Workspace2
+    :param obj_id: Object ID
+    :type obj_id: str
+    :param advance: Reporting obj
+    """
 
-    wsc = workspaceService(URLS.workspace)
-    wsd = Workspace(url=URLS.ws,token=meth.token)
+    lseries = ws.get(obj_id)
 
-    meth.advance("downloading expression data")
+    if lseries is None:
+        raise COEXException("Object {} not found in workspace {}".format(obj_id, ws.workspace))
+    if meth:
+        meth.debug("series object: {}".format(lseries))
+    #'type' : 'KBaseExpression.ExpressionSeries',
 
-    lseries = wsd.get_object({'id' : series_obj_id,
-                  'type' : 'KBaseExpression.ExpressionSeries', 
-                  'workspace' : series_ws_id})
-                
+    advance("Converting file format")
 
-    meth.advance("convert file format")
-
-    samples = {};
-    sids = [];
-    genome_id = "";
-    for gid in sorted(lseries['data']['genome_expression_sample_ids_map'].keys()):
-      genome_id = gid;
-      for samid in lseries['data']['genome_expression_sample_ids_map'][gid]:
-        sids.append({'ref' : samid});
-      samples = wsd.get_objects(sids);
-      break;
+    samples, sids, genome_id = {}, [], ""
+    for gid in sorted(lseries['genome_expression_sample_ids_map'].keys()):
+        genome_id = gid
+        for samid in lseries['genome_expression_sample_ids_map'][gid]:
+            sids.append({'ref': samid})
+        samples = ws.get_objects(sids)
+        break
      
 
     cif = open(files['expression'], 'w')
-    gids = {};
-    header ="";
-    sample ="";
-    sample_id = 0;
-    
-    sids = [] 
-    for i in range(len(samples)):
-      sids.append(samples[i]['info'][1])
-      header += "," + (samples[i]['data']['source_id'])
-      gids = dict((i,1) for i in samples[i]['data']['expression_levels'].keys())
-      if sample != "": sample += "," 
-      sample += `i`
-
-    print >>cif, header 
-    for gid in sorted(gids.keys()) :
-        line =  gid
-        for i in range(len(samples)) :
-            line += "," + str(samples[i]['data']['expression_levels'][gid])
-        print >>cif, line
-    cif.close();
+    header = ",".join([s['data']['source_id'] for s in samples])
+    cif.write(header + "\n")
+    gids = samples[0]['data']['expression_levels'].keys()  # each sample has same gids
+    for gid in sorted(gids):
+        line = gid + ","
+        line += ",".join([str(s['data']['expression_levels'][gid]) for s in samples])
+        cif.write(line + "\n")
+    cif.close()
 
     sif = open(files['sample_id'], 'w')
-    print >>sif, sample
-    sif.close();
+    sample = ",".join(map(str, range(len(samples))))
+    sif.write(sample + "\n")
+    sif.close()
 
-    meth.advance("Uploading files to shock")
+    advance("Uploading files to shock")
     shock_ids = {}
     for file_type, file_name in files.iteritems():
         file_meta = str(metadata[file_type])
         shock_ids[file_type] = upload_file(URLS.shock, file_name, file_meta)
-    nbconsole("Uploaded to shock. ids = {}".format(','.join(shock_ids.values())))
-    return {'shock_ids' : shock_ids, 'series' :lseries, 'samples' : samples, 'gnid' : genome_id}
+
+    advance("Uploaded to shock. ids = {}".format(','.join(shock_ids.values())))
+    return {'shock_ids': shock_ids, 'series': lseries,
+            'samples': samples, 'gnid': genome_id}
 
 @method(name="Differential expression filter")
-def filter_expr (meth, series_ws_id='KBasePublicExpression', series_obj_id=None, filtering_method=None, num_genes=None, p_value=None):
+def filter_expr(meth, series_ws_id='KBasePublicExpression', series_obj_id=None, filtering_method=None,
+                num_genes=None, p_value=None):
     """Filter expression table to differentially expressed genes
 
     :param series_ws_id:Workspace name for the expression series data (if empty, defaults to current workspace)
@@ -444,34 +452,35 @@ def filter_expr (meth, series_ws_id='KBasePublicExpression', series_obj_id=None,
     :param series_obj_id:Object id of the expression series data
     :type series_obj_id:kbtypes.WorkspaceObjectId
     :param filtering_method: Filtering method ('anova' for ANOVA or 'lor' for log-odd ratio)
-    :type filtering_method:kbtypes.Unicode
+    :type filtering_method: kbtypes.Unicode
     :param num_genes: Target number of genes (choose this or p-value below)
-    :type num_genes:kbtypes.Unicode
+    :type num_genes: kbtypes.Unicode
     :param p_value: p-value cutoff (choose this or num_genes above)
-    :type p_value:kbtypes.Unicode
+    :type p_value: kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
     meth.stages = 8
 
-    meth.advance("init COEX service")
+    meth.advance("Initialize COEX service")
 
-    wsd = Workspace(URLS.ws, token=meth.token)
-
+    # Connect to workspace.
     if not series_ws_id:
         series_ws_id = meth.workspace_id
+    wsd = Workspace2(token=meth.token, wsid=series_ws_id)
 
-    full_obj = ws_obj2shock(meth, series_ws_id, series_obj_id)
-    shock_ids = full_obj['shock_ids'];
+    meth.advance("Downloading expression data")
+    full_obj = ws_obj2shock(wsd, series_obj_id, advance=meth.advance, meth=meth)
+    shock_ids = full_obj['shock_ids']
 
     # Read & substitute values into job spec
     subst = shock_ids.copy()
-    if(num_genes is not None): 
-      subst.update({"coex_filter" : "-n {}".format(num_genes)})
-    elif(num_genes is None and p_value is not None):
-      subst.update({"coex_filter" : "-p {}".format(num_genes)})
+    if num_genes is not None:
+        subst.update({"coex_filter": "-n {}".format(num_genes)})
+    elif num_genes is None and p_value is not None:
+        subst.update({"coex_filter": "-p {}".format(num_genes)})
     else:
-      raise COEXException("None of p_value and num_genes are specified")
+        raise COEXException("None of p_value and num_genes are specified")
     
     subst.update(dict(shock_uri=URLS.shock, session_id=sessionID))
     awe_job_str = Template(AWE_JOB_FILTER).substitute(subst)
@@ -482,56 +491,60 @@ def filter_expr (meth, series_ws_id='KBasePublicExpression', series_obj_id=None,
     coex_filter_args = awe_job_dict['tasks'][0]['cmd']['args']
 
     # Wait for job to complete
-
-    
-
-    AweJob(meth, started="filtering expression object", running="filter expression object").run(job_id)
+    AweJob(meth, started="Filtering expression object", running="Filter expression object").run(job_id)
 
     download_urls = get_output_filter(URLS.awe, job_id)
 
-
-    meth.advance("upload filtered object")
+    meth.advance("Upload filtered object")
     # now put them back into ws
-    elm = {};
-    fif = urllib2.urlopen(download_urls[files_rst['expression_filtered']]);
+    elm = {}
+    fif = urllib2.urlopen(download_urls[files_rst['expression_filtered']])
     # TODO: make sure # of sample IDs are match to the header of filtered data
-    fif.readline(); # skip header
+    fif.readline()   # skip header
 
-    
     nsamples = len(full_obj['samples'])
     # don't need but to be safe
-    for i in range(nsamples): elm[i] = {}
+    for i in range(nsamples):
+        elm[i] = {}
     
-    for line in fif :
-        line.strip();
+    for line in fif:
+        line.strip()
         values = line.split(',')
         gene_id = values[0].replace("\"", "")
-        for i in range(nsamples): elm[i][gene_id] = float(values[i + 1])
-    samples = full_obj['samples'];
+        for i in range(nsamples):
+            elm[i][gene_id] = float(values[i + 1])
+    samples = full_obj['samples']
 
-    data_list = [];
-    sid_list =[];
-    for i in range(nsamples) :
+    data_list = []
+    sid_list = []
+    for i in range(nsamples):
         samples[i]['data']['expression_levels'] = elm[i]
-        if samples[i]['data']['title'] is None: samples[i]['data']['title'] = " filtered by coex_filter"
-        else : samples[i]['data']['title'] += " filtered by coex_filter"
-        if samples[i]['data']['description'] is None : samples[i]['data']['description'] = "Generated by coex_filter " + coex_filter_args
-        else : samples[i]['data']['description'] += " Generated by coex_filter " + coex_filter_args
-        samples[i]['data']['id']+=".filtered";
-        samples[i]['data']['source_id']+=".filtered";
-        data_list.append({'type' : 'KBaseExpression.ExpressionSample', 'data' : samples[i]['data'], 'name' : samples[i]['data']['id']})
-    sv_rst = wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : data_list})
-    for i in range(nsamples):sid_list.append(str(sv_rst[i][6]) + "/" + str(sv_rst[i][0]) + "/" + str(sv_rst[i][4]))
+        if samples[i]['data']['title'] is None:
+            samples[i]['data']['title'] = " filtered by coex_filter"
+        else:
+            samples[i]['data']['title'] += " filtered by coex_filter"
+        if samples[i]['data']['description'] is None:
+            samples[i]['data']['description'] = "Generated by coex_filter " + coex_filter_args
+        else:
+            samples[i]['data']['description'] += " Generated by coex_filter " + coex_filter_args
+        samples[i]['data']['id'] += ".filtered"
+        samples[i]['data']['source_id'] += ".filtered"
+        data_list.append({'type': 'KBaseExpression.ExpressionSample', 'data': samples[i]['data'],
+                          'name': samples[i]['data']['id']})
+    sv_rst = wsd.save_objects({'workspace': meth.workspace_id, 'objects': data_list})
+    for i in range(nsamples): sid_list.append(str(sv_rst[i][6]) + "/" + str(sv_rst[i][0]) + "/" + str(sv_rst[i][4]))
 
-    data_list = [];
-    full_obj['series']['data']['genome_expression_sample_ids_map'][full_obj['gnid']] = sid_list;
-    full_obj['series']['data']['title'] += " filtered by coex_filter for " + full_obj['gnid']
-    full_obj['series']['data']['source_id'] += ".filtered"
-    full_obj['series']['data']['id'] += ".filtered"
-    data_list.append({'type' : 'KBaseExpression.ExpressionSeries', 'data' : full_obj['series']['data'], 'name' : full_obj['series']['data']['id'], 'meta' : {'org.data.csv' : shock_ids['expression'], 'org.sample.csv' : shock_ids['sample_id']}})
-    wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : data_list})
+    series = full_obj['series']
+    series['genome_expression_sample_ids_map'][full_obj['gnid']] = sid_list
+    series['title'] += " filtered by coex_filter for " + full_obj['gnid']
+    series['source_id'] += ".filtered"
+    series['id'] += ".filtered"
+    data_list = [{'type': 'KBaseExpression.ExpressionSeries', 'data': series,
+                  'name': series['id'], 'meta': {'org.data.csv': shock_ids['expression'],
+                                                 'org.sample.csv': shock_ids['sample_id']}}]
+    wsd.save_objects({'workspace': meth.workspace_id, 'objects': data_list})
 
-    return _output_object(full_obj['series']['data']['id'])
+    return _output_object(series['id'])
 
 #@method(name="Construct co-expression network")
 #def build_net (meth, series_obj_id=None, net_method = 'simple', cut_off=None):

@@ -9,7 +9,7 @@ __version__ = '0.3'
 # Stdlib
 import json
 import time
-import os
+import osß
 import base64
 import urllib
 import urllib2
@@ -844,7 +844,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})
 
-@method(name="Heatmap from Abundance Profiles")
+@method(name="Heatmap from Abundance Profile")
 def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, label):
     """Generate a heatmap-dendrogram from annotation abundance data.
 
@@ -918,7 +918,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
-@method(name="PCoA from Abundance Profiles")
+@method(name="PCoA from Abundance Profile")
 def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     """Generate a PCoA from annotation abundance data.
 

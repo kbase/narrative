@@ -213,6 +213,26 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
 
+@method(name="Upload Metagenome List")
+def _upload_metagenome_list(meth, workspace, metagenome_list_id):
+    """Upload metagenome list object into workspace.
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param metagenome_list_id: name of metagenome list object
+    :type metagenome_list_id: kbtypes.Communities.Data
+    :ui_name metagenome_list_id: Metagenome List Name
+    :return: Metagenome List Uploading Info
+    :rtype: kbtypes.Unicode
+    :output_widget: MetagenomeListUploadWidget
+    """
+    meth.stages = 1
+    if not metagenome_list_id:
+        raise Exception("Metagenome List object name is not set.")
+    workspace = _get_wsname(meth, workspace)
+    return json.dumps({'ws': workspace, 'id': metagenome_list_id})
+
 @method(name="Retrieve Subsytems Annotation")
 def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, length, rest):
     """Retrieve all SEED/Subsystems functional annotations for a given metagenome ID. Alternatively, filter annotations for specific taxa.

@@ -14,8 +14,8 @@ $.KBWidget({
     	type: null
     },
 
-    wsUrl: "http://140.221.84.209:7058/",
-    uploadUrl: "http://140.221.85.58:8283/uploader",
+    uploadUrl: "http://140.221.85.57:8283/uploader",
+    wsUrl: "https://kbase.us/services/ws",
 
     init: function(options) {
         this._super(options);
@@ -28,6 +28,11 @@ $.KBWidget({
     render: function() {
         var self = this;
         var container = this.$elem;
+    	container.empty();
+        if (self.token == null) {
+        	container.append("<div>[Error] You're not logged in</div>");
+        	return;
+        }
     	var pref = (new Date()).getTime();
         var kbws = new Workspace(this.wsUrl, {'token': self.token});
     	var panel = $('<div>'+

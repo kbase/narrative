@@ -38,7 +38,7 @@
                                .attr({
                                   'type' : 'text',
                                   'class' : 'form-control',
-                                  'style' : 'width:95%',
+                                  'style' : 'width: 95%',
                                   'placeholder' : 'Search',
                                });
 
@@ -70,7 +70,7 @@
              * This should be styled to how the data is used.
              */
             this.$dataTable.dataTable({
-                sScrollX: '100%',
+//                sScrollX: '100%',
                 iDisplayLength: -1,
                 bPaginate: false,
                 oLanguage: {
@@ -87,17 +87,22 @@
                         mRender: function(data, type, row) {
                             // if the 'data' (name) is too long,
                             // truncate it and give it a tooltip with the full name.
-                            if (data.length > 36) {
-                                var title = data;
-                                var abbrev = data.substring(0, 33);
-                                data = "<span data-toggle='tooltip' title='" + title + "'>" + abbrev + "..." + "</span>";
-                            }
-
-                            return "<div>" + data + 
+  // 91                                 var title = data;
+  // 92                                 var abbrev = data.substring(0, 33);
+  // 93                                 data = "<span data-toggle='tooltip' title='" + title + "'>" + abbrev + "..." + "</span>";
+                            var type = row[2];
+                            var typeName = /^(\S+)-/.exec(type);
+                            return  "<div >" + 
+                                    "<span class='kb-data-obj-name' data-toggle='tooltip' title='" + typeName[1] + "\n" + data + "'>" +
+                                            data + 
+                                   "</span>" +
                                    "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
-                                   "data-ws='" + row[0] + "' " +
-                                   "data-id='" + row[1] + "' " + 
-                                   "style='margin-top: -3px'></span></div>";
+                                          "data-ws='" + row[0] + "' " +
+                                          "data-id='" + row[1] + "' " + 
+                                          "style='display: inline-block;'>" +
+                                   "</span>" +
+                                   "</div>";
+
                         },
                         aTargets: [1]
                     },
@@ -168,6 +173,19 @@
                 }, 
                 this)
             );
+//             this.$dataTable.find('span.kb-data-obj-name').each(function(i) {
+//                 var elem = $(this)
+//                            .clone()
+// //                           .removeClass('kb-data-obj-name')
+//                            .css({display: 'inline', width: 'auto', visibility: 'hidden'})
+//                            .appendTo('body');
+
+//                 if (elem.width() > $(this).width())
+//                     $(this).css({color: '#ff0000'});
+//                 console.log(elem.width() + " " + $(this).width())
+
+//                 elem.remove();
+//             });
             this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right'});
         },
     })

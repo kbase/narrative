@@ -118,7 +118,7 @@ def _upload_genome(meth, genome_id):
     This should be run before adding seed annotations to this Genome. [20]
 
     :param genome_id: Output Genome ID. If empty, an ID will be chosen randomly. [20.1]
-    :type genome_id: kbtypes.Unicode
+    :type genome_id: kbtypes.KBaseGenomes.Genome
     :ui_name genome_id: Genome Object ID
     :return: Preparation message
     :rtype: kbtypes.Unicode
@@ -142,7 +142,7 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     :type scientific_name: kbtypes.Unicode
     :ui_name scientific_name: Scientific Name
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly. [3.3]
-    :type out_genome: kbtypes.Unicode
+    :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
     :return: Preparation message
     :rtype: kbtypes.Unicode
@@ -178,7 +178,7 @@ def _annotate_genome(meth, genome, out_genome):
     :type genome: kbtypes.KBaseGenomes.Genome
     :ui_name genome: Genome ID
     :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [4.2]
-    :type out_genome: kbtypes.Unicode
+    :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
     :rtype: kbtypes.KBaseGenomes.Genome
@@ -205,10 +205,10 @@ def _add_seed_annotation(meth, genome, out_genome):
     When it finishes, the Genome with SEED annotations will be stored in your data space. [21]
     
     :param genome: Source genome ID [21.1]
-    :type genome: kbtypes.Genome
+    :type genome: kbtypes.KBaseGenomes.Genome
     :ui_name genome: Genome ID
     :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [21.2]
-    :type out_genome: kbtypes.Unicode
+    :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
     :rtype: kbtypes.Genome
@@ -277,7 +277,7 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     :type core_model: kbtypes.Unicode
     :ui_name core_model: Core Model Only?
     """
-    meth.stages = 3  # for reporting progress
+    meth.stages = 2  # for reporting progress
     meth.advance("Starting")
     meth.advance("Building your new FBA model")
     
@@ -306,14 +306,13 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     model_name = fba_meta_data[1]
     
     # fetch the model via fba client
-    fbaClient = fbaModelServices(service.URLS.fba)
-    get_models_params = {
-        'models' : [model_name],
-          'workspaces' : [workspaceName]
-    }
-    modeldata = fbaClient.get_models(get_models_params)
-    meth.advance("Displaying your new FBA model details")
-    return json.dumps({'id': model_name, 'ws': workspaceName, 'modelsData': modeldata})
+    #get_models_params = {
+    #    'models' : [model_name],
+    #      'workspaces' : [workspaceName]
+    #}
+    #modeldata = fbaClient.get_models(get_models_params)
+    #meth.advance("Displaying your new FBA model details")
+    return json.dumps({'id': model_name, 'ws': workspaceName})
 
 
 @method(name="View FBA Model Details")
@@ -335,14 +334,14 @@ def _view_model_details(meth, fba_model_id):
     userToken, workspaceName = meth.token, meth.workspace_id;
     meth.advance("Loading the model")
     
-    # fetch via fba client
-    fbaClient = fbaModelServices(service.URLS.fba, token=userToken)
-    get_models_params = {
-        'models' : [fba_model_id],
-        'workspaces' : [workspaceName]
-    }
-    modeldata = fbaClient.get_models(get_models_params)
-    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': modeldata})
+    # fetch via fba client (NOW HANDLED IN JS WIDGET)
+    #fbaClient = fbaModelServices(service.URLS.fba, token=userToken)
+    #get_models_params = {
+    #    'models' : [fba_model_id],
+    #    'workspaces' : [workspaceName]
+    #}
+    #modeldata = fbaClient.get_models(get_models_params)
+    return json.dumps({'id': fba_model_id, 'ws': workspaceName})
 
 
 @method(name="Build Media")
@@ -602,12 +601,12 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     result_meta = fbaClient.runfba(fba_params)
     generated_fba_id = result_meta[0]
     
-    meth.advance("Retrieving FBA results")
-    get_fbas_params = {
-        'fbas' : [generated_fba_id],
-        'workspaces' : [workspaceName]
-    }
-    fbadata = fbaClient.get_fbas(get_fbas_params)
+    #meth.advance("Retrieving FBA results")
+    #get_fbas_params = {
+    #    'fbas' : [generated_fba_id],
+    #    'workspaces' : [workspaceName]
+    #}
+    #fbadata = fbaClient.get_fbas(get_fbas_params)
     
     # a hack: get object info so we can have the object name (instead of the id number)
     ws = workspaceService(service.URLS.workspace, token=userToken)
@@ -617,7 +616,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     }]
     info = ws.get_object_info(get_objects_params,0)
     
-    return json.dumps({ "ids":[info[0][1]],"workspaces":[workspaceName],"fbaData":fbadata })
+    return json.dumps({ "ids":[info[0][1]],"workspaces":[workspaceName] })
 
 
 
@@ -639,18 +638,18 @@ def _view_fba_result_details(meth, fba_id):
     
     #grab token and workspace info, setup the client
     token, workspaceName = meth.token, meth.workspace_id;
-    fbaClient = fbaModelServices(service.URLS.fba)
+    #fbaClient = fbaModelServices(service.URLS.fba)
     
     meth.advance("Retrieving FBA results")
-    get_fbas_params = {
-        'fbas' : [fba_id],
-        'workspaces' : [workspaceName],
-        'auth' : token
-    }
-    fbadata = fbaClient.get_fbas(get_fbas_params)
+    #get_fbas_params = {
+    #    'fbas' : [fba_id],
+    #    'workspaces' : [workspaceName],
+    #    'auth' : token
+    #}
+    #fbadata = fbaClient.get_fbas(get_fbas_params)
     
     
-    return json.dumps({ "ids":[fba_id],"workspaces":[workspaceName],"fbaData":fbadata })
+    return json.dumps({ "ids":[fba_id],"workspaces":[workspaceName] })
 
 
 
@@ -982,7 +981,7 @@ def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
     :type genome2: kbtypes.KBaseGenomes.Genome
     :ui_name genome2: Genome2 ID
     :param out_proteome_cmp: Output proteome comparison ID. If empty, an ID will be chosen randomly. [17.3]
-    :type out_proteome_cmp: kbtypes.Unicode
+    :type out_proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name out_proteome_cmp: Output Proteome Comparison ID
     :return: Output Proteome Comparison ID
     :rtype: kbtypes.ProteomeComparison
@@ -1011,7 +1010,7 @@ def _view_proteome_cmp(meth, proteome_cmp):
     When it finishes, the annotated Genome will be stored in your data space. [18]
      
     :param proteome_cmp: Proteome comparison ID [18.1]
-    :type proteome_cmp: kbtypes.ProteomeComparison
+    :type proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name proteome_cmp: Proteome Comparison ID
     :return: Output Proteome Comparison ID
     :rtype: kbtypes.ProteomeComparison
@@ -1034,7 +1033,7 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     :type fba_model2: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model2: FBA Model 2 ID
     :param proteome_cmp: Proteome comparison ID [19.3]
-    :type proteome_cmp: kbtypes.ProteomeComparison
+    :type proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name proteome_cmp: Proteome Comparison ID
     :return: Output Comparison Result
     :rtype: kbtypes.Unicode
@@ -1043,16 +1042,16 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     meth.stages = 1  # for reporting progress
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
-    get_models_params = {
-                         'models' : [fba_model1, fba_model2],
-                         'workspaces' : [workspace, workspace],
-                         'auth' : token
-                         }
-    modeldata = fbaClient.get_models(get_models_params)
-    model1 = modeldata[0]
-    model2 = modeldata[1]
-    return json.dumps({'ws_name': workspace, 'fba_model1': model1, 'fba_model2': model2, 'proteome_cmp': proteome_cmp, 'key1': 'val1'})
+    #fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
+    #get_models_params = {
+    #                     'models' : [fba_model1, fba_model2],
+    #                     'workspaces' : [workspace, workspace],
+    #                     'auth' : token
+    #                     }
+    #modeldata = fbaClient.get_models(get_models_params)
+    #model1 = modeldata[0]
+    #model2 = modeldata[1]
+    return json.dumps({'ws_name': workspace, 'fba_model1_id': fba_model1, 'fba_model2_id': fba_model2, 'proteome_cmp': proteome_cmp})
 
 
 #

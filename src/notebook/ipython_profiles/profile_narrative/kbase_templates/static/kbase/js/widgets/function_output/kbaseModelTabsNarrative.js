@@ -177,8 +177,9 @@ $.KBWidget({
             var rxn_objs = []
             for (var i in rxnObjs) {
                 var rxn = $.extend({}, rxnObjs[i] );
-                rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'
-                            +rxn.reaction+'</a> ('+rxn.compartment+')'
+                //rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'
+                //            +rxn.reaction+'</a> ('+rxn.compartment+')'
+                rxn.reaction = rxn.reaction+' ('+rxn.compartment+')';
                 rxn.features = rxn.features.join('<br>')
                 rxn_objs.push(rxn)
             }

@@ -35,18 +35,12 @@
                 "reference": null, 
                 "version": "widget"};
             var self = this;
-	    var kbws = new Workspace(ws_url, {"token": token});
-            var data_report = $('<div class="panel panel-info" style="padding:10px">')
-		.append('<div class="panel-heading panel-title">Assembly Service Data Set </div>');
-
-	    var obj_params = {'type': 'KBaseAssembly.AssemblyInput',
-			      'data': {'hello': 'hello data'}}
-
-	    var save_params = {'workspace': 'cbun:home',
-			       'objects': [obj_params]}
-	    kbws.save_objects(save_params)
 
 	    // Parses the AssemblyInput object and displays it in the table
+	    var data_report = $('<div class="panel panel-info" style="padding:10px">')
+		    .append('<div class="panel-heading panel-title">Assembly Service Data Set </div>');
+
+
 	    var make_data_table = function(info) {
 		var tables = $('<div>')
 		if (info.paired_end_libs != undefined) {
@@ -97,8 +91,8 @@
 
             var asm_div = $('<div class="row">');
             var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
-                                      <option value="sga_preprocess,bhammer,tagdust,spades,sspace">AssemblyRAST Pipeline</option> \
-                                      <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">Trifecta Pipeline</option> \
+                                      <option value="sga_preprocess,bhammer,tagdust,spades">AssemblyRAST Pipeline</option> \
+                                      <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">Triple Pipeline</option> \
                                       <option value="a6">A6 Pipeline</option> \
                                       <option value="pacbio">PacBio SMRT Pipeline</option> \
                                       <option value="spades">SPAdes Assembler</option> \
@@ -219,6 +213,19 @@
                 return prom;
             }
 
+	    // var create_ws_contig = function(raw_contig_str){
+	    // 	var kbws = new Workspace(ws_url, {"token": token});
+		
+	    // 	var obj_params = {'type': 'KBaseAssembly.AssemblyInput',
+	    // 			  'data': {'hello': 'hello data'},
+	    // 			  'name': String(job_id) + '-assembly'}
+		
+		
+	    // var save_params = {'workspace': 'cbun:home',
+	    // 		       'objects': [obj_params]}
+	    // kbws.save_objects(save_params)
+
+	    // };
             return this;	    
         }
 

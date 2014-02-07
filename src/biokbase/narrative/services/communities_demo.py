@@ -501,6 +501,48 @@ def _compare_model(meth, workspace, model1, model2):
     htmltext = "<br>".join( stdout.strip().split('\n') )
     return json.dumps({'header': htmltext})
 
+@method(name="KEGG Mapper")
+def _kegg_map(meth, workspace, input1, input2):
+    """Compare two or more metabolic networks via overlay on graphical KEGG Map.
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param input1: workspace ID of profile 1
+    :type input1: kbtypes.Communities.Profile
+    :ui_name input1: Profile 1 Name
+    :param input2: workspace ID of profile 2
+    :type input2: kbtypes.Communities.Profile
+    :ui_name input2: Profile 2 Name
+    :return: KEGG Map
+    :rtype: kbtypes.Unicode
+    :output_widget: KeggMapWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    # validate
+    workspace = _get_wsname(meth, workspace)
+    if not (input1 and input2):
+        return json.dumps({'header': 'ERROR: missing profile 1 and profile 2'})
+    
+    meth.advance("Retrieve Data from Workspace")
+    # abundance profile
+    biom1 = _get_ws(workspace, input1, CWS.profile)
+    biom2 = _get_ws(workspace, input2, CWS.profile)
+    
+    meth.advance("Compare KEGG Networks")
+    kdata = [{},{}]
+    for i in range(len(biom1['rows'])):
+    	if biom1['data'][i][0] > 0:
+    		kdata[0][ biom1['rows'][i]['id'] ] = biom1['data'][i][0]
+    for i in range(len(biom2['rows'])):
+    	if biom2['data'][i][0] > 0:
+    		kdata[1][ biom2['rows'][i]['id'] ] = biom2['data'][i][0]
+    
+    meth.advance("Display KEGG Map")
+    return json.dumps({'data': kdata, 'width': 1200})
+
 @method(name="Retrieve Annotation Abundance Profile")
 def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, int_level, int_source, evalue, identity, length, norm):
     """Retrieve annotation abundance data for selected metagenomes.
@@ -844,7 +886,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})
 
-@method(name="Heatmap from Abundance Profiles")
+@method(name="Heatmap from Abundance Profile")
 def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, label):
     """Generate a heatmap-dendrogram from annotation abundance data.
 
@@ -918,7 +960,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
-@method(name="PCoA from Abundance Profiles")
+@method(name="PCoA from Abundance Profile")
 def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     """Generate a PCoA from annotation abundance data.
 

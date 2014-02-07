@@ -518,21 +518,21 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :type annot: kbtypes.Unicode
     :ui_name annot: Annotation Type
     :default annot: taxa
-    :param level: annotation hierarchal level to retrieve abundances for
+    :param level: annotation hierarchical level to retrieve abundances for
     :type level: kbtypes.Unicode
     :ui_name level: Annotation Level
     :default level: genus
-    :param source: datasource to filter results by
+    :param source: data source to filter results by
     :type source: kbtypes.Unicode
     :ui_name source: Source Name
     :default source: SEED
     :param int_name: workspace ID of list of names to filter results by
     :type int_name: kbtypes.Communities.Data
     :ui_name int_name: Filter List
-    :param int_level: hierarchal level of filter names list
+    :param int_level: hierarchical level of filter names list
     :type int_level: kbtypes.Unicode
     :ui_name int_level: Filter Level
-    :param int_source: datasource of filter names list
+    :param int_source: data source of filter names list
     :type int_source: kbtypes.Unicode
     :ui_name int_source: Filter Source
     :param evalue: negative exponent value for maximum e-value cutoff, default is 5
@@ -717,7 +717,7 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
         txt += " All but first %d columns were removed."%int(cols)
     if rows != '':
         cmd += ' --rows %d'%int(rows)
-        txt += " All but first %d rows were removed."%int(cols)
+        txt += " All but first %d rows were removed."%int(rows)
     if order != '':
         cmd += ' --order %d'%int(order)
         txt += " Rows were ordered by column %d."%int(order)

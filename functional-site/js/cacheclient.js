@@ -249,6 +249,17 @@ function ProjectAPI(ws_url, token) {
         auth : undefined
     };
 
+    // Empty ws2 project tag template
+    var empty_ws2_proj_tag = {
+        name : ws_tag.project,
+        type : ws_tag_type,
+        data : { description : 'Tag! You\'re a project!' },
+        workspace : undefined,
+        meta : {},
+	provenance : [],
+	hidden : 1
+    };
+
 
     // id of the div containing the kbase login widget to query for auth
     // info. Set this to a different value if the div has been named differently.
@@ -410,11 +421,13 @@ function ProjectAPI(ws_url, token) {
             // create it, then add the _project otag
 
             function tag_ws() {
-                var proj = $.extend(true,{},empty_proj_tag);
+                //var proj = $.extend(true,{},empty_proj_tag);
+		var proj = $.extend(true,{},empty_ws2_proj_tag);
 
-                proj.workspace = p.project_id;
-
-                var ws_fn2 = ws_client.save_object( proj);
+		var params = { objects : proj };
+                params.workspace = p.project_id;
+		console.log("in tag_ws",params);
+                var ws_fn2 = ws_client.save_objects( params);
                 //var prom = $.when( ws_fn2 ).
                 //.then( function(obj_meta) {
                 //               return  obj_meta_dict(obj_meta); 

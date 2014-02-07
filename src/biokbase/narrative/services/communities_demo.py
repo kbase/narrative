@@ -739,7 +739,7 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     _put_ws(workspace, out_name, wtype, data=data)
     return json.dumps({'header': txt})
 
-@method(name="View Abundace Profile")
+@method(name="View Abundance Profile")
 def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_end, stats):
     """View a slice of a BIOM format abundance profile as a table
 

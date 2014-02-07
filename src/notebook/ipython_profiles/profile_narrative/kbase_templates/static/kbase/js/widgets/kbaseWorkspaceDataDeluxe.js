@@ -269,7 +269,7 @@
                                              'data-placement' : 'top',
                                              'title' : 'Sorry, no data page available for this object yet!',
                                          })
-                                         .append('Object Details'))
+                                         .append('View Object'))
                                  .append($('<button>')
                                          .attr({
                                              'type' : 'button',

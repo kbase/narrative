@@ -933,8 +933,7 @@ window.CDMI_API = function (url, auth, auth_cb) {
 }
 
 
-
-function CDMI_EntityAPI(url, auth, auth_cb) {
+window.CDMI_EntityAPI = function (url, auth, auth_cb) {
 
     this.url = url;
     var _url = url;

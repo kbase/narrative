@@ -67,3 +67,21 @@ RGBColor.prototype.subtract = function(c) {
 		this.b - c.b
 	);
 }
+
+RGBColor.prototype.rgbFromString = function(string) {
+    if ($) {
+        var $div = $.jqElem('div').css('background-color', string);
+        var rgb = $div.css('background-color');
+        var m;
+        if (m = rgb.match(/rgb\((\d+), (\d+), (\d+)\)/)) {
+            return {
+                r : +m[1],
+                g : +m[2],
+                b : +m[3]
+            };
+        }
+    }
+    else {
+        return undefined;
+    }
+}

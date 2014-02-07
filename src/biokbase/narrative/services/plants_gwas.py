@@ -463,13 +463,15 @@ def gene_table(meth, workspace_id=None, obj_id=None):
 GENE_NETWORK_OBJECT_TYPE = "KBaseGwasData.GwasGeneList"
 
 @method(name="Gene network")
-def gene_network(meth, workspace_id=None, obj_id=None):
+def gene_network(meth, workspace_id=None, obj_id=None, external_ids=None):
     """See a gene network.
 
     :param workspace_id: Workspace name (if empty, defaults to current workspace)
     :type workspace_id: kbtypes.Unicode
     :param obj_id: Gene's workspace object identifier.
     :type obj_id: kbtypes.Unicode
+    :param external_ids: Space delimited list of external IDs (optional. Use this or workspace id)
+    :type external_ids: kbtypes.Unicode
     :return: Rows for display
     :rtype: kbtypes.Unicode
     :output_widget: kbasePlantsNetworkNarrative
@@ -479,9 +481,12 @@ def gene_network(meth, workspace_id=None, obj_id=None):
     if not workspace_id:
         meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
         workspace_id = meth.workspace_id
-    ws = Workspace2(token=meth.token, wsid=workspace_id)
-    raw_data = ws.get(obj_id) #, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
-    data = {'input': raw_data}
+    if workspace_id and obj_id:
+        ws = Workspace2(token=meth.token, wsid=workspace_id)
+        raw_data = ws.get(obj_id) #, objtype=GENE_TABLE_OBJECT_TYPE, instance=0)
+    else:
+        raw_data = {}
+    data = {'gwas': raw_data, 'external_ids' : external_ids}
     return json.dumps(data)
 
 

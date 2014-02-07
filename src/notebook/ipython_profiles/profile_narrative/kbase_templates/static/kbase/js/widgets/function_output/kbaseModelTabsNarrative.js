@@ -157,7 +157,7 @@ $.KBWidget({
         // gapfilling table
         
         //var dataDict = model.integrated_gapfillings;
-        console.log(dataDict)
+        //console.log(dataDict)
         var keys = ["id", "index", "name", "pH","potential"];
         var labels = ["id", "index", "name", "pH","potential"];
         var cols = getColumns(keys, labels);
@@ -320,8 +320,8 @@ $.KBWidget({
                 var gapAJAX = fba.get_gapfills({gapfills: [gapRef], workspaces: [self.currentws], auth: self.authToken()});
                 $.when(gapAJAX).done(function(data) {
                     $('.loader-gap-sol').remove();
-                    console.debug("gapfill:")
-                    console.debug(data);
+                    //console.debug("gapfill:")
+                    //console.debug(data);
                     var data = data[0];  // only one gap fill solution at a time is clicked
                     var sols = data.solutions;
 

@@ -828,6 +828,7 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
     :param gapfill_id: select the ID of the gapfill solution (found in the Gapfilling tab in the model viewer, usually in the form 'modelId.gf.2.gfsol.1') [13.2]
     :type gapfill_id: kbtypes.KBaseFBA.Gapfilling
     :ui_name gapfill_id: Gapfill ID
+    :default gapfill_id: e.g myModel.gf.2.gfsol.1
 
     :param output_model_id: select a name for the gapfilled object (optional) [13.3]
     :type output_model_id: kbtypes.KBaseFBA.FBAModel
@@ -868,7 +869,7 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
     # get the model to determine the number of reactions
     wsClient = workspaceService(service.URLS.workspace, token=userToken)
     firstReactionList = wsClient.get_object_subset([{'ref':workspaceName+"/"+fba_model_id, 'included':["/modelreactions/[*]/id"]}])
-    meth.debug(json.dumps(firstReactionList));
+    #meth.debug(json.dumps(firstReactionList));
 
     output_model_id = output_model_id.strip()
     if (output_model_id):

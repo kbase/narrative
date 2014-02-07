@@ -341,7 +341,7 @@ $.KBWidget({
                             var createTableRow = function(rxn_id, equation) {
                                     return "<tr><td>" + rxn_id + "</td><td>" + equation + "</td></tr>";
                             };
-                            table.append(createTableRow("<b>Added Rxn Id</b>","<b>Reaction Equation</b>"))
+                            table.append(createTableRow("<b>New Rxn</b>","<b>Equation</b>"))
                             for (var j in rxnAdditions) {
                                 var rxnArray = rxnAdditions[j];
                                 table.append(createTableRow(rxnArray[0], rxnArray[4]));

@@ -389,6 +389,11 @@
                             i--;
                         }
                         else {
+                            // type = KBaseBlahblah.Blah-v#.#
+                            var parsedType = /^(\S+)-/.exec(type);
+                            // if it works, turn type into KBaseBlahblah.Blah w/o the version.
+                            if (parsedType && parsedType[1])
+                                type = parsedType[1];
                             if (!this.loadedData[type]) {
                                 this.loadedData[type] = [];
                                 renderedData[type] = [];

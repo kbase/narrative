@@ -424,9 +424,8 @@ function ProjectAPI(ws_url, token) {
                 //var proj = $.extend(true,{},empty_proj_tag);
 		var proj = $.extend(true,{},empty_ws2_proj_tag);
 
-		var params = { objects : proj };
+		var params = { objects : [proj] };
                 params.workspace = p.project_id;
-		console.log("in tag_ws",params);
                 var ws_fn2 = ws_client.save_objects( params);
                 //var prom = $.when( ws_fn2 ).
                 //.then( function(obj_meta) {

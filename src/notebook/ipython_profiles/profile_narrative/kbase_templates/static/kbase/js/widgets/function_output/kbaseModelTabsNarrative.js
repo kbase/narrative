@@ -105,8 +105,8 @@ $.KBWidget({
 
 
         model = data[0];
-        console.log("kbaseModelTabsNarrative");
-        console.log(model);
+        //console.log("kbaseModelTabsNarrative");
+        //console.log(model);
 
         // compartment table
         var dataDict = model.compartments;

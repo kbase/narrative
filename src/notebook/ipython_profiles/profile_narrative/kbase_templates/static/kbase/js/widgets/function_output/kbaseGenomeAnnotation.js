@@ -95,6 +95,14 @@
             		var geneMap = {};
             		var contigMap = {};
 
+            		if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
+            			for (var pos in gnm.contig_ids) {
+            				var contigId = gnm.contig_ids[pos];
+            				var contigLen = gnm.contig_lengths[pos];
+            				contigMap[contigId] = {name: contigId, length: contigLen, genes: []};
+            			}
+            		}
+            		
             		function geneEvents() {
             			$('.'+pref+'gene-click').unbind('click');
             			$('.'+pref+'gene-click').click(function() {
@@ -129,7 +137,9 @@
             				contigMap[contigName] = contig;
             			}
             			if (contig) {
-            				var geneStop = Number(geneStart) + Number(geneLen);
+            				var geneStop = Number(geneStart);
+            				if (geneDir == '+')
+            					geneStop += Number(geneLen);
             				if (contig.length < geneStop) {
             					contig.length = geneStop;
             				}

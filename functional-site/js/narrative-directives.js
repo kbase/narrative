@@ -15,33 +15,38 @@ angular.module('narrative-directives')
             link: function(scope, element, attrs) {
                 $(element).loading()
 
-                var p = kb.nar.get_narratives();
-                $.when(p).done(function(results){
-                    $(element).rmLoading();
+                scope.loadRecentNarratives = function() {
+                    var p = kb.nar.get_narratives();
+                    $.when(p).done(function(results){
+                        $(element).rmLoading();
 
-                    var narratives = []
+                        var narratives = [];
 
-                    if (results.length > 0) {
-                        for (var i in results) {
-                            var nar = {};
-                            nar.id = results[i][0];
-                            nar.name = results[i][1];
-                            nar.wsid = results[i][6]
-                            nar.ws = results[i][7];
+                        if (results.length > 0) {
+                            for (var i in results) {
+                                var nar = {};
+                                nar.id = results[i][0];
+                                nar.name = results[i][1];
+                                nar.wsid = results[i][6]
+                                nar.ws = results[i][7];
 
-                            nar.timestamp = getTimestamp(results[i][3]);
-                            nar.nealtime = formateDate(nar.timestamp) 
-                                            ? formateDate(nar.timestamp) : results[i][3].replace('T',' ').split('+')[0];
-                            narratives.push(nar);
+                                nar.timestamp = getTimestamp(results[i][3]);
+                                nar.nealtime = formateDate(nar.timestamp) 
+                                                ? formateDate(nar.timestamp) : results[i][3].replace('T',' ').split('+')[0];
+                                narratives.push(nar);
+                            }
+
+                            scope.$apply(function() {
+                                scope.narratives = narratives;
+                            })
+                        } else {
+                            $(element).append('no narratives');
                         }
+                    });
+                }
 
-                        scope.$apply(function() {
-                            scope.narratives = narratives;
-                        })
-                    } else {
-                        $(element).append('no narratives');
-                    }
-                });
+                scope.loadRecentNarratives();
+               
 		
             }  /* end link */
         };
@@ -51,34 +56,37 @@ angular.module('narrative-directives')
         return {
             link: function(scope, element, attrs) {
 
-                $(element).loading()
-                var prom = kb.nar.get_projects()
-                $.when(prom).done(function(projs){
+                scope.loadRecentProjects= function() {
+                    $(element).loading();
+                    var prom = kb.nar.get_projects();
+                    $.when(prom).done(function(projs){
 
-                    $(element).rmLoading();
-                    if (projs.length > 0) {
-                        var projects = []
-                        //first sort
-                        for (var i in projs) {
-                            var project = {};
-                            project.timestamp = getTimestamp(projs[i][3]); // moddate to timestamp
-                            if (!project.timestamp) continue; //fixme
-                            project.nealtime = formateDate(project.timestamp) 
-                                                ? formateDate(project.timestamp) : 
-                                                    projs[i][3].replace('T',' ').split('+')[0];
-                            project.name = parse_name(projs[i][7]); 
-                            projects.push(project)
+                        $(element).rmLoading();
+                        if (projs.length > 0) {
+                            var projects = []
+                            //first sort
+                            for (var i in projs) {
+                                var project = {};
+                                project.timestamp = getTimestamp(projs[i][3]); // moddate to timestamp
+                                if (!project.timestamp) continue; //fixme
+                                project.nealtime = formateDate(project.timestamp) 
+                                                    ? formateDate(project.timestamp) : 
+                                                        projs[i][3].replace('T',' ').split('+')[0];
+                                project.name = parse_name(projs[i][7]); 
+                                projects.push(project)
+                            }
+
+                            scope.$apply(function() {
+                                scope.projects = projects;
+                            })
+
+                        } else {
+                            $(element).append('no projects')
                         }
+                    })
+                }
 
-                        scope.$apply(function() {
-                            scope.projects = projects;
-                        })
-
-                    } else {
-                        $(element).append('no projects')
-                    }
-                })
-
+                scope.loadRecentProjects();
             }
 
         };
@@ -104,7 +112,7 @@ angular.module('narrative-directives')
 
 
                 // this "api" method loads the project/narrative table; 
-                scope.loadData = function() {
+                scope.loadProjectList = function() {
                     //tableEle.remove();
 
                     // if datatable already exists, clear it
@@ -129,7 +137,7 @@ angular.module('narrative-directives')
 
                 }
 
-                scope.loadData();
+                scope.loadProjectList();
 
 
                 function getNarratives(proj_ids) {
@@ -137,7 +145,6 @@ angular.module('narrative-directives')
                     $.when(prom).done(function(nars){
                         $(element).rmLoading();                                
                         //var narratives = nars.slice(0); // make copy of narratives
-
 
                         var narratives = []
 
@@ -405,7 +412,8 @@ angular.module('narrative-directives')
                                         $.when(p).done(function() {
                                             $prompt.addCover('Created project <b><i>'+proj+'</b></i>');
 
-                                            scope.loadData()
+                                            scope.loadProjectList()
+                                            scope.loadRecentProjects()
 
                                             var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                             btn.click(function() { 
@@ -473,7 +481,8 @@ angular.module('narrative-directives')
                                         $prompt.addCover('Created narrative <b><i>'+name
                                                         +'</i></b> in project <b><i>'+proj_id+'</i></b>');
 
-                                        scope.loadData()
+                                        scope.loadProjectList();
+                                        scope.loadRecentNarratives();
 
                                         var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                         btn.click(function() { 
@@ -527,7 +536,8 @@ angular.module('narrative-directives')
 
                                     $.when(prom).done(function() {
                                         $prompt.addCover('Deleted narrative: '+nar_id);
-                                        scope.loadData()
+                                        scope.loadProjectList();
+                                        scope.loadRecentNarratives();
 
                                         var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                         btn.click(function() { 
@@ -577,7 +587,10 @@ angular.module('narrative-directives')
                                     $prompt.getCover().loading()
                                     $.when(prom).done(function(){
                                         $prompt.addCover('Deleted project: '+proj_name);
-                                        scope.loadData();
+                                        scope.loadProjectList();
+                                        scope.loadRecentNarratives();
+                                        scope.loadRecentProject();
+
                                         var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                         btn.click(function() { $prompt.closePrompt(); })
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);

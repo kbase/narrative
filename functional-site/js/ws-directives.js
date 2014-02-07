@@ -301,7 +301,6 @@ angular.module('ws-directives')
                                     prompt = $prompt;
 
                                     // save permissions, then save description
-                                    console.log('saving permissions')
                                     $.when(prom).done(function() {
                                         // if description textarea is showing, saving description
                                         if ($('#ws-description textarea').length > 0) {
@@ -447,10 +446,8 @@ angular.module('ws-directives')
 
                         // create new permissions for each user that does not currently have 
                         // permsissions.
-                        console.log('newPerms', newPerms)
                         var promises = [];
                         for (var new_user in newPerms) {
-                            console.log('newuser', new_user)
                             // ignore these
                             if (new_user == '*' || new_user == USER_ID) continue;   
 
@@ -467,18 +464,14 @@ angular.module('ws-directives')
                                 //auth: USER_TOKEN
                             };
 
-                            console.log('params1', params)
                             var p = kb.ws.set_permissions(params);
                             promises.push(p);
                         };
 
                         var rm_users = [];
 
-                        console.log()
                         // if user was removed from user list, change permission to 'n'
-                        console.log('permdata', permData)
                         for (var user in permData) {
-                            console.log('user', user)
                             if (user == '*' || user == USER_ID) continue;                            
 
                             if ( !(user in newPerms) ) {
@@ -489,7 +482,6 @@ angular.module('ws-directives')
                                     users: [user],
                                     //auth: USER_TOKEN
                                 };
-                                console.log('params2', params)                                
 
                                 var p = kb.ws.set_permissions(params);
                                 promises.push(p);
@@ -856,11 +848,9 @@ angular.module('ws-directives')
                     $(element).loading('loading '+ws+'...')
 
                     // load workspace objects
-                    console.log(ws)
                     var prom = kb.ws.list_objects({workspaces: [ws]});
                     var prom2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1})
                     $.when(prom, prom2).done(function(data, deleted_objs){
-                        console.log('data:',data)
                         $(element).rmLoading();
 
                         var table_id = "obj-table-"+ws.replace(':',"_");
@@ -868,7 +858,6 @@ angular.module('ws-directives')
                             class="table table-bordered table-striped" style="width: 100%;"></table>')    
 
                         var tableobjs = formatObjs(data);
-                        console.log('tableobjs', tableobjs)
                         var wsobjs = tableobjs[0];
                         var type_counts = tableobjs[1];
 
@@ -1323,7 +1312,7 @@ angular.module('ws-directives')
                         }
                     }
 
-                    // hide the objecttable, add back button
+                    // hide the objecttable, add back button{}
                     var table_id = 'obj-table-'+ws.replace(':','_');
                     $('#'+table_id+'_wrapper').hide();
                     $(element).prepend('<h4 class="trash-header"><a class="btn btn-primary">\
@@ -1334,7 +1323,6 @@ angular.module('ws-directives')
                     $('.trash-header .btn').unbind('click');
                     $('.trash-header .btn').click(function() {
                         if (typeof trashbin) { // fixme: cleanup
-                            console.log('destroy trash')
                             trashbin.fnDestroy();
                             $('#'+table_id+'-trash').remove();
                             trashbin = undefined;
@@ -1346,7 +1334,6 @@ angular.module('ws-directives')
 
                     // if trash table hasn't already been rendered, render it
                     if (typeof trashbin == 'undefined') {
-                        console.log('render trash')
                         $(element).append('<table id="'+table_id+'-trash" \
                             class="table table-bordered table-striped" style="width: 100%;"></table>');
 
@@ -1473,6 +1460,14 @@ angular.module('ws-directives')
 
 
 
+
+function parse_name(name) {
+    if (name.indexOf(USER_ID+':') != -1) {
+        return name.split(':')[1];
+    } else {
+        return name;
+    }
+}
 
 
 

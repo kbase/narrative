@@ -1,5 +1,7 @@
 
 
+//https://kbase.us/services/fba_model_services/ //production fba service not deployed
+
 // This saves a request by service name, method, params, and promise
 // Todo: Make as module
 function Cache() {
@@ -61,6 +63,10 @@ function KBCacheClient(token) {
         // otherwise, make request
         var prom = undefined;
         if (service == 'fba') {
+            // use whatever workspace server that was configured.
+            // this makes it possible to use the production workspace server
+            // with the fba server
+            params.wsurl = ws_url;  
             console.log('Making request:', 'fba.'+method+'('+JSON.stringify(params)+')');
             var prom = fba[method](params);
         } else if (service == 'ws') {
@@ -146,6 +152,8 @@ function ProjectAPI(ws_url, token) {
     var ws_client = new Workspace(ws_url, auth);
 
 
+    // We probably don't want to do error handeling in api functions, 
+    // so we should deprecate these as well. 
     var legit_ws_id = /^\w+$/;
     // regex for a numeric workspace id of the form "ws.####.obj.###"
     var legit_narr_ws_id = /^ws\.(\d+)\.obj\.(\d+)$/;
@@ -239,6 +247,17 @@ function ProjectAPI(ws_url, token) {
         workspace : undefined,
         metadata : {},
         auth : undefined
+    };
+
+    // Empty ws2 project tag template
+    var empty_ws2_proj_tag = {
+        name : ws_tag.project,
+        type : ws_tag_type,
+        data : { description : 'Tag! You\'re a project!' },
+        workspace : undefined,
+        meta : {},
+	provenance : [],
+	hidden : 1
     };
 
 
@@ -396,17 +415,18 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-        if ( legit_ws_id.test(p.project_id)) {
+        //if ( legit_ws_id.test(p.project_id)) {
             // Check if the workspace exists already. If it does, then 'upgrade'
             // it by adding a _project object, if it doesn't exist yet then
             // create it, then add the _project otag
 
-            function tag_ws(ws_meta) {
-                var proj = $.extend(true,{},empty_proj_tag);
+            function tag_ws() {
+                //var proj = $.extend(true,{},empty_proj_tag);
+		var proj = $.extend(true,{},empty_ws2_proj_tag);
 
-                proj.workspace = p.project_id;
-
-                var ws_fn2 = ws_client.save_object( proj);
+		var params = { objects : [proj] };
+                params.workspace = p.project_id;
+                var ws_fn2 = ws_client.save_objects( params);
                 //var prom = $.when( ws_fn2 ).
                 //.then( function(obj_meta) {
                 //               return  obj_meta_dict(obj_meta); 
@@ -420,15 +440,17 @@ function ProjectAPI(ws_url, token) {
                 var ws_fn = ws_client.create_workspace( { workspace : p.project_id,
                                                                   globalread : p.def_perm })
 
-                return $.when( ws_fn).then( tag_ws, function() {
-                    console.log('this failed')
-                });
+                var prom = $.when(ws_fn).done(function() {
+                    return tag_ws();
+                })
+
+                return prom
             });
 
             return prom;
-        } else {
-            console.error( "Bad project id: "+p.project_id);
-        }
+        //} else {
+        //    console.error( "Bad project id: "+p.project_id);
+        //}
     };
 
 
@@ -443,15 +465,16 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-       if ( legit_ws_id.test(p.project_id)) {
+
+        //if ( legit_ws_id.test(p.project_id)) {
             var ws_def_fun = ws_client.delete_workspace({
                                       workspace: p.project_id});
             $.when( ws_def_fun).then( p.callback,
                           p.error_callback
                         );
-        } else {
-            console.error( "Bad project id: ",p.project_id);
-        }
+        //} else {
+        //    console.error( "Bad project id: ",p.project_id);
+        //}
     };
 
     // Get the permissions for a project, returns a 2 element
@@ -522,16 +545,42 @@ function ProjectAPI(ws_url, token) {
         };
 
     };
+    
+    this._parse_object_id_string = function(p) {
+        if (p.fq_id != undefined) {
+            var re = p.fq_id.match( legit_narr_ws_id);
+            if (re) {
+                p.project_id = re[1];
+                p.narrative_id = re[2];
+            } else {
+                p.error_callback("Cannot parse fq_id: " + p.fq_id);
+            }
+        }
+    }
 
-
+    //copy a narrative and dependencies to the home workspace
+    //
+    // The inputs are based on the numeric workspace id and numeric objid, which
+    // are using the narrative URLs. Alternative you can just pass in a string
+    // like "ws.637.obj.1" in the fq_id (fully qualified id) and this will parse
+    // it out into the necessary components.
+    // returns a dicts with the following keys:
+    // fq_id - the fully qualified id the new narrative of the form "ws.####.obj.###"
+    // 
+    // known issues: in the case of a name collision in a narrative dependency,
+    // the dependency is renamed by appending a timestamp. This is not currently
+    // altered in the narrative or in the narrative object metadata.
     this.copy_narrative = function (p_in) {
-        var def_params = { callback : undefined,
+        var def_params = {
                 project_id : undefined, // numeric workspace id
                 narrative_id : undefined, //numeric object id
                 fq_id : undefined, // string of the form "ws.{numeric ws id}.obj.{numeric obj id}"
                 callback: undefined,
-                error_callback: error_handler };
+                error_callback: error_handler
+                };
         var p = $.extend( def_params, p_in);
+        var metadata_fn = ws_client.get_object_info([{wsid: p.project_id, objid : p.narrative_id}], 1);
+//        $.when( metadata_fn).then( function( obj_meta) {
 
         p.callback( 1);
     };
@@ -550,7 +599,7 @@ function ProjectAPI(ws_url, token) {
     //        name - textual name
     //        type - textual type of the object
     //        overwrite - a boolean that indicates if there is already
-    this.get_narrative_deps = function ( p_in) {
+    this.get_narrative_deps = function (p_in) {
         var def_params = { callback : undefined,
                 project_id : undefined, // numeric workspace id
                 narrative_id : undefined, //numeric object id
@@ -558,69 +607,69 @@ function ProjectAPI(ws_url, token) {
                 callback: undefined,
                 error_callback: error_handler };
         var p = $.extend( def_params, p_in);
-        if (p.fq_id != undefined) {
-            var re = p.fq_id.match( legit_narr_ws_id);
-            if (re) {
-                p.project_id = re[1];
-                p.narrative_id = re[2];
-            } else {
-                p.error_callback("Cannot parse fq_id: " + p.fq_id);
-            }
-        }
+        this._parse_object_id_string(p);
+        var self = this;
         var metadata_fn = ws_client.get_object_info([{wsid: p.project_id, objid : p.narrative_id}], 1);
         $.when( metadata_fn).then( function( obj_meta) {
             if (obj_meta.length != 1) {
                 p.error_callback( "Error: narrative ws." + p.project_id +
                         ".obj." + p.narrative_id + " not found");
             } else {
-                var res = {};
-                var nar = obj_meta[0];
-                var meta = nar[10]
-                res.fq_id = "ws." + nar[6] + ".obj." + nar[0];
-                res.description = meta.description;
-                res.name = meta.name;
-                var temp = $.parseJSON(meta.data_dependencies);
-                //deps should really be stored as an id, not a name, since names can change
-                var deps = temp.reduce( function(prev,curr,index) {
-                    var dep = curr.split(" ");
-                    prev[dep[1]] = {};
-                    prev[dep[1]].type = dep[0];
-                    prev[dep[1]].name = dep[1];
-                    prev[dep[1]].overwrite = false;
-                    return(prev);
-                },{});
-                var home = USER_ID + ":home";
-                var proms = []
-                //TODO use has_objects when it exists rather than multiple get_objects calls
-                $.each(deps, function(key, val) {
-                    proms.push(ws_client.get_object_info(
-                            [{workspace: home, name: key}], 0,
-                            function(result) { //success, the object exists
-                                deps[key].overwrite = true;
-                            },
-                            function(result) { //fail
-                                console.log(result.error.message);
-                                if (!/^No object with .+ exists in workspace [:\w]+$/
-                                        .test(result.error.message)) {
-                                    p.error_callback(result.error.message);
-                                }
-                                //everything's cool, the object doesn't exist in home
-                            })
-                    );
-                    
-                });
-                //this wraps all the promise objects in another promise object
-                //that forces all the original POs to resolve in a $.when()
-                proms = $.map(proms, function(p) {
-                    var dfd = $.Deferred();
-                    p.always(function() { dfd.resolve(); });
-                    return dfd.promise();
-                });
-                res.deps = deps;
-                $.when.apply($, proms).done(function() {
-                        p.callback(res);
-                });
+                var oi = {obj_info: obj_meta[0],
+                          callback: p.callback
+                          };
+                self._get_narrative_deps_from_obj_info(oi)
             }
+        });
+    };
+    
+    this._get_narrative_deps_from_obj_info = function(p) {
+        var res = {};
+        var obj_info = p.obj_info;
+        var meta = obj_info[10]
+        res.fq_id = "ws." + obj_info[6] + ".obj." + obj_info[0];
+        res.description = meta.description;
+        res.name = meta.name;
+        var temp = $.parseJSON(meta.data_dependencies);
+        //deps should really be stored as an id, not a name, since names can change
+        var deps = temp.reduce( function(prev,curr,index) {
+            var dep = curr.split(" ");
+            prev[dep[1]] = {};
+            prev[dep[1]].type = dep[0];
+            prev[dep[1]].name = dep[1];
+            prev[dep[1]].overwrite = false;
+            return(prev);
+        },{});
+        var home = USER_ID + ":home";
+        var proms = []
+        //TODO use has_objects when it exists rather than multiple get_objects calls
+        $.each(deps, function(key, val) {
+            proms.push(ws_client.get_object_info(
+                    [{workspace: home, name: key}], 0,
+                    function(result) { //success, the object exists
+                        deps[key].overwrite = true;
+                    },
+                    function(result) { //fail
+                        console.log(result.error.message);
+                        if (!/^No object with .+ exists in workspace [:\w]+$/
+                                .test(result.error.message)) {
+                            p.error_callback(result.error.message);
+                        }
+                        //everything's cool, the object doesn't exist in home
+                    })
+            );
+            
+        });
+        //this wraps all the promise objects in another promise object
+        //that forces all the original POs to resolve in a $.when()
+        proms = $.map(proms, function(p) {
+            var dfd = $.Deferred();
+            p.always(function() { dfd.resolve(); });
+            return dfd.promise();
+        });
+        res.deps = deps;
+        $.when.apply($, proms).done(function() {
+                p.callback(res);
         });
     };
 
@@ -635,7 +684,7 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-        if ( legit_ws_id.test(p.narrative_id)) {
+        //if ( legit_ws_id.test(p.narrative_id)) {
             var nar = $.extend(true,{},empty_narrative);
             nar.data.metadata.ws_name = p.project_id;
             nar.name = p.narrative_id; 
@@ -646,9 +695,9 @@ function ProjectAPI(ws_url, token) {
             return $.when( ws_fn ).then( function(obj_meta) {
                           return obj_meta_dict(obj_meta);
                       });
-        } else {
-            console.error( "Bad narrative_id");
-        }
+        //} else {
+        //    console.error( "Bad narrative_id");
+        //}
     };
 
 }

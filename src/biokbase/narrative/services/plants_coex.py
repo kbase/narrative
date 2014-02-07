@@ -792,7 +792,7 @@ def annotate_nodes(net_object, ots=None, oan=None, funcs=None, eids=None,
         if lid in ots:
             go_enr_list = []
             for lcnt, go in enumerate(ots[lid].keys()):
-                if lcnt < MAX_COUNT:
+                if lcnt < 0:
                     go_enr_list.append(go + "(go)" + ots[lid][go][0]['desc'] + '\n')
                 for i, goen in enumerate(ots[lid][go]):
                     for ext in "domain", "ec", "desc":
@@ -810,6 +810,7 @@ def annotate_nodes(net_object, ots=None, oan=None, funcs=None, eids=None,
                     hr_nd['user_annotations'][gea_key(i, goen_oid, "p_value")] = goen['p_value']
                 hr_nd['user_annotations'][gea_key(i, goen_oid, "type")] = goen['ontology_type']
                 if i < MAX_COUNT:
+                    if not has_pvalue: continue
                     pval = "{:6.4f}".format(float(goen['p_value'])) if has_pvalue else "go"
                     go_enr_list.append("{}({}){}\n".format(goen_oid, pval, goen_desc))
             hr_nd['user_annotations']['go_enrichnment_annotation'] = ''.join(go_enr_list)

@@ -35,23 +35,29 @@
             var table = $('#'+pref+'mglu-table');
             table.append('<tr><td>Target Workspace</td><td>' + self.ws + '</td></tr>');
             table.append('<tr><td>Target Metagenome List Name</td><td>' + self.id + '</td></tr>');
-            table.append('<tr><td>Data to store</td> \
+            table.append('<tr><td>URL prefix</td> \
+            		<td><input id="'+pref+'mglu-tf" type="text" style="width:100%;"></td></tr>');
+            table.append('<tr><td>Data to store<br>(one ID per line)</td> \
             		<td><textarea id="'+pref+'mglu-ta" style="width:100%;" cols="80" rows="8"></textarea></td></tr>');
             container.append('<button class="btn" id="'+pref+'mglu-btn">Save in workspace</button>');
             container.append('&nbsp;<button class="btn" id="'+pref+'xmpl-btn">Show an example in text area above</button>');
             $('#'+pref+'mglu-btn').click(function() {
+            	var urlPref = "" + $('#'+pref+'mglu-tf').val();
+            	if (urlPref.length > 0 && urlPref.substr(urlPref.length-1) != "/") {
+            		urlPref += "/";
+            	}
             	var val = $('#'+pref+'mglu-ta').val();
             	var lines = val.split(/\r\n|\r|\n/g);
-            	var data = "";
+            	var data = [];
             	for (var pos in lines) {
             		var line = lines[pos];
             		if (line == '')
             			continue;
-            		data += line + "\n";
+            		data.push({URL: urlPref+line, ID: line});
             	}
             	var today = new Date();
             	var dd = today.getDate();
-            	var mm = today.getMonth()+1;//January is 0!
+            	var mm = today.getMonth()+1;
             	var yyyy = today.getFullYear();
             	var hours = today.getHours();
             	var minutes = today.getMinutes();
@@ -63,17 +69,18 @@
             			created: date,
             			name: self.id,
             			type: 'list',
-            			data: data
+            			members: data
             	};
             	var kbws = new Workspace(self.wsUrl, {'token': self.token});
-            	kbws.save_objects({workspace: self.ws, objects: [{type: 'Communities.Data', name: self.id, data: mgl}]}, function(data) {
+            	kbws.save_objects({workspace: self.ws, objects: [{type: 'Communities.Collection', name: self.id, data: mgl}]}, function(data) {
             		alert('Data was successfuly stored in workspace');
             	}, function(data) {
             		alert('Error: ' + data.error.message);
             	});
             });
             $('#'+pref+'xmpl-btn').click(function() {
-            	var text = "mgm4549802.3\nmgm4549784.3\nmgm4549797.3\nmgm4549806.3\nmgm4549812.3\nmgm4549816.3\nmgm4549793.3\nmgm4549786.3\nmgm4549804.3\nmgm4549798.3\n";
+            	$('#'+pref+'mglu-tf').val("http://api.metagenomics.anl.gov/1/metagenome/");
+            	var text = "mgm4549802.3\nmgm4549784.3\nmgm4549797.3\nmgm4549806.3\nmgm4549812.3\n";
             	var val = $('#'+pref+'mglu-ta').val();
             	if (val != "")
             		val += "\n";

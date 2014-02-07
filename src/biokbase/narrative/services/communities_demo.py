@@ -9,7 +9,7 @@ __version__ = '0.3'
 # Stdlib
 import json
 import time
-import osß
+import os
 import base64
 import urllib
 import urllib2

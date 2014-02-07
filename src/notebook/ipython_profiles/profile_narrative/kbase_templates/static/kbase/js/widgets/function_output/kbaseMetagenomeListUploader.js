@@ -36,7 +36,7 @@
             table.append('<tr><td>Target Workspace</td><td>' + self.ws + '</td></tr>');
             table.append('<tr><td>Target Metagenome List Name</td><td>' + self.id + '</td></tr>');
             table.append('<tr><td>Data to store</td> \
-            		<td><textarea id="'+pref+'mglu-ta" style="width:100%;" cols="80" rows="15"></textarea></td></tr>');
+            		<td><textarea id="'+pref+'mglu-ta" style="width:100%;" cols="80" rows="8"></textarea></td></tr>');
             container.append('<button class="btn" id="'+pref+'mglu-btn">Save in workspace</button>');
             container.append('&nbsp;<button class="btn" id="'+pref+'xmpl-btn">Show an example in text area above</button>');
             $('#'+pref+'mglu-btn').click(function() {

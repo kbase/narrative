@@ -213,15 +213,15 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
 
-@method(name="Upload Metagenome List")
-def _upload_metagenome_list(meth, workspace, metagenome_list_id):
-    """Upload metagenome list object into workspace.
+@method(name="Import Metagenome List")
+def _import_metagenome_list(meth, workspace, metagenome_list_id):
+    """Import metagenome list object into workspace.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param metagenome_list_id: name of metagenome list object
-    :type metagenome_list_id: kbtypes.Communities.Data
+    :type metagenome_list_id: kbtypes.Unicode
     :ui_name metagenome_list_id: Metagenome List Name
     :return: Metagenome List Uploading Info
     :rtype: kbtypes.Unicode

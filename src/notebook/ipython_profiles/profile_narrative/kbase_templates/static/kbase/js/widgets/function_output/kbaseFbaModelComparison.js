@@ -104,28 +104,40 @@ $.KBWidget({
         	var model1 = self.fba_model1;
         	var model2 = self.fba_model2;
         	var model1map = {};
-        	for (var i in model1.reactions) {
-        		var r = model1.reactions[i];
-        		model1map[r.id] = r;
-        	}
         	var model2map = {};
-        	for (var i in model2.reactions) {
-        		var r = model2.reactions[i];
-        		model2map[r.id] = r;
-        	}
         	var model1only = [];
-        	for (var i in model1.reactions) {
-        		var r = model1.reactions[i];
-        		if (!model2map.hasOwnProperty(r.id))
-        			model1only.push(r);
-        	}
         	var model2only = [];
-        	for (var i in model2.reactions) {
-        		var r = model2.reactions[i];
-        		if (!model1map.hasOwnProperty(r.id))
-        			model2only.push(r);
+        	var stat = null;
+        	var dataDict = null;
+        	function prepare() {
+        		for (var i in model1.reactions) {
+        			var r = model1.reactions[i];
+        			model1map[r.id] = r;
+        		}
+        		for (var i in model2.reactions) {
+        			var r = model2.reactions[i];
+        			model2map[r.id] = r;
+        		}
+        		for (var i in model1.reactions) {
+        			var r = model1.reactions[i];
+        			if (!model2map.hasOwnProperty(r.id))
+        				model1only.push(r);
+        		}
+        		for (var i in model2.reactions) {
+        			var r = model2.reactions[i];
+        			if (!model1map.hasOwnProperty(r.id))
+        				model2only.push(r);
+        		}
+        		stat = [0,0];
+        		dataDict = formatRxnObjs(model1.reactions, model2map, stat);
         	}
-        	var tableSettings = {
+        	prepare();
+        	if (stat[0]/10 > stat[1]) {
+            	model1 = self.fba_model2;
+            	model2 = self.fba_model1;
+            	prepare();
+        	}
+            var tableSettings = {
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 5,
                     "aaData": [],
@@ -134,11 +146,10 @@ $.KBWidget({
                     }
                 };
         	//////////////////////////////////////////// Common tab /////////////////////////////////////////////
-        	var stat = [0,0];
-            var dataDict = formatRxnObjs(model1.reactions, model2map, stat);
         	var headTable = $('#'+pref+'stat-table');
-            headTable.append("<tr><td>Reactions in genome1</td><td><center>" + model1.reactions.length + "</center></td></tr>" +
-            		"<tr><td>Reactions in genome2</td><td><center>" + model2.reactions.length + "</center></td></tr>" +
+            headTable.append("" +
+            		"<tr><td>Reactions in genome1 (" + cmp.genome1id + ")</td><td><center>" + model1.reactions.length + "</center></td></tr>" +
+            		"<tr><td>Reactions in genome2 (" + cmp.genome2id + ")</td><td><center>" + model2.reactions.length + "</center></td></tr>" +
             		"<tr><td>Common reactions</td><td><center>" + stat[0] + "</center></td></tr>" +
             		"<tr><td>Reactions with same features</td><td><center>" + stat[1] + "</center></td></tr>");
             var keys = ["reaction", "definition", "features1", "features2", "name"];
@@ -151,7 +162,7 @@ $.KBWidget({
         	//////////////////////////////////////////// Model1 only tab ////////////////////////////////////////
             var dataDict = formatRxnObjs(model1only, null, null);
             var keys = ["reaction", "definition", "features1", "name"];
-            var labels = ["Reaction", "Equation", "Features from genome 1", "Name"];
+            var labels = ["Reaction", "Equation", "Features from genome1", "Name"];
             var cols = getColumns(keys, labels);
             var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
             rxnTableSettings.aoColumns = cols;
@@ -160,7 +171,7 @@ $.KBWidget({
         	//////////////////////////////////////////// Model2 only tab ////////////////////////////////////////
             var dataDict = formatRxnObjs(model2only, null, null);
             var keys = ["reaction", "definition", "features1", "name"];
-            var labels = ["Reaction", "Equation", "Features from genome 2", "Name"];
+            var labels = ["Reaction", "Equation", "Features from genome2", "Name"];
             var cols = getColumns(keys, labels);
             var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
             rxnTableSettings.aoColumns = cols;

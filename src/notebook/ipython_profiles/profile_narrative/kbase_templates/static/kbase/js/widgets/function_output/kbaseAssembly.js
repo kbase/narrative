@@ -20,6 +20,7 @@
             var user = options.ar_user
             var token = options.ar_token
             var arURL = options.ar_url
+	    var ws_url = options.ws_url
             var arRequest = {
                 "data_id": null,
 		"kbase_assembly_input": options.kbase_assembly_input,
@@ -33,10 +34,17 @@
                 "pair": [],
                 "reference": null, 
                 "version": "widget"};
-
             var self = this;
+	    var kbws = new Workspace(ws_url, {"token": token});
             var data_report = $('<div class="panel panel-info" style="padding:10px">')
 		.append('<div class="panel-heading panel-title">Assembly Service Data Set </div>');
+
+	    var obj_params = {'type': 'KBaseAssembly.AssemblyInput',
+			      'data': {'hello': 'hello data'}}
+
+	    var save_params = {'workspace': 'cbun:home',
+			       'objects': [obj_params]}
+	    kbws.save_objects(save_params)
 
 	    // Parses the AssemblyInput object and displays it in the table
 	    var make_data_table = function(info) {

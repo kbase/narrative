@@ -28,21 +28,36 @@ NAME = "Microbes Services"
 init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
 @method(name="Assemble Contigs from Reads")
-def _assemble_contigs(meth, reads_files, out_contig_set):
+def _assemble_contigs(meth, asm_input):
     """Use a KBase pipeline to assemble a set of contigs from generated reads files.
     This starts a job that might run for several hours.
     When it finishes, the assembled ContigSet will be stored in your data space. [1]
 
-    :param reads_files: A list of files with read information [1.1]
-    :type reads_files: kbtypes.List
-    :ui_name reads_files: Genome Reads files
-    :param out_contig_set: The name of the created contig set (leave blank for a random name) [1.2]
-    :type out_contig_set: kbtypes.Unicode
-    :ui_name out_contig_set: Output ContigSet ID
-    :return: A contig assembly job ID
+    :param asm_input: A list of files with read information [1.1]
+    :type asm_input: kbtypes.KBaseAssembly.AssemblyInput
+    :ui_name asm_input: Assembly Input file
+    :return: An assembly job
     :rtype: kbtypes.Unicode
+    :output_widget: AssemblyWidget
     """
-    return json.dumps({"output": "Assemble Contigs stub"})
+    ws = os.environ['KB_WORKSPACE_ID']
+    token = os.environ['KB_AUTH_TOKEN']
+    arURL = 'http://140.221.84.108:8000/'
+    ar_user = token.split('=')[1].split('|')[0]
+    
+
+    wsClient = workspaceService(service.URLS.workspace, token=token)
+    ws_request = {'id': asm_input,
+                  'workspace': ws}
+
+    asm_data = wsClient.get_object(ws_request)
+    meth.debug(str(asm_data))
+
+    return json.dumps({"ar_url": arURL,
+                       "ar_user" : ar_user,
+                       "ar_token" : token,
+                       "ws_url" : service.URLS.workspace,
+                       "kbase_assembly_input": asm_data['data']})
 
 
 @method(name="Assemble Genome from Fasta")

@@ -874,6 +874,8 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
     output_model_id = output_model_id.strip()
     if (output_model_id):
         integrate_params['out_model'] = output_model_id
+    else:
+        output_model_id = fba_model_id
 
     # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);
     meth.advance("Integrating the gapfill solutions")

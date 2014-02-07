@@ -209,6 +209,10 @@ class Workspace2(WS2):
             raise WorkspaceException("get_workspace_info", self._wsi, err)
         return result
 
+    @property
+    def workspace(self):
+        return self._wsi
+
     def _create_ws(self, create_params):
         """Create new workspace, or raise WorkspaceException.
         """
@@ -238,7 +242,7 @@ class Workspace2(WS2):
             raise ValueError("Starts with a digit, but not all digits")
         return False
 
-    def get(self, objid, instance=None):
+    def get(self, objid, instance=None, data_only=True):
         """Get an object in the workspace.
         If there are multiple objects, the first one is returned.
         Returns just the object data, not all the associated info.
@@ -247,6 +251,8 @@ class Workspace2(WS2):
         :type objid: str
         :param instance: Instance (version) identifier, None for 'latest'
         :type instance: str or None
+        :param data_only: Return the values for the 'data' key (True) or the whole result dict (False)
+        :type data_only: bool
         :return: whatever the JSON for the object data parsed to, probably a dict,
                  or None if there are no objects by that name or ID, or workspace is not set.
         :raise: WorkspaceException, if command fails
@@ -257,7 +263,7 @@ class Workspace2(WS2):
         params = self._make_oid_params(objid, ver=instance)
         try:
             for result in self.get_objects(params):
-                return result['data']
+                return result['data'] if data_only else result
         except (URLError, ServerError) as err:
             if "No object with" in str(err):
                 return None

@@ -447,7 +447,7 @@ def ws_obj2shock(ws, obj_id, advance=None, meth=None):
             'samples': samples, 'gnid': genome_id}
 
 @method(name="Differential expression filter")
-def filter_expr(meth, series_ws_id='KBasePublicExpression', series_obj_id=None, filtering_method=None,
+def filter_expr(meth, series_ws_id=None, series_obj_id=None, filtering_method=None,
                 num_genes=None, p_value=None):
     """Filter expression table to differentially expressed genes
 
@@ -823,7 +823,6 @@ def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
     :type net_obj_id: kbtypes.KBaseNetworks.Network
     :param p_value: p-value cutoff
     :type p_value: kbtypes.Unicode
-    :default p_value: 0.05
     :param ec: Evidence code list (comma separated, IEA, ...)
     :type ec:kbtypes.Unicode
     :param domain: Domain list (comma separated, biological_process, ...)
@@ -832,6 +831,7 @@ def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
     :rtype: kbtypes.Unicode
     :output_widget: GeneTableWidget
     """
+#    :default p_value: 0.05
     meth.stages = 3
 
     meth.advance("Prepare enrichment test")

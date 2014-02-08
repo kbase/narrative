@@ -86,7 +86,7 @@
                                 marker.data = innerSelf.collection.data.ecotype_details[i].nativename;
                                 marker.options = new Object();
 
-                                marker.options.icon = '/landing-pages/assets/images/' + iconFile + '.svg';
+                                marker.options.icon = '/functional-site/assets/images/' + iconFile + '.svg';
 
                                 allMarkers.push(marker);
                             }                                                

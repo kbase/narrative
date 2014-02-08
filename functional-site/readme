@@ -7,12 +7,12 @@
  *  The app uses angular.js, a MVC front-end framework.
  *
  *  -- Some of the critical files --
- *  App:               landing-pages/js/app.js
- *  Controllers:       landing-pages/js/controllers.js
- *  Directives:        landing-pages/js/directives.js 
- *                                     /card-directives.js 
- *                                     /iris-directives.js
- *                                     /mv-directives.js 
- *  Views (templates): landing-pages/views/* 
+ *  App:               js/app.js
+ *  Controllers:       js/controllers.js
+ *  Directives:        js/directives.js 
+ *                     js/card-directives.js 
+ *                     js/iris-directives.js
+ *                     js/mv-directives.js 
+ *  Views (templates): views/* 
  *
 */

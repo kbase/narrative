@@ -168,6 +168,14 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
         'genetic_code': 11,
     }
     fbaClient.ContigSet_to_Genome(contigset_to_genome_params)
+    wsClient = workspaceService(service.URLS.workspace, token=token)
+    genomeData = wsClient.get_objects([{'ref': workspace+'/'+out_genome}])[0]
+    genome = genomeData['data']
+    meta = genomeData['info'][10]
+    if not meta:
+        meta = {}
+    meta['Scientific name'] = scientific_name
+    wsClient.save_objects({'workspace': workspace, 'objects': [{'type': 'KBaseGenomes.Genome', 'name': out_genome, 'data': genome, 'meta': meta}]})
     return json.dumps({'ws_name': workspace, 'ws_id': out_genome})
 
 @method(name="Annotate Genome")

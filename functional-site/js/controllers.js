@@ -319,6 +319,16 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 
 
+/* controller for the search box */
+var SearchController = function ($scope, $location) {
+
+    // callback for ng-click search:
+    $scope.startSearch = function (searchquery) {
+        window.location.replace("#search?" + searchquery);          
+    };
+};
+
+
 /* controller for the copy narrative modal */
 var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) {
 

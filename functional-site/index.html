@@ -243,14 +243,19 @@
                 <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>          
               </ul>
 
-              <form class="navbar-form navbar-left" role="search" style="width: 40%">
-                <div class="form-group">
-                  <div class="input-group">
-                  <!--<span class="input-group-addon" id="narr-search-label">Search</span>-->
-                  <input class="form-control" name="search" placeholder=" Search KBase Data" autocomplete="off" type="text">
-                  <span class="input-group-addon"><span class="glyphicon glyphicon-search"></span></span>
-                  </div>
+              <form ng-controller="SearchController" ng-submit="startSearch(searchquery)" class="navbar-form navbar-left" role="search" style="width: 40%">
+                <div class="input-group">
+                    <input class="form-control" ng-model="searchquery" name="search" placeholder=" Search KBase Data" autocomplete="off" type="text"> 
+                   <!-- <div class="input-group-addon">
+                        <span class="glyphicon glyphicon-search"></span>
+                    </div>  -->         
+                    <div class="input-group-btn">
+                        <button class="btn" type="submit" style="background-color: #ebebeb; border-color: #adadad"><span class="glyphicon glyphicon-search" style="line-height: .9"></span></button>
+                    </div>
                 </div>
+
+
+                
               </form>
 
               <div id="signin-button" class="pull-right"></div>

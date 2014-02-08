@@ -325,7 +325,8 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) 
     $scope.narr = narr;
     // callback for ng-click 'copy narrative':
     $scope.copyNarrative = function () {
-        console.log("clicked copy narrative");
+        $('#loading-indicator').show();
+        $('#copy-narr-button').attr("disabled", "disabled");
         kb.nar.copy_narrative({
             fq_id: $scope.narr,
             callback: function(results) {
@@ -336,12 +337,17 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) 
 
                 
             },
-            error_callback: function() {
-                //console.log("error occurred");
-                $scope.alerts = [];
-                $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace."});
-                //TODO need to retrieve the actual error message 
-                $scope.$apply();
+            error_callback: function(message) {
+                //console.log("error occurred " + message);
+
+                if (!message.match("No object with name")) {
+                    $('loading-indicator').hide();
+
+                    $scope.alerts = [];
+                    $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace."});
+                    //TODO need to retrieve the actual error message 
+                    $scope.$apply();
+                }
             }
 
         })

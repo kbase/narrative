@@ -15,7 +15,8 @@
         options: {
             'header': null,
 		    'width': 1200,
-		    'data': null
+		    'data': null,
+		    'image': null
 		},
         
         init: function(options) {
@@ -36,44 +37,48 @@
     	    renderer.options.height = height;
 
     	    // get the target div
-            var target = $('<div>');
+            var main_div = $('<div>');
+            var target = main_div[0];
     	    var index = renderer.index;
 
     	    // set header text
     	    if (renderer.options.header != null) {
-    	        var text = $('<p>').css({'padding': '10px 20px'}).html(renderer.options.header);
-                target.append(text);
+                var text = document.createElement('p');
+                text.setAttribute('style', "padding: 10px 20px;");
+                text.innerHTML = renderer.options.header;
+                target.appendChild(text);
     	    }
     	    if (renderer.options.data == null) {
     	        // add to DOM and return
-    	        renderer.$elem.append(target);
+    	        renderer.$elem.append(main_div);
                 return renderer;
     	    }
     	    
     	    // get image
-    	    var image = $('<img>')
-    	        .attr({'src': renderer.imagepath})
-    	        .css({'width': renderer.options.width+'px'});
-    	    image.load(function(event) {
-    	        event.target.next.css({'top': parseInt(event.target.offset().top)+'px'});
-	        });
-            target.append(image);
+    	    if (renderer.options.image == null) {
+    		    var image = document.createElement('img');
+    		    image.setAttribute('src', renderer.imagepath);
+    		    image.addEventListener('load', function(event){event.target.nextSibling.style.top=event.target.offsetTop+"px";});
+    		    target.appendChild(image);
+    		    renderer.options.image = image;
+    	    }
+    	    renderer.options.image.setAttribute('style', "width: "+ renderer.options.width+"px;");
     	    
     	    // create svg
     	    var svg_div = $('<div>')
     	        .html('')
     	        .attr({'id': 'map_div'+index, 'class': ''})
                 .css({ 'position': 'absolute',
-                       'left': parseInt(image.offset().left)+'px',
+                       'left': renderer.options.image.offsetLeft+'px',
                        'width': renderer.options.width+'px',
                        'height': renderer.options.height+'px'
                 });
-            target.append(svg_div);
+            target.appendChild(svg_div[0]);
     	    svg_div.svg();
     	    renderer.drawImage(svg_div.svg('get'), renderer.options.data);
 
             // add to DOM and return
-            renderer.$elem.append(target);
+            renderer.$elem.append(main_div);
             return renderer;
         },
         

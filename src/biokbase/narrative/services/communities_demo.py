@@ -234,9 +234,9 @@ def _import_metagenome_list(meth, workspace, metagenome_list_id):
     workspace = _get_wsname(meth, workspace)
     return json.dumps({'ws': workspace, 'id': metagenome_list_id})
 
-@method(name="Retrieve Subsytems Annotation")
+@method(name="Export Functional Profile for Modeling")
 def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, length, rest):
-    """Retrieve all SEED/Subsystems functional annotations for a given metagenome ID. Alternatively, filter annotations for specific taxa.
+    """Retrieve all SEED/Subsystems functional annotations for a given metagenome ID. Alternatively, filter annotations for specific taxa. For input into modeling service.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -368,9 +368,9 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     text = "Abundance Profile BIOM %s created for PICRUSt prediction of %s"%(out_name, in_seq)
     return json.dumps({'header': text})
 
-@method(name="Map KEGG annotation to Subsystems annotation")
+@method(name="Transform Abundance Profile to Functional Profile for Modeling")
 def _map_annot(meth, workspace, in_name, out_name):
-    """Create SEED/Subsystems annotations from a KEGG metagenome abundance profile.
+    """Create SEED/Subsystems functional annotations from a KEGG metagenome abundance profile. For input into modeling service.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode

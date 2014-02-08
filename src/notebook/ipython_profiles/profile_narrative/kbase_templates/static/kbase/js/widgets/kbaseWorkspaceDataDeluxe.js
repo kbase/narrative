@@ -92,16 +92,33 @@
                 this)
             );
 
+            /**
+             * Get the landing page map.
+             * First, try getting it from /functional-site/landing_page_map.json.
+             * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
+             */
             $.ajax({
-                url: '/static/kbase/js/widgets/landing_page_map.json',
+                url: '/functional-site/landing_page_map.json',
                 async: true,
                 dataType: 'json',
                 success: $.proxy(function(response) {
                     this.landingPageMap = response;
                 }, this),
                 error: $.proxy(function(error) {
-                    console.log(error);
-                })
+                    this.dbg("Unable to get standard landing page map, looking for backup...");
+                    $.ajax({
+                        url: '/static/kbase/js/widgets/landing_page_map.json',
+                        async: true,
+                        dataType: 'json',
+                        success: $.proxy(function(response) {
+                            this.landingPageMap = response;
+                        }, this),
+                        error: $.proxy(function(error) {
+                            this.dbg("Unable to get any landing page map! Landing pages unavailable...");
+                            this.landingPageMap = null;
+                        }, this)
+                    })
+                }, this)
             });
 
             this.createStructure()
@@ -266,10 +283,9 @@
                                              'type' : 'button',
                                              'class' : 'btn btn-default',
                                              'id' : 'obj-details-btn',
-                                             'data-placement' : 'top',
-                                             'title' : 'Sorry, no data page available for this object yet!',
                                          })
                                          .append('View Object'))
+                                         .tooltip()
                                  .append($('<button>')
                                          .attr({
                                              'type' : 'button',
@@ -450,7 +466,13 @@
                     }
                     if (!dataList[type])
                         dataList[type] = [];
-                    dataList[type].push([ws, name, type]);
+
+                    // Workaround for dealing with the occasional blank name.
+                    if (name) {
+                        name = name.trim();
+                        if (name.length > 0)
+                            dataList[type].push([ws, name, type]);
+                    }
                 }, this));
             }
             this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
@@ -566,24 +588,27 @@
 
             // Figure out the landingPageType. e.g. KBaseGenomes.Genome-1.0 should go to /genomes/
             var landingPageType = null;
-            var parsedType = /^(\S+)\.(\S+)-/.exec(dataType);
-            if (parsedType) {
-                // module = idx 1, type = idx 2
-                if (this.landingPageMap[parsedType[1]] && this.landingPageMap[parsedType[1]][parsedType[2]]) {
-                    landingPageType = this.landingPageMap[parsedType[1]][parsedType[2]];
+            if (this.landingPageMap !== null) {
+                var parsedType = /^(\S+)\.(\S+)-/.exec(dataType);
+                if (parsedType) {
+                    // module = idx 1, type = idx 2
+                    if (this.landingPageMap[parsedType[1]] && this.landingPageMap[parsedType[1]][parsedType[2]]) {
+                        landingPageType = this.landingPageMap[parsedType[1]][parsedType[2]];
+                    }
                 }
             }
 
             var detailsBtn = this.$infoModal.find('.modal-footer > div > button#obj-details-btn');
-            detailsBtn.off('click').removeAttr('data-toggle');
+            detailsBtn.off('click');
             // If we don't havea a landingPageType (it's still null), then we don't have a landing page for that
             // object. Remove the clicky function and add a tooltip.
             if (landingPageType) {
                 var landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
                 detailsBtn.click(function(event) { window.open(landingPage); });
+                detailsBtn.html("View Object");
             }
             else {
-                detailsBtn.attr('data-toggle', 'tooltip');
+                detailsBtn.html("Object Page Unavailable");
             }
 
         },

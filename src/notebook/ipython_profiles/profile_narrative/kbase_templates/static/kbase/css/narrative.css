@@ -4,6 +4,7 @@
 	border-radius: 4px;
 	border: #ababab solid;
 }
+
 /**
  * Shim to make sure jQuery-ui dialogs are always on front of other DOM elements.
  */

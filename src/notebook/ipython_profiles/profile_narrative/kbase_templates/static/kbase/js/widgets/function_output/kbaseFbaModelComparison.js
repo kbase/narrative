@@ -21,7 +21,7 @@ $.KBWidget({
 
     wsUrl: "https://kbase.us/services/ws/",
     //fbaURL: "https://kbase.us/services/fba_model_services",
-    fbaURL: "http://140.221.84.183:7036",
+    fbaURL: "https://kbase.us/services/KBaseFBAModeling",
     loadingImage: "static/kbase/images/ajax-loader.gif",
 
     init: function(options) {

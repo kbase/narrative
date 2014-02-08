@@ -64,17 +64,18 @@ def _assemble_contigs(meth, asm_input):
 
 @method(name="Get Contigs from Assembly Service")
 def _get_contigs(meth, job_id, contig_num, contig_name):
-    """Pull down assembled contigs from the Assembly Service
+    """Pull down assembled contigs from the Assembly Service.  Enter the Job ID of the Assembly computation.
+    The Contig Number indicates the single desired contig returned from a multi-pipeline assembly.
 
     :param job_id: The Job ID of the desired assembly
     :type job_id: kbtypes.Unicode
     :ui_name job_id: Job Id
-    :param contig_num: The contig id
+    :param contig_num: The contig # returned by Assembly Service (optional)
     :type contig_num: kbtypes.Unicode
-    :ui_name contig_num: Contig ID
-    :param contig_name: The name of the ContigSet to be created
+    :ui_name contig_num: Contig Number
+    :param contig_name: The name of the ContigSet to be created (optional)
     :type contig_name: kbtypes.Unicode
-    :ui_name contig_name: Contig Name
+    :ui_name contig_name: Output Contig Name
     :return: An assembly job
     :rtype: kbtypes.Unicode
     """
@@ -87,6 +88,8 @@ def _get_contigs(meth, job_id, contig_num, contig_name):
 
     #### Get Fasta from Assembly service
     outdir = os.path.join('/tmp', str(uuid.uuid4()))
+    if not contig_num:
+        contig_num = 1
     aclient.get_assemblies(job_id=job_id, asm_id=contig_num, outdir=outdir)
     outfile = os.path.join(outdir, os.listdir(outdir)[0])
 

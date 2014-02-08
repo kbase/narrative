@@ -173,7 +173,7 @@
                             })
                         };
                         var status_updater = null;
-                        status_updater = setInterval(update_status, 5000);
+                        status_updater = setInterval(update_status, 10000);
                     },
                     error: function(data){
                         console.log(data);

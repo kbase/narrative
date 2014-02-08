@@ -11,13 +11,13 @@
         name: 'KeggMapWidget',
         version: '1.0.0',
         index: Math.floor((Math.random()*1000)+1),
-        imagepath: '../../../images/keggmap.png',
+        imagepath: 'static/kbase/images/keggmap.png',
         options: {
             'header': null,
 		    'width': 1200,
 		    'data': null,
 		    'image': null,
-		    'div': null
+		    'svg': null
 		},
         
         init: function(options) {
@@ -38,21 +38,23 @@
     	    renderer.options.height = height;
 
     	    // get the target div
-    	    var target = document.createElement('div');
+            var main_div = $('<div>');
+            renderer.$elem.append(main_div);
+            var target = main_div[0];
     	    var index = renderer.index;
-    	    
+
+    	    // set header text
     	    if (renderer.options.header != null) {
                 var text = document.createElement('p');
                 text.setAttribute('style', "padding: 10px 20px;");
                 text.innerHTML = renderer.options.header;
                 target.appendChild(text);
     	    }
-    	    
     	    if (renderer.options.data == null) {
-    	        renderer.$elem.append(target);
-                return this;
+                return renderer;
     	    }
     	    
+    	    // get image
     	    if (renderer.options.image == null) {
     		    var image = document.createElement('img');
     		    image.setAttribute('src', renderer.imagepath);
@@ -62,23 +64,23 @@
     	    }
     	    renderer.options.image.setAttribute('style', "width: "+ renderer.options.width+"px;");
     	    
+    	    // create svg
     	    if (renderer.options.div == null) {
     		    var div = document.createElement('div');
-    		    div.setAttribute('id', 'map_div'+index);//top: "+renderer.options.image.offsetTop+"px; 
+    		    div.setAttribute('id', 'map_div'+index);
     		    div.setAttribute('style', "position: absolute; left: "+renderer.options.image.offsetLeft+"px;");
     		    renderer.options.div = div;
     		    target.appendChild(div);
     	    }
-
     	    renderer.options.div.style.width = renderer.options.width+"px";
     	    renderer.options.div.style.height = renderer.options.height+"px";
     	    renderer.options.div.setAttribute('class', "");
     	    renderer.options.div.innerHTML = "";
+    	    
     	    $('#map_div'+index).svg();
     	    renderer.drawImage($('#map_div'+index).svg('get'), renderer.options.data);
             
-            renderer.$elem.append(target);
-            return this;
+            return renderer;
         },
         
         hover: function (id, event) {

@@ -146,6 +146,29 @@ var app = angular.module('landing-pages',
              controller: 'ModelDetailCards'})
 
     $stateProvider
+       .state('gptype', {
+            url: '/KBaseGwasData.GwasPopulation/:ws/:id',
+            templateUrl: 'views/objects/gptype.html',
+            controller: 'GPTypeDetail'})  
+       .state('gttype', {
+            url: '/KBaseGwasData.GwasPopulationTrait/:ws/:id',
+            templateUrl: 'views/objects/gttype.html',
+            controller: 'GTTypeDetail'})  
+       .state('gvtype', {
+            url: '/KBaseGwasData.GwasPopulationVariation/:ws/:id',
+            templateUrl: 'views/objects/gvtype.html',
+            controller: 'GVTypeDetail'})  
+       .state('ggltype', {
+            url: '/KBaseGwasData.GwasGeneList/:ws/:id',
+            templateUrl: 'views/objects/ggltype.html',
+            controller: 'GGLTypeDetail'})  
+       .state('gtvtype', {
+            url: '/KBaseGwasData.GwasTopVariations/:ws/:id',
+            templateUrl: 'views/objects/gtvtype.html',
+            controller: 'GTVTypeDetail'})  
+
+
+    $stateProvider
         .state('fbasbyws', {
                 url:'/fbas/:ws', 
                 templateUrl: 'views/object-list.html',

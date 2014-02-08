@@ -19,6 +19,56 @@ angular.module('card-directives')
             }
         };
     })
+    .directive('gptype', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "gptype", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
+    .directive('gttype', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "gttype", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })    
+    .directive('gvtype', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "gvtype", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })    
+    .directive('ggltype', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "ggltype", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })    
+    .directive('gtvtype', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).KBaseCardLayoutManager({template: "gtvtype", 
+                                                   data: scope.params, 
+                                                   auth: $rootScope.USER_TOKEN,
+                                                   userId: $rootScope.USER_ID});
+            }
+        };
+    })
     .directive('genecards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {

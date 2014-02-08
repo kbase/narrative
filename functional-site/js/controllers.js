@@ -133,6 +133,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                      'kbCache' : kb}
 })
 
+
 .controller('MediaDetail', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
@@ -183,6 +184,27 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
         'kind' : $stateParams.kind,
         'id' : $stateParams.id
     };
+})
+
+
+.controller('GPTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
+.controller('GTTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
+.controller('GVTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
+.controller('GGLTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
+.controller('GTVTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
 })
 
 

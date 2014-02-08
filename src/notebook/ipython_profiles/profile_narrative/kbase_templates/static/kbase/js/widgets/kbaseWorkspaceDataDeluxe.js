@@ -688,7 +688,7 @@
                         // turn the dataType's . into \.
                         // then build the regex /^datatype/
                         // so it'll look like /^KBaseGenomes\.Genome/ for example
-                        var typeRegex = new RegExp("^" + dataType.replace(/\./g, '\\.'));
+                        var typeRegex = new RegExp("^" + dataType.replace(/\./g, '\\.') + "(-\d+\.\d+)?$");
 
                         for (var typeName in this.loadedData) {
                             if (typeRegex.test(typeName)) {

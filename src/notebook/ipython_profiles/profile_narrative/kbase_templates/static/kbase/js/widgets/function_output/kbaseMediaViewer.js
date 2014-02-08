@@ -12,7 +12,8 @@
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
-            fbaURL: "https://kbase.us/services/fba_model_services",
+            #fbaURL: "https://kbase.us/services/fba_model_services",
+            fbaURL: "https://kbase.us/services/KBaseFBAModeling",
             metadata: null,
             media: null
         },

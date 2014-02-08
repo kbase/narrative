@@ -78,7 +78,7 @@
     	    renderer.drawImage(svg_div.svg('get'), renderer.options.data);
 
             // add to DOM and return
-            renderer.$elem.append(target);
+            renderer.$elem.append(main_div);
             return renderer;
         },
         

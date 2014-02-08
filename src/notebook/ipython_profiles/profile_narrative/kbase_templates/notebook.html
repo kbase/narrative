@@ -236,7 +236,6 @@ class="notebook_app"
 <!-- inserted KBase Javascript below -->
 <script src="{{ static_url("kbase/js/jquery.cookie.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbwidget.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbaseLogging.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/workspaceService.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -244,20 +243,15 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script>
-<!--<script src="{{ static_url("kbase/js/widgets/kbaseLogin.js") }}" type="text/javascript" charset="utf-8"></script>
- --><script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/datatables-bootstrap-paging.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseAccordion.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeFunctionPanel.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceDataDeluxe.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseDeletePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbaseContigBrowserButtons.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/UserAndJobStateClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <!-- function input JS widgets -->
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -384,5 +378,13 @@ console.log($.kbasePlantsNetworkNarrative);*/
 <script src="{{ static_url("notebook/js/celltoolbarpresets/slideshow.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("auth/js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeFunctionPanel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceDataDeluxe.js") }}" type="text/javascript" charset="utf-8"></script>
+
 
 {% endblock %}

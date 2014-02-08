@@ -67,7 +67,7 @@
     	    // create svg
     	    if (renderer.options.div == null) {
     		    var div = document.createElement('div');
-    		    div.setAttribute('id', 'map_div'+index);//top: "+renderer.settings.image.offsetTop+"px; 
+    		    div.setAttribute('id', 'map_div'+index);
     		    div.setAttribute('style', "position: absolute; left: "+renderer.options.image.offsetLeft+"px;");
     		    renderer.options.div = div;
     		    target.appendChild(div);

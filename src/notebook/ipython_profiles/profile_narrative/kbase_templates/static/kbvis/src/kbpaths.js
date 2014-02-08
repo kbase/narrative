@@ -82,6 +82,8 @@ define('kbvis/src/kbpaths',[], function (paths) {
 
         KbaseNetworkServiceClient : 'kbvis/src/js/KbaseNetworkServiceClient',
         CDMI_API : 'kbvis/src/js/CDMI_API',
+        IdMapClient : 'kbvis/src/js/IdMapClient',
+        OntologyServiceClient : 'kbvis/src/js/OntologyServiceClient',
     },
     shim: {
         bootstrap:    { deps: ["jquery"] },

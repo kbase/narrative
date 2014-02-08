@@ -52,7 +52,13 @@
          * Go ahead and fill in the rest of the Javascript stuff.
          */
         $([IPython.events]).one('status_idle.Kernel', function() {
-            var workspaceId = IPython.notebook.metadata.ws_name;
+            var workspaceId = null;
+            if (IPython.notebook.metadata)
+                workspaceId = IPython.notebook.metadata.ws_name;
+
+            if (workspaceId) {
+                $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objtable/' + workspaceId);
+            }
 
             $('#kb-ws').kbaseWorkspaceDataDeluxe({ 'wsId': workspaceId });
             // Build the list of available functions.

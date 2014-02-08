@@ -28,6 +28,7 @@ define('kbaseHeatmap',
             xPadding    : 50,
             xGutter     : 5,
             overColor   : '#999900',
+            overColor   : '#999900',
 
         },
 

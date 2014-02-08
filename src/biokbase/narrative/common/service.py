@@ -33,7 +33,8 @@ _log = logging.getLogger(__name__)
 class URLS:
     workspace = "https://kbase.us/services/ws/"
     invocation = "https://kbase.us/services/invocation"
-    fba = "http://140.221.84.183:7036"
+    #fba = "http://140.221.84.183:7036"
+    fba = "https://kbase.us/services/KBaseFBAModeling"
     genomeCmp = "http://140.221.85.57:8283/jsonrpc"
 
 ## Exceptions

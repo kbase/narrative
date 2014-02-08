@@ -92,6 +92,35 @@
                 this)
             );
 
+            /**
+             * Get the landing page map.
+             * First, try getting it from /functional-site/landing_page_map.json.
+             * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
+             */
+            $.ajax({
+                url: '/functional-site/landing_page_map.json',
+                async: true,
+                dataType: 'json',
+                success: $.proxy(function(response) {
+                    this.landingPageMap = response;
+                }, this),
+                error: $.proxy(function(error) {
+                    this.dbg("Unable to get standard landing page map, looking for backup...");
+                    $.ajax({
+                        url: '/static/kbase/js/widgets/landing_page_map.json',
+                        async: true,
+                        dataType: 'json',
+                        success: $.proxy(function(response) {
+                            this.landingPageMap = response;
+                        }, this),
+                        error: $.proxy(function(error) {
+                            this.dbg("Unable to get any landing page map! Landing pages unavailable...");
+                            this.landingPageMap = null;
+                        }, this)
+                    })
+                }, this)
+            });
+
             this.createStructure()
                 .createMessages();
 
@@ -108,7 +137,6 @@
          * @private
          */
         loggedInCallback: function(event, auth) {
-            console.log(auth);
             this.authToken = auth;
             this.wsClient = new Workspace(this.options.workspaceURL, this.authToken);
             this.isLoggedIn = true;
@@ -254,9 +282,10 @@
                                          .attr({
                                              'type' : 'button',
                                              'class' : 'btn btn-default',
-                                             'id' : 'obj-details-btn'
+                                             'id' : 'obj-details-btn',
                                          })
-                                         .append('Object Details'))
+                                         .append('View Object'))
+                                         .tooltip()
                                  .append($('<button>')
                                          .attr({
                                              'type' : 'button',
@@ -371,17 +400,24 @@
                     var renderedData = {};
                     for (var i=0; i<list.length; i++) {
                         var type = list[i][2];
+
                         if (type.indexOf('KBaseNarrative') == 0) {
                             list.splice(i, 1);
                             i--;
                         }
                         else {
+                            // type = KBaseBlahblah.Blah-v#.#
+                            var parsedType = /^(\S+)-/.exec(type);
+                            // if it works, turn type into KBaseBlahblah.Blah w/o the version.
+                            if (parsedType && parsedType[1])
+                                type = parsedType[1];
+
                             if (!this.loadedData[type]) {
                                 this.loadedData[type] = [];
                                 renderedData[type] = [];
                             }
                             this.loadedData[type].push(list[i]);
-                            renderedData[type].push([list[i][7], list[i][1], list[i][2]]);
+                            renderedData[type].push([list[i][7], list[i][1], type]);
                         }
                     }
 
@@ -430,7 +466,13 @@
                     }
                     if (!dataList[type])
                         dataList[type] = [];
-                    dataList[type].push([ws, name, type]);
+
+                    // Workaround for dealing with the occasional blank name.
+                    if (name) {
+                        name = name.trim();
+                        if (name.length > 0)
+                            dataList[type].push([ws, name, type]);
+                    }
                 }, this));
             }
             this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
@@ -539,11 +581,36 @@
             var dataType = info[2];
             var workspace = info[7];
             var id = info[1];
-            var landingPage = this.options.landingPageURL + dataType + '/' + workspace + '/' + id;
-            var specPage = this.options.landingPageURL + 'spec/type/' + dataType;
 
+            // Set up the typespec page.
+            var specPage = this.options.landingPageURL + 'spec/type/' + dataType;
             this.$infoModal.find('.modal-footer > div > button#obj-type-btn').off('click').click(function(event) { window.open(specPage); });
-            this.$infoModal.find('.modal-footer > div > button#obj-details-btn').off('click').click(function(event) { window.open(landingPage); });
+
+            // Figure out the landingPageType. e.g. KBaseGenomes.Genome-1.0 should go to /genomes/
+            var landingPageType = null;
+            if (this.landingPageMap !== null) {
+                var parsedType = /^(\S+)\.(\S+)-/.exec(dataType);
+                if (parsedType) {
+                    // module = idx 1, type = idx 2
+                    if (this.landingPageMap[parsedType[1]] && this.landingPageMap[parsedType[1]][parsedType[2]]) {
+                        landingPageType = this.landingPageMap[parsedType[1]][parsedType[2]];
+                    }
+                }
+            }
+
+            var detailsBtn = this.$infoModal.find('.modal-footer > div > button#obj-details-btn');
+            detailsBtn.off('click');
+            // If we don't havea a landingPageType (it's still null), then we don't have a landing page for that
+            // object. Remove the clicky function and add a tooltip.
+            if (landingPageType) {
+                var landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
+                detailsBtn.click(function(event) { window.open(landingPage); });
+                detailsBtn.html("View Object");
+            }
+            else {
+                detailsBtn.html("Object Page Unavailable");
+            }
+
         },
 
         /**
@@ -571,16 +638,11 @@
                 var $tracebackDiv = $('<div>')
                                  .addClass('kb-function-error-traceback')
                                  .append(error.error.error);
-                // for (var i=0; i<error.traceback.length; i++) {
-                //     $tracebackDiv.append(error.traceback[i] + "<br>");
-                // }
 
                 var $tracebackPanel = $('<div>');
                 var tracebackAccordion = [{'title' : 'Details', 'body' : $tracebackDiv}];
 
                 $errorPanel.append($details);
-                //                 .append($tracebackPanel);
-                // $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
             }
 
             return $errorPanel;
@@ -626,7 +688,7 @@
                         // turn the dataType's . into \.
                         // then build the regex /^datatype/
                         // so it'll look like /^KBaseGenomes\.Genome/ for example
-                        var typeRegex = new RegExp("^" + dataType.replace(/\./g, '\\.'));
+                        var typeRegex = new RegExp("^" + dataType.replace(/\./g, '\\.') + "(-\d+\.\d+)?$");
 
                         for (var typeName in this.loadedData) {
                             if (typeRegex.test(typeName)) {

@@ -79,7 +79,7 @@
             	});
             });
             $('#'+pref+'xmpl-btn').click(function() {
-            	$('#'+pref+'mglu-tf').val("http://api.metagenomics.anl.gov/1/metagenome/");
+            	$('#'+pref+'mglu-tf').val("http://kbase.us/services/communities/metagenome/");
             	var text = "mgm4549802.3\nmgm4549784.3\nmgm4549797.3\nmgm4549806.3\nmgm4549812.3\n";
             	var val = $('#'+pref+'mglu-ta').val();
             	if (val != "")

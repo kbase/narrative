@@ -384,6 +384,7 @@
                     var renderedData = {};
                     for (var i=0; i<list.length; i++) {
                         var type = list[i][2];
+
                         if (type.indexOf('KBaseNarrative') == 0) {
                             list.splice(i, 1);
                             i--;
@@ -394,12 +395,13 @@
                             // if it works, turn type into KBaseBlahblah.Blah w/o the version.
                             if (parsedType && parsedType[1])
                                 type = parsedType[1];
+
                             if (!this.loadedData[type]) {
                                 this.loadedData[type] = [];
                                 renderedData[type] = [];
                             }
                             this.loadedData[type].push(list[i]);
-                            renderedData[type].push([list[i][7], list[i][1], list[i][2]]);
+                            renderedData[type].push([list[i][7], list[i][1], type]);
                         }
                     }
 

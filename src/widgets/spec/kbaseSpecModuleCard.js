@@ -3,6 +3,7 @@
         name: "KBaseSpecModuleCard", 
         parent: "kbaseWidget", 
         version: "1.0.0",
+        timer: null,
 
         options: {
             id: "",
@@ -71,9 +72,24 @@
             	////////////////////////////// Spec-file Tab //////////////////////////////
             	var specText = $('<div/>').text(data.spec).html();
             	$('#'+pref+'spec').append(
-            			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + '</pre></div>'
+            			'<div id="'+pref+'specdiv" style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + '</pre></div>'
             	);
             	prettyPrint();
+            	var timeLst = function(event) {
+            		var h1 = container.is(":hidden");
+            		if (h1) {
+            			clearInterval(self.timer);
+            			return;
+            		}
+            		var elem = $('#'+pref+'specdiv');
+            		var h2 = elem.is(":hidden");
+            		if (h2)
+            			return;
+            		var diff = container.height() - elem.height() - 41;
+            		if (Math.abs(diff) > 10)
+            			elem.height(container.height() - 41);
+                };
+            	self.timer = setInterval(timeLst, 1000);
             	
             	////////////////////////////// Types Tab //////////////////////////////
             	$('#'+pref+'types').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'types-table" \
@@ -228,8 +244,8 @@
             return {
                 type: "KBaseSpecModuleCard",
                 id: this.options.name,
-                workspace: '',
-                title: "Spec-document Module"
+                workspace: 'specification',
+                title: "Module Object Specification"
             };
         }
     });

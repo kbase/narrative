@@ -60,8 +60,8 @@
             return {
                 type: "KBaseSpecStorageCard",
                 id: this.options.id,
-                workspace: '',
-                title: "Spec-document Storage"
+                workspace: 'specification',
+                title: "Registered Module Objects"
             };
         }
     });

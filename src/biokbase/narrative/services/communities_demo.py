@@ -571,7 +571,8 @@ def _kegg_map(meth, workspace, input1, input2):
     		kdata[1][ biom2['rows'][i]['id'] ] = biom2['data'][i][0]
     
     meth.advance("Display KEGG Map")
-    return json.dumps({'data': kdata, 'width': 1200})
+    text = "KEGG Pathway map comparison. Colored lines represent KEGG functions found in the inputed metagenomes.  %s is in green and %s is in blue. Overlap is in cyan."%(biom1['columns'][0]['id'], biom2['columns'][0]['id'])
+    return json.dumps({'header': text, 'data': kdata, 'width': 800})
 
 @method(name="Retrieve Annotation Abundance Profile")
 def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, int_level, int_source, evalue, identity, length, norm):

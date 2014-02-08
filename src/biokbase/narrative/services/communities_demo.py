@@ -3,7 +3,7 @@ Demo communitites service and methods
 """
 __author__ = 'Travis Harrison'
 __date__ = '1/10/13'
-__version__ = '0.3'
+__version__ = '0.4'
 
 ## Imports
 # Stdlib

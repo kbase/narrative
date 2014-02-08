@@ -3,7 +3,7 @@ define('kbvis/src/kbpaths',[], function (paths) {
 
  requirejs.config({
  waitSeconds : 30,
-    baseUrl : '/static/',
+    baseUrl : '/narrative/static/',
     //baseUrl : '../../src/widgets',
     //baseUrl : '/static',
     //urlArgs: "bust=" + (new Date()).getTime(),

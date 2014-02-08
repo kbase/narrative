@@ -74,15 +74,15 @@
     	    renderer.options.div.style.height = renderer.options.height+"px";
     	    renderer.options.div.setAttribute('class', "");
     	    renderer.options.div.innerHTML = "";
-    	    jQuery('#map_div'+index).svg();
-    	    renderer.drawImage(jQuery('#map_div'+index).svg('get'), renderer.options.data);
+    	    $('#map_div'+index).svg();
+    	    renderer.drawImage($('#map_div'+index).svg('get'), renderer.options.data);
             
             renderer.$elem.append(target);
             return this;
         },
         
         hover: function (id, event) {
-    	    var svg = jQuery('#map_div'+this.index).svg('get');
+    	    var svg = $('#map_div'+this.index).svg('get');
     	},
     	
     	drawImage: function (svg, mg_data) {

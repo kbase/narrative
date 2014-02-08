@@ -58,7 +58,10 @@
     	    if (renderer.options.image == null) {
     		    var image = document.createElement('img');
     		    image.setAttribute('src', renderer.imagepath);
-    		    image.addEventListener('load', function(event){event.target.nextSibling.style.top=event.target.offsetTop+"px";});
+    		    image.addEventListener('load', function(event) {
+    		        var offset = parseInt(event.target.offsetTop) - 5;
+    		        event.target.nextSibling.style.top = offset+"px";
+    		    });
     		    target.appendChild(image);
     		    renderer.options.image = image;
     	    }

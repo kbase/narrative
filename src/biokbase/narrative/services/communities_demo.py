@@ -24,7 +24,7 @@ from biokbase.narrative.common import kbtypes
 from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.shock import Client as shockService
-from biokbase.mglib import tab_to_matrix
+from biokbase.mglib import tab_to_matrix, sparse_to_dense
 
 ## Globals
 VERSION = (0, 0, 1)
@@ -548,8 +548,17 @@ def _kegg_map(meth, workspace, input1, input2):
     
     meth.advance("Retrieve Data from Workspace")
     # abundance profile
-    biom1 = _get_ws(workspace, input1, CWS.profile)
-    biom2 = _get_ws(workspace, input2, CWS.profile)
+    profile1 = _get_ws(workspace, input1, CWS.profile)
+    profile2 = _get_ws(workspace, input2, CWS.profile)
+    try:
+        biom1 = json.loads(profile1)
+        biom2 = json.loads(profile2)
+        if biom1['matrix_type'] == 'sparse':
+            biom1['data'] = sparse_to_dense(biom1['data'], biom1['shape'][0], biom1['shape'][1])
+        if biom2['matrix_type'] == 'sparse':
+            biom2['data'] = sparse_to_dense(biom2['data'], biom2['shape'][0], biom2['shape'][1])
+    except:
+        return json.dumps({'header': 'ERROR: profiles contain invalid BIOM formats'})
     
     meth.advance("Compare KEGG Networks")
     kdata = [{},{}]

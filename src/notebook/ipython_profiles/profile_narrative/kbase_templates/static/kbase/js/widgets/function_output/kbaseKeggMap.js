@@ -11,7 +11,7 @@
         name: 'KeggMapWidget',
         version: '1.0.0',
         index: Math.floor((Math.random()*1000)+1),
-        imagepath: '../../../images/keggmap.png',
+        imagepath: 'static/kbase/images/keggmap.png',
         options: {
             'header': null,
 		    'width': 1200,

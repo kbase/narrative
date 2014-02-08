@@ -157,7 +157,7 @@ def _workspace_output(wsid):
     return json.dumps({'values': [["Workspace object", wsid]]})
 
 
-@method(name="Create GWAS Population obj")
+#@method(name="Create GWAS Population obj")
 def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_population_object_name=None,
                                   GwasPopulation_description=None, kbase_genome_id=None, comment=None):
     """Create Gwas Population object from an uploaded Population file in the workspace.
@@ -201,7 +201,7 @@ def gwas_create_population_object(meth, GwasPopulation_file_id=None, output_popu
     return _workspace_output('GwasPopulation_' + output_population_object_name)
 
 
-@method(name="Create Gwas Population Trait obj")
+#@method(name="Create Gwas Population Trait obj")
 def gwas_create_population_trait_object(meth, GwasPopulation_obj_id=None, population_trait_file_id=None, protocol=None,
                                         comment=None, originator=None, output_trait_object_name=None,
                                         kbase_genome_id=None, trait_ontology_id=None, trait_name=None,
@@ -251,7 +251,7 @@ def gwas_create_population_trait_object(meth, GwasPopulation_obj_id=None, popula
     return _workspace_output('Trait_' + output_trait_object_name)
 
 
-@method(name="Create GWAS Variation object")
+#@method(name="Create GWAS Variation object")
 def gwas_create_population_variation_object(meth, population_variation_file_shock_url=None,
                                             population_variation_file_shock_id=None, GwasPopulation_obj_id=None,
                                             assay=None, filetype=None, comment=None,  originator=None,
@@ -335,7 +335,9 @@ def maf(meth, maf=0.05, variation=None):
 
 @method(name="Calculate Kinship matrix")
 def gwas_run_kinship(meth,  filtered_variation=None):
-    """Calculate the kinship matrix.
+    """Computes the n by n kinship matrix for a set of n related subjects.
+       The kinship matrix defines pairwise genetic relatedness among individuals and
+       is estimated by using all genotyped markers. This requires the filtered SNPs as input.
 
     :param filtered_variation: Population variation, filtered
     :type filtered_variation: kbtypes.KBaseGwasData.GwasPopulationVariation
@@ -362,9 +364,11 @@ def gwas_run_kinship(meth,  filtered_variation=None):
 
 @method(name="Run GWAS analysis MLM")
 def gwas_run_gwas2(meth,  genotype=None,  kinship_matrix=None, traits=None, pvalue_cutoff=None):
-    """Run GWAS analysis using
-    <a href="http://www.maizegenetics.net/index.php?option=com_content&task=view&id=89&Itemid=119">Tassel</a>
-    to create top-variations.
+    """Computes association between each SNP and a trait of interest that has been scored
+    across a large number of individuals. This method takes Filtered SNP object,
+    kinship matrix, trait object, p-value cutoff as input and computes association
+    using mixed linear model as implemented  in
+    <a href='http://www.maizegenetics.net/'>TASSEL</a>.
 
    :param genotype: Population variation object
    :type genotype: kbtypes.KBaseGwasData.GwasPopulationVariation
@@ -397,8 +401,9 @@ def gwas_run_gwas2(meth,  genotype=None,  kinship_matrix=None, traits=None, pval
 
 @method(name="Trait Manhattan Plot")
 def trait_manhattan_plot(meth, workspaceID=None, gwas_result=None):
-    """Visualize significant SNPs from GWAS study in a Manhattan plot. On the X-axis of the plot are all contigs,
-    and on the Y-axis is pvalue of SNPs-association for the trait.
+    """Widget to visualize top SNPs related to a trait on the manhattan plot.
+    On the X-axis of the plot are all contigs, and
+    on the Y-axis is -log10(pvalue) of SNPs-association for the trait.
 
     :param workspaceID: workspaceID (use current if empty)
     :type workspaceID: kbtypes.Unicode
@@ -418,13 +423,16 @@ def trait_manhattan_plot(meth, workspaceID=None, gwas_result=None):
 
 @method(name="GWAS Variation To Genes")
 def gwas_variation_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=None, distance=None):
-    """Get variations to genes.
+    """This method takes the top SNPs obtained after GWAS analysis as input
+    (TopVariations) object, -log (pvalue) cutoff and a distance parameter as input.
+    For each significant SNP that passes the p-value cutoff, genes are searched in the
+    window specified by the distance parameter.
 
     :param workspaceID: Workspace (use current if empty)
     :type workspaceID: kbtypes.Unicode
     :param gwasObjectID: GWAS analysis MLM result object
     :type gwasObjectID: kbtypes.KBaseGwasData.GwasTopVariations
-    :param pmin: minimum pvalue (-log10)
+    :param pmin: Minimum pvalue (-log10)
     :type pmin: kbtypes.Numeric
     :default pmin: 4
     :param distance: Distance in bp around SNP to look for genes
@@ -457,23 +465,24 @@ GENE_TABLE_OBJECT_TYPE = "KBaseGwasData.GwasGeneList"
 
 
 @method(name="Gene table")
-def gene_table(meth, workspace_id=None, obj_id=None):
-    """Make a browsable table of gene data.
+def gene_table(meth, obj_id=None):
+    """This method displays a gene list
+    along with functional annotation in a table.
 
-    :param workspace_id: Workspace name (if empty, defaults to current workspace)
-    :type workspace_id: kbtypes.Unicode
     :param obj_id: Gene's workspace object identifier.
-    :type obj_id: kbtypes.Unicode
+    :type obj_id: kbtypes.KBaseGwasData.GwasGeneList
     :return: Rows for display
     :rtype: kbtypes.Unicode
     :output_widget: GeneTableWidget
     """
+    # :param workspace_id: Workspace name (if empty, defaults to current workspace)
+    # :type workspace_id: kbtypes.Unicode
     meth.stages = 1
     meth.advance("Retrieve gene from workspace")
-    if not workspace_id:
-        meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
-        workspace_id = meth.workspace_id
-    ws = Workspace2(token=meth.token, wsid=workspace_id)
+    # if not workspace_id:
+    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
+    #     workspace_id = meth.workspace_id
+    ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
     raw_data = ws.get(obj_id)
     genes = raw_data['data']['genes']
     header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"]
@@ -483,7 +492,9 @@ def gene_table(meth, workspace_id=None, obj_id=None):
 
 @method(name="Gene network")
 def gene_network(meth, gene_list=None):
-    """Visualize a gene network with an interactive widget.
+    """This method searches KBase indexed co-expression networks where
+    genes from the gene_list are present and displays internal networks formed by
+    these genes in an interactive visualization.
 
     :param gene_list: GWAS Gene list
     :type gene_list: kbtypes.KBaseGwasData.GwasGeneList

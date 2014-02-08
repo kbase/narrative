@@ -50,7 +50,8 @@ class URLS:
     #workspace = "https://140.221.84.209:7058"
     workspace = "https://kbase.us/services/ws"
     #invocation = "https://kbase.us/services/invocation"
-    invocation = "http://140.221.85.110:443"
+    #invocation = "http://140.221.85.110:443"
+    invocation = "http://140.221.85.185:7049"
 
 picrustWF = """{
    "info" : {

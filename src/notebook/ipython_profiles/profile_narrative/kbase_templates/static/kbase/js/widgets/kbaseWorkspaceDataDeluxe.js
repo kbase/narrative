@@ -466,7 +466,13 @@
                     }
                     if (!dataList[type])
                         dataList[type] = [];
-                    dataList[type].push([ws, name, type]);
+
+                    // Workaround for dealing with the occasional blank name.
+                    if (name) {
+                        name = name.trim();
+                        if (name.length > 0)
+                            dataList[type].push([ws, name, type]);
+                    }
                 }, this));
             }
             this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);

@@ -283,10 +283,9 @@
                                              'type' : 'button',
                                              'class' : 'btn btn-default',
                                              'id' : 'obj-details-btn',
-                                             'data-placement' : 'top',
-                                             'title' : 'Sorry, no data page available for this object yet!',
                                          })
                                          .append('View Object'))
+                                         .tooltip()
                                  .append($('<button>')
                                          .attr({
                                              'type' : 'button',
@@ -594,15 +593,16 @@
             }
 
             var detailsBtn = this.$infoModal.find('.modal-footer > div > button#obj-details-btn');
-            detailsBtn.off('click').removeAttr('data-toggle');
+            detailsBtn.off('click');
             // If we don't havea a landingPageType (it's still null), then we don't have a landing page for that
             // object. Remove the clicky function and add a tooltip.
             if (landingPageType) {
                 var landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
                 detailsBtn.click(function(event) { window.open(landingPage); });
+                detailsBtn.html("View Object");
             }
             else {
-                detailsBtn.attr('data-toggle', 'tooltip');
+                detailsBtn.html("Object Page Unavailable");
             }
 
         },

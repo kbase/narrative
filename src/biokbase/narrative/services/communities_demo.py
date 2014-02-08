@@ -528,8 +528,13 @@ def _kegg_map(meth, workspace, input1, input2):
     
     meth.advance("Retrieve Data from Workspace")
     # abundance profile
-    biom1 = _get_ws(workspace, input1, CWS.profile)
-    biom2 = _get_ws(workspace, input2, CWS.profile)
+    profile1 = _get_ws(workspace, input1, CWS.profile)
+    profile2 = _get_ws(workspace, input2, CWS.profile)
+    try:
+        biom1 = json.loads(profile1)
+        biom2 = json.loads(profile2)
+    except:
+        return json.dumps({'header': 'ERROR: profiles contain invalid BIOM formats'})
     
     meth.advance("Compare KEGG Networks")
     kdata = [{},{}]

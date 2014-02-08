@@ -13,8 +13,9 @@
         index: Math.floor((Math.random()*1000)+1),
         imagepath: '../../../images/keggmap.png',
         options: {
+            'header': null,
 		    'width': 1200,
-		    'data': [ ],
+		    'data': null,
 		    'image': null,
 		    'div': null
 		},
@@ -39,6 +40,18 @@
     	    // get the target div
     	    var target = document.createElement('div');
     	    var index = renderer.index;
+    	    
+    	    if (renderer.options.header != null) {
+                var text = document.createElement('p');
+                text.setAttribute('style', "padding: 10px 20px;");
+                text.innerHTML = renderer.options.header;
+                target.appendChild(text);
+    	    }
+    	    
+    	    if (renderer.options.data == null) {
+    	        renderer.$elem.append(target);
+                return this;
+    	    }
     	    
     	    if (renderer.options.image == null) {
     		    var image = document.createElement('img');

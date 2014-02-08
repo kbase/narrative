@@ -55,7 +55,7 @@
             this.$dataSelect.change($.proxy(function(event) {
                 var filterValue = '';
                 this.$dataSelect.find('option:selected').each(function(){ filterValue = $( this ).val(); });
-                this.$dataTable.fnFilter(filterValue, 2);
+                this.$dataTable.fnFilter("^" + filterValue + "$", 2, true);
             }, this));
 
             // just filter the search bar on keyup events.
@@ -92,8 +92,11 @@
   // 93                                 data = "<span data-toggle='tooltip' title='" + title + "'>" + abbrev + "..." + "</span>";
                             var type = row[2];
                             var typeName = /^(\S+)-/.exec(type);
-                            return  "<div >" + 
-                                    "<span class='kb-data-obj-name' data-toggle='tooltip' title='" + typeName[1] + "\n" + data + "'>" +
+                            if (typeName && typeName[1]) {
+                                type = typeName[1];
+                            }
+                            return "<div >" + 
+                                   "<span class='kb-data-obj-name' data-toggle='tooltip' title='" + type + "\n" + data + "'>" +
                                             data + 
                                    "</span>" +
                                    "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 

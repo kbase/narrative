@@ -45,7 +45,7 @@ def _assemble_contigs(meth, asm_input):
     """
     ws = os.environ['KB_WORKSPACE_ID']
     token = os.environ['KB_AUTH_TOKEN']
-    arURL = 'http://140.221.84.108:8000/'
+    arURL = 'http://140.221.84.124:8000/'
     ar_user = token.split('=')[1].split('|')[0]
     
 
@@ -81,7 +81,7 @@ def _get_contigs(meth, job_id, contig_num, contig_name):
     """
     ws = os.environ['KB_WORKSPACE_ID']
     token = os.environ['KB_AUTH_TOKEN']
-    arURL = '140.221.84.108'
+    arURL = '140.221.84.124'
     ar_user = token.split('=')[1].split('|')[0]
     wsClient = workspaceService(service.URLS.workspace, token=token)
     aclient = ArastClient(arURL, ar_user, token)

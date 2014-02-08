@@ -320,26 +320,30 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 
 /* controller for the copy narrative modal */
-var CopyNarrativeModalCtrl = function ($scope, $modalInstance, narr) {
+var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) {
 
     $scope.narr = narr;
     // callback for ng-click 'copy narrative':
     $scope.copyNarrative = function () {
-        project.copy_narrative({
+        console.log("clicked copy narrative");
+        kb.nar.copy_narrative({
             fq_id: $scope.narr,
             callback: function(results) {
                 
-                console.log("copied narrative");
-                $modalInstance.dismiss();
+                //console.log("copied narrative " + results.fq_id);
+                window.location.replace("http://demo.kbase.us/narrative/" + results.fq_id);
+                //$modalInstance.dismiss();
 
-                //TODO need to get the Narrative name and redirect to the copied narrative 
+                
             },
             error_callback: function() {
                 //console.log("error occurred");
                 $scope.alerts = [];
                 $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace."});
                 //TODO need to retrieve the actual error message 
+                $scope.$apply();
             }
+
         })
     }
     $scope.cancel = function () {

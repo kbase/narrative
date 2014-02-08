@@ -50,7 +50,7 @@ function (marked) {
 
     IPython.page = new IPython.Page();
     IPython.layout_manager = new IPython.LayoutManager();
-    IPython.pager = new IPython.Pager('div#pager', 'div#pager_splitter');
+//    IPython.pager = new IPython.Pager('div#pager', 'div#pager_splitter');
     IPython.quick_help = new IPython.QuickHelp();
     IPython.login_widget = new IPython.LoginWidget('span#login_widget',{baseProjectUrl:baseProjectUrl});
     IPython.notebook = new IPython.Notebook('div#notebook',{baseProjectUrl:baseProjectUrl});

@@ -160,11 +160,6 @@
                                                 var formatted = quast_txt.replace(/\n/g, '<br>')
                                                 var formatted2 = formatted.replace(/\s/g, '&nbsp')
 						    report_div += '<code style="font-size:4px>' + formatted2 +'</code><br>'
-						    var save_btn = $('<span class=""><a class="btn btn-primary" target="_blank" style="padding:5px">Save Assembly</a></span>')
-						    save_btn.one("click", function(){
-							alert('Saving to workspace');
-						    })
-						    result_btn_row.append(save_btn)
 						    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
                                             }).always(function(){
 						var full_link_log = arURL + '/static/' + user + '/job/' + job_id + '/' + job_id + '_report.txt';

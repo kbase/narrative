@@ -11,6 +11,7 @@ import os
 import random
 import numbers
 import uuid
+import hashlib
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
@@ -61,7 +62,7 @@ def _assemble_contigs(meth, asm_input):
                        "ws_url" : service.URLS.workspace,
                        "kbase_assembly_input": asm_data['data']})
 
-@method(name="Pull Contigs from Assembly Service")
+@method(name="Get Contigs from Assembly Service")
 def _get_contigs(meth, job_id, contig_num, contig_name):
     """Pull down assembled contigs from the Assembly Service
 
@@ -90,9 +91,59 @@ def _get_contigs(meth, job_id, contig_num, contig_name):
     outfile = os.path.join(outdir, os.listdir(outdir)[0])
 
     #### Fasta to ContigSet
-    # TODO: parse OUTFILE to contigset obj, put in ws
+    def fasta_to_contigset(fasta_file, name):
+        contig_set = {'name:': name,
+                      'source':'AssemblyService',
+                      'type': 'Genome',
+                      'contigs': [],
+                      'id': name,
+                      'source_id': name}
 
-    return json.dumps({'output': outfile})
+        ##### Parse Fasta content
+        contig = {}
+        seq_buffer = ''
+        with open(fasta_file) as f:
+            for line in f:
+                if line[0] == '>':
+                    header = line[1:].rstrip()
+                    contig['id'] = header
+                    contig['name'] = header
+                    header = ''
+                elif line[0] == '\n':
+                    if seq_buffer != '':
+                        contig['sequence'] = seq_buffer
+                        m = hashlib.md5()
+                        m.update(seq_buffer)
+                        contig['md5'] = str(m.hexdigest())
+                        seq_buffer = ''
+                        contig_set['contigs'].append(contig)
+                        contig = {}
+                else:
+                    seq_buffer += line.rstrip()
+            if seq_buffer != '':
+                contig['sequence'] = seq_buffer
+                m = hashlib.md5()
+                m.update(seq_buffer)
+                contig['md5'] = str(m.hexdigest())
+                contig_set['contigs'].append(contig)
+        m = hashlib.md5()
+        m.update(str(contig_set['contigs']))
+        contig_set['md5'] = str(m.hexdigest())
+        
+        return contig_set
+
+    if not contig_name:
+        contig_name = str(job_id) + '.assembly.contigset'
+
+    cs_data = fasta_to_contigset(outfile, contig_name)
+    ws_saveobj_params = {'id': contig_name,
+                         'type': 'KBaseGenomes.ContigSet',
+                         'workspace': ws,
+                         'data': cs_data}
+    wsClient.save_object(ws_saveobj_params)
+
+    return json.dumps({'Success': '{} saved to worksapace as {}'.format(
+                os.path.basename(outfile), contig_name)})
 
 @method(name="Assemble Genome from Fasta")
 def _assemble_genome(meth, contig_file, out_genome):

@@ -485,7 +485,7 @@ def gene_table(meth, obj_id=None):
     ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
     raw_data = ws.get(obj_id)
     genes = raw_data['genes']
-    header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function"]
+    header = ["Chromosome ID", "Source gene ID", "Gene ID", "Gene function", "Min. p-value (-log10)"]
     data = {'table': [header] + genes}
     return json.dumps(data)
 

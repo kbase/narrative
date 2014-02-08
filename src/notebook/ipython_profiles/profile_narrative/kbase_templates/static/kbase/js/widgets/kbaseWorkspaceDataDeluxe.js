@@ -393,7 +393,6 @@
                             // type = KBaseBlahblah.Blah-v#.#
                             var parsedType = /^(\S+)-/.exec(type);
                             // if it works, turn type into KBaseBlahblah.Blah w/o the version.
-                            console.log(parsedType);
                             if (parsedType && parsedType[1])
                                 type = parsedType[1];
 
@@ -406,7 +405,6 @@
                         }
                     }
 
-                    console.log(renderedData);
                     this.$myDataDiv.kbaseNarrativeDataTable('setData', renderedData);
 
                     this.trigger('dataUpdated.Narrative');

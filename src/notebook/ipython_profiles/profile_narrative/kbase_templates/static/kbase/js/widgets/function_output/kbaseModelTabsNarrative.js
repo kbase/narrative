@@ -9,7 +9,8 @@ $.KBWidget({
     
     loadingImage: "static/kbase/images/ajax-loader.gif",
     //fbaURL: "https://kbase.us/services/fba_model_services",
-    fbaURL: "http://140.221.84.183:7036",
+    //fbaURL: "http://140.221.84.183:7036",
+    fbaURL: "https://kbase.us/services/KBaseFBAModeling",
 
     getData: function() {
         return {
@@ -125,12 +126,14 @@ $.KBWidget({
 
         // reaction table
         var dataDict = formatRxnObjs(model.reactions);
+        
 
-        var keys = ["reaction", "definition",
-                    "features","name"];
-        var labels = ["reaction", "equation",
-                    "features","name"];
-        var cols = getColumns(keys, labels);
+ 
+        var keys = ["id","name", "definition",
+                    "features","id"];
+        var labels = ["Id (compartment)", "Name", "Equation",
+                    "Genome Features Mapped to this Reaction"];
+        var cols = getColumnsRxns(keys, labels);
         var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
         rxnTableSettings.aoColumns = cols;
         var table = $('#'+randId+'reaction-table').dataTable(rxnTableSettings);
@@ -177,6 +180,10 @@ $.KBWidget({
             var rxn_objs = []
             for (var i in rxnObjs) {
                 var rxn = $.extend({}, rxnObjs[i] );
+                
+                var id = rxn.id.split('_')[0]
+                var compart = rxn.id.split('_')[1]
+                rxn.id = id + " ("+compart+")";
                 //rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'
                 //            +rxn.reaction+'</a> ('+rxn.compartment+')'
                 rxn.reaction = rxn.reaction+' ('+rxn.compartment+')';
@@ -186,6 +193,18 @@ $.KBWidget({
             return rxn_objs;
         }
 
+        function getColumnsRxns(keys, labels) {
+            var cols = [];
+
+            for (var i=0; i<keys.length; i++) {
+                if (i===0) {
+                    cols.push({sTitle: labels[i], mData: keys[i], sWidth:"15%"})
+                } else {
+                    cols.push({sTitle: labels[i], mData: keys[i]})
+                }
+            }
+            return cols;
+        }
         function getColumns(keys, labels) {
             var cols = [];
 
@@ -215,7 +234,7 @@ $.KBWidget({
               "aoColumns": [
                   { "sTitle": "Integrated?", "sWidth": "10%"},
                   {"bVisible":    false},
-                  { "sTitle": "Gapfill Run Name (Object Reference)", "sWidth": "40%"},
+                  { "sTitle": "Gapfill Name (Object Reference)", "sWidth": "40%"},
                   { "sTitle": "Media"},
                   { "sTitle": "Media Object Reference", "sWidth": "20%"},
                   {"bVisible": false},
@@ -276,7 +295,7 @@ $.KBWidget({
                     if (unIntGap.length == 6) {            
                         unIntGap.splice(0, 0, "No")
                         unIntGap.splice(2, 1,  unIntGap[1]+"&nbsp ("+unIntGap[2]+')&nbsp&nbsp'+
-                                        '<a class="show-gap" data-ref="'+unIntGap[1]+'" >view solution details</a>');
+                                        '<a class="show-gap" data-ref="'+unIntGap[1]+'" >view/hide solution details</a>');
                     }
                 }
 
@@ -298,8 +317,8 @@ $.KBWidget({
                 //    <i class="icon-list-alt icon-white history-icon"></i>'
                 //    , placement: 'right'});
 
-                $('.show-gap').unbind('click');
-                $('.show-gap').click(function() {
+                self.$elem.find('.show-gap').unbind('click');
+                self.$elem.find('.show-gap').click(function() {
                     var gapRef = $(this).data('ref');
 
                     var tr = $(this).closest('tr')[0];
@@ -316,7 +335,6 @@ $.KBWidget({
 
             function showGapfillSolutions(tr, gapRef) {
                 var fba = new fbaModelServices(self.fbaURL);
-                //fba.get_models({auth: self.authToken()
                 
                 var gapAJAX = fba.get_gapfills({gapfills: [gapRef], workspaces: [self.currentws], auth: self.authToken()});
                 $.when(gapAJAX).done(function(data) {
@@ -328,7 +346,7 @@ $.KBWidget({
 
                     //$(tr).next().children('td').append('<h5>Gapfill Details</h5>');
 
-                    var solList = $('<div>');
+                    var solList = $('<div>').append("<br> "+ sols.length +" solutions found by this gapfill run<br>");
                     
                     for (var i in sols) {
                         var sol = sols[i];

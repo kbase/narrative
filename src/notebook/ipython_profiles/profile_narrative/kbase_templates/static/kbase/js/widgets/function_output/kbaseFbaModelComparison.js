@@ -185,8 +185,8 @@ $.KBWidget({
                 for (var i in rxnObjs) {
                 	var r1 = rxnObjs[i];
                     var rxn = $.extend({}, r1);
-                    rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'
-                                +rxn.reaction+'</a> ('+rxn.compartment+')';
+                    //rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'+rxn.reaction+'</a> ('+rxn.compartment+')';
+                    rxn.reaction = ''+rxn.reaction+' ('+rxn.compartment+')';
                     if (map2 != null) {
                     	if (map2.hasOwnProperty(r1.id)) {
                     		if (stat != null)

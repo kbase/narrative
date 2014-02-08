@@ -491,13 +491,15 @@ def gene_table(meth, obj_id=None):
 
 
 @method(name="Gene network")
-def gene_network(meth, gene_list=None):
+def gene_network(meth, gene_list=None, external_ids=None):
     """This method searches KBase indexed co-expression networks where
     genes from the gene_list are present and displays internal networks formed by
     these genes in an interactive visualization.
 
     :param gene_list: GWAS Gene list
     :type gene_list: kbtypes.KBaseGwasData.GwasGeneList
+    :param external_ids: Space delimited list of external IDs (optional. Use this or workspace id)
+    :type external_ids: kbtypes.Unicode
     :return: Rows for display
     :rtype: kbtypes.Unicode
     :output_widget: kbasePlantsNetworkNarrative
@@ -509,9 +511,12 @@ def gene_network(meth, gene_list=None):
     #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
     #     workspace_id = meth.workspace_id
     meth.advance("Retrieve gene from workspace")
-    ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
-    raw_data = ws.get(gene_list)
-    data = {'input': raw_data}
+    if gene_list:
+        ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
+        raw_data = ws.get(gene_list)
+    else:
+        raw_data = {}
+    data = {'gwas': raw_data, 'external_ids' : external_ids}
     return json.dumps(data)
 
 

@@ -71,7 +71,7 @@ window.KBaseNetworks = function (url, auth, auth_cb) {
     };
 
     this.taxon2datasets = function (taxid, _callback, _errorCallback) {
-    return json_call_ajax("KBaseNetworks.taxon2Datasets",
+    return json_call_ajax("KBaseNetworks.taxon2datasets",
         [taxid], 1, _callback, _errorCallback);
 };
 
@@ -120,8 +120,8 @@ window.KBaseNetworks = function (url, auth, auth_cb) {
         return json_call_ajax("KBaseNetworks.build_first_neighbor_network_limted_by_strength", [dataset_ids, entity_ids, edge_types, cutOff], 1, _callback, _error_callback);
     };
 
-    this.buildInternalNetwork = function (dataset_ids, gene_ids, edge_types, _callback, _errorCallback) {
-    return json_call_ajax("KBaseNetworks.buildInternalNetwork",
+    this.build_internal_network = function (dataset_ids, gene_ids, edge_types, _callback, _errorCallback) {
+    return json_call_ajax("KBaseNetworks.build_internal_network",
         [dataset_ids, gene_ids, edge_types], 1, _callback, _errorCallback);
 };
 

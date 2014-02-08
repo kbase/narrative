@@ -11,6 +11,8 @@ define('kbasePlantsNetworkNarrative',
         'kbaseTable',
         'KbaseNetworkServiceClient',
         'CDMI_API',
+        'IdMapClient',
+        'OntologyServiceClient',
     ],
     function ($) {
         $.KBWidget(
@@ -27,12 +29,15 @@ define('kbasePlantsNetworkNarrative',
                 'networkClient',
                 //'idMapClient',
                 'cdmiClient',
+                'ontologyClient',
+                'idmapClient',
             ],
 
             options: {
-                networkClientURL : 'http://140.221.85.171:7064/KBaseNetworksRPC/networks',
-                //idmapClientURL : "http://140.221.85.96:7111",
+                networkClientURL : 'http://140.221.85.172:7064/KBaseNetworksRPC/networks',
                 cdmiClientURL    : 'http://140.221.84.182:7032',
+                idmapClientURL   : 'http://140.221.85.181:7111',
+                ontologyClientURL: 'http://140.221.85.171:7062',
             },
 
             init : function(options) {
@@ -64,11 +69,37 @@ define('kbasePlantsNetworkNarrative',
                     )
                 );
 
+                this.idmapClient(
+                    new window.IdMapClient(
+                        this.options.idmapClientURL,
+                        this.auth()
+                    )
+                );
+
+                this.ontologyClient(
+                    new window.Ontology(
+                        this.options.ontologyClientURL,
+                        this.auth()
+                    )
+                );
+
                 if (this.input()) {
                     this.setInput(this.input());
                 }
                 else if (this.options.input) {
                     this.setInput(this.options.input);
+                }
+                else if (this.options.external_ids) {
+                    this.setExternalInput(this.options.external_ids.split(/\s+/));
+                }
+                else if (this.options.gwas) {
+                    this.setGwasInput(this.options.gwas);
+                }
+                else if (this.options.locus_ids) {
+                    this.setLocusInput(this.options.locus_ids.split(/\s+/));
+                }
+                else if (this.options.cds_ids) {
+                    this.setCDSInput(this.options.cds_ids.split(/\s+/));
                 }
 
                 return this;
@@ -76,6 +107,40 @@ define('kbasePlantsNetworkNarrative',
 
             setInput : function(input) {
                 return this.setGwasInput(input);
+            },
+
+            setExternalInput : function(external_ids, species) {
+
+                var $self = this;
+
+                if (species == undefined) {
+                    species = 'kb|g.3899';
+                }
+
+                this.idmapClient().lookup_features(
+                    species,
+                    external_ids,'',''
+                )
+                .done(
+                    function(res) {
+
+                        var locus_ids = [];
+                        $.each(
+                            res,
+                            function (key, ids) {
+                                $.each(
+                                    ids,
+                                    function (idx, val) {
+                                        locus_ids.push(val.kbase_id);
+                                    }
+                                )
+                            }
+                        );
+
+                        $self.setLocusInput(locus_ids);
+
+                    }
+                )
             },
 
             setGwasInput : function (gwasInput) {
@@ -86,6 +151,7 @@ define('kbasePlantsNetworkNarrative',
                     return;
                 }
 
+                var external_ids = [];
                 var locus_ids = [];
                 $.each(
                     gwasInput.genes,
@@ -94,60 +160,96 @@ define('kbasePlantsNetworkNarrative',
                     }
                 );
 
-                this.cdmiClient().fids_to_locations(
-                    locus_ids
-                )
+                this.setLocusInput(locus_ids);
+            },
+
+            setLocusInput : function (locus_ids) {
+
+                var $self = this;
+
+                this.ontologyClient().get_go_annotation(locus_ids,['biological_process'],['IEA'])
                 .done(
-                    function(res) {
-                        var locations = [];
+                    function (res) {
+
+                        var locus_to_associations = {};
                         $.each(
                             res,
-                            function(key, l) {
+                            function (ass_type, loci) {
                                 $.each(
-                                    l,
-                                    function (idx, location) {
-                                        locations.push(
-                                            [location[0], "_", location[1], location[2], location[3]].join('')
-                                        )
+                                    loci,
+                                    function (locus, data) {
+                                        var locus_data = locus_to_associations[locus];
+                                        if (locus_data == undefined) {
+                                            locus_data = locus_to_associations[locus] = {};
+                                        };
+                                        locus_data[ass_type] = data;
                                     }
                                 )
-                             }
+                            }
                         );
 
-                        //okay. We've got our locations. Go back the other way now.
 
-                        $self.cdmiClient().locations_to_fids(
-                            locations
-                        )
+                        $self.ontologyClient().get_goidlist(locus_ids,['biological_process'],['IEA'])
                         .done(
-                            function(res) {
-                                var cdses = [];
+                            function (res) {
                                 $.each(
                                     res,
-                                    function (key, ids) {
-                                        $.each(
-                                            ids,
-                                            function (idx, val) {
-                                                if (val.match(/CDS/i)) {
-                                                    cdses.push(val);
-                                                }
-                                            }
-                                        )
+                                    function (locus, obj) {
+                                        var locus_data = locus_to_associations[locus];
+                                        if (locus_data == undefined) {
+                                            locus_data = locus_to_associations[locus] = {};
+                                        };
+                                        locus_data['go_annotation'] = obj;
                                     }
                                 );
 
-                                $self.setCDSInput(cdses.join("\n"));
+                                $self.idmapClient().longest_cds_from_locus(
+                                    locus_ids
+                                )
+                                .done(
+                                    function(res) {
+                                        //contains a map locus_id => {cds_id => length_of_cds}
+                                        var cdses = [];
+                                        var cds_to_locus = {};
+                                        $.each(
+                                            res,
+                                            function (locus, val) {
+                                                var cds = Object.keys(val)[0];
+                                                cdses.push(cds);
+                                                cds_to_locus[cds] = locus;
+                                            }
+                                        );
+
+                                        cdses.cds_to_locus = cds_to_locus;
+
+                                        //get our mapping of locus_id -> function
+                                        $self.cdmiClient().fids_to_functions(
+                                            locus_ids
+                                        )
+                                        .done(
+                                            function(locus_func_defs) {
+                                                cdses.locus_func_defs = locus_func_defs;
+                                                cdses.locus_to_associations = locus_to_associations;
+                                                $self.setCDSInput(cdses);
+                                            }
+                                        )
+
+                                    }
+                                );
 
                             }
-                        );
+                        )
+
+
                     }
-                );
+                )
+
 
             },
 
-            setCDSInput : function(cds_list) {
+            setCDSInput : function(cdses) {
 
-                this.setValueForKey('input', cds_list);
+                this.setValueForKey('input', cdses);
 
                 if (this.networkClient() == undefined) {
                     return;
@@ -157,7 +259,6 @@ define('kbasePlantsNetworkNarrative',
 
                 var $self = this;
 
-                var cdses = cds_list.split(/\n/);
                 var keyedSpecies = {};
                 $.each(
                     cdses,
@@ -203,15 +304,15 @@ define('kbasePlantsNetworkNarrative',
                                         };
 
                                         datasetRec.description = rec.name + ' (' + rec.description + ')';
-                                        datasetRec.type = rec.networkType;
-                                        datasetRec.source = rec.sourceReference;
+                                        datasetRec.type = rec.network_type;
+                                        datasetRec.source = rec.source_ref;
                                     };
 
                                 }
                             );
 //datasets = ['kb|netdataset.plant.cn.191', 'kb|netdataset.plant.cn.192'];
 
-                            $self.networkClient().buildInternalNetwork(
+                            $self.networkClient().build_internal_network(
                                 datasets,
                                 cdses,
                                 ['GENE_GENE']
@@ -228,17 +329,35 @@ define('kbasePlantsNetworkNarrative',
                                     $.each(
                                         results.nodes,
                                         function (idx, node) {
+
                                             var nodeObj = nodes[node.name];
                                             if (nodeObj == undefined) {
+
+                                                node.func = cdses.locus_func_defs[cdses.cds_to_locus[node.entity_id]];
+
+                                                if (node.func.match(/unknown/i)) {
+                                                    node.func = '';
+                                                }
+
+                                                node.associations = cdses.locus_to_associations[cdses.cds_to_locus[node.entity_id]];
+
                                                 nodeObj = nodes[node.id] = {
                                                     name : node.name,
+                                                    func : node.func,
+                                                    associations : node.associations,
                                                     activeDatasets : {},
                                                     id : node.id,
                                                     radius : 10,
                                                     tag : node.name,
+                                                    search : [
+                                                        node.name,
+                                                        node.func,
+                                                        JSON.stringify(node.associations)
+                                                    ].join(''),
                                                     tagStyle : 'font : 12px sans-serif',
                                                     color : 'black',
                                                 };
+
                                             }
                                         }
                                     );
@@ -247,9 +366,9 @@ define('kbasePlantsNetworkNarrative',
                                         results.edges,
                                         function (idx, edge) {
 
-                                            var node1 = nodes[edge.nodeId1];
-                                            var node2 = nodes[edge.nodeId2];
-                                            var datasetRec = records[edge.datasetId];
+                                            var node1 = nodes[edge.node_id1];
+                                            var node2 = nodes[edge.node_id2];
+                                            var datasetRec = records[edge.dataset_id];
 
                                             if (! datasetRec.nodesByName[node1.name]) {
                                                 datasetRec.nodesByName[node1.name] = 1;
@@ -261,10 +380,14 @@ define('kbasePlantsNetworkNarrative',
                                                 datasetRec.nodes.push(node2);
                                             }
 
-                                            var edgeName = [edge.datasetId, node1.name, node2.name].sort().join('-');//node1.name + '-' + node2.name;
+                                            var edgeName = [edge.dataset_id, node1.name, node2.name].sort().join('-');//node1.name + '-' + node2.name;
                                             var edgeObj = edges[edgeName];
 
-                                            var datasetIdx = datasets.indexOf(edge.datasetId);
+                                            var dataset_idx = datasets.indexOf(edge.dataset_id);
+
+                                            if (edge.name == 'is interact with') {
+                                                edge.name = 'interacts with';
+                                            }
 
                                             if (edgeObj == undefined) {
                                                 edgeObj = edges[edgeName] = {
@@ -272,15 +395,15 @@ define('kbasePlantsNetworkNarrative',
                                                         target : node2,
                                                         activeDatasets : {},
                                                         name : edgeName,
-                                                        description : edge.name + '<br>' + node1.name + ' to ' + node2.name + ' (' + edge.strength.toFixed(3) + ')',
+                                                        description : node1.name + ' ' + edge.name + ' ' + node2.name + ' (' + edge.strength.toFixed(3) + ')',
                                                         //weight : 1,
                                                         colors : {},
-                                                        curveStrength : linkScale(datasetIdx) * (datasetIdx % 2 ? -1 : 1),
+                                                        curveStrength : linkScale(dataset_idx) * (dataset_idx % 2 ? -1 : 1),
                                                     };
                                             }
 
-                                            var color = colorCats(datasets.indexOf(edge.datasetId) % 20);
-                                            edgeObj.colors[edge.datasetId] = color;
+                                            var color = colorCats(datasets.indexOf(edge.dataset_id) % 20);
+                                            edgeObj.colors[edge.dataset_id] = color;
 
                                             if (! datasetRec.edgesByName[edgeName]) {
                                                 datasetRec.edgesByName[edgeName] = 1;
@@ -315,6 +438,7 @@ define('kbasePlantsNetworkNarrative',
 
                                     $self.data('loader').remove();
                                     $self.data('msgBox').show();
+
                                     $self.networkTable().setInput(tabularData);
 
                                 }
@@ -363,7 +487,13 @@ define('kbasePlantsNetworkNarrative',
                 var $networkGraph = $.jqElem('div')
                     .css({width : 700, height : 600})
                     .attr('align', 'center')
-                    .kbaseForcedNetwork({linkDistance : 200, filter : true});
+                    .kbaseForcedNetwork(
+                        {
+                            linkDistance : 200,
+                            filter : true,
+                            nodeHighlightColor : '#002200',
+                            relatedNodeHighlightColor : 'black',
+                        });
 
                 this.networkGraph($networkGraph);
 

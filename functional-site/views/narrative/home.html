@@ -28,7 +28,7 @@
             <br>
             <hr>
             <div class="narrative-sidebar-section">
-                <div class="sidebar-header">RECENT NARRATIVES</div>
+                <h3 class="sidebar-header">RECENT NARRATIVES</h3>
                 <div recentnarratives>
                     <ul class="recent-narratives" ng-repeat="nar in narratives | orderBy:'timestamp':true | limitTo:5">
                         <li><a href="{{nar_url}}/ws.{{nar.wsid}}.obj.{{nar.id}}">{{nar.name}}</a> 

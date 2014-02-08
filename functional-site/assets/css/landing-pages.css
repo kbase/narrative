@@ -171,9 +171,6 @@ rect:hover {
 /* end bootstrap overrides */
 
 
-#core-model { 
-    overflow-x: auto; 
-}
 
 #logo {
     margin: 2px 10px 0 10px;
@@ -188,14 +185,15 @@ table {
     width: 800px;
 }
 
-#selected-workspace {
-    margin: 17px 14px 15px 0px;
-}
 
 .tab-view {
     margin: 10px 0 0 0;
 }
 
+/* landing page */
+#core-model { 
+    overflow-x: auto; 
+}
 
 
 /* mv */
@@ -348,10 +346,13 @@ div::-webkit-scrollbar-thumb {
     border-radius: 3px;
 }
 
-
+.object-options .btn {
+    height: 34px; /* make all buttons equal height */
+}
 .obj-table .dataTables_length label {
     margin: 7px 0 0 0;
 }
+
 
 .dataTables_info {
     margin: 0 10px 0 0;

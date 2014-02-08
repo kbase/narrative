@@ -1,7 +1,8 @@
 <div >
         <div class="modal-header">
             <button type="button" class="close" ng-click="cancel()" aria-hidden="true">&times;</button>
-            <h4>Copy Narrative </h4>
+            <h4>Copy Narrative 
+</h4>
         </div>
         <div class="modal-body">
             <div>
@@ -16,8 +17,8 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-default" ng-click="cancel()">Cancel</button>
-            <button class="btn btn-primary" ng-click="copyNarrative()">Copy Narrative</button>
-            
+            <button id="copy-narr-button" class="btn btn-primary" ng-click="copyNarrative()">Copy Narrative</button>
+            <img src="./assets/images/ajax-loader.gif" id="loading-indicator"  style="display: none"/>
         </div>
 
 </div>

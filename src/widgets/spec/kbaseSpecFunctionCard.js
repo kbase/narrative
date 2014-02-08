@@ -3,6 +3,7 @@
         name: "KBaseSpecFunctionCard", 
         parent: "kbaseWidget", 
         version: "1.0.0",
+        timer: null,
 
         options: {
             id: "",
@@ -87,7 +88,7 @@
                 var specText = $('<div/>').text(data.spec_def).html();
                 specText = replaceMarkedTypeLinksInSpec(moduleName, specText, pref+'links-click');
             	$('#'+pref+'spec').append(
-            			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + "</pre></div>"
+            			'<div id="'+pref+'specdiv" style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + "</pre></div>"
             	);
             	specClicks[pref+'links-click'] = (function(elem, e) {
                     var aTypeId = $(elem).data('typeid');
@@ -100,6 +101,21 @@
                     		});
                 });
             	prettyPrint();
+            	var timeLst = function(event) {
+            		var h1 = container.is(":hidden");
+            		if (h1) {
+            			clearInterval(self.timer);
+            			return;
+            		}
+            		var elem = $('#'+pref+'specdiv');
+            		var h2 = elem.is(":hidden");
+            		if (h2)
+            			return;
+            		var diff = container.height() - elem.height() - 41;
+            		if (Math.abs(diff) > 10)
+            			elem.height(container.height() - 41);
+                };
+            	self.timer = setInterval(timeLst, 1000);
             	
             	////////////////////////////// Sub-types Tab //////////////////////////////
             	$('#'+pref+'subs').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'subs-table" \
@@ -185,8 +201,8 @@
             return {
                 type: "KBaseSpecFunctionCard",
                 id: this.options.name,
-                workspace: '',
-                title: "Spec-document Function"
+                workspace: 'specification',
+                title: "Function Object Specification"
             };
         }
     });

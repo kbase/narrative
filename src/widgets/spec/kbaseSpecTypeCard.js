@@ -3,7 +3,8 @@
         name: "KBaseSpecTypeCard", 
         parent: "kbaseWidget", 
         version: "1.0.0",
-
+        timer: null,
+        
         options: {
             id: "",
             name: "",
@@ -14,8 +15,9 @@
         init: function(options) {
             this._super(options);
             var self = this;
-            var container = this.$elem;
-            self.$elem.append('<p class="muted loader-table"><img src="assets/img/ajax-loader.gif"> loading...</p>');
+        	var pref = generateSpecPrefix();
+        	var container = self.$elem;
+            container.append('<p class="muted loader-table"><img src="assets/img/ajax-loader.gif"> loading...</p>');
 
             var kbws = new Workspace(newWorkspaceServiceUrlForSpec, {token: options.token});
             var typeName = this.options.id;
@@ -25,7 +27,6 @@
             	typeName = typeName.substring(0, typeName.indexOf('-'));
             }
         	self.options.name = typeName;
-        	var pref = generateSpecPrefix();
         	
             kbws.get_type_info(this.options.id, function(data) {
             	$('.loader-table').remove();
@@ -36,15 +37,19 @@
             	var tabs = $('<ul id="'+pref+'table-tabs" class="nav nav-tabs"/>');
                 tabs.append('<li class="active"><a href="#'+pref+tabIds[0]+'" data-toggle="tab" >'+tabNames[0]+'</a></li>');
             	for (var i=1; i<tabIds.length; i++) {
+            		if (tabIds[i] == 'funcs')
+            			continue;
                 	tabs.append('<li><a href="#'+pref+tabIds[i]+'" data-toggle="tab">'+tabNames[i]+'</a></li>');
             	}
             	container.append(tabs);
 
             	// tab panel
-            	var tab_pane = $('<div id="'+pref+'tab-content" class="tab-content">');
+            	var tab_pane = $('<div id="'+pref+'tab-content" class="tab-content"/>');
             	tab_pane.append('<div class="tab-pane in active" id="'+pref+tabIds[0]+'"/>');
             	for (var i=1; i<tabIds.length; i++) {
-                	var tableDiv = $('<div class="tab-pane in" id="'+pref+tabIds[i]+'"> ');
+            		if (tabIds[i] == 'funcs')
+            			continue;
+                	var tableDiv = $('<div class="tab-pane in" id="'+pref+tabIds[i]+'"/>');
                 	tab_pane.append(tableDiv);
             	}
             	container.append(tab_pane);
@@ -87,7 +92,7 @@
                 var specText = $('<div/>').text(data.spec_def).html();
                 specText = replaceMarkedTypeLinksInSpec(moduleName, specText, pref+'links-click');
             	$('#'+pref+'spec').append(
-            			'<div style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + "</pre></div>"
+            			'<div id="'+pref+'specdiv" style="width:100%; overflow-y: auto; height: 300px;"><pre class="prettyprint lang-spec">' + specText + "</pre></div>"
             	);
             	specClicks[pref+'links-click'] = (function(elem, e) {
                     var aTypeId = $(elem).data('typeid');
@@ -100,7 +105,22 @@
                     		});
                 });
             	prettyPrint();
-                
+            	var timeLst = function(event) {
+            		var h1 = container.is(":hidden");
+            		if (h1) {
+            			clearInterval(self.timer);
+            			return;
+            		}
+            		var elem = $('#'+pref+'specdiv');
+            		var h2 = elem.is(":hidden");
+            		if (h2)
+            			return;
+            		var diff = container.height() - elem.height() - 41;
+            		if (Math.abs(diff) > 10)
+            			elem.height(container.height() - 41);
+                };
+            	self.timer = setInterval(timeLst, 1000);
+
             	////////////////////////////// Functions Tab //////////////////////////////
             	$('#'+pref+'funcs').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'funcs-table" \
         				class="table table-bordered table-striped" style="width: 100%;"/>');
@@ -240,7 +260,7 @@
 
             }, function(data) {
             	$('.loader-table').remove();
-                self.$elem.append('<p>[Error] ' + data.error.message + '</p>');
+                container.append('<p>[Error] ' + data.error.message + '</p>');
                 return;
             });
             
@@ -251,8 +271,8 @@
             return {
                 type: "KBaseSpecTypeCard",
                 id: this.options.name,
-                workspace: '',
-                title: "Spec-document Type"
+                workspace: "specification",
+                title: "Typed Object Specification"
             };
         }
     });

@@ -91,11 +91,12 @@
 
             var asm_div = $('<div class="row">');
             var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
+                                      <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">3-Assembly Pipeline</option> \
                                       <option value="sga_preprocess,bhammer,tagdust,spades">AssemblyRAST Pipeline</option> \
-                                      <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">Triple Pipeline</option> \
                                       <option value="a6">A6 Pipeline</option> \
-                                      <option value="pacbio">PacBio SMRT Pipeline</option> \
+                                      <option value="pacbio,?min_long_read_length=3500,?genome_size=40000">PacBio SMRT Pipeline</option> \
                                       <option value="spades">SPAdes Assembler</option> \
+                                      <option value="ray">Ray Assembler</option> \
                                       <option value="idba">IDBA-UD Assembler</option> \
                                       <option value="kiki">Kiki Assembler</option> \
                                     </select></span>');
@@ -159,10 +160,15 @@
                                                 var formatted = quast_txt.replace(/\n/g, '<br>')
                                                 var formatted2 = formatted.replace(/\s/g, '&nbsp')
 						    report_div += '<code style="font-size:4px>' + formatted2 +'</code><br>'
-						    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-success" target="_blank" style="padding:5px">Full Analysis</a></span>')
+						    var save_btn = $('<span class=""><a class="btn btn-primary" target="_blank" style="padding:5px">Save Assembly</a></span>')
+						    save_btn.one("click", function(){
+							alert('Saving to workspace');
+						    })
+						    result_btn_row.append(save_btn)
+						    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
                                             }).always(function(){
 						var full_link_log = arURL + '/static/' + user + '/job/' + job_id + '/' + job_id + '_report.txt';
-						result_btn_row.append('<span class=""><a href='+ full_link_log +' class="btn btn-info" target="_blank">Assembly Log</a></span></div>')
+						result_btn_row.append('<span class=""><a href='+ full_link_log +' class="btn btn-primary" target="_blank">Assembly Log</a></span></div>')
                                                 self.$elem.append(report_div);
 						self.$elem.append(result_btn_row);
 					    })

@@ -10,6 +10,7 @@ import json
 import os
 import random
 import numbers
+import uuid
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
@@ -18,6 +19,7 @@ from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.GenomeComparison.Client import GenomeComparison
+from biokbase.assembly.client import Client as ArastClient
 
 ## Globals
 
@@ -59,6 +61,38 @@ def _assemble_contigs(meth, asm_input):
                        "ws_url" : service.URLS.workspace,
                        "kbase_assembly_input": asm_data['data']})
 
+@method(name="Pull Contigs from Assembly Service")
+def _get_contigs(meth, job_id, contig_num, contig_name):
+    """Pull down assembled contigs from the Assembly Service
+
+    :param job_id: The Job ID of the desired assembly
+    :type job_id: kbtypes.Unicode
+    :ui_name job_id: Job Id
+    :param contig_num: The contig id
+    :type contig_num: kbtypes.Unicode
+    :ui_name contig_num: Contig ID
+    :param contig_name: The name of the ContigSet to be created
+    :type contig_name: kbtypes.Unicode
+    :ui_name contig_name: Contig Name
+    :return: An assembly job
+    :rtype: kbtypes.Unicode
+    """
+    ws = os.environ['KB_WORKSPACE_ID']
+    token = os.environ['KB_AUTH_TOKEN']
+    arURL = '140.221.84.108'
+    ar_user = token.split('=')[1].split('|')[0]
+    wsClient = workspaceService(service.URLS.workspace, token=token)
+    aclient = ArastClient(arURL, ar_user, token)
+
+    #### Get Fasta from Assembly service
+    outdir = os.path.join('/tmp', str(uuid.uuid4()))
+    aclient.get_assemblies(job_id=job_id, asm_id=contig_num, outdir=outdir)
+    outfile = os.path.join(outdir, os.listdir(outdir)[0])
+
+    #### Fasta to ContigSet
+    # TODO: parse OUTFILE to contigset obj, put in ws
+
+    return json.dumps({'output': outfile})
 
 @method(name="Assemble Genome from Fasta")
 def _assemble_genome(meth, contig_file, out_genome):

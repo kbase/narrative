@@ -14,9 +14,10 @@ $.KBWidget({
     	ws_id: null
     },
 
-    wsUrl: "http://140.221.84.209:7058/",
+    wsUrl: "https://kbase.us/services/ws/",
     jobSrvUrl: "https://kbase.us/services/userandjobstate/",
-    cmpImgUrl: "http://140.221.85.58:8283/image",
+    cmpImgUrl: "http://140.221.85.57:8283/image",
+    loadingImage: "static/kbase/images/ajax-loader.gif",
     timer: null,
     geneRows: 21,
     geneRowH: 21,
@@ -43,12 +44,20 @@ $.KBWidget({
     render: function() {
         var self = this;
         var container = this.$elem;
+    	container.empty();
+        if (self.token == null) {
+        	container.append("<div>[Error] You're not logged in</div>");
+        	return;
+        }
+
         var kbws = new Workspace(this.wsUrl, {'token': self.token});
         var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.token});
 
         var dataIsReady = function() {
+        	container.empty();
+            container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading comparison data...</div>");
             kbws.get_objects([{ref: self.ws_name + "/" + self.ws_id}], function(data) {
-            	$('.loader-table').remove();
+            	container.empty();
             	self.cmp = data[0].data;
             	var table = $('<table/>')
             		.addClass('table table-bordered')
@@ -57,9 +66,21 @@ $.KBWidget({
             	var createTableRow = function(name, value) {
             		return "<tr><td>" + name + "</td><td>" + value + "</td></tr>";
             	};
+            	var count1hits = 0;
+    			for (var i in self.cmp.data1) {
+    				if (self.cmp.data1[i].length > 0)
+    					count1hits++;
+    			}
+            	var count2hits = 0;
+    			for (var i in self.cmp.data2) {
+    				if (self.cmp.data2[i].length > 0)
+    					count2hits++;
+    			}
             	table.append(createTableRow("Comparison object", self.ws_id));
-            	table.append(createTableRow("Genome1 (x-axis)", self.cmp.genome1id + " (" + self.cmp.proteome1names.length + " genes)"));
-            	table.append(createTableRow("Genome2 (y-axis)", self.cmp.genome2id + " (" + self.cmp.proteome2names.length + " genes)"));
+            	table.append(createTableRow("Genome1 (x-axis)", self.cmp.genome1id + 
+            			" (" + self.cmp.proteome1names.length + " genes, " + count1hits + " have hits)"));
+            	table.append(createTableRow("Genome2 (y-axis)", self.cmp.genome2id + 
+            			" (" + self.cmp.proteome2names.length + " genes, " + count2hits + " have hits)"));
             	if (self.scale == null)
             		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
             	var st = ' style="border: 0px; margin: 0px; padding: 0px;"';
@@ -242,8 +263,12 @@ $.KBWidget({
         			var wasError = data[6];
     				var tdElem = $('#'+self.pref+'job');
     				tdElem.html(status);
+				if (status === 'running') {
+					tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
+                                }
         			if (complete === 1) {
         				clearInterval(self.timer);
+					
         				if (wasError === 0) {
             				dataIsReady();
         				}
@@ -433,6 +458,8 @@ $.KBWidget({
 
     getState: function() {
         var self = this;
+    	if (self.scale == null)
+    		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
         var state = {
         		imgI: self.imgI,
         	    imgJ: self.imgJ,
@@ -460,6 +487,8 @@ $.KBWidget({
 	    self.dirI = state.dirI;
 	    self.geneJ = state.geneJ;
 	    self.dirJ = state.dirJ;
+    	if (self.scale == null)
+    		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
 	    self.refreshImage();
 	    self.refreshGenes();
     }

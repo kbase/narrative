@@ -47,7 +47,7 @@ ws_tag_type = 'KBaseNarrative.Metadata'
 ws_narrative_type = 'KBaseNarrative.Narrative'
 
 # object name for project tag
-ws_tag = { 'project' : 'project_meta' }
+ws_tag = { 'project' : '_project' }
 
 def get_wsobj_meta( wsclient, objtype=ws_narrative_type, ws_id=None ):
     """
@@ -81,7 +81,7 @@ def get_wsid( wsclient, workspace):
     try:
         ws_meta = wsclient.get_workspace_info( { 'workspace' : workspace});
     except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
-        if e.message.find('not found'):
+        if e.message.find('not found') >= 0 or e.message.find('No workspace with name') >= 0:
             return( None)
         else:
             raise e
@@ -156,7 +156,7 @@ def check_project_tag( wsclient, ws_id):
                                         0);
     except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
-        if e.message.find('not found'):
+        if e.message.find('not found') >= 0 or e.message.find('No object with name') >= 0:
             obj_save_data = { 'name' : ws_tag['project'],
                               'type' :ws_tag_type,
                               'data' : { 'description' : 'Tag! You\'re a project!'},
@@ -204,7 +204,7 @@ def check_homews( wsclient, user_id = None):
         ws_meta = wsclient.get_workspace_info( workspace_identity)
     except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
-        if e.message.find('not found') >= 0:
+        if e.message.find('not found') >= 0 or e.message.find('No workspace with name') >= 0:
             ws_meta = wsclient.create_workspace( { 'workspace' : homews,
                                                    'globalread' : 'n',
                                                    'description' : 'User home workspace'})

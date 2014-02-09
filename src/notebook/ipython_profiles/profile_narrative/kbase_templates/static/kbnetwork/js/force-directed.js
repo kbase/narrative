@@ -30,7 +30,7 @@
 (function ($) {
     var URL_ROOT = "http://140.221.84.142/objects/coexpr_test/Networks";
 //    var WS_URL = "http://kbase.us/services/workspace_service/";
-	var WS_URL = "http://140.221.84.209:7058/";
+	var WS_URL = "https://kbase.us/services/ws/";
   var GO_URL_TEMPLATE = "http://www.ebi.ac.uk/QuickGO/GTerm?id=<%= id %>";
     $.KBWidget({
         name: "ForceDirectedNetwork",
@@ -65,7 +65,7 @@
                         auth: self.options.token,
                         workspace: wsid,
                         id: noid,
-                        type: 'Networks.Network'
+                        type: 'KBaseNetworks.Network'
                     });
                 } else {
                     self.trigger("error", ["Cannot parse workspace ID " +
@@ -135,6 +135,29 @@
                                     });
                                     makeRow("GO terms", goList);
                                 }
+                                if (annotations["go_annotation"] !== undefined) {
+                                	var goe = annotations["go_annotation"];
+                                	var goe1 = goe.replace("\n","<br>");
+                                    makeRow("GO", goe1);
+                                }
+                                if (annotations["go_enrichnment_annotation"] !== undefined) {
+                                	var goe = annotations["go_enrichnment_annotation"];
+                                	var goe1 = goe.replace("\n","<br>");
+                                    makeRow("GO(e)", goe1);
+                                }
+                            }
+                           if (node.type === "CLUSTER" && node.user_annotations !== undefined) {
+                                var annotations = node.user_annotations;
+                                if (annotations["go_annotation"] !== undefined) {
+                                	var goe = annotations["go_annotation"];
+                                	var goe1 = goe.replace("\n","<br>");
+                                    makeRow("GO", goe1);
+                                }
+                                if (annotations["go_enrichnment_annotation"] !== undefined) {
+                                	var goe = annotations["go_enrichnment_annotation"];
+                                	var goe1 = goe.replace("\n","<br>");
+                                    makeRow("GO(e)", goe1);
+                                }
                             }
                         },
                         searchTerms: function (node, indexMe) {
@@ -174,10 +197,6 @@
                         });
                         progress.dismiss();
                         try {
-// make another init data object (one cluster nodes and edges).   
-//                          var init_cluster = getFirstCluster(data);
-// now for this cluster, create sub-data
-//                          						                     
                             network.setData(data);
                         } catch (error) {
                             $(self.$elem)

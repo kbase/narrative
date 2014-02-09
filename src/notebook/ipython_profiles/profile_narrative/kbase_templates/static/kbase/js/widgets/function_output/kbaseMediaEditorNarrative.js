@@ -17,8 +17,8 @@ $.KBWidget({
         var viewOnly = this.options.viewOnly;
         var editOnly = this.options.editOnly;
 
-        var fba = new fbaModelServices('http://kbase.us/services/fba_model_services');
-        var kbws = new workspaceService('http://140.221.84.209:7058/');
+        var fba = new fbaModelServices('https://kbase.us/services/KBaseFBAModeling');
+        var kbws = new workspaceService('https://kbase.us/services/ws/');
 
 //      var panel = self.$elem.kbasePanel({title: 'Media Info', subText: media})
 

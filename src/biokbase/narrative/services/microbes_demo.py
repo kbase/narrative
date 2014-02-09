@@ -151,7 +151,7 @@ def _get_contigs(meth, job_id, contig_num, contig_name):
 
 @method(name="Assemble Genome from Fasta")
 def _assemble_genome(meth, contig_file, out_genome):
-    """This assembles a ContigSet into a Genome object in your data space.
+    """This assembles a ContigSet into a Genome object in your workspace.
     This should be run before trying to annotate a Genome. [2]
 
     :param contig_file: A FASTA file with contig data [2.1]
@@ -198,10 +198,10 @@ def _assemble_genome(meth, contig_file, out_genome):
     meth.advance("Rendering Genome Information")
     return json.dumps(genome_meta)
 
-@method(name="Upload Contigs")
+@method(name="Upload Contigs (FASTA-file)")
 def _upload_contigs(meth, contig_set):
-    """This wraps a ContigSet by a Genome object in your data space.
-    This should be run before trying to annotate a Genome. [19]
+    """Upload a ContigSet from FASTA-file into your workspace.
+    This function should be run before wrapping the ContigSet as a Genome object. [19]
 
     :param contig_set: Output contig set ID. If empty, an ID will be chosen randomly. [19.1]
     :type contig_set: kbtypes.KBaseGenomes.ContigSet
@@ -216,10 +216,28 @@ def _upload_contigs(meth, contig_set):
     workspace = os.environ['KB_WORKSPACE_ID']
     return json.dumps({'ws_name': workspace, 'contig_set': contig_set})
 
+@method(name="Upload Genome (GBK-file)")
+def _upload_genome(meth, genome_id):
+    """Upload a Genome and ContigSet from GBK-file into your workspace.
+    This function should be run before adding SEED annotations to this Genome. [20]
+
+    :param genome_id: Output Genome ID. If empty, an ID will be chosen randomly. [20.1]
+    :type genome_id: kbtypes.KBaseGenomes.Genome
+    :ui_name genome_id: Genome Object ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: GenomeUploadWidget
+    """
+    if not genome_id:
+        genome_id = "genome_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    meth.stages = 1
+    workspace = os.environ['KB_WORKSPACE_ID']
+    return json.dumps({'ws_name': workspace, 'genome_id': genome_id, 'type': 'gbk'})
+
 @method(name="Convert Contigs to a Genome")
 def _prepare_genome(meth, contig_set, scientific_name, out_genome):
-    """This wraps a ContigSet by a Genome object in your data space.
-    This should be run before trying to annotate a Genome. [3]
+    """Wrap a ContigSet as a Genome object in your workspace.
+    This function should be run before trying to annotate a Genome. [3]
 
     :param contig_set: An object with contig data [3.1]
     :type contig_set: kbtypes.KBaseGenomes.ContigSet
@@ -228,10 +246,11 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     :type scientific_name: kbtypes.Unicode
     :ui_name scientific_name: Scientific Name
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly. [3.3]
-    :type out_genome: kbtypes.Unicode
+    :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
     :return: Preparation message
     :rtype: kbtypes.Unicode
+    :output_widget: GenomeAnnotation
     """
     if not scientific_name:
         return json.dump({'error': 'output genome name should be defined'})
@@ -253,18 +272,27 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
         'genetic_code': 11,
     }
     fbaClient.ContigSet_to_Genome(contigset_to_genome_params)
-    return json.dumps({"output": "New genome was created"})
+    wsClient = workspaceService(service.URLS.workspace, token=token)
+    genomeData = wsClient.get_objects([{'ref': workspace+'/'+out_genome}])[0]
+    genome = genomeData['data']
+    meta = genomeData['info'][10]
+    if not meta:
+        meta = {}
+    meta['Scientific name'] = scientific_name
+    wsClient.save_objects({'workspace': workspace, 'objects': [{'type': 'KBaseGenomes.Genome', 'name': out_genome, 'data': genome, 'meta': meta}]})
+    return json.dumps({'ws_name': workspace, 'ws_id': out_genome})
 
-@method(name="Annotate Assembled Genome")
+@method(name="Annotate Genome")
 def _annotate_genome(meth, genome, out_genome):
-    """This starts a job that might run for an hour or longer.
-    When it finishes, the annotated Genome will be stored in your data space. [4]
+    """Annotate a Genome object with structural and functional gene annotations.
+    The annotation job may run for an hour or longer. When the annotation job finishes,
+    the annotated Genome object will be stored in your workspace. [4]
     
     :param genome: Source genome ID [4.1]
     :type genome: kbtypes.KBaseGenomes.Genome
     :ui_name genome: Genome ID
     :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [4.2]
-    :type out_genome: kbtypes.Unicode
+    :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
     :return: Annotated output genome ID
     :rtype: kbtypes.KBaseGenomes.Genome
@@ -285,9 +313,40 @@ def _annotate_genome(meth, genome, out_genome):
     job_id = cmpClient.annotate_genome(annotate_genome_params)
     return json.dumps({'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
 
-@method(name="View Annotated Genome")
+@method(name="Add SEED Annotation")
+def _add_seed_annotation(meth, genome, out_genome):
+    """Add SEED annotations to a genome.  This function will start a job that might run for an hour or longer.
+    When the job finishes, the Genome with SEED annotations will be stored in your workspace. [21]
+    
+    :param genome: Source genome ID [21.1]
+    :type genome: kbtypes.KBaseGenomes.Genome
+    :ui_name genome: Genome ID
+    :param out_genome: Annotated output genome ID. If empty, annotation will be added into original genome object. [21.2]
+    :type out_genome: kbtypes.KBaseGenomes.Genome
+    :ui_name out_genome: Output Genome ID
+    :return: Annotated output genome ID
+    :rtype: kbtypes.Genome
+    :output_widget: GenomeAnnotation
+    """
+    meth.stages = 1  # for reporting progress
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    if not out_genome:
+        out_genome = genome
+    cmpClient = GenomeComparison(url = service.URLS.genomeCmp, token = token)
+    annotate_genome_params = {
+        'in_genome_ws': workspace, 
+        'in_genome_id': genome, 
+        'out_genome_ws': workspace, 
+        'out_genome_id': out_genome,
+        'seed_annotation_only' : 1,
+    }
+    job_id = cmpClient.annotate_genome(annotate_genome_params)
+    return json.dumps({'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
+
+@method(name="View Genome")
 def _show_genome(meth, genome):
-    """View and explore an annotated Genome in your Workspace. [5]
+    """View and explore a Genome object in your workspace. [5]
     
     :param genome: select the genome you want to view [5.1]
     :type genome: kbtypes.KBaseGenomes.Genome
@@ -301,19 +360,19 @@ def _show_genome(meth, genome):
     token, workspaceName = meth.token, meth.workspace_id
     return json.dumps({'ws_name': workspaceName, 'ws_id': genome})
 
-@method(name="Build an FBA Model for a Genome")
+@method(name="Build a Metabolic Model")
 def _genome_to_fba_model(meth, genome_id, fba_model_id):
-    """Given an annotated Genome, build a draft flux balance analysis model. [6]
+    """Given an annotated Genome, build a draft metabolic model which can be analyzed with FBA. [6]
 
     :param genome_id: Source genome name [6.1]
     :type genome_id: kbtypes.KBaseGenomes.Genome
     :ui_name genome_id: Genome Name
     
-    :param fba_model_id: select a name for the generated FBA Model (optional) [6.2]
+    :param fba_model_id: select a name for the generated metabolic model (optional) [6.2]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: Output FBA Model Name
+    :ui_name fba_model_id: Output Metabolic Model Name
     
-    :return: Generated FBA Model ID
+    :return: Generated Metabolic Model ID
     :rtype: kbtypes.KBaseFBA.FBAModel
     :output_widget: kbaseModelTabs
     """
@@ -332,7 +391,7 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     :type core_model: kbtypes.Unicode
     :ui_name core_model: Core Model Only?
     """
-    meth.stages = 3  # for reporting progress
+    meth.stages = 2  # for reporting progress
     meth.advance("Starting")
     meth.advance("Building your new FBA model")
     
@@ -361,25 +420,24 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     model_name = fba_meta_data[1]
     
     # fetch the model via fba client
-    fbaClient = fbaModelServices(service.URLS.fba)
-    get_models_params = {
-        'models' : [model_name],
-          'workspaces' : [workspaceName]
-    }
-    modeldata = fbaClient.get_models(get_models_params)
-    meth.advance("Displaying your new FBA model details")
-    return json.dumps({'id': model_name, 'ws': workspaceName, 'modelsData': modeldata})
+    #get_models_params = {
+    #    'models' : [model_name],
+    #      'workspaces' : [workspaceName]
+    #}
+    #modeldata = fbaClient.get_models(get_models_params)
+    #meth.advance("Displaying your new FBA model details")
+    return json.dumps({'id': model_name, 'ws': workspaceName})
 
 
-@method(name="View FBA Model Details")
+@method(name="View Metabolic Model Details")
 def _view_model_details(meth, fba_model_id):
-    """Bring up a detailed view of your FBA Model within the narrative. [7]
+    """Bring up a detailed view of your metabolic model within the narrative. [7]
     
-    :param fba_model_id: the FBA Model to view [7.1]
+    :param fba_model_id: the metabolic model to view [7.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: FBA Model
+    :ui_name fba_model_id: Metabolic Model
     
-    :return: FBA Model Data
+    :return: Metabolic Model Data
     :rtype: kbtypes.Model
     :output_widget: kbaseModelTabs
     """
@@ -390,19 +448,19 @@ def _view_model_details(meth, fba_model_id):
     userToken, workspaceName = meth.token, meth.workspace_id;
     meth.advance("Loading the model")
     
-    # fetch via fba client
-    fbaClient = fbaModelServices(service.URLS.fba, token=userToken)
-    get_models_params = {
-        'models' : [fba_model_id],
-        'workspaces' : [workspaceName]
-    }
-    modeldata = fbaClient.get_models(get_models_params)
-    return json.dumps({'id': fba_model_id, 'ws': workspaceName, 'modelsData': modeldata})
+    # fetch via fba client (NOW HANDLED IN JS WIDGET)
+    #fbaClient = fbaModelServices(service.URLS.fba, token=userToken)
+    #get_models_params = {
+    #    'models' : [fba_model_id],
+    #    'workspaces' : [workspaceName]
+    #}
+    #modeldata = fbaClient.get_models(get_models_params)
+    return json.dumps({'id': fba_model_id, 'ws': workspaceName})
 
 
 @method(name="Build Media")
 def _build_media(meth, media):
-    """Assemble a set of compounds to use as a media set for performing FBA on a model. [8]
+    """Assemble a set of compounds to use as a media set for performing FBA on a metabolic model. [8]
 
     :param base_media: Base media type [8.1]
     :type base_media: kbtypes.KBaseBiochem.Media
@@ -472,12 +530,13 @@ def _view_media(meth, media_id):
     return json.dumps(result)
 
 @method(name="Run Flux Balance Analysis")
-def _run_fba(meth, fba_model_id, media_id, fba_result_id):
+def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, defaultmaxflux, defaultminuptake, defaultmaxuptake, minimizeFlux, maximizeObjective, allreversible):
     """Run Flux Balance Analysis on a metabolic model. [10]
 
-    :param fba_model_id: the FBA model you wish to run [10.1]
+    :param fba_model_id: the metabolic model you wish to run [10.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: FBA Model
+    :ui_name fba_model_id: Metabolic Model
+    
     :param media_id: the media condition in which to run FBA (optional, default is an artificial complete media) [10.2]
     :type media_id: kbtypes.KBaseBiochem.Media
     :ui_name media_id: Media
@@ -486,14 +545,55 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     :type fba_result_id: kbtypes.KBaseFBA.FBA
     :ui_name fba_result_id: Output FBA Result Name
     
+    :param geneko: specify gene knockouts by the gene's feature ID delimited by semicolons(;) (optional) [10.4]
+    :type geneko: kbtypes.Unicode
+    :ui_name geneko: Gene Knockouts
+    
+    :param rxnko: specify reaction knockouts by reaction ID delimited by semicolons(;) (optional) [10.5]
+    :type rxnko: kbtypes.Unicode
+    :ui_name rxnko: Reaction Knockouts
+    
+    :param defaultmaxflux: specify the default maximum intracellular flux (optional) [10.6]
+    :type defaultmaxflux: kbtypes.Unicode
+    :ui_name defaultmaxflux: Default Maximum flux
+    :default defaultmaxflux: 100
+    
+    :param defaultminuptake: specify the default minumum nutrient uptake flux (optional) [10.7]
+    :type defaultminuptake: kbtypes.Unicode
+    :ui_name defaultminuptake: Default Min Uptake
+    :default defaultminuptake: -100
+    
+    :param defaultmaxuptake: specify the default maximum nutrient uptake flux (optional) [10.8]
+    :type defaultmaxuptake: kbtypes.Unicode
+    :ui_name defaultmaxuptake: Default Max Uptake
+    :default defaultmaxuptake: 0
+    
+    :param minimizeFlux: set to 'yes' or '1' to run FBA by minimizing flux (optional) [10.9]
+    :type minimizeFlux: kbtypes.Unicode
+    :ui_name minimizeFlux: Minimize Flux?
+    :default minimizeFlux: no
+    
+    :param maximizeObjective: set to 'no' or '0' to run FBA without maximizing the objective function (optional) [10.10]
+    :type maximizeObjective: kbtypes.Unicode
+    :ui_name maximizeObjective: Maximize Objective?
+    :default maximizeObjective: yes
+    
+    :param allreversible: set to 'yes' or '1' to allow all model reactions to be reversible (optional) [10.11]
+    :type allreversible: kbtypes.Unicode
+    :ui_name allreversible: All rxns reversible?
+    :default allreversible: no
+    
     :return: something 
     :rtype: kbtypes.Unicode
-    
     :output_widget: kbaseFbaTabsNarrative
     """
     
+    ## !! Important note!  the default values set here are for display only, so we actually revert to the
+    ## default values in the FBA modeling service.  Thus, if default values are updated there, the default values
+    ## displayed to the end user will be incorrect!
+    
     meth.stages = 3
-    meth.advance("Setting up FBA parameters")
+    meth.advance("Setting up and validating FBA parameters")
     
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id;
@@ -501,6 +601,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     
     # setup the parameters
     """
+    bool minimizeflux - a flag indicating if flux variability should be run (an optional argument: default is '0')
     typedef structure {
         fbamodel_id model;
         workspace_id model_workspace;
@@ -541,6 +642,11 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
         bool minthermoerror;
     } FBAFormulation;
     """
+    
+    # handle and/or validate parameters...
+    if not fba_model_id:
+        raise Exception("Error in running FBA: model name was not specified")
+    
     if media_id:
         fba_formulation = {
             'media' : media_id,
@@ -559,17 +665,62 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     fba_result_id = fba_result_id.strip()
     if fba_result_id:
         fba_params['fba'] = fba_result_id
+    if geneko:
+        fba_params['simulateko'] = 1
+        fba_params['formulation']['geneko']=geneko.split(";")
+    if rxnko:
+        fba_params['simulateko'] = 1
+        fba_params['formulation']['rxnko']=rxnko.split(";")
+    if maximizeObjective=='0' or maximizeObjective=='false' or maximizeObjective=='no':
+        fba_params['formulation']['maximizeObjective'] = 0
+    else:
+        fba_params['formulation']['maximizeObjective'] = 1
+        
+    if minimizeFlux=='1' or minimizeFlux=='true' or minimizeFlux=='yes':
+        fba_params['minimizeflux'] = 1
+    else:
+        fba_params['minimizeflux'] = 0
+        
+    if allreversible=='1' or allreversible=='true' or allreversible=='yes':   
+        fba_params['formulation']['allreversible'] = 1
+    else:  
+        fba_params['formulation']['allreversible'] = 0
+        
+
+    if defaultmaxflux:
+        try:
+            fba_params['formulation']['defaultmaxflux'] = float(defaultmaxflux)
+        except:
+            raise Exception("Default maximum flux must be a valid number.")
+    else:
+        fba_params['formulation']['defaultmaxflux'] = 100
+    if defaultminuptake:
+        try:
+            fba_params['formulation']['defaultminuptake'] = float(defaultminuptake)
+        except:
+            raise Exception("Default minimum uptake must be a valid number.")
+    else:
+        fba_params['formulation']['defaultminuptake'] = -100
+    if defaultmaxflux:
+        try:
+            fba_params['formulation']['defaultmaxuptake'] = float(defaultmaxuptake)
+        except:
+            raise Exception("Default maximum uptake must be a valid number.")
+    else:
+        fba_params['formulation']['defaultmaxuptake'] = 0
+    
+    meth.debug(json.dumps(fba_params))
 
     meth.advance("Running FBA")
     result_meta = fbaClient.runfba(fba_params)
     generated_fba_id = result_meta[0]
     
-    meth.advance("Retrieving FBA results")
-    get_fbas_params = {
-        'fbas' : [generated_fba_id],
-        'workspaces' : [workspaceName]
-    }
-    fbadata = fbaClient.get_fbas(get_fbas_params)
+    #meth.advance("Retrieving FBA results")
+    #get_fbas_params = {
+    #    'fbas' : [generated_fba_id],
+    #    'workspaces' : [workspaceName]
+    #}
+    #fbadata = fbaClient.get_fbas(get_fbas_params)
     
     # a hack: get object info so we can have the object name (instead of the id number)
     ws = workspaceService(service.URLS.workspace, token=userToken)
@@ -579,13 +730,13 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id):
     }]
     info = ws.get_object_info(get_objects_params,0)
     
-    return json.dumps({ "ids":[info[0][1]],"workspaces":[workspaceName],"fbaData":fbadata })
+    return json.dumps({ "ids":[info[0][1]],"workspaces":[workspaceName] })
 
 
 
 @method(name="View FBA Result Details")
 def _view_fba_result_details(meth, fba_id):
-    """This brings up a detailed view of your FBA Model within the narrative. [11]
+    """Bring up a detailed view of your FBA result within the narrative. [11]
     
     :param fba_id: the FBA Result to view [11.1]
     :type fba_id: kbtypes.KBaseFBA.FBA
@@ -601,29 +752,34 @@ def _view_fba_result_details(meth, fba_id):
     
     #grab token and workspace info, setup the client
     token, workspaceName = meth.token, meth.workspace_id;
-    fbaClient = fbaModelServices(service.URLS.fba)
+    #fbaClient = fbaModelServices(service.URLS.fba)
     
     meth.advance("Retrieving FBA results")
-    get_fbas_params = {
-        'fbas' : [fba_id],
-        'workspaces' : [workspaceName],
-        'auth' : token
-    }
-    fbadata = fbaClient.get_fbas(get_fbas_params)
+    #get_fbas_params = {
+    #    'fbas' : [fba_id],
+    #    'workspaces' : [workspaceName],
+    #    'auth' : token
+    #}
+    #fbadata = fbaClient.get_fbas(get_fbas_params)
     
     
-    return json.dumps({ "ids":[fba_id],"workspaces":[workspaceName],"fbaData":fbadata })
+    return json.dumps({ "ids":[fba_id],"workspaces":[workspaceName] })
 
 
 
 
-@method(name="Gapfill an FBA Model")
+@method(name="Gapfill a Metabolic Model")
 def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit):
-    """Run Gapfilling on an FBA Model [12]
+    """Run Gapfilling on an metabolic model.  Gapfill attempts to identify the minimal number of reactions
+    needed to add to your metabolic model in order for the model to predict growth in the
+    given media condition (or in complete media if no Media is provided).  Gapfilling is
+    an optimization procedure that can produce many possible solutions.  After a gapfilling
+    job is submitted and run, you can view the results by viewing a metabolic model details,
+    and incorporate the new reactions by running the Integrate Gapfill Solution function. [12]
 
-    :param fba_model_id: the FBA Model to gapfill [12.1]
+    :param fba_model_id: the metabolic model to gapfill [12.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: FBA Model
+    :ui_name fba_model_id: Metabolic Model
     
     :param media_id: the media condition in which to gapfill [12.2]
     :type media_id: kbtypes.KBaseBiochem.Media
@@ -632,17 +788,21 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     :param solution_limit: select the number of solutions you want to find [12.3]
     :type solution_limit: kbtypes.Unicode
     :ui_name solution_limit: Number of Solutions
+    :default solution_limit: 5
     
     :param total_time_limit: the total time you want to run gapfill [12.4]
     :type total_time_limit: kbtypes.Unicode
     :ui_name total_time_limit: Total Time Limit (s)
+    :default total_time_limit: 18000
     
     :param solution_time_limit: the max time you want to spend per solution [12.5]
     :type solution_time_limit: kbtypes.Unicode
     :ui_name solution_time_limit: Solution Time Limit (s)
+    :default solution_time_limit: 3600
     
     :return: job ID string
     :rtype: kbtypes.Unicode
+    :output_widget: kbaseGapfillStatus
     """
     
     # setting the output id appears to not work, so for now we leave it out
@@ -650,7 +810,6 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     #:type output_model_id: kbtypes.Unicode
     #:ui_name output_model_id: Output FBA Result Name
     
-
     meth.stages = 2
     meth.advance("Setting up gapfill parameters")
     
@@ -779,32 +938,32 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
 
 @method(name="Integrate Gapfill Solution")
 def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
-    """Integrate a Gapfill solution into your FBA model [13]
+    """Integrate a Gapfill solution into your metabolic model [13]
 
-    :param fba_model_id: the FBA Model to integrate gapfill solutions into [13.1]
+    :param fba_model_id: the metabolic model to integrate gapfill solutions into [13.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: FBA Model
+    :ui_name fba_model_id: Metabolic Model
     
-    :param gapfill_id: select the ID of the gapfill solution (found in the Gapfilling tab in the model viewer) [13.2]
+    :param gapfill_id: select the ID of the gapfill solution (found in the Gapfilling tab in the model viewer, usually in the form 'modelId.gf.2.gfsol.1') [13.2]
     :type gapfill_id: kbtypes.KBaseFBA.Gapfilling
     :ui_name gapfill_id: Gapfill ID
+    :default gapfill_id: e.g model.gf.2.gfsol.1
 
     :param output_model_id: select a name for the gapfilled object (optional) [13.3]
-    :type output_model_id: kbtypes.Unicode
-    :ui_name output_model_id: Output FBA Result Name
+    :type output_model_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name output_model_id: Output Model Result Name
     
-    :output_widget: kbaseModelMetaNarrative
-
+    :output_widget: kbaseIntegrateGapfillOutput
+    
     :return: gapfilled model ID
     :rtype: kbtypes.Unicode
     """
-
-    meth.stages = 3
+    meth.stages = 2
     meth.advance("Setting up parameters")
     
     #grab token and workspace info, setup the client
-    token, workspaceName = meth.token, meth.workspace_id;
-    fbaClient = fbaModelServices(service.URLS.fba)
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(service.URLS.fba, token=userToken)
 
     """
     typedef structure {
@@ -818,27 +977,41 @@ def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
         bool overwrite;
     } integrate_reconciliation_solutions_params;
     """
-
     integrate_params = {
         'model' : fba_model_id,
         'model_workspace' : workspaceName,
         'gapfillSolutions' : [gapfill_id],
         'gapgenSolutions' : [],
-        'workspace' : workspaceName,
-        'auth' : token,
+        'workspace' : workspaceName
     }
+    
+    # get the model to determine the number of reactions
+    wsClient = workspaceService(service.URLS.workspace, token=userToken)
+    firstReactionList = wsClient.get_object_subset([{'ref':workspaceName+"/"+fba_model_id, 'included':["/modelreactions/[*]/id"]}])
+    #meth.debug(json.dumps(firstReactionList));
 
     output_model_id = output_model_id.strip()
     if (output_model_id):
         integrate_params['out_model'] = output_model_id
+    else:
+        output_model_id = fba_model_id
 
     # funcdef integrate_reconciliation_solutions(integrate_reconciliation_solutions_params input) returns (object_metadata modelMeta);
-    meth.advance("Integrating the gapfill solutions")
+    meth.advance("Integrating the gapfill solution")
     model_meta = fbaClient.integrate_reconciliation_solutions(integrate_params)
+    finalReactionList = wsClient.get_object_subset([{'ref':workspaceName+"/"+output_model_id, 'included':["/modelreactions/[*]/id"]}])
 
-    return json.dumps({"data":model_meta})
+    return json.dumps( {
+        "workspaceName":workspaceName,
+        "originalModel":fba_model_id,
+        "originalModelRef":str(firstReactionList[0]['info'][6])+"/"+str(firstReactionList[0]['info'][0])+"/"+str(firstReactionList[0]['info'][4]),
+        "startingNumRxns":len(firstReactionList[0]['data']['modelreactions']),
+        "newModel":output_model_id,
+        "newModelRef":str(finalReactionList[0]['info'][6])+"/"+str(finalReactionList[0]['info'][0])+"/"+str(finalReactionList[0]['info'][4]),
+        "endingNumRxns":len(finalReactionList[0]['data']['modelreactions'])
+        })
 
-@method(name="Upload Phenotype Data")
+#@method(name="Upload Phenotype Data")
 def _upload_phenotype(meth, genome_id, phenotype_id):
     """Upload phenotype data for FBA analysis [14]
 
@@ -859,7 +1032,7 @@ def _upload_phenotype(meth, genome_id, phenotype_id):
     workspace = os.environ['KB_WORKSPACE_ID']
     return json.dumps({'token': token, 'ws_name': workspace, 'genome_id': genome_id, 'phenotype_id': phenotype_id})
 
-@method(name="Simulate Phenotype Data")
+#@method(name="Simulate Phenotype Data")
 def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
     """Simulate some phenotype on an FBA model [15]
 
@@ -894,7 +1067,7 @@ def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
     fbaClient.simulate_phenotypes(simulate_phenotypes_params)
     return json.dumps({'token': token, 'ws_name': workspace, 'simulation_id': simulation_id})
 
-@method(name="Reconcile Phenotype Data")
+#@method(name="Reconcile Phenotype Data")
 def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
     """Run Gapfilling on an FBA Model [16]
 
@@ -941,7 +1114,7 @@ def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
     :type genome2: kbtypes.KBaseGenomes.Genome
     :ui_name genome2: Genome2 ID
     :param out_proteome_cmp: Output proteome comparison ID. If empty, an ID will be chosen randomly. [17.3]
-    :type out_proteome_cmp: kbtypes.Unicode
+    :type out_proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name out_proteome_cmp: Output Proteome Comparison ID
     :return: Output Proteome Comparison ID
     :rtype: kbtypes.ProteomeComparison
@@ -970,7 +1143,7 @@ def _view_proteome_cmp(meth, proteome_cmp):
     When it finishes, the annotated Genome will be stored in your data space. [18]
      
     :param proteome_cmp: Proteome comparison ID [18.1]
-    :type proteome_cmp: kbtypes.ProteomeComparison
+    :type proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name proteome_cmp: Proteome Comparison ID
     :return: Output Proteome Comparison ID
     :rtype: kbtypes.ProteomeComparison
@@ -981,7 +1154,7 @@ def _view_proteome_cmp(meth, proteome_cmp):
     workspace = os.environ['KB_WORKSPACE_ID']
     return json.dumps({'ws_name': workspace, 'ws_id': proteome_cmp})
 
-@method(name="Compare Two Fba Models")
+@method(name="Compare Two Metabolic Models")
 def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     """This starts a job that might run for an hour or longer.
     When it finishes, the annotated Genome will be stored in your data space. [19]
@@ -993,7 +1166,7 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     :type fba_model2: kbtypes.KBaseFBA.FBAModel
     :ui_name fba_model2: FBA Model 2 ID
     :param proteome_cmp: Proteome comparison ID [19.3]
-    :type proteome_cmp: kbtypes.ProteomeComparison
+    :type proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name proteome_cmp: Proteome Comparison ID
     :return: Output Comparison Result
     :rtype: kbtypes.Unicode
@@ -1002,16 +1175,16 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     meth.stages = 1  # for reporting progress
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
-    get_models_params = {
-                         'models' : [fba_model1, fba_model2],
-                         'workspaces' : [workspace, workspace],
-                         'auth' : token
-                         }
-    modeldata = fbaClient.get_models(get_models_params)
-    model1 = modeldata[0]
-    model2 = modeldata[1]
-    return json.dumps({'ws_name': workspace, 'fba_model1': model1, 'fba_model2': model2, 'proteome_cmp': proteome_cmp, 'key1': 'val1'})
+    #fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
+    #get_models_params = {
+    #                     'models' : [fba_model1, fba_model2],
+    #                     'workspaces' : [workspace, workspace],
+    #                     'auth' : token
+    #                     }
+    #modeldata = fbaClient.get_models(get_models_params)
+    #model1 = modeldata[0]
+    #model2 = modeldata[1]
+    return json.dumps({'ws_name': workspace, 'fba_model1_id': fba_model1, 'fba_model2_id': fba_model2, 'proteome_cmp': proteome_cmp})
 
 
 #

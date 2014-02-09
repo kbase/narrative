@@ -29,7 +29,7 @@
  */
 (function ($) {
     var URL_ROOT = "http://140.221.84.142/objects/kbasetest_home/ExpressionDataSamplesMap";
-    var WS_URL = "http://140.221.84.209:7058/";
+    var WS_URL = "https://kbase.us/services/ws/";
     var GO_URL_TEMPLATE = "http://www.ebi.ac.uk/QuickGO/GTerm?id=<%= id %>";
     $.KBWidget({
         name: "Manhattan",

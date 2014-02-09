@@ -3,6 +3,7 @@ Demo communitites service and methods
 """
 __author__ = 'Travis Harrison'
 __date__ = '1/10/13'
+__version__ = '0.4'
 
 ## Imports
 # Stdlib
@@ -23,7 +24,7 @@ from biokbase.narrative.common import kbtypes
 from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.shock import Client as shockService
-from biokbase.mglib import tab_to_matrix
+from biokbase.mglib import tab_to_matrix, sparse_to_dense
 
 ## Globals
 VERSION = (0, 0, 1)
@@ -39,16 +40,18 @@ class CWS:
     coll = 'Communities.Collection-1.0'
     proj = 'Communities.Project-1.0'
     seq = 'Communities.SequenceFile-1.0'
-    model = 'KBaseFBA.FBAModel-3.1'
+    model = 'KBaseFBA.FBAModel-2.0'
     mg_an = 'KBaseGenomes.MetagenomeAnnotation-1.0'
 
 class URLS:
-    shock = "http://shock1.chicago.kbase.us"
+    #shock = "http://shock1.chicago.kbase.us"
+    shock = "http://shock.metagenomics.anl.gov"
     awe = "http://140.221.85.36:8000"
-    #workspace = "http://kbase.us/services/workspace"
-    workspace = "http://140.221.84.209:7058"
+    #workspace = "https://140.221.84.209:7058"
+    workspace = "https://kbase.us/services/ws"
     #invocation = "https://kbase.us/services/invocation"
-    invocation = "http://140.221.85.110:443"
+    #invocation = "http://140.221.85.110:443"
+    invocation = "http://140.221.85.185:7049"
 
 picrustWF = """{
    "info" : {
@@ -143,13 +146,12 @@ def _get_wsname(meth, ws):
         return default_ws
 
 def _submit_awe(wf):
-    headers = {'Content-Type': 'multipart/form-data', 'Datatoken': os.environ['KB_AUTH_TOKEN']}
+    headers = {'Datatoken': os.environ['KB_AUTH_TOKEN']}
     files = {'upload': ('awe_workflow', cStringIO.StringIO(wf))}
     url = URLS.awe+"/job"
-    req = requests.post(url, headers=self.auth_header, files=files, allow_redirects=True)
-    res = req.json()
-    return res['data']
-    
+    req = requests.post(url, headers=headers, files=files, allow_redirects=True)
+    return req.json()
+
 def _get_awe_job(jobid):
     req = urllib2.Request('%s/job/%s'%(URLS.awe, jobid))
     res = urllib2.urlopen(req)
@@ -212,9 +214,29 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
 
-@method(name="Retrieve Subsytems Annotation")
+@method(name="Import Metagenome List")
+def _import_metagenome_list(meth, workspace, metagenome_list_id):
+    """Import metagenome list object into workspace.
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param metagenome_list_id: name of metagenome list object
+    :type metagenome_list_id: kbtypes.Unicode
+    :ui_name metagenome_list_id: Metagenome List Name
+    :return: Metagenome List Uploading Info
+    :rtype: kbtypes.Unicode
+    :output_widget: MetagenomeListUploadWidget
+    """
+    meth.stages = 1
+    if not metagenome_list_id:
+        raise Exception("Metagenome List object name is not set.")
+    workspace = _get_wsname(meth, workspace)
+    return json.dumps({'ws': workspace, 'id': metagenome_list_id})
+
+@method(name="Export Functional Profile for Modeling")
 def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, length, rest):
-    """Retrieve all SEED/Subsystems functional annotations for a given metagenome ID. Alternatively, filter annotations for specific taxa.
+    """Retrieve all SEED/Subsystems functional annotations for a given metagenome ID. Alternatively, filter annotations for specific taxa. For input into modeling service.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -275,7 +297,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
         rest = 'no'
     
     meth.advance("Building annotation set from communitites API")
-    mg = _get_ws(workspace, in_name, CWS.mg)
+    mg = _get_ws(workspace, mgid, CWS.mg)
     cmd = "mg-get-annotation-set --id %s --top %d --level %s --evalue %d --identity %d --length %d"%(mg['ID'], int(top), level, int(evalue), int(identity), int(length))
     if rest.lower() == 'yes':
         cmd += " --rest"
@@ -293,7 +315,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     return json.dumps({'header': text})
 
 @method(name="PICRUSt Predicted Abundance Profile")
-def _redo_annot(meth, workspace, in_seq, out_name):
+def _run_picrust(meth, workspace, in_seq, out_name):
     """Create a KEGG annotated functional abundance profile for 16S data in BIOM format using PICRUSt. The input OTUs are created by QIIME using a closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
 
     :param workspace: name of workspace, default is current
@@ -313,7 +335,7 @@ def _redo_annot(meth, workspace, in_seq, out_name):
     meth.stages = 5
     meth.advance("Processing inputs")
     # validate
-    if not (in_seq and out_id):
+    if not (in_seq and out_name):
         return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
@@ -330,9 +352,11 @@ def _redo_annot(meth, workspace, in_seq, out_name):
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     ajob = _submit_awe(wf_str)
+    if ajob['status'] != 200:
+        return json.dumps({'header': 'ERROR: %d - %s'%(ajob['status'], ', '.join(ajob['error']))})
     
     meth.advance("Waiting on PICRUSt prediction of KEGG BIOM")
-    aresult = _get_awe_results(ajob['id'])
+    aresult = _get_awe_results(ajob['data']['id'])
     if not aresult:
         return json.dumps({'header': 'ERROR: AWE error running PICRUSt'})
     
@@ -344,9 +368,9 @@ def _redo_annot(meth, workspace, in_seq, out_name):
     text = "Abundance Profile BIOM %s created for PICRUSt prediction of %s"%(out_name, in_seq)
     return json.dumps({'header': text})
 
-@method(name="Map KEGG annotation to Subsystems annotation")
-def _redo_annot(meth, workspace, in_name, out_name):
-    """Create SEED/Subsystems annotations from a KEGG metagenome abundance profile.
+@method(name="Transform Abundance Profile to Functional Profile for Modeling")
+def _map_annot(meth, workspace, in_name, out_name):
+    """Create SEED/Subsystems functional annotations from a KEGG metagenome abundance profile. For input into modeling service.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -394,7 +418,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     return json.dumps({'header': text})
 
 @method(name="Create Metabolic Model")
-def _redo_annot(meth, workspace, in_name, out_name):
+def _make_model(meth, workspace, in_name, out_name):
     """Create a draft metabolic model from metagenome Subsystems annotations.
 
     :param workspace: name of workspace, default is current
@@ -436,7 +460,7 @@ def _redo_annot(meth, workspace, in_name, out_name):
     return json.dumps({'header': htmltext})
 
 @method(name="Gapfill Metabolic Model")
-def _redo_annot(meth, workspace, in_name):
+def _gapfill_model(meth, workspace, in_name):
     """Fill in missing core metabolism functions in a draft model.
 
     :param workspace: name of workspace, default is current
@@ -466,7 +490,7 @@ def _redo_annot(meth, workspace, in_name):
     return json.dumps({'header': htmltext})
 
 @method(name="Compare Metabolic Model")
-def _redo_annot(meth, workspace, model1, model2):
+def _compare_model(meth, workspace, model1, model2):
     """Compare two or more metabolic models with appropriate statistical tests.
 
     :param workspace: name of workspace, default is current
@@ -498,6 +522,58 @@ def _redo_annot(meth, workspace, model1, model2):
     htmltext = "<br>".join( stdout.strip().split('\n') )
     return json.dumps({'header': htmltext})
 
+@method(name="KEGG Mapper")
+def _kegg_map(meth, workspace, input1, input2):
+    """Compare two or more metabolic networks via overlay on graphical KEGG Map.
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param input1: workspace ID of profile 1
+    :type input1: kbtypes.Communities.Profile
+    :ui_name input1: Profile 1 Name
+    :param input2: workspace ID of profile 2
+    :type input2: kbtypes.Communities.Profile
+    :ui_name input2: Profile 2 Name
+    :return: KEGG Map
+    :rtype: kbtypes.Unicode
+    :output_widget: KeggMapWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    # validate
+    workspace = _get_wsname(meth, workspace)
+    if not (input1 and input2):
+        return json.dumps({'header': 'ERROR: missing profile 1 and profile 2'})
+    
+    meth.advance("Retrieve Data from Workspace")
+    # abundance profile
+    profile1 = _get_ws(workspace, input1, CWS.profile)
+    profile2 = _get_ws(workspace, input2, CWS.profile)
+    try:
+        biom1 = json.loads(profile1)
+        biom2 = json.loads(profile2)
+        if biom1['matrix_type'] == 'sparse':
+            biom1['data'] = sparse_to_dense(biom1['data'], biom1['shape'][0], biom1['shape'][1])
+        if biom2['matrix_type'] == 'sparse':
+            biom2['data'] = sparse_to_dense(biom2['data'], biom2['shape'][0], biom2['shape'][1])
+    except:
+        return json.dumps({'header': 'ERROR: profiles contain invalid BIOM formats'})
+    
+    meth.advance("Compare KEGG Networks")
+    kdata = [{},{}]
+    for i in range(len(biom1['rows'])):
+    	if biom1['data'][i][0] > 0:
+    		kdata[0][ biom1['rows'][i]['id'] ] = biom1['data'][i][0]
+    for i in range(len(biom2['rows'])):
+    	if biom2['data'][i][0] > 0:
+    		kdata[1][ biom2['rows'][i]['id'] ] = biom2['data'][i][0]
+    
+    meth.advance("Display KEGG Map")
+    text = "KEGG Pathway map comparison. Colored lines represent KEGG functions found in the inputed metagenomes.  %s is in green and %s is in blue. Overlap is in cyan."%(input1, input2)
+    return json.dumps({'header': text, 'data': kdata, 'width': 800})
+
 @method(name="Retrieve Annotation Abundance Profile")
 def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, int_level, int_source, evalue, identity, length, norm):
     """Retrieve annotation abundance data for selected metagenomes.
@@ -515,21 +591,21 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :type annot: kbtypes.Unicode
     :ui_name annot: Annotation Type
     :default annot: taxa
-    :param level: annotation hierarchal level to retrieve abundances for
+    :param level: annotation hierarchical level to retrieve abundances for
     :type level: kbtypes.Unicode
     :ui_name level: Annotation Level
     :default level: genus
-    :param source: datasource to filter results by
+    :param source: data source to filter results by
     :type source: kbtypes.Unicode
     :ui_name source: Source Name
     :default source: SEED
     :param int_name: workspace ID of list of names to filter results by
     :type int_name: kbtypes.Communities.Data
     :ui_name int_name: Filter List
-    :param int_level: hierarchal level of filter names list
+    :param int_level: hierarchical level of filter names list
     :type int_level: kbtypes.Unicode
     :ui_name int_level: Filter Level
-    :param int_source: datasource of filter names list
+    :param int_source: data source of filter names list
     :type int_source: kbtypes.Unicode
     :ui_name int_source: Filter Source
     :param evalue: negative exponent value for maximum e-value cutoff, default is 5
@@ -591,9 +667,8 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
         return json.dumps({'header': 'ERROR: %s'%stderr})
     
     meth.advance("Storing in Workspace")
-    rows = len(stdout.strip().split('\n')) - 1
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
-    text = "%s abundance data for %d samples listed in %s were downloaded. %d %s level %s annotations from the %s database were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d). Annotations with an overall abundance of 1 were removed by singleton filtering. Values did%s undergo normalization."%(annot, len(id_list), ids, rows, level, annot, source, out_name, int(evalue), int(identity), int(length), '' if norm.lower() == 'yes' else ' not')
+    text = "%s abundance data for %d samples listed in %s were downloaded. %s level %s annotations from the %s database were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d). Annotations with an overall abundance of 1 were removed by singleton filtering. Values did%s undergo normalization."%(annot, len(id_list), ids, level, annot, source, out_name, int(evalue), int(identity), int(length), '' if norm.lower() == 'yes' else ' not')
     _put_ws(workspace, out_name, CWS.profile, data=data)
     return json.dumps({'header': text})
 
@@ -660,7 +735,7 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     return json.dumps({'header': text})
 
 @method(name="Sub-select Abundance Profile")
-def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, rows):
+def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, rows, alist):
     """Sort and/or subselect annotation abundance data and outputs from statistical analyses.
 
     :param workspace: name of workspace, default is current
@@ -685,6 +760,10 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     :param rows: number of rows from the top to return from input table, default is all
     :type rows: kbtypes.Unicode
     :ui_name rows: Rows
+    :param alist: create only list of annotations from ordering and sub-selection
+    :type alist: kbtypes.Unicode
+    :ui_name alist: Output List
+    :default alist: no
     :return: Metagenome Abundance Profile Significance Info
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
@@ -696,30 +775,44 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     # set defaults since unfilled options are empty strings
     if direction == '':
         direction = 'desc'
+    if alist == '':
+        alist = 'no'
 
     meth.advance("Retrieve Data from Workspace")
     _put_invo(in_name, _get_ws(workspace, in_name, CWS.profile))
     
     meth.advance("Manipulating Abundance Table")
+    biom = None
     cmd = "mg-select-significance --input %s --direction %s --format biom --output biom"%(in_name, direction)
     txt = "%s was saved as %s."%(in_name, out_name)
-    if order != '':
-        cmd += ' --order %d'%int(order)
-        txt += " Rows were ordered by column %d."%int(order)
     if cols != '':
         cmd += ' --cols %d'%int(cols)
         txt += " All but first %d columns were removed."%int(cols)
     if rows != '':
         cmd += ' --rows %d'%int(rows)
-        txt += " All but first %d rows were removed."%int(cols)
+        txt += " All but first %d rows were removed."%int(rows)
+    if order != '':
+        cmd += ' --order %d'%int(order)
+        txt += " Rows were ordered by column %d."%int(order)
     stdout, stderr = _run_invo(cmd)
     
     meth.advance("Storing in Workspace")
-    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
-    _put_ws(workspace, out_name, CWS.profile, data=data)
+    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': '', 'data': ''}
+    wtype = None
+    if alist.lower() == 'yes':
+        biom = json.loads(stdout)
+        data['type'] = 'list'
+        data['data'] = "\n".join([r['id'] for r in biom['rows']])
+        wtype = CWS.data
+    else:
+        data['type'] = 'biom'
+        data['data'] = stdout
+        wtype = CWS.profile
+    
+    _put_ws(workspace, out_name, wtype, data=data)
     return json.dumps({'header': txt})
 
-@method(name="View Abundace Profile")
+@method(name="View Abundance Profile")
 def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_end, stats):
     """View a slice of a BIOM format abundance profile as a table
 
@@ -824,7 +917,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})
 
-@method(name="Heatmap from Abundance Profiles")
+@method(name="Heatmap from Abundance Profile")
 def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, label):
     """Generate a heatmap-dendrogram from annotation abundance data.
 
@@ -898,7 +991,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
-@method(name="PCoA from Abundance Profiles")
+@method(name="PCoA from Abundance Profile")
 def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     """Generate a PCoA from annotation abundance data.
 
@@ -951,8 +1044,8 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     
     meth.advance("Displaying PCoA")
     text = "A %s dimensional PCoA calculated from %s distance/dissimilarity was created from %s."%('three' if three.lower() == 'yes' else 'two', distance, in_name)
-    if groups:
-        text += " Samples were colored by groups in position %d of the %s groups table."%(int(gpos), groups)
+    if metadata:
+        text += " Samples were colored by metadata values for %s."%metadata
     fig_rawpng = _get_invo(in_name+'.pcoa.png', binary=True)
     fig_b64png = base64.b64encode(fig_rawpng)
     leg_rawpng = _get_invo(in_name+'.pcoa.png.legend.png', binary=True)

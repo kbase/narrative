@@ -8,13 +8,13 @@
  *  The app uses angular.js, a MVC front-end framework.
  *
  *  -- Some of the critical files --
- *  App:               landing-pages/js/app.js
- *  Controllers:       landing-pages/js/controllers.js
- *  Directives:        landing-pages/js/directives.js 
- *                                     /card-directives.js 
- *                                     /iris-directives.js
- *                                     /mv-directives.js 
- *  Views (templates): landing-pages/views/* 
+ *  App:               js/app.js
+ *  Controllers:       js/controllers.js
+ *  Directives:        js/directives.js 
+ *                     js/card-directives.js 
+ *                     js/iris-directives.js
+ *                     js/mv-directives.js 
+ *  Views (templates): views/* 
  *
 */
 
@@ -144,6 +144,29 @@ var app = angular.module('landing-pages',
              url: '/cards/models/:ws/:id',
              templateUrl: 'views/objects/modelcards.html',
              controller: 'ModelDetailCards'})
+
+    $stateProvider
+       .state('gptype', {
+            url: '/KBaseGwasData.GwasPopulation/:ws/:id',
+            templateUrl: 'views/objects/gptype.html',
+            controller: 'GPTypeDetail'})  
+       .state('gttype', {
+            url: '/KBaseGwasData.GwasPopulationTrait/:ws/:id',
+            templateUrl: 'views/objects/gttype.html',
+            controller: 'GTTypeDetail'})  
+       .state('gvtype', {
+            url: '/KBaseGwasData.GwasPopulationVariation/:ws/:id',
+            templateUrl: 'views/objects/gvtype.html',
+            controller: 'GVTypeDetail'})  
+       .state('ggltype', {
+            url: '/KBaseGwasData.GwasGeneList/:ws/:id',
+            templateUrl: 'views/objects/ggltype.html',
+            controller: 'GGLTypeDetail'})  
+       .state('gtvtype', {
+            url: '/KBaseGwasData.GwasTopVariations/:ws/:id',
+            templateUrl: 'views/objects/gtvtype.html',
+            controller: 'GTVTypeDetail'})  
+
 
     $stateProvider
         .state('fbasbyws', {

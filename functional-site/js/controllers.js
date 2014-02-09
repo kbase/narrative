@@ -133,6 +133,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                      'kbCache' : kb}
 })
 
+
 .controller('MediaDetail', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
@@ -183,6 +184,27 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
         'kind' : $stateParams.kind,
         'id' : $stateParams.id
     };
+})
+
+
+.controller('GPTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
+.controller('GTTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
+.controller('GVTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
+.controller('GGLTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
+})
+
+.controller('GTVTypeDetail', function($scope, $stateParams) {
+    $scope.params = {'id': $stateParams.id, 'ws':$stateParams.ws}
 })
 
 
@@ -259,6 +281,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                 if (args.success === 1) {
                         
                     this.registerLogin(args);
+                    //this.data('_session', kbaseCookie);
 
                     //set the cookie
                     var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
@@ -283,9 +306,16 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                              + '|'
                              + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
                              { path: '/'});
-                    console.log("redirecting");
+
+                    //this.data('_session', c);
+
+                    USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+                    USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+
+                    kb = new KBCacheClient(USER_TOKEN);
 
                     $location.path('/narrative/home/');
+
                     $scope.$apply();
                     
                 } else {
@@ -351,10 +381,10 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) 
                 //console.log("error occurred " + message);
 
                 if (!message.match("No object with name")) {
-                    $('loading-indicator').hide();
+                    $('#loading-indicator').hide();
 
                     $scope.alerts = [];
-                    $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace."});
+                    $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace. Error: " + message});
                     //TODO need to retrieve the actual error message 
                     $scope.$apply();
                 }

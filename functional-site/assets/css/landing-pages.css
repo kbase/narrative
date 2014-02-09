@@ -448,6 +448,9 @@ div::-webkit-scrollbar-thumb {
 .group-item-expander {
     background: #f2f2f2; /*#d6eaff;*/
 }
+.group-item-expander:hover {
+    background: #f2f2f2 !important; /* override boostrap hover */
+}
 
 .group-item-expander:hover {
     cursor: hand;
@@ -572,6 +575,12 @@ div::-webkit-scrollbar-thumb {
 .navbar-nav > .active:hover {
     color: #2a6496;
 }
+
+
+.project-shared-with {
+    margin: 0 40px 0 0;
+}
+
 
 #wrap {
   min-height: 100%;

@@ -321,8 +321,6 @@ function ProjectAPI(ws_url, token) {
     // if a specific workspace name is given its metadata will be
     // returned
     this.get_projects = function( p_in ) {
-
-        console.log('getting projects')
         var def_params = { perms : ['a'],
                            workspace_id : undefined };
 

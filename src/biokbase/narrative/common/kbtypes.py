@@ -828,6 +828,11 @@ class KBaseSequences(object):
             info_text = "KBaseSequences.SequenceSet-1.0"
 #@AUTO_END
 
+class GenomeComparison(object):
+    """GenomeComparison module"""
+    class ProteomeComparison(tls.Unicode, TypeMeta):
+        """ProteomeComparison type"""
+        info_text = "GenomeComparison.ProteomeComparison"
 
 class Regenerator(object):
     """Regenerate self with AUTO section filled in.

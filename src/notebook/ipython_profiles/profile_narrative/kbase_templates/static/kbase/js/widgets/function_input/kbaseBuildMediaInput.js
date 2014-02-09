@@ -13,9 +13,10 @@
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             //fbaURL: "https://kbase.us/services/fba_model_services",
-            fbaURL: "http://140.221.84.183:7036",
+            //fbaURL: "http://140.221.84.183:7036",
+            fbaURL: "https://kbase.us/services/KBaseFBAModeling",
         },
-        mediaType: "KBaseBiochem.Media-1.0",
+        mediaType: "KBaseBiochem.Media",
         IGNORE_VERSION: false,
 
         init: function(options) {

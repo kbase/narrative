@@ -1,31 +1,42 @@
 (function( $, undefined ) {
     $.KBWidget({
         name: "PhenotypeSimulation",
-        parent: "kbaseWidget",
+        parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
+        simulation_id: null,
+        ws_name: null,
+        width: 1150,
         options: {
             simulation_id: null,
-            ws_name: null,
-            token: null,
-            width: 1150
+            ws_name: null
         },
+        wsUrl: "https://kbase.us/services/ws/",
+        loadingImage: "static/kbase/images/ajax-loader.gif",
 
         init: function(options) {
             this._super(options);
+            this.ws_name = options.ws_name;
+            this.simulation_id = options.simulation_id;
+            return this;
+        },
+        
+        render: function() {
             var self = this;
 
-            var wsUrl = "http://140.221.84.209:7058/";
             var container = this.$elem;
-        	var panel = $('<div class="loader-table">Please wait...</div>');
-        	container.append(panel);
+        	container.empty();
+            if (self.token == null) {
+            	container.append("<div>[Error] You're not logged in</div>");
+            	return;
+            }
+        	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading phenotype simulation data...</div>");
 
-            var kbws = new workspaceService(wsUrl);
+            var kbws = new Workspace(self.wsUrl, {'token': self.token});
             
-            var request = {auth: options.token, workspace: options.ws_name, id: options.simulation_id, type: 'PhenotypeSimulationSet'};
-            kbws.get_object(request, function(data) {
-            	$('.loader-table').remove();
-            	console.log(data);
-            	var simList = data['data']['phenotypeSimulations'];
+            //var request = {auth: self.token, workspace: self.ws_name, id: self.simulation_id, type: 'KBasePhenotypes.PhenotypeSimulationSet'};
+            kbws.get_objects([{ref: self.ws_name +"/"+ self.simulation_id}], function(data) {
+            	container.empty();
+            	var simList = data[0].data.phenotypeSimulations;
             	var table = $('<table class="table table-striped table-bordered" \
             			style="margin-left: auto; margin-right: auto;"/>');
             	var s = ' style="text-align: center"';
@@ -54,7 +65,7 @@
             				<td'+st+'><center>'+simClass+'</center></td></tr>');
             	}
             }, function(data) {
-            	$('.loader-table').remove();
+            	container.empty();
                 container.append('<p>[Error] ' + data.error.message + '</p>');
                 return;
             });            	
@@ -64,10 +75,23 @@
         getData: function() {
             return {
                 type: "PhenotypeSimulation",
-                id: this.options.ws_name + "." + this.options.simulation_id,
-                workspace: this.options.ws_name,
+                id: this.ws_name + "." + this.simulation_id,
+                workspace: this.ws_name,
                 title: "Phenotype Simulation Widget"
             };
+        },
+
+        loggedInCallback: function(event, auth) {
+            this.token = auth.token;
+            this.render();
+            return this;
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.token = null;
+            this.render();
+            return this;
         }
+
     });
 })( jQuery );

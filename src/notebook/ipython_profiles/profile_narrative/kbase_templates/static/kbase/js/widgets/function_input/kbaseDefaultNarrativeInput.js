@@ -20,6 +20,8 @@
             return this;
         },
 
+        useSelect2: true,
+
         /**
          * Builds the input div for a function cell, based on the given method object.
          * @param {Object} method - the method being constructed around.
@@ -38,13 +40,13 @@
 
                 var input_default = (p.default !== "" && p.default !== undefined) ?
                                     " placeholder='" + p.default + "'" : "";
-                input = "<input name='" + pid + "'" + input_default +
+                input = "<input class='form-control' style='width: 85%' name='" + pid + "'" + input_default +
                         " value='' type='text'></input>";
 
                 var cellStyle = "border:none; vertical-align:middle;";
                 inputDiv += "<tr style='" + cellStyle + "'>" + 
                                 "<td style='" + cellStyle + "'>" + p.ui_name + "</td>" +
-                                "<td style='" + cellStyle + "'>" + input + "</td>" +
+                                "<td style='" + cellStyle + " width: 50%;'>" + input + "</td>" +
                                 "<td style='" + cellStyle + "'>" + p.description + "</td>" +
                             "</tr>";
             }
@@ -62,7 +64,7 @@
             var paramList = [];
 
             $(this.$elem).find("[name^=param]").filter(":input").each(function(key, field) {
-                paramList.push(field.value);
+                paramList.push(field.value.trim());
             });
 
             return paramList;

@@ -6,47 +6,75 @@ $.KBWidget({
     version: "1.0.0",
 	token: null,
 	ws_name: null,
-	fba_model1: null, 
+	fba_model1_id: null, 
+	fba_model1: null,
+	fba_model2_id: null,
 	fba_model2: null,
 	proteome_cmp: null,
     options: {
     	ws_name: null,
-    	fba_model1: null, 
-    	fba_model2: null,
-    	proteome_cmp: null
+    	fba_model1_id: null, 
+    	fba_model2_id: null,
+    	proteome_cmp_id: null
     },
 
-    wsUrl: "http://140.221.84.209:7058/",
+
+    wsUrl: "https://kbase.us/services/ws/",
+    //fbaURL: "https://kbase.us/services/fba_model_services",
+    fbaURL: "https://kbase.us/services/KBaseFBAModeling",
+    loadingImage: "static/kbase/images/ajax-loader.gif",
 
     init: function(options) {
         this._super(options);
         this.ws_name = options.ws_name;
-        this.fba_model1 = options.fba_model1;
-        this.fba_model2 = options.fba_model2;
+        this.fba_model1_id = options.fba_model1_id;
+        this.fba_model2_id = options.fba_model2_id;
         this.proteome_cmp = options.proteome_cmp;
-        console.log(options.key1);
         return this;
     },
     
     render: function() {
         var self = this;
         var container = this.$elem;
-    	var panel = $('<div class="loader-table">Please wait...</div>');
-    	container.append(panel);
+    	container.empty();
+        if (self.token == null) {
+        	container.append("<div>[Error] You're not logged in</div>");
+        	return;
+        }
+
+    	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading models and comparison data...</div>");
+
     	var pref = (new Date()).getTime();
-        var kbws = new Workspace(this.wsUrl, {'token': self.token});
+        var fba = new fbaModelServices(this.fbaURL);
+    	var kbws = new Workspace(this.wsUrl, {'token': self.token});
 
         var cmp = null;
+        var error = false;
+        fba.get_models({auth: self.token, workspaces: [self.ws_name, self.ws_name], models: [self.fba_model1_id, self.fba_model2_id] }, function(data) {
+        	self.fba_model1 = data[0];
+        	self.fba_model2 = data[1];
+        	if (cmp != null)
+        		dataIsReady();
+        }, function(data) {
+        	if (!error)
+        		container.empty();
+        	error = true;
+    		container.append('<p>[Error] ' + data.error.message + '</p>');
+        });
         
         kbws.get_objects([{ref: self.ws_name + "/" + self.proteome_cmp}], function(data) {
         	cmp = data[0].data;
-        	dataIsReady();
+        	if (self.fba_model1 != null && self.fba_model2 != null)
+        		dataIsReady();
         }, function(data) {
-        	alert("Error: " + data.error.message)
+        	if (!error)
+        		container.empty();
+        	error = true;
+    		container.append('<p>[Error] ' + data.error.message + '</p>');
         });
 
         var dataIsReady = function() {
-        	$('.loader-table').remove();
+        	container.empty();
         	var tables = ['Statistics', 'Common reactions', 'Model1 only', 'Model2 only'];
             var tableIds = [pref+'stat', pref+'common', pref+'model1', pref+'model2'];
             // build tabs
@@ -76,28 +104,40 @@ $.KBWidget({
         	var model1 = self.fba_model1;
         	var model2 = self.fba_model2;
         	var model1map = {};
-        	for (var i in model1.reactions) {
-        		var r = model1.reactions[i];
-        		model1map[r.id] = r;
-        	}
         	var model2map = {};
-        	for (var i in model2.reactions) {
-        		var r = model2.reactions[i];
-        		model2map[r.id] = r;
-        	}
         	var model1only = [];
-        	for (var i in model1.reactions) {
-        		var r = model1.reactions[i];
-        		if (!model2map.hasOwnProperty(r.id))
-        			model1only.push(r);
-        	}
         	var model2only = [];
-        	for (var i in model2.reactions) {
-        		var r = model2.reactions[i];
-        		if (!model1map.hasOwnProperty(r.id))
-        			model2only.push(r);
+        	var stat = null;
+        	var dataDict = null;
+        	function prepare() {
+        		for (var i in model1.reactions) {
+        			var r = model1.reactions[i];
+        			model1map[r.id] = r;
+        		}
+        		for (var i in model2.reactions) {
+        			var r = model2.reactions[i];
+        			model2map[r.id] = r;
+        		}
+        		for (var i in model1.reactions) {
+        			var r = model1.reactions[i];
+        			if (!model2map.hasOwnProperty(r.id))
+        				model1only.push(r);
+        		}
+        		for (var i in model2.reactions) {
+        			var r = model2.reactions[i];
+        			if (!model1map.hasOwnProperty(r.id))
+        				model2only.push(r);
+        		}
+        		stat = [0,0];
+        		dataDict = formatRxnObjs(model1.reactions, model2map, stat);
         	}
-        	var tableSettings = {
+        	prepare();
+        	if (stat[0]/10 > stat[1]) {
+            	model1 = self.fba_model2;
+            	model2 = self.fba_model1;
+            	prepare();
+        	}
+            var tableSettings = {
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 5,
                     "aaData": [],
@@ -106,14 +146,10 @@ $.KBWidget({
                     }
                 };
         	//////////////////////////////////////////// Common tab /////////////////////////////////////////////
-            for (var key in model1) {
-            	console.log(key);
-            }
-        	var stat = [0,0];
-            var dataDict = formatRxnObjs(model1.reactions, model2map, stat);
         	var headTable = $('#'+pref+'stat-table');
-            headTable.append("<tr><td>Reactions in genome1</td><td><center>" + model1.reactions.length + "</center></td></tr>" +
-            		"<tr><td>Reactions in genome2</td><td><center>" + model2.reactions.length + "</center></td></tr>" +
+            headTable.append("" +
+            		"<tr><td>Reactions in genome1 (" + cmp.genome1id + ")</td><td><center>" + model1.reactions.length + "</center></td></tr>" +
+            		"<tr><td>Reactions in genome2 (" + cmp.genome2id + ")</td><td><center>" + model2.reactions.length + "</center></td></tr>" +
             		"<tr><td>Common reactions</td><td><center>" + stat[0] + "</center></td></tr>" +
             		"<tr><td>Reactions with same features</td><td><center>" + stat[1] + "</center></td></tr>");
             var keys = ["reaction", "definition", "features1", "features2", "name"];
@@ -126,7 +162,7 @@ $.KBWidget({
         	//////////////////////////////////////////// Model1 only tab ////////////////////////////////////////
             var dataDict = formatRxnObjs(model1only, null, null);
             var keys = ["reaction", "definition", "features1", "name"];
-            var labels = ["Reaction", "Equation", "Features from genome 1", "Name"];
+            var labels = ["Reaction", "Equation", "Features from genome1", "Name"];
             var cols = getColumns(keys, labels);
             var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
             rxnTableSettings.aoColumns = cols;
@@ -135,13 +171,13 @@ $.KBWidget({
         	//////////////////////////////////////////// Model2 only tab ////////////////////////////////////////
             var dataDict = formatRxnObjs(model2only, null, null);
             var keys = ["reaction", "definition", "features1", "name"];
-            var labels = ["Reaction", "Equation", "Features from genome 2", "Name"];
+            var labels = ["Reaction", "Equation", "Features from genome2", "Name"];
             var cols = getColumns(keys, labels);
             var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
             rxnTableSettings.aoColumns = cols;
             var table = $('#'+pref+'model2-table').dataTable(rxnTableSettings);
             table.fnAddData(dataDict);
-            $('#'+pref+'common').append($('<table><tr><td>(*) color legend: sub-best bidirectional hits are marked by <font color="blue">blue</font>, '+
+            $('#'+pref+'common').append($('<table><tr><td>(*) color legend: sub-best bidirectional hits are marked<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by <font color="blue">blue</font>, '+
             		'orphan features are marked by <font color="red">red</font>.</td></tr></table>'));
             
             function formatRxnObjs(rxnObjs, map2, stat) {
@@ -149,8 +185,8 @@ $.KBWidget({
                 for (var i in rxnObjs) {
                 	var r1 = rxnObjs[i];
                     var rxn = $.extend({}, r1);
-                    rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'
-                                +rxn.reaction+'</a> ('+rxn.compartment+')';
+                    //rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'+rxn.reaction+'</a> ('+rxn.compartment+')';
+                    rxn.reaction = ''+rxn.reaction+' ('+rxn.compartment+')';
                     if (map2 != null) {
                     	if (map2.hasOwnProperty(r1.id)) {
                     		if (stat != null)

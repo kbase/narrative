@@ -14,7 +14,7 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     {% block stylesheet %}
     {% block lesscss %}
 	    {% if use_less %}
@@ -27,7 +27,9 @@
     <link rel="stylesheet" href="{{ static_url("custom/custom.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/narrative.css") }}" type="text/css" />
-    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <!--<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/3.2.1/css/font-awesome.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
     <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
@@ -58,39 +60,54 @@
     </a>
 
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-      <ul class="nav navbar-nav"> 
-        <li class="dropdown active" ng-class="{ active: $state.includes('home')}">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
+      <ul class="nav navbar-nav">
+        <li class="dropdown active">
+          <a href="/functional-site/#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
           <ul class="dropdown-menu">
-            <li><a href="#/narrative/home/">Newsfeed</a></li>                
-            <li><a href="#/narrative/home/projects/">Projects</a></li>
-            <!--<li class="divider"></li>     
-            <li><a href="#">Profile</a></li>-->
+            <li><a href="/functional-site/#/narrative/home/">Newsfeed</a></li>
+            <li><a href="/functional-site/#/narrative/home/projects/">Projects</a></li>
           </ul>
         </li>
-        <li ng-class="{ active: $state.includes('ws')}"><a href="#/ws/" >Workspaces</a></li>
-        <li><a>Upload</a></li>          
+        <li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li>
+        <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>
       </ul>
 
-      <form class="navbar-form navbar-left" role="search" style="width: 40%">
+              <form ng-controller="SearchController" ng-submit="startSearch(searchquery)" class="navbar-form navbar-left" role="search" style="width: 40%">
+                <div class="input-group">
+                    <input class="form-control" ng-model="searchquery" name="search" placeholder=" Search KBase Data" autocomplete="off" type="text"> 
+                   <!-- <div class="input-group-addon">
+                        <span class="glyphicon glyphicon-search"></span>
+                    </div>  -->         
+                    <div class="input-group-btn">
+                        <button class="btn" type="submit" style="background-color: #ebebeb; border-color: #adadad; border-left:none"><span class="glyphicon glyphicon-search" style="line-height: .9"></span></button>
+                    </div>
+                </div>
+
+
+                
+              </form>
+<!--       <form class="navbar-form navbar-left" role="search" style="width: 40%">
         <div class="form-group">
           <div class="input-group">
-          <!--<span class="input-group-addon" id="narr-search-label">Search</span>-->
           <input class="form-control" name="search" placeholder=" Search KBase Data" autocomplete="off" autofocus="autofocus" type="text">
           <span class="input-group-addon"><span class="glyphicon glyphicon-search"></span></span>
           </div>
         </div>
       </form>
-
+ -->
       <div id="signin-button" class="pull-right"></div>
       <ul class="nav navbar-nav pull-right">
-          <li class="dropdown help-dropdown"></li>
+          <li class="dropdown help-dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a>
+                 <ul class="dropdown-menu">
+                 <li><a href="#/landing-pages-help">Landing Page Documentation</a></li>
+                 <li><a href="mailto:help@kbase.us">Email help@kbase.us</a></li>
+              </ul></li>
       </ul>
-    </div> 
+    </div>
 </div>
 
     {% block login_widget %}
-    
+
     <div id="login-info" class="pull-right">
       <div id="login-widget">
       </div>
@@ -112,6 +129,13 @@
 {% block site %}
 {% endblock %}
 </div>
+
+        <div id="app" class="wrapper" ui-view></div>
+
+        </div> <!-- end wrap, this pushes the footer down -->
+            <div id="footer">
+              <div class="disclaimer">This site is for demonstration purposes only.</div>
+            </div>
 
 <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>

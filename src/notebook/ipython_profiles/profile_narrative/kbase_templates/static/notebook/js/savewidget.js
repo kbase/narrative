@@ -143,7 +143,8 @@ var IPython = (function (IPython) {
         if (dirty) {
             this.set_save_status("(unsaved changes)");
         } else {
-            this.set_save_status("(autosaved)");
+//            this.set_save_status("(autosaved)");
+            this.set_save_status("(saved)");
         }
     };
 

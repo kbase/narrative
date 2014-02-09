@@ -45,6 +45,9 @@ var IPython = (function (IPython) {
     }
 
     LayoutManager.prototype.do_resize = function () {
+        // HACK TO KILL OFF THE PAGE BOUNDARY
+        return;
+
         var app_height = this.app_height()  // content height
 
         $('#ipython-main-app').height(app_height);  // content+padding+border height

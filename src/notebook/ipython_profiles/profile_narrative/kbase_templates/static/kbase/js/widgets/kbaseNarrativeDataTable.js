@@ -38,7 +38,7 @@
                                .attr({
                                   'type' : 'text',
                                   'class' : 'form-control',
-                                  'style' : 'width:95%',
+                                  'style' : 'width: 95%',
                                   'placeholder' : 'Search',
                                });
 
@@ -55,7 +55,7 @@
             this.$dataSelect.change($.proxy(function(event) {
                 var filterValue = '';
                 this.$dataSelect.find('option:selected').each(function(){ filterValue = $( this ).val(); });
-                this.$dataTable.fnFilter(filterValue, 2);
+                this.$dataTable.fnFilter("^" + filterValue + "$", 2, true);
             }, this));
 
             // just filter the search bar on keyup events.
@@ -70,7 +70,7 @@
              * This should be styled to how the data is used.
              */
             this.$dataTable.dataTable({
-                sScrollX: '100%',
+//                sScrollX: '100%',
                 iDisplayLength: -1,
                 bPaginate: false,
                 oLanguage: {
@@ -87,17 +87,25 @@
                         mRender: function(data, type, row) {
                             // if the 'data' (name) is too long,
                             // truncate it and give it a tooltip with the full name.
-                            if (data.length > 36) {
-                                var title = data;
-                                var abbrev = data.substring(0, 33);
-                                data = "<span data-toggle='tooltip' title='" + title + "'>" + abbrev + "..." + "</span>";
+  // 91                                 var title = data;
+  // 92                                 var abbrev = data.substring(0, 33);
+  // 93                                 data = "<span data-toggle='tooltip' title='" + title + "'>" + abbrev + "..." + "</span>";
+                            var type = row[2];
+                            var typeName = /^(\S+)-/.exec(type);
+                            if (typeName && typeName[1]) {
+                                type = typeName[1];
                             }
-
-                            return "<div>" + data + 
+                            return "<div >" + 
+                                   "<span class='kb-data-obj-name' data-toggle='tooltip' title='" + type + "\n" + data + "'>" +
+                                            data + 
+                                   "</span>" +
                                    "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
-                                   "data-ws='" + row[0] + "' " +
-                                   "data-id='" + row[1] + "' " + 
-                                   "style='margin-top: -3px'></span></div>";
+                                          "data-ws='" + row[0] + "' " +
+                                          "data-id='" + row[1] + "' " + 
+                                          "style='display: inline-block;'>" +
+                                   "</span>" +
+                                   "</div>";
+
                         },
                         aTargets: [1]
                     },
@@ -168,6 +176,19 @@
                 }, 
                 this)
             );
+//             this.$dataTable.find('span.kb-data-obj-name').each(function(i) {
+//                 var elem = $(this)
+//                            .clone()
+// //                           .removeClass('kb-data-obj-name')
+//                            .css({display: 'inline', width: 'auto', visibility: 'hidden'})
+//                            .appendTo('body');
+
+//                 if (elem.width() > $(this).width())
+//                     $(this).css({color: '#ff0000'});
+//                 console.log(elem.width() + " " + $(this).width())
+
+//                 elem.remove();
+//             });
             this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right'});
         },
     })

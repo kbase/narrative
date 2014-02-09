@@ -17,7 +17,7 @@ var IPython = (function (IPython) {
         this.pager_element = $(pager_selector);
         this.pager_button_area = $('#pager_button_area');
         var that = this;
-        this.percentage_height = 0.40;
+        this.percentage_height = 1; //0.40;
         this.pager_splitter_element = $(pager_splitter_selector)
             .draggable({
                         containment: 'window',

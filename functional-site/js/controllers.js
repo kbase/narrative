@@ -309,7 +309,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
                     this.data('_session', c);
                     $location.path('/narrative/home/');
-                    //window.location.replace("http://localhost/~sarahpoon/kbase/uicommon/ui-common/functional-site/#/narrative/home/projects/");
 
                     $scope.$apply();
                     

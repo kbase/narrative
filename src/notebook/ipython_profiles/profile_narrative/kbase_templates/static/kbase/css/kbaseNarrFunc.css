@@ -18,7 +18,8 @@
 
 /* Container for func list */
 .kb-function-body {
-    max-height: 500px;
+    height: 45%;
+    max-height:45%;
     overflow-y: auto;
     width: 100%;
 }

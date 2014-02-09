@@ -4,6 +4,10 @@ div#notebook {
 	overflow-y: auto;
 }
 
+.cell.selected {
+	border: #ababab solid;
+}
+
 /**
  * Shim to make sure jQuery-ui dialogs are always on front of other DOM elements.
  */
@@ -310,18 +314,12 @@ nav ul li.selected {
 
 /* left pane styling */
 #left-column {
-    /*float: left;
-    width: 289px; 
-    padding: 0px 1px;
-	height: 100%;
-	border-right: 1px solid #AAA;
-	overflow-y: auto;
-	*/
 	width: 289px;
-	position: absolute;
+	position: fixed;
 	left: 10px;
 	bottom: 0;
-	top: 10px;
+	top: 65px;
+	overflow-y: auto;
 }
 
 #data-panel {

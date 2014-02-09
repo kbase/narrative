@@ -102,7 +102,7 @@ def _get_contigs(meth, job_id, contig_num, contig_name):
                       'source_id': name}
 
         ##### Parse Fasta content
-        contig = {'description', ''}
+        contig = {'description': ''}
         seq_buffer = ''
         with open(fasta_file) as f:
             for line in f:
@@ -120,7 +120,7 @@ def _get_contigs(meth, job_id, contig_num, contig_name):
                         contig['length'] = len(seq_buffer)
                         seq_buffer = ''
                         contig_set['contigs'].append(contig)
-                        contig = {'description', ''}
+                        contig = {'description': ''}
                 else:
                     seq_buffer += line.rstrip()
             if seq_buffer != '':

@@ -47,7 +47,6 @@ def _assemble_contigs(meth, asm_input):
     token = os.environ['KB_AUTH_TOKEN']
     arURL = 'http://140.221.84.124:8000/'
     ar_user = token.split('=')[1].split('|')[0]
-    
 
     wsClient = workspaceService(service.URLS.workspace, token=token)
     ws_request = {'id': asm_input,
@@ -103,7 +102,7 @@ def _get_contigs(meth, job_id, contig_num, contig_name):
                       'source_id': name}
 
         ##### Parse Fasta content
-        contig = {}
+        contig = {'description', ''}
         seq_buffer = ''
         with open(fasta_file) as f:
             for line in f:
@@ -118,9 +117,10 @@ def _get_contigs(meth, job_id, contig_num, contig_name):
                         m = hashlib.md5()
                         m.update(seq_buffer)
                         contig['md5'] = str(m.hexdigest())
+                        contig['length'] = len(seq_buffer)
                         seq_buffer = ''
                         contig_set['contigs'].append(contig)
-                        contig = {}
+                        contig = {'description', ''}
                 else:
                     seq_buffer += line.rstrip()
             if seq_buffer != '':
@@ -128,6 +128,7 @@ def _get_contigs(meth, job_id, contig_num, contig_name):
                 m = hashlib.md5()
                 m.update(seq_buffer)
                 contig['md5'] = str(m.hexdigest())
+                contig['length'] = len(seq_buffer)
                 contig_set['contigs'].append(contig)
         m = hashlib.md5()
         m.update(str(contig_set['contigs']))

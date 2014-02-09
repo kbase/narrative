@@ -6,6 +6,7 @@
     <div class="col-md-2">
         <ul class="nav nav-pills nav-stacked" id="navbar" ng-controller="ScrollCtrl" style="position:fixed;">
             <li><a ng-click="gotoAnchor('genomes')">Genomes</a></li>
+            <li><a ng-click="gotoAnchor('gwas')">GWAS</a></li>
             <li><a ng-click="gotoAnchor('reactions')">Reactions</a></li>
             <li><a ng-click="gotoAnchor('compounds')">Compounds</a></li>
             <li><a ng-click="gotoAnchor('media')">Media</a></li>
@@ -51,6 +52,116 @@
             <a class="btn btn-default api-url-submit">Go</a>
             <span class="glyphicon glyphicon-unchecked"></span>
         </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Population</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasPopulation/">#/KBaseGwasData.GwasPopulation/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasPopulation/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasPopulation">
+              #/KBaseGwasData.GwasPopulation/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="arabidopsis_population_atwell_et_al">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Traits</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasPopulationTrait/">#/KBaseGwasData.GwasPopulationTrait/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasPopulationTrait/$workspaceId/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasPopulationTrait">
+              #/KBaseGwasData.GwasPopulationTrait/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="Trait-avrRpm1-arabidopsis_population_atwell_et_al">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Variations</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasPopulationVariation/">#/KBaseGwasData.GwasPopulationVariation/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasPopulationVariation/$workspaceId/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasPopulationVariation">
+              #/KBaseGwasData.GwasPopulationVariation/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="arabidopsis_250KSNPs_197_ecotypes_vcf">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Gene List</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasGeneList/">#/KBaseGwasData.GwasGeneList/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasGeneList/$workspaceId/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasGeneList">
+              #/KBaseGwasData.GwasGeneList/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="TopVariations-Trait-avrRpm1-arabidopsis_population_atwell_et_al.genelist.4">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Top Variations</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasTopVariations/">#/KBaseGwasData.GwasTopVariations/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasTopVariations/$workspaceId/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasTopVariations">
+              #/KBaseGwasData.GwasTopVariations/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="TopVariations-Trait-avrRpm1-arabidopsis_population_atwell_et_al">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
 
         <div class="page-header"><h3 id="reactions">Reactions</h3></div>
         <h4>URLs</h4>
@@ -404,6 +515,7 @@
 
         <br><br>
         </div>
+
 
 
 </div>

@@ -589,6 +589,16 @@
 
             if (this.options.template.toLowerCase() === "genome")
                 this.showGenomeCards();
+            else if (this.options.template.toLowerCase() === "gptype")
+                this.showGWASPopCards();
+            else if (this.options.template.toLowerCase() === "gttype")
+                this.showGWASTraitCards();
+            else if (this.options.template.toLowerCase() === "gvtype")
+                this.showGWASVarCards();
+            else if (this.options.template.toLowerCase() === "ggltype")
+                this.showGWASGeneListCards();
+            else if (this.options.template.toLowerCase() === "gtvtype")
+                this.showGWASTopVariationsCards();
             else if (this.options.template.toLowerCase() === "meme")
                 this.showMemeCards();
             else if (this.options.template.toLowerCase() === "cmonkey")
@@ -652,6 +662,8 @@
             return this;
         },
 
+
+
         /**
          * Template for showing gene cards.
          */
@@ -679,6 +691,81 @@
                     of: "#app"
                 }
             );
+        },
+
+        /**
+         * Template for showing gwas model cards.
+         */
+        showGWASPopCards: function() {
+            this.addNewCard("KBaseGWASPop",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+            this.addNewCard("KBaseGWASPopTable",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left+410 bottom",
+                  of: "#app"});
+            this.addNewCard("KBaseGWASPopMaps",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom+500",
+                  of: "#app"});
+        },
+
+        /**
+         * Template to show GWAS traits data
+         */
+        showGWASTraitCards: function() {
+            this.addNewCard("KBaseGWASTraitMaps",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+            this.addNewCard("KBaseGWASTraitTable",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom+600",
+                  of: "#app"});
+        },
+
+        /**
+         * Template to show GWAS variation data
+         */
+        showGWASVarCards: function() {
+            this.addNewCard("KBaseGWASVarTable",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+        },
+
+        /**
+         * Template for showing GWAS Gene List
+         */
+         showGWASGeneListCards: function() {
+            this.addNewCard("KBaseGWASGeneListTable",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+         },
+
+        /**
+         * Template for showing GWAS Top Variations
+         */
+         showGWASTopVariationsCards: function() {
+            this.addNewCard("KBaseGWASTopVariations",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left bottom",
+                  of: "#app"});
+            this.addNewCard("KBaseGWASTopVariationsTable",
+                { id: this.options.data.id, ws: this.options.data.ws},
+                { my: "left top",
+                  at: "left+410 bottom",
+                  of: "#app"});
         },
 
         /**
@@ -919,6 +1006,8 @@
                                      "showGenome", 
                                      "showFeature",
                                      "showGenomeDescription",
+                                     "showGWASPopDetails",
+                                     "showGWASPopCards",
                                      "showDomains", 
                                      "showOperons", 
                                      "showBiochemistry", 
@@ -1109,6 +1198,7 @@
                     }
                 );
             });
+
 
             /**
              * Event: showMemeMotif

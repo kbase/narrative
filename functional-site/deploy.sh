@@ -17,7 +17,7 @@ fi
 
 mkdir $1
 
-printf "\nCopying landing page app from ui-common/landing-pages/ to: $1/objects/ \n\n"
+printf "\nCopying landing page app from ui-common/functional-site/ to: $1/objects/ \n\n"
 
 mkdir "$1/objects"
 cp -r ./* "$1/objects/"

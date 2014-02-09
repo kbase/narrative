@@ -259,6 +259,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                 if (args.success === 1) {
                         
                     this.registerLogin(args);
+                    //this.data('_session', kbaseCookie);
 
                     //set the cookie
                     var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
@@ -283,9 +284,11 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                              + '|'
                              + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
                              { path: '/'});
-                    console.log("redirecting");
 
+                    this.data('_session', c);
                     $location.path('/narrative/home/');
+                    //window.location.replace("http://localhost/~sarahpoon/kbase/uicommon/ui-common/functional-site/#/narrative/home/projects/");
+
                     $scope.$apply();
                     
                 } else {

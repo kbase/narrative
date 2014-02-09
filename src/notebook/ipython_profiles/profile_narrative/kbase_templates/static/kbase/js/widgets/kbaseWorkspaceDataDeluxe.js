@@ -340,7 +340,8 @@
                                                       .addClass('modal-footer')
                                                       .append($footerButtons))));
 
-            this.$elem.append(this.$infoModal);
+            // Appending this to body since the left panels are now fixed.
+            $('body').append(this.$infoModal);
             $infoAccordion.kbaseAccordion(
                 {
                     elements:

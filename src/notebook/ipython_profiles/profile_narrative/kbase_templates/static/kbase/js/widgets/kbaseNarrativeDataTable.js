@@ -98,8 +98,8 @@
                             if (typeName && typeName[1]) {
                                 type = typeName[1];
                             }
-                            return "<div >" + 
-                                   "<span class='kb-data-obj-name' data-toggle='tooltip' title='" + type + "\n" + data + "'>" +
+                            return "<div data-toggle='tooltip' title='" + type + "\n" + data + "'>" + 
+                                   "<span class='kb-data-obj-name' >" +
                                             data + 
                                    "</span>" +
                                    "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
@@ -192,7 +192,7 @@
 
 //                 elem.remove();
 //             });
-            this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right'});
+            this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right', container: 'body'});
         },
     })
 

@@ -381,10 +381,10 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) 
                 //console.log("error occurred " + message);
 
                 if (!message.match("No object with name")) {
-                    $('loading-indicator').hide();
+                    $('#loading-indicator').hide();
 
                     $scope.alerts = [];
-                    $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace."});
+                    $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace. Error: " + message});
                     //TODO need to retrieve the actual error message 
                     $scope.$apply();
                 }

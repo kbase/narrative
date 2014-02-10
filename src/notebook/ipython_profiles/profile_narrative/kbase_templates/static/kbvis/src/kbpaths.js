@@ -3,7 +3,7 @@ define('kbvis/src/kbpaths',[], function (paths) {
 
  requirejs.config({
  waitSeconds : 30,
-    baseUrl : '/static/',
+    //baseUrl : '/narrative/static/',
     //baseUrl : '../../src/widgets',
     //baseUrl : '/static',
     //urlArgs: "bust=" + (new Date()).getTime(),
@@ -82,6 +82,8 @@ define('kbvis/src/kbpaths',[], function (paths) {
 
         KbaseNetworkServiceClient : 'kbvis/src/js/KbaseNetworkServiceClient',
         CDMI_API : 'kbvis/src/js/CDMI_API',
+        IdMapClient : 'kbvis/src/js/IdMapClient',
+        OntologyServiceClient : 'kbvis/src/js/OntologyServiceClient',
     },
     shim: {
         bootstrap:    { deps: ["jquery"] },

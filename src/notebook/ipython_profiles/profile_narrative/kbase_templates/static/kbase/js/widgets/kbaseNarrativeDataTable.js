@@ -55,7 +55,10 @@
             this.$dataSelect.change($.proxy(function(event) {
                 var filterValue = '';
                 this.$dataSelect.find('option:selected').each(function(){ filterValue = $( this ).val(); });
-                this.$dataTable.fnFilter("^" + filterValue + "$", 2, true);
+                if (filterValue.length > 0)
+                    this.$dataTable.fnFilter("^" + filterValue + "$", 2, true);
+                else
+                    this.$dataTable.fnFilter("", 2, true);
             }, this));
 
             // just filter the search bar on keyup events.

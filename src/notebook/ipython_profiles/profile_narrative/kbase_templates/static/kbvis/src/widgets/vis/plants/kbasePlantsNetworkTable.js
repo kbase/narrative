@@ -230,6 +230,7 @@ define('kbasePlantsNetworkTable',
                                                         newDataset.nodes,
                                                         function (idx, node) {
                                                             node.label = '<b>' + node.name + '</b>'
+                                                                + '<hr>' + node.func
                                                                 + '<hr>'
                                                                 + d3.keys(node.activeDatasets).sort().join('<br>');
 

@@ -3,7 +3,7 @@ Demo communitites service and methods
 """
 __author__ = 'Travis Harrison'
 __date__ = '1/10/13'
-__version__ = '0.3'
+__version__ = '0.4'
 
 ## Imports
 # Stdlib
@@ -24,7 +24,7 @@ from biokbase.narrative.common import kbtypes
 from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.shock import Client as shockService
-from biokbase.mglib import tab_to_matrix
+from biokbase.mglib import tab_to_matrix, sparse_to_dense
 
 ## Globals
 VERSION = (0, 0, 1)
@@ -50,7 +50,8 @@ class URLS:
     #workspace = "https://140.221.84.209:7058"
     workspace = "https://kbase.us/services/ws"
     #invocation = "https://kbase.us/services/invocation"
-    invocation = "http://140.221.85.110:443"
+    #invocation = "http://140.221.85.110:443"
+    invocation = "http://140.221.85.185:7049"
 
 picrustWF = """{
    "info" : {
@@ -233,9 +234,9 @@ def _import_metagenome_list(meth, workspace, metagenome_list_id):
     workspace = _get_wsname(meth, workspace)
     return json.dumps({'ws': workspace, 'id': metagenome_list_id})
 
-@method(name="Retrieve Subsytems Annotation")
+@method(name="Export Functional Profile for Modeling")
 def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, length, rest):
-    """Retrieve all SEED/Subsystems functional annotations for a given metagenome ID. Alternatively, filter annotations for specific taxa.
+    """Retrieve all SEED/Subsystems functional annotations for a given metagenome ID. Alternatively, filter annotations for specific taxa. For input into modeling service.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -367,9 +368,9 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     text = "Abundance Profile BIOM %s created for PICRUSt prediction of %s"%(out_name, in_seq)
     return json.dumps({'header': text})
 
-@method(name="Map KEGG annotation to Subsystems annotation")
+@method(name="Transform Abundance Profile to Functional Profile for Modeling")
 def _map_annot(meth, workspace, in_name, out_name):
-    """Create SEED/Subsystems annotations from a KEGG metagenome abundance profile.
+    """Create SEED/Subsystems functional annotations from a KEGG metagenome abundance profile. For input into modeling service.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
@@ -548,8 +549,17 @@ def _kegg_map(meth, workspace, input1, input2):
     
     meth.advance("Retrieve Data from Workspace")
     # abundance profile
-    biom1 = _get_ws(workspace, input1, CWS.profile)
-    biom2 = _get_ws(workspace, input2, CWS.profile)
+    profile1 = _get_ws(workspace, input1, CWS.profile)
+    profile2 = _get_ws(workspace, input2, CWS.profile)
+    try:
+        biom1 = json.loads(profile1)
+        biom2 = json.loads(profile2)
+        if biom1['matrix_type'] == 'sparse':
+            biom1['data'] = sparse_to_dense(biom1['data'], biom1['shape'][0], biom1['shape'][1])
+        if biom2['matrix_type'] == 'sparse':
+            biom2['data'] = sparse_to_dense(biom2['data'], biom2['shape'][0], biom2['shape'][1])
+    except:
+        return json.dumps({'header': 'ERROR: profiles contain invalid BIOM formats'})
     
     meth.advance("Compare KEGG Networks")
     kdata = [{},{}]
@@ -561,7 +571,8 @@ def _kegg_map(meth, workspace, input1, input2):
     		kdata[1][ biom2['rows'][i]['id'] ] = biom2['data'][i][0]
     
     meth.advance("Display KEGG Map")
-    return json.dumps({'data': kdata, 'width': 1200})
+    text = "KEGG Pathway map comparison. Colored lines represent KEGG functions found in the inputed metagenomes.  %s is in green and %s is in blue. Overlap is in cyan."%(input1, input2)
+    return json.dumps({'header': text, 'data': kdata, 'width': 800})
 
 @method(name="Retrieve Annotation Abundance Profile")
 def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, int_level, int_source, evalue, identity, length, norm):

@@ -313,6 +313,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
 
                     kb = new KBCacheClient(USER_TOKEN);
+                    kb.nar.ensure_home_project(USER_ID);
 
                     $location.path('/narrative/home/');
 

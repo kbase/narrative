@@ -212,14 +212,28 @@ angular.module('narrative-directives')
                 }
 
                 function formatUsers(perms) {
-
                     var users = []
                     for (var user in perms) {
                         if (user == '~global' || user == USER_ID) continue;
                         users.push(user);
                     }
 
-                    return users.join(', ');
+                    var n = 3;
+
+                    var share_str = ''
+                    if (users.length > n) {
+                        if (users.slice(n).length == 1) {
+                            share_str = 'Shared with: '+users.slice(0, n).join(', ')+', and'+
+                                    ' <a class="btn-share-with">+'+users.slice(n).length+' user</a>';  
+                        } else if (users.slice(2).length > 1) {
+
+                            share_str = 'Shared with: '+users.slice(0, n).join(', ')+ ', and'+
+                                    ' <a class="btn-share-with"> +'+users.slice(n).length+' users</a>';
+                        } 
+                    } else if (users.length <= n) {
+                        share_str = 'Shared with: '+users.slice(0, n).join(', ');
+                    }
+                    return share_str;
                 }
 
 
@@ -244,8 +258,10 @@ angular.module('narrative-directives')
                                   { "sTitle": "Project", "mData": "project"},  // grouped by this column
                                   { "sTitle": "Shared With", "mData": "users", 'bVisible': false},
                                   { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 6},
+
                                   (USER_ID ? { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'} :
-                                        { "sTitle": "", "mData": "deleteButton", 'bSortable': false, bVisible: false}),
+                                        { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'bVisible': false}),
+
                                   { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}  
 
                               ],                         
@@ -275,15 +291,25 @@ angular.module('narrative-directives')
 
                 function events() {
                     // adding buttons to project header
+
                     $('.group-item-expander').each(function() {
                         var self = this;
                         var proj = $(this).find('.proj-link').data('proj');
 
-                        var prom = kb.nar.get_project_perms({project_id: proj});
-                        $.when(prom).done(function(results) {
-                            var user_list = formatUsers(results);
-                            $(self).append(user_list);
-                        })
+                        if (USER_ID) {
+                            var prom = kb.nar.get_project_perms({project_id: proj});
+                            $.when(prom).done(function(results) {
+                                var user_list = formatUsers(results);
+                                $(self).append('<span class="project-shared-with pull-right">'+user_list+'</span>');
+                                // event for edit perms button
+                                $('.btn-share-with').unbind('click')
+                                $('.btn-share-with').click(function(e){
+                                    e.stopImmediatePropagation()
+                                    var proj = $(this).parents('td').find('.proj-link').data('proj')
+                                    manageProject(proj)
+                                })
+                            })
+                        }
 
                         if (USER_ID) {
                             $(this).append('<span class="proj-opts pull-right">\
@@ -318,8 +344,6 @@ angular.module('narrative-directives')
                         newNarrativeModal(proj);
                     })
 
-
-
                     // event for edit perms button
                     $('.edit-perms').unbind('click')
                     $('.edit-perms').click(function(e){
@@ -327,6 +351,8 @@ angular.module('narrative-directives')
                         var proj = $(this).parents('td').find('.proj-link').data('proj')
                         manageProject(proj)
                     })
+
+      
 
                     // event for delete narrative button
                     $('.btn-delete-narrative').unbind('click')
@@ -641,7 +667,8 @@ angular.module('narrative-directives')
                                         // save permissions
                                         var prom = savePermissions(proj_id);
                                         $.when(prom).done(function(){
-                                            $prompt.addCover('Permissions saved.', 'success');                                            
+                                            $prompt.addCover('Permissions saved.', 'success');   
+                                            scope.loadProjectList();
                                         }).fail(function(e) {
                                             $prompt.addCover(e.error.message, 'danger');                                             
                                         }) 
@@ -692,7 +719,7 @@ angular.module('narrative-directives')
                         })
 
 
-                        var del_proj = $('<a class="btn btn-danger pull-left">Delete</a>');
+                        var del_proj = $('<a class="btn btn-danger pull-left">Delete Project</a>');
 
                         del_proj.click(function() { 
                             deleteProject(proj_id)

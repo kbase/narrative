@@ -54,8 +54,10 @@
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
-                                 .addClass('kb-loading')
+                                 .addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">')
+                                 .append($('<div>')
+                                         .attr('id', 'message'))
                                  .hide();
 
             // The error panel should be empty for now.
@@ -99,7 +101,10 @@
          * @private
          */
         refresh: function() {
-            this.showLoadingMessage();
+            if (!IPython || !IPython.notebook || !IPython.notebook.kernel)
+                return;
+
+            this.showLoadingMessage("Loading available KBase Services...");
 
             // Command to load and fetch all functions from the kernel
             var fetchFunctionsCommand = 'import biokbase.narrative.common.service_root as root\n' + 
@@ -266,7 +271,10 @@
          * Shows a loading spinner or message on top of the panel.
          * @private
          */
-        showLoadingMessage: function() {
+        showLoadingMessage: function(message) {
+            this.$loadingPanel.find('#message').empty();
+            if (message) 
+                this.$loadingPanel.find('#message').html(message);
             this.$functionPanel.hide();
             this.$errorPanel.hide();
             this.$loadingPanel.show();

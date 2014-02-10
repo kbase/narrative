@@ -322,10 +322,6 @@ nav ul li.selected {
 	overflow-y: auto;
 }
 
-#data-panel {
-
-}
-
 #data-header {
 	padding: 10px 0;
 	color: #fff;
@@ -422,9 +418,24 @@ nav ul li.selected {
 	overflow: auto;
 }
 
-.left-pane {
+/*.left-pane {
     font-size: 14px;
     position: relative;
+}
+*/
+.left-pane {
+	font-size: 14px;
+	position: relative;
+/*	width: 289px;
+	top: 428px;
+	bottom: 20px;
+	overflow: auto;
+*/}
+
+
+#kb-function-panel .kb-function-body {
+	height: 100% ;
+	max-height: 100% ;
 }
 
 h3.pane-title {

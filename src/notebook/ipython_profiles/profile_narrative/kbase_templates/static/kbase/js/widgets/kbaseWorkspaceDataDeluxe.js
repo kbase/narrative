@@ -36,14 +36,17 @@
             landingPageURL: "/functional-site/#/",
             uploaderURL: "http://kbase.us/services/docs/uploader/uploader.html",
             container: null,
+            wsId: null,
         },
+        wsId: null,
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
 
         init: function(options) {
             this._super(options);
-            this.wsId = options.wsId;
+            if (this.options.wsId)
+                this.wsId = options.wsId;
 
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
@@ -124,7 +127,8 @@
             this.createStructure()
                 .createMessages();
 
-            this.trigger('workspaceUpdated.Narrative', this.wsId);
+            if (this.wsId)
+                this.trigger('workspaceUpdated.Narrative', this.wsId);
 
             return this;
         },
@@ -156,6 +160,10 @@
             this.isLoggedIn = false;
             this.refresh();
             return this;
+        },
+
+        setWorkspace: function(wsId) {
+            this.wsId = wsId;
         },
 
         /**
@@ -195,6 +203,8 @@
             this.$loadingPanel = $('<div>')
                                  .addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">')
+                                 .append($('<div>')
+                                         .attr('id', 'message'))
                                  .hide();
 //            this.$elem.append(this.$loadingPanel);
 
@@ -214,7 +224,7 @@
 //            this.$elem.append(this.$errorPanel);
 
             this.$elem.append($('<div>')
-                              .addClass('panel panel-primary')
+                              .addClass('panel panel-primary kb-data-main-panel')
                               .append($('<div>')
                                       .addClass('panel-heading')
                                       .append($('<div>')
@@ -340,7 +350,8 @@
                                                       .addClass('modal-footer')
                                                       .append($footerButtons))));
 
-            this.$elem.append(this.$infoModal);
+            // Appending this to body since the left panels are now fixed.
+            $('body').append(this.$infoModal);
             $infoAccordion.kbaseAccordion(
                 {
                     elements:
@@ -375,17 +386,20 @@
          * This reloads any data that this panel should display.
          * It uses the existing workspace client to fetch data from workspaces and populates the
          * panel. It then fetches anything that's a part of the narrative (using the Narrative's metadata)
-         * and displays that
-         *
-         * XXX: THIS SHOULD NOT HAPPEN. It should be fetched by event through the main narrative controller.
+         * and displays that.
          *
          * @public
          */
         refresh: function() {
-            if (!this.wsClient) return;
+            if (!this.wsClient) {
+                this.showLoadingMessage("Unable to load workspace data!<br>No user credentials found!");
+                return;
+            }
+            else if (!this.wsId) {
+                return; // silent for testing.
+            }
 
-            this.showLoadingPanel();
-
+            this.showLoadingMessage("Loading workspace data...");
             // Fetch data from the current workspace.
             this.wsClient.list_objects( 
                 {
@@ -435,47 +449,49 @@
 
             // Fetch dependent data from the narrative
             // XXX: this should be pushed in from the main narrative javascript! Maybe later.
-            var narrData = IPython.notebook.metadata.data_dependencies;
-            var dataList = {};
-            if (narrData) {
-                // format things to be how we want them.
-                $.each(narrData, $.proxy(function(idx, val) {
-                    val = val.split(/\s+/);
-                    var type = val[0];
+            if (IPython.notebook) {
+                var narrData = IPython.notebook.metadata.data_dependencies;
+                var dataList = {};
+                if (narrData) {
+                    // format things to be how we want them.
+                    $.each(narrData, $.proxy(function(idx, val) {
+                        val = val.split(/\s+/);
+                        var type = val[0];
 
-                    var ws = "";
-                    var name = "";
+                        var ws = "";
+                        var name = "";
 
-                    // if there's a forward slash, it'll be ws/name
-                    if (val[1].indexOf('/') !== -1) {
-                        var arr = val[1].split('/');
-                        ws = arr[0];
-                        name = arr[1];
-                    }
-                    else if (/ws\.(\d+)\.obj\.(\d+)/.exec(val[1])) {
-                        var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(val[1]);
-                        if (qualId.length === 3) {
-                            ws = qualId[1];
-                            name = qualId[2];
+                        // if there's a forward slash, it'll be ws/name
+                        if (val[1].indexOf('/') !== -1) {
+                            var arr = val[1].split('/');
+                            ws = arr[0];
+                            name = arr[1];
                         }
-                    }
-                    // otherwise-otherwise, it'll be just name, and we provide the workspace
-                    else {
-                        ws = this.wsId;
-                        name = val[1];
-                    }
-                    if (!dataList[type])
-                        dataList[type] = [];
+                        else if (/ws\.(\d+)\.obj\.(\d+)/.exec(val[1])) {
+                            var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(val[1]);
+                            if (qualId.length === 3) {
+                                ws = qualId[1];
+                                name = qualId[2];
+                            }
+                        }
+                        // otherwise-otherwise, it'll be just name, and we provide the workspace
+                        else {
+                            ws = this.wsId;
+                            name = val[1];
+                        }
+                        if (!dataList[type])
+                            dataList[type] = [];
 
-                    // Workaround for dealing with the occasional blank name.
-                    if (name) {
-                        name = name.trim();
-                        if (name.length > 0)
-                            dataList[type].push([ws, name, type]);
-                    }
-                }, this));
+                        // Workaround for dealing with the occasional blank name.
+                        if (name) {
+                            name = name.trim();
+                            if (name.length > 0)
+                                dataList[type].push([ws, name, type]);
+                        }
+                    }, this));
+                }
+                this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
             }
-            this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
         },
 
         /**
@@ -713,7 +729,10 @@
          * Shows the loading panel and hides all others
          * @private
          */
-        showLoadingPanel: function() {
+        showLoadingMessage: function(message) {
+            this.$loadingPanel.find('#message').empty();
+            if (message)
+                this.$loadingPanel.find('#message').html(message);
             this.$dataPanel.hide();
             this.$errorPanel.hide();
             this.$loadingPanel.show();

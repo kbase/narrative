@@ -12,6 +12,10 @@ div[class="tooltip-inner"] {
 .tooltip {
     z-index: 2000 !important;
 }
+.kb-data-main-panel {
+    height: 100%;
+}
+
 #kb-ws {
     background-color: #fff;
     width: 100%;
@@ -32,6 +36,10 @@ div[class="tooltip-inner"] {
 #kb-ws .form-control {
     width: 85%;
     margin: 3px;
+}
+
+.kb-data-control {
+    width: 95%;
 }
 
 /* Data table */
@@ -64,8 +72,7 @@ div[class="tooltip-inner"] {
     overflow:hidden; 
     white-space: nowrap; 
     display: inline-block; 
-    max-width: 90%; 
-    width: 90%;
+    max-width: 88%; 
 }
 
 .kb-data-loading {

@@ -175,7 +175,7 @@ def trait_manhattan_plot(meth, workspaceID=None, gwas_result=None):
     :output_widget: Manhattan
     """
     meth.stages = 1
-    if workspaceID is None:
+    if not workspaceID:
         workspaceID = meth.workspace_id
     meth.advance("Manhattan plot")
     token = meth.token
@@ -205,7 +205,7 @@ def gwas_variation_to_genes(meth, workspaceID=None, gwasObjectID=None, pmin=None
     """
     meth.stages = 3
 
-    if workspaceID is None:
+    if not workspaceID:
         workspaceID = meth.workspace_id
 
     meth.advance("init GWAS service")

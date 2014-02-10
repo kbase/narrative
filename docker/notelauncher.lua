@@ -66,9 +66,12 @@ local function remove_notebook( name )
    local portmap = get_notebooks()
    assert(portmap[name], "Notebook by this name does not exist: " .. name)
    local id = string.format('/%s',name)
+   ngx.log(ngx.INFO,string.format("removing notebook named: %s",id))
    local res = docker.client:stop_container{ id = id }
+   ngx.log(ngx.INFO,string.format("response from stop_container: %d : %s",res.status,res.body))
    assert(res.status == 204, "Failed to stop container: " .. json.encode(res.body))
    res = docker.client:remove_container{ id = id}
+   ngx.log(ngx.INFO,string.format("response from remove_container: %d : %s",res.status,res.body))
    assert(res.status == 204, "Failed to remove container " .. id .. " : " .. json.encode(res.body))
    return true
 end

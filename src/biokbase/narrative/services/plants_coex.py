@@ -947,8 +947,7 @@ def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
     wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".trmd", 'meta' : {'orginal' : net_obj_id, 'cluster_id_list' : cluster_id_list}}]})
 
     meth.advance("Create plot specification")
-    workspaceID = "{}.{}".format(meth.workspace_id, net_obj_id + ".trmd")
-    return json.dumps({'token': meth.token, 'workspaceID': workspaceID})
+    return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': net_obj_id + ".trmd" })
 
 @method(name="Network diagram")
 def network_diagram(meth, workspace_id=None, obj_id=None):
@@ -966,10 +965,7 @@ def network_diagram(meth, workspace_id=None, obj_id=None):
     meth.advance("Create plot specification")
     if not workspace_id:
         workspace_id = meth.workspace_id
-    workspaceID = "{}.{}".format(workspace_id, obj_id)
-    return json.dumps({'token': meth.token, 'workspaceID': workspaceID})
-
-
+	return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': obj_id })
 
 # Finalize (registers service)
 finalize_service()

@@ -55,7 +55,10 @@
             this.$dataSelect.change($.proxy(function(event) {
                 var filterValue = '';
                 this.$dataSelect.find('option:selected').each(function(){ filterValue = $( this ).val(); });
-                this.$dataTable.fnFilter("^" + filterValue + "$", 2, true);
+                if (filterValue.length > 0)
+                    this.$dataTable.fnFilter("^" + filterValue + "$", 2, true);
+                else
+                    this.$dataTable.fnFilter("", 2, true);
             }, this));
 
             // just filter the search bar on keyup events.
@@ -70,7 +73,6 @@
              * This should be styled to how the data is used.
              */
             this.$dataTable.dataTable({
-//                sScrollX: '100%',
                 iDisplayLength: -1,
                 bPaginate: false,
                 oLanguage: {
@@ -87,16 +89,13 @@
                         mRender: function(data, type, row) {
                             // if the 'data' (name) is too long,
                             // truncate it and give it a tooltip with the full name.
-  // 91                                 var title = data;
-  // 92                                 var abbrev = data.substring(0, 33);
-  // 93                                 data = "<span data-toggle='tooltip' title='" + title + "'>" + abbrev + "..." + "</span>";
                             var type = row[2];
                             var typeName = /^(\S+)-/.exec(type);
                             if (typeName && typeName[1]) {
                                 type = typeName[1];
                             }
-                            return "<div >" + 
-                                   "<span class='kb-data-obj-name' data-toggle='tooltip' title='" + type + "\n" + data + "'>" +
+                            return "<div data-toggle='tooltip' title='" + type + "\n" + data + "'>" + 
+                                   "<span class='kb-data-obj-name' >" +
                                             data + 
                                    "</span>" +
                                    "<span class='glyphicon glyphicon-question-sign kb-function-help' " + 
@@ -189,7 +188,7 @@
 
 //                 elem.remove();
 //             });
-            this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right'});
+            this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right', container: 'body'});
         },
     })
 

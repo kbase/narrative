@@ -459,12 +459,12 @@ def _make_model(meth, workspace, in_name, out_name):
     
     meth.advance("Saving Model in Workspace")
     lines = stdout.strip().split('\n')
-    mname = lines[2].split(':')[1].strip()
+    mname = lines[1].split(':')[1].strip()
     stdout, stderr = _run_invo("ws-rename %s %s --workspace %s"%(mname, out_name, workspace))
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
-    lines[2] = 'Object Name: '+out_name
+    lines[1] = 'Object Name: '+out_name
     return json.dumps({'header': '\n'.join(lines)})
 
 @method(name="Gapfill Metabolic Model")

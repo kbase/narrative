@@ -780,7 +780,7 @@ function ProjectAPI(ws_url, token) {
                         console.log(result.error.message);
                         if (!/^No object with .+ exists in workspace [:\w]+$/
                                 .test(result.error.message)) {
-                            p.error_callback(result.error.message);
+                            //p.error_callback(result.error.message);
                         }
                         //everything's cool, the object doesn't exist in home
                     })

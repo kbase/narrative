@@ -12,7 +12,7 @@ function Cache() {
             var obj = cache[i];
             if (service != obj['service']) continue;
             if (method != obj['method']) continue;
-            if ( angular.equals(obj['params'], params) ) return obj;
+            if ( angular.equals(obj['params'], params) ) { return obj; }
         }
         return undefined;
     }
@@ -24,7 +24,7 @@ function Cache() {
         obj['prom'] = prom;
         obj['params'] = params;
         cache.push(obj);
-        //console.log('cache', cache)
+        //console.log('Cache after the last "put"', cache)
     }
 }
 
@@ -51,8 +51,12 @@ function KBCacheClient(token) {
     var cache = new Cache();
 
     this.req = function(service, method, params) {
-        //if (!params) var params = {auth: auth.token};
-        //else params.auth = auth.token;  // Fixme: set auth in client object
+        if (service == 'fba') { 
+            // use whatever workspace server that was configured.
+            // this makes it possible to use the production workspace server
+            // with the fba server.   Fixme:  fix once production fba server is ready.
+            params.wsurl = ws_url;  
+        }
 
         // see if api call has already been made        
         var data = cache.get(service, method, params);
@@ -63,10 +67,6 @@ function KBCacheClient(token) {
         // otherwise, make request
         var prom = undefined;
         if (service == 'fba') {
-            // use whatever workspace server that was configured.
-            // this makes it possible to use the production workspace server
-            // with the fba server
-            params.wsurl = ws_url;  
             console.log('Making request:', 'fba.'+method+'('+JSON.stringify(params)+')');
             var prom = fba[method](params);
         } else if (service == 'ws') {

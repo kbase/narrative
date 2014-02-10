@@ -332,7 +332,10 @@ function ProjectAPI(ws_url, token) {
             $.proxy(function(error) {   // if no project USER_ID:home exists, make one
                 this.new_project({
                     project_id: projId,
-                    error_callback: function(error) { console.debug("Error while creating home project!"); console.debug(error); },
+                    error_callback: function(error) {  // Just fails more or less silently for now
+                        console.debug("Error while creating home project!"); 
+                        console.debug(error); 
+                    },
                 });
             }, this)
         );

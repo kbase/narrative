@@ -198,15 +198,17 @@ angular.module('lp-directives')
                 var prom1 = kb.req('fba', 'get_fbas',
                             {fbas: [scope.id], workspaces: [scope.ws]});
                 $.when(prom1).done(function(fbas_data) {
-                    var model_ws = fbas_data[0].model_workspace;
-                    var model_id = fbas_data[0].model;
+                    console.log(fbas_data)
+                    var model_ref = fbas_data[0].modelref;
+                    var wsid = model_ref.split('/')[0];
+                    var objid = model_ref.split('/')[1];
 
-                    var prom2 = kb.req('fba', 'get_models',
-                            {models: [model_id], workspaces: [model_ws]});
+                    var prom2 = kb.req('ws', 'get_objects',
+                            [{wsid: wsid, objid: objid}]);
                     $.when(prom2).done(function(models_data){
                         $(p.body()).kbaseModelCore({ids: [scope.id], 
                                                     workspaces : [scope.ws],
-                                                    modelsData: models_data,
+                                                    modelsData: models_data[0].data,
                                                     fbasData: fbas_data});
                         $(document).on('coreRxnClick', function(e, data) {
                             var url = '/rxns/'+data.ids.join('&');

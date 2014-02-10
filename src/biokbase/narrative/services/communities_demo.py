@@ -460,7 +460,7 @@ def _make_model(meth, workspace, in_name, out_name):
     meth.advance("Saving Model in Workspace")
     lines = stdout.strip().split('\n')
     mname = lines[2].split(':')[1].strip()
-    stdout, stderr = _run_invo("ws-rename %s %s -w %s"%(mname, out_name, workspace))
+    stdout, stderr = _run_invo("ws-rename %s %s --workspace %s"%(mname, out_name, workspace))
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
@@ -518,11 +518,11 @@ def _compare_model(meth, workspace, model1, model2):
     meth.advance("Processing inputs")
     # validate
     workspace = _get_wsname(meth, workspace)
-    if not (model1 and model1):
+    if not (model1 and model2):
         return json.dumps({'header': 'ERROR:\nmissing model 1 and model 2'})
     
     meth.advance("Compare Models")
-    cmd = "fba-compare-mdls %s %s"%(';'.join(model_list), workspace)
+    cmd = "fba-compare-mdls %s;%s %s"%(model1, model2, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})

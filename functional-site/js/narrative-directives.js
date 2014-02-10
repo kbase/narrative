@@ -230,7 +230,7 @@ angular.module('narrative-directives')
                             share_str = 'Shared with: '+users.slice(0, n).join(', ')+ ', and'+
                                     ' <a class="btn-share-with"> +'+users.slice(n).length+' users</a>';
                         } 
-                    } else if (users.length <= n) {
+                    } else if (users.length > 0 && users.length <= n) {
                         share_str = 'Shared with: '+users.slice(0, n).join(', ');
                     }
                     return share_str;

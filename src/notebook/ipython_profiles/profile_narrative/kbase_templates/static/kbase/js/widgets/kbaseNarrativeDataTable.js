@@ -73,7 +73,6 @@
              * This should be styled to how the data is used.
              */
             this.$dataTable.dataTable({
-//                sScrollX: '100%',
                 iDisplayLength: -1,
                 bPaginate: false,
                 oLanguage: {
@@ -90,9 +89,6 @@
                         mRender: function(data, type, row) {
                             // if the 'data' (name) is too long,
                             // truncate it and give it a tooltip with the full name.
-  // 91                                 var title = data;
-  // 92                                 var abbrev = data.substring(0, 33);
-  // 93                                 data = "<span data-toggle='tooltip' title='" + title + "'>" + abbrev + "..." + "</span>";
                             var type = row[2];
                             var typeName = /^(\S+)-/.exec(type);
                             if (typeName && typeName[1]) {

@@ -47,22 +47,26 @@
             kbaseConnected();
         }
 
+        var dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
+        dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+
+        var functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel();
+        functionWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
         /*
          * Once everything else is loaded and the Kernel is idle,
          * Go ahead and fill in the rest of the Javascript stuff.
          */
         $([IPython.events]).one('status_idle.Kernel', function() {
             var workspaceId = null;
-            if (IPython.notebook.metadata)
-                workspaceId = IPython.notebook.metadata.ws_name;
+            if (IPython.notebook.metadata) {
+                workspaceId = IPython.notebook.metadata.ws_name;                
+            }
 
             if (workspaceId) {
                 $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objtable/' + workspaceId);
+                dataWidget.setWorkspace(workspaceId);
             }
 
-            $('#kb-ws').kbaseWorkspaceDataDeluxe({ 'wsId': workspaceId });
-            // Build the list of available functions.
-            $('#kb-function-panel').kbaseNarrativeFunctionPanel({});
 
             // XXX: Should be renamed.... eventually?
             narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
@@ -78,6 +82,8 @@
             IPython.notebook.kernel.execute(cmd, {}, {'silent' : true});
 
             IPython.notebook.set_autosave_interval(0);
+
+            functionWidget.refresh();
         });
 
     });

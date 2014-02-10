@@ -60,7 +60,7 @@ $.KBWidget({
             for (var i in models) {
                 org_names.push(models[i].name)
             }
-            console.log('MODELS!,', models)
+            console.log('MODELS,', models)
             // Adding data structures to core data or each organism
             for (var i in core) {
                 var obj = core[i];
@@ -72,13 +72,14 @@ $.KBWidget({
                 }
             }
 
+            // for each model, join fba data to model data...  yeah.
             for (var n in models) {
                 var model = models[n];
                 rxn_list = model.reactions;
 
                 var model_fba = [];
                 for (var k in fba_data) {
-                    if (fba_data[k].model == model.id ) {
+                    if (fba_data[k].modelref.split('/')[1] == model.id ) {
                         model_fba = fba_data[k];
                     }
                 }

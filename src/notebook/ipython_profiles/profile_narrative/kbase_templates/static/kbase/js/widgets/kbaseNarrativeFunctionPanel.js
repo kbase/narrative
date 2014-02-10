@@ -88,7 +88,7 @@
                                       .append(this.$loadingPanel)
                                       .append(this.$errorPanel)));
 
-            this.$elem.append(this.$helpPanel);
+            $('body').append(this.$helpPanel);
             this.refresh();
 
             return this;
@@ -207,11 +207,11 @@
             var $helpButton = $('<span>')
                               .addClass('glyphicon glyphicon-question-sign kb-function-help')
                               .css({'margin-top': '-5px'})
-                              .click(function(event) { event.preventDefault(); event.stopPropagation(); self.showHelpPopup(method); });
+                              .click(function(event) { event.preventDefault(); event.stopPropagation(); self.showHelpPopup(method, event); });
 
             var $newFunction = $('<li>')
                                .append(method.title)
-                               .click(function(event) { self.trigger('function_clicked.Narrative', method); })
+                               .click(function(event) {self.trigger('function_clicked.Narrative', method); })
                                .append($helpButton);
 
             return $newFunction;
@@ -259,7 +259,8 @@
          * description for populating the popup.
          * @private
          */
-        showHelpPopup: function(method) {
+        showHelpPopup: function(method, event) {
+            this.$helpPanel.css({'left':event.pageX, 'top':event.pageY})
             this.$helpPanel.empty();
             this.$helpPanel.append($('<h1>').append(method.title + ' Help'))
                            .append(method.description)

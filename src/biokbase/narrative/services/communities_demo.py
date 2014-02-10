@@ -435,7 +435,7 @@ def _make_model(meth, workspace, in_name, out_name):
     :output_widget: ImageViewWidget
     """
     
-    meth.stages = 4
+    meth.stages = 5
     meth.advance("Processing inputs")
     # validate
     if not (in_name and out_name):
@@ -452,11 +452,20 @@ def _make_model(meth, workspace, in_name, out_name):
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Create Metagenome Model Object")
-    cmd = "fba-metaanno-to-models %s.annot --maxotumod 1 --workspace %s --metaannows %s --showerror"%(in_name, workspace, workspace)
+    cmd = "fba-metaanno-to-models %s.annot --maxotumod 0 --workspace %s --metaannows %s --showerror"%(in_name, workspace, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
-    return json.dumps({'header': stdout})
+    
+    meth.advance("Saving Model in Workspace")
+    lines = stdout.strip().split('\n')
+    mname = lines[2].split(':')[1].strip()
+    stdout, stderr = _run_invo("ws-rename %s %s -w %s"%(mname, out_name, workspace))
+    if stderr:
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
+    
+    lines[2] = 'Object Name: '+out_name
+    return json.dumps({'header': '\n'.join(lines)})
 
 @method(name="Gapfill Metabolic Model")
 def _gapfill_model(meth, workspace, in_name):
@@ -481,7 +490,7 @@ def _gapfill_model(meth, workspace, in_name):
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Gapfill Model Starting")
-    cmd = "kbfba-gapfill %s --numsol 5 --timepersol 3600 --intsol -w %s"%(in_name, workspace)
+    cmd = "kbfba-gapfill %s --numsol 1 --timepersol 3600 --intsol -w %s"%(in_name, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})

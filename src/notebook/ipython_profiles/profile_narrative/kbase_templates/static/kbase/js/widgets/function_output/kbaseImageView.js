@@ -25,7 +25,7 @@
             if (this.options.header !== null) {
                 main.append($('<p>')
                     .css({'padding': '10px 20px'})
-                    .text(this.options.header));
+                    .append($('<pre>').text(this.options.header)));
             }
             // Create image
             if (this.options.data !== null) {

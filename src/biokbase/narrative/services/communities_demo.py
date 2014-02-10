@@ -280,7 +280,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     meth.advance("Processing inputs")
     # validate
     if not (mgid and out_name):
-        return json.dumps({'header': 'ERROR:  missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if top == '':
@@ -304,7 +304,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     cmd += " > "+out_name
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Storing in Workspace")
     anno = _get_invo(out_name, binary=False)
@@ -336,7 +336,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     meth.advance("Processing inputs")
     # validate
     if not (in_seq and out_name):
-        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
@@ -345,7 +345,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     _run_invo("echo 'pick_otus:similarity 0.97' >> picrust.params")
     stdout, stderr = _run_invo("mg-upload2shock %s picrust.params"%(URLS.shock))
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
     param_nid = json.loads(stdout)['id']
     wf_tmp = Template(picrustWF)
     wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_nid, param=param_nid)
@@ -353,12 +353,12 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     ajob = _submit_awe(wf_str)
     if ajob['status'] != 200:
-        return json.dumps({'header': 'ERROR: %d - %s'%(ajob['status'], ', '.join(ajob['error']))})
+        return json.dumps({'header': 'ERROR:\n%d - %s'%(ajob['status'], ', '.join(ajob['error']))})
     
     meth.advance("Waiting on PICRUSt prediction of KEGG BIOM")
     aresult = _get_awe_results(ajob['data']['id'])
     if not aresult:
-        return json.dumps({'header': 'ERROR: AWE error running PICRUSt'})
+        return json.dumps({'header': 'ERROR:\nAWE error running PICRUSt'})
     
     meth.advance("Storing Profile BIOM in Workspace")
     last_task = aresult['tasks'][-1]
@@ -390,7 +390,7 @@ def _map_annot(meth, workspace, in_name, out_name):
     meth.advance("Processing inputs")
     # validate
     if not (in_name and out_name):
-        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
@@ -407,7 +407,7 @@ def _map_annot(meth, workspace, in_name, out_name):
     cmd = "mg-kegg2ss --input %s --output text > %s"%(in_name, out_name)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Storing in Workspace")
     anno = _get_invo(out_name, binary=False)
@@ -439,7 +439,7 @@ def _make_model(meth, workspace, in_name, out_name):
     meth.advance("Processing inputs")
     # validate
     if not (in_name and out_name):
-        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
@@ -449,15 +449,14 @@ def _make_model(meth, workspace, in_name, out_name):
     cmd = "fba-import-meta-anno %s -u %s.annot -n %s.annot -w %s"%(in_name, in_name, in_name, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Create Metagenome Model Object")
     cmd = "fba-metaanno-to-models %s.annot -m 1 -w %s -e %s"%(in_name, workspace, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
-    htmltext = "<br>".join( stdout.strip().split('\n') )
-    return json.dumps({'header': htmltext})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
+    return json.dumps({'header': stdout})
 
 @method(name="Gapfill Metabolic Model")
 def _gapfill_model(meth, workspace, in_name):
@@ -478,16 +477,15 @@ def _gapfill_model(meth, workspace, in_name):
     meth.advance("Processing inputs")
     # validate
     if not in_name:
-        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Gapfill Model Starting")
     cmd = "kbfba-gapfill %s --numsol 5 --timepersol 3600 --intsol -w %s"%(in_name, workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
-    htmltext = "<br>".join( stdout.strip().split('\n') )
-    return json.dumps({'header': htmltext})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
+    return json.dumps({'header': stdout})
 
 @method(name="Compare Metabolic Model")
 def _compare_model(meth, workspace, model1, model2):
@@ -512,15 +510,14 @@ def _compare_model(meth, workspace, model1, model2):
     # validate
     workspace = _get_wsname(meth, workspace)
     if not (model1 and model1):
-        return json.dumps({'header': 'ERROR: missing model 1 and model 2'})
+        return json.dumps({'header': 'ERROR:\nmissing model 1 and model 2'})
     
     meth.advance("Compare Models")
     cmd = "fba-compare-mdls %s %s"%(';'.join(model_list), workspace)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
-    htmltext = "<br>".join( stdout.strip().split('\n') )
-    return json.dumps({'header': htmltext})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
+    return json.dumps({'header': stdout})
 
 @method(name="KEGG Mapper")
 def _kegg_map(meth, workspace, input1, input2):
@@ -545,7 +542,7 @@ def _kegg_map(meth, workspace, input1, input2):
     # validate
     workspace = _get_wsname(meth, workspace)
     if not (input1 and input2):
-        return json.dumps({'header': 'ERROR: missing profile 1 and profile 2'})
+        return json.dumps({'header': 'ERROR:\nmissing profile 1 and profile 2'})
     
     meth.advance("Retrieve Data from Workspace")
     # abundance profile
@@ -559,7 +556,7 @@ def _kegg_map(meth, workspace, input1, input2):
         if biom2['matrix_type'] == 'sparse':
             biom2['data'] = sparse_to_dense(biom2['data'], biom2['shape'][0], biom2['shape'][1])
     except:
-        return json.dumps({'header': 'ERROR: profiles contain invalid BIOM formats'})
+        return json.dumps({'header': 'ERROR:\nprofiles contain invalid BIOM formats'})
     
     meth.advance("Compare KEGG Networks")
     kdata = [{},{}]
@@ -633,7 +630,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     meth.advance("Processing inputs")
     # validate
     if not (ids and out_name):
-        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if annot == '':
@@ -664,7 +661,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     meth.advance("Building abundance profile from communitites API")
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Storing in Workspace")
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
@@ -708,7 +705,7 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     meth.advance("Processing inputs")
     # validate
     if not (in_name and metadata and out_name):
-        return json.dumps({'header': 'ERROR: missing input or output workspace IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output workspace IDs'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if stat_test == '':
@@ -726,7 +723,7 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
         cmd += ' --order %d'%int(order)
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Storing in Workspace")
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
@@ -894,7 +891,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     meth.advance("Processing inputs")
     # validate
     if not in_name:
-        json.dumps({'header': 'ERROR: missing input'})
+        json.dumps({'header': 'ERROR:\nmissing input'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if use_name == '':
@@ -909,7 +906,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
         cmd += ' --name'
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        json.dumps({'header': 'ERROR: %s'%stderr})
+        json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Displaying Boxplot")
     text = 'Boxplot was produced for abundance profile %s.'%in_name
@@ -956,7 +953,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     meth.advance("Processing inputs")
     # validate
     if not in_name:
-        json.dumps({'header': 'ERROR: missing input'})
+        json.dumps({'header': 'ERROR:\nmissing input'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if use_name == '':
@@ -983,7 +980,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
         cmd += ' --label'
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        json.dumps({'header': 'ERROR: %s'%stderr})
+        json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Displaying Heatmap")
     text = "A heatmap-dendrogram was produced from the abundance profile %s. The %s distance/dissimilarity was used to compute distances and %s was used to cluster the data. Rows (annotations) were sorted; columns were%s sorted."%(in_name, distance, cluster, '' if order.lower() == 'yes' else ' not')
@@ -1021,7 +1018,7 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     meth.advance("Processing inputs")
     # validate
     if not in_name:
-        return json.dumps({'header': 'ERROR: missing input'})
+        return json.dumps({'header': 'ERROR:\nmissing input'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if distance == '':
@@ -1040,7 +1037,7 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
         cmd += ' --three'
     stdout, stderr = _run_invo(cmd)
     if stderr:
-        return json.dumps({'header': 'ERROR: %s'%stderr})
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Displaying PCoA")
     text = "A %s dimensional PCoA calculated from %s distance/dissimilarity was created from %s."%('three' if three.lower() == 'yes' else 'two', distance, in_name)

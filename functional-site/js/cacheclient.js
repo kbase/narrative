@@ -312,6 +312,31 @@ function ProjectAPI(ws_url, token) {
         return prom
     };
 
+    /**
+     * Ensures that a USER_ID:home workspace exists and is tagged as a project.
+     * If one does not exist, it calls 'new_project' and makes one.
+     */
+    this.ensure_home_project = function(userId) {
+
+        // if we don't have a userid, don't do anything.
+        if (!userId)
+            return;
+
+        var projId = userId + ":home";
+
+        var prom = ws_client.get_object({ type: ws_tag_type,
+                                          workspace: projId,
+                                          id: ws_tag.project });
+        $.when(prom).then(
+            undefined,                  // don't need to do anything if it already has one. 
+            $.proxy(function(error) {   // if no project USER_ID:home exists, make one
+                this.new_project({
+                    project_id: projId,
+                    error_callback: function(error) { console.debug("Error while creating home project!"); console.debug(error); },
+                });
+            }, this)
+        );
+    };
 
     // Get all the workspaces that match the values of the
     // permission array. Defaults to only workspaces that the
@@ -420,9 +445,9 @@ function ProjectAPI(ws_url, token) {
 
             function tag_ws() {
                 //var proj = $.extend(true,{},empty_proj_tag);
-		var proj = $.extend(true,{},empty_ws2_proj_tag);
+                var proj = $.extend(true,{},empty_ws2_proj_tag);
 
-		var params = { objects : [proj] };
+                var params = { objects : [proj] };
                 params.workspace = p.project_id;
                 var ws_fn2 = ws_client.save_objects( params);
                 //var prom = $.when( ws_fn2 ).
@@ -433,16 +458,13 @@ function ProjectAPI(ws_url, token) {
             };
 
             var ws_exists = ws_client.get_workspacemeta( {workspace : p.project_id });
-            var prom =  $.when( ws_exists).then(tag_ws, function() {
-
+            var prom =  $.when(ws_exists).then(tag_ws, function() {
                 var ws_fn = ws_client.create_workspace( { workspace : p.project_id,
-                                                                  globalread : p.def_perm })
-
+                                                          globalread : p.def_perm })
                 var prom = $.when(ws_fn).done(function() {
                     return tag_ws();
                 })
-
-                return prom
+                return prom;
             });
 
             return prom;

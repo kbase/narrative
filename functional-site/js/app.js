@@ -378,6 +378,7 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     USER_ID = $("#signin-button").kbaseLogin('session').user_id;
     USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
     kb = new KBCacheClient(USER_TOKEN);
+    kb.nar.ensure_home_project(USER_ID);
 
     // Fixme, check before load
     if (typeof USER_ID == 'undefined') $rootScope.$apply($location.path( '/narrative/' ) );

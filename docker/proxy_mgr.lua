@@ -27,7 +27,7 @@ local val_regex = "[%w_%-:%.]+"
 local json = require('json')
 local notemgr = require('notelauncher')
 
--- forward declare the functions used in this module
+-- forward declare the functions in this module
 local est_connections
 local sweeper
 local marker
@@ -37,6 +37,10 @@ local initialize
 local set_proxy
 local use_proxy
 local idle_status
+local new_container
+local url_decode
+local get_session
+local discover
 
 -- this are name/value pairs referencing ngx.shared.DICT objects
 -- that we use to track docker containers. The ngx.shared.DICT
@@ -409,7 +413,7 @@ set_proxy = function(self)
 
 --
 -- simple URL decode function
-local function url_decode(str)
+url_decode = function(str)
    str = string.gsub (str, "+", " ")
    str = string.gsub (str, "%%(%x%x)",
 		      function(h) return string.char(tonumber(h,16)) end)
@@ -423,7 +427,7 @@ end
 -- and only return a session id if the authentication is legit
 -- returns nil, err if a session cannot be found/created
 
-local function get_session()
+get_session = function()
    local hdrs = ngx.req.get_headers()
    local cheader = hdrs['Cookie']
    local token = {}
@@ -452,6 +456,55 @@ local function get_session()
 end
 
 --
+-- Check docker and update our list of containers
+--
+discover = function()
+	      local notebooks = notemgr:get_notebooks()
+	      ngx.log( ngx.INFO, json.encode(notebooks))
+	      -- add any notebooks we don't know about
+	      local k,v
+	      for k,v in pairs(notebooks) do
+		 if proxy_map:get(k) == nil then
+		    ngx.log( ngx.INFO, "Discovered new container " .. k )
+		    local success,err,forcible = proxy_map:set(k,v)
+		    if not success then
+		       ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+		       ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
+		    end
+		    success,err,forcible = proxy_last:set(k,os.time())
+		    if not success then
+		       ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )
+		    end
+		    success,err,forcible = proxy_state:set(k,true)
+		    success,err,forcible = proxy_last_ip:set(k,client_ip)
+		 end
+	      end
+	   end
+
+--
+-- Spin up a new instance
+--
+new_container = function( session_id)
+		   ngx.log( ngx.INFO, "Creating new notebook instance " )
+		   local status, res = pcall(notemgr.launch_notebook,session_key)
+		   if status then
+		      ngx.log( ngx.INFO, "New instance at: " .. res)
+		      -- do a none blocking sleep for 2 seconds to allow the instance to spin up
+		      ngx.sleep(5)
+		      local success,err,forcible = proxy_map:set(session_key,res)
+		      if not success then
+			 ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+			 ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
+			 response = "Unable to set routing for notebook " .. err
+		      else
+			 return res
+		      end
+		   else
+		      ngx.log( ngx.ERR, "Failed to launch new instance :" .. res)
+		   end
+		end
+
+--
 -- Route to the appropriate proxy
 --
 use_proxy = function(self)
@@ -465,47 +518,12 @@ use_proxy = function(self)
 		  target, flags = proxy_map:get(session_key)
 		  if target == nil then -- didn't find in proxy map, check containers
 		     ngx.log( ngx.WARN, "Unknown proxy key:" .. session_key)
-		     local notebooks = notemgr:get_notebooks()
-		     ngx.log( ngx.INFO, json.encode(notebooks))
-		     -- add any notebooks we don't know about
-		     local k,v
-		     for k,v in pairs(notebooks) do
-			if proxy_map:get(k) == nil then
-			   ngx.log( ngx.INFO, "Discovered new container " .. k )
-			   local success,err,forcible = proxy_map:set(k,v)
-			   if not success then
-			      ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-			      ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
-			   end
-			   success,err,forcible = proxy_last:set(k,os.time())
-			   if not success then
-			      ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )
-			   end
-			   success,err,forcible = proxy_state:set(k,true)
-			   success,err,forcible = proxy_last_ip:set(k,client_ip)
-			end
-		     end
+		     discover()
 		  end
 		  -- try to fetch the target again
 		  target = proxy_map:get(session_key)
 		  if target == nil then
-		     ngx.log( ngx.INFO, "Creating new notebook instance " )
-		     local status, res = pcall(notemgr.launch_notebook,session_key)
-		     if status then
-			ngx.log( ngx.INFO, "New instance at: " .. res)
-			-- do a none blocking sleep for 2 seconds to allow the instance to spin up
-			ngx.sleep(5)
-			local success,err,forcible = proxy_map:set(session_key,res)
-			if not success then
-			   ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-			   ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
-			   response = "Unable to set routing for notebook " .. err
-			else
-			   target = res
-			end
-		     else
-			ngx.log( ngx.ERR, "Failed to launch new instance :" .. res)
-		     end
+		     target = new_instance( session_key)
 		  end
 	       else
 		  ngx.log(ngx.WARN,"No session_key found!")

@@ -1000,8 +1000,8 @@ def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
 
 @method(name="Compare Two Proteomes")
 def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
-    """Run blast between proteomes of two genomes. It starts new job.
-    Comparison information includes best-bidirectional hits. [17]
+    """Start a job to run Blast between the proteomes of two genomes.
+    The comparison information includes best-bidirectional hits. [17]
      
     :param genome1: Source genome1 ID [17.1]
     :type genome1: kbtypes.KBaseGenomes.Genome
@@ -1035,7 +1035,7 @@ def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
 
 @method(name="View Proteome Comparison")
 def _view_proteome_cmp(meth, proteome_cmp):
-    """Show hit map based on comparison between two proteomes 
+    """Show the hit map result of running a comparison between two proteomes, 
     which includes information about best-bidirectional hits. [18]
      
     :param proteome_cmp: Proteome comparison ID [18.1]
@@ -1052,8 +1052,8 @@ def _view_proteome_cmp(meth, proteome_cmp):
 
 @method(name="Compare Two Metabolic Models")
 def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
-    """ Compare genes from two metabolic models according to comparison 
-    information about hits between proteomes. [19]
+    """ Compare genes mapped to the same reactions from two metabolic models according to
+    the comparison result between proteomes. See also the function 'Compare Two Proteomes'.  [19]
      
     :param fba_model1: an FBA model id from first genome [19.1]
     :type fba_model1: kbtypes.KBaseFBA.FBAModel

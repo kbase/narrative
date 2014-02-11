@@ -6,7 +6,7 @@ local json = require('json')
 -- Example config contains:
 local function config()
    local config = { Hostname = "",
-		    User = "",
+		    User = "nobody",
 		    Memory = 0,
 		    MemorySwap = 0,
 		    AttachStdin = false,

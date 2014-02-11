@@ -419,6 +419,9 @@ function LPHelp($scope, $stateParams, $location) {
         if (form.find('#input2').val()) {
             url = url+'/'+form.find('#input2').val();
         }
+        if (form.find('#input3').val()) {
+            url = url+'/'+form.find('#input3').val();
+        }
     
         $scope.$apply( $location.path( url ) );
     });

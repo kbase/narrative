@@ -13,7 +13,7 @@
 (function( $, undefined ) {
     $.KBWidget({
         name: "KBaseCardLayoutManager",
-        parent: "kbaseWidget",
+        parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
             template: null,
@@ -28,6 +28,7 @@
         defaultWidth: 300,
 
         fbaURL: "https://www.kbase.us/services/fba_model_services",
+        workspaceURL: "https://kbase.us/services/ws",
         workspaceClient: null,
         fbaClient: null,        // used to export CDS genomes to workspace.
 
@@ -71,6 +72,20 @@
             return this;
         },
 
+        loggedInCallback: function(event, auth) {
+            this.options.auth = auth.token;
+            this.options.userId = auth.user_id;
+            this.wsClient = new Workspace(this.workspaceURL, auth);
+            this.refreshWorkspaceSelector();
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.options.auth = null;
+            this.options.userId = null;
+            this.wsClient = null;
+            this.refreshWorkspaceSelector();
+        },
+
         /**
          * Renders the control box panel.
          */
@@ -79,9 +94,29 @@
             $("#app").append(this.$controlBox);
 
             this.initExportModal();
+            this.refreshWorkspaceSelector();
             this.$elem.append(this.exportModal.modal);
 
             return this;
+        },
+
+        initUnderConstructionModal: function() {
+            var $modal = $("<div class='modal fade'>")
+                         .append($("<div class='modal-dialog'>")
+                                 .append($("<div class='modal-content'>")
+                                         .append($("<div class='modal-header'>")
+                                                 .append($("<h4 class='modal-title'>Under Construction</h4>"))
+                                                )
+                                         .append($("<div class='modal-body'>")
+                                                 .append($("<div class='row '>")
+                                                         .append($("<div class='col-md-1 alert alert-warning'><span class='glyphicon glyphicon-wrench' style='font-size:16pt'></span></div>"))
+                                                         .append($("<div class='col-md-11'> Sorry, exporting from these data pages to your workspace is currently under construction. Please use the <a href='/functional-site/#/ws/' class='alert-link'>Workspace Browser</a> or the Search page.</div>"))))
+                                         .append($("<div class='modal-footer'>")
+                                                 .append($("<button type='button' class='btn btn-primary' data-dismiss='modal'>OK</button>"))
+                                                 )
+                                         )
+                                 );
+            return $modal;
         },
 
         /**
@@ -95,16 +130,32 @@
          *   loadingDiv: exported so it can be readily added/removed from the modal body.
          */
         initExportModal: function() {
-            var $body = $("<div class='modal-body'></div>");
             var $okButton = $("<button type='button' class='btn btn-primary'>Export</button>");
-
+            var $wsSelector = $("<select>")
+                              .addClass("form-control select-ws");
+            var $validWsDataBody = $("<form>")
+                                   .addClass("form-horizontal")
+                                   .attr("role", "form")
+                                   .append($("<div>")
+                                           .addClass("form-group")
+                                           .append($("<label>")
+                                                   .addClass("col-sm-5 control-label")
+                                                   .append("Destination Workspace"))
+                                           .append($("<div>")
+                                                   .addClass("col-sm-5")
+                                                   .append($wsSelector)));
+            var $errorBody = $("<div>")
+                             .addClass("alert alert-danger");
             var $modal = $("<div class='modal fade'>")
                          .append($("<div class='modal-dialog'>")
                                  .append($("<div class='modal-content'>")
                                          .append($("<div class='modal-header'>")
                                                  .append($("<h4 class='modal-title'>Export data?</h4>"))
                                                 )
-                                         .append($body)
+                                         .append($("<div class='modal-body'></div>")
+                                                 .append($validWsDataBody.hide())
+                                                 .append($errorBody.hide())
+                                                )
                                          .append($("<div class='modal-footer'>")
                                                  .append($("<button type='button' class='btn btn-default' data-dismiss='modal'>Cancel</button>"))
                                                  .append($okButton)
@@ -115,13 +166,50 @@
             var $loadingDiv = $("<div style='width: 100%; text-align: center; padding: 20px'><img src='" + this.options.loadingImage + "'/><br/>Exporting data. This may take a moment...</div>");
 
             var exportModal = {
-                modal: $modal,
-                body: $body,
+                modal: this.initUnderConstructionModal(), //$modal,
                 okButton: $okButton,
-                loadingDiv: $loadingDiv
+                loadingDiv: $loadingDiv,
+                wsSelector: $wsSelector,
+                errorBody: $errorBody,
+                wsDataBody: $validWsDataBody,
             };
 
             this.exportModal = exportModal;
+        },
+
+        /**
+         * Refreshes the workspace selector.
+         * @private
+         */
+        refreshWorkspaceSelector: function() {
+            if (!this.exportModal || !this.exportModal.wsSelector) {
+                return;
+            }
+            else if (!this.options.auth || !this.options.userId) {
+                this.exportModal.wsSelector.empty().append("<option>Not logged in!</option>");
+                return;
+            }
+            else {
+                this.wsClient.list_workspace_info({"perm" : "w"}, 
+                    $.proxy(function(wsList) {
+                        wsList = wsList.sort(function(a, b) {
+                            return (a[1] < b[1]) ? -1 : ( a[1] > b[1] ? 1 : 0 );
+                        });
+                        this.exportModal.wsSelector.empty();
+                        for (var i=0; i<wsList.length; i++) {
+                            this.exportModal.wsSelector.append($("<option>")
+                                                               .attr("value", wsList[i][0])
+                                                               .append(wsList[i][1]));
+                        }
+                    }, this),
+
+                    $.proxy(function(error) {
+                        this.dbg("ERROR WHILE FETCHING WRITEABLE WORKSPACE LIST!");
+                        this.dbg(error);
+                        this.exportModal.wsSelector.empty()
+                                                   .append("<option value='" + this.options.userId + ":home'>" + this.options.userId + ":home</option>");
+                    }, this));
+            }
         },
 
         /**
@@ -428,7 +516,7 @@
             /**
              * This internal function does the work of invoking all the exporters.
              */
-            var exportWs = this.options.userId + "_home";
+            var exportWsId = this.ex
             var self = this;
             var doExport = function() {
                 self.exportModal.body.append(self.exportModal.loadingDiv);
@@ -441,7 +529,6 @@
 
                 $.when.apply($, jobsList).done(function() {
                     self.exportModal.modal.modal('hide');
-                    self.dbg("Done exporting genomes!");
                 });
             };
 
@@ -450,15 +537,25 @@
              * If the user says yes, modify it to show a progress bar or something.
              */
 
-            if (Object.keys(exportData).length === 0) {
-                this.exportModal.body.html("No data selected for export!");
+            if (this.options.auth === null || this.options.userId === null) {
+                this.exportModal.errorBody.html("You must be logged in to export data!");
                 this.exportModal.okButton.addClass("hide");
+                this.exportModal.errorBody.show();
+                this.exportModal.wsDataBody.hide();
+            }
+            else if (Object.keys(exportData).length === 0) {
+                this.exportModal.errorBody.html("No data selected for export!");
+                this.exportModal.okButton.addClass("hide");
+                this.exportModal.errorBody.show();
+                this.exportModal.wsDataBody.hide();
             }
             else {
-                var $bodyHtml = "Export selected data to workspace '<b>" + exportWs + "</b>'?";
-                this.exportModal.body.html($bodyHtml);
+                // var $bodyHtml = "Export selected data to workspace '<b>" + exportWs + "</b>'?";
+                // this.exportModal.body.html($bodyHtml);
                 this.exportModal.okButton.removeClass("hide");
                 this.exportModal.okButton.click(function(event) { doExport(); });
+                this.exportModal.errorBody.hide();
+                this.exportModal.wsDataBody.show();
             }
             this.exportModal.modal.modal({'backdrop': 'static', 'keyboard': false});
 

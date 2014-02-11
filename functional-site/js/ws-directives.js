@@ -77,6 +77,10 @@ angular.module('ws-directives')
                         var owned_ws = [];
                         for (var i in data) {
                             var ws = data[i];
+
+                            //quick fix to hide search workspaces
+                            if (ws[1]== "kbasesearch") continue;  
+
                             var user = ws[1];
                             var perm = ws[4];
 

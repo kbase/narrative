@@ -280,10 +280,28 @@ function ProjectAPI(ws_url, token) {
      * within)
      */
     var filter_wsobj = function (p_in) {
+        console.log('p_in', p_in)
+      
+        /*
+        for (var i in p_in.res) {
+            var ws = p_in.res[i];
 
-        var def_params = {callback : undefined,
-                   perms : ['a'],
-                   filter_tag : ws_tag.project};
+            // if there is global read or any permissions
+            if (ws[4] == "r" || ws[5].match(/r|w|a/)) {
+
+            }
+        }
+        */
+
+        var prom = ws_client.list_objects({type: 'KBaseNarrative.Metadata', 
+                                           showHidden: 1});
+        return prom
+    };
+
+    /*
+
+  var def_params = {perms : ['r', 'w', 'a'],
+                          filter_tag : ws_tag.project};
         var p = $.extend( def_params, p_in);
 
         var ignore = /^core/;
@@ -305,12 +323,7 @@ function ProjectAPI(ws_url, token) {
         var ws_match = p.res.reduce(reduce_ws_meta,[]);
         // extract workspace ids into a list
         var ws_ids = ws_match.map( function(v) { return v[0]});
-
-        var prom = ws_client.list_objects({workspaces: ws_ids, 
-                                                   type: 'KBaseNarrative.Metadata', 
-                                                   showHidden: 1});
-        return prom
-    };
+        */    
 
     /**
      * Ensures that a USER_ID:home workspace exists and is tagged as a project.
@@ -351,23 +364,18 @@ function ProjectAPI(ws_url, token) {
     this.get_projects = function( p_in ) {
         var def_params = { perms : ['a'],
                            workspace_id : undefined };
-
         var p = $.extend( def_params, p_in);
 
-        var META_ws;
-        if ( p.workspace_id ) {
-            META_ws = ws_client.get_workspacemeta( { workspace : p.workspace_id } );
-            var prom =  $.when( META_ws).then( function(result) {
-                           return filter_wsobj( {res: [result], perms: p.perms });
-                       });
-            return prom
-        } else {
-            META_ws = ws_client.list_workspaces( {} );
-            var prom = $.when( META_ws).then( function(result) {
-                            return filter_wsobj( { res: result, perms: p.perms });
-                       });
-            return prom
-        }
+        console.log('calling get projects')
+//        META_ws = ws_client.list_objects( {} );
+    
+        var prom = ws_client.list_objects({type: 'KBaseNarrative.Metadata', 
+                                           showHidden: 1});
+        //var prom = $.when( META_ws).then( function(result) {
+         //               return filter_wsobj( { res: result, perms: p.perms });
+          //         });
+        return prom
+        
     };
 
 

@@ -571,7 +571,8 @@ def _kegg_map(meth, workspace, input1, input2):
                     for ecm in ec_re.finditer(mrps['role'].rstrip()):
                         ec = ecm.group()
                         if ec in ec2ko:
-                            kgdata[i][ ec2ko[ec] ] = 1
+                            for ko in ec2ko[ec]:
+                                kgdata[i][ko] = 1
     
     meth.advance("Display KEGG Map")
     text = "KEGG Pathway map comparison. Colored lines represent KEGG functions found in the inputed models.  %s is in green and %s is in blue. Overlap is in cyan."%(input1, input2)

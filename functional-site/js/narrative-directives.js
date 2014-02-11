@@ -217,7 +217,7 @@ angular.module('narrative-directives')
                                 //empty_projects.push(proj_ids[i])
                                 narratives.push({project: '<span class="proj-link" data-owner="'+nar_dict.owner+'" data-proj="'+proj_ids[i]+'">\
                                                             <span class="caret"></span> Project <b>'+parse_name(proj_ids[i])+'</b>\
-                                                           </span> - Owner: '+proj_dict[proj_ids[i]][5],
+                                                           </span> - Owner: '+(proj_dict[proj_ids[i]][5] == USER_ID ? 'Me' : proj_dict[proj_ids[i]][5]),
                                                 id: '<span class="text-muted">Empty Project</span>', 
                                                 owner: proj_dict[proj_ids[i]], moddate: '', deleteButton: '',
                                                 timestamp: '', sharedwith: (isSharedWith(proj, nar_dict.owner) ? 'Yes' : 'No' )})

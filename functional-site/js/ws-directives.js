@@ -848,7 +848,7 @@ angular.module('ws-directives')
                         "fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
                       "aoColumns": [
-                          { "sTitle": ""},
+                          (USER_ID ? { "sTitle": "", bSortable: false} : { "sTitle": "", bVisible: false}),
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type", "sWidth": "20%"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
@@ -1199,7 +1199,7 @@ angular.module('ws-directives')
                                         <li><a class="btn-cp-obj">Copy</a></li>\
                                     </ul></div>');
                     // if user has narrative home workspace, add option to copy there
-                    if (scope.workspace_dict[USER_ID+'_home']) {
+                    if (scope.workspace_dict[USER_ID+':home']) {
                         var dd = options.find('.dropdown-menu')
                         dd.append('<li class="divider"></li>');
                         dd.append('<li><a class="btn-mv-obj-to-nar">Copy to Narrative Home</a></li>');
@@ -1325,7 +1325,7 @@ angular.module('ws-directives')
                         //"fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
                       "aoColumns": [
-                          { "sTitle": ""},
+                          { "sTitle": "", bSortable: false},
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type", "sWidth": "20%"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
@@ -1432,7 +1432,7 @@ angular.module('ws-directives')
 
 
                 function copyObjectsToNarrative() {
-                    confirmCopy(USER_ID+'_home');
+                    confirmCopy(USER_ID+':home');
                 }
 
 

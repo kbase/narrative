@@ -540,6 +540,7 @@ def _gapfill_model(meth, workspace, in_name):
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
+    time.sleep(5)
     return json.dumps({'header': stdout})
 
 @method(name="Compare Metabolic Model")

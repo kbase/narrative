@@ -485,13 +485,13 @@ discover = function()
 -- Spin up a new instance
 --
 new_container = function( session_id)
-		   ngx.log( ngx.INFO, "Creating new notebook instance " )
-		   local status, res = pcall(notemgr.launch_notebook,session_key)
+		   ngx.log( ngx.INFO, "Creating new notebook instance for ",session_id )
+		   local status, res = pcall(notemgr.launch_notebook,session_id)
 		   if status then
 		      ngx.log( ngx.INFO, "New instance at: " .. res)
 		      -- do a none blocking sleep for 2 seconds to allow the instance to spin up
 		      ngx.sleep(5)
-		      local success,err,forcible = proxy_map:set(session_key,res)
+		      local success,err,forcible = proxy_map:set(session_id,res)
 		      if not success then
 			 ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
 			 ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
@@ -523,7 +523,7 @@ use_proxy = function(self)
 		  -- try to fetch the target again
 		  target = proxy_map:get(session_key)
 		  if target == nil then
-		     target = new_instance( session_key)
+		     target = new_container( session_key)
 		  end
 	       else
 		  ngx.log(ngx.WARN,"No session_key found!")

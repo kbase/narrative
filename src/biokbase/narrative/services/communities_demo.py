@@ -341,7 +341,7 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     :output_widget: ImageViewWidget
     """
     
-    meth.stages = 3
+    meth.stages = 4
     meth.advance("Processing inputs")
     # validate
     if not (in_seq1 and in_seq2 and out_seq):
@@ -354,7 +354,10 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     
     meth.advance("Submiting EMIRGE to AWE")
     time.sleep(5)
-    return json.dumps({'header': "EMIRGE running on %s and %s"}%())
+    
+    meth.advance("Running EMIRGE")
+    time.sleep(8)
+    return json.dumps({'header': "EMIRGE ran on %s and %s"}%(in_seq1, in_seq2))
     
 
 @method(name="PICRUSt Predicted Abundance Profile")
@@ -1113,7 +1116,7 @@ def _view_mg(meth, mgid):
         return json.dumps({'header': 'ERROR:\nInvalid metagenome ID'})
     
     meth.advance("Building Overview")
-    return json.dumps({'metagenome': mgid})
+    return json.dumps({'mgid': mgid})
 
 ec2ko = {
     "3.1.22.4": ["K01159"],

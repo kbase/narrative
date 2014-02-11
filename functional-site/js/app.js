@@ -30,22 +30,22 @@ var app = angular.module('landing-pages',
     $locationProvider.html5Mode(false);  
 
     $stateProvider
-        .state('narrative', {
-          url: "/narrative/",
+        .state('login', {
+          url: "/login/",
           templateUrl: 'views/narrative/login.html',
           controller: 'Narrative'
         })
 
     $stateProvider
-        .state('home', {
-          url: "/narrative/home/",
+        .state('narrative', {
+          url: "/narrative/",
           templateUrl: 'views/narrative/home.html',
           controller: 'Narrative'
-        }).state('home.projects', {
+        }).state('narrative.projects', {
           url: "projects/",
           templateUrl: 'views/narrative/projects.html',
           controller: 'NarrativeProjects'
-        }) 
+        })
 
 
     $stateProvider
@@ -326,7 +326,7 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/landing-pages-help.html',
              controller: LPHelp})
 
-    $urlRouterProvider.when('', '/narrative/');
+    $urlRouterProvider.when('', '/login/');
 
     $stateProvider
         .state('otherwise', 
@@ -381,7 +381,7 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     kb.nar.ensure_home_project(USER_ID);
 
     // Fixme, check before load
-    if (typeof USER_ID == 'undefined') $rootScope.$apply($location.path( '/narrative/' ) );
+    //if (typeof USER_ID == 'undefined') $rootScope.$apply($location.path( '/narrative/' ) );
 
     // global state object to store state
     state = new State();

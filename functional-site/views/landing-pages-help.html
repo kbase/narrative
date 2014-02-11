@@ -6,6 +6,7 @@
     <div class="col-md-2">
         <ul class="nav nav-pills nav-stacked" id="navbar" ng-controller="ScrollCtrl" style="position:fixed;">
             <li><a ng-click="gotoAnchor('genomes')">Genomes</a></li>
+            <li><a ng-click="gotoAnchor('genes')">Genome Features</a></li>
             <li><a ng-click="gotoAnchor('gwas')">GWAS</a></li>
             <li><a ng-click="gotoAnchor('reactions')">Reactions</a></li>
             <li><a ng-click="gotoAnchor('compounds')">Compounds</a></li>
@@ -23,15 +24,16 @@
     </div>
     <div class="col-md-10">
 
+        <!-- GENOMES -->
         <div class="page-header"><h3 id="genomes">Genomes</h3></div>
         <h4>URLs</h4>
         <a href="#/genomes">#/genomes</a> <span class="glyphicon glyphicon-unchecked"></span><br>
         <h5>Params</h5>
-            #/genomes/cs/$genomeID <br>
+            #/genomes/CDS/$genomeID <br>
             #/genomes/$workspaceID/$genomeID <br>            
         <h5>Examples</h5>
-        <form class="form-inline" role="form" type="genomes/cs">
-            #/genomes/cs/
+        <form class="form-inline" role="form" type="genomes/CDS">
+            #/genomes/CDS/
             <div class="form-group">
                 <label class="sr-only" for="input1">gnome id</label>
                 <input class="form-control" id="input1" placeholder="kb|g.0" value="kb|g.0">
@@ -47,8 +49,48 @@
             </div>
             <div class="form-group">
                 <label class="sr-only" for="input2">genome id</label>
-                <input class="form-control" id="input2" placeholder="Seed" value="kb|g.0">
-            </div>              
+                <input class="form-control" id="input2" placeholder="Genome Id" value="kb|g.0">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-unchecked"></span>
+        </form>
+
+       <!-- GENOME FEATURES -->
+       <div class="page-header"><h3 id="genes">Genome Features</h3></div>
+        <h4>URLs</h4>
+        <a href="#/genes">#/genes</a> <span class="glyphicon glyphicon-unchecked"></span><br>
+        <h5>Params</h5>
+            #/genes/CDS/$genomeID/$featureID <br>
+            #/genes/$workspaceID/$genomeID/$featureID <br>
+        <h5>Examples</h5>
+
+        <form class="form-inline" role="form" type="genes/CDS">
+            #/genes/CDS/
+            <div class="form-group">
+                <label class="sr-only" for="input1">genome id</label>
+                <input class="form-control" id="input1" placeholder="Genome Id" value="kb|g.0">
+            </div>
+            <div class="form-group">
+                <label class="sr-only" for="input2">gene id</label>
+                <input class="form-control" id="input2" placeholder="Feature Id" value="kb|g.0.peg.2173">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-check"></span>               
+        </form>
+        <form class="form-inline" role="form" type="genes">
+            #/genes/
+            <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="KBaseCDMGenomes">
+            </div>
+            <div class="form-group">
+                <label class="sr-only" for="input2">genome id</label>
+                <input class="form-control" id="input2" placeholder="Genome Id" value="kb|g.0">
+            </div>
+            <div class="form-group">
+                <label class="sr-only" for="input3">genome id</label>
+                <input class="form-control" id="input3" placeholder="Feature Id" value="kb|g.0.peg.2173">
+            </div>
             <a class="btn btn-default api-url-submit">Go</a>
             <span class="glyphicon glyphicon-unchecked"></span>
         </form>

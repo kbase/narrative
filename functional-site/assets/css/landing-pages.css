@@ -576,11 +576,13 @@ div::-webkit-scrollbar-thumb {
     color: #2a6496;
 }
 
-
 .project-shared-with {
     margin: 0 40px 0 0;
 }
 
+.table-options .checkbox {
+    margin: 10px 0 0 50px;
+}
 
 #wrap {
   min-height: 100%;

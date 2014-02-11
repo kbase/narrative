@@ -12,7 +12,7 @@ function Cache() {
             var obj = cache[i];
             if (service != obj['service']) continue;
             if (method != obj['method']) continue;
-            if ( angular.equals(obj['params'], params) ) return obj;
+            if ( angular.equals(obj['params'], params) ) { return obj; }
         }
         return undefined;
     }
@@ -24,7 +24,7 @@ function Cache() {
         obj['prom'] = prom;
         obj['params'] = params;
         cache.push(obj);
-        //console.log('cache', cache)
+        //console.log('Cache after the last "put"', cache)
     }
 }
 
@@ -51,8 +51,12 @@ function KBCacheClient(token) {
     var cache = new Cache();
 
     this.req = function(service, method, params) {
-        //if (!params) var params = {auth: auth.token};
-        //else params.auth = auth.token;  // Fixme: set auth in client object
+        if (service == 'fba') { 
+            // use whatever workspace server that was configured.
+            // this makes it possible to use the production workspace server
+            // with the fba server.   Fixme:  fix once production fba server is ready.
+            params.wsurl = ws_url;  
+        }
 
         // see if api call has already been made        
         var data = cache.get(service, method, params);
@@ -63,10 +67,6 @@ function KBCacheClient(token) {
         // otherwise, make request
         var prom = undefined;
         if (service == 'fba') {
-            // use whatever workspace server that was configured.
-            // this makes it possible to use the production workspace server
-            // with the fba server
-            params.wsurl = ws_url;  
             console.log('Making request:', 'fba.'+method+'('+JSON.stringify(params)+')');
             var prom = fba[method](params);
         } else if (service == 'ws') {
@@ -280,10 +280,28 @@ function ProjectAPI(ws_url, token) {
      * within)
      */
     var filter_wsobj = function (p_in) {
+        console.log('p_in', p_in)
+      
+        /*
+        for (var i in p_in.res) {
+            var ws = p_in.res[i];
 
-        var def_params = {callback : undefined,
-                   perms : ['a'],
-                   filter_tag : ws_tag.project};
+            // if there is global read or any permissions
+            if (ws[4] == "r" || ws[5].match(/r|w|a/)) {
+
+            }
+        }
+        */
+
+        var prom = ws_client.list_objects({type: 'KBaseNarrative.Metadata', 
+                                           showHidden: 1});
+        return prom
+    };
+
+    /*
+
+  var def_params = {perms : ['r', 'w', 'a'],
+                          filter_tag : ws_tag.project};
         var p = $.extend( def_params, p_in);
 
         var ignore = /^core/;
@@ -305,12 +323,7 @@ function ProjectAPI(ws_url, token) {
         var ws_match = p.res.reduce(reduce_ws_meta,[]);
         // extract workspace ids into a list
         var ws_ids = ws_match.map( function(v) { return v[0]});
-
-        var prom = ws_client.list_objects({workspaces: ws_ids, 
-                                                   type: 'KBaseNarrative.Metadata', 
-                                                   showHidden: 1});
-        return prom
-    };
+        */    
 
     /**
      * Ensures that a USER_ID:home workspace exists and is tagged as a project.
@@ -351,23 +364,18 @@ function ProjectAPI(ws_url, token) {
     this.get_projects = function( p_in ) {
         var def_params = { perms : ['a'],
                            workspace_id : undefined };
-
         var p = $.extend( def_params, p_in);
 
-        var META_ws;
-        if ( p.workspace_id ) {
-            META_ws = ws_client.get_workspacemeta( { workspace : p.workspace_id } );
-            var prom =  $.when( META_ws).then( function(result) {
-                           return filter_wsobj( {res: [result], perms: p.perms });
-                       });
-            return prom
-        } else {
-            META_ws = ws_client.list_workspaces( {} );
-            var prom = $.when( META_ws).then( function(result) {
-                            return filter_wsobj( { res: result, perms: p.perms });
-                       });
-            return prom
-        }
+        console.log('calling get projects')
+//        META_ws = ws_client.list_objects( {} );
+    
+        var prom = ws_client.list_objects({type: 'KBaseNarrative.Metadata', 
+                                           showHidden: 1});
+        //var prom = $.when( META_ws).then( function(result) {
+         //               return filter_wsobj( { res: result, perms: p.perms });
+          //         });
+        return prom
+        
     };
 
 

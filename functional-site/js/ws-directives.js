@@ -884,9 +884,13 @@ angular.module('ws-directives')
                         // if there are objects, add 'select all' button, type filter,
                         // and trash bin.
                         if (data.length > 0) {
-                            // add select all button to table options datatables.bootstrap file for template
-                            $('.table-options').append('<button class="btn btn-default btn-select-all">\
-                                <div class="ncheck check-option"></div></button> ');
+
+                            // if logged in, add select all button to table options 
+                            //datatables.bootstrap file for template
+                            if (USER_ID) {
+                                $('.table-options').append('<button class="btn btn-default btn-select-all">\
+                                    <div class="ncheck check-option"></div></button> ');
+                            }
 
                             // add type filter
                             var select = $('<select class=" type-filter form-control">\
@@ -906,13 +910,17 @@ angular.module('ws-directives')
                                 }    
                             });
 
-                            // trash bin link
-                            var trash_btn = $('<a class="btn-trash pull-right">Trash \
-                                        <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
-                            trash_btn.click(function(){
-                                displayTrashBin(deleted_objs)
-                            })
-                            $('.dataTables_filter').append(trash_btn);
+
+                            // if logged in, add trash bin link
+                            if (USER_ID) {
+                                var trash_btn = $('<a class="btn-trash pull-right">Trash \
+                                            <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
+                                trash_btn.click(function(){
+                                    displayTrashBin(deleted_objs)
+                                })
+                                $('.dataTables_filter').append(trash_btn);
+                            }
+
 
                             // event for when an object checkbox is clicked
                             checkBoxObjectClickEvent('.obj-check-box');
@@ -978,7 +986,7 @@ angular.module('ws-directives')
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
 
-                        var match = ( type.split('-')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) 
+                        var match = ( type.split('-')[0].match(/^(Genome|FBAModel|Media|FBA|Annotation|Cmonkey)$/) 
                                         !== null ? true : false);
 
                         if (match) {
@@ -1009,7 +1017,7 @@ angular.module('ws-directives')
 
                         if (type == 'Genome') {
                             scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
-                        } else if (type == 'Model') {
+                        } else if (type == 'FBAModel') {
                             scope.$apply( $location.path('/models/'+ws+'/'+id) );
                         } else if (type == 'FBA') {
                             scope.$apply( $location.path('/fbas/'+ws+'/'+id) );

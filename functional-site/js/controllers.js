@@ -315,8 +315,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     kb = new KBCacheClient(USER_TOKEN);
                     kb.nar.ensure_home_project(USER_ID);
 
-                    $location.path('/narrative/home/');
-
+                    $location.path('/narrative/');
                     $scope.$apply();
                     
                 } else {
@@ -419,6 +418,9 @@ function LPHelp($scope, $stateParams, $location) {
         var url = '/'+form.attr('type')+'/'+form.find('#input1').val();
         if (form.find('#input2').val()) {
             url = url+'/'+form.find('#input2').val();
+        }
+        if (form.find('#input3').val()) {
+            url = url+'/'+form.find('#input3').val();
         }
     
         $scope.$apply( $location.path( url ) );

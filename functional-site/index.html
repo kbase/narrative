@@ -149,6 +149,7 @@
         <!-- GWAS widgets -->
         <link rel="stylesheet" type="text/css" href="assets/css/gwas.css" />
         <script src='../src/widgets/kbaseAuthenticatedWidget.js'></script>
+        <!-- please don't load external scripts in index.html -->
         <script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>
         <script src='../ext/gmaps/gmap3.js'></script>
         <script src="../src/widgets/gwas/kbaseGWASPop.js"></script>
@@ -247,11 +248,11 @@
 
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav"> 
-                <li class="dropdown" ng-class="{ active: $state.includes('home')}">
+                <li class="dropdown" ng-class="{ active: $state.includes('narrative')}">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
                   <ul class="dropdown-menu">
-                    <li><a href="#/narrative/home/">Newsfeed</a></li>                
-                    <li><a href="#/narrative/home/projects/">Projects</a></li>
+                    <li><a href="#/narrative/">Newsfeed</a></li>                
+                    <li><a href="#/narrative/projects/">Projects</a></li>
                     <!--<li class="divider"></li>     
                     <li><a href="#">Profile</a></li>-->
                   </ul>

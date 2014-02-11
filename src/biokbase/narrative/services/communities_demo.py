@@ -575,7 +575,7 @@ def _kegg_map(meth, workspace, input1, input2):
                                 kgdata[i][ko] = 1
     
     meth.advance("Display KEGG Map")
-    text = "KEGG Pathway map comparison. Colored lines represent KEGG functions found in the inputed models.  %s is in green and %s is in blue. Overlap is in cyan."%(input1, input2)
+    text = "KEGG Pathway map comparison. Colored lines represent reactions found in the inputed models.  %s is in green and %s is in blue. Overlap is in cyan."%(input1, input2)
     return json.dumps({'header': text, 'data': kgdata, 'width': 800})
 
 @method(name="Retrieve Annotation Abundance Profile")

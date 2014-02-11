@@ -10,7 +10,6 @@
     $.KBWidget({
         name: 'KeggMapWidget',
         version: '1.0.0',
-        index: Math.floor((Math.random()*1000)+1),
         imagepath: 'static/kbase/images/keggmap.png',
         options: {
             'header': null,
@@ -41,7 +40,7 @@
             var main_div = $('<div>');
             renderer.$elem.append(main_div);
             var target = main_div[0];
-    	    var index = renderer.index;
+    	    var index = Math.floor((Math.random()*1000)+1);
 
     	    // set header text
     	    if (renderer.options.header != null) {
@@ -85,10 +84,6 @@
             
             return renderer;
         },
-        
-        hover: function (id, event) {
-    	    var svg = $('#map_div'+this.index).svg('get');
-    	},
     	
     	drawImage: function (svg, mg_data) {
     	    var renderer = this;

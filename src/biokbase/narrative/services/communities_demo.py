@@ -32,6 +32,7 @@ VERSION = (0, 0, 1)
 NAME = "Communities Services"
 default_ws = 'communitiesdemo:home'
 ec_re = re.compile(r'[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+mg_re = re.compile(r'mgm[0-9]{7}\.[0-9]')
 
 class CWS:
     data = 'Communities.Data-1.0'
@@ -318,6 +319,43 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     text = "Annotation sets for the %s %s from SEED/Subsystems were downloaded into %s. The download used default settings for the E-value (e-%d), percent identity (%d), and alignment length (%d)."%('top '+str(top) if int(top) > 0 else 'merged', level, out_name, int(evalue), int(identity), int(length))
     _put_ws(workspace, out_name, CWS.annot, data=data)
     return json.dumps({'header': text})
+
+@method(name="EMIRGE 16S Extraction")
+def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
+    """EMIRGE (Miller et al., Genome Biol. 2011) extracts 16S sequences from a WGS metagenome and reconstructs full-length small subunit gene sequences. It also provides estimates of relative taxon abundances.
+    
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param in_seq1: workspace ID of input sequence, fastq mate pair 1
+    :type in_seq1: kbtypes.Communities.SequenceFile
+    :ui_name in_seq1: Input FASTQ Pair 1
+    :param in_seq2:  workspace ID of input sequence, fastq mate pair 2
+    :type in_seq2: kbtypes.Communities.SequenceFile
+    :ui_name in_seq2: Input FASTQ Pair 2
+    :param out_name: workspace ID of resulting 16S sequences
+    :type out_name: kbtypes.Unicode
+    :ui_name out_name: Output 16S Sequences
+    :return: EMIRGE Results
+    :rtype: kbtypes.Unicode
+    :output_widget: ImageViewWidget
+    """
+    
+    meth.stages = 3
+    meth.advance("Processing inputs")
+    # validate
+    if not (in_seq1 and in_seq2 and out_seq):
+        return json.dumps({'header': 'ERROR:\nmissing input or output workspace IDs'})
+    workspace = _get_wsname(meth, workspace)
+    time.sleep(2)
+    
+    meth.advance("Retrieve Data from Workspace")
+    time.sleep(5)
+    
+    meth.advance("Submiting EMIRGE to AWE")
+    time.sleep(5)
+    return json.dumps({'header': "EMIRGE running on %s and %s"}%())
+    
 
 @method(name="PICRUSt Predicted Abundance Profile")
 def _run_picrust(meth, workspace, in_seq, out_name):
@@ -1055,6 +1093,27 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     leg_rawpng = _get_invo(in_name+'.pcoa.png.legend.png', binary=True)
     leg_b64png = base64.b64encode(leg_rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': fig_b64png, 'legend': leg_b64png})
+
+@method(name="View Metagenome")
+def _view_mg(meth, mgid):
+    """Overview of metagenome statistics, numeric and plotted.
+    
+    :param in_name: id of a metagenome
+    :type in_name: kbtypes.Unicode
+    :ui_name in_name: Metagenome ID
+    :return: Gapfilled Metagenome Model
+    :rtype: kbtypes.Unicode
+    :output_widget: MGOverviewWidget
+    """
+    
+    meth.stages = 2
+    meth.advance("Processing inputs")
+    # validate
+    if not (mgid and mg_re.match(mgid)):
+        return json.dumps({'header': 'ERROR:\nInvalid metagenome ID'})
+    
+    meth.advance("Building Overview")
+    return json.dumps({'metagenome': mgid})
 
 ec2ko = {
     "3.1.22.4": ["K01159"],

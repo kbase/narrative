@@ -350,10 +350,10 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     time.sleep(2)
     
     meth.advance("Retrieve Data from Workspace")
-    time.sleep(5)
+    time.sleep(3)
     
     meth.advance("Submiting EMIRGE to AWE")
-    time.sleep(5)
+    time.sleep(4)
     
     meth.advance("Running EMIRGE")
     time.sleep(8)

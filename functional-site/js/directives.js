@@ -108,7 +108,8 @@ angular.module('lp-directives')
                 var prom = kb.req('fba', 'get_models',
                             {models: [scope.id], workspaces: [scope.ws]});
                 $.when(prom).done(function(data){
-                    $(p.body()).kbaseModelTabs({modelsData: data, api: kb.fbaAPI()});
+                    console.log('data for tabs', data )
+                    $(p.body()).kbaseModelTabs({modelsData: data, api: kb.fba});
                     $(document).on('rxnClick', function(e, data) {
                         var url = '/rxns/'+data.ids;
                         scope.$apply( $location.path(url) );
@@ -128,6 +129,7 @@ angular.module('lp-directives')
                 var prom = kb.req('fba', 'get_models',
                             {models: [scope.id], workspaces: [scope.ws]})
                 $.when(prom).done(function(data) {
+                    console.log('data', data)
                     $(p.body()).kbaseModelCore({ids: [scope.id], 
                                                 workspaces : [scope.ws],
                                                 modelsData: data});
@@ -205,9 +207,9 @@ angular.module('lp-directives')
 
                     console.log('fba data ', fbas_data)
                     var prom2 = kb.req('fba', 'get_models',
-                            {models: [objid], workspaces: [wsid]});                    
+                            {models: [objid], workspaces: [wsid]});
                     $.when(prom2).done(function(models_data){
-                        $(p.body()).kbaseModelCore({ids: [scope.id], 
+                        $(p.body()).kbaseModelCore({ids: [scope.id],
                                                     workspaces : [scope.ws],
                                                     modelsData: models_data,
                                                     fbasData: fbas_data});

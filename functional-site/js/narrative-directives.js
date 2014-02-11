@@ -136,15 +136,21 @@ angular.module('narrative-directives')
                         }
 
                         //fixme: !!
-                        var proms = getAllProjPerms(proj_ids)
-                        $.when.apply($, proms).done(function() {
-                            // create dictionary of [ {project_name: {perms}, ...} ] // so bad.
-                            for (var i in proj_ids) {
-                                proj_perms_dict[proj_ids[i]] = arguments[i];
-                            }
-                            // get narratives for each projectr //fixme: optimize
-                            getNarratives(proj_ids);                            
-                        })
+                        if(USER_ID) {
+                            var proms = getAllProjPerms(proj_ids)
+                            $.when.apply($, proms).done(function() {
+                                // create dictionary of [ {project_name: {perms}, ...} ] // so bad.
+                                for (var i in proj_ids) {
+                                    proj_perms_dict[proj_ids[i]] = arguments[i];
+                                }
+                                // get narratives for each projectr //fixme: optimize
+                                getNarratives(proj_ids);                            
+                            })
+                        } else {
+                            getNarratives(proj_ids); 
+                        }
+                        
+
                     })
 
                 }
@@ -199,7 +205,12 @@ angular.module('narrative-directives')
                             nar_dict.moddate = formateDate(tstamp) ? 
                                     formateDate(tstamp) : nar[3].replace('T',' ').split('+')[0];
 
-                            nar_dict.sharedwith = isSharedWith(proj, nar_dict.owner) ? 'Yes' : 'No'
+                            if (USER_ID) {
+                                nar_dict.sharedwith = isSharedWith(proj, nar_dict.owner) ? 'Yes' : 'No'
+                            } else {
+                                nar_dict.sharedwith = 'No';
+                            }
+
 
                             //nar.moddate = nar.moddate
                             nar_dict.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" \
@@ -220,7 +231,7 @@ angular.module('narrative-directives')
                                                            </span> - Owner: '+(proj_dict[proj_ids[i]][5] == USER_ID ? 'Me' : proj_dict[proj_ids[i]][5]),
                                                 id: '<span class="text-muted">Empty Project</span>', 
                                                 owner: proj_dict[proj_ids[i]], moddate: '', deleteButton: '',
-                                                timestamp: '', sharedwith: (isSharedWith(proj, nar_dict.owner) ? 'Yes' : 'No' )})
+                                                timestamp: '', sharedwith: (isSharedWith(proj, nar_dict.owner) ? 'Yes' : 'No' )   })
                             }
                         }
 

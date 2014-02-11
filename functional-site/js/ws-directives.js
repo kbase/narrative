@@ -986,7 +986,7 @@ angular.module('ws-directives')
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
 
-                        var match = ( type.split('-')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) 
+                        var match = ( type.split('-')[0].match(/^(Genome|FBAModel|Media|FBA|Annotation|Cmonkey)$/) 
                                         !== null ? true : false);
 
                         if (match) {
@@ -1017,7 +1017,7 @@ angular.module('ws-directives')
 
                         if (type == 'Genome') {
                             scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
-                        } else if (type == 'Model') {
+                        } else if (type == 'FBAModel') {
                             scope.$apply( $location.path('/models/'+ws+'/'+id) );
                         } else if (type == 'FBA') {
                             scope.$apply( $location.path('/fbas/'+ws+'/'+id) );

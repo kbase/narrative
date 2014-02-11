@@ -29,7 +29,7 @@
             var url = 'http://140.221.85.116/mgoverview.html?metagenome='+this.options.mgid;
             var iframe = $('<iframe>')
                 .attr({'src': url})
-                .css({'scrolling': 'auto', 'width': '800px', 'height': '800px'});
+                .css({'scrolling': 'auto', 'width': '900px', 'height': '700px'});
             main.append(iframe);
             
             // put container in cell

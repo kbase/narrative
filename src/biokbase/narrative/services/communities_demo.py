@@ -357,7 +357,7 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     
     meth.advance("Running EMIRGE")
     time.sleep(8)
-    return json.dumps({'header': "EMIRGE ran on %s and %s"}%(in_seq1, in_seq2))
+    return json.dumps({'header': "EMIRGE ran on %s and %s"%(in_seq1, in_seq2)})
     
 
 @method(name="PICRUSt Predicted Abundance Profile")

@@ -23,13 +23,33 @@
         
         render: function() {
             // creater main comtainer
-            var main = $('<div>');
+            var main = $('<div>')
+                .css({ 'width': '900px',
+                       'height': '700px',
+                       'padding': '0'
+            });
             
             // Create overview
             var url = 'http://140.221.85.116/mgoverview.html?metagenome='+this.options.mgid;
             var iframe = $('<iframe>')
                 .attr({'src': url})
-                .css({'scrolling': 'auto', 'width': '900px', 'height': '700px'});
+                .css({ 'width': '1285',
+                       'height': '1000',
+                       'border': '0',
+                       'overflow-x': 'hidden',
+                       'overflow-y': 'scroll',
+                       'position': 'relative',
+                       '-ms-transform': 'scale(0.7)',
+                       '-moz-transform': 'scale(0.7)',
+                       '-o-transform': 'scale(0.7)',
+                       '-webkit-transform': 'scale(0.7)',
+                       'transform': 'scale(0.7)',
+                       '-ms-transform-origin': '0 0',
+                       '-moz-transform-origin': '0 0',
+                       '-o-transform-origin': '0 0',
+                       '-webkit-transform-origin': '0 0',
+                       'transform-origin': '0 0',
+            });
             main.append(iframe);
             
             // put container in cell

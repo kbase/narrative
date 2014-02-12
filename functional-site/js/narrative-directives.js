@@ -298,7 +298,7 @@ angular.module('narrative-directives')
                         var tableSettings = {
                             "sPaginationType": "bootstrap",
                             //"sPaginationType": "full_numbers",
-                            "iDisplayLength": 200,
+                            "iDisplayLength": 1000,
                             //"aaData": [],
                             "fnDrawCallback": events,
                             bLengthChange: false,
@@ -455,11 +455,7 @@ angular.module('narrative-directives')
                         var nar = $(this).data('nar');                        
                         deleteNarrativeModal(proj, nar);
                     })                    
-
-
                 }
-
-
 
 
                 function newProjectModal() {
@@ -479,12 +475,12 @@ angular.module('narrative-directives')
                                           <div style="margin: 7px 0 0 0;">None</div>\
                                         </div>\
                                       </div>\
-                                      <!--<div class="form-group">\
+                                      <div class="form-group">\
                                         <label class="col-sm-4 control-label">Description</label>\
                                         <div class="col-sm-7">\
                                           <textarea class="form-control create-descript" rows="3"></textarea>\
                                         </div>\
-                                      </div>-->\
+                                      </div>\
                                   </div>')
                     
 
@@ -497,6 +493,7 @@ angular.module('narrative-directives')
                                 type : 'primary',
                                 callback : function(e, $prompt) {
                                     var proj_name = $(".new-project-name").val();
+                                    var descript = $('.create-descript').val();
 
                                     //no spaces allowed in narrative name
                                     proj_name = proj_name.replace(/ /g,"_");
@@ -521,16 +518,15 @@ angular.module('narrative-directives')
                                             var proj = USER_ID+':'+s_proj[1];
                                         } else {
                                             error = 'Only your username ('+USER_ID+') may be used before a colon';
-                                            
                                         }
                                     } else {
-                                        var proj = USER_ID+':'+proj_name
+                                        var proj = USER_ID+':'+proj_name;
                                     }
 
                                     if (error) {
                                         $prompt.addCover(error, 'danger');
                                     } else {
-                                        var p =  kb.nar.new_project({project_id: proj})    
+                                        var p =  kb.nar.new_project({project_id: proj, description: descript})    
                                         $.when(p).done(function() {
                                             $prompt.addCover('Created project <b><i>'+proj+'</b></i>');
 

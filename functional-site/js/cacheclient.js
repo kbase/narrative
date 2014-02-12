@@ -253,7 +253,7 @@ function ProjectAPI(ws_url, token) {
     var empty_ws2_proj_tag = {
         name : ws_tag.project,
         type : ws_tag_type,
-        data : { description : 'Tag! You\'re a project!' },
+        data : { description : '' },
         workspace : undefined,
         meta : {},
 	provenance : [],
@@ -444,12 +444,14 @@ function ProjectAPI(ws_url, token) {
     // tag object to it
     this.new_project = function( p_in ) {
         var def_params = { project_id : undefined,
-                           def_perm : 'n'};
+                           def_perm : 'n',
+                           description: ''};
 
         var p = $.extend( def_params, p_in);
 
         function tag_ws() {
             var proj = $.extend(true,{},empty_ws2_proj_tag);
+            proj.data.description = p_in.description;
 
             var params = { objects : [proj] };
             params.workspace = p.project_id;

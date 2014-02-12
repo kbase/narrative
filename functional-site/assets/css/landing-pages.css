@@ -447,6 +447,7 @@ div::-webkit-scrollbar-thumb {
 
 .group-item-expander {
     background: #f2f2f2; /*#d6eaff;*/
+    /*padding: 4px 2px 2px 2px !important; */
 }
 .group-item-expander:hover {
     background: #f2f2f2 !important; /* override boostrap hover */

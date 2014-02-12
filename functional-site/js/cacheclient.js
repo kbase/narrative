@@ -444,45 +444,56 @@ function ProjectAPI(ws_url, token) {
     // tag object to it
     this.new_project = function( p_in ) {
         var def_params = { project_id : undefined,
-                           def_perm : 'n',
-                           error_callback: error_handler };
+                           def_perm : 'n'};
 
         var p = $.extend( def_params, p_in);
 
-        //if ( legit_ws_id.test(p.project_id)) {
-            // Check if the workspace exists already. If it does, then 'upgrade'
-            // it by adding a _project object, if it doesn't exist yet then
-            // create it, then add the _project otag
+        function tag_ws() {
+            var proj = $.extend(true,{},empty_ws2_proj_tag);
 
-            function tag_ws() {
-                //var proj = $.extend(true,{},empty_proj_tag);
-                var proj = $.extend(true,{},empty_ws2_proj_tag);
+            var params = { objects : [proj] };
+            params.workspace = p.project_id;
+            var ws_fn2 = ws_client.save_objects( params);
 
-                var params = { objects : [proj] };
-                params.workspace = p.project_id;
-                var ws_fn2 = ws_client.save_objects( params);
-                //var prom = $.when( ws_fn2 ).
-                //.then( function(obj_meta) {
-                //               return  obj_meta_dict(obj_meta); 
-                //});
-                return ws_fn2;
-            };
+            return ws_fn2;
+        };
 
-            var ws_exists = ws_client.get_workspacemeta( {workspace : p.project_id });
-            var prom =  $.when(ws_exists).then(tag_ws, function() {
-                var ws_fn = ws_client.create_workspace( { workspace : p.project_id,
-                                                          globalread : p.def_perm })
-                var prom = $.when(ws_fn).done(function() {
-                    return tag_ws();
-                })
-                return prom;
-            });
-
+        var ws_exists = ws_client.get_workspacemeta( {workspace : p.project_id });
+        var prom =  $.when(ws_exists).then(tag_ws, function() {
+            var ws_fn = ws_client.create_workspace( { workspace : p.project_id,
+                                                      globalread : p.def_perm })
+            var prom = $.when(ws_fn).done(function() {
+                return tag_ws();
+            })
             return prom;
-        //} else {
-        //    console.error( "Bad project id: "+p.project_id);
-        //}
+        });
+
+        return prom;
     };
+
+
+    // returns a project description (out of the project object)
+    this.get_project_description = function(proj_name) {
+        var prom = ws_client.get_object({ type: ws_tag_type,
+                                          workspace: proj_name,
+                                          id: ws_tag.project });
+        var p = $.when(prom).then(function(r) {
+            return r.data.description;
+        })
+        return p;
+    }
+
+    // returns a project description (out of the project object)
+    this.set_project_description = function(proj_name, descript) {
+        var proj = $.extend({}, empty_ws2_proj_tag);
+        proj.data.description = descript;
+        var p = ws_client.save_objects( {workspace: proj_name, objects: [proj]}); 
+
+        return p;
+    }
+
+
+
 
 
     // Delete a workspace(project)

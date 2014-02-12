@@ -364,11 +364,6 @@ angular.module('ws-directives')
                         d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
                         modal_body.prepend(d);
 
-                        var save_disabled = true;
-
-                        // add btn that allows the user to edit any content
-//                        modal_body.prepend('')
-
                         $('.btn-edit').click(function(){
                             if ($('#ws-description textarea').length > 0) {
                                 $('#ws-description').html(descript);
@@ -378,7 +373,7 @@ angular.module('ws-directives')
                                 var editable = getEditableDescription(descript);
                                 $('#ws-description').html(editable);
                                 $(this).text('Cancel');
-                                save_btn.attr('disabled', false)                               
+                                save_btn.attr('disabled', false);
                             }
                         })
                     })
@@ -436,62 +431,7 @@ angular.module('ws-directives')
                     }
 
 
-                    function savePermissions(ws_name) {
-                        var newPerms = {};
-                        var table = $('.edit-perm-table');
-                        table.find('tr').each(function() {
-                            var user = $(this).find('.perm-user').val()
-                            var perm = $(this).find('option:selected').val();
-                            if (!user) return;
-                            
-                            newPerms[user] = perm
-                        })
 
-                        // create new permissions for each user that does not currently have 
-                        // permsissions.
-                        var promises = [];
-                        for (var new_user in newPerms) {
-                            // ignore these
-                            if (new_user == '*' || new_user == USER_ID) continue;   
-
-                            // if perms have not change, do not request change
-                            if ( (new_user in permData) && newPerms[new_user] == permData[new_user]) {
-                                continue;
-                            }
-
-
-                            var params = {
-                                workspace: ws_name,
-                                new_permission: newPerms[new_user],
-                                users: [new_user],
-                            };
-
-                            var p = kb.ws.set_permissions(params);
-                            promises.push(p);
-                        };
-
-                        var rm_users = [];
-
-                        // if user was removed from user list, change permission to 'n'
-                        for (var user in permData) {
-                            if (user == '*' || user == USER_ID) continue;                            
-
-                            if ( !(user in newPerms) ) {
-
-                                var params = {
-                                    workspace: ws_name,
-                                    new_permission: 'n',
-                                    users: [user],
-                                };
-
-                                var p = kb.ws.set_permissions(params);
-                                promises.push(p);
-                                rm_users.push(user)
-                            } 
-                        }
-
-                        return $.when.apply($, promises);
-                    }
 
                     function getEditableDescription(d) {
                         var d = $('<form role="form">\
@@ -500,9 +440,7 @@ angular.module('ws-directives')
                                   </div>\
                                   </form>');
                         return d;
-
                     }
-
 
                     //table for displaying user permissions
                     function getPermTable(data) {
@@ -1478,15 +1416,21 @@ angular.module('ws-directives')
                         }
                     );
                     confirmCopy.openPrompt();
-                }                
-
+                } 
             }
 
         };
     })
 
 
-
+function getEditableDescription(d) {
+    var d = $('<form role="form">\
+               <div class="form-group">\
+                <textarea rows="4" class="form-control" placeholder="Description">'+d+'</textarea>\
+              </div>\
+              </form>');
+    return d;
+}
 
 function parse_name(name) {
     if (name.indexOf(USER_ID+':') != -1) {
@@ -1495,6 +1439,8 @@ function parse_name(name) {
         return name;
     }
 }
+
+
 
 
 

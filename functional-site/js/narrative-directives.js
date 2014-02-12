@@ -63,17 +63,18 @@ angular.module('narrative-directives')
 
                         $(element).rmLoading();
                         if (projs.length > 0) {
-                            var projects = []
+                            var projects = [];
                             //first sort
                             for (var i in projs) {
+
                                 var project = {};
                                 project.timestamp = getTimestamp(projs[i][3]); // moddate to timestamp
                                 if (!project.timestamp) continue; //fixme
-                                project.nealtime = formateDate(project.timestamp) 
-                                                    ? formateDate(project.timestamp) : 
+                                project.nealtime = formateDate(project.timestamp)
+                                                    ? formateDate(project.timestamp) :
                                                         projs[i][3].replace('T',' ').split('+')[0];
-                                project.name = parse_name(projs[i][7]); 
-                                projects.push(project)
+                                project.name = parse_name(projs[i][7]);
+                                projects.push(project);
                             }
 
                             scope.$apply(function() {
@@ -81,7 +82,7 @@ angular.module('narrative-directives')
                             })
 
                         } else {
-                            $(element).append('no projects')
+                            $(element).append('no projects');
                         }
                     })
                 }
@@ -728,20 +729,20 @@ angular.module('narrative-directives')
                 }
 
 
-                function manageProject(proj_id) {
-
+                
+                function manageProject(p_name) {
                     var perm_dict = {'a': 'Admin',
                                      'r': 'Read',
                                      'w': 'Write',
                                      'o': 'Owner',
                                      'n': 'None'};
 
-
                     var content = $('<div class="manage-content"></div>');
+
                     // modal for managing project permissions, and delete
                     var permData; 
                     var manage_modal = $('<div></div>').kbasePrompt({
-                            title : 'Manage Project'+' <small>'+proj_id+'</small>',
+                            title : 'Manage Project'+' <small>'+p_name+'</small> <a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></a>',
                             body : content,
                             modalClass : '', 
                             controls : [{
@@ -756,15 +757,33 @@ angular.module('narrative-directives')
                                 callback : function(e, $prompt) {
                                         $prompt.addCover();
                                         $prompt.getCover().loading();
+                               
+                                        var prom = savePermissions(p_name);
+                                        prompt = $prompt;
 
-                                        // save permissions
-                                        var prom = savePermissions(proj_id);
-                                        $.when(prom).done(function(){
-                                            $prompt.addCover('Permissions saved.', 'success');   
-                                            scope.loadProjectList();
-                                        }).fail(function(e) {
-                                            $prompt.addCover(e.error.message, 'danger');                                             
-                                        }) 
+                                        // save permissions, then save description
+                                        $.when(prom).done(function() {
+                                            // if description textarea is showing, saving description
+                                            if ($('#ws-description textarea').length > 0) {
+                                                var d = $('#ws-description textarea').val();
+
+                                                // saving description
+                                                var prom = kb.nar.set_project_description(p_name, d)
+                                                $.when(prom).done(function() {
+                                                    prompt.addCover('Saved.');
+                                                    prompt.closePrompt();
+                                                    manageProject(p_name);                                            
+                                                }).fail(function(e){
+                                                    prompt.addCover(e.error.message, 'danger');
+                                                })
+                                            } else {
+                                                prompt.addCover('Saved.');
+                                                prompt.closePrompt();
+                                                manageProject(p_name);
+                                            }
+                                        }).fail(function(e){
+                                            prompt.addCover(e.error.message, 'danger');
+                                        })
                                     }
                                 }]
                         })
@@ -772,16 +791,17 @@ angular.module('narrative-directives')
                     manage_modal.openPrompt();
                     var dialog = manage_modal.data('dialogModal');
                     dialog.find('.modal-dialog').css('width', '500px');
+                    var modal_body = dialog.find('.modal-body');
 
-
-                    var modal_body = manage_modal.data('dialogModal').find('.modal-body');
-
+                    var modal_footer = dialog.find('.modal-footer');
+                    var save_btn = modal_footer.find('.btn-primary');
+                    save_btn.attr('disabled', true);
                     // if user is logged in and admin 
 
                     var placeholder = $('<div></div>').loading()
                     modal_body.append(placeholder); 
 
-                    var prom = kb.nar.get_project_perms({project_id: proj_id})
+                    var prom = kb.nar.get_project_perms({project_id: p_name})
 
                     $.when(prom).done(function(data) {
                         permData = data
@@ -797,33 +817,55 @@ angular.module('narrative-directives')
                         var perm_table = getPermTable(permData)
                         perm_container.append(perm_table);
 
-                        $('.edit-perms').click(function() {
+                        $('.btn-edit').click(function() {
                             if (perm_container.find('table.perm-table').length > 0) {
                                 $(this).html('Cancel')
                                 perm_table.remove()
                                 perm_table = getEditablePermTable(data);
                                 perm_container.html(perm_table);
+                                save_btn.attr('disabled', false);                                        
                             } else {
                                 $(this).html('Edit')                                    
                                 perm_table.remove()
                                 perm_table = getPermTable(data);
-                                perm_container.html(perm_table);                                  
+                                perm_container.html(perm_table);
+                                save_btn.attr('disabled', true);                                        
                             }
                         })
+
 
 
                         var del_proj = $('<a class="btn btn-danger pull-left">Delete Project</a>');
 
                         del_proj.click(function() { 
-                            deleteProject(proj_id)
+                            deleteProject(p_name)
                         });
                         dialog.find('.modal-footer .text-left').append(del_proj);
                     })
 
+                    var prom = kb.nar.get_project_description(p_name);
+                    $.when(prom).done(function(descript) {
+                        console.log('got description', descript)
+                        var d = $('<div>');
+                        d.append('<h5>Description</h5>');
+                        d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
+                        modal_body.prepend(d);
 
-
-
-                    function savePermissions(ws_name) {
+                        $('.btn-edit').click(function(){
+                            if ($('#ws-description textarea').length > 0) {
+                                $('#ws-description').html(descript);
+                                $(this).text('Edit');
+                                save_btn.attr('disabled', true);
+                            } else {
+                                var editable = getEditableDescription(descript);
+                                $('#ws-description').html(editable);
+                                $(this).text('Cancel');
+                                save_btn.attr('disabled', false);
+                            }
+                        })
+                    })
+                
+                    function savePermissions(p_name) {
                         var newPerms = {};
                         var table = $('.edit-perm-table');
                         table.find('tr').each(function() {
@@ -848,7 +890,7 @@ angular.module('narrative-directives')
 
 
                             var params = {
-                                workspace: ws_name,
+                                workspace: p_name,
                                 new_permission: newPerms[new_user],
                                 users: [new_user],
                                 //auth: USER_TOKEN
@@ -867,7 +909,7 @@ angular.module('narrative-directives')
                             if ( !(user in newPerms) ) {
 
                                 var params = {
-                                    workspace: ws_name,
+                                    workspace: p_name,
                                     new_permission: 'n',
                                     users: [user],
                                     //auth: USER_TOKEN
@@ -992,7 +1034,9 @@ angular.module('narrative-directives')
 
                         return $('<div>').append(dd).html();
                     }
-                }  // end manageModal
+                }  // end manageProject
+
+
 
 
 
@@ -1097,8 +1141,6 @@ narrativeDirectives.directive('newsfeed', function(FeedLoad, $compile) {
                     }
                     
                     $(element).html($(feedContent));
-
-                    
                 });
 
             } 

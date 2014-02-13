@@ -45,8 +45,8 @@ RUN cd /kb/dev_container/narrative; /bin/bash install.sh -p /kb/deployment/servi
 # proxy environment
 CMD ["kbasetest"]
 ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/run_magellan_narrative.sh"]
-RUN chown -R nobody /kb/dev_container/narrative/src/notebook/ipython_profiles
-RUN mkdir ~nobody
+RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_profiles
+#RUN mkdir ~nobody
 USER nobody
 # CMD /bin/bash /kb/deployment/services/narrative-venv/bin/run_notebook.sh notebook --ip='*' --NotebookApp.password='sha1:89e8b3c3b94f:34c04b4f82d4f5442094cbf73204333 176be148a' --NotebookApp.open_browser='False'
 

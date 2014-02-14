@@ -65,7 +65,7 @@
             this.cdmiClient.genomes_to_taxonomies([this.options.genomeID], 
                 $.proxy(function(taxonomy) {
                     taxonomy = taxonomy[this.options.genomeID];
-                    this.renderFromTaxonomy(taxonomy);
+                    this.renderFromTaxonomy(taxonomy.reverse());
                 }, this),
 
                 this.renderError
@@ -74,18 +74,34 @@
             return this;
         },
 
+        /**
+         * Needs to be given in reverse order. Calling function should handle
+         * what are valid names. E.g.
+         * ['Escherichia coli K-12', 'Escherichia coli', 'Escherichia', 'Enterobacteriaceae', 'Enterobacteriales', 'Gammaproteobacteria', ...]
+         * Start with most descriptive name, proceed on down to least descriptive (usually kingdom name, if available).
+         * 
+         * This will try to fetch wiki content for the first valid name in that list.
+         */
         renderFromTaxonomy: function(taxonomy) {
-            var searchTerms = [];
-            var strainName = taxonomy.pop();
+            console.debug("renderFromTaxonomy - begin");
+            console.debug(taxonomy);
 
-            var tokens = strainName.split(" ");
-            if (tokens.length > 2);
-            searchTerms.push(tokens[0] + " " + tokens[1]);
-            searchTerms = searchTerms.concat(taxonomy.reverse());
+            var searchTerms = taxonomy;
+            var strainName = taxonomy[0];
+
+            // var tokens = strainName.split(" ");
+            // if (tokens.length > 2);
+            // searchTerms.push(tokens[0] + " " + tokens[1]);
+            // searchTerms = searchTerms.concat(taxonomy.reverse());
+            console.debug("renderFromTaxonomy - scraping");
+            console.debug(searchTerms);
 
             // step 2: do the wiki scraping
             this.wikiClient.scrape_first_hit(searchTerms, {endpoint: "dbpedia.org"}, 
                 $.proxy(function(desc) {
+                    console.debug('renderFromTaxonomy-returned from wikiClient');
+                    console.debug(desc);
+
                     if (desc.hasOwnProperty('description') && desc.description != null) {
                         if (desc.description.length > this.options.maxNumChars) {
                             desc.description = desc.description.substr(0, this.options.maxNumChars);
@@ -96,59 +112,64 @@
                         var descStr = "<p style='text-align:justify;'>" + desc.description + "</p>"
 
                         var descHtml;
-                        if (desc.term === strainName || strainName === desc.redirect_from) {
+                        if (strainName === desc.redirect_from) {
+                            descHtml = this.redirectHeader(strainName, desc.redirect_from, desc.term) + descStr + this.descFooter(desc.wiki_url);
+                        }
+                        else if (desc.term === strainName) {
                             descHtml = descStr + this.descFooter(desc.wiki_uri);
                         }
                         else {
-                            descHtml = this.notFoundHeader(strainName, desc.term) + descStr + this.descFooter(desc.wiki_uri);
+                            descHtml = this.notFoundHeader(strainName, desc.term, desc.redirect_from) + descStr + this.descFooter(desc.wiki_uri);
                         }
 
                         var imageHtml = "Unable to find an image. If you have one, you might consider <a href='" + desc.wiki_uri + "' target='_new'>adding it to Wikipedia</a>.";
                         if (desc.image_uri != null)
                             imageHtml = "<img src='" + desc.image_uri + "' />";
-
-
-                        var descId = this.uid();
-                        var imageId = this.uid();
-
-
-                        var $contentDiv = $("<div />")
-                                          .addClass("tab-content")
-                                          .append($("<div />")
-                                                  .attr("id", descId)
-                                                  .addClass("tab-pane fade active in")
-                                                  .append(descHtml)
-                                          )
-                                          .append($("<div />")
-                                                  .attr("id", imageId)
-                                                  .addClass("tab-pane fade")
-                                                  .append(imageHtml)
-                                          );
-
-                        var $descTab = $("<a />")
-                                         .attr("href", "#" + descId)
-                                         .attr("data-toggle", "tab")
-                                         .append("Description");
-
-                        var $imageTab = $("<a />")
-                                         .attr("href", "#" + imageId)
-                                         .attr("data-toggle", "tab")
-                                         .append("Image");
-
-                        var $tabSet = $("<ul />")
-                                      .addClass("nav nav-tabs")
-                                      .append($("<li />")
-                                              .addClass("active")
-                                              .append($descTab)
-                                             )
-                                      .append($("<li />")
-                                              .append($imageTab)
-                                             );
-
-                        this.hideMessage();
-                        this.$elem.append($tabSet).append($contentDiv);
+                    }
+                    else {
+                        descHtml = this.notFoundHeader(strainName, desc.term, desc.redirect_from) + descStr + this.descFooter(desc.wiki_uri);
                     }
 
+
+                    var descId = this.uid();
+                    var imageId = this.uid();
+
+
+                    var $contentDiv = $("<div />")
+                                      .addClass("tab-content")
+                                      .append($("<div />")
+                                              .attr("id", descId)
+                                              .addClass("tab-pane fade active in")
+                                              .append(descHtml)
+                                      )
+                                      .append($("<div />")
+                                              .attr("id", imageId)
+                                              .addClass("tab-pane fade")
+                                              .append(imageHtml)
+                                      );
+
+                    var $descTab = $("<a />")
+                                     .attr("href", "#" + descId)
+                                     .attr("data-toggle", "tab")
+                                     .append("Description");
+
+                    var $imageTab = $("<a />")
+                                     .attr("href", "#" + imageId)
+                                     .attr("data-toggle", "tab")
+                                     .append("Image");
+
+                    var $tabSet = $("<ul />")
+                                  .addClass("nav nav-tabs")
+                                  .append($("<li />")
+                                          .addClass("active")
+                                          .append($descTab)
+                                         )
+                                  .append($("<li />")
+                                          .append($imageTab)
+                                         );
+
+                    this.hideMessage();
+                    this.$elem.append($tabSet).append($contentDiv);
                 }, this),
 
                 this.renderError
@@ -166,16 +187,18 @@
             }, this));
             // if it succeeds, grab the taxonomy (or at least the scientific name) and roll out.
             $.when(prom).done($.proxy(function(genome) {
+                console.log(genome);
                 genome = genome[0];
 
                 var tax = genome.data.taxonomy;
                 var taxList = [];
-                if (!tax || tax === "Unknown") {
-                    taxList.push(genome.data.scientific_name);
+                var nameTokens = genome.data.scientific_name.split(/\s+/);
+                for (var i=nameTokens.length; i>0; i--) {
+                    taxList.push(nameTokens.slice(0, i).join(' '));
                 }
-                else {
+                if (taxList && taxList !== "Unknown") {
                     // parse the taxonomy, however it's munged together. semicolons, i think?
-                    taxList = tax.split(/\;\s*/);
+                    taxList = taxList.concat(tax.split(/\;\s*/).reverse());
                 }
                 this.renderFromTaxonomy(taxList);
             }, this));
@@ -208,7 +231,7 @@
             return "<p>[<a href='" + wikiUri + "'' target='_new'>more at Wikipedia</a>]</p>";
         },
 
-        notFoundHeader: function(strainName, term) {
+        notFoundHeader: function(strainName, term, redirectFrom) {
             var underscoredName = strainName.replace(/\s+/g, "_");
             var str = "<p><b><i>" +
                       strainName + 
@@ -218,8 +241,22 @@
             if (term) {
                 str += "<p><b>Showing description for <i>" +
                        term +
-                       "</i></b></p>";
+                       "</i></b>";
+                if (redirectFrom) {
+                    str += "<br>redirected from <i>" + redirectFrom + "</i>";
+                }
+                str += "</p>";
             }
+            return str;
+        },
+
+        redirectHeader: function(strainName, redirectFrom, term) {
+            var underscoredName = redirectFrom.replace(/\s+/g, "_");
+            var str = "<p><b>" +
+                      "Showing description for <i>" + term + "</i></b>" +
+                      "<br>redirected from <i>" + underscoredName + "</i>" +
+                      "</p>";
+
             return str;
         },
 

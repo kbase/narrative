@@ -83,25 +83,12 @@
          * This will try to fetch wiki content for the first valid name in that list.
          */
         renderFromTaxonomy: function(taxonomy) {
-            console.debug("renderFromTaxonomy - begin");
-            console.debug(taxonomy);
-
             var searchTerms = taxonomy;
             var strainName = taxonomy[0];
-
-            // var tokens = strainName.split(" ");
-            // if (tokens.length > 2);
-            // searchTerms.push(tokens[0] + " " + tokens[1]);
-            // searchTerms = searchTerms.concat(taxonomy.reverse());
-            console.debug("renderFromTaxonomy - scraping");
-            console.debug(searchTerms);
 
             // step 2: do the wiki scraping
             this.wikiClient.scrape_first_hit(searchTerms, {endpoint: "dbpedia.org"}, 
                 $.proxy(function(desc) {
-                    console.debug('renderFromTaxonomy-returned from wikiClient');
-                    console.debug(desc);
-
                     if (desc.hasOwnProperty('description') && desc.description != null) {
                         if (desc.description.length > this.options.maxNumChars) {
                             desc.description = desc.description.substr(0, this.options.maxNumChars);
@@ -187,7 +174,6 @@
             }, this));
             // if it succeeds, grab the taxonomy (or at least the scientific name) and roll out.
             $.when(prom).done($.proxy(function(genome) {
-                console.log(genome);
                 genome = genome[0];
 
                 var tax = genome.data.taxonomy;

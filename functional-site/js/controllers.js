@@ -242,8 +242,14 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 
 .controller('WorkspaceBrowser', function($scope, $stateParams) {
-    //changeNav('workspaces');
     $scope.selected_ws = $stateParams.ws;
+})
+
+.controller('WorkspaceBrowserLanding', function($scope, $stateParams) {
+    //changeNav('workspaces');
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+    console.log('model id: ', $scope.id)
 })
 
 

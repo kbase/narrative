@@ -960,7 +960,7 @@ angular.module('ws-directives')
                         if (type == 'Genome') {
                             scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
                         } else if (type == 'FBAModel') {
-                            scope.$apply( $location.path('/models/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/models/'+ws+'/'+id) );
                         } else if (type == 'FBA') {
                             scope.$apply( $location.path('/fbas/'+ws+'/'+id) );
                         } else if (type == 'Media') {

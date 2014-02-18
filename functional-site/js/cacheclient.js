@@ -55,7 +55,7 @@ function KBCacheClient(token) {
             // use whatever workspace server that was configured.
             // this makes it possible to use the production workspace server
             // with the fba server.   Fixme:  fix once production fba server is ready.
-            params.wsurl = ws_url;  
+            params.wsurl = ws_url;
         }
 
         // see if api call has already been made        
@@ -832,20 +832,16 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-        //if ( legit_ws_id.test(p.narrative_id)) {
-            var nar = $.extend(true,{},empty_narrative);
-            nar.data.metadata.ws_name = p.project_id;
-            nar.name = p.narrative_id; 
-            nar.data.metadata.name = p.narrative_id; 
-            nar.data.metadata.creator = USER_ID;
+        var nar = $.extend(true,{},empty_narrative);
+        nar.data.metadata.ws_name = p.project_id;
+        nar.name = p.narrative_id; 
+        nar.data.metadata.name = p.narrative_id; 
+        nar.data.metadata.creator = USER_ID;
 
-            var ws_fn = ws_client.save_objects( {workspace: p.project_id, objects: [nar]});
-            return $.when( ws_fn ).then( function(obj_meta) {
-                          return obj_meta_dict(obj_meta);
-                      });
-        //} else {
-        //    console.error( "Bad narrative_id");
-        //}
+        var ws_fn = ws_client.save_objects( {workspace: p.project_id, objects: [nar]});
+        return $.when( ws_fn ).then( function(obj_meta) {
+                      return obj_meta_dict(obj_meta);
+                  });
     };
 
 }

@@ -14,6 +14,11 @@ angular.module('fav-directives')
         return {
             template: '<div class="ws-selector">Fav sidebar </div>',
             link: function(scope, element, attrs) {
+                var prom = kb.ujs.get_state('userstate');
+                $.when(prom).done(function(data){
+                    console.log('result', data)
+                })
+
             }
         };
     })

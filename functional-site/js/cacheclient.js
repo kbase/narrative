@@ -36,11 +36,11 @@ function KBCacheClient(token) {
     if (configJSON.setup == 'dev') {
         fba_url = configJSON.dev.fba_url;
         ws_url = configJSON.dev.workspace_url;
-        ujs_url = configJSON.dev.workspace_url;
+        ujs_url = configJSON.dev.user_job_state_url;
     } else {
         fba_url = configJSON.prod.fba_url;
         ws_url = configJSON.prod.workspace_url;
-        ujs_url = configJSON.prod.workspace_url;
+        ujs_url = configJSON.prod.user_job_state_url;
     }
 
     console.log('FBA URL is:', fba_url);
@@ -49,7 +49,7 @@ function KBCacheClient(token) {
 
     var fba = new fbaModelServices(fba_url);
     var kbws = new Workspace(ws_url, auth);
-    var userjobstate = new UserAndJobState(ujs_url, auth);
+    var ujs = new UserAndJobState(ujs_url, auth);
 
   
     var cache = new Cache();
@@ -86,6 +86,7 @@ function KBCacheClient(token) {
     // make publically accessible methods that 
     this.fba = fba;
     this.ws = kbws;
+    this.ujs = ujs
 
     this.nar = new ProjectAPI(ws_url, token);
 

@@ -962,7 +962,7 @@ angular.module('ws-directives')
                         } else if (type == 'FBAModel') {
                             scope.$apply( $location.path('/ws/models/'+ws+'/'+id) );
                         } else if (type == 'FBA') {
-                            scope.$apply( $location.path('/fbas/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/fbas/'+ws+'/'+id) );
                         } else if (type == 'Media') {
                             scope.$apply( $location.path('/media/'+ws+'/'+id) );
                         } else if (type == 'Cmonkey') {

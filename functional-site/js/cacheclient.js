@@ -36,16 +36,20 @@ function KBCacheClient(token) {
     if (configJSON.setup == 'dev') {
         fba_url = configJSON.dev.fba_url;
         ws_url = configJSON.dev.workspace_url;
+        ujs_url = configJSON.dev.workspace_url;
     } else {
         fba_url = configJSON.prod.fba_url;
         ws_url = configJSON.prod.workspace_url;
+        ujs_url = configJSON.prod.workspace_url;
     }
 
-    console.log('FBA URL is:', fba_url)
-    console.log('Workspace URL is:', ws_url)
+    console.log('FBA URL is:', fba_url);
+    console.log('Workspace URL is:', ws_url);
+    console.log('User Job State URL is:', ujs_url);
 
     var fba = new fbaModelServices(fba_url);
     var kbws = new Workspace(ws_url, auth);
+    var userjobstate = new UserAndJobState(ujs_url, auth);
 
   
     var cache = new Cache();
@@ -84,8 +88,7 @@ function KBCacheClient(token) {
     this.ws = kbws;
 
     this.nar = new ProjectAPI(ws_url, token);
-    project = new ProjectAPI(ws_url, token);  // let's deprecate this. It'd be nice to avoid the
-                                              // global varriable in the future....
+
     this.token = token;
 }
 

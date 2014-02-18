@@ -43,6 +43,7 @@
         <!-- KBase client library javascript -->
         <script src="assets/js/kbclient/kbase.js"></script>
         <script src="assets/js/kbclient/workspaceDeluxe1.1.js"></script>
+        <script src="assets/js/kbclient/userandjobstate.js"></script>        
         <!--<script src="assets/js/kbclient/projects.js"></script>        -->
         <script src="assets/js/kbclient/wikiScraper.js"></script>
 
@@ -229,7 +230,7 @@
 
         <script src="js/directives.js"></script>
         <script src="js/card-directives.js"></script>
-        <script src="js/mv-directives.js"></script>
+        <script src="js/fav-directives.js"></script>
         <script src="js/ws-directives.js"></script>           
         <script src="js/trees-directives.js"></script>        
 	    <script src="js/narrative-directives.js"></script>
@@ -271,10 +272,10 @@
                         <button class="btn" type="submit" style="background-color: #ebebeb; border-color: #adadad; border-left:none"><span class="glyphicon glyphicon-search" style="line-height: .9"></span></button>
                     </div>
                 </div>
-
-
-                
               </form>
+              <ul class="nav navbar-nav"> 
+                <li ng-class="{ active: $state.includes('favorites')}"><a href="#/favorites/all/">Favorites <span class="badge">0</span></a></li>
+              </ul>
 
               <div id="signin-button" class="pull-right"></div>
               <ul class="nav navbar-nav pull-right">
@@ -288,12 +289,11 @@
         </div> <!-- end wrap, this pushes the footer down -->
         <div id="footer">
             <ul>
-
                 <li><a href="http://kbase.us/about/about/" target="_blank">About KBase</a></li>
                 <li><a href="http://kbase.us/for-users/user-home/" target="_blank">Documentation</a></li>
                 <li><a href="http://kbase.us/about/kbase-data-policy/" target="_blank">KBase Data Policy</a></li>
                 <li><a href="http://kbase.us/contact-us/" target="_blank">Contact Us</a></li>
-                                <li><a href="http://science.energy.gov/" target="_blank"><img class="center-block" src="./assets/images/doe_sc_logo.png" /></a></li>
+                <li><a href="http://science.energy.gov/" target="_blank"><img class="center-block" src="./assets/images/doe_sc_logo.png" /></a></li>
             </ul>
             
             <div class="disclaimer">This site is for demonstration purposes only.</div>

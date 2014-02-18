@@ -21,7 +21,7 @@
 
 var app = angular.module('landing-pages', 
     ['lp-directives', 'card-directives',
-     'mv-directives', 'trees-directives', 
+     'trees-directives', 'fav-directives',
      'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin', 'FeedLoad', 'ui.bootstrap'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
@@ -59,8 +59,24 @@ var app = angular.module('landing-pages',
           controller: 'WorkspaceBrowser'
         }).state('ws.models', {
           url: "models/:ws/:id",
-          templateUrl: 'views/ws/model.html',
+          templateUrl: 'views/ws/sortable/model.html',
           controller: 'WorkspaceBrowserLanding'
+        }).state('ws.fbas', {
+          url: "fbas/:ws/:id",
+          templateUrl: 'views/ws/sortable/fba.html',
+          controller: 'WorkspaceBrowserLanding'
+        })
+
+
+    $stateProvider
+        .state('favorites', {
+          url: "/favorites/",
+          templateUrl: 'views/ws/favorites.html',
+          controller: 'Favorites'
+        }).state('favorites.all', {
+          url: "all/",
+          templateUrl: 'views/ws/favorites.all.html',
+          controller: 'Favorites'
         })
 
 

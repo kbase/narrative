@@ -66,6 +66,10 @@ var app = angular.module('landing-pages',
           url: "fbas/:ws/:id",
           templateUrl: 'views/ws/sortable/fba.html',
           controller: 'WorkspaceBrowserLanding'
+        }).state('ws.genomes', {
+          url: "genomes/:ws/:id",
+          templateUrl: 'views/ws/sortable/genome.html',
+          controller: 'WorkspaceBrowserLanding'
         })
 
 
@@ -80,25 +84,23 @@ var app = angular.module('landing-pages',
           controller: 'Favorites'
         })
 
-
+    /*
     $stateProvider
         .state('mv', {
           url: "/mv/",
           templateUrl: 'views/mv/mv.html',
           controller: 'ModelViewer'
         })   
-        
         .state('mv.objtable', {
           url: "objtable/?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
           controller: 'ModelViewer'
         })
-        /*
         .state('mv.objtable.selectedobjs', {
           url: "?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
           controller: 'ModelViewer'
-        })*/       
+        })
         .state('mv.core', {
             url: "core/?ws&ids",
             templateUrl: 'views/mv/core.html',
@@ -113,7 +115,8 @@ var app = angular.module('landing-pages',
             url: "tree/?ws&ids",
             templateUrl: 'views/mv/tree.html',
             controller: 'ModelViewer'
-        })        
+        })
+    */   
 
     $stateProvider
         .state('trees', {

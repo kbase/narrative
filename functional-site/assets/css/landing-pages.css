@@ -415,7 +415,12 @@ div::-webkit-scrollbar-thumb {
 }
 
 
-.drag-placeholder { height: 58px; border: 1px solid #6da8cf; background: #e0f7ff; }  
+.drag-placeholder { 
+    height: 58px;
+    border: 1px solid #6da8cf;
+    background: #e0f7ff;
+    margin: 0 0 20px 0;
+}  
 
 /* custom checkboxes (prototyped) */
 .ncheck {
@@ -614,6 +619,7 @@ div::-webkit-scrollbar-thumb {
 
 .btn-favorite, 
 .btn-rm-panel {
+    margin: -5px 0 0 0; /* adjust for container margin */
     font-size: 1.3em;
 }
 

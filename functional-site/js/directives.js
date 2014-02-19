@@ -275,82 +275,39 @@ angular.module('lp-directives')
             }
         };
     })
-
-    // Workspace browser widgets (directives)
-    .directive('wsobjtable-old', function($rootScope) {
+    .directive('backbutton', function() {
         return {
             link: function(scope, element, attrs) {
-                $rootScope.objectTable = $(element).kbaseWSObjectTable({auth: scope.USER_TOKEN});
+                $(element).on('click', function() {
+                    window.history.back();
+                });
             }
+
         };
     })
-    .directive('wsselector-old', function($rootScope) {
+
+    .directive('genomeoverview', function($rootScope) {
         return {
-            link: function(scope, element, attrs, routeParams) {
-                var wsSelector = $(element).kbaseWSSelector({userToken: scope.USER_TOKEN,
-                                                      selectHandler: selectHandler});
-                var first = true;
-                var prevPromises = []; // store previous promises to cancel
-                function selectHandler(selected) {
-                    workspaces = wsSelector.workspaces;
-                    set_selected_workspace()
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'Genome Overview', 
+                                               rightLabel: scope.ws,
+                                               subText: scope.id,
+                                               widget: 'genomeoverview'});
+                p.loading(); // not sure why this isn't loading first.  I'm thinking data should be retrieved here.
 
-                    // tell the previous promise(s) not to fire
-                    prevPromises.cancel = true;
-
-                    // workspaces might have data loaded already
-                    var promises = [];
-                    prevPromises = promises;
-
-                    // loop through selected workspaces and download objects if they haven't been downloaded yet
-                    for (var i=0; i<selected.length; i++) {
-                        var workspace = selected[i];
-
-                        var objType = $.type(workspace.objectData);
-                        if (objType === 'undefined') {
-                            // no data and not being downloaded
-                            var p = workspace.getAllObjectsMeta();
-                            workspace.objectData = p; // save the promise
-                            promises.push(p);
-
-                            // provide closure over workspace
-                            (function(workspace) {
-                                p.done(function(data) {
-                                // save the data and tell workspace selector that the workspace has it's data
-                                    workspace.objectData = data;
-                                    wsSelector.setLoaded(workspace);
-                                });
-                            })(workspace);
-                        } else if (objType === 'object') {
-                            // data being downloaded (objectData is a promise)
-                            promises.push(workspace.objectData);
-                        }
-                    }
-
-                    if (promises.length > 0) {
-                        // may take some time to load
-                        $rootScope.objectTable.loading(true);
-                    }
-
-                    // when all the promises are done...
-                    $.when.apply($, promises).done(function() {
-                        if (promises.cancel) {
-                            // do nothing if it was cancelled
-                            return;
-                        }
-
-                        // reload the object table
-                        $rootScope.objectTable.reload(selected).done(function() {
-                            if (promises.cancel) {
-                                return;
-                            }
-
-                            if (first) {
-                                first = false;
-                            }
-                        });
-                    });
-                }
+                $(p.body()).KBaseGenomeOverview({genomeID: scope.id, workspaceID: scope.ws, kbCache: kb})
             }
         };
     })
+    .directive('genomewiki', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'Genome Wiki', 
+                                               rightLabel: scope.ws,
+                                               subText: scope.id,
+                                               widget: 'genomewiki'});
+                p.loading(); 
+                $(p.body()).KBaseWikiDescription({genomeID: scope.id, workspaceID: scope.ws, kbCache: kb})
+            }
+        };
+    })    

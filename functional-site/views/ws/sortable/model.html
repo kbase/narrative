@@ -1,23 +1,6 @@
 
-<script>
-  $(function() {
-      $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
-    start: function() {
-      $(this).find('.panel-body').addClass('hide');
-      $(this).sortable('refreshPositions');
-    },
-    stop: function() {
-      $(this).find('.panel-body').removeClass('hide');
-    }
-     });
-      $( "#sortable-landing" ).disableSelection();
-  });
-  </script>
-</head>
-<body>
  
 <ul id="sortable-landing">
   <li><div modeltabs></div></li>
   <li><div modelcore></div></li>
-
 </ul>

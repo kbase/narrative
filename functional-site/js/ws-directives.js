@@ -959,7 +959,7 @@ angular.module('ws-directives')
                         var ws = $(this).data('ws');
 
                         if (type == 'Genome') {
-                            scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/genomes/'+ws+'/'+id) );
                         } else if (type == 'FBAModel') {
                             scope.$apply( $location.path('/ws/models/'+ws+'/'+id) );
                         } else if (type == 'FBA') {

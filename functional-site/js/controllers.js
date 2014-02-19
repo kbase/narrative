@@ -248,7 +248,19 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 .controller('WorkspaceBrowserLanding', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
-    console.log('model id: ', $scope.id)
+
+
+    $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
+        start: function() {
+          $(this).find('.panel-body').addClass('hide');
+          $(this).sortable('refreshPositions');
+        },
+        stop: function() {
+          $(this).find('.panel-body').removeClass('hide');
+        }
+    });
+    $( "#sortable-landing" ).disableSelection();
+
 })
 
 .controller('Favorites', function($scope, $stateParams) {

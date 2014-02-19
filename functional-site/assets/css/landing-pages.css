@@ -622,6 +622,9 @@ div::-webkit-scrollbar-thumb {
     margin: -5px 0 0 0; /* adjust for container margin */
     font-size: 1.3em;
 }
+.fav-loading {
+    margin: 10px 0 0 0;
+}
 
 /*
 .favorite-count {

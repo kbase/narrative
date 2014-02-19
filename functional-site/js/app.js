@@ -481,7 +481,7 @@ function set_cookie() {
 $.fn.loading = function(text) {
     $(this).rmLoading()
 
-    if (text) {
+    if (typeof text != 'undefined') {
         $(this).append('<p class="text-muted loader"> \
              <img src="assets/img/ajax-loader.gif"> '+text+'</p>');
     } else {

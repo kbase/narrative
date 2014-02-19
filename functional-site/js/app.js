@@ -411,8 +411,8 @@ function get_selected_ws() {
 
 
 function removeCards() {
-    //$(".ui-dialog").remove();    
-    //$("#genomes").KBaseCardLayoutManager("destroy");
+    if (cardManager)
+        cardManager.closeAllCards();
 }
 
 

@@ -31,7 +31,6 @@ angular.module('fav-directives')
                     showWidgets(data)
                 })
 
-
                 function showWidgets(data) {
                     for (var i in data) {
 

@@ -348,7 +348,6 @@ angular.module('narrative-directives')
                                                   </div>');
                             table.fnFilter(USER_ID, 1);                            
 
-
                         }
 
                         new FixedHeader( table , {offsetTop: 50, "zTop": 1000});    
@@ -361,8 +360,8 @@ angular.module('narrative-directives')
 
 
                 function events() {
-                    // adding buttons to project header
 
+                    // adding buttons to project header
                     $('.group-item-expander').each(function() {
                         var self = this;
                         var proj_link = $(this).find('.proj-link')
@@ -410,16 +409,17 @@ angular.module('narrative-directives')
 
                     $('.filter-sharedwithme').unbind('click');
                     $('.filter-sharedwithme').click(function(e) {
+                        var own_filter = $('.filter-owner')
                         if (this.checked) {
-                            $('.filter-owner').parent().addClass('text-muted');
-                            $('.filter-owner').attr('checked', false);
-                            $('.filter-owner').attr('disabled', true);
+                            own_filter.parent().addClass('text-muted');
+                            own_filter.attr('checked', false);
+                            own_filter.attr('disabled', true);
                             table.fnFilter('', 1);
-                            table.fnFilter( 'Yes', 6);
+                            table.fnFilter( 'Yes', 5);
                         } else {  
-                            $('.filter-owner').parent().removeClass('text-muted');
-                            $('.filter-owner').attr('disabled', false);
-                            table.fnFilter('', 6);
+                            own_filter.parent().removeClass('text-muted');
+                            own_filter.attr('disabled', false);
+                            table.fnFilter('', 5);
                         }    
                     })                    
 
@@ -465,12 +465,57 @@ angular.module('narrative-directives')
                     function rename_narrative_event() {
                         $('.btn-rename-narrative').unbind('click')
                         $('.btn-rename-narrative').click(function(e){
-                            //var proj = $(this).data('proj');
-                            //var nar = $(this).data('nar'); 
-                            var proj = $('.nar-selected .nar-link').data('proj');
-                            var nar = $('.nar-selected .nar-link').data('nar'); 
+                            var link = $('.nar-selected .nar-link');
+                            var proj = link.data('proj');
+                            var nar = link.data('nar');
 
-                            renameNarrative(proj, nar);
+                            // add editable input to table
+                            var input = $('<input type="text" class="form-control">');
+                            var form = $('<div class="col-sm-4 input-group input-group-sm"></div>');
+                            form.append(input);
+                            input.val(nar);
+                            input.parents('td').html(link);                            
+                            
+                            input.keypress(function (e) {
+                                if (e.which == 13) {
+                                    $(this).blur();
+                                }
+                            })
+
+                            // save new name when focus is lost or when key entered
+                            input.focusout(function() {
+                                var new_name = $(this).val();
+
+                                // if new name is actually new
+                                if (new_name != nar) {
+                                    var notice = $('<span>saving...</span>')
+                                    input.parents('td').html(notice);
+                                    console.log('calling api')
+                                    var p = renameNarrative(proj, nar, new_name);
+                                    $.when(p).done(function(data) {
+                                        //change link on page
+                                        link.data('nar', new_name)
+                                        link.html(new_name);
+                                        notice.parents('td').html(link);
+                                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                                           
+                                    }).fail(function(e){
+                                        notice.parents('td').html(link);
+                                        link.append(' <span class="text-danger">'+e.error.message+'</span>');
+                                        link.find('span').delay(2200).fadeOut(400, function(){
+                                            $(this).remove();
+                                        });
+                                    })
+                                } else {  // if didn't change name, replace link;
+                                    input.parents('td').html(link);
+                                }
+                            });
+
+
+
+
+                            $('.nar-selected .nar-link').parent().html(form);
+                            input.focus();  
+
                         });
                     }
 
@@ -499,7 +544,11 @@ angular.module('narrative-directives')
                         rename_narrative_event();
                     })
 
-                    $('body').click(function() {
+                    // event for putting fixed header back on page
+                    //    this special event uses .row since that container should be 
+                    //    replaced via angular when view changes
+                    $('.row').unbind('click');
+                    $('.row').click(function() {
                         $('#project-table tr').removeClass('nar-selected');
                         new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                            
                     })
@@ -713,26 +762,8 @@ angular.module('narrative-directives')
                     deleteModal.addAlert('<strong>Warning</strong> this narrative will be deleted!');
                 }
 
-                function renameNarrative(proj, nar) {
-                    var new_name = "blahblahblah";
-
-                    var prom = kb.ws.get_object({ workspace: proj,
-                                                      id: nar });
-                    $.when(prom).done(function(result) {
-                        var narrative = result
-                        narrative.type = 'KBaseNarrative.Narrative'
-                        narrative.data.metadata.ws_name = proj;
-                        narrative.name = new_name; 
-                        narrative.data.metadata.name = new_name; 
-                        narrative.data.metadata.creator = USER_ID;
-                                        delete narrative.metadata
-
-                        var p = kb.ws.save_objects({workspace: proj, id: nar, objects: [narrative]})
-                        $.when(p).done(function(d) {
-                            console.log('done renaming', d)
-                        })
-                    })
-
+                function renameNarrative(proj, nar, new_name) {
+                    return kb.ws.rename_object({obj: {workspace: proj, name: nar}, new_name: new_name})
                 }
 
 

@@ -1240,8 +1240,7 @@ angular.module('ws-directives')
                         open.click(function() {
                             var fileName = id+'.'+data[4]+'.json';
                             var jsonWindow = window.open(fileName,"_blank");
-                            jsonWindow.document.write('loading...  This may take several seconds or minutes\
-                                                     depending on object size.');
+                            jsonWindow.document.write('loading...  This may take several seconds or minutes.');
                             var prom = kb.ws.get_objects([{workspace: ws, name:id}])
                             $.when(prom).done(function(json) {
                                 jsonWindow.document.body.innerHTML = ''

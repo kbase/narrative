@@ -611,6 +611,12 @@ div::-webkit-scrollbar-thumb {
 .nav-sidebar > li > a {
     padding: 7px 15px;
 }
+
+.btn-favorite, 
+.btn-rm-panel {
+    font-size: 1.3em;
+}
+
 /*
 .favorite-count {
     background-color: #428bca;

@@ -32,22 +32,25 @@ $.KBWidget({
 
         var drag = options.drag;
 
-        var container = $('<div class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <span class="panel-title"></span>'+
-                                    '<a class="favorite-star" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'+
-                                    (fav ? '<span class="pull-right glyphicon glyphicon-star"></span>'  :
-                                        '<span class="pull-right glyphicon glyphicon-star-empty"></span>')+
-                                    '</a><div class="panel-subtitle"></div>\
-                                </div>\
-                                <div class="panel-body"></div>\
-                           </div>');
+        var container = $('<div class="panel panel-default">'+
+                                '<div class="panel-heading">'+
+                                    '<span class="panel-title"></span>'+
+                                    '<a class="pull-right btn-rm-panel text-muted"><span class="glyphicon glyphicon-remove"></span></a>'+
+                                    '<a class="btn-favorite pull-right" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'+
+                                    (fav ? '<span class="glyphicon glyphicon-star"></span>'  :
+                                        '<span class="glyphicon glyphicon-star-empty"></span>')+
+                                    '</a>'+
+                                    '<div class="panel-subtitle"></div>'+
+                                '</div>'+
+                                '<div class="panel-body"></div>'+
+                           '</div>');
 
         var panel_header = container.find('.panel-heading');
         var panel_title = container.find('.panel-title');
         var panel_subtitle = container.find('.panel-subtitle');        
         var panel_body = container.find('.panel-body');
-        var fav_btn = container.find('.favorite-star');
+        var fav_btn = container.find('.btn-favorite');
+        var rm_panel_btn = container.find('.btn-rm-panel');        
 
         this.header = function(data) {
             if (data) panel_header.html(data);
@@ -162,7 +165,13 @@ $.KBWidget({
                 $('.favorite-count').text(parseInt($('.favorite-count').text())-1)
                 container.remove()
             }
+        })
 
+        // event for removing panel
+        rm_panel_btn.click(function() {
+            container.slideUp(400, function(){
+                $(this).remove();
+            })
         })
 
         // This is just a function for debugging purposes

@@ -156,14 +156,24 @@ $.KBWidget({
         fav_btn.find('span').click(function() {
             if (fav_btn.find('span').hasClass('glyphicon-star-empty')) {
                 console.log('adding favorite: ', ws, id, type, widget)
-                addFavorite(ws, id, type, widget);
-                self.toggleFavorite();
-                $('.favorite-count').text(parseInt($('.favorite-count').text())+1)                
+                $('.fav-loading').loading('');
+                var p = addFavorite(ws, id, type, widget);
+                $.when(p).done(function() {
+                    $('.fav-loading').rmLoading();
+                    self.toggleFavorite();
+                    $('.favorite-count').text(parseInt($('.favorite-count').text())+1) 
+                })       
             } else {
-                rmFavorite(ws, id, type, widget);
-                self.toggleFavorite();
-                $('.favorite-count').text(parseInt($('.favorite-count').text())-1)
-                container.remove()
+                $('.fav-loading').loading('');
+                var p = rmFavorite(ws, id, type, widget);
+                $.when(p).done(function(){
+                    $('.fav-loading').rmLoading();                    
+                    self.toggleFavorite();
+                    $('.favorite-count').text(parseInt($('.favorite-count').text())-1)
+                    container.slideUp(400, function(){
+                        $(this).remove();
+                    })
+                })
             }
         })
 

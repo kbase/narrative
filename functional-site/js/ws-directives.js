@@ -1236,12 +1236,15 @@ angular.module('ws-directives')
                         })
                         info_modal.data('dialogModal').find('.modal-footer .text-left').append(download);
 
-                        var open = $('<a class="open-obj pull-left">Open</a>')
+                        var open = $('<a class="open-obj pull-left">View JSON</a>')
                         open.click(function() {
                             var fileName = id+'.'+data[4]+'.json';
                             var jsonWindow = window.open(fileName,"_blank");
+                            jsonWindow.document.write('loading...  This may take several seconds or minutes\
+                                                     depending on object size.');
                             var prom = kb.ws.get_objects([{workspace: ws, name:id}])
                             $.when(prom).done(function(json) {
+                                jsonWindow.document.body.innerHTML = ''
                                 jsonWindow.document.write(JSON.stringify(json[0]));
                             })                            
                         })

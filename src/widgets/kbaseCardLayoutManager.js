@@ -38,6 +38,7 @@
         init: function(options) {
             this._super(options);
 
+            $.data(this.$elem[0], "KBaseCardLayoutManager", true);
             this.fbaClient = new fbaModelServices(this.fbaURL);
 
             $.ui.dialog.prototype._makeDraggable = function() {
@@ -65,11 +66,24 @@
             $(document).on("kbaseCardClosed", function(event, id) {
                 self.cardClosed(id);
             });
+            console.log(this.options);
 
             this.render();
             this.registerEvents();
             this.showInitialCards();
             return this;
+        },
+
+        reInit: function(options) {
+            console.log('reiniting card manager');
+            console.log(this.options);
+            for (var opt in options) {
+                this.options[opt] = options[opt];
+            }
+            console.log(this.options);
+            this.closeAllCards();
+            this.showInitialCards();
+
         },
 
         loggedInCallback: function(event, auth) {
@@ -1852,6 +1866,12 @@
             this.dbg(error);
         },
 
+        closeAllCards: function() {
+            for (var cardId in this.cards) {
+                this.cards[cardId].card.LandingPageCard("close");
+            }
+        },
+
         /**
          * When the manager is destroyed, it needs to:
          * 1. Close all cards.
@@ -1861,9 +1881,7 @@
          * That third one might be more appropriate to occur outside of this widget, but here it is for now.
          */
         destroy: function() {
-            for (var cardId in this.cards) {
-                this.cards[cardId].card.LandingPageCard("close");
-            }
+            this.closeAllCards();
 
             $(document).off("kbaseCardClosed");
             this.$elem.empty();

@@ -18,6 +18,7 @@
  *
 */
 
+var cardManager = undefined;
 
 var app = angular.module('landing-pages', 
     ['lp-directives', 'card-directives',
@@ -410,7 +411,7 @@ function get_selected_ws() {
 
 
 function removeCards() {
-    $(".ui-dialog").remove();    
+    //$(".ui-dialog").remove();    
     //$("#genomes").KBaseCardLayoutManager("destroy");
 }
 

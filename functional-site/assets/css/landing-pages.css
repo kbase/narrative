@@ -415,6 +415,7 @@ div::-webkit-scrollbar-thumb {
 }
 
 
+.drag-placeholder { height: 58px; border: 1px solid #6da8cf; background: #e0f7ff; }  
 
 /* custom checkboxes (prototyped) */
 .ncheck {
@@ -610,8 +611,13 @@ div::-webkit-scrollbar-thumb {
 .nav-sidebar > li > a {
     padding: 7px 15px;
 }
-
-
+/*
+.favorite-count {
+    background-color: #428bca;
+}
+.active .favorite-count {
+    background-color: #2a6496;
+}*/
 .navbar-nav {
     color: #6DA8CF;
     font-family: 'RobotoBlack', Arial, sans-serif;

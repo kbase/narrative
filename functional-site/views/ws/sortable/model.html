@@ -1,35 +1,23 @@
 
-
-
-
-<head>
-  <meta charset="utf-8">
-  <title>jQuery UI Sortable - Default functionality</title>
-
-  <style>
-
-
-		.drag-placeholder { height: 58px; border: 1px solid #6da8cf; background: #e0f7ff; }  
-  </style>
-  <script>
+<script>
   $(function() {
-    $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
-  start: function() {
-    $(this).find('.panel-body').addClass('hide');
-    $(this).sortable('refreshPositions');
-  },
-  stop: function() {
-    $(this).find('.panel-body').removeClass('hide');
-  }
-   });
-    $( "#sortable-landing" ).disableSelection();
+      $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
+    start: function() {
+      $(this).find('.panel-body').addClass('hide');
+      $(this).sortable('refreshPositions');
+    },
+    stop: function() {
+      $(this).find('.panel-body').removeClass('hide');
+    }
+     });
+      $( "#sortable-landing" ).disableSelection();
   });
   </script>
 </head>
 <body>
  
 <ul id="sortable-landing">
-  <li class=""><div modeltabs></div></li>
-  <li class=""><div modelcore></div></li>
+  <li><div modeltabs></div></li>
+  <li><div modelcore></div></li>
 
 </ul>

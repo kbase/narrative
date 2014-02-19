@@ -34,7 +34,7 @@ function KBCacheClient(token) {
     auth.token = token;
 
     if (configJSON.setup == 'dev') {
-        fba_url = configJSON.dev.fba_url;
+        fba_url = configJSON.dev.fba_url;{}
         ws_url = configJSON.dev.workspace_url;
         ujs_url = configJSON.dev.user_job_state_url;
     } else {

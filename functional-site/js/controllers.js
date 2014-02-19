@@ -253,6 +253,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 .controller('Favorites', function($scope, $stateParams) {
 
+
 })
 
 

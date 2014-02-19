@@ -374,6 +374,8 @@ configJSON = $.parseJSON( $.ajax({url: "config.json",
                              dataType: 'json'}).responseText )
 
 
+
+
 app.run(function ($rootScope, $state, $stateParams, $location) {
 
     var HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
@@ -400,8 +402,6 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     kb = new KBCacheClient(USER_TOKEN);
     kb.nar.ensure_home_project(USER_ID);
 
-    // Fixme, check before load
-    //if (typeof USER_ID == 'undefined') $rootScope.$apply($location.path( '/narrative/' ) );
 
     // global state object to store state
     state = new State();
@@ -409,7 +409,17 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     // Critical: used for navigation urls and highlighting
     $rootScope.$state = $state;
     $rootScope.$stateParams = $stateParams;
+
+    // if logged in, display favorite count in navbar
+    // create global favorites list (should be overwritten)
+    var prom = kb.ujs.get_state('favorites', 'queue', 0);
+    $.when(prom).done(function(queue) {
+        favorites = queue;
+        $('.favorite-count').text(queue.length);
+    });
 });
+
+
 
 
 /*

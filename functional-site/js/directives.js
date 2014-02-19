@@ -100,13 +100,17 @@ angular.module('lp-directives')
     .directive('modeltabs', function($location) {
         return {
             link: function(scope, element, attrs) {
+                var ws = scope.ws;
+                var id = scope.id;
                 var p = $(element).kbasePanel({title: 'Model Details', 
-                                               rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               rightLabel: ws ,
+                                               subText: id,
+                                               type: 'FBAModel', 
+                                               widget: 'modeltabs'});
                 p.loading();
 
                 var prom = kb.req('fba', 'get_models',
-                            {models: [scope.id], workspaces: [scope.ws]});
+                            {models: [id], workspaces: [ws]});
                 $.when(prom).done(function(data){
                     console.log('data for tabs', data )
                     $(p.body()).kbaseModelTabs({modelsData: data, api: kb.fba});
@@ -121,17 +125,21 @@ angular.module('lp-directives')
     .directive('modelcore', function($location) {
         return {
             link: function(scope, element, attrs) {
+                var ws = scope.ws;
+                var id = scope.id;
                 var p = $(element).kbasePanel({title: 'Core Metabolic Pathway', 
-                                               rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               rightLabel: ws,
+                                               subText: id, 
+                                               type: 'FBAModel', 
+                                               widget: 'modelcore'});
                 p.loading();
 
                 var prom = kb.req('fba', 'get_models',
-                            {models: [scope.id], workspaces: [scope.ws]})
+                            {models: [id], workspaces: [ws]})
                 $.when(prom).done(function(data) {
                     console.log('data', data)
-                    $(p.body()).kbaseModelCore({ids: [scope.id], 
-                                                workspaces : [scope.ws],
+                    $(p.body()).kbaseModelCore({ids: [id], 
+                                                workspaces : [ws],
                                                 modelsData: data});
                     $(document).on('coreRxnClick', function(e, data) {
                         var url = '/rxns/'+data.ids.join('&');
@@ -170,7 +178,8 @@ angular.module('lp-directives')
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'FBA Details', 
                                                rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               subText: scope.id,
+                                               widget: 'fbatabs'});
                 p.loading();
 
                 var prom = kb.req('fba', 'get_fbas',
@@ -194,7 +203,9 @@ angular.module('lp-directives')
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Core Metabolic Pathway', 
                                                rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               subText: scope.id, 
+                                               type: 'FBA', 
+                                               widget: 'fbacore'});
                 p.loading();
 
                 var prom1 = kb.req('fba', 'get_fbas',
@@ -228,7 +239,8 @@ angular.module('lp-directives')
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Media Details', 
                                                rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               subText: scope.id,
+                                               widget: 'mediadetail'});
                 p.loading();
 
                 var prom = kb.req('fba', 'get_media',

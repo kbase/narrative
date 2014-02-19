@@ -37,12 +37,24 @@
         <script src="assets/js/viz/raphael-min.js"></script>
         <!--<script src="assets/js/jquery.jscrollpane.min.js"></script>
         <script src="assets/js/jquery.mousewheel.js"></script>-->
-
         <!-- <script src="http://html5demos.com/h5utils.js"></script>-->
+
+	<!-- Google Analytics -->
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	  
+	  ga('create', 'UA-48256002-1', 'kbase.us');
+	  ga('send', 'pageview');
+	  
+	</script>
 
         <!-- KBase client library javascript -->
         <script src="assets/js/kbclient/kbase.js"></script>
         <script src="assets/js/kbclient/workspaceDeluxe1.1.js"></script>
+        <script src="assets/js/kbclient/userandjobstate.js"></script>        
         <!--<script src="assets/js/kbclient/projects.js"></script>        -->
         <script src="assets/js/kbclient/wikiScraper.js"></script>
 
@@ -150,7 +162,7 @@
         <link rel="stylesheet" type="text/css" href="assets/css/gwas.css" />
         <script src='../src/widgets/kbaseAuthenticatedWidget.js'></script>
         <!-- please don't load external scripts in index.html -->
-        <script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>
+        <!--<script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>-->
         <script src='../ext/gmaps/gmap3.js'></script>
         <script src="../src/widgets/gwas/kbaseGWASPop.js"></script>
         <script src="../src/widgets/gwas/kbaseGWASPopTable.js"></script>
@@ -229,7 +241,7 @@
 
         <script src="js/directives.js"></script>
         <script src="js/card-directives.js"></script>
-        <script src="js/mv-directives.js"></script>
+        <script src="js/fav-directives.js"></script>
         <script src="js/ws-directives.js"></script>           
         <script src="js/trees-directives.js"></script>        
 	    <script src="js/narrative-directives.js"></script>
@@ -271,10 +283,10 @@
                         <button class="btn" type="submit" style="background-color: #ebebeb; border-color: #adadad; border-left:none"><span class="glyphicon glyphicon-search" style="line-height: .9"></span></button>
                     </div>
                 </div>
-
-
-                
               </form>
+              <ul class="nav navbar-nav"> 
+                <li ng-class="{ active: $state.includes('favorites')}"><a href="#/favorites/all/">Favorites <span class="badge  favorite-count"></span></a></li>
+              </ul>
 
               <div id="signin-button" class="pull-right"></div>
               <ul class="nav navbar-nav pull-right">
@@ -288,12 +300,11 @@
         </div> <!-- end wrap, this pushes the footer down -->
         <div id="footer">
             <ul>
-
                 <li><a href="http://kbase.us/about/about/" target="_blank">About KBase</a></li>
                 <li><a href="http://kbase.us/for-users/user-home/" target="_blank">Documentation</a></li>
                 <li><a href="http://kbase.us/about/kbase-data-policy/" target="_blank">KBase Data Policy</a></li>
                 <li><a href="http://kbase.us/contact-us/" target="_blank">Contact Us</a></li>
-                                <li><a href="http://science.energy.gov/" target="_blank"><img class="center-block" src="./assets/images/doe_sc_logo.png" /></a></li>
+                <li><a href="http://science.energy.gov/" target="_blank"><img class="center-block" src="./assets/images/doe_sc_logo.png" /></a></li>
             </ul>
             
             <div class="disclaimer">This site is for demonstration purposes only.</div>

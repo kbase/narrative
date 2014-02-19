@@ -34,18 +34,22 @@ function KBCacheClient(token) {
     auth.token = token;
 
     if (configJSON.setup == 'dev') {
-        fba_url = configJSON.dev.fba_url;
+        fba_url = configJSON.dev.fba_url;{}
         ws_url = configJSON.dev.workspace_url;
+        ujs_url = configJSON.dev.user_job_state_url;
     } else {
         fba_url = configJSON.prod.fba_url;
         ws_url = configJSON.prod.workspace_url;
+        ujs_url = configJSON.prod.user_job_state_url;
     }
 
-    console.log('FBA URL is:', fba_url)
-    console.log('Workspace URL is:', ws_url)
+    console.log('FBA URL is:', fba_url);
+    console.log('Workspace URL is:', ws_url);
+    console.log('User Job State URL is:', ujs_url);
 
     var fba = new fbaModelServices(fba_url);
     var kbws = new Workspace(ws_url, auth);
+    var ujs = new UserAndJobState(ujs_url, auth);
 
   
     var cache = new Cache();
@@ -55,7 +59,7 @@ function KBCacheClient(token) {
             // use whatever workspace server that was configured.
             // this makes it possible to use the production workspace server
             // with the fba server.   Fixme:  fix once production fba server is ready.
-            params.wsurl = ws_url;  
+            params.wsurl = ws_url;
         }
 
         // see if api call has already been made        
@@ -82,10 +86,10 @@ function KBCacheClient(token) {
     // make publically accessible methods that 
     this.fba = fba;
     this.ws = kbws;
+    this.ujs = ujs
 
     this.nar = new ProjectAPI(ws_url, token);
-    project = new ProjectAPI(ws_url, token);  // let's deprecate this. It'd be nice to avoid the
-                                              // global varriable in the future....
+
     this.token = token;
 }
 
@@ -832,20 +836,16 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-        //if ( legit_ws_id.test(p.narrative_id)) {
-            var nar = $.extend(true,{},empty_narrative);
-            nar.data.metadata.ws_name = p.project_id;
-            nar.name = p.narrative_id; 
-            nar.data.metadata.name = p.narrative_id; 
-            nar.data.metadata.creator = USER_ID;
+        var nar = $.extend(true,{},empty_narrative);
+        nar.data.metadata.ws_name = p.project_id;
+        nar.name = p.narrative_id; 
+        nar.data.metadata.name = p.narrative_id; 
+        nar.data.metadata.creator = USER_ID;
 
-            var ws_fn = ws_client.save_objects( {workspace: p.project_id, objects: [nar]});
-            return $.when( ws_fn ).then( function(obj_meta) {
-                          return obj_meta_dict(obj_meta);
-                      });
-        //} else {
-        //    console.error( "Bad narrative_id");
-        //}
+        var ws_fn = ws_client.save_objects( {workspace: p.project_id, objects: [nar]});
+        return $.when( ws_fn ).then( function(obj_meta) {
+                      return obj_meta_dict(obj_meta);
+                  });
     };
 
 }

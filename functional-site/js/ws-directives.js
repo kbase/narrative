@@ -285,7 +285,8 @@ angular.module('ws-directives')
                     // modal for managing workspace permissions, clone, and delete
                     var permData; 
                     var manage_modal = $('<div></div>').kbasePrompt({
-                            title : 'Manage Workspace <a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>',
+                            title : 'Manage Workspace '+
+                                (USER_ID ? '<a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>' : ''),
                             body : content,
                             modalClass : '', 
                             controls : [{
@@ -958,11 +959,11 @@ angular.module('ws-directives')
                         var ws = $(this).data('ws');
 
                         if (type == 'Genome') {
-                            scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/genomes/'+ws+'/'+id) );
                         } else if (type == 'FBAModel') {
-                            scope.$apply( $location.path('/models/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/models/'+ws+'/'+id) );
                         } else if (type == 'FBA') {
-                            scope.$apply( $location.path('/fbas/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/fbas/'+ws+'/'+id) );
                         } else if (type == 'Media') {
                             scope.$apply( $location.path('/media/'+ws+'/'+id) );
                         } else if (type == 'Cmonkey') {
@@ -1235,12 +1236,14 @@ angular.module('ws-directives')
                         })
                         info_modal.data('dialogModal').find('.modal-footer .text-left').append(download);
 
-                        var open = $('<a class="open-obj pull-left">Open</a>')
+                        var open = $('<a class="open-obj pull-left">View JSON</a>')
                         open.click(function() {
                             var fileName = id+'.'+data[4]+'.json';
                             var jsonWindow = window.open(fileName,"_blank");
+                            jsonWindow.document.write('loading...  This may take several seconds or minutes.');
                             var prom = kb.ws.get_objects([{workspace: ws, name:id}])
                             $.when(prom).done(function(json) {
+                                jsonWindow.document.body.innerHTML = ''
                                 jsonWindow.document.write(JSON.stringify(json[0]));
                             })                            
                         })

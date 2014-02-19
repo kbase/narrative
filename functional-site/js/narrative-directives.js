@@ -191,14 +191,16 @@ angular.module('narrative-directives')
                             var nar_id = nar[1];
                             var proj = nar[7]; // projects are workspaces right now
 
-                            nar_dict.id = '<a href="'+scope.nar_url+'/ws.'
+                            nar_dict.id = '<a class="nar-link" data-owner="'+nar_dict.owner
+                                            +'" data-proj="'+proj+'" data-nar="'+nar_id+'" href="'+scope.nar_url+'/ws.'
                                         +nar[6]+'.obj.'+nar[0]+'" >'+nar_id+'</a>';
+
                             // projects are workspaces right now
                             nar_dict.owner = nar[5];
                             nar_dict.project = '<span class="proj-link" data-owner="'+nar_dict.owner
-                                            +'" data-proj="'+proj+'"><span class="caret"></span>\
-                                             Project <b>'+parse_name(proj)+'</b></span> - Owner: '+ 
-                                             (nar_dict.owner == USER_ID ? 'Me' : nar_dict.owner);                            
+                                            +'" data-proj="'+proj+'" ><span class="caret"></span>\
+                                             Project <b>'+parse_name(proj)+'</b> - ' + 
+                                             (nar_dict.owner == USER_ID ? 'Me' : nar_dict.owner)+'</span>'; 
 
 
                             var tstamp = getTimestamp(nar[3]);
@@ -214,8 +216,8 @@ angular.module('narrative-directives')
 
 
                             //nar.moddate = nar.moddate
-                            nar_dict.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" \
-                                                class="glyphicon glyphicon-trash btn-delete-narrative"></span>';
+                            //nar_dict.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" \
+                            //                    class="glyphicon glyphicon-trash btn-delete-narrative"></span>';
 
                             narratives.push(nar_dict);
                             nar_projs.push(proj);
@@ -229,9 +231,9 @@ angular.module('narrative-directives')
                                 //empty_projects.push(proj_ids[i])
                                 narratives.push({project: '<span class="proj-link" data-owner="'+nar_dict.owner+'" data-proj="'+proj_ids[i]+'">\
                                                             <span class="caret"></span> Project <b>'+parse_name(proj_ids[i])+'</b>\
-                                                           </span> - Owner: '+(proj_dict[proj_ids[i]][5] == USER_ID ? 'Me' : proj_dict[proj_ids[i]][5]),
+                                                           </span> - '+(proj_dict[proj_ids[i]][5] == USER_ID ? 'Me' : proj_dict[proj_ids[i]][5]),
                                                 id: '<span class="text-muted">Empty Project</span>', 
-                                                owner: proj_dict[proj_ids[i]], moddate: '', deleteButton: '',
+                                                owner: proj_dict[proj_ids[i]], moddate: '', //deleteButton: '',
                                                 timestamp: '', sharedwith: (isSharedWith(proj, nar_dict.owner) ? 'Yes' : 'No' )   })
                             }
                         }
@@ -309,10 +311,10 @@ angular.module('narrative-directives')
                               { "sTitle": "Owner", "mData": "owner", bVisible: false},
                               { "sTitle": "Project", "mData": "project"},  // grouped by this column
                               //{ "sTitle": "Shared With", "mData": "users", 'bVisible': false},
-                              { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 5},
+                              { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 4, 'sWidth': '30%'},
 
-                              (USER_ID ? { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'} :
-                                    { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'bVisible': false}),
+                              //(USER_ID ? { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'} :
+                              //      { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'bVisible': false}),
 
                               { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}, 
                               { "sTitle": "Shared with me", "mData": "sharedwith", "bVisible": false}  
@@ -346,7 +348,6 @@ angular.module('narrative-directives')
                                                   </div>');
                             table.fnFilter(USER_ID, 1);                            
 
-
                         }
 
                         new FixedHeader( table , {offsetTop: 50, "zTop": 1000});    
@@ -359,8 +360,8 @@ angular.module('narrative-directives')
 
 
                 function events() {
-                    // adding buttons to project header
 
+                    // adding buttons to project header
                     $('.group-item-expander').each(function() {
                         var self = this;
                         var proj_link = $(this).find('.proj-link')
@@ -408,16 +409,17 @@ angular.module('narrative-directives')
 
                     $('.filter-sharedwithme').unbind('click');
                     $('.filter-sharedwithme').click(function(e) {
+                        var own_filter = $('.filter-owner')
                         if (this.checked) {
-                            $('.filter-owner').parent().addClass('text-muted')
-                            $('.filter-owner').attr('checked', false)
-                            $('.filter-owner').attr('disabled', true);
+                            own_filter.parent().addClass('text-muted');
+                            own_filter.attr('checked', false);
+                            own_filter.attr('disabled', true);
                             table.fnFilter('', 1);
-                            table.fnFilter( 'Yes', 6);
+                            table.fnFilter( 'Yes', 5);
                         } else {  
-                            $('.filter-owner').parent().removeClass('text-muted')
-                            $('.filter-owner').attr('disabled', false);
-                            table.fnFilter('', 6);
+                            own_filter.parent().removeClass('text-muted');
+                            own_filter.attr('disabled', false);
+                            table.fnFilter('', 5);
                         }    
                     })                    
 
@@ -446,15 +448,110 @@ angular.module('narrative-directives')
                         manageProject(proj)
                     })
 
-      
-
                     // event for delete narrative button
-                    $('.btn-delete-narrative').unbind('click')
-                    $('.btn-delete-narrative').click(function(e){
-                        var proj = $(this).data('proj');
-                        var nar = $(this).data('nar');                        
-                        deleteNarrativeModal(proj, nar);
-                    })                    
+                    function delete_narrative_event() {
+                        $('.btn-delete-narrative').unbind('click')
+                        $('.btn-delete-narrative').click(function(e){
+                            //var proj = $(this).data('proj');
+                            //var nar = $(this).data('nar'); 
+                            var proj = $('.nar-selected .nar-link').data('proj');
+                            var nar = $('.nar-selected .nar-link').data('nar'); 
+
+                            deleteNarrativeModal(proj, nar);
+                        });
+                    }
+
+                    // event for rename narrative button
+                    function rename_narrative_event() {
+                        $('.btn-rename-narrative').unbind('click')
+                        $('.btn-rename-narrative').click(function(e){
+                            var link = $('.nar-selected .nar-link');
+                            var proj = link.data('proj');
+                            var nar = link.data('nar');
+
+                            // add editable input to table
+                            var input = $('<input type="text" class="form-control">');
+                            var form = $('<div class="col-sm-4 input-group input-group-sm"></div>');
+                            form.append(input);
+                            input.val(nar);
+                            input.parents('td').html(link);                            
+                            
+                            input.keypress(function (e) {
+                                if (e.which == 13) {
+                                    $(this).blur();
+                                }
+                            })
+
+                            // save new name when focus is lost or when key entered
+                            input.focusout(function() {
+                                var new_name = $(this).val();
+
+                                // if new name is actually new
+                                if (new_name != nar) {
+                                    var notice = $('<span>saving...</span>')
+                                    input.parents('td').html(notice);
+                                    console.log('calling api')
+                                    var p = renameNarrative(proj, nar, new_name);
+                                    $.when(p).done(function(data) {
+                                        //change link on page
+                                        link.data('nar', new_name)
+                                        link.html(new_name);
+                                        notice.parents('td').html(link);
+                                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                                           
+                                    }).fail(function(e){
+                                        notice.parents('td').html(link);
+                                        link.append(' <span class="text-danger">'+e.error.message+'</span>');
+                                        link.find('span').delay(2200).fadeOut(400, function(){
+                                            $(this).remove();
+                                        });
+                                    })
+                                } else {  // if didn't change name, replace link;
+                                    input.parents('td').html(link);
+                                }
+                            });
+
+
+
+
+                            $('.nar-selected .nar-link').parent().html(form);
+                            input.focus();  
+
+                        });
+                    }
+
+                    // event for clicking on narrative row (and brining up options)
+                    $('#project-table tr').unbind('click')
+                    $('#project-table tr').click(function(e){
+                        e.stopPropagation();
+                        var nar = $(this).find('.nar-link').data('nar'); 
+
+                        // don't do anything for empty projects (no narratives) or group expander
+                        // I'm proud of this one :)
+                        if (!nar) return;
+
+                        $('#project-table tr').removeClass('nar-selected');
+                        $(this).addClass('nar-selected');
+
+                        $('.fixedHeader').html('');
+                        var ele = '<div class="narrative-options">'+(nar ? nar : '')+
+                                        ' <a class="btn-rename-narrative"><span class="glyphicon glyphicon-edit"></span> Rename</a> \
+                                          <a class="btn-delete-narrative"><span class="glyphicon glyphicon-trash"></span> Delete</a>\
+                                   </div>'
+                        var c = $('<div class="narrative-options-container">');
+                        c.append(ele)
+                        $('.fixedHeader').append(c);
+                        delete_narrative_event();
+                        rename_narrative_event();
+                    })
+
+                    // event for putting fixed header back on page
+                    //    this special event uses .row since that container should be 
+                    //    replaced via angular when view changes
+                    $('.row').unbind('click');
+                    $('.row').click(function() {
+                        $('#project-table tr').removeClass('nar-selected');
+                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                            
+                    })
                 }
 
 
@@ -608,17 +705,7 @@ angular.module('narrative-directives')
                                         });
 
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);     
-
-                                        //redirect to the narrative page
-                                        //var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
-                                        //window.location.href = "http://narrative.kbase.us/"+proj_id+"."+name;
                                     })
-
-
-                                    // fixme: use promise!
-                                    //.fail(function(e) {
-                                    //    $prompt.addCover(e.error.message, 'danger');                                            
-                                    //})
                                 }
                             }]
                         }
@@ -675,6 +762,9 @@ angular.module('narrative-directives')
                     deleteModal.addAlert('<strong>Warning</strong> this narrative will be deleted!');
                 }
 
+                function renameNarrative(proj, nar, new_name) {
+                    return kb.ws.rename_object({obj: {workspace: proj, name: nar}, new_name: new_name})
+                }
 
 
                 function deleteProject(proj_name) {

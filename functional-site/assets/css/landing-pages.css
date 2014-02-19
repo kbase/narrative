@@ -128,7 +128,9 @@ rect:hover {
     padding-left: 8px;
 }
 
-
+.label {
+    line-height: 1;
+}
 
 /* KBase navigation bar */
 .navbar-kbase {
@@ -194,6 +196,10 @@ table {
 #core-model { 
     overflow-x: auto; 
 }
+/* for adjusting height on drag */
+/*.panel-body div {
+    height: inherit;
+}*/
 
 
 /* mv */
@@ -225,7 +231,8 @@ table {
 
 
 #select-box tr td{
-    padding: 6px;
+    padding: 7px;
+
 }
 
 /*#select-box tr :hover {
@@ -295,6 +302,7 @@ div::-webkit-scrollbar-thumb {
     margin: 10px 0 0 0;
 }
 
+
 .select-ws .badge {
     margin: 0 4px 0 0 ;
 }
@@ -346,6 +354,36 @@ div::-webkit-scrollbar-thumb {
     border-radius: 3px;
 }
 
+
+#sortable-landing {
+    padding: 0;
+    list-style: none;
+}
+#sortable-landing li {
+    padding: 0;
+    list-style: none;
+}
+
+.narrative-options-container {
+    border-bottom: 1px solid #ccc;
+}
+.narrative-options {
+    margin: 20px 0 0 10px;
+}
+
+.narrative-options a { 
+    margin: 0 20px 0 20px;
+}
+.narrative-options .glyphicon { 
+    color: #444;
+}
+.narrative-options a:hover {
+    opacity: 0.7;    
+}
+
+
+
+
 .object-options .btn {
     height: 34px; /* make all buttons equal height */
 }
@@ -377,6 +415,12 @@ div::-webkit-scrollbar-thumb {
 }
 
 
+.drag-placeholder { 
+    height: 58px;
+    border: 1px solid #6da8cf;
+    background: #e0f7ff;
+    margin: 0 0 20px 0;
+}  
 
 /* custom checkboxes (prototyped) */
 .ncheck {
@@ -445,12 +489,20 @@ div::-webkit-scrollbar-thumb {
     margin: 0;
 }
 
+#project-table td {
+    border-width: 1px 0 0 0;
+    border-color: #eee;
+}
+
 .group-item-expander {
-    background: #f2f2f2; /*#d6eaff;*/
-    /*padding: 4px 2px 2px 2px !important; */
+    border-bottom: 1px solid #ddd !important;
+    border-top: 1px solid #ddd !important;    
+    background: #f8f8f8; /*#d6eaff;*/
+    padding: 8px 10px 0 10px !important;
+    /*margin: 10px 2px 0px 2px !important; */
 }
 .group-item-expander:hover {
-    background: #f2f2f2 !important; /* override boostrap hover */
+    background: #f8f8f8 !important; /* override boostrap hover */
 }
 
 .group-item-expander:hover {
@@ -459,16 +511,27 @@ div::-webkit-scrollbar-thumb {
 }
 
 
+.nar-selected, 
+.table-hover .nar-selected:hover > td { /* override boostrap hover */
+    background-color: #e0f7ff !important; 
+}
+.table-hover > tbody > tr:hover > td, 
+.table-hover > tbody > tr:hover > th {
+    background-color: #f9ffff ;
+}
+
+.proj-opts {
+    margin: 0 0 8px 0;
+}
+
 .btn-new-narrative {
-    margin: 0 20px 0 0;
+    margin: 0 20px 0px 0;
 }
 .btn-delete-narrative {
     cursor: hand;
     cursor: pointer;
 }
-.btn-delete-narrative:hover {
-    opacity: 0.7;    
-}
+
 /* changing z index for datatable fixed header */
 .navbar-fixed-top {
     z-index: 500;
@@ -554,7 +617,19 @@ div::-webkit-scrollbar-thumb {
     padding: 7px 15px;
 }
 
+.btn-favorite, 
+.btn-rm-panel {
+    margin: -5px 0 0 0; /* adjust for container margin */
+    font-size: 1.3em;
+}
 
+/*
+.favorite-count {
+    background-color: #428bca;
+}
+.active .favorite-count {
+    background-color: #2a6496;
+}*/
 .navbar-nav {
     color: #6DA8CF;
     font-family: 'RobotoBlack', Arial, sans-serif;
@@ -639,6 +714,7 @@ div::-webkit-scrollbar-thumb {
     position: fixed;
     bottom: 0;
     width: 100%;
+    z-index: 1000;
 }
 
 

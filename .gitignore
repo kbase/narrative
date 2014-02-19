@@ -7,3 +7,4 @@ dist/docs
 .externalToolBuilders/
 .settings/
 /nbproject/private/
+functional-site/assets/data/maps

@@ -77,6 +77,10 @@ angular.module('ws-directives')
                         var owned_ws = [];
                         for (var i in data) {
                             var ws = data[i];
+
+                            //quick fix to hide search workspaces
+                            if (ws[1]== "kbasesearch") continue;  
+
                             var user = ws[1];
                             var perm = ws[4];
 
@@ -281,7 +285,8 @@ angular.module('ws-directives')
                     // modal for managing workspace permissions, clone, and delete
                     var permData; 
                     var manage_modal = $('<div></div>').kbasePrompt({
-                            title : 'Manage Workspace <a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>',
+                            title : 'Manage Workspace '+
+                                (USER_ID ? '<a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>' : ''),
                             body : content,
                             modalClass : '', 
                             controls : [{
@@ -360,11 +365,6 @@ angular.module('ws-directives')
                         d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
                         modal_body.prepend(d);
 
-                        var save_disabled = true;
-
-                        // add btn that allows the user to edit any content
-//                        modal_body.prepend('')
-
                         $('.btn-edit').click(function(){
                             if ($('#ws-description textarea').length > 0) {
                                 $('#ws-description').html(descript);
@@ -374,7 +374,7 @@ angular.module('ws-directives')
                                 var editable = getEditableDescription(descript);
                                 $('#ws-description').html(editable);
                                 $(this).text('Cancel');
-                                save_btn.attr('disabled', false)                               
+                                save_btn.attr('disabled', false);
                             }
                         })
                     })
@@ -432,62 +432,7 @@ angular.module('ws-directives')
                     }
 
 
-                    function savePermissions(ws_name) {
-                        var newPerms = {};
-                        var table = $('.edit-perm-table');
-                        table.find('tr').each(function() {
-                            var user = $(this).find('.perm-user').val()
-                            var perm = $(this).find('option:selected').val();
-                            if (!user) return;
-                            
-                            newPerms[user] = perm
-                        })
 
-                        // create new permissions for each user that does not currently have 
-                        // permsissions.
-                        var promises = [];
-                        for (var new_user in newPerms) {
-                            // ignore these
-                            if (new_user == '*' || new_user == USER_ID) continue;   
-
-                            // if perms have not change, do not request change
-                            if ( (new_user in permData) && newPerms[new_user] == permData[new_user]) {
-                                continue;
-                            }
-
-
-                            var params = {
-                                workspace: ws_name,
-                                new_permission: newPerms[new_user],
-                                users: [new_user],
-                            };
-
-                            var p = kb.ws.set_permissions(params);
-                            promises.push(p);
-                        };
-
-                        var rm_users = [];
-
-                        // if user was removed from user list, change permission to 'n'
-                        for (var user in permData) {
-                            if (user == '*' || user == USER_ID) continue;                            
-
-                            if ( !(user in newPerms) ) {
-
-                                var params = {
-                                    workspace: ws_name,
-                                    new_permission: 'n',
-                                    users: [user],
-                                };
-
-                                var p = kb.ws.set_permissions(params);
-                                promises.push(p);
-                                rm_users.push(user)
-                            } 
-                        }
-
-                        return $.when.apply($, promises);
-                    }
 
                     function getEditableDescription(d) {
                         var d = $('<form role="form">\
@@ -496,9 +441,7 @@ angular.module('ws-directives')
                                   </div>\
                                   </form>');
                         return d;
-
                     }
-
 
                     //table for displaying user permissions
                     function getPermTable(data) {
@@ -844,7 +787,7 @@ angular.module('ws-directives')
                         "fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
                       "aoColumns": [
-                          { "sTitle": ""},
+                          (USER_ID ? { "sTitle": "", bSortable: false} : { "sTitle": "", bVisible: false}),
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type", "sWidth": "20%"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
@@ -986,7 +929,7 @@ angular.module('ws-directives')
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
 
-                        var match = ( type.split('-')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) 
+                        var match = ( type.split('-')[0].match(/^(Genome|FBAModel|Media|FBA|Annotation|Cmonkey)$/) 
                                         !== null ? true : false);
 
                         if (match) {
@@ -1016,11 +959,11 @@ angular.module('ws-directives')
                         var ws = $(this).data('ws');
 
                         if (type == 'Genome') {
-                            scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
-                        } else if (type == 'Model') {
-                            scope.$apply( $location.path('/models/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/genomes/'+ws+'/'+id) );
+                        } else if (type == 'FBAModel') {
+                            scope.$apply( $location.path('/ws/models/'+ws+'/'+id) );
                         } else if (type == 'FBA') {
-                            scope.$apply( $location.path('/fbas/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/fbas/'+ws+'/'+id) );
                         } else if (type == 'Media') {
                             scope.$apply( $location.path('/media/'+ws+'/'+id) );
                         } else if (type == 'Cmonkey') {
@@ -1195,7 +1138,7 @@ angular.module('ws-directives')
                                         <li><a class="btn-cp-obj">Copy</a></li>\
                                     </ul></div>');
                     // if user has narrative home workspace, add option to copy there
-                    if (scope.workspace_dict[USER_ID+'_home']) {
+                    if (scope.workspace_dict[USER_ID+':home']) {
                         var dd = options.find('.dropdown-menu')
                         dd.append('<li class="divider"></li>');
                         dd.append('<li><a class="btn-mv-obj-to-nar">Copy to Narrative Home</a></li>');
@@ -1293,12 +1236,14 @@ angular.module('ws-directives')
                         })
                         info_modal.data('dialogModal').find('.modal-footer .text-left').append(download);
 
-                        var open = $('<a class="open-obj pull-left">Open</a>')
+                        var open = $('<a class="open-obj pull-left">View JSON</a>')
                         open.click(function() {
                             var fileName = id+'.'+data[4]+'.json';
                             var jsonWindow = window.open(fileName,"_blank");
+                            jsonWindow.document.write('loading...  This may take several seconds or minutes.');
                             var prom = kb.ws.get_objects([{workspace: ws, name:id}])
                             $.when(prom).done(function(json) {
+                                jsonWindow.document.body.innerHTML = ''
                                 jsonWindow.document.write(JSON.stringify(json[0]));
                             })                            
                         })
@@ -1321,7 +1266,7 @@ angular.module('ws-directives')
                         //"fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
                       "aoColumns": [
-                          { "sTitle": ""},
+                          { "sTitle": "", bSortable: false},
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type", "sWidth": "20%"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
@@ -1428,7 +1373,7 @@ angular.module('ws-directives')
 
 
                 function copyObjectsToNarrative() {
-                    confirmCopy(USER_ID+'_home');
+                    confirmCopy(USER_ID+':home');
                 }
 
 
@@ -1474,15 +1419,21 @@ angular.module('ws-directives')
                         }
                     );
                     confirmCopy.openPrompt();
-                }                
-
+                } 
             }
 
         };
     })
 
 
-
+function getEditableDescription(d) {
+    var d = $('<form role="form">\
+               <div class="form-group">\
+                <textarea rows="4" class="form-control" placeholder="Description">'+d+'</textarea>\
+              </div>\
+              </form>');
+    return d;
+}
 
 function parse_name(name) {
     if (name.indexOf(USER_ID+':') != -1) {
@@ -1491,6 +1442,8 @@ function parse_name(name) {
         return name;
     }
 }
+
+
 
 
 

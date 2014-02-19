@@ -18,10 +18,11 @@
  *
 */
 
+var cardManager = undefined;
 
 var app = angular.module('landing-pages', 
     ['lp-directives', 'card-directives',
-     'mv-directives', 'trees-directives', 
+     'trees-directives', 'fav-directives',
      'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin', 'FeedLoad', 'ui.bootstrap'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
@@ -57,27 +58,49 @@ var app = angular.module('landing-pages',
           url: "objtable/:ws",
           templateUrl: 'views/ws/objtable.html',
           controller: 'WorkspaceBrowser'
+        }).state('ws.models', {
+          url: "models/:ws/:id",
+          templateUrl: 'views/ws/sortable/model.html',
+          controller: 'WorkspaceBrowserLanding'
+        }).state('ws.fbas', {
+          url: "fbas/:ws/:id",
+          templateUrl: 'views/ws/sortable/fba.html',
+          controller: 'WorkspaceBrowserLanding'
+        }).state('ws.genomes', {
+          url: "genomes/:ws/:id",
+          templateUrl: 'views/ws/sortable/genome.html',
+          controller: 'WorkspaceBrowserLanding'
         })
 
 
+    $stateProvider
+        .state('favorites', {
+          url: "/favorites/",
+          templateUrl: 'views/ws/favorites.html',
+          controller: 'Favorites'
+        }).state('favorites.all', {
+          url: "all/",
+          templateUrl: 'views/ws/favorites.all.html',
+          controller: 'Favorites'
+        })
+
+    /*
     $stateProvider
         .state('mv', {
           url: "/mv/",
           templateUrl: 'views/mv/mv.html',
           controller: 'ModelViewer'
         })   
-        
         .state('mv.objtable', {
           url: "objtable/?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
           controller: 'ModelViewer'
         })
-        /*
         .state('mv.objtable.selectedobjs', {
           url: "?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
           controller: 'ModelViewer'
-        })*/       
+        })
         .state('mv.core', {
             url: "core/?ws&ids",
             templateUrl: 'views/mv/core.html',
@@ -92,7 +115,8 @@ var app = angular.module('landing-pages',
             url: "tree/?ws&ids",
             templateUrl: 'views/mv/tree.html',
             controller: 'ModelViewer'
-        })        
+        })
+    */   
 
     $stateProvider
         .state('trees', {
@@ -354,6 +378,8 @@ configJSON = $.parseJSON( $.ajax({url: "config.json",
                              dataType: 'json'}).responseText )
 
 
+
+
 app.run(function ($rootScope, $state, $stateParams, $location) {
 
     var HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
@@ -380,8 +406,6 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     kb = new KBCacheClient(USER_TOKEN);
     kb.nar.ensure_home_project(USER_ID);
 
-    // Fixme, check before load
-    //if (typeof USER_ID == 'undefined') $rootScope.$apply($location.path( '/narrative/' ) );
 
     // global state object to store state
     state = new State();
@@ -389,7 +413,17 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     // Critical: used for navigation urls and highlighting
     $rootScope.$state = $state;
     $rootScope.$stateParams = $stateParams;
+
+    // if logged in, display favorite count in navbar
+    // create global favorites list (should be overwritten)
+    var prom = kb.ujs.get_state('favorites', 'queue', 0);
+    $.when(prom).done(function(queue) {
+        favorites = queue;
+        $('.favorite-count').text(queue.length);
+    });
 });
+
+
 
 
 /*
@@ -410,8 +444,8 @@ function get_selected_ws() {
 
 
 function removeCards() {
-    $(".ui-dialog").remove();    
-    //$("#genomes").KBaseCardLayoutManager("destroy");
+    if (cardManager)
+        cardManager.closeAllCards();
 }
 
 

@@ -285,7 +285,8 @@ angular.module('ws-directives')
                     // modal for managing workspace permissions, clone, and delete
                     var permData; 
                     var manage_modal = $('<div></div>').kbasePrompt({
-                            title : 'Manage Workspace <a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>',
+                            title : 'Manage Workspace '+
+                                (USER_ID ? '<a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>' : ''),
                             body : content,
                             modalClass : '', 
                             controls : [{

@@ -8,6 +8,8 @@ import time
 import json
 import os
 
+from functools import wraps
+
 from thrift import Thrift
 from thrift.transport import TSocket, TSSLSocket
 from thrift.transport import TTransport
@@ -41,60 +43,27 @@ init_service(name = NAME, desc="Variation and Expression service", version = VER
 
 clients = {}
 
-def userFromToken(token):
-    un,user = token.strip().split('|')[0].split('=')
-    if not un == "un" or user == "":
-        raise Exception, "Token is not in correct form"
-    return user
     
-def openClientConnection(client_class, url):
-    transport = TSSLSocket.TSSLSocket(url.host, url.port,validate=False)
-    transport = TTransport.TBufferedTransport(transport)
-
-    protocol = TBinaryProtocol.TBinaryProtocol(transport)
-
-    client = client_class(protocol)
-
-    transport.open()
-
-    clients[client] = transport
-    return client
+##
+##Decorators for control logic
+##
 
     
-def openDataClientConnection():
-    return openClientConnection(CLIENT_CLASSES["data"],URLS["data"])
-
-def openComputeClientConnection():
-    return openClientConnection(CLIENT_CLASSES["compute"],URLS["compute"])
-
-def closeClientConnection(client):
-    clients[client].close()
-    del clients[client]
+def dataClient(func):
+    '''decorator for data client,
+    opens data client connection and passes
+    it to the func'''
+    return lambda : clientWrap("data",func)
 
 def computeClient(func):
     '''decorator for compute client,
     opens compute client connection and passes
     it to the func'''
-    def wrap():
-        client = openComputeClientConnection()
-        d = func(client)
-        closeClientConnection(client)
-        return d
-    return wrap
+    return lambda : clientWrap("compute",func)
 
-def dataClient(func):
-    '''decorator for data client,
-    opens data client connection and passes
-    it to the func'''
-    def wrap():
-        client = openDataClientConnection()
-        d = func(client)
-        closeClientConnection(client)
-        return d
-    return wrap
-    
 def poller(pollfunc):
     '''decorator for polling logic'''
+    @wraps(pollfunc)
     def polret(job_id, auth):
         status = False
         while not status:
@@ -102,6 +71,11 @@ def poller(pollfunc):
             status = pollfunc(job_id, auth)
         return status
     return polret
+
+
+##
+##Utility functions
+##
 
 @poller
 def pollHadoopJob(job_id, auth):
@@ -154,8 +128,62 @@ def runStep(step, auth, poll_func=None):
 
     return {"output" : str(status), "error": json_error}
 
+
+def userFromToken(token):
+    un,user = token.strip().split('|')[0].split('=')
+    if not un == "un" or user == "":
+        raise Exception, "Token is not in correct form"
+    return user
+
+def openClientConnection(client_class, url):
+    transport = TSSLSocket.TSSLSocket(url.host, url.port,validate=False)
+    transport = TTransport.TBufferedTransport(transport)
+
+    protocol = TBinaryProtocol.TBinaryProtocol(transport)
+
+    client = client_class(protocol)
+
+    transport.open()
+
+    clients[client] = transport
+    return client
     
-    
+def openDataClientConnection():
+    return openClientConnection(CLIENT_CLASSES["data"],URLS["data"])
+
+def openComputeClientConnection():
+    return openClientConnection(CLIENT_CLASSES["compute"],URLS["compute"])
+
+def closeClientConnection(client):
+    clients[client].close()
+    del clients[client]
+
+def clientWrap(client_type, func):
+    if client_type =="compute":
+        client= openComputeClientConnection()
+    elif client_type == "data":
+        client = openDataClientConnection()
+    else:
+        raise Exception, "Unknown Client Type"
+    d = func(client)
+    closeClientConnection(client)
+    return d
+
+def runPipeline(stages,meth,auth):
+    '''Runs pipeline stages'''
+    meth.stages = len(stages)
+    for stage in stages:
+        meth.advance(stage.name)
+        stat = runStep(stage.func,auth,stage.poll)
+        if not stat["error"] == None:
+            return json.dumps(stat)
+    return json.dumps(stat)
+
+
+##
+##Narrative Functions that will be displayed
+##
+
 @method(name = "Calculate Variatons")
 def jnomics_calculate_variations(meth, Input_file_path=None,
                                  Input_organism=None,
@@ -208,20 +236,15 @@ def jnomics_calculate_variations(meth, Input_file_path=None,
               Stage(runMerge,"Merging Output",None),
               Stage(writeShock,"Uploading Output To Shock",pollGridJob)]
 
-    meth.stages = len(stages)
-    for stage in stages:
-        meth.advance(stage.name)
-        stat = runStep(stage.func,auth,stage.poll)
-        if not stat["error"] == None:
-            return json.dumps(stat)
-    return json.dumps(stat)
+    return runPipeline(stages,meth,auth)
+    
         
 
 @method(name = "Calculate Gene Expression")
-def jnomics_calculate_variations(meth, Input_file_path=None,
+def jnomics_calculate_expression(meth, Input_file_path=None,
                                  Input_organism=None,
                                  Output_file_path=None):
-    """Calculate variations
+    """Calculate Expression
 
     :param Input_file_path: Input to the raw sequencing data
     :type Input_file_path: kbtypes.Unicode
@@ -252,12 +275,6 @@ def jnomics_calculate_variations(meth, Input_file_path=None,
     stages = [Stage(runTophat, "Aligning Reads with Tophat", pollGridJob),
               Stage(runCufflinks, "Calculating Expression with Cufflinks", pollGridJob)]
 
-    meth.stages = len(stages)
-    for stage in stages:
-        meth.advance(stage.name)
-        stat = runStep(stage.func, auth, stage.poll)
-        if not stat["error"] == None:
-            return json.dumps(stat)
-    return json.dumps(stat)
-
+    return runPipeline(stages,meth,auth)
+    
 finalize_service()

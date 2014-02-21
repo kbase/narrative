@@ -355,6 +355,16 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 })
 
+.controller('Search', function($scope, $stateParams, $state) {
+
+    $scope.query = $stateParams.q;
+
+    $scope.startSearch = function (searchquery) {
+        $state.transitionTo('search', {q: searchquery})
+    };
+})
+
+
 /*
 .controller('CopyNarrativeModalCtrl', function ($scope, $modalInstance) {
 // controller for the modals to copy a featured narrative 
@@ -368,17 +378,10 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 */
 .controller('NarrativeProjects', function($scope, $stateParams) {
+
 })
 
 
-/* controller for the search box */
-var SearchController = function ($scope, $location) {
-
-    // callback for ng-click search:
-    $scope.startSearch = function (searchquery) {
-        window.location.replace("#search?" + searchquery);          
-    };
-};
 
 
 /* controller for the copy narrative modal */

@@ -38,6 +38,13 @@ var app = angular.module('landing-pages',
         })
 
     $stateProvider
+        .state('search', {
+          url: "/search/?q",
+          templateUrl: 'views/search/search.html',
+          controller: 'Search'
+        })
+
+    $stateProvider
         .state('narrative', {
           url: "/narrative/",
           templateUrl: 'views/narrative/home.html',

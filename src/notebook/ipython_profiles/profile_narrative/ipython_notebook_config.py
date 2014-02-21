@@ -19,7 +19,7 @@ c.NotebookApp.notebook_manager_class="biokbase.narrative.kbasewsmanager.KBaseWSN
 # c.NotebookApp.profile = u'default'
 
 # The url for MathJax.js.
-c.NotebookApp.mathjax_url = '/static/mathjax/MathJax.js'
+c.NotebookApp.mathjax_url = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js'
 
 # The IP address the notebook server will listen on.
 # c.NotebookApp.ip = '127.0.0.1'

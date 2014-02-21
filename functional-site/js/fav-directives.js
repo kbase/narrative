@@ -12,9 +12,21 @@ angular.module('fav-directives', []);
 angular.module('fav-directives')
     .directive('favoritesidebar', function($location) {
         return {
-            template: '<div>Displaying All</div>',
+            template: '<div class="fav-filters">'+
+                          '<a data-type="all">Display All</a><br>'+
+                          '<a data-type="models">Genome</a><br>'+                          
+                          '<a data-type="models">Models</a><br><br>'+
+                          'options/filting are in the works.'+
+                      '</div>',
             link: function(scope, element, attrs) {
+                $('.fav-filters a').click(function() {
+                    console.log('click')
+                    $('.widget').show();                    
 
+                    var type = $(this).data('type');
+                    console.log(type)
+                    $('.widget-type-'+type).hide();
+                })
 
             }
         };
@@ -25,9 +37,10 @@ angular.module('fav-directives')
         return {
 
             link: function(scope, element, attrs, compile) {
+                // retrieve again
                 var prom = kb.ujs.get_state('favorites', 'queue', 0);
                 $.when(prom).done(function(data) {
-                    console.log(data)
+                    scope.favorites = data
                     showWidgets(data)
                 })
 
@@ -38,7 +51,7 @@ angular.module('fav-directives')
                         if (obj == null) continue;
                         scope.ws = obj.ws; 
                         scope.id = obj.id;
-                        var el = $compile( '<div '+obj.widget+' ></div>' )( scope ); 
+                        var el = $compile( '<div '+obj.widget+' class="widget widget-type-'+obj.type+'"></div>' )( scope ); 
                         $('#sortable-landing').append( el );
                     }
 

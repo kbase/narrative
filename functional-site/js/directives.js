@@ -238,6 +238,7 @@ angular.module('lp-directives')
         return {
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Media Details', 
+                                               type: 'Media',
                                                rightLabel: scope.ws,
                                                subText: scope.id,
                                                widget: 'mediadetail'});
@@ -290,6 +291,7 @@ angular.module('lp-directives')
         return {
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Genome Overview', 
+                                               type: 'Genome',
                                                rightLabel: scope.ws,
                                                subText: scope.id,
                                                widget: 'genomeoverview'});
@@ -302,7 +304,8 @@ angular.module('lp-directives')
     .directive('genomewiki', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                var p = $(element).kbasePanel({title: 'Genome Wiki', 
+                var p = $(element).kbasePanel({title: 'Genome Wiki',
+                                                type: 'Genome',
                                                rightLabel: scope.ws,
                                                subText: scope.id,
                                                widget: 'genomewiki'});

@@ -47,7 +47,7 @@ function KBCacheClient(token) {
     console.log('Workspace URL is:', ws_url);
     console.log('User Job State URL is:', ujs_url);
 
-    var fba = new fbaModelServices(fba_url);
+    var fba = new fbaModelServices(fba_url, auth);
     var kbws = new Workspace(ws_url, auth);
     var ujs = new UserAndJobState(ujs_url, auth);
 

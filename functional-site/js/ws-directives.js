@@ -270,7 +270,7 @@ angular.module('ws-directives')
                         ['Objects', '~ ' + settings[3] ],
                         ['Owner', settings[1] ],
                         ['Permission', perm_dict[settings[4]] ],
-                        ['Global Permission', perm_dict[settings[5]] ]
+                        //['Global Permission', perm_dict[settings[5]] ]
                     ];
                     for (var i=0; i<data.length; i++) {
                         var row = $('<tr>');
@@ -278,6 +278,12 @@ angular.module('ws-directives')
                                 + '<td class="manage-modal-value">' + data[i][1] + '</td>');
                         table.append(row);
                     }
+
+                    // add editable global permisssion
+                    var row = $('<tr>');
+                    row.append('<td class="manage-modal-attribute"><strong>Global Permission</strong></td>'
+                            + '<td class="manage-modal-value btn-global-perm">' + perm_dict[settings[5]] + '</td>');
+                    table.append(row);
 
                     var content = $('<div class="manage-content"></div>');
                     content.append(table);
@@ -366,15 +372,11 @@ angular.module('ws-directives')
                         modal_body.prepend(d);
 
                         $('.btn-edit').click(function(){
-                            if ($('#ws-description textarea').length > 0) {
+                            if ($(this).hasClass('editable')) {
                                 $('#ws-description').html(descript);
-                                $(this).text('Edit');
-                                save_btn.attr('disabled', true);
                             } else {
                                 var editable = getEditableDescription(descript);
                                 $('#ws-description').html(editable);
-                                $(this).text('Cancel');
-                                save_btn.attr('disabled', false);
                             }
                         })
                     })
@@ -407,23 +409,18 @@ angular.module('ws-directives')
                             var perm_table = getPermTable(data)
                             perm_container.append(perm_table);
 
-
                             $('.btn-edit').click(function() {
-                                if (perm_container.find('table.perm-table').length > 0) {
-                                    $(this).html('Cancel')
-                                    perm_table.remove()
-                                    perm_table = getEditablePermTable(data);
-                                    perm_container.html(perm_table);
-                                    save_btn.attr('disabled', false);                                        
+                                // if alr
+                                if ($(this).hasClass('editable')) {
+                                    var val = $('.btn-global-perm option:selected').val()
+                                    console.log('current value', val)
+                                    $('.btn-global-perm').html(globalPermDropDown('none'))
                                 } else {
-                                    $(this).html('Edit')                                    
-                                    perm_table.remove()
+                                    perm_table.remove();
                                     perm_table = getPermTable(data);
                                     perm_container.html(perm_table);
-                                    save_btn.attr('disabled', true);                                        
                                 }
                             })
-
 
                             modal_body.append(cloneWS);
                             modal_body.append(deleteWS);
@@ -431,6 +428,22 @@ angular.module('ws-directives')
                     // if logged in and admin
                     }
 
+                    $('.btn-edit').click(function(){
+                        if ($(this).hasClass('editable')) {
+                            save_btn.attr('disabled', true);  
+                            $(this).html('Cancel');
+                        } else {
+                            save_btn.attr('disabled', false);                              
+                            $(this).html('Edit');
+                        }
+                        $(this).toggleClass('editable');
+                    })
+
+                    $('.btn-edit').click(function() {
+                        if ($(this).hasClass('editable')) {
+                        } else {
+                        }
+                    })
 
 
 
@@ -554,6 +567,22 @@ angular.module('ws-directives')
                     }
                 }  // end manageModal
 
+                function globalPermDropDown(perm) {
+                    var dd = $('<select class="form-control create-permission" data-value="n">\
+                                    <option value="n">none</option>\
+                                    <option value="r">read</option>\
+                                </select>')
+                    if (perm == 'none') {
+                        dd.find("option[value='n']").attr('selected', 'selected');
+                    } else if (perm == 'read') {
+                        dd.find("option[value='r']").attr('selected', 'selected');                        
+                    } else {
+                        dd.find("option[value='n']").attr('selected', 'selected');
+                    }
+
+                    return $('<div>').append(dd).html();
+                }
+
                 function createWorkspaceModal() {
                     var body = $('<form class="form-horizontal" role="form">\
                                       <div class="form-group">\
@@ -566,12 +595,10 @@ angular.module('ws-directives')
                                         '</div>\
                                       </div>\
                                       <div class="form-group">\
-                                        <label class="col-sm-4 control-label">Global Permsission</label>\
-                                        <div class="col-sm-3">\
-                                         <select class="form-control create-permission" data-value="n">\
-                                            <option value="n" selected="selected">none</option>\
-                                            <option value="r">read</option></select>\
-                                        </div>\
+                                        <label class="col-sm-4 control-label">Global Permission</label>\
+                                        <div class="col-sm-3">'+
+                                            globalPermDropDown('none')+
+                                        '</div>\
                                       </div>\
                                       <div class="form-group">\
                                         <label class="col-sm-4 control-label">Description</label>\

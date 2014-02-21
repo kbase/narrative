@@ -2,7 +2,7 @@
     "setup": "prod",
 
     "prod": {"workspace_url": "https://kbase.us/services/ws/",
-             "fba_url" : "http://140.221.85.73:4043/",
+             "fba_url" : "https://kbase.us/services/KBaseFBAModeling",
              "user_job_state_url": "http://140.221.84.180:7083"},
 
     "dev": { "workspace_url": "http://140.221.84.209:7058",

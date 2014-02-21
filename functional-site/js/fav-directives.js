@@ -14,18 +14,23 @@ angular.module('fav-directives')
         return {
             template: '<div class="fav-filters">'+
                           '<a data-type="all">Display All</a><br>'+
-                          '<a data-type="models">Genome</a><br>'+                          
-                          '<a data-type="models">Models</a><br><br>'+
-                          'options/filting are in the works.'+
+                          '<a data-type="Genome">Genomes</a><br>'+            
+                          '<a data-type="Model">Models</a><br><br>'+
+                          '<a data-type="Media">Media</a><br><br>'+                          
+                          'options/filtering are in the works.'+
                       '</div>',
             link: function(scope, element, attrs) {
                 $('.fav-filters a').click(function() {
                     console.log('click')
-                    $('.widget').show();                    
+                    $('.widget').hide();                    
 
                     var type = $(this).data('type');
                     console.log(type)
-                    $('.widget-type-'+type).hide();
+                    if (type == "all") {
+                        $('.widget').show();                         
+                    } else {
+                        $('.widget-type-'+type).show();                        
+                    }
                 })
 
             }

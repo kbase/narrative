@@ -368,7 +368,7 @@ kbaseLogin.factory('kbaseLogin', function() {
 //add the Google Feeds API as a module
 var Feed = angular.module('FeedLoad', ['ngResource'])
     .factory('FeedLoad', function ($resource) {
-        return $resource('http://ajax.googleapis.com/ajax/services/feed/load', {}, {
+        return $resource('//ajax.googleapis.com/ajax/services/feed/load', {}, {
             fetch: { method: 'JSONP', params: {v: '1.0', callback: 'JSON_CALLBACK'} }
         });
     });

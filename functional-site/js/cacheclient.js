@@ -12,7 +12,7 @@ function Cache() {
             var obj = cache[i];
             if (service != obj['service']) continue;
             if (method != obj['method']) continue;
-            if ( angular.equals(obj['params'], params) ) return obj;
+            if ( angular.equals(obj['params'], params) ) { return obj; }
         }
         return undefined;
     }
@@ -24,7 +24,7 @@ function Cache() {
         obj['prom'] = prom;
         obj['params'] = params;
         cache.push(obj);
-        //console.log('cache', cache)
+        //console.log('Cache after the last "put"', cache)
     }
 }
 
@@ -34,25 +34,32 @@ function KBCacheClient(token) {
     auth.token = token;
 
     if (configJSON.setup == 'dev') {
-        fba_url = configJSON.dev.fba_url;
+        fba_url = configJSON.dev.fba_url;{}
         ws_url = configJSON.dev.workspace_url;
+        ujs_url = configJSON.dev.user_job_state_url;
     } else {
         fba_url = configJSON.prod.fba_url;
         ws_url = configJSON.prod.workspace_url;
+        ujs_url = configJSON.prod.user_job_state_url;
     }
 
-    console.log('FBA URL is:', fba_url)
-    console.log('Workspace URL is:', ws_url)
+    console.log('FBA URL is:', fba_url);
+    console.log('Workspace URL is:', ws_url);
+    console.log('User Job State URL is:', ujs_url);
 
-    var fba = new fbaModelServices(fba_url);
+    var fba = new fbaModelServices(fba_url, auth);
     var kbws = new Workspace(ws_url, auth);
+    var ujs = new UserAndJobState(ujs_url, auth);
 
-  
     var cache = new Cache();
 
     this.req = function(service, method, params) {
-        //if (!params) var params = {auth: auth.token};
-        //else params.auth = auth.token;  // Fixme: set auth in client object
+        if (service == 'fba') { 
+            // use whatever workspace server that was configured.
+            // this makes it possible to use the production workspace server
+            // with the fba server.   Fixme:  fix once production fba server is ready.
+            params.wsurl = ws_url;
+        }
 
         // see if api call has already been made        
         var data = cache.get(service, method, params);
@@ -63,10 +70,6 @@ function KBCacheClient(token) {
         // otherwise, make request
         var prom = undefined;
         if (service == 'fba') {
-            // use whatever workspace server that was configured.
-            // this makes it possible to use the production workspace server
-            // with the fba server
-            params.wsurl = ws_url;  
             console.log('Making request:', 'fba.'+method+'('+JSON.stringify(params)+')');
             var prom = fba[method](params);
         } else if (service == 'ws') {
@@ -82,10 +85,10 @@ function KBCacheClient(token) {
     // make publically accessible methods that 
     this.fba = fba;
     this.ws = kbws;
+    this.ujs = ujs
 
     this.nar = new ProjectAPI(ws_url, token);
-    project = new ProjectAPI(ws_url, token);  // let's deprecate this. It'd be nice to avoid the
-                                              // global varriable in the future....
+
     this.token = token;
 }
 
@@ -253,7 +256,7 @@ function ProjectAPI(ws_url, token) {
     var empty_ws2_proj_tag = {
         name : ws_tag.project,
         type : ws_tag_type,
-        data : { description : 'Tag! You\'re a project!' },
+        data : { description : '' },
         workspace : undefined,
         meta : {},
 	provenance : [],
@@ -280,10 +283,28 @@ function ProjectAPI(ws_url, token) {
      * within)
      */
     var filter_wsobj = function (p_in) {
+        console.log('p_in', p_in)
+      
+        /*
+        for (var i in p_in.res) {
+            var ws = p_in.res[i];
 
-        var def_params = {callback : undefined,
-                   perms : ['a'],
-                   filter_tag : ws_tag.project};
+            // if there is global read or any permissions
+            if (ws[4] == "r" || ws[5].match(/r|w|a/)) {
+
+            }
+        }
+        */
+
+        var prom = ws_client.list_objects({type: 'KBaseNarrative.Metadata', 
+                                           showHidden: 1});
+        return prom
+    };
+
+    /*
+
+  var def_params = {perms : ['r', 'w', 'a'],
+                          filter_tag : ws_tag.project};
         var p = $.extend( def_params, p_in);
 
         var ignore = /^core/;
@@ -305,13 +326,36 @@ function ProjectAPI(ws_url, token) {
         var ws_match = p.res.reduce(reduce_ws_meta,[]);
         // extract workspace ids into a list
         var ws_ids = ws_match.map( function(v) { return v[0]});
+        */    
 
-        var prom = ws_client.list_objects({workspaces: ws_ids, 
-                                                   type: 'KBaseNarrative.Metadata', 
-                                                   showHidden: 1});
-        return prom
+    /**
+     * Ensures that a USER_ID:home workspace exists and is tagged as a project.
+     * If one does not exist, it calls 'new_project' and makes one.
+     */
+    this.ensure_home_project = function(userId) {
+
+        // if we don't have a userid, don't do anything.
+        if (!userId)
+            return;
+
+        var projId = userId + ":home";
+
+        var prom = ws_client.get_object({ type: ws_tag_type,
+                                          workspace: projId,
+                                          id: ws_tag.project });
+        $.when(prom).then(
+            undefined,                  // don't need to do anything if it already has one. 
+            $.proxy(function(error) {   // if no project USER_ID:home exists, make one
+                this.new_project({
+                    project_id: projId,
+                    error_callback: function(error) {  // Just fails more or less silently for now
+                        console.debug("Error while creating home project!"); 
+                        console.debug(error); 
+                    },
+                });
+            }, this)
+        );
     };
-
 
     // Get all the workspaces that match the values of the
     // permission array. Defaults to only workspaces that the
@@ -321,27 +365,20 @@ function ProjectAPI(ws_url, token) {
     // if a specific workspace name is given its metadata will be
     // returned
     this.get_projects = function( p_in ) {
-
-        console.log('getting projects')
         var def_params = { perms : ['a'],
                            workspace_id : undefined };
-
         var p = $.extend( def_params, p_in);
 
-        var META_ws;
-        if ( p.workspace_id ) {
-            META_ws = ws_client.get_workspacemeta( { workspace : p.workspace_id } );
-            var prom =  $.when( META_ws).then( function(result) {
-                           return filter_wsobj( {res: [result], perms: p.perms });
-                       });
-            return prom
-        } else {
-            META_ws = ws_client.list_workspaces( {} );
-            var prom = $.when( META_ws).then( function(result) {
-                            return filter_wsobj( { res: result, perms: p.perms });
-                       });
-            return prom
-        }
+        console.log('calling get projects')
+//        META_ws = ws_client.list_objects( {} );
+    
+        var prom = ws_client.list_objects({type: 'KBaseNarrative.Metadata', 
+                                           showHidden: 1});
+        //var prom = $.when( META_ws).then( function(result) {
+         //               return filter_wsobj( { res: result, perms: p.perms });
+          //         });
+        return prom
+        
     };
 
 
@@ -411,47 +448,57 @@ function ProjectAPI(ws_url, token) {
     this.new_project = function( p_in ) {
         var def_params = { project_id : undefined,
                            def_perm : 'n',
-                           error_callback: error_handler };
+                           description: ''};
 
         var p = $.extend( def_params, p_in);
 
-        //if ( legit_ws_id.test(p.project_id)) {
-            // Check if the workspace exists already. If it does, then 'upgrade'
-            // it by adding a _project object, if it doesn't exist yet then
-            // create it, then add the _project otag
+        function tag_ws() {
+            var proj = $.extend(true,{},empty_ws2_proj_tag);
+            proj.data.description = p_in.description;
 
-            function tag_ws() {
-                //var proj = $.extend(true,{},empty_proj_tag);
-		var proj = $.extend(true,{},empty_ws2_proj_tag);
+            var params = { objects : [proj] };
+            params.workspace = p.project_id;
+            var ws_fn2 = ws_client.save_objects( params);
 
-		var params = { objects : [proj] };
-                params.workspace = p.project_id;
-                var ws_fn2 = ws_client.save_objects( params);
-                //var prom = $.when( ws_fn2 ).
-                //.then( function(obj_meta) {
-                //               return  obj_meta_dict(obj_meta); 
-                //});
-                return ws_fn2;
-            };
+            return ws_fn2;
+        };
 
-            var ws_exists = ws_client.get_workspacemeta( {workspace : p.project_id });
-            var prom =  $.when( ws_exists).then(tag_ws, function() {
-
-                var ws_fn = ws_client.create_workspace( { workspace : p.project_id,
-                                                                  globalread : p.def_perm })
-
-                var prom = $.when(ws_fn).done(function() {
-                    return tag_ws();
-                })
-
-                return prom
-            });
-
+        var ws_exists = ws_client.get_workspacemeta( {workspace : p.project_id });
+        var prom =  $.when(ws_exists).then(tag_ws, function() {
+            var ws_fn = ws_client.create_workspace( { workspace : p.project_id,
+                                                      globalread : p.def_perm })
+            var prom = $.when(ws_fn).done(function() {
+                return tag_ws();
+            })
             return prom;
-        //} else {
-        //    console.error( "Bad project id: "+p.project_id);
-        //}
+        });
+
+        return prom;
     };
+
+
+    // returns a project description (out of the project object)
+    this.get_project_description = function(proj_name) {
+        var prom = ws_client.get_object({ type: ws_tag_type,
+                                          workspace: proj_name,
+                                          id: ws_tag.project });
+        var p = $.when(prom).then(function(r) {
+            return r.data.description;
+        })
+        return p;
+    }
+
+    // returns a project description (out of the project object)
+    this.set_project_description = function(proj_name, descript) {
+        var proj = $.extend({}, empty_ws2_proj_tag);
+        proj.data.description = descript;
+        var p = ws_client.save_objects( {workspace: proj_name, objects: [proj]}); 
+
+        return p;
+    }
+
+
+
 
 
     // Delete a workspace(project)
@@ -757,7 +804,7 @@ function ProjectAPI(ws_url, token) {
                         console.log(result.error.message);
                         if (!/^No object with .+ exists in workspace [:\w]+$/
                                 .test(result.error.message)) {
-                            p.error_callback(result.error.message);
+                            //p.error_callback(result.error.message);
                         }
                         //everything's cool, the object doesn't exist in home
                     })
@@ -788,20 +835,16 @@ function ProjectAPI(ws_url, token) {
 
         var p = $.extend( def_params, p_in);
 
-        //if ( legit_ws_id.test(p.narrative_id)) {
-            var nar = $.extend(true,{},empty_narrative);
-            nar.data.metadata.ws_name = p.project_id;
-            nar.name = p.narrative_id; 
-            nar.data.metadata.name = p.narrative_id; 
-            nar.data.metadata.creator = USER_ID;
+        var nar = $.extend(true,{},empty_narrative);
+        nar.data.metadata.ws_name = p.project_id;
+        nar.name = p.narrative_id; 
+        nar.data.metadata.name = p.narrative_id; 
+        nar.data.metadata.creator = USER_ID;
 
-            var ws_fn = ws_client.save_objects( {workspace: p.project_id, objects: [nar]});
-            return $.when( ws_fn ).then( function(obj_meta) {
-                          return obj_meta_dict(obj_meta);
-                      });
-        //} else {
-        //    console.error( "Bad narrative_id");
-        //}
+        var ws_fn = ws_client.save_objects( {workspace: p.project_id, objects: [nar]});
+        return $.when( ws_fn ).then( function(obj_meta) {
+                      return obj_meta_dict(obj_meta);
+                  });
     };
 
 }

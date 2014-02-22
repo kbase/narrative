@@ -100,15 +100,20 @@ angular.module('lp-directives')
     .directive('modeltabs', function($location) {
         return {
             link: function(scope, element, attrs) {
+                var ws = scope.ws;
+                var id = scope.id;
                 var p = $(element).kbasePanel({title: 'Model Details', 
-                                               rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               rightLabel: ws ,
+                                               subText: id,
+                                               type: 'FBAModel', 
+                                               widget: 'modeltabs'});
                 p.loading();
 
                 var prom = kb.req('fba', 'get_models',
-                            {models: [scope.id], workspaces: [scope.ws]});
+                            {models: [id], workspaces: [ws]});
                 $.when(prom).done(function(data){
-                    $(p.body()).kbaseModelTabs({modelsData: data, api: kb.fbaAPI()});
+                    console.log('data for tabs', data )
+                    $(p.body()).kbaseModelTabs({modelsData: data, api: kb.fba});
                     $(document).on('rxnClick', function(e, data) {
                         var url = '/rxns/'+data.ids;
                         scope.$apply( $location.path(url) );
@@ -120,16 +125,21 @@ angular.module('lp-directives')
     .directive('modelcore', function($location) {
         return {
             link: function(scope, element, attrs) {
+                var ws = scope.ws;
+                var id = scope.id;
                 var p = $(element).kbasePanel({title: 'Core Metabolic Pathway', 
-                                               rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               rightLabel: ws,
+                                               subText: id, 
+                                               type: 'FBAModel', 
+                                               widget: 'modelcore'});
                 p.loading();
 
                 var prom = kb.req('fba', 'get_models',
-                            {models: [scope.id], workspaces: [scope.ws]})
+                            {models: [id], workspaces: [ws]})
                 $.when(prom).done(function(data) {
-                    $(p.body()).kbaseModelCore({ids: [scope.id], 
-                                                workspaces : [scope.ws],
+                    console.log('data', data)
+                    $(p.body()).kbaseModelCore({ids: [id], 
+                                                workspaces : [ws],
                                                 modelsData: data});
                     $(document).on('coreRxnClick', function(e, data) {
                         var url = '/rxns/'+data.ids.join('&');
@@ -168,7 +178,8 @@ angular.module('lp-directives')
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'FBA Details', 
                                                rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               subText: scope.id,
+                                               widget: 'fbatabs'});
                 p.loading();
 
                 var prom = kb.req('fba', 'get_fbas',
@@ -192,19 +203,24 @@ angular.module('lp-directives')
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Core Metabolic Pathway', 
                                                rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               subText: scope.id, 
+                                               type: 'FBA', 
+                                               widget: 'fbacore'});
                 p.loading();
 
                 var prom1 = kb.req('fba', 'get_fbas',
                             {fbas: [scope.id], workspaces: [scope.ws]});
                 $.when(prom1).done(function(fbas_data) {
-                    var model_ws = fbas_data[0].model_workspace;
-                    var model_id = fbas_data[0].model;
+                    console.log(fbas_data)
+                    var model_ref = fbas_data[0].modelref;
+                    var wsid = parseInt(model_ref.split('/')[0]);
+                    var objid = parseInt(model_ref.split('/')[1]);
 
+                    console.log('fba data ', fbas_data)
                     var prom2 = kb.req('fba', 'get_models',
-                            {models: [model_id], workspaces: [model_ws]});
+                            {models: [objid], workspaces: [wsid]});
                     $.when(prom2).done(function(models_data){
-                        $(p.body()).kbaseModelCore({ids: [scope.id], 
+                        $(p.body()).kbaseModelCore({ids: [scope.id],
                                                     workspaces : [scope.ws],
                                                     modelsData: models_data,
                                                     fbasData: fbas_data});
@@ -222,8 +238,10 @@ angular.module('lp-directives')
         return {
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Media Details', 
+                                               type: 'Media',
                                                rightLabel: scope.ws,
-                                               subText: scope.id});
+                                               subText: scope.id,
+                                               widget: 'mediadetail'});
                 p.loading();
 
                 var prom = kb.req('fba', 'get_media',
@@ -258,82 +276,41 @@ angular.module('lp-directives')
             }
         };
     })
-
-    // Workspace browser widgets (directives)
-    .directive('wsobjtable-old', function($rootScope) {
+    .directive('backbutton', function() {
         return {
             link: function(scope, element, attrs) {
-                $rootScope.objectTable = $(element).kbaseWSObjectTable({auth: scope.USER_TOKEN});
+                $(element).on('click', function() {
+                    window.history.back();
+                });
             }
+
         };
     })
-    .directive('wsselector-old', function($rootScope) {
+
+    .directive('genomeoverview', function($rootScope) {
         return {
-            link: function(scope, element, attrs, routeParams) {
-                var wsSelector = $(element).kbaseWSSelector({userToken: scope.USER_TOKEN,
-                                                      selectHandler: selectHandler});
-                var first = true;
-                var prevPromises = []; // store previous promises to cancel
-                function selectHandler(selected) {
-                    workspaces = wsSelector.workspaces;
-                    set_selected_workspace()
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'Genome Overview', 
+                                               type: 'Genome',
+                                               rightLabel: scope.ws,
+                                               subText: scope.id,
+                                               widget: 'genomeoverview'});
+                p.loading(); // not sure why this isn't loading first.  I'm thinking data should be retrieved here.
 
-                    // tell the previous promise(s) not to fire
-                    prevPromises.cancel = true;
-
-                    // workspaces might have data loaded already
-                    var promises = [];
-                    prevPromises = promises;
-
-                    // loop through selected workspaces and download objects if they haven't been downloaded yet
-                    for (var i=0; i<selected.length; i++) {
-                        var workspace = selected[i];
-
-                        var objType = $.type(workspace.objectData);
-                        if (objType === 'undefined') {
-                            // no data and not being downloaded
-                            var p = workspace.getAllObjectsMeta();
-                            workspace.objectData = p; // save the promise
-                            promises.push(p);
-
-                            // provide closure over workspace
-                            (function(workspace) {
-                                p.done(function(data) {
-                                // save the data and tell workspace selector that the workspace has it's data
-                                    workspace.objectData = data;
-                                    wsSelector.setLoaded(workspace);
-                                });
-                            })(workspace);
-                        } else if (objType === 'object') {
-                            // data being downloaded (objectData is a promise)
-                            promises.push(workspace.objectData);
-                        }
-                    }
-
-                    if (promises.length > 0) {
-                        // may take some time to load
-                        $rootScope.objectTable.loading(true);
-                    }
-
-                    // when all the promises are done...
-                    $.when.apply($, promises).done(function() {
-                        if (promises.cancel) {
-                            // do nothing if it was cancelled
-                            return;
-                        }
-
-                        // reload the object table
-                        $rootScope.objectTable.reload(selected).done(function() {
-                            if (promises.cancel) {
-                                return;
-                            }
-
-                            if (first) {
-                                first = false;
-                            }
-                        });
-                    });
-                }
+                $(p.body()).KBaseGenomeOverview({genomeID: scope.id, workspaceID: scope.ws, kbCache: kb})
             }
         };
     })
+    .directive('genomewiki', function($rootScope) {
+        return {
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'Genome Wiki',
+                                                type: 'Genome',
+                                               rightLabel: scope.ws,
+                                               subText: scope.id,
+                                               widget: 'genomewiki'});
+                p.loading(); 
+                $(p.body()).KBaseWikiDescription({genomeID: scope.id, workspaceID: scope.ws, kbCache: kb})
+            }
+        };
+    })    

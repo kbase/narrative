@@ -23,21 +23,34 @@ $.KBWidget({
         var subText = options.subText;
         var right_label = options.rightLabel;
         var body = options.body;
+        var fav = options.fav;
+
+        var id = options.id ? options.id : options.subText;
+        var ws = options.ws ? options.ws : options.rightLabel;
+        var type = options.type;
+        var widget = options.widget;
 
         var drag = options.drag;
 
-        var container = $('<div class="panel panel-default">\
-                                <div class="panel-heading">\
-                                    <h4 class="panel-title"></h4>\
-                                    <div class="panel-subtitle"></div>\
-                                </div>\
-                                <div class="panel-body"></div>\
-                           </div>');
+        var container = $('<div class="panel panel-default">'+
+                                '<div class="panel-heading">'+
+                                    '<span class="panel-title"></span>'+
+                                    '<a class="pull-right btn-rm-panel text-muted"><span class="glyphicon glyphicon-remove"></span></a>'+
+                                    '<a class="btn-favorite pull-right" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'+
+                                    (fav ? '<span class="glyphicon glyphicon-star"></span>'  :
+                                        '<span class="glyphicon glyphicon-star-empty"></span>')+
+                                    '</a>'+
+                                    '<div class="panel-subtitle"></div>'+
+                                '</div>'+
+                                '<div class="panel-body"></div>'+
+                           '</div>');
 
         var panel_header = container.find('.panel-heading');
         var panel_title = container.find('.panel-title');
         var panel_subtitle = container.find('.panel-subtitle');        
         var panel_body = container.find('.panel-body');
+        var fav_btn = container.find('.btn-favorite');
+        var rm_panel_btn = container.find('.btn-rm-panel');        
 
         this.header = function(data) {
             if (data) panel_header.html(data);
@@ -70,6 +83,12 @@ $.KBWidget({
             panel_body.find('.ajax-loader').remove();
         }
 
+        this.toggleFavorite = function() {
+            var starred = fav_btn.find('span').hasClass('glyphicon-star')
+            console.log('starred', starred)
+            fav_btn.find('span').toggleClass('glyphicon-star-empty');
+            fav_btn.find('span').toggleClass('glyphicon-star');
+        }
 
         if (title) this.title(title);
         if (body) this.body(body); 
@@ -79,6 +98,21 @@ $.KBWidget({
             panel_header.append('<span class="label label-primary pull-right">'
                                     +right_label+'</span><br>');
         }
+
+
+
+        // event for removing panel
+        rm_panel_btn.click(function() {
+            container.slideUp(400, function(){
+                $(this).remove();
+            })
+        })
+
+        // This is just a function for debugging purposes
+        function resetQueue() {
+            var p = kb.ujs.remove_state('favorites', 'queue');
+        }
+        //resetQueue();  //****THIS WILL DELETE the User's Favorites ****
 
         self.$elem.append(container);
 

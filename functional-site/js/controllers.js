@@ -242,8 +242,30 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 
 .controller('WorkspaceBrowser', function($scope, $stateParams) {
-    //changeNav('workspaces');
     $scope.selected_ws = $stateParams.ws;
+})
+
+.controller('WorkspaceBrowserLanding', function($scope, $stateParams) {
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+
+
+    $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
+        start: function() {
+          $(this).find('.panel-body').addClass('hide');
+          $(this).sortable('refreshPositions');
+        },
+        stop: function() {
+          $(this).find('.panel-body').removeClass('hide');
+        }
+    });
+    $( "#sortable-landing" ).disableSelection();
+
+})
+
+.controller('Favorites', function($scope, $stateParams) {
+
+
 })
 
 
@@ -281,6 +303,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                 if (args.success === 1) {
                         
                     this.registerLogin(args);
+                    //this.data('_session', kbaseCookie);
 
                     //set the cookie
                     var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
@@ -305,9 +328,16 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                              + '|'
                              + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
                              { path: '/'});
-                    console.log("redirecting");
 
-                    $location.path('/narrative/home/');
+                    //this.data('_session', c);
+
+                    USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+                    USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+
+                    kb = new KBCacheClient(USER_TOKEN);
+                    kb.nar.ensure_home_project(USER_ID);
+
+                    $location.path('/narrative/');
                     $scope.$apply();
                     
                 } else {
@@ -325,6 +355,16 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 })
 
+.controller('Search', function($scope, $stateParams, $state) {
+
+    $scope.query = $stateParams.q;
+
+    $scope.startSearch = function (searchquery) {
+        $state.transitionTo('search', {q: searchquery})
+    };
+})
+
+
 /*
 .controller('CopyNarrativeModalCtrl', function ($scope, $modalInstance) {
 // controller for the modals to copy a featured narrative 
@@ -338,17 +378,10 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 */
 .controller('NarrativeProjects', function($scope, $stateParams) {
+
 })
 
 
-/* controller for the search box */
-var SearchController = function ($scope, $location) {
-
-    // callback for ng-click search:
-    $scope.startSearch = function (searchquery) {
-        window.location.replace("#search?" + searchquery);          
-    };
-};
 
 
 /* controller for the copy narrative modal */
@@ -373,10 +406,10 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) 
                 //console.log("error occurred " + message);
 
                 if (!message.match("No object with name")) {
-                    $('loading-indicator').hide();
+                    $('#loading-indicator').hide();
 
                     $scope.alerts = [];
-                    $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace."});
+                    $scope.alerts.push({type: 'danger', msg: "We were unable to copy the narrative and its datasets into your home workspace. Error: " + message});
                     //TODO need to retrieve the actual error message 
                     $scope.$apply();
                 }
@@ -410,6 +443,9 @@ function LPHelp($scope, $stateParams, $location) {
         var url = '/'+form.attr('type')+'/'+form.find('#input1').val();
         if (form.find('#input2').val()) {
             url = url+'/'+form.find('#input2').val();
+        }
+        if (form.find('#input3').val()) {
+            url = url+'/'+form.find('#input3').val();
         }
     
         $scope.$apply( $location.path( url ) );

@@ -77,6 +77,10 @@ angular.module('ws-directives')
                         var owned_ws = [];
                         for (var i in data) {
                             var ws = data[i];
+
+                            //quick fix to hide search workspaces
+                            if (ws[1]== "kbasesearch") continue;  
+
                             var user = ws[1];
                             var perm = ws[4];
 
@@ -265,8 +269,8 @@ angular.module('ws-directives')
                         ['Name', settings[0]],
                         ['Objects', '~ ' + settings[3] ],
                         ['Owner', settings[1] ],
-                        ['Permission', perm_dict[settings[4]] ],
-                        ['Global Permission', perm_dict[settings[5]] ]
+                        ['Your Permission', perm_dict[settings[4]] ],
+                        //['Global Permission', perm_dict[settings[5]] ]
                     ];
                     for (var i=0; i<data.length; i++) {
                         var row = $('<tr>');
@@ -275,13 +279,20 @@ angular.module('ws-directives')
                         table.append(row);
                     }
 
+                    // add editable global permisssion
+                    var row = $('<tr>');
+                    row.append('<td class="manage-modal-attribute"><strong>Global Permission</strong></td>'
+                            + '<td class="manage-modal-value btn-global-perm">' + perm_dict[settings[5]] + '</td>');
+                    table.append(row);
+
                     var content = $('<div class="manage-content"></div>');
                     content.append(table);
 
                     // modal for managing workspace permissions, clone, and delete
                     var permData; 
                     var manage_modal = $('<div></div>').kbasePrompt({
-                            title : 'Manage Workspace <a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>',
+                            title : 'Manage Workspace '+
+                                (USER_ID ? '<a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>' : ''),
                             body : content,
                             modalClass : '', 
                             controls : [{
@@ -300,28 +311,31 @@ angular.module('ws-directives')
                                     var prom = savePermissions(ws_name);
                                     prompt = $prompt;
 
-                                    // save permissions, then save description
+                                    // save permissions, then save description, then the global perm //fixme
                                     $.when(prom).done(function() {
                                         // if description textarea is showing, saving description
-                                        if ($('#ws-description textarea').length > 0) {
-                                            var d = $('#ws-description textarea').val();
+                                        var d = $('#ws-description textarea').val();
 
-                                            // saving description
-                                            var prom = kb.ws.set_workspace_description({workspace: ws_name, 
-                                                description: d})
+                                        // saving description
+                                        var p1 = kb.ws.set_workspace_description({workspace: ws_name, 
+                                            description: d})
 
-                                            $.when(prom).done(function() {
+                                        $.when(p1).done(function() {
+                                            var new_perm = $('.btn-global-perm option:selected').val();
+                                            // saving global perm
+                                            var p1 = kb.ws.set_global_permission({workspace: ws_name, 
+                                                new_permission: new_perm})
+                                            $.when(p1).done(function() {
                                                 prompt.addCover('Saved.');
                                                 prompt.closePrompt();
                                                 manageModal(ws_name);                                            
                                             }).fail(function(e){
                                                 prompt.addCover(e.error.message, 'danger');
-                                            })
-                                        } else {
-                                            prompt.addCover('Saved.');
-                                            prompt.closePrompt();
-                                            manageModal(ws_name);
-                                        }
+                                            })                      
+                                        }).fail(function(e){
+                                            prompt.addCover(e.error.message, 'danger');
+                                        })
+
                                     }).fail(function(e){
                                         prompt.addCover(e.error.message, 'danger');
                                     })
@@ -337,6 +351,20 @@ angular.module('ws-directives')
                     var modal_footer = dialog.find('.modal-footer');
                     var save_btn = modal_footer.find('.btn-primary');
                     save_btn.attr('disabled', true);
+
+                    // editable status
+                    $('.btn-edit').click(function(){
+                        $(this).toggleClass('editable');
+
+                        // if not editable, make editable
+                        if ($(this).hasClass('editable')) {
+                            save_btn.attr('disabled', false);  
+                            $(this).html('Cancel');
+                        } else {
+                            save_btn.attr('disabled', true);                              
+                            $(this).html('Edit');
+                        }
+                    })
 
                     var cloneWS = $('<button class="btn btn-link pull-left">Clone</button>');
                     cloneWS.click(function() {
@@ -360,21 +388,12 @@ angular.module('ws-directives')
                         d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
                         modal_body.prepend(d);
 
-                        var save_disabled = true;
-
-                        // add btn that allows the user to edit any content
-//                        modal_body.prepend('')
-
                         $('.btn-edit').click(function(){
-                            if ($('#ws-description textarea').length > 0) {
-                                $('#ws-description').html(descript);
-                                $(this).text('Edit');
-                                save_btn.attr('disabled', true);
-                            } else {
+                            if ($(this).hasClass('editable')) {
                                 var editable = getEditableDescription(descript);
                                 $('#ws-description').html(editable);
-                                $(this).text('Cancel');
-                                save_btn.attr('disabled', false)                               
+                            } else {
+                                $('#ws-description').html(descript);
                             }
                         })
                     })
@@ -407,87 +426,36 @@ angular.module('ws-directives')
                             var perm_table = getPermTable(data)
                             perm_container.append(perm_table);
 
-
                             $('.btn-edit').click(function() {
-                                if (perm_container.find('table.perm-table').length > 0) {
-                                    $(this).html('Cancel')
-                                    perm_table.remove()
+                                if ($(this).hasClass('editable')) {
+                                    perm_table.remove();
                                     perm_table = getEditablePermTable(data);
                                     perm_container.html(perm_table);
-                                    save_btn.attr('disabled', false);                                        
                                 } else {
-                                    $(this).html('Edit')                                    
-                                    perm_table.remove()
+                                    perm_table.remove();
                                     perm_table = getPermTable(data);
                                     perm_container.html(perm_table);
-                                    save_btn.attr('disabled', true);                                        
                                 }
                             })
-
 
                             modal_body.append(cloneWS);
                             modal_body.append(deleteWS);
                         })
-                    // if logged in and admin
                     }
 
 
-                    function savePermissions(ws_name) {
-                        var newPerms = {};
-                        var table = $('.edit-perm-table');
-                        table.find('tr').each(function() {
-                            var user = $(this).find('.perm-user').val()
-                            var perm = $(this).find('option:selected').val();
-                            if (!user) return;
-                            
-                            newPerms[user] = perm
-                        })
-
-                        // create new permissions for each user that does not currently have 
-                        // permsissions.
-                        var promises = [];
-                        for (var new_user in newPerms) {
-                            // ignore these
-                            if (new_user == '*' || new_user == USER_ID) continue;   
-
-                            // if perms have not change, do not request change
-                            if ( (new_user in permData) && newPerms[new_user] == permData[new_user]) {
-                                continue;
-                            }
-
-
-                            var params = {
-                                workspace: ws_name,
-                                new_permission: newPerms[new_user],
-                                users: [new_user],
-                            };
-
-                            var p = kb.ws.set_permissions(params);
-                            promises.push(p);
-                        };
-
-                        var rm_users = [];
-
-                        // if user was removed from user list, change permission to 'n'
-                        for (var user in permData) {
-                            if (user == '*' || user == USER_ID) continue;                            
-
-                            if ( !(user in newPerms) ) {
-
-                                var params = {
-                                    workspace: ws_name,
-                                    new_permission: 'n',
-                                    users: [user],
-                                };
-
-                                var p = kb.ws.set_permissions(params);
-                                promises.push(p);
-                                rm_users.push(user)
-                            } 
+                    var global_perm = $('.btn-global-perm').text(); //fixme: create editable form plugin
+                    var p = (global_perm == 'None' ? 'n' : 'r');
+                    $('.btn-edit').click(function() {
+                        if ($(this).hasClass('editable')) {
+                            $('.btn-global-perm').html(globalPermDropDown(p));   
+                        } else {
+                            $('.btn-global-perm').html('')  //fixme: create editable form plugin
+                            $('.btn-global-perm').text(global_perm);
                         }
+                    })
 
-                        return $.when.apply($, promises);
-                    }
+
 
                     function getEditableDescription(d) {
                         var d = $('<form role="form">\
@@ -496,9 +464,7 @@ angular.module('ws-directives')
                                   </div>\
                                   </form>');
                         return d;
-
                     }
-
 
                     //table for displaying user permissions
                     function getPermTable(data) {
@@ -591,6 +557,66 @@ angular.module('ws-directives')
                         return table;
                     }
 
+
+                    function savePermissions(p_name) {
+                        var newPerms = {};
+                        var table = $('.edit-perm-table');
+                        table.find('tr').each(function() {
+                            var user = $(this).find('.perm-user').val()
+                            var perm = $(this).find('option:selected').val();
+                            if (!user) return;
+                            
+                            newPerms[user] = perm
+                        })
+
+                        // create new permissions for each user that does not currently have 
+                        // permsissions.
+                        var promises = [];
+                        for (var new_user in newPerms) {
+                            // ignore these
+                            if (new_user == '*' || new_user == USER_ID) continue;   
+
+                            // if perms have not change, do not request change
+                            if ( (new_user in permData) && newPerms[new_user] == permData[new_user]) {
+                                continue;
+                            }
+
+
+                            var params = {
+                                workspace: p_name,
+                                new_permission: newPerms[new_user],
+                                users: [new_user],
+                                //auth: USER_TOKEN
+                            };
+
+                            var p = kb.ws.set_permissions(params);
+                            promises.push(p);
+                        };
+
+                        var rm_users = [];
+
+                        // if user was removed from user list, change permission to 'n'
+                        for (var user in permData) {
+                            if (user == '*' || user == USER_ID) continue;                            
+
+                            if ( !(user in newPerms) ) {
+
+                                var params = {
+                                    workspace: p_name,
+                                    new_permission: 'n',
+                                    users: [user],
+                                    //auth: USER_TOKEN
+                                };
+
+                                var p = kb.ws.set_permissions(params);
+                                promises.push(p);
+                                rm_users.push(user)
+                            } 
+                        }
+
+                        return $.when.apply($, promises);
+                    }                    
+
                     // dropdown for user permissions (used in getPermission Table) //fixme: cleanup
                     function permDropDown(perm) {
                         var dd = $('<select class="form-control create-permission" data-value="n">\
@@ -609,7 +635,26 @@ angular.module('ws-directives')
 
                         return $('<div>').append(dd).html();
                     }
+
+                    function globalPermDropDown(perm) {
+                        var dd = $('<select class="form-control create-permission" data-value="n">\
+                                        <option value="n">None</option>\
+                                        <option value="r">Read</option>\
+                                    </select>')
+                        if (perm == 'n') {
+                            dd.find("option[value='n']").attr('selected', 'selected');
+                        } else if (perm == 'r') {
+                            dd.find("option[value='r']").attr('selected', 'selected');                        
+                        } else {
+                            dd.find("option[value='n']").attr('selected', 'selected');
+                        }
+
+                        return $('<div>').append(dd).html();
+                    }
+
                 }  // end manageModal
+
+
 
                 function createWorkspaceModal() {
                     var body = $('<form class="form-horizontal" role="form">\
@@ -623,12 +668,10 @@ angular.module('ws-directives')
                                         '</div>\
                                       </div>\
                                       <div class="form-group">\
-                                        <label class="col-sm-4 control-label">Global Permsission</label>\
-                                        <div class="col-sm-3">\
-                                         <select class="form-control create-permission" data-value="n">\
-                                            <option value="n" selected="selected">none</option>\
-                                            <option value="r">read</option></select>\
-                                        </div>\
+                                        <label class="col-sm-4 control-label">Global Permission</label>\
+                                        <div class="col-sm-3">'+
+                                            globalPermDropDown('n')+
+                                        '</div>\
                                       </div>\
                                       <div class="form-group">\
                                         <label class="col-sm-4 control-label">Description</label>\
@@ -844,7 +887,7 @@ angular.module('ws-directives')
                         "fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
                       "aoColumns": [
-                          { "sTitle": ""},
+                          (USER_ID ? { "sTitle": "", bSortable: false} : { "sTitle": "", bVisible: false}),
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type", "sWidth": "20%"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
@@ -884,9 +927,12 @@ angular.module('ws-directives')
                         // if there are objects, add 'select all' button, type filter,
                         // and trash bin.
                         if (data.length > 0) {
-                            // add select all button to table options datatables.bootstrap file for template
-                            $('.table-options').append('<button class="btn btn-default btn-select-all">\
-                                <div class="ncheck check-option"></div></button> ');
+                            // if logged in, add select all button to table options 
+                            //datatables.bootstrap file for template
+                            if (USER_ID) {
+                                $('.table-options').append('<button class="btn btn-default btn-select-all">\
+                                    <div class="ncheck check-option"></div></button> ');
+                            }
 
                             // add type filter
                             var select = $('<select class=" type-filter form-control">\
@@ -895,7 +941,7 @@ angular.module('ws-directives')
                             for (var type in type_counts) {
                                 select.append('<option data-type="'+type+'">'+type+'  ('+type_counts[type]+')</option>');
                             }
-                            $('.table-options').append(select);
+                            $('.table-options').append(select);                     
 
                             // event for type filter
                             $('.type-filter').change( function () {
@@ -906,13 +952,17 @@ angular.module('ws-directives')
                                 }    
                             });
 
-                            // trash bin link
-                            var trash_btn = $('<a class="btn-trash pull-right">Trash \
-                                        <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
-                            trash_btn.click(function(){
-                                displayTrashBin(deleted_objs)
-                            })
-                            $('.dataTables_filter').append(trash_btn);
+
+                            // if logged in, add trash bin link
+                            if (USER_ID) {
+                                var trash_btn = $('<a class="btn-trash pull-right">Trash \
+                                            <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
+                                trash_btn.click(function(){
+                                    displayTrashBin(deleted_objs)
+                                })
+                                $('.dataTables_filter').append(trash_btn);
+                            }
+
 
                             // event for when an object checkbox is clicked
                             checkBoxObjectClickEvent('.obj-check-box');
@@ -978,7 +1028,7 @@ angular.module('ws-directives')
                                         //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
                                         //+'</a>';
 
-                        var match = ( type.split('-')[0].match(/^(Genome|Model|Media|FBA|Annotation|Cmonkey)$/) 
+                        var match = ( type.split('-')[0].match(/^(Genome|FBAModel|Media|FBA|Annotation|Cmonkey)$/) 
                                         !== null ? true : false);
 
                         if (match) {
@@ -1008,11 +1058,11 @@ angular.module('ws-directives')
                         var ws = $(this).data('ws');
 
                         if (type == 'Genome') {
-                            scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
-                        } else if (type == 'Model') {
-                            scope.$apply( $location.path('/models/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/genomes/'+ws+'/'+id) );
+                        } else if (type == 'FBAModel') {
+                            scope.$apply( $location.path('/ws/models/'+ws+'/'+id) );
                         } else if (type == 'FBA') {
-                            scope.$apply( $location.path('/fbas/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/fbas/'+ws+'/'+id) );
                         } else if (type == 'Media') {
                             scope.$apply( $location.path('/media/'+ws+'/'+id) );
                         } else if (type == 'Cmonkey') {
@@ -1178,16 +1228,21 @@ angular.module('ws-directives')
                     options.append('<button class="btn btn-danger btn-delete-obj">\
                         <span class="glyphicon glyphicon-trash"></span></button> ');
 
-                    options.append('<div class="btn-group"><button class="btn btn-default btn-mv-dd" \
+                    options.append('<button class="btn btn-default btn-mv-dd" \
                                         data-toggle="dropdown">\
                                     <span class="glyphicon glyphicon-folder-open"></span>\
                                     <span class="caret"></span></button>\
                                     <ul class="dropdown-menu" role="menu">\
                                         <!--<li><a class="btn-mv-obj">Move</a></li>-->\
                                         <li><a class="btn-cp-obj">Copy</a></li>\
-                                    </ul></div>');
+                                    </ul>\
+                                    ');
+
+                    options.append('<a class="btn btn-default btn-favorite"><span class="glyphicon glyphicon-star"></span></a>');
+
+
                     // if user has narrative home workspace, add option to copy there
-                    if (scope.workspace_dict[USER_ID+'_home']) {
+                    if (scope.workspace_dict[USER_ID+':home']) {
                         var dd = options.find('.dropdown-menu')
                         dd.append('<li class="divider"></li>');
                         dd.append('<li><a class="btn-mv-obj-to-nar">Copy to Narrative Home</a></li>');
@@ -1285,12 +1340,14 @@ angular.module('ws-directives')
                         })
                         info_modal.data('dialogModal').find('.modal-footer .text-left').append(download);
 
-                        var open = $('<a class="open-obj pull-left">Open</a>')
+                        var open = $('<a class="open-obj pull-left">View JSON</a>')
                         open.click(function() {
                             var fileName = id+'.'+data[4]+'.json';
                             var jsonWindow = window.open(fileName,"_blank");
+                            jsonWindow.document.write('loading...  This may take several seconds or minutes.');
                             var prom = kb.ws.get_objects([{workspace: ws, name:id}])
                             $.when(prom).done(function(json) {
+                                jsonWindow.document.body.innerHTML = ''
                                 jsonWindow.document.write(JSON.stringify(json[0]));
                             })                            
                         })
@@ -1313,7 +1370,7 @@ angular.module('ws-directives')
                         //"fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
                       "aoColumns": [
-                          { "sTitle": ""},
+                          { "sTitle": "", bSortable: false},
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type", "sWidth": "20%"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
@@ -1420,7 +1477,7 @@ angular.module('ws-directives')
 
 
                 function copyObjectsToNarrative() {
-                    confirmCopy(USER_ID+'_home');
+                    confirmCopy(USER_ID+':home');
                 }
 
 
@@ -1466,15 +1523,21 @@ angular.module('ws-directives')
                         }
                     );
                     confirmCopy.openPrompt();
-                }                
-
+                } 
             }
 
         };
     })
 
 
-
+function getEditableDescription(d) {
+    var d = $('<form role="form">\
+               <div class="form-group">\
+                <textarea rows="4" class="form-control" placeholder="Description">'+d+'</textarea>\
+              </div>\
+              </form>');
+    return d;
+}
 
 function parse_name(name) {
     if (name.indexOf(USER_ID+':') != -1) {
@@ -1486,3 +1549,85 @@ function parse_name(name) {
 
 
 
+
+
+/*
+
+        function addFavorite(ws, id, type, widget) {
+            var get_state_prom = kb.ujs.get_state('favorites', 'queue', 0);
+            var prom = $.when(get_state_prom).then(function(queue) {
+                console.log('queue', queue)
+                if (!queue) var queue = [];
+
+                queue.push({ws: ws, id: id, widget: widget, type: type});
+                console.log('saving queue', queue)
+                var p = kb.ujs.set_state('favorites', 'queue', queue);
+                return p;
+            }).fail(function() {
+                var p = kb.ujs.set_state('favorites', 'queue', []);
+
+            });
+
+            return prom;
+        }
+
+        function rmFavorite(ws, id, type, widget) {
+            var get_state_prom = kb.ujs.get_state('favorites', 'queue', 0);
+            var prom = $.when(get_state_prom).then(function(q) {
+                if (!q) q = [];
+
+                for (var i = 0; i < q.length; i++) {
+                    if (q[i].ws == ws && q[i].id == id 
+                        && q[i].widget == widget && q[i].type == type) {
+                        q.splice(q.indexOf(i), 1);
+                    }
+                }
+
+                var p = kb.ujs.set_state('favorites', 'queue', q);
+                return p;
+            });
+
+            return prom;
+        }        
+
+        // mark as favorite, if found in user job state service
+        var prom = kb.ujs.get_state('favorites', 'queue', 0);
+        $.when(prom).done(function(queue) {
+            var favorites = queue;
+
+            for (var i in favorites) { 
+                if (favorites[i].ws == ws && favorites[i].id == id && favorites[i].widget == widget) {
+                    fav_btn.find('span').removeClass('glyphicon-star-empty');
+                    fav_btn.find('span').addClass('glyphicon-star');
+                }
+            }
+        })
+
+
+        // event for favoriting 
+        fav_btn.find('span').unbind('click');
+        fav_btn.find('span').click(function() {
+            if (fav_btn.find('span').hasClass('glyphicon-star-empty')) {
+                console.log('adding favorite: ', ws, id, type, widget)
+                $('.fav-loading').loading('');
+                var p = addFavorite(ws, id, type, widget);
+                $.when(p).done(function() {
+                    $('.fav-loading').rmLoading();
+                    self.toggleFavorite();
+                    $('.favorite-count').text(parseInt($('.favorite-count').text())+1) 
+                })       
+            } else {
+                $('.fav-loading').loading('');
+                var p = rmFavorite(ws, id, type, widget);
+                $.when(p).done(function(){
+                    $('.fav-loading').rmLoading();                    
+                    self.toggleFavorite();
+                    $('.favorite-count').text(parseInt($('.favorite-count').text())-1)
+                    container.slideUp(400, function(){
+                        $(this).remove();
+                    })
+                })
+            }
+        })
+
+*/

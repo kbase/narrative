@@ -2,12 +2,14 @@
     "setup": "prod",
 
     "prod": {"workspace_url": "https://kbase.us/services/ws/",
-             "fba_url" : "http://140.221.85.73:4043/" },
+             "fba_url" : "http://140.221.85.73:4043/",
+             "user_job_state_url": "http://140.221.84.180:7083"},
 
     "dev": { "workspace_url": "http://140.221.84.209:7058",
-             "fba_url" : "http://140.221.85.73:4043/" },
+             "fba_url" : "http://140.221.85.73:4043/",
+             "user_job_state_url": "http://140.221.84.180:7083" },
 
-    "narrative_url": "http://narrative.kbase.us/narrative"
+    "narrative_url": "//narrative.kbase.us/narrative"
 
 }
 

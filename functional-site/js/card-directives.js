@@ -12,152 +12,194 @@ angular.module('card-directives')
     .directive('genomecards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "genome", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "genome", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('gptype', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "gptype", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "gptype", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('gttype', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "gttype", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "gttype", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })    
     .directive('gvtype', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "gvtype", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "gvtype", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })    
     .directive('ggltype', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "ggltype", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "ggltype", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })    
     .directive('gtvtype', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "gtvtype", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "gtvtype", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('genecards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "gene", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "gene", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('memecards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "meme", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "meme", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('cmonkeycards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "cmonkey", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "cmonkey", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('inferelatorcards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "inferelator", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "inferelator", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('regprecisecards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "regprecise", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "regprecise", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('makcards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "mak", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "mak", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('bambicards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "bambi", 
-                                                   data: scope.params, 
-                                                   auth: $rootScope.USER_TOKEN,
-                                                   userId: $rootScope.USER_ID});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "bambi", 
+                    data: scope.params, 
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
             }
         };
     })
     .directive('ppid', function($rootScope) {
-	return {
-	    link: function(scope, element, attrs) {
-		$(element).KBaseCardLayoutManager({
-		    template: 'ppid',
-		    data: scope.params,
-		    auth: $rootScope.USER_TOKEN,
-		    userId: $rootScope.USER_ID
-		});
-	    }
-	};
+        return {
+            link: function(scope, element, attrs) {
+                if (cardManager) cardManager.destroy();
+                $(element).KBaseCardLayoutManager({
+                    template: 'ppid',
+                    data: scope.params,
+                    auth: $rootScope.USER_TOKEN,
+                    userId: $rootScope.USER_ID
+                });
+            }
+        };
     })
     .directive('modelcards', function($rootScope, $location) {
         return {
             link: function(scope, element, attrs) {
+                if(cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager();
                 var prom = kb.req('ws', 'get_objectmeta',
                             {type:'Model', id: scope.id, workspace: scope.ws, auth: scope.USER_TOKEN});
                 $.when(prom).done(function(data){
-                    $(element).KBaseCardLayoutManager().addNewCard("kbaseModelMeta", 
+                    cardManager.addNewCard("kbaseModelMeta", 
                         { title: 'Model Info',
                           data: data,
                           id: scope.id,
@@ -171,7 +213,7 @@ angular.module('card-directives')
                 var prom = kb.req('fba', 'get_models',
                             {models: [scope.id], workspaces: [scope.ws], auth: scope.USER_TOKEN});
                 $.when(prom).done(function(data) {
-                    $(element).KBaseCardLayoutManager().addNewCard("kbaseModelTabs", 
+                    cardManager.addNewCard("kbaseModelTabs", 
                         { modelsData: data,
                           title: 'Model Details',
                           id: scope.id,
@@ -181,7 +223,7 @@ angular.module('card-directives')
                           at: "left bottom",
                           of: "#app"
                     });
-                    $(element).KBaseCardLayoutManager().addNewCard("kbaseModelCore", 
+                    cardManager.addNewCard("kbaseModelCore", 
                         { title: 'Central Carbon Core Metabolic Pathway',
                           modelsData: data,
                           ids: [scope.id],
@@ -212,10 +254,12 @@ angular.module('card-directives')
     .directive('fbacards', function($rootScope, $location) {
         return {
             link: function(scope, element, attrs) {
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager();
                 var prom = kb.req('ws', 'get_objectmeta',
                             {type:'FBA', id: scope.id, workspace: scope.ws, auth: scope.USER_TOKEN});
                 $.when(prom).done(function(data){
-                    $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaMeta", 
+                    cardManager.addNewCard("kbaseFbaMeta", 
                         { title: 'Model Info',
                           data: data,
                           id: scope.id,
@@ -230,7 +274,7 @@ angular.module('card-directives')
                 var prom = kb.req('fba', 'get_fbas',
                             {fbas: [scope.id], workspaces: [scope.ws], auth: scope.USER_TOKEN})
                 $.when(prom).done(function(fbas_data) {
-                    $(element).KBaseCardLayoutManager().addNewCard("kbaseFbaTabs", 
+                    cardManager.addNewCard("kbaseFbaTabs", 
                         { title: 'FBA Details',
                           fbaData: fbas_data,
                           id: scope.id,
@@ -246,7 +290,7 @@ angular.module('card-directives')
                     var prom2 = kb.req('fba', 'get_models',
                             {models: [model_id], workspaces: [model_ws], auth: scope.USER_TOKEN});
                     $.when(prom2).done(function(models_data){
-                        $(element).KBaseCardLayoutManager().addNewCard("kbaseModelCore", 
+                        cardManager.addNewCard("kbaseModelCore", 
                             { title: 'Central Carbon Core Metabolic Pathway',
                               modelsData: models_data,
                               fbasData: fbas_data,
@@ -285,9 +329,12 @@ angular.module('card-directives')
     .directive('speccards', function($rootScope) {
         return {
             link: function(scope, element, attrs) {
-                $(element).KBaseCardLayoutManager({template: "spec", 
-                                                   data: scope.params,
-                                                   auth: $rootScope.USER_TOKEN});
+                if (cardManager) cardManager.destroy();
+                cardManager = $(element).KBaseCardLayoutManager({
+                    template: "spec", 
+                    data: scope.params,
+                    auth: $rootScope.USER_TOKEN
+                });
             }
         };
     })

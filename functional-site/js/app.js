@@ -18,10 +18,11 @@
  *
 */
 
+var cardManager = undefined;
 
 var app = angular.module('landing-pages', 
     ['lp-directives', 'card-directives',
-     'mv-directives', 'trees-directives', 
+     'trees-directives', 'fav-directives',
      'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin', 'FeedLoad', 'ui.bootstrap'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
@@ -30,22 +31,29 @@ var app = angular.module('landing-pages',
     $locationProvider.html5Mode(false);  
 
     $stateProvider
-        .state('narrative', {
-          url: "/narrative/",
+        .state('login', {
+          url: "/login/",
           templateUrl: 'views/narrative/login.html',
           controller: 'Narrative'
         })
 
     $stateProvider
-        .state('home', {
-          url: "/narrative/home/",
+        .state('search', {
+          url: "/search/?q",
+          templateUrl: 'views/search/search.html',
+          controller: 'Search'
+        })
+
+    $stateProvider
+        .state('narrative', {
+          url: "/narrative/",
           templateUrl: 'views/narrative/home.html',
           controller: 'Narrative'
-        }).state('home.projects', {
+        }).state('narrative.projects', {
           url: "projects/",
           templateUrl: 'views/narrative/projects.html',
           controller: 'NarrativeProjects'
-        }) 
+        })
 
 
     $stateProvider
@@ -57,27 +65,49 @@ var app = angular.module('landing-pages',
           url: "objtable/:ws",
           templateUrl: 'views/ws/objtable.html',
           controller: 'WorkspaceBrowser'
+        }).state('ws.models', {
+          url: "models/:ws/:id",
+          templateUrl: 'views/ws/sortable/model.html',
+          controller: 'WorkspaceBrowserLanding'
+        }).state('ws.fbas', {
+          url: "fbas/:ws/:id",
+          templateUrl: 'views/ws/sortable/fba.html',
+          controller: 'WorkspaceBrowserLanding'
+        }).state('ws.genomes', {
+          url: "genomes/:ws/:id",
+          templateUrl: 'views/ws/sortable/genome.html',
+          controller: 'WorkspaceBrowserLanding'
         })
 
 
+    $stateProvider
+        .state('favorites', {
+          url: "/favorites/",
+          templateUrl: 'views/ws/favorites.html',
+          controller: 'Favorites'
+        }).state('favorites.all', {
+          url: "all/",
+          templateUrl: 'views/ws/favorites.all.html',
+          controller: 'Favorites'
+        })
+
+    /*
     $stateProvider
         .state('mv', {
           url: "/mv/",
           templateUrl: 'views/mv/mv.html',
           controller: 'ModelViewer'
         })   
-        
         .state('mv.objtable', {
           url: "objtable/?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
           controller: 'ModelViewer'
         })
-        /*
         .state('mv.objtable.selectedobjs', {
           url: "?selected_ws&ws&ids",
           templateUrl: 'views/mv/objtable.html',
           controller: 'ModelViewer'
-        })*/       
+        })
         .state('mv.core', {
             url: "core/?ws&ids",
             templateUrl: 'views/mv/core.html',
@@ -92,7 +122,8 @@ var app = angular.module('landing-pages',
             url: "tree/?ws&ids",
             templateUrl: 'views/mv/tree.html',
             controller: 'ModelViewer'
-        })        
+        })
+    */   
 
     $stateProvider
         .state('trees', {
@@ -326,7 +357,7 @@ var app = angular.module('landing-pages',
              templateUrl: 'views/landing-pages-help.html',
              controller: LPHelp})
 
-    $urlRouterProvider.when('', '/narrative/');
+    $urlRouterProvider.when('', '/login/');
 
     $stateProvider
         .state('otherwise', 
@@ -344,7 +375,7 @@ kbaseLogin.factory('kbaseLogin', function() {
 //add the Google Feeds API as a module
 var Feed = angular.module('FeedLoad', ['ngResource'])
     .factory('FeedLoad', function ($resource) {
-        return $resource('http://ajax.googleapis.com/ajax/services/feed/load', {}, {
+        return $resource('//ajax.googleapis.com/ajax/services/feed/load', {}, {
             fetch: { method: 'JSONP', params: {v: '1.0', callback: 'JSON_CALLBACK'} }
         });
     });
@@ -352,6 +383,8 @@ var Feed = angular.module('FeedLoad', ['ngResource'])
 configJSON = $.parseJSON( $.ajax({url: "config.json", 
                              async: false, 
                              dataType: 'json'}).responseText )
+
+
 
 
 app.run(function ($rootScope, $state, $stateParams, $location) {
@@ -378,9 +411,8 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     USER_ID = $("#signin-button").kbaseLogin('session').user_id;
     USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
     kb = new KBCacheClient(USER_TOKEN);
+    kb.nar.ensure_home_project(USER_ID);
 
-    // Fixme, check before load
-    if (typeof USER_ID == 'undefined') $rootScope.$apply($location.path( '/narrative/' ) );
 
     // global state object to store state
     state = new State();
@@ -388,7 +420,17 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     // Critical: used for navigation urls and highlighting
     $rootScope.$state = $state;
     $rootScope.$stateParams = $stateParams;
+
+    // if logged in, display favorite count in navbar
+    // create global favorites list (should be overwritten)
+    var prom = kb.ujs.get_state('favorites', 'queue', 0);
+    $.when(prom).done(function(queue) {
+        favorites = queue;
+        $('.favorite-count').text(queue.length);
+    });
 });
+
+
 
 
 /*
@@ -409,8 +451,8 @@ function get_selected_ws() {
 
 
 function removeCards() {
-    $(".ui-dialog").remove();    
-    //$("#genomes").KBaseCardLayoutManager("destroy");
+    if (cardManager)
+        cardManager.closeAllCards();
 }
 
 
@@ -446,7 +488,7 @@ function set_cookie() {
 $.fn.loading = function(text) {
     $(this).rmLoading()
 
-    if (text) {
+    if (typeof text != 'undefined') {
         $(this).append('<p class="text-muted loader"> \
              <img src="assets/img/ajax-loader.gif"> '+text+'</p>');
     } else {

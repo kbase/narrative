@@ -193,8 +193,12 @@
         renderWorkspace: function() {
             this.showMessage("<img src='" + this.options.loadingImage + "'>");
             this.$infoPanel.hide();
-            console.log("rendering workspace genome");
-            console.log(this.options.kbCache);
+            // console.log("rendering workspace genome");
+            // console.log(this.options.kbCache);
+
+            isInt = function(n) {
+                return typeof n === 'number' && n % 1 == 0;
+            };
             
             var obj = this.buildObjectIdentity(this.options.workspaceID, this.options.genomeID);
 
@@ -207,8 +211,15 @@
                 var dnaLength = "Unknown";
                 if (genome.dna_size && genome.dna_size != 0) {
                     dnaLength = genome.dna_size;
-                    if (genome.gc_content)
-                        gcContent = Number(genome.gc_content/dnaLength*100).toFixed(2) + " %";
+                    if (genome.gc_content) {
+                        gcContent = Number(genome.gc_content);
+                        if (isInt(gcContent)) {
+                            if (dnaLength)
+                                gcContent = (gcContent/dnaLength*100).toFixed(2) + " %";
+                        }
+                        else
+                            gcContent = Number(gcContent.toFixed(2)) + " %";
+                    }
                 }
 
                 this.$infoTable.empty()

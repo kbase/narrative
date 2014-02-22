@@ -63,17 +63,18 @@ angular.module('narrative-directives')
 
                         $(element).rmLoading();
                         if (projs.length > 0) {
-                            var projects = []
+                            var projects = [];
                             //first sort
                             for (var i in projs) {
+
                                 var project = {};
                                 project.timestamp = getTimestamp(projs[i][3]); // moddate to timestamp
                                 if (!project.timestamp) continue; //fixme
-                                project.nealtime = formateDate(project.timestamp) 
-                                                    ? formateDate(project.timestamp) : 
+                                project.nealtime = formateDate(project.timestamp)
+                                                    ? formateDate(project.timestamp) :
                                                         projs[i][3].replace('T',' ').split('+')[0];
-                                project.name = parse_name(projs[i][7]); 
-                                projects.push(project)
+                                project.name = parse_name(projs[i][7]);
+                                projects.push(project);
                             }
 
                             scope.$apply(function() {
@@ -81,7 +82,7 @@ angular.module('narrative-directives')
                             })
 
                         } else {
-                            $(element).append('no projects')
+                            $(element).append('no projects');
                         }
                     })
                 }
@@ -110,6 +111,8 @@ angular.module('narrative-directives')
                 var tableId = 'project-table';
                 var table;
 
+                var proj_dict = {}
+                var proj_perms_dict = {};
 
                 // this "api" method loads the project/narrative table; 
                 scope.loadProjectList = function() {
@@ -121,24 +124,57 @@ angular.module('narrative-directives')
                     }
 
                     // get all projects
+                    proj_dict = {};  // reset global object
                     var proj_ids = [];
                     $(element).loading();
                     var p = kb.nar.get_projects()
                     $.when(p).done(function(projs){
                         var projects = [];
+                        for (var i in projs) {
+                            proj_ids.push(projs[i][7]); // project is a workspace, this is the workspace name
+                            proj_dict[projs[i][7]] = projs[i]
 
-                        for (var key in projs) {
-                            proj_ids.push(projs[key][7]); // project is a workspace, this is the workspace name
                         }
 
-                        // get narratives for each projectr //fixme: optimize
-                        getNarratives(proj_ids);
+                        //fixme: !!
+                        if(USER_ID) {
+                            var proms = getAllProjPerms(proj_ids)
+                            $.when.apply($, proms).done(function() {
+                                // create dictionary of [ {project_name: {perms}, ...} ] // so bad.
+                                for (var i in proj_ids) {
+                                    proj_perms_dict[proj_ids[i]] = arguments[i];
+                                }
+                                // get narratives for each projectr //fixme: optimize
+                                getNarratives(proj_ids);                            
+                            })
+                        } else {
+                            getNarratives(proj_ids); 
+                        }
+                        
+
                     })
 
                 }
 
                 scope.loadProjectList();
 
+                function getAllProjPerms(proj_names) {
+                    var proms = []
+                    for (var i in proj_names) {
+                        var p = kb.nar.get_project_perms({project_id: proj_names[i]})                        
+                        proms.push(p)
+                    }
+                    return proms;
+                }
+
+                function isSharedWith(proj, user) {
+                    var perms = proj_perms_dict[proj]
+                    if (user in perms && user != USER_ID) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
 
                 function getNarratives(proj_ids) {
                     var prom = kb.nar.get_narratives({project_ids:proj_ids})
@@ -147,8 +183,7 @@ angular.module('narrative-directives')
                         //var narratives = nars.slice(0); // make copy of narratives
 
                         var narratives = []
-
-                        var nar_projs = []
+                        var nar_projs = [];
                         for (var i in nars) {
                             var nar_dict = {}   
 
@@ -156,13 +191,16 @@ angular.module('narrative-directives')
                             var nar_id = nar[1];
                             var proj = nar[7]; // projects are workspaces right now
 
-                            nar_dict.id = '<a href="'+scope.nar_url+'/ws.'
+                            nar_dict.id = '<a class="nar-link" data-owner="'+nar_dict.owner
+                                            +'" data-proj="'+proj+'" data-nar="'+nar_id+'" href="'+scope.nar_url+'/ws.'
                                         +nar[6]+'.obj.'+nar[0]+'" >'+nar_id+'</a>';
+
                             // projects are workspaces right now
-                            console.log(proj)
-                            nar_dict.project = '<span class="proj-link" data-proj="'+proj+'"><span class="caret"></span>\
-                                             Project <b>'+parse_name(proj)+'</b></span>';
                             nar_dict.owner = nar[5];
+                            nar_dict.project = '<span class="proj-link" data-owner="'+nar_dict.owner
+                                            +'" data-proj="'+proj+'" ><span class="caret"></span>\
+                                             Project <b>'+parse_name(proj)+'</b> - ' + 
+                                             (nar_dict.owner == USER_ID ? 'Me' : nar_dict.owner)+'</span>'; 
 
 
                             var tstamp = getTimestamp(nar[3]);
@@ -170,17 +208,19 @@ angular.module('narrative-directives')
                             nar_dict.moddate = formateDate(tstamp) ? 
                                     formateDate(tstamp) : nar[3].replace('T',' ').split('+')[0];
 
+                            if (USER_ID) {
+                                nar_dict.sharedwith = isSharedWith(proj, nar_dict.owner) ? 'Yes' : 'No'
+                            } else {
+                                nar_dict.sharedwith = 'No';
+                            }
+
 
                             //nar.moddate = nar.moddate
-                            nar_dict.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" \
-                                                class="glyphicon glyphicon-trash btn-delete-narrative"></span>';
+                            //nar_dict.deleteButton = '<span data-proj="'+proj+'" data-nar="'+nar_id+'" \
+                            //                    class="glyphicon glyphicon-trash btn-delete-narrative"></span>';
 
-                            //fixme: wow!  This is horrible.
-                            nar_dict.users = '<span id="'+ proj+"-"+nar_id+'_users" >loading...</span>';
-                            //addUserColumn(proj, nar_id)
-
-                            narratives.push(nar_dict)
-                            nar_projs.push(proj)
+                            narratives.push(nar_dict);
+                            nar_projs.push(proj);
                         }
 
 
@@ -189,17 +229,17 @@ angular.module('narrative-directives')
                         for (var i in proj_ids) {
                             if (nar_projs.indexOf(proj_ids[i]) == -1) {
                                 //empty_projects.push(proj_ids[i])
-                                narratives.push({project: '<span class="proj-link" data-proj="'+proj_ids[i]+'">\
+                                narratives.push({project: '<span class="proj-link" data-owner="'+nar_dict.owner+'" data-proj="'+proj_ids[i]+'">\
                                                             <span class="caret"></span> Project <b>'+parse_name(proj_ids[i])+'</b>\
-                                                           </span>',
+                                                           </span> - '+(proj_dict[proj_ids[i]][5] == USER_ID ? 'Me' : proj_dict[proj_ids[i]][5]),
                                                 id: '<span class="text-muted">Empty Project</span>', 
-                                                owner: '', moddate: '', users: '', deleteButton: '', timestamp: ''})
+                                                owner: proj_dict[proj_ids[i]], moddate: '', //deleteButton: '',
+                                                timestamp: '', sharedwith: (isSharedWith(proj, nar_dict.owner) ? 'Yes' : 'No' )   })
                             }
                         }
 
                         buildTable(narratives);               
                     })
-
                 }
 
 
@@ -211,79 +251,123 @@ angular.module('narrative-directives')
                     })
                 }
 
-                function formatUsers(perms) {
+                // fixme: this seems like a lot of logic for the front end
+                function formatUsers(perms, owner) {
+                    var isowner = owner == USER_ID ? true : false;
 
                     var users = []
                     for (var user in perms) {
-                        if (user == '~global' || user == USER_ID) continue;
+                        if (user == '~global') {
+                            continue;
+                        }
+
+                        if (user == USER_ID && !isowner && !('*' in perms)) {
+                            users.push('You');
+                            continue;
+                        } else if (user == USER_ID) {
+                            continue;
+                        } else if (user == owner) {
+                            continue
+                        }
                         users.push(user);
                     }
 
-                    return users.join(', ');
+                    var n = 3;
+
+                    var share_str = ''
+                    if (users.length > n) {
+                        if (users.slice(n).length == 1) {
+                            share_str = 'Shared with: '+users.slice(0, n).join(', ')+', and'+
+                                    ' <a class="btn-share-with">+'+users.slice(n).length+' user</a>';  
+                        } else if (users.slice(2).length > 1) {
+
+                            share_str = 'Shared with: '+users.slice(0, n).join(', ')+ ', and'+
+                                    ' <a class="btn-share-with"> +'+users.slice(n).length+' users</a>';
+                        } 
+                    } else if (users.length > 0 && users.length <= n) {
+                        share_str = 'Shared with: '+users.slice(0, n).join(', ');
+                    }
+                    return share_str;
                 }
 
 
                 function buildTable(narratives) {
-                        // reinstantiate fixed header, if one already exists in dom
-                        if (table) {
-                            table.fnAddData(narratives)
-                        } else {
+                    // reinstantiate fixed header, if one already exists in dom
+                    if (table) {
+                        table.fnAddData(narratives)
+                    } else {
 
-                            var tableSettings = {
-                                "sPaginationType": "bootstrap",
-                                //"sPaginationType": "full_numbers",
-                                "iDisplayLength": 200,
-                                //"aaData": [],
-                                "fnDrawCallback": events,
-                                bLengthChange: false,
-                                "bInfo": false,
-                                "aaSorting": [[ 4, "desc" ]],
-                              "aoColumns": [
-                                  { "sTitle": "Name", "mData": "id"},
-                                  { "sTitle": "Owner", "mData": "owner"},
-                                  { "sTitle": "Project", "mData": "project"},  // grouped by this column
-                                  { "sTitle": "Shared With", "mData": "users", 'bVisible': false},
-                                  { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 6},
-                                  (USER_ID ? { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'} :
-                                        { "sTitle": "", "mData": "deleteButton", 'bSortable': false, bVisible: false}),
-                                  { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}  
+                        var tableSettings = {
+                            "sPaginationType": "bootstrap",
+                            //"sPaginationType": "full_numbers",
+                            "iDisplayLength": 1000,
+                            //"aaData": [],
+                            "fnDrawCallback": events,
+                            bLengthChange: false,
+                            "bInfo": false,
+                            "aaSorting": [[ 4, "desc" ]],
+                          "aoColumns": [
+                              { "sTitle": "Name", "mData": "id"},
+                              { "sTitle": "Owner", "mData": "owner", bVisible: false},
+                              { "sTitle": "Project", "mData": "project"},  // grouped by this column
+                              //{ "sTitle": "Shared With", "mData": "users", 'bVisible': false},
+                              { "sTitle": "Last Modified", "mData": "moddate", "iDataSort": 4, 'sWidth': '30%'},
 
-                              ],                         
-                                "oLanguage": {
-                                    //"sEmptyTable": "No objects in workspace",
-                                    "sSearch": "Search:"
-                                }
+                              //(USER_ID ? { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'sWidth': '1%'} :
+                              //      { "sTitle": "", "mData": "deleteButton", 'bSortable': false, 'bVisible': false}),
+
+                              { "sTitle": "unix time", "mData": "timestamp", "bVisible": false, "sType": 'numeric'}, 
+                              { "sTitle": "Shared with me", "mData": "sharedwith", "bVisible": false}  
+                          ],                         
+                            "oLanguage": {
+                                //"sEmptyTable": "No objects in workspace",
+                                "sSearch": "Search:"
                             }
-    
-
-                            tableSettings.aaData = narratives;
-                            table = $('#'+tableId).dataTable(tableSettings)
-                                            .rowGrouping({iGroupingColumnIndex: 2,
-                                                          bExpandableGrouping: true});
-                            if (USER_ID) {
-                                var new_proj_btn = $('<a class="btn btn-default pull-left">\
-                                        <span class="glyphicon glyphicon-plus"></span>New Project</a>')
-                                new_proj_btn.on('click', newProjectModal)
-                            $('.table-options').append(new_proj_btn)
-                            }
-
-                            new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                                  
                         }
+
+
+                        tableSettings.aaData = narratives;
+                        table = $('#'+tableId).dataTable(tableSettings)
+                                        .rowGrouping({iGroupingColumnIndex: 2,
+                                                      bExpandableGrouping: true});
+                        if (USER_ID) {
+                            var new_proj_btn = $('<a class="btn btn-default pull-left">\
+                                    <span class="glyphicon glyphicon-plus"></span>New Project</a>')
+                            new_proj_btn.on('click', newProjectModal)
+                            $('.table-options').append(new_proj_btn)
+
+                            $('.table-options').append('<div class="checkbox">\
+                                                    <label> \
+                                                      <input class="filter-owner" type="checkbox" checked="checked"> Owned by me\
+                                                    </label>\
+                                                  </div>\
+                                                  <div class="checkbox">\
+                                                    <label> \
+                                                      <input class="filter-sharedwithme" type="checkbox" > Shared with me\
+                                                    </label>\
+                                                  </div>');
+                            table.fnFilter(USER_ID, 1);                            
+
+                        }
+
+                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});    
+                        //events();                              
+                    }
+
+
                 }
 
 
 
                 function events() {
+
                     // adding buttons to project header
                     $('.group-item-expander').each(function() {
                         var self = this;
-                        var proj = $(this).find('.proj-link').data('proj');
-
-                        var prom = kb.nar.get_project_perms({project_id: proj});
-                        $.when(prom).done(function(results) {
-                            var user_list = formatUsers(results);
-                            $(self).append(user_list);
-                        })
+                        var proj_link = $(this).find('.proj-link')
+                        var proj = proj_link.data('proj');
+                        var owner = proj_link.data('owner');
+                
 
                         if (USER_ID) {
                             $(this).append('<span class="proj-opts pull-right">\
@@ -297,9 +381,47 @@ angular.module('narrative-directives')
                                            </span>');                  
                         }
 
+                       // add 'shared with' to project header
+                        if (USER_ID) {
+                            var user_list = formatUsers(proj_perms_dict[proj], owner);
+                            $(self).append('<span class="project-shared-with pull-right">'+user_list+'</span>');
+                            // event for edit perms button
+                            $('.btn-share-with').unbind('click')
+                            $('.btn-share-with').click(function(e){
+                                e.stopImmediatePropagation()
+                                var proj = $(this).parents('td').find('.proj-link').data('proj')
+                                manageProject(proj)
+                            })
+                        }                        
                     })
 
 
+
+                    // event for filters on projects
+                    $('.filter-owner').unbind('click');
+                    $('.filter-owner').click(function(e) {
+                        if (this.checked) {
+                            table.fnFilter( USER_ID, 1);
+                        } else {  
+                            table.fnFilter('', 1);
+                        }    
+                    })
+
+                    $('.filter-sharedwithme').unbind('click');
+                    $('.filter-sharedwithme').click(function(e) {
+                        var own_filter = $('.filter-owner')
+                        if (this.checked) {
+                            own_filter.parent().addClass('text-muted');
+                            own_filter.attr('checked', false);
+                            own_filter.attr('disabled', true);
+                            table.fnFilter('', 1);
+                            table.fnFilter( 'Yes', 5);
+                        } else {  
+                            own_filter.parent().removeClass('text-muted');
+                            own_filter.attr('disabled', false);
+                            table.fnFilter('', 5);
+                        }    
+                    })                    
 
                     // event for new narrative button
                     $('.btn-view-data').unbind('click')
@@ -318,8 +440,6 @@ angular.module('narrative-directives')
                         newNarrativeModal(proj);
                     })
 
-
-
                     // event for edit perms button
                     $('.edit-perms').unbind('click')
                     $('.edit-perms').click(function(e){
@@ -329,17 +449,110 @@ angular.module('narrative-directives')
                     })
 
                     // event for delete narrative button
-                    $('.btn-delete-narrative').unbind('click')
-                    $('.btn-delete-narrative').click(function(e){
-                        var proj = $(this).data('proj');
-                        var nar = $(this).data('nar');                        
-                        deleteNarrativeModal(proj, nar);
-                    })                    
+                    function delete_narrative_event() {
+                        $('.btn-delete-narrative').unbind('click')
+                        $('.btn-delete-narrative').click(function(e){
+                            //var proj = $(this).data('proj');
+                            //var nar = $(this).data('nar'); 
+                            var proj = $('.nar-selected .nar-link').data('proj');
+                            var nar = $('.nar-selected .nar-link').data('nar'); 
+
+                            deleteNarrativeModal(proj, nar);
+                        });
+                    }
+
+                    // event for rename narrative button
+                    function rename_narrative_event() {
+                        $('.btn-rename-narrative').unbind('click')
+                        $('.btn-rename-narrative').click(function(e){
+                            var link = $('.nar-selected .nar-link');
+                            var proj = link.data('proj');
+                            var nar = link.data('nar');
+
+                            // add editable input to table
+                            var input = $('<input type="text" class="form-control">');
+                            var form = $('<div class="col-sm-4 input-group input-group-sm"></div>');
+                            form.append(input);
+                            input.val(nar);
+                            input.parents('td').html(link);                            
+                            
+                            input.keypress(function (e) {
+                                if (e.which == 13) {
+                                    $(this).blur();
+                                }
+                            })
+
+                            // save new name when focus is lost or when key entered
+                            input.focusout(function() {
+                                var new_name = $(this).val();
+
+                                // if new name is actually new
+                                if (new_name != nar) {
+                                    var notice = $('<span>saving...</span>')
+                                    input.parents('td').html(notice);
+                                    console.log('calling api')
+                                    var p = renameNarrative(proj, nar, new_name);
+                                    $.when(p).done(function(data) {
+                                        //change link on page
+                                        link.data('nar', new_name)
+                                        link.html(new_name);
+                                        notice.parents('td').html(link);
+                                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                                           
+                                    }).fail(function(e){
+                                        notice.parents('td').html(link);
+                                        link.append(' <span class="text-danger">'+e.error.message+'</span>');
+                                        link.find('span').delay(2200).fadeOut(400, function(){
+                                            $(this).remove();
+                                        });
+                                    })
+                                } else {  // if didn't change name, replace link;
+                                    input.parents('td').html(link);
+                                }
+                            });
 
 
+
+
+                            $('.nar-selected .nar-link').parent().html(form);
+                            input.focus();  
+
+                        });
+                    }
+
+                    // event for clicking on narrative row (and brining up options)
+                    $('#project-table tr').unbind('click')
+                    $('#project-table tr').click(function(e){
+                        e.stopPropagation();
+                        var nar = $(this).find('.nar-link').data('nar'); 
+
+                        // don't do anything for empty projects (no narratives) or group expander
+                        // I'm proud of this one :)
+                        if (!nar) return;
+
+                        $('#project-table tr').removeClass('nar-selected');
+                        $(this).addClass('nar-selected');
+
+                        $('.fixedHeader').html('');
+                        var ele = '<div class="narrative-options">'+(nar ? nar : '')+
+                                        ' <a class="btn-rename-narrative"><span class="glyphicon glyphicon-edit"></span> Rename</a> \
+                                          <a class="btn-delete-narrative"><span class="glyphicon glyphicon-trash"></span> Delete</a>\
+                                   </div>'
+                        var c = $('<div class="narrative-options-container">');
+                        c.append(ele)
+                        $('.fixedHeader').append(c);
+                        delete_narrative_event();
+                        rename_narrative_event();
+                    })
+
+                    // event for putting fixed header back on page
+                    //    this special event uses .row since that container should be 
+                    //    replaced via angular when view changes
+                    $('.row').unbind('click');
+                    $('.row').click(function() {
+                        $('#project-table tr').removeClass('nar-selected');
+                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                            
+                    })
                 }
-
-
 
 
                 function newProjectModal() {
@@ -359,12 +572,12 @@ angular.module('narrative-directives')
                                           <div style="margin: 7px 0 0 0;">None</div>\
                                         </div>\
                                       </div>\
-                                      <!--<div class="form-group">\
+                                      <div class="form-group">\
                                         <label class="col-sm-4 control-label">Description</label>\
                                         <div class="col-sm-7">\
                                           <textarea class="form-control create-descript" rows="3"></textarea>\
                                         </div>\
-                                      </div>-->\
+                                      </div>\
                                   </div>')
                     
 
@@ -377,6 +590,7 @@ angular.module('narrative-directives')
                                 type : 'primary',
                                 callback : function(e, $prompt) {
                                     var proj_name = $(".new-project-name").val();
+                                    var descript = $('.create-descript').val();
 
                                     //no spaces allowed in narrative name
                                     proj_name = proj_name.replace(/ /g,"_");
@@ -401,16 +615,15 @@ angular.module('narrative-directives')
                                             var proj = USER_ID+':'+s_proj[1];
                                         } else {
                                             error = 'Only your username ('+USER_ID+') may be used before a colon';
-                                            
                                         }
                                     } else {
-                                        var proj = USER_ID+':'+proj_name
+                                        var proj = USER_ID+':'+proj_name;
                                     }
 
                                     if (error) {
                                         $prompt.addCover(error, 'danger');
                                     } else {
-                                        var p =  kb.nar.new_project({project_id: proj})    
+                                        var p =  kb.nar.new_project({project_id: proj, description: descript})    
                                         $.when(p).done(function() {
                                             $prompt.addCover('Created project <b><i>'+proj+'</b></i>');
 
@@ -492,17 +705,7 @@ angular.module('narrative-directives')
                                         });
 
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);     
-
-                                        //redirect to the narrative page
-                                        //var userId = $("#login-widget").kbaseLogin("get_kbase_cookie", "user_id");
-                                        //window.location.href = "http://narrative.kbase.us/"+proj_id+"."+name;
                                     })
-
-
-                                    // fixme: use promise!
-                                    //.fail(function(e) {
-                                    //    $prompt.addCover(e.error.message, 'danger');                                            
-                                    //})
                                 }
                             }]
                         }
@@ -559,6 +762,9 @@ angular.module('narrative-directives')
                     deleteModal.addAlert('<strong>Warning</strong> this narrative will be deleted!');
                 }
 
+                function renameNarrative(proj, nar, new_name) {
+                    return kb.ws.rename_object({obj: {workspace: proj, name: nar}, new_name: new_name})
+                }
 
 
                 function deleteProject(proj_name) {
@@ -609,20 +815,20 @@ angular.module('narrative-directives')
                 }
 
 
-                function manageProject(proj_id) {
-
+                
+                function manageProject(p_name) {
                     var perm_dict = {'a': 'Admin',
                                      'r': 'Read',
                                      'w': 'Write',
                                      'o': 'Owner',
                                      'n': 'None'};
 
-
                     var content = $('<div class="manage-content"></div>');
+
                     // modal for managing project permissions, and delete
                     var permData; 
                     var manage_modal = $('<div></div>').kbasePrompt({
-                            title : 'Manage Project'+' <small>'+proj_id+'</small>',
+                            title : 'Manage Project'+' <small>'+p_name+'</small> <a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></a>',
                             body : content,
                             modalClass : '', 
                             controls : [{
@@ -637,14 +843,33 @@ angular.module('narrative-directives')
                                 callback : function(e, $prompt) {
                                         $prompt.addCover();
                                         $prompt.getCover().loading();
+                               
+                                        var prom = savePermissions(p_name);
+                                        prompt = $prompt;
 
-                                        // save permissions
-                                        var prom = savePermissions(proj_id);
-                                        $.when(prom).done(function(){
-                                            $prompt.addCover('Permissions saved.', 'success');                                            
-                                        }).fail(function(e) {
-                                            $prompt.addCover(e.error.message, 'danger');                                             
-                                        }) 
+                                        // save permissions, then save description
+                                        $.when(prom).done(function() {
+                                            // if description textarea is showing, saving description
+                                            if ($('#ws-description textarea').length > 0) {
+                                                var d = $('#ws-description textarea').val();
+
+                                                // saving description
+                                                var prom = kb.nar.set_project_description(p_name, d)
+                                                $.when(prom).done(function() {
+                                                    prompt.addCover('Saved.');
+                                                    prompt.closePrompt();
+                                                    manageProject(p_name);                                            
+                                                }).fail(function(e){
+                                                    prompt.addCover(e.error.message, 'danger');
+                                                })
+                                            } else {
+                                                prompt.addCover('Saved.');
+                                                prompt.closePrompt();
+                                                manageProject(p_name);
+                                            }
+                                        }).fail(function(e){
+                                            prompt.addCover(e.error.message, 'danger');
+                                        })
                                     }
                                 }]
                         })
@@ -652,16 +877,17 @@ angular.module('narrative-directives')
                     manage_modal.openPrompt();
                     var dialog = manage_modal.data('dialogModal');
                     dialog.find('.modal-dialog').css('width', '500px');
+                    var modal_body = dialog.find('.modal-body');
 
-
-                    var modal_body = manage_modal.data('dialogModal').find('.modal-body');
-
+                    var modal_footer = dialog.find('.modal-footer');
+                    var save_btn = modal_footer.find('.btn-primary');
+                    save_btn.attr('disabled', true);
                     // if user is logged in and admin 
 
                     var placeholder = $('<div></div>').loading()
                     modal_body.append(placeholder); 
 
-                    var prom = kb.nar.get_project_perms({project_id: proj_id})
+                    var prom = kb.nar.get_project_perms({project_id: p_name})
 
                     $.when(prom).done(function(data) {
                         permData = data
@@ -677,33 +903,55 @@ angular.module('narrative-directives')
                         var perm_table = getPermTable(permData)
                         perm_container.append(perm_table);
 
-                        $('.edit-perms').click(function() {
+                        $('.btn-edit').click(function() {
                             if (perm_container.find('table.perm-table').length > 0) {
                                 $(this).html('Cancel')
                                 perm_table.remove()
                                 perm_table = getEditablePermTable(data);
                                 perm_container.html(perm_table);
+                                save_btn.attr('disabled', false);                                        
                             } else {
                                 $(this).html('Edit')                                    
                                 perm_table.remove()
                                 perm_table = getPermTable(data);
-                                perm_container.html(perm_table);                                  
+                                perm_container.html(perm_table);
+                                save_btn.attr('disabled', true);                                        
                             }
                         })
 
 
-                        var del_proj = $('<a class="btn btn-danger pull-left">Delete</a>');
+
+                        var del_proj = $('<a class="btn btn-danger pull-left">Delete Project</a>');
 
                         del_proj.click(function() { 
-                            deleteProject(proj_id)
+                            deleteProject(p_name)
                         });
                         dialog.find('.modal-footer .text-left').append(del_proj);
                     })
 
+                    var prom = kb.nar.get_project_description(p_name);
+                    $.when(prom).done(function(descript) {
+                        console.log('got description', descript)
+                        var d = $('<div>');
+                        d.append('<h5>Description</h5>');
+                        d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
+                        modal_body.prepend(d);
 
-
-
-                    function savePermissions(ws_name) {
+                        $('.btn-edit').click(function(){
+                            if ($('#ws-description textarea').length > 0) {
+                                $('#ws-description').html(descript);
+                                $(this).text('Edit');
+                                save_btn.attr('disabled', true);
+                            } else {
+                                var editable = getEditableDescription(descript);
+                                $('#ws-description').html(editable);
+                                $(this).text('Cancel');
+                                save_btn.attr('disabled', false);
+                            }
+                        })
+                    })
+                
+                    function savePermissions(p_name) {
                         var newPerms = {};
                         var table = $('.edit-perm-table');
                         table.find('tr').each(function() {
@@ -728,7 +976,7 @@ angular.module('narrative-directives')
 
 
                             var params = {
-                                workspace: ws_name,
+                                workspace: p_name,
                                 new_permission: newPerms[new_user],
                                 users: [new_user],
                                 //auth: USER_TOKEN
@@ -747,7 +995,7 @@ angular.module('narrative-directives')
                             if ( !(user in newPerms) ) {
 
                                 var params = {
-                                    workspace: ws_name,
+                                    workspace: p_name,
                                     new_permission: 'n',
                                     users: [user],
                                     //auth: USER_TOKEN
@@ -872,7 +1120,9 @@ angular.module('narrative-directives')
 
                         return $('<div>').append(dd).html();
                     }
-                }  // end manageModal
+                }  // end manageProject
+
+
 
 
 
@@ -939,7 +1189,7 @@ function formateDate(timestamp) {
         var d = new Date(timestamp);        
         var day = dayOfWeek[d.getDay()]
         var t = d.toLocaleTimeString().split(':');
-        return 'Last '+ day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
+        return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
     } else  {
         var d = new Date(timestamp);        
         return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); //check
@@ -977,8 +1227,6 @@ narrativeDirectives.directive('newsfeed', function(FeedLoad, $compile) {
                     }
                     
                     $(element).html($(feedContent));
-
-                    
                 });
 
             } 

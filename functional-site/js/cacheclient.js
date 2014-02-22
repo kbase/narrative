@@ -51,7 +51,6 @@ function KBCacheClient(token) {
     var kbws = new Workspace(ws_url, auth);
     var ujs = new UserAndJobState(ujs_url, auth);
 
-  
     var cache = new Cache();
 
     this.req = function(service, method, params) {

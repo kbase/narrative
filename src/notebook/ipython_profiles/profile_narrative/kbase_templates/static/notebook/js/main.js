@@ -61,6 +61,11 @@ function (marked) {
     IPython.notification_area = new IPython.NotificationArea('#notification_area')
     IPython.notification_area.init_notification_widgets();
 
+    // Monkey patch to get the narrative 'start me up' event registered at the right time.
+    narrative.init();
+    // End Monkey patch.
+
+
     IPython.layout_manager.do_resize();
 
     $('body').append('<div id="fonttest"><pre><span id="test1">x</span>'+
@@ -85,6 +90,7 @@ function (marked) {
             document.location.hash = hash;
         }
         IPython.notebook.set_autosave_interval(IPython.notebook.minimum_autosave_interval);
+
         // only do this once
         $([IPython.events]).off('notebook_loaded.Notebook', first_load);
     };

@@ -16,6 +16,7 @@
         version: '0.0.1',
         options: {
             loadingImage: 'static/kbase/images/ajax-loader.gif',
+            autopopulate: true,
         },
 
         /**
@@ -32,6 +33,8 @@
          */
         init: function(options) {
             this._super(options);
+
+            console.debug("kbaseNarrativeFunctionPanel.init start");
 
             // DOM structure setup here.
             // After this, just need to update the function list
@@ -91,6 +94,11 @@
             $('body').append(this.$helpPanel);
             this.refresh();
 
+            if (this.options.autopopulate === true) {
+                this.refresh();
+            }
+
+            console.debug("kbaseNarrativeFunctionPanel.init done");
             return this;
         },
         
@@ -110,32 +118,36 @@
             var fetchFunctionsCommand = 'import biokbase.narrative.common.service_root as root\n' + 
                                         'print root.service.get_all_services(as_json_schema=True)\n';
 
-            var self = this;
             var callbacks = {
-                'output' : function(msgType, content) { 
-                    self.parseKernelResponse(msgType, content); 
-                    self.showFunctionPanel();
-                },
-                'execute_reply' : function(content) { 
-                    self.handleCallback("execute_reply", content); 
-                },
-                'clear_output' : function(content) { 
-                    self.handleCallback("clear_output", content); 
-                },
-                'set_next_input' : function(content) { 
-                    self.handleCallback("set_next_input", content); 
-                },
-                'input_request' : function(content) { 
-                    self.handleCallback("input_request", content); 
-                },
+                'output' : $.proxy(function(msgType, content) { 
+                    this.parseKernelResponse(msgType, content); 
+                    this.showFunctionPanel();
+                }, this),
+                'execute_reply' : $.proxy(function(content) { 
+                    this.handleCallback("execute_reply", content); 
+                }, this),
+                'clear_output' : $.proxy(function(content) { 
+                    this.handleCallback("clear_output", content); 
+                }, this),
+                'set_next_input' : $.proxy(function(content) { 
+                    this.handleCallback("set_next_input", content); 
+                }, this),
+                'input_request' : $.proxy(function(content) { 
+                    this.handleCallback("input_request", content); 
+                }, this),
             };
 
+            console.debug("kbaseNarrativeFunctionPanel.refresh running kernel command");
             var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
         },
 
         handleCallback: function(call, content) {
             if (content.status === "error") {
                 this.showError(content);
+            }
+            else {
+                console.debug("kbaseNarrativeFunctionPanel." + call);
+                console.debug(content);
             }
         },
 

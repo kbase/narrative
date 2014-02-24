@@ -279,22 +279,17 @@ angular.module('ws-directives')
                         table.append(row);
                     }
 
-                    // add editable global permisssion
-                    var row = $('<tr>');
-                    row.append('<td class="manage-modal-attribute"><strong>Global Permission</strong></td>'
-                            + '<td class="manage-modal-value btn-global-perm">' + perm_dict[settings[5]] + '</td>');
-                    table.append(row);
-
-                    var content = $('<div class="manage-content"></div>');
-                    content.append(table);
+                    var content = '<div class="ws-description"><h5>Description</h5><div class="descript-container"></div></div>\
+                                    <div class="ws-info"><h5>Info</h5></div>\
+                                    <div class="ws-perms"><h5>User Permisions</h5><div class="perm-container"></div></div>'
 
                     // modal for managing workspace permissions, clone, and delete
-                    var permData; 
+                    var permData;
                     var manage_modal = $('<div></div>').kbasePrompt({
                             title : 'Manage Workspace '+
                                 (USER_ID ? '<a class="btn btn-primary btn-xs btn-edit">Edit <span class="glyphicon glyphicon-pencil"></span></a>' : ''),
                             body : content,
-                            modalClass : '', 
+                            modalClass : '',
                             controls : [{
                                 name: 'Close',
                                 type: 'default',
@@ -314,7 +309,7 @@ angular.module('ws-directives')
                                     // save permissions, then save description, then the global perm //fixme
                                     $.when(prom).done(function() {
                                         // if description textarea is showing, saving description
-                                        var d = $('#ws-description textarea').val();
+                                        var d = $('.descript-container textarea').val();
 
                                         // saving description
                                         var p1 = kb.ws.set_workspace_description({workspace: ws_name, 
@@ -352,6 +347,28 @@ angular.module('ws-directives')
                     var save_btn = modal_footer.find('.btn-primary');
                     save_btn.attr('disabled', true);
 
+                    // add editable global permisssion
+                    kb.ws.get_workspace_info({workspace: ws_name}).done(function(data) {
+                        var perm = data[6];
+                        var row = $('<tr>');
+                        row.append('<td class="manage-modal-attribute"><strong>Global Permission</strong></td>'
+                                + '<td class="manage-modal-value btn-global-perm">' + perm_dict[perm] + '</td>');
+                        table.append(row);
+
+                        // event for editable global perm
+                        $('.btn-edit').click(function() {
+                            if ($(this).hasClass('editable')) {
+                                $('.btn-global-perm').html(globalPermDropDown(perm));   
+                            } else {
+                                $('.btn-global-perm').html('')  //fixme: create editable form plugin
+                                $('.btn-global-perm').text(perm_dict[perm]);
+                            }
+                        })
+
+                        modal_body.find('.ws-info').append(table)
+                    })
+
+
                     // editable status
                     $('.btn-edit').click(function(){
                         $(this).toggleClass('editable');
@@ -378,22 +395,19 @@ angular.module('ws-directives')
                         deleteWorkspace(ws_name);
                     });
 
-                    var dialog = manage_modal.data('dialogModal');
-                    var modal_body = dialog.find('.modal-body');
-
+                    // get and display editable description
                     var prom = kb.ws.get_workspace_description({workspace:ws_name})
                     $.when(prom).done(function(descript) {
-                        var d = $('<div>');
-                        d.append('<h5>Description</h5>');
-                        d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
-                        modal_body.prepend(d);
+                        var d = (descript ? descript : '(none)')+'<br>';
+                        modal_body.find('.descript-container')
+                            .append(d);
 
                         $('.btn-edit').click(function(){
                             if ($(this).hasClass('editable')) {
                                 var editable = getEditableDescription(descript);
-                                $('#ws-description').html(editable);
+                                $('.descript-container').html(editable);
                             } else {
-                                $('#ws-description').html(descript);
+                                $('.descript-container').html(descript);
                             }
                         })
                     })
@@ -414,14 +428,7 @@ angular.module('ws-directives')
                             //newPerms = $.extend({},data)
                             placeholder.rmLoading();
 
-                            if (isAdmin) {
-                                modal_body.append('<hr><h5>User Permissions<h5>')
-                            } else {
-                                modal_body.append('<h5>User Permissions</h5>');                                
-                            }
-
-                            var perm_container = $('<div class="perm-container"></div>');
-                            modal_body.append(perm_container);
+                            perm_container = modal_body.find('.perm-container');
 
                             var perm_table = getPermTable(data)
                             perm_container.append(perm_table);
@@ -443,17 +450,6 @@ angular.module('ws-directives')
                         })
                     }
 
-
-                    var global_perm = $('.btn-global-perm').text(); //fixme: create editable form plugin
-                    var p = (global_perm == 'None' ? 'n' : 'r');
-                    $('.btn-edit').click(function() {
-                        if ($(this).hasClass('editable')) {
-                            $('.btn-global-perm').html(globalPermDropDown(p));   
-                        } else {
-                            $('.btn-global-perm').html('')  //fixme: create editable form plugin
-                            $('.btn-global-perm').text(global_perm);
-                        }
-                    })
 
 
 
@@ -636,24 +632,24 @@ angular.module('ws-directives')
                         return $('<div>').append(dd).html();
                     }
 
-                    function globalPermDropDown(perm) {
-                        var dd = $('<select class="form-control create-permission" data-value="n">\
-                                        <option value="n">None</option>\
-                                        <option value="r">Read</option>\
-                                    </select>')
-                        if (perm == 'n') {
-                            dd.find("option[value='n']").attr('selected', 'selected');
-                        } else if (perm == 'r') {
-                            dd.find("option[value='r']").attr('selected', 'selected');                        
-                        } else {
-                            dd.find("option[value='n']").attr('selected', 'selected');
-                        }
-
-                        return $('<div>').append(dd).html();
-                    }
-
                 }  // end manageModal
 
+
+                function globalPermDropDown(perm) {
+                    var dd = $('<select class="form-control create-permission" data-value="n">\
+                                    <option value="n">None</option>\
+                                    <option value="r">Read</option>\
+                                </select>')
+                    if (perm == 'n') {
+                        dd.find("option[value='n']").attr('selected', 'selected');
+                    } else if (perm == 'r') {
+                        dd.find("option[value='r']").attr('selected', 'selected');                        
+                    } else {
+                        dd.find("option[value='n']").attr('selected', 'selected');
+                    }
+
+                    return $('<div>').append(dd).html();
+                }
 
 
                 function createWorkspaceModal() {
@@ -887,12 +883,12 @@ angular.module('ws-directives')
                         "fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
                       "aoColumns": [
-                          (USER_ID ? { "sTitle": "", bSortable: false} : { "sTitle": "", bVisible: false}),
+                          (USER_ID ? { "sTitle": "", bSortable: false, "sWidth": "1%"} : { "sTitle": "", bVisible: false, "sWidth": "1%"}),
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type", "sWidth": "20%"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
                           { "sTitle": "Owner"},
-                          { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}                   
+                          { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}
 
                       ],                         
                         "oLanguage": {
@@ -1238,7 +1234,7 @@ angular.module('ws-directives')
                                     </ul>\
                                     ');
 
-                    options.append('<a class="btn btn-default btn-favorite"><span class="glyphicon glyphicon-star"></span></a>');
+                    //options.append('<a class="btn btn-default btn-favorite"><span class="glyphicon glyphicon-star"></span></a>');
 
 
                     // if user has narrative home workspace, add option to copy there

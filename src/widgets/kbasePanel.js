@@ -37,8 +37,8 @@ $.KBWidget({
                                     '<span class="panel-title"></span>'+
                                     '<a class="pull-right btn-rm-panel text-muted"><span class="glyphicon glyphicon-remove"></span></a>'+
                                     '<a class="btn-favorite pull-right" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'+
-                                    (fav ? '<span class="glyphicon glyphicon-star"></span>'  :
-                                        '<span class="glyphicon glyphicon-star-empty"></span>')+
+                                    //(fav ? '<span class="glyphicon glyphicon-star"></span>'  :
+                                    //    '<span class="glyphicon glyphicon-star-empty"></span>')+
                                     '</a>'+
                                     '<div class="panel-subtitle"></div>'+
                                 '</div>'+

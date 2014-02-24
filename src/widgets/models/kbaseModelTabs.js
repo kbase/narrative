@@ -66,7 +66,7 @@ $.KBWidget({
         })
 
         var tableSettings = {
-            "sPaginationType": "full_numbers",
+            "sPaginationType": "bootstrap",
             "iDisplayLength": 5,
             "aaData": [],
             "oLanguage": {

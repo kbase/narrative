@@ -307,7 +307,8 @@ div::-webkit-scrollbar-thumb {
     margin: 0 4px 0 0 ;
 }
 .select-ws .btn-ws-settings {
-    padding: 0px 5px;
+    padding: 3px 7px 0 7px;
+    margin: -3px;
 }
 
 .modal-alert {

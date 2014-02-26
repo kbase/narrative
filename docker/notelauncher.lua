@@ -5,9 +5,16 @@ local M = {}
 
 local docker = require('docker')
 local json = require('json')
-local docker_image = 'sychan/narrative:latest'
 local p = require('pl.pretty')
-local private_port = 8888
+
+-- This is the repository name, can be set by whoever instantiates a notelauncher
+M.repository_image = 'sychan/narrative'
+-- This is the tag to use, defaults to latest
+M.repository_version = 'latest'
+-- This is the port that should be exposed from the container, the service in the container
+-- should have a listener on here configured
+M.private_port = 8888
+
 --
 --  Query the docker container for a list of containers and
 -- return a list of the container names that have listeners on
@@ -17,12 +24,13 @@ local function get_notebooks()
    local res = docker.client:containers()
    local portmap = {}
    for index,container in pairs(res.body) do
-      -- we only care about containers running docker_image and listening on the proper port
-      if container.Image == docker_image then
+      -- we only care about containers matching repository_image and listening on the proper port
+      first,last = string.find(container.Image,M.repository_image)
+      if first == 1 then
 	 name = string.sub(container.Names[1],2,-1)
 	 portmap[name]={}
 	 for i, v in pairs(container.Ports) do
-	    if v.PrivatePort == private_port then
+	    if v.PrivatePort == M.private_port then
 	       portmap[name] = string.format("127.0.0.1:%u", v.PublicPort)
 	    end
 	 end
@@ -39,9 +47,9 @@ local function launch_notebook( name )
    local portmap = get_notebooks()
    assert(portmap[name] == nil, "Notebook by this name already exists: " .. name)
    local conf = docker.config()
-   conf.Image = docker_image
+   conf.Image = string.format("%s:%s",M.repository_image,M.repository_version)
    conf.Cmd={name}
-   conf.PortSpecs = {"8888"}
+   conf.PortSpecs = {M.private_port}
    --p.dump(conf)
    local res = docker.client:create_container{ payload = conf, name = name}
    --p.dump(res)
@@ -55,8 +63,9 @@ local function launch_notebook( name )
    --p.dump(res)
    assert(res.status == 200, "Could not inspect new container: " .. id)
    local ports = res.body.NetworkSettings.Ports
-   assert( ports["8888/tcp"] ~= nil, "Port binding for port 8888/tcp not found!")
-   return(string.format("%s:%d","127.0.0.1", ports['8888/tcp'][1].HostPort))
+   local ThePort = string.format("%d/tcp", M.private_port)
+   assert( ports[ThePort] ~= nil, string.format("Port binding for port %s not found!",ThePort))
+   return(string.format("%s:%d","127.0.0.1", ports[ThePort][1].HostPort))
 end
 
 --

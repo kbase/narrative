@@ -279,9 +279,18 @@ angular.module('ws-directives')
                         table.append(row);
                     }
 
-                    var content = '<div class="ws-description"><h5>Description</h5><div class="descript-container"></div></div>\
-                                    <div class="ws-info"><h5>Info</h5></div>\
-                                    <div class="ws-perms"><h5>User Permisions</h5><div class="perm-container"></div></div>'
+                    var content = '<div class="ws-description">\
+                                        <h5>Description</h5>\
+                                        <div class="descript-container"></div>\
+                                   </div>\
+                                   <div class="ws-info">\
+                                        <h5>Info</h5>\
+                                   </div>'+
+                                   (USER_ID ?
+                                   '<div class="ws-perms">\
+                                        <h5>User Permisions</h5>\
+                                        <div class="perm-container"></div>\
+                                   </div>' : '');
 
                     // modal for managing workspace permissions, clone, and delete
                     var permData;

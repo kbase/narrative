@@ -5919,7 +5919,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
         },
         cdmiURL: "http://kbase.us/services/cdmi_api",
         proteinInfoURL: "http://kbase.us/services/protein_info_service",
-        workspaceURL: "http://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         tooltip: null,
         operonFeatures: [],
         $messagePane: null,
@@ -6322,7 +6322,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             title: "Feature Info"
         },
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         init: function(options) {
             this._super(options);
             if (this.options.featureID === null) {
@@ -6388,7 +6388,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             title: "Gene Instance"
         },
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         init: function(options) {
             this._super(options);
             if (this.options.featureID === null) {
@@ -6620,7 +6620,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             isInCard: false
         },
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         init: function(options) {
             this._super(options);
             if (this.options.genomeID === null) {
@@ -6701,7 +6701,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
         },
         wikiScraperURL: "http://140.221.85.80:7051",
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         init: function(options) {
             this._super(options);
             if (this.options.featureID === null) {
@@ -8091,7 +8091,7 @@ function WSHandler(params) {
     console.log("here");
     var parent = this;
     var user = params && params.user ? params.user : null;
-    var url = params && params.url ? params.url : "http://kbase.us/services/workspace";
+    var url = params && params.url ? params.url : "https://kbase.us/services/ws/";
     var service = new workspaceService(url);
     this.getWorkspace = function(workspaceId) {
         var def = $.Deferred();

@@ -11,9 +11,13 @@
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
-            fbaURL: "https://kbase.us/services/fba_model_services",
+            loadingImage: "static/kbase/images/ajax-loader.gif",
+            //fbaURL: "https://kbase.us/services/fba_model_services",
+            //fbaURL: "http://140.221.84.183:7036",
+            fbaURL: "https://kbase.us/services/KBaseFBAModeling",
         },
+        mediaType: "KBaseBiochem.Media",
+        IGNORE_VERSION: false,
 
         init: function(options) {
             this._super(options);
@@ -21,19 +25,17 @@
             this.trigger("workspaceQuery.Narrative", $.proxy(
                 function(wsId) {
                     this.wsId = wsId;
-                    this.trigger("dataLoadedQuery.Narrative", [ ["Media"], $.proxy(
-                        function(objects) {
-                            this.$fetchMediaDiv = this.buildFetchMediaDiv(objects["Media"]);
-                            this.$headerInputDiv = this.buildHeaderInputs();
-                            this.$mediaTable = this.buildMediaTable();
-                            this.addEmptyMediaRow();
+                    this.$fetchMediaDiv = this.buildFetchMediaDiv();
+                    this.$headerInputDiv = this.buildHeaderInputs();
+                    this.$mediaTable = this.buildMediaTable();
+                    this.addEmptyMediaRow();
 
-                            this.$elem.append(this.$fetchMediaDiv)
-                                      .append(this.$headerInputDiv)
-                                      .append(this.$mediaTable);
-                        },
-                        this
-                    )]);
+                    this.$elem.append(this.$fetchMediaDiv)
+                              .append(this.$headerInputDiv)
+                              .append(this.$mediaTable);
+
+                    this.refresh();
+
                 }, this));
 
             return this;
@@ -42,14 +44,13 @@
         /**
          * Builds controls to fetch a media set and populate the current list.
          */
-        buildFetchMediaDiv: function(mediaList) {
-            var $fetchMediaDiv = $("<div>");
+        buildFetchMediaDiv: function() {
+            var $fetchMediaDiv = $("<div class='form-inline'>");
             $fetchMediaDiv.append("Select an existing media to modify (optional): ");
 
-            var $mediaList = $("<select>");
-            for (var i=0; i<mediaList.length; i++) {
-                $mediaList.append($("<option>").append(mediaList[i][0]));
-            }
+            var $mediaList = $("<select>")
+                              .addClass('form-control')
+                              .css({'max-width': '80%', 'margin-right' : '10px'});
 
             var $fetchButton = $("<button>")
                                .attr("type", "button")
@@ -59,18 +60,88 @@
                                .click($.proxy(
                                     function(event) {
                                         var mediaName = this.$elem.find("div > select").val();
-                                        this.fbaClient.get_media_async({
+
+                                        if (!mediaName) {
+                                            this.fetchMediaError({
+                                                status: -1,
+                                                error: {
+                                                    code: -1,
+                                                    error: "Unable to fetch media - no name given",
+                                                    message: "Unable to fetch media - no name given",
+                                                    name: "NoMediaError",
+                                                },
+                                            });
+                                            return;
+                                        }
+                                        if (!this.wsId) {
+                                            this.fetchMediaError({
+                                                status: -2,
+                                                error: {
+                                                    code: -2,
+                                                    error: "Unable to fetch media - no workspace ID given",
+                                                    message: "Unable to fetch media - no workspace ID given",
+                                                    name: "NoWsIdError",
+                                                }
+                                            });
+                                            return;
+                                        }
+
+                                        $fetchMediaDiv.find("img").show();
+                                        $fetchMediaDiv.find("button.btn-danger").hide();
+                                        this.fbaClient.get_media({
                                                 auth: this.authToken(),
                                                 medias: [mediaName],
                                                 workspaces: [this.wsId],
                                             },
-                                            $.proxy(function(media) { this.updateMediaTable(media); }, this)
+                                            $.proxy(function(media) { 
+                                                this.updateMediaTable(media);
+                                                $fetchMediaDiv.find("img").hide();
+
+                                            }, this),
+                                            $.proxy(function(error) {
+                                                this.fetchMediaError(error);
+                                                $fetchMediaDiv.find("img").hide();
+                                            }, this)
                                         );
                                     },
                                     this));
 
+            this.$errorPanel = $("<div>")
+                               .css({
+                                   "margin" : "20px 0",
+                                   "padding" : "20px",
+                                   "border-left" : "3px solid #d9534f",
+                                   "background-color" : "#fdf7f7",
+                               })
+                               .append($("<p>")
+                                       .addClass("text-danger")
+                                       .append("<b>An error occurred while fetching media!</b>"))
+                               .append($("<table>")
+                                       .addClass("table table-bordered")
+                                       .css({ 'margin-left' : 'auto', 'margin-right' : 'auto' }))
+                               .append($("<div>")
+                                       .attr("id", "error-accordion"));
+
             $fetchMediaDiv.append($mediaList)
-                          .append($fetchButton);
+                          .append($fetchButton)
+                          .append($("<img>")
+                                  .attr("src", this.options.loadingImage)
+                                  .css("margin-left", "10px")
+                                  .hide())
+                          .append(this.$errorPanel);
+
+            this.$errorPanel.find("#error-accordion").kbaseAccordion({
+                    elements: [{ 
+                        title: "Error Details", 
+                        body: $("<pre>")
+                              .addClass('kb-err-msg')
+                              .append("ERROR'D!"),
+                    }]
+                });
+
+            $mediaList.append("<option>No media found</option>");
+            $fetchButton.hide();
+            this.$errorPanel.hide();
 
             return $fetchMediaDiv;
         },
@@ -145,6 +216,9 @@
             return $button;
         },
 
+        /**
+         * Just a convenience function to add a media row with no elements.
+         */
         addEmptyMediaRow: function() {
             this.addMediaRow();
         },
@@ -308,8 +382,52 @@
                 cpd.max_flux = cpd.max;
                 this.addMediaRow(cpd);
             }
+            this.addEmptyMediaRow();
 
         },
+
+        refresh: function() {
+            this.trigger("dataLoadedQuery.Narrative", [ [ this.mediaType ], this.IGNORE_VERSION,
+                $.proxy(function(objects) {
+                    var mediaList = objects[ this.mediaType ];
+                    if (mediaList && mediaList.length > 0) {
+                        this.$fetchMediaDiv.find('select').empty();
+                        for (var i=0; i<mediaList.length; i++) {
+                            this.$fetchMediaDiv.find('select').append($('<option>').append(mediaList[i][1]));
+                        }
+                        this.$fetchMediaDiv.find('button').hide();
+                        this.$fetchMediaDiv.find('button.btn-primary').show();
+                    }
+                    else {
+                        this.$fetchMediaDiv.find('select').empty().append($('<option>').append('No media found'));
+                        this.$fetchMediaDiv.find('button').hide();
+                    }
+                },
+                this)
+            ]);
+        },
+
+        fetchMediaError: function(error) {
+            var addRow = function(name, val) {
+                return "<tr><td><b>" + name + "</b></td><td>" + val + "</td></tr>";
+            };
+
+            var esc = function(s) { 
+                return String(s).replace(/'/g, "&apos;")
+                                .replace(/"/g, "&quot;")
+                                .replace(/</g, "&gt;")
+                                .replace(/>/g, "&lt;");
+            };
+
+            $( this.$errorPanel.find('table') ).empty()
+                                               .append(addRow('Status', esc(error.status)))
+                                               .append(addRow('Code', esc(error.error.code)))
+                                               .append(addRow('Name', esc(error.error.name)));
+            $( this.$errorPanel.find('.kb-err-msg') ).empty()
+                                                     .append(esc(error.error.error));
+
+            this.$errorPanel.show();
+        }
 
     });
 })( jQuery );

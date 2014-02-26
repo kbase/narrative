@@ -5,7 +5,7 @@
     {% if mathjax_url %}
         <script type="text/javascript" src="{{mathjax_url}}?config=TeX-AMS_HTML-full&delayStartupUntil=configured" charset="utf-8"></script>
     {% endif %}
-    
+
     <script type="text/javascript">
         // MathJax disabled, set as null to distingish from *missing* MathJax,
         // where it will be undefined, and should prompt a dialog later.
@@ -16,7 +16,6 @@
 
     {{super()}}
     <link rel="stylesheet" href="{{ static_url("kbnetwork/css/datavis.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrativeWorkspace.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseData.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFuncResults.css") }}" type="text/css" />
@@ -78,7 +77,7 @@ class="notebook_app"
                                             </ul>
                                         </li>
                                         <li class="divider"></li>
-                                        
+
                                         <li id="kill_and_exit"><a href="#" >Close and halt</a></li>
                                     </ul>
                                 </li>
@@ -174,127 +173,17 @@ class="notebook_app"
                     </div>
                 </div>
             </div>
-    <div id="kb-ws-guard">Connecting to KBase..</div>
-
+<!--     <div id="kb-ws-guard">Connecting to KBase..</div>
+ -->
     <div id="left-column">
-        <div id="kb-ws">
-            <div class="kb-header"><span id='kb-wsname'>Data</span></div>
-            <div class="kb-controls"><span id='kb-ws-upload-dialog'></span>
-            </div>
-            <div class="kb-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- <div class="kb-ws-browser-link">
-            See more in the 
-            <a href="http://140.221.84.142/" target="_blank">workspace browser</a>.
-        </div>
-    -->
-<!--         <div class="kb-function-panel left-pane">
-            <div class="kb-function-header">
-                Functions
-            </div>
-            <div class="kb-function-body">
-                <ul>
-                    <li><a href="#" data-name="Plants Co-expression">Plants Co-expression</a>
-                        <span data-name="Plants Co-expression" 
-                              data-help="Calculate gene co-expression clusters and visualize results as a graph."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Assemble Contigs">Assemble Contigs from Reads</a>
-                        <span data-name="Assemble Contigs" 
-                              data-help="Use a KBase pipeline to assemble a set of contigs from generated reads files."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Assemble Genome">Assemble Genome from Contigs</a>
-                        <span data-name="Assemble Genome" 
-                              data-help="Assemble an unannotated Genome from a set of Contigs in your data."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Annotate Genome">Annotate Assembled Genome</a>
-                        <span data-name="Annotate Genome" 
-                              data-help="Annotate a Genome. This starts a job that might run for an hour or longer.
-                                         When it finishes, the annotated Genome will be stored in your data space."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="View Genome Details">View Genome Details</a>
-                        <span data-name="View Genome Details" 
-                              data-help="Select and view a brief list of details about a Genome in your workspace."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Genome To Draft FBA Model">Genome to Draft FBA Model</a>
-                        <span data-name="Genome to Draft FBA Model" 
-                              data-help="Build a draft FBA model from a genome in your workspace."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="View FBA Model Details">View FBA Model Details</a>
-                        <span data-name="View FBA Model Details" 
-                              data-help="Select and view a constructed FBA Model from your data."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Build Media">Build Media</a>
-                        <span data-name="Build Media" 
-                              data-help="Assemble a set of compounds to use as a media set for performing FBA on a model."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="View Media">View Media</a>
-                        <span data-name="View Media" 
-                              data-help="Select and view a media set from your data."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Run Flux Balance Analysis">Run Flux Balance Analysis</a>
-                        <span data-name="Run Flux Balance Analysis" 
-                              data-help="Run a Flux Balance Analysis using a model and media set."
-                              class="kb-function-help">?</span>
-                    </li>                    
-                    <li><a href="#" data-name="View FBA Results">View FBA Results</a>
-                        <span data-name="View FBA Results" 
-                              data-help="Select and view FBA results from your data."
-                              class="kb-function-help">?</span>
-                    </li>                    
-                    <li><a href="#" data-name="Gapfill FBA Model">Gapfill FBA Model</a>
-                        <span data-name="Gapfill FBA Model" 
-                              data-help="Generate a set of reactions to add to your FBA model in order to allow biomass production in a set of conditions."
-                              class="kb-function-help">?</span>
-                    </li>
-                    <li><a href="#" data-name="Integrate Gapfill Solution">Integrate Gapfill Solution</a>
-                        <span data-name="Integrate Gapfill Solution" 
-                              data-help="Integrate a set of gapfilled reactions into your FBA model."
-                              class="kb-function-help">?</span>
-                    </li>
-                </ul>
-            </div>
-        </div> -->
-        <div id="function-panel" class="left-pane"></div>
+        <div id="kb-ws"></div>
+        <div id="kb-function-panel" class="left-pane"></div>
         <div id="kb-function-help"></div>
-        
-<!--         <div id="data-pane" class="left-pane">
-            <h3 class="pane-title">
-                Data<span id="add-link"><a id="add-data" href="#">+ add data</a></span>
-            </h3>
-            <p><span class="tab1">In workspace</span><span class="tab2">In narrative</span></p>
-             <ul id="data-list" class="pane-list">
-             </ul>
-        </div>
-        <div id="function-pane" class="left-pane">
-            <h3 class="pane-title">Functions</h3>
-            <ul id="command-list" class="pane-list">
-            </ul>
-        </div>
- -->    </div>
+
+     </div>
 
      <div id="content-column">
         <div id="menubar-container">
-            
             <div id="maintoolbar" class="navbar" style="z-index:100">
               <div class="toolbar-inner navbar-nobg">
                 <div id="maintoolbar-container" class="container"></div>
@@ -304,16 +193,15 @@ class="notebook_app"
 
 
         <div id="narrative-title">
-      <span id="save_widget" class="nav pull-left">
-        <span id="notebook_name"></span>
-        <span id="checkpoint_status"></span>
-        <span id="autosave_status"></span>
-      </span>
-      <span> &nbsp;</span>
+            <span id="save_widget" class="nav pull-left">
+                <span id="notebook_name"></span>
+                <span id="checkpoint_status"></span>
+                <span id="autosave_status"></span>
+            </span>
+            <span> &nbsp;</span>
         </div>
 
         <div id="ipython-main-app">
-
             <div id="notebook_panel">
                 <div id="notebook"></div>
                 <div id="pager_splitter"></div>
@@ -328,63 +216,8 @@ class="notebook_app"
     </div>
 </div>
 
-    <!-- 
-        Show details for 1 object in separate, modal, box 
-     -->
-    <div id="kb-obj" class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="object-info" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h2 class="modal-title">Object</h2>
-                </div>
-                <div class="modal-body">
-                    <div class="kb-table">
-                        <!-- DataTables index of versions -->
-                        <h3>Versions</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Version</th>
-                                    <th>Date</th>
-                                    <th>User</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Tabs for info about obj -->
-                    <div>
-                        <ul class="nav nav-pills">
-                            <li><a href="#kb-info-table" data-toggle="tab">Description</a></li>
-                            <li><a href="#kb-metainfo-table" data-toggle="tab">Metadata</a></li>
-                        </ul>
-                        <div class="tab-content">
-                            <div class="tab-pane active" id="kb-info-table">
-                                <table class="kb-info table">
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="tab-pane" id="kb-metainfo-table">
-                                <table class="kb-metainfo table">
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- <div class="modal-footer">
-                    <button type="button" class="btn btn-primary kb-network">Insert visualization</button>
-                </div> -->
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-  </div><!-- /.modal -->
-
 <div id='tooltip' class='ipython_tooltip' style='display:none'></div>
-
+<div id='widget-tooltip' class='ipython_tooltip' style='display:none; min-height: 25px;'>Test message</div>
 
 {% endblock %}
 
@@ -397,35 +230,37 @@ class="notebook_app"
 <!-- inserted KBase Javascript below -->
 <script src="{{ static_url("kbase/js/jquery.cookie.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbwidget.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbaseLogging.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/workspaceService.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/workspaceDeluxeClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbasePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseLogin.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/datatables-bootstrap-paging.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseAccordion.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeFunctionPanel.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceData.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseDeletePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbaseContigBrowserButtons.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/UserAndJobStateClient.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeFunctionPanel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseWorkspaceDataDeluxe.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <!-- function input JS widgets -->
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseDefaultNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseBuildMediaInput.js") }}" type="text/javascript" charset="utf-8"></script>
 
-
 <!-- function output JS widgets -->
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseNarrativeError.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAssembly.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelCoreNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -439,9 +274,53 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_output/kbasePhenotypeSimulation.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeComparison.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGeneTable.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseImageView.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseKeggMap.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseMGOverview.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaModelComparison.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseContigSetUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseGapfillStatus.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseIntegrateGapfillOutput.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseMetagenomeListUploader.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseValueList.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<script>
+
+$(function() {
+  var original = $;
+  require(['kbvis/src/kbpaths'], function() {
+  /*console.log('got paths');
+  console.log(requirejs.s.contexts._.config);
+  console.log(require.toUrl('kbaseLinechart' + '.js'));
+  console.log(require.toUrl('vis' + '.js'));
+  console.log(require.toUrl('d3' + '.js'));
+  console.log(require.toUrl('bootstrap' + '.js'));
+  console.log(require.toUrl('jqueryui' + '.js'));*/
+    require(['jquery','vis'], function() {
+      //console.log('got vis');
+      var newJQ = $;
+      $ = original;
+      for (prop in newJQ.fn) {
+        if (prop.match(/^kbase/)) {
+          $[prop] = newJQ.fn[prop];
+          $.fn[prop] = newJQ.fn[prop];
+        }
+      }
+/*console.log($.kbaseAccordion);
+console.log($.kbasePlantsNetworkNarrative);
+console.log($.kbaseBarchart);
+console.log($.kbaseLinechart);
+console.log('plants network narrative');
+console.log($.kbasePlantsNetworkNarrative);*/
+    });
+  });
+});
+
+</script>
 
 <!-- Standard IPython Notebook Javascript -->
 
@@ -499,5 +378,7 @@ class="notebook_app"
 <script src="{{ static_url("notebook/js/celltoolbarpresets/slideshow.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("auth/js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
 
 {% endblock %}

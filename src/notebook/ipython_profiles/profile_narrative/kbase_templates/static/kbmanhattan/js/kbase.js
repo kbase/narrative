@@ -552,7 +552,7 @@
         version: "1.0.0",
         options: {
             style: "text",
-            loginURL: "http://kbase.us/services/authorization/Sessions/Login",
+            loginURL: "https://kbase.us/services/authorization/Sessions/Login",
             possibleFields: [ "verified", "name", "opt_in", "kbase_sessionid", "token", "groups", "user_id", "email", "system_admin" ],
             fields: [ "name", "kbase_sessionid", "user_id", "token" ]
         },
@@ -1519,7 +1519,7 @@
 
 (function($) {
     var URL_ROOT = "http://140.221.84.142/objects/coexpr_test/Networks";
-    var WS_URL = "http://kbase.us/services/workspace_service/";
+    var WS_URL = "https://kbase.us/services/ws/";
     $.KBWidget({
         name: "ForceDirectedNetwork",
         version: "0.1.0",
@@ -5333,7 +5333,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             });
             var panel_body = panel.body();
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var tableSettings = {
                 fnDrawCallback: cpdEvents,
                 sPaginationType: "full_numbers",
@@ -5427,7 +5427,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             });
             var panel_body = panel.body();
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var tableSettings = {
                 fnDrawCallback: rxnEvents,
                 sPaginationType: "full_numbers",
@@ -5519,7 +5519,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             var self = this;
             var token = options.auth;
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var modal = self.$elem.kbaseModal({
                 title: "Reaction Info",
                 subText: "Note: this view is currently under development."
@@ -5735,7 +5735,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             var ws = options.ws;
             var title = options.title ? options.title : "Set formulation";
             var fba = new fbaModelServices("http://140.221.85.73:4043/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var container = $('<div id="kbase-formulation-form" class="panel panel-default">                                <div class="panel-heading">                                    <h4 class="panel-title">' + title + '</h4>                                </div>                                <div class="panel-body"></div>                           </div>');
             self.$elem.append(container);
             var panel_body = container.find(".panel-body");
@@ -5872,7 +5872,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             var id = options.id;
             var formulation = options.formulation;
             var fba = new fbaModelServices("http://140.221.85.73:4043/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var container = $('<div id="kbase-run-fba">');
             var body = $('<div class="fba-run-info"><b>Model:</b> ' + id + "<br><br></div>");
             var fba_button = $('<button type="button" class="btn btn-primary run-fba-btn" disabled="disabled">Run FBA</button>');
@@ -5925,7 +5925,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
         },
         cdmiURL: "http://kbase.us/services/cdmi_api",
         proteinInfoURL: "http://kbase.us/services/protein_info_service",
-        workspaceURL: "http://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         tooltip: null,
         operonFeatures: [],
         $messagePane: null,
@@ -6327,7 +6327,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             auth: null
         },
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         init: function(options) {
             this._super(options);
             if (this.options.featureID === null) {
@@ -6392,7 +6392,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             auth: null
         },
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         init: function(options) {
             this._super(options);
             if (this.options.featureID === null) {
@@ -6623,7 +6623,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             isInCard: false
         },
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         init: function(options) {
             this._super(options);
             if (this.options.genomeID === null) {
@@ -6705,7 +6705,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
         },
         wikiScraperURL: "http://140.221.85.80:7051",
         cdmiURL: "https://kbase.us/services/cdmi_api",
-        workspaceURL: "https://kbase.us/services/workspace",
+        workspaceURL: "https://kbase.us/services/ws/",
         init: function(options) {
             this._super(options);
             if (this.options.featureID === null) {
@@ -6816,7 +6816,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             var media = options.id;
             var ws = options.ws;
             var fba = new fbaModelServices("http://140.221.85.73:4043");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var panel = self.$elem.kbasePanel({
                 title: "Media Info",
                 subText: media
@@ -7135,7 +7135,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             panel.loading();
             var panel_body = panel.body();
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var flux_threshold = .001;
             var heat_colors = [ "#731d1d", "#8a2424", "#b35050", "#d05060", "#f28e8e" ];
             var neg_heat_colors = [ "#4f4f04", "#7c7c07", "#8b8d08", "#acc474", "#dded00" ];
@@ -7535,7 +7535,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             panel.loading();
             var panel_body = panel.body();
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var meta_AJAX = kbws.get_objectmeta({
                 type: "Model",
                 workspace: workspaces[0],
@@ -7598,7 +7598,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             panel.loading();
             var panel_body = panel.body();
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var tableSettings = {
                 fnDrawCallback: modelEvents,
                 sPaginationType: "full_numbers",
@@ -7672,7 +7672,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             });
             var panel_body = panel.body();
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var tables = [ "Reactions", "Compounds", "Compartment", "Biomass", "Gapfill", "Gapgen" ];
             var tableIds = [ "reaction", "compound", "compartment", "biomass", "gapfill", "gapgen" ];
             var tabs = $('<ul id="table-tabs" class="nav nav-tabs">                         <li class="active" >                         <a href="#' + tableIds[0] + '" data-toggle="tab" >' + tables[0] + "</a>                       </li></ul>");
@@ -7968,7 +7968,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             var self = this;
             var token = options.auth;
             var default_ws = options.defaultWS;
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             this.show = function(options) {
                 var modal = self.$elem.kbaseModal({
                     title: "Save to a Workspace"
@@ -8035,7 +8035,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             this.$elem.append('<div id="kbase-ws-fba-table" class="panel panel-default">                                <div class="panel-heading">                                    <h4 class="panel-title">FBA Objects</h4>                                    <span class="label label-primary pull-right">' + ws + '</span><br>                                </div>                                <div class="panel-body"></div>                           </div>');
             var container = $("#kbase-ws-fba-table .panel-body");
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var tableSettings = {
                 fnDrawCallback: modelEvents,
                 sPaginationType: "full_numbers",
@@ -8095,7 +8095,7 @@ function WSHandler(params) {
     console.log("here");
     var parent = this;
     var user = params && params.user ? params.user : null;
-    var url = params && params.url ? params.url : "http://kbase.us/services/workspace";
+    var url = params && params.url ? params.url : "https://kbase.us/services/ws/";
     var service = new workspaceService(url);
     this.getWorkspace = function(workspaceId) {
         var def = $.Deferred();
@@ -8444,7 +8444,7 @@ function WSHandler(params) {
             this.$elem.append(container);
             var panel_body = container.find(".panel-body");
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var tableSettings = {
                 fnDrawCallback: mediaEvents,
                 sPaginationType: "full_numbers",
@@ -8530,7 +8530,7 @@ function WSHandler(params) {
             panel.loading();
             var panel_body = panel.body();
             var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
-            var kbws = new workspaceService("http://kbase.us/services/workspace_service/");
+            var kbws = new workspaceService("https://kbase.us/services/ws/");
             var tableSettings = {
                 fnDrawCallback: modelEvents,
                 sPaginationType: "full_numbers",

@@ -1788,7 +1788,6 @@ var IPython = (function (IPython) {
         this.start_kernel();
         // load our checkpoint list
         IPython.notebook.list_checkpoints();
-
         $([IPython.events]).trigger('notebook_loaded.Notebook');
     };
 

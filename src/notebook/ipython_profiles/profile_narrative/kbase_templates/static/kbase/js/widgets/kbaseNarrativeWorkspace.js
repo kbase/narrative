@@ -6,7 +6,6 @@
  * like the CDS and local files.
  *
  * Options:
- *    workspaceURL - the location of the workspace service (default points to existing deployed service)
  *    loadingImage - an image to show in the middle of the widget while loading data
  *    tableElem - HTML element container for the data table
  *    controlsElem - HTML element container for the controls (search/add)
@@ -25,10 +24,10 @@
         parent: "kbaseWidget",
         version: "1.0.0",
         options: {
-            workspaceURL: "https://www.kbase.us/services/workspace",
             loadingImage: "../images/ajax-loader.gif",
             tableElem: null,
-            controlsElem: null
+            controlsElem: null,
+            ws_id: null,
         },
         ws_client: null,
         ws_id: null,
@@ -52,6 +51,8 @@
             this._super(options);
 
             var self = this;
+
+            this.ws_id = this.options.ws_id;
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
 
@@ -76,7 +77,18 @@
                         // to track when some event occurred.
                         // So, dirty bit it is.
                         this.refreshFunctionInputs(!this.inputsRendered);
+                        if (!this.inputsRendered)
+                            this.loadAllRecentCellStates();
                         this.inputsRendered = true;
+                    }
+                },
+                this)
+            );
+
+            $(document).on('narrativeDataQuery.Narrative', $.proxy(function(e, params, callback) {
+                    var objList = this.getCurrentNarrativeData();
+                    if (callback) {
+                        callback(objList);
                     }
                 },
                 this)
@@ -89,123 +101,13 @@
                 self.buildFunctionCell(method);
             });
 
-            // Build the list of available functions.
-            $("#function-panel").kbaseNarrativeFunctionPanel({});
 
             // Initialize the data table.
-            this.initControls(options.controlsElem);
-
-            // bind search to data table
-            // XXX: This is BROKEN, so skip it!
-            // XXX: At some point, 'this.dataTableWidget' went away..
-            if ( false ) {
-                $search_inp = options.controlsElem.find(':input');
-                var that = this;
-                $search_inp.on('change keyup', function(e) {
-                    var tbl = that.dataTableWidget.table;
-                    tbl.fnFilter($search_inp.val());
-                    tbl.fnDraw();
-                });
-            }
-
-            // **DEPRECATED** Initializes controls.
-            this.initFuncs();
 
             this.render();
             return this;
         },
         
-        /**
-         * Initialize controls at top of workspace view.
-         *
-         * @param elem Workspace view element
-         * @returns this
-         */
-        initControls: function(elem) {
-//            this.dbg('initControls.begin');
-            var $search = $('<div>').addClass('kb-search')
-            var $search_inp = $('<input>').attr('type', 'text');
-            $search.append($search_inp);
-            $search.append($('<i>').addClass('icon-search'));
-            elem.append($search);
-            // populate the dropdown
-            var $dd_menu = $('<div>').addClass('dropdown').attr({id:'kb-ws-upload-pulldown'});
-            var $dd_toggle = $('<a>').addClass("dropdown-toggle").attr({'data-toggle':'dropdown',
-                            href: '#', id: 'kb-ws-add-data'}).text('+ Add');
-            $dd_menu.append($dd_toggle);
-            var ul = $('<ul>').addClass('dropdown-menu').attr({role: 'menu', 'aria-labelledby': 'dLabel'});
-            ul.append($('<li>').addClass('nav-header').text('Add data from..'));
-            ul.append($('<li>').addClass('divider'));
-            var dd_items = { // key: [label, element_id]
-                'upload': {label:'Local file', id: 'kb-ws-upload-local'},
-                'cds': {label:'Central Data Store', id:'kb-ws-upload-cds'}
-            }
-            $.each(dd_items, function(key, info) {
-                var item = $('<li>');
-                item.append($('<a>').attr({'href': '#', 'id': info.id}).text(info.label));
-                ul.append(item);
-            })
-            $dd_menu.append(ul);
-            // add to element
-            elem.append($dd_menu);
-            // activate the dropdown
-            $dd_toggle.dropdown();
-            // bind the upload action
-            var $dlg = $('#kb-ws-upload-dialog');
-            var opts = {$anchor: $('#' + dd_items.upload.id),
-                        ws_parent: this};
-            this.uploadWidget_dlg = $dlg //$dlg.kbaseUploadWidget;
-            this.uploadWidget_opts = opts;
-            // Add a 'refresh' button, bound to this widget's render() function
-            var $refresh = $('<button>')
-                .addClass('btn btn-default btn-sm')
-                .attr({'type': 'button', 'id': 'kb-ws-refresh'});
-                //.text("Refresh");
-            $refresh.append($('<span>').addClass("glyphicon glyphicon-refresh"));
-            elem.append($refresh);
-            var self = this;
-            elem.on('click', function(e) {
-                // this.dbg("refresh.begin");
-                self.render();
-                // this.dbg("refresh.end");
-            });
-            // done
-
-            return this;
-        },
-
-        /**
-         * Set up interactive features of the function-list panel.
-         */
-        initFuncs: function() {
-            var env = this;
-            $('.kb-function-body ul li').each(function(index) {
-                var $anchor = $(this).find('a');
-                this.name = $anchor.data('name');
-                var self = this;
-                // Add cell for function
-                $anchor.click(function() {
-                    env.addCellForFunction(self.name);
-                });
-                // Help for function
-                var $anchor2 = $(this).find('span.kb-function-help');
-                this.help = $anchor2.data('help');
-                this.help_title = $anchor2.data('name');
-                $anchor2.click(function() {
-//                    console.debug("help asked for");
-                    var $elt = $('#kb-function-help');
-                    $elt.addClass("alert alert-info");
-                    $elt.html("<h1>" + self.help_title + " help</h1>" + 
-                              self.help + 
-                              "<h2>Click to hide</h2>");
-                    $elt.click(function() {
-                        $(this).hide();
-                    });
-                    $elt.show();
-                });
-            });
-        },
-
         /**
          * @method buildFunctionCell
          * @param {Object} method - the JSON schema version of the method to invoke. This will
@@ -238,7 +140,7 @@
 
                 // These are the 'delete' and 'run' buttons for the cell
                 var buttons = "<div class='buttons pull-right'>" + //style='margin-top:10px'>" +
-                                  "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-warning'>Delete</button> " +
+                                  "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default'>Delete</button> " +
                                   "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary'>Run</button>" + 
                               "</div>";
 
@@ -281,20 +183,6 @@
                               "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
                                this.safeJSONStringify(method) + "'});" +
                               "</script>";
-
-                // cellContent = "<div class='kb-cell-run' " + "id='" + cellId + "'>" + 
-                //                   //"<h1>" + method.title + "</h1>" +
-                //                   methodInfo +
-                //                   "<div>" +  
-                //                       inputDiv +
-                //                       buttons + 
-                //                   "</div>" +
-                //                   progressBar +
-                //               "</div>\n" + 
-                //               "<script>" + 
-                //               "$('#" + cellId + " > div > #inputs')." + inputWidget + "({ method:'" +
-                //                this.safeJSONStringify(method) + "'});" +
-                //               "</script>";
             }
             else {
                 cellContent = "Error - the selected method is invalid.";
@@ -510,6 +398,12 @@
             cell.metadata[this.KB_CELL] = cellInfo;
         },
 
+        setErrorCell: function(cell) {
+            var cellInfo = {};
+            cellInfo[this.KB_TYPE] = this.KB_ERROR_CELL;
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
+
         // Backup function code cell type (usually hidden through css... I still think this is superfluous)
         isFunctionCodeCell: function(cell) {
             return this.checkCellType(cell, this.KB_CODE_CELL);
@@ -557,16 +451,22 @@
                 target = "#output";
             }
 
-            var state;
-            if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
-                // if that widget can save state, do it!
-                state = $(cell.element).find(target)[widget]('getState');
-            }
+            try {
+                var state;
+                if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
+                    // if that widget can save state, do it!
+                    state = $(cell.element).find(target)[widget]('getState');
+                }
 
-            var timestamp = this.getTimestamp();
-            cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
-            while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
-                cell.metadata[this.KB_CELL][this.KB_STATE].pop();
+                var timestamp = this.getTimestamp();
+                cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
+                while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
+                    cell.metadata[this.KB_CELL][this.KB_STATE].pop();
+                }
+            }
+            catch(error) {
+                this.dbg("Unable to save state for cell:");
+                this.dbg(cell);
             }
         },
 
@@ -583,18 +483,30 @@
                 var target;
                 var widget;
 
+                // if it's labeled as a function cell do that.
                 if (this.isFunctionCell(cell)) {
                     widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
                     target = "#inputs";
                 }
+                // if it's labeled as an output cell do that.
                 else if (this.isOutputCell(cell)) {
                     // do output widget stuff.
                     widget = cell.metadata[this.KB_CELL].widget;
                     target = "#output";
                 }
-                if ($(cell.element).find(target)[widget](['prototype'])['loadState']) {
-                    $(cell.element).find(target)[widget]('loadState', state.state);
-                    // later, do something with the timestamp.
+                // it might not be either! if we don't have both a target and widget, don't do anything!
+                if (target && widget) {
+                    try {
+                        if ($(cell.element).find(target)[widget](['prototype'])['loadState']) {
+                            $(cell.element).find(target)[widget]('loadState', state.state);
+                            // later, do something with the timestamp.
+                        }
+                    } catch(err) {
+                        // just ignore it and move on.
+                        this.dbg('Unable to load cell state! Ignoring the following cell:')
+                        this.dbg(cell);
+                        this.dbg(err);
+                    }
                 }
             }
         },
@@ -780,12 +692,15 @@
          */
         buildRunCommand: function(service, method, params) {
             var cmd = "import biokbase.narrative.common.service as Service\n" +
-                      "method = Service.get_service('" + service + "').get_method('" + method + "')\n" +
-                      "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
-                      "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
+                      "method = Service.get_service('" + service + "').get_method('" + method + "')\n";
+
+                      // THIS SHOULD ONLY BE SET AT STARTUP BY THE MAIN JAVASCRIPT!!
+                      // "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
+                      // "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
 
             var paramList = params.map(function(p) { return "'" + p + "'"; });
             cmd += "method(" + paramList + ")";
+
             return cmd;
         },
 
@@ -888,40 +803,45 @@
                             // look for @@S, @@P, @@D, @@G, or @@E
                             var matches = line.match(/^@@([SPDGE])(.*)/);
                             if (matches) { // if we got one
-                                // if we're starting, init the progress bar.
-                                if (matches[1] === 'S') {
+                                switch(matches[1]) {
+                                    case 'S':
+                                        // if we're starting, init the progress bar.
+                                        break;
+
+                                    case 'D':
+                                        // were done, so hide the progress bar (wait like a second or two?)
+                                        self.resetProgress(cell);
+                                        break;
+
+                                    case 'P':
+                                        var progressInfo = matches[2].split(',');
+                                        if (progressInfo.length == 3) {
+                                            self.showCellProgress(cell, progressInfo[0], progressInfo[1], progressInfo[2]);
+                                            offs += line.length;
+                                            if (index < lines.length - 1)
+                                                offs += 1;
+                                        }
+                                        else
+                                            done = true;
+                                        break;
+
+                                    case 'E':
+                                        var errorJson = matches[2];
+                                        errorJson = errorJson.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\$/g, "&#36;");
+                                        self.createErrorCell(cell, errorJson);
+                                        break;
+
+                                    case 'G':
+                                        var debug = matches[2];
+                                        self.dbg("[KERNEL] " + debug);
+                                        break;
+
+                                    default:
+                                        // by default just dump it to the console
+                                        self.dbg("[UNKNOWN TAG] " + line);
+                                        break;
                                 }
-                                // were done, so hide the progress bar (wait like a second or two?)
-                                else if (matches[1] === 'D') {
-                                    self.resetProgress(cell);
-                                }
-                                // progress! capture the progress info and pass it along.
-                                else if (matches[1] === 'P') {
-                                    var progressInfo = matches[2].split(',');
-                                    if (progressInfo.length == 3) {
-                                        self.showCellProgress(cell, progressInfo[0], progressInfo[1], progressInfo[2]);
-                                        offs += line.length;
-                                        if (index < lines.length - 1)
-                                            offs += 1;
-                                    }
-                                    else
-                                        done = true;
-                                }
-                                // Error! From the error, create an error cell.
-                                else if (matches[1] === 'E') {
-                                    var errorJson = matches[2];
-                                    self.createErrorCell(cell, errorJson);
-                                    self.dbg("Narrative error: " + errorJson);
-                                }
-                                // Debug statement. Forward this into the console.
-                                else if (matches[1] === 'G') {
-                                    var debug = matches[2];
-                                    self.dbg("[KERNEL] " + debug);
-                                }
-                                else if (matches[1] == 'G') {
-                                    // Debugging message, just repeat to console
-                                    console.debug('[APP-DBG]', matches[2]);
-                                }
+                                return;
                             }
                             // No progress marker on non-empty line => treat as final output of program.
                             else {
@@ -953,7 +873,45 @@
                 'data': '{"error": ' + errorJson + "}",
                 'embed': true
             };
-            this.createOutputCell(cell, error);
+
+            var widget = this.errorWidget;
+
+            var errorCell = this.addErrorCell(IPython.notebook.find_cell_index(cell), widget);
+
+            // kinda ugly, but concise. grab the method. if it's not falsy, fetch the title from it.
+            // worst case, it'll still be falsy, and we can deal with it in the header line.
+            var methodName = cell.metadata[this.KB_CELL].method;
+            if (methodName)
+                methodName = methodName.title;
+
+            var uuid = this.uuidgen();
+            var errCellId = 'kb-cell-err-' + uuid;
+
+            var widgetInvoker = this.errorWidget + "({ \"error\" : " + errorJson + "});";
+
+            var header = '<span class="kb-err-desc"><b>' + 
+                            (methodName ? methodName : 'Unknown method') + 
+                            '</b> - Error</span><span class="pull-right kb-func-timestamp">' + 
+                            this.readableTimestamp(this.getTimestamp()) +
+                            '</span>' + 
+                         '';
+
+            var cellText = '<div class="kb-cell-error" id="' + errCellId + '">' +
+                                '<div class="panel panel-danger">' + 
+                                    '<div class="panel-heading">' + header + '</div>' +
+                                    '<div class="panel-body"><div id="error"></div></div>' +
+                                '</div>' +
+                           '</div>\n' +
+                           '<script>' +
+                           '$("#' + errCellId + ' > div > div > div#error").' + widgetInvoker +
+                           '</script>';
+
+            errorCell.set_text(cellText);
+            errorCell.rendered = false; // force a render
+            errorCell.render();
+
+            this.resetProgress(cell);
+            this.trigger('updateData.Narrative');
         },
 
         /**
@@ -968,7 +926,13 @@
             if (typeof result === 'string')
                 result = JSON.parse(result);
 
-            if (!result.embed) {
+            // If result.embed is false,
+            // or if the result doesn't have any data to put into a widget,
+            // don't make a widget! Assume that this will have thrown an error somewhere
+            // along the way.
+            //
+            // Note that an empty object is not null! So if result.data = {}, it'll still do something.
+            if (!result.embed || result.data === null || result.data === undefined) {
                 //do something.
                 return;
             }
@@ -1009,15 +973,6 @@
                            '<script>' +
                            '$("#' + outCellId + ' > div > div > div#output").' + widgetInvoker +
                            '</script>';
-
-
-            // var cellText = '<div class="kb-cell-output" id="' + outCellId + '">' +
-            //                    '<div>' + header + '</div>' + // gap for header info
-            //                    '<div id="output" style="margin:-10px;"></div>' +
-            //                '</div>\n' +
-            //                '<script>' +
-            //                '$("#' + outCellId + ' > div#output").' + widgetInvoker +
-            //                '</script>';
 
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
@@ -1082,13 +1037,19 @@
          * @return id of <div> inside cell where content can be placed
          */
         addOutputCell: function(currentIndex, widget) {
-            var nb = IPython.notebook;
-            var cell = nb.insert_cell_below('markdown', currentIndex);
+            var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
 
             this.setOutputCell(cell, widget);
             this.removeCellEditFunction(cell);
 
-            return( cell );
+            return cell;
+        },
+
+        addErrorCell: function(currentIndex) {
+            var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
+            this.setErrorCell(cell);
+            this.removeCellEditFunction(cell);
+            return cell;
         },
 
         /** Not really used right now. */
@@ -1174,16 +1135,20 @@
          * @returns this
          */
         loggedIn: function(token) {
-            this.ws_client = new workspaceService(this.options.workspaceURL);
-            this.ws_auth = token;
-            var un = token.match(/un=[\w_]+|/);
-            this.ws_user = un[0].substr(3, un[0].length - 3);
+            // this.ws_client = new workspaceService(this.options.workspaceURL);
+            // this.ws_auth = token;
+            // var un = token.match(/un=[\w_]+|/);
+            // this.ws_user = un[0].substr(3, un[0].length - 3);
             // grab ws_id to give to, e.g., upload widget
 
             //this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
-            this.workspace("id", this.ws_id); // add to global accessor
+
+
+            // this.workspace("id", this.ws_id); // add to global accessor
+
+
             // create/refresh the upload dialog, which needs login to populate types
-            this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
+//            this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
             //this.uploadWidget.createDialog(); -- redundant
             this.render();
         },

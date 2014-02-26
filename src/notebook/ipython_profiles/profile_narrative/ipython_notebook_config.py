@@ -19,10 +19,11 @@ c.NotebookApp.notebook_manager_class="biokbase.narrative.kbasewsmanager.KBaseWSN
 # c.NotebookApp.profile = u'default'
 
 # The url for MathJax.js.
-# c.NotebookApp.mathjax_url = ''
+c.NotebookApp.mathjax_url = 'https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
 
 # The IP address the notebook server will listen on.
 # c.NotebookApp.ip = '127.0.0.1'
+c.NotebookApp.ip = '0.0.0.0'
 
 # The base URL for the notebook server
 # c.NotebookApp.base_project_url = '/'
@@ -44,7 +45,7 @@ c.NotebookApp.notebook_manager_class="biokbase.narrative.kbasewsmanager.KBaseWSN
 # c.NotebookApp.base_kernel_url = '/'
 
 # The port the notebook server will listen on.
-# c.NotebookApp.port = 8888
+c.NotebookApp.port = 8888
 
 # Whether to overwrite existing config files when copying
 # c.NotebookApp.overwrite = False

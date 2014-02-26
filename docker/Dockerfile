@@ -29,8 +29,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -f upgrade -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-base perl-modules make
 # Maybe this will get all the necessary dependencies!
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4 python-pip python-setuptools ipython-notebook python-matplotlib python-dev python-scipy python-numpy python-lxml python-sklearn python-sympy python-pandas
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev libcairo2-dev texlive-latex-base texlive-fonts-recommended curl git-core libzmq-dev libreadline6-dev libreadline-dev libssl-dev libxml2-dev libxslt1-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev libcairo2-dev texlive-latex-base texlive-fonts-recommended curl git-core libzmq-dev libreadline6-dev libreadline-dev libssl-dev libxml2-dev libxslt1-dev r-recommended
 
 # Clone in the python bootstrap and run it
 ADD ./bootstrap/kb_python_runtime /mini-bootstrap/kb_python_runtime
@@ -45,8 +44,7 @@ RUN cd /kb/dev_container/narrative; /bin/bash install.sh -p /kb/deployment/servi
 # proxy environment
 CMD ["kbasetest"]
 ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/run_magellan_narrative.sh"]
-RUN chown -R nobody /kb/dev_container/narrative/src/notebook/ipython_profiles
-RUN mkdir ~nobody
+RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_profiles; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
 USER nobody
 # CMD /bin/bash /kb/deployment/services/narrative-venv/bin/run_notebook.sh notebook --ip='*' --NotebookApp.password='sha1:89e8b3c3b94f:34c04b4f82d4f5442094cbf73204333 176be148a' --NotebookApp.open_browser='False'
 

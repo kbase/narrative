@@ -12,13 +12,21 @@
     margin-bottom: 3px;
 }
 
+.kb-narr-panel-body {
+    padding:3px;
+}
+
 /* Container for func list */
 .kb-function-body {
-    padding: 10px;
-    padding: 0;
-    height: 300px;
+    height: 45%;
+    max-height:45%;
     overflow-y: auto;
     width: 100%;
+}
+
+.kb-function-body .accordion .panel .panel-body {
+    padding: 0px;
+    padding-left: 5px;
 }
 
 .kb-function-body ul {
@@ -61,12 +69,15 @@
 
 /* Help on a function */
 .kb-function-help {
-    color: white;
     padding: 0 3px;
     float: right;
     cursor: pointer;
-    color: #0064b6;
+    color: #56559e;
     font-size: 14pt;
+}
+
+.kb-function-help:hover {
+    color: black;
 }
 
 .kb-function-help-popup {
@@ -136,18 +147,13 @@
 .kb-cell-run {
     z-index: auto;
     opacity: 1;
-/*    border: 1px solid #aaa;
-    border-radius: 4px;
-    -moz-border-radius: 4px;
-    -webkit-border-radius: 4px;
-    padding: 5px;
-*/}
+}
 .kb-cell-run h1 {
     font-family: 'Roboto';
     font-weight: bold;
     font-size: 12pt;
     line-height: 15px;
-    color: #0D7876;
+    color: #2E618D;
     margin: 3px;
     opacity: inherit;
     display: inline;
@@ -223,10 +229,25 @@
     font-weight: bold;
     font-size: 12pt;
     line-height: 15px;
-    color: #0D7876;
+    color: #2E618D;
     margin: 3px;
     opacity: inherit;
     display: inline;
+}
+
+.kb-err-desc {
+    font-family: 'Roboto';
+    font-weight: bold;
+    font-size: 12pt;
+    line-height: 15px;
+    color: #A94442;
+    margin: 3px;
+    opacity: inherit;
+    display: inline;
+}
+
+.kb-err-msg {
+    font-size: 80% !important;
 }
 
 .kb-out-header {

@@ -29,7 +29,7 @@
  */
 (function ($) {
     var URL_ROOT = "http://140.221.84.142/objects/kbasetest_home/ExpressionDataSamplesMap";
-    var WS_URL = "http://kbase.us/services/workspace_service/";
+    var WS_URL = "https://kbase.us/services/ws/";
     var GO_URL_TEMPLATE = "http://www.ebi.ac.uk/QuickGO/GTerm?id=<%= id %>";
     $.KBWidget({
         name: "Manhattan",
@@ -58,7 +58,7 @@
                 var wsid = self.options.workspaceID;
                 var goid = self.options.gwasObjectID;
                 if (wsid !== null && wsid && goid) {
-                    var kbws = new workspaceService(WS_URL);
+                    var kbws = new Workspace(WS_URL);
                     fetchAjax = kbws.get_object({
                         auth: self.options.token,
                         workspace: wsid,

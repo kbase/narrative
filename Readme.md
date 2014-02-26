@@ -1,11 +1,15 @@
-# Introduction
+Last updated: Dan Gunter <dkgunter@lbl.gov> 2/2/2014
+
+Introduction
+============
 
 This is the new IPython based Narrative Interface repo.
 The previous version has been branched into the pre-sprint branch for archival purposes.
 All relevant code has been migrated under the src/ directory. A virtualenv based installer
 and standard KBase makefile targets are in the works.
 
-# Running
+Running
+-------
 
 The ipython narrative is a "profile" of the ipython notebook. The setup and instructions are run using the Python [virtualenv](https://pypi.python.org/pypi/virtualenv) module. If you haven't ever used this module, you should take some time to go familiarize yourself with it now.
 
@@ -22,7 +26,10 @@ pip install -r bootstrap/kb_python_runtime/python-pip-list-narrative
 
 it should install all the necessary python module dependencies to run the notebook.
 
-## Current instructions
+Install and Run
+---------------
+
+(See also the Alternate Installation Procedure section, below.)
 
 For the impatient, the following commands should work to start the KBase notebook.
 
@@ -54,21 +61,16 @@ This line activates the virtual environment. If you use the [virtualenvwrapper](
 
 Finally, `run_notebook.sh` sets up some environment variables and runs ipython in "notebook" mode with the profile specified in profile_name ("narrative"). The notebooks themselves (i.e. files ending in `.ipynb`) are stored in `~/.narrative`. 
 
-Last updated: Steve Chan (sychan) 9/2/2013
-Last updated: Dan Gunter (dang) 8/19/2013
-
-
-
-## Alternate install procedure
+Alternate Installation Procedure
+--------------------------------
 
 This is an EXPERIMENTAL way to install, which assumes you have the virtualenv
-already set up.
+already set up and active.
 
-    make -f Makefile.narrative installed
+    make -f Makefile.narrative
 
 That is it -- the script file generated is called "run_notebook" instead of
 "run_notebook.sh", and does not require the extra "notebook" argument, so:
 
     run_notebook
-
-
+  

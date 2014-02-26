@@ -57,7 +57,7 @@
         version: "1.0.0",
         options: {
             style : 'text',
-            //loginURL : "http://140.221.92.231/services/authorization/Sessions/Login",
+            //loginURL : "https://140.221.92.231/services/authorization/Sessions/Login",
             loginURL : "http://kbase.us/services/authorization/Sessions/Login",
             possibleFields : ['verified','name','opt_in','kbase_sessionid','token','groups','user_id','email','system_admin'],
             fields : ['name', 'kbase_sessionid', 'user_id', 'token'],

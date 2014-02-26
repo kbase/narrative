@@ -124,7 +124,7 @@ class workspaceService(object):
     def __init__(self, url=None, timeout=30 * 60, user_id=None,
                  password=None, token=None, ignore_authrc=False):
         if url is None:
-            url = 'http://kbase.us/services/workspace/'
+            url = 'http://140.221.84.209:7058/'
         scheme, _, _, _, _, _ = urlparse.urlparse(url)
         if scheme not in _URL_SCHEME:
             raise ValueError(url + " isn't a valid http url")

@@ -16,33 +16,26 @@ import logging
 import os
 import sys
 import time
+import traceback
 # Third-party
 import IPython.utils.traitlets as trt
 from IPython.core.application import Application
 # Local
-from biokbase.narrative.common import kbtypes
+from biokbase.narrative.common import kbtypes, kblogging
 
-## Logging boilerplate
 
+# Init logging.
 _log = logging.getLogger(__name__)
-# turn on debugging by setting environment variable KBASE_DEBUG
-if os.environ.get("KBASE_DEBUG", None):
-    _log.setLevel(logging.DEBUG)
-else:
-    _log.setLevel(logging.WARN)
-# set custom log format
-_h = logging.StreamHandler()
-_h.setFormatter(logging.Formatter("%(levelname)s %(asctime)s %(module)s: %(message)s"))
-_log.addHandler(_h)
 
 ## Globals
 
 
 class URLS:
-    workspace = "http://kbase.us/services/workspace"
+    workspace = "https://kbase.us/services/ws/"
     invocation = "https://kbase.us/services/invocation"
-    fba = "https://kbase.us/services/fba_model_services"
-    genomeCmp = "http://140.221.85.98:8284/jsonrpc"
+    #fba = "http://140.221.84.183:7036"
+    fba = "https://kbase.us/services/KBaseFBAModeling"
+    genomeCmp = "http://140.221.85.57:8283/jsonrpc"
 
 ## Exceptions
 
@@ -74,10 +67,28 @@ class DuplicateServiceError(ServiceError):
 class ServiceMethodError(ServiceError):
     """Base class for all ServiceMethod errors"""
 
-    def __init__(self, method, errmsg):
+    def __init__(self, method, errmsg, tb=None):
         msg = "in function '{}': {}".format(method.name, errmsg)
         ServiceError.__init__(self, msg)
         self.add_info('method_name', method.name)
+        if tb is not None:
+            self.add_info('traceback',
+                          self.traceback_dict(tb))
+
+    TB_KEYS = 'filename', 'line', 'function', 'text'
+
+    def traceback_dict(self, tb):
+        """Extract and reformat traceback as a dict, for reporting in narrative.
+
+        :param tb: List of stack trace entries.
+        :type tb: list
+        :return: List where each entry is converted into a dict with
+                 key/value pairs corresponding to the quadruple given above.
+        :rtype: dict
+        """
+        etb = traceback.extract_tb(tb)
+        return [{self.TB_KEYS[i]: entry[i] for i in xrange(len(entry))}
+                for entry in etb]
 
 
 class ServiceMethodParameterError(ServiceMethodError):
@@ -798,7 +809,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         except ServiceMethodError as err:
             self.error(-2, err)
         except Exception as err:
-            self.error(-1, ServiceMethodError(self, err))
+            tb = traceback.sys.exc_traceback
+            self.error(-1, ServiceMethodError(self, err, tb=tb))
 
         # output object contains:
         # data

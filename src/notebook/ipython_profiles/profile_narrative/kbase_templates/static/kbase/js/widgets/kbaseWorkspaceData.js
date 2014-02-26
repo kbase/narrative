@@ -15,7 +15,7 @@
     $.KBWidget({
         name: "kbaseWorkspaceData", 
         parent: "kbaseAuthenticatedWidget",
-        version: "1.0.0",
+        version: "1.0.1",
         ws_client: null,
         table: null,
         tableData: [],
@@ -29,7 +29,8 @@
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
-            workspaceURL: "http://kbase.us/services/workspace",
+            //workspaceURL: "http://kbase.us/services/workspace",
+            workspaceURL: "https://kbase.us/services/ws/",
             container: null,
             ws_id: null
         },
@@ -77,7 +78,8 @@
 
         loggedInCallback: function(event, auth) {
             this.ws_auth = auth.token;
-            this.ws_client = new workspaceService(this.options.workspaceURL);
+            // this.ws_client = new workspaceService(this.options.workspaceURL);
+            this.ws_client = new Workspace(this.options.workspaceURL);
             this.isLoggedIn = true;
             this.render();
             return this;
@@ -730,8 +732,9 @@
          */
         ensureWorkspace: function(name, _callback, _errorCallback) {
             var _fn = "ensureWorkspace.";
-            var params = {auth: this.ws_auth, workspace: name};
+            var params = {workspace: name};
             console.debug(_fn + "create name=" + name);
+	    /* workspace0 */
             return this.ws_client.create_workspace(params, _callback, function(result) {
                 var error_text = result.error.message;
                 if (error_text.indexOf("exists") >= 0) {

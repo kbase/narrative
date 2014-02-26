@@ -14,7 +14,7 @@ $.KBWidget({
     glammModelTag: "mod",
     glammWorkspaceTag: "ws",
     wsBrowserURL: "http://narrative.kbase.us/landing/landing-pages/#/cards/models/",
-    wsUrl: "http://kbase.us/services/workspace/",
+    wsUrl: "https://kbase.us/services/ws/",
     timer: null,
 
     init: function(options) {
@@ -31,12 +31,12 @@ $.KBWidget({
         		return "<tr><td>" + name + "</td><td>" + value + "</td></tr>";
         	};
 
-        	table.append(createTableRow("<b>ID</b>", "<b>" + data[0] + "</b>"));
-        	table.append(createTableRow("Genome", data[10].name));
-        	table.append(createTableRow("# Genes", data[10].number_genes));
-        	table.append(createTableRow("# Compounds", data[10].number_compounds));
-        	table.append(createTableRow("# Reactions", data[10].number_reactions));
-        	table.append(createTableRow("# Compartments", data[10].number_compartments));
+        	table.append(createTableRow("<b>FBA Model Name</b>", "<b>" + data.name + "</b>"));
+        	//table.append(createTableRow("FBA Model Name", data.name));
+        	table.append(createTableRow("# of Genes", data.number_genes));
+        	table.append(createTableRow("# of Compounds", data.number_compounds));
+        	table.append(createTableRow("# of Reactions", data.number_reactions));
+        	table.append(createTableRow("# of Compartments", data.number_compartments));
         	//table.append(createTableRow("Workspace", data[7]));
 
         	container.append(table);

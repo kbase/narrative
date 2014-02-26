@@ -29,8 +29,9 @@
  */
 (function ($) {
     var URL_ROOT = "http://140.221.84.142/objects/coexpr_test/Networks";
-    var WS_URL = "http://kbase.us/services/workspace_service/";
-    var GO_URL_TEMPLATE = "http://www.ebi.ac.uk/QuickGO/GTerm?id=<%= id %>";
+//    var WS_URL = "http://kbase.us/services/workspace_service/";
+	var WS_URL = "https://kbase.us/services/ws/";
+  var GO_URL_TEMPLATE = "http://www.ebi.ac.uk/QuickGO/GTerm?id=<%= id %>";
     $.KBWidget({
         name: "ForceDirectedNetwork",
         version: "0.1.0",
@@ -50,24 +51,22 @@
             };
             if (self.options.minHeight) {
                 self.$elem.css("min-height", self.options.minHeight);
+                self.$elem.css("overflow", "scroll");
             }
             if (self.options.workspaceID === undefined) {
                 fetchAjax = self.exampleData();
             } else if (self.options.token) {
-                $.ajaxSetup({ cache: true });
-                // parse into 3 parts: workspace <dot> objectid [<dot> version]
-                var wsRegex = /^(\w+)\.([^#]+)(?:#(.+))?/;
-                var wsid = wsRegex.exec(self.options.workspaceID);
-                if (wsid !== null && wsid[1] && wsid[2]) {
-                    var kbws = new workspaceService(WS_URL);
-                    var params = { auth: self.options.token,    // auth
-                        workspace: wsid[1], // workspace name
-                        id: wsid[2],        // object id
-                        type: 'Networks'};  // object type
-                    if (wsid[3] !== undefined) {
-                        params.instance = wsid[3]; // optional version
-                    }
-                    fetchAjax = kbws.get_object(params);
+             $.ajaxSetup({ cache: true });
+                var wsid = self.options.workspaceID;
+                var noid = self.options.networkObjectID;
+                if (wsid !== null && wsid && noid) {
+                    var kbws = new Workspace(WS_URL);
+                    fetchAjax = kbws.get_object({
+                        auth: self.options.token,
+                        workspace: wsid,
+                        id: noid,
+                        type: 'KBaseNetworks.Network'
+                    });
                 } else {
                     self.trigger("error", ["Cannot parse workspace ID " +
                         self.options.workspaceID
@@ -99,6 +98,8 @@
                         maximize: true
                     });
                     viewport.css("min-height", "600px");
+                    viewport.css("height", "100%");
+                    viewport.css("overflow", "scroll");
                     var datasetFilter = function () {
                         return true;
                     };
@@ -116,9 +117,9 @@
                         },
                         nodeInfo: function (node, makeRow) {
                             makeRow("Type", node.type);
-                            makeRow("KBase ID", link(node.entityId, "#"));
-                            if (node.type === "GENE" && node.userAnnotations !== undefined) {
-                                var annotations = node.userAnnotations;
+                            makeRow("KBase ID", link(node.entity_id, "#"));
+                            if (node.type === "GENE" && node.user_annotations !== undefined) {
+                                var annotations = node.user_annotations;
                                 if (annotations["external_id"] !== undefined)
                                     makeRow("External ID",
                                         link(annotations["external_id"], "#"));
@@ -134,13 +135,36 @@
                                     });
                                     makeRow("GO terms", goList);
                                 }
+                                if (annotations["go_annotation"] !== undefined) {
+                                	var goe = annotations["go_annotation"];
+                                	var goe1 = goe.replace("\n","<br>");
+                                    makeRow("GO", goe1);
+                                }
+                                if (annotations["go_enrichnment_annotation"] !== undefined) {
+                                	var goe = annotations["go_enrichnment_annotation"];
+                                	var goe1 = goe.replace("\n","<br>");
+                                    makeRow("GO(e)", goe1);
+                                }
+                            }
+                           if (node.type === "CLUSTER" && node.user_annotations !== undefined) {
+                                var annotations = node.user_annotations;
+                                if (annotations["go_annotation"] !== undefined) {
+                                	var goe = annotations["go_annotation"];
+                                	var goe1 = goe.replace("\n","<br>");
+                                    makeRow("GO", goe1);
+                                }
+                                if (annotations["go_enrichnment_annotation"] !== undefined) {
+                                	var goe = annotations["go_enrichnment_annotation"];
+                                	var goe1 = goe.replace("\n","<br>");
+                                    makeRow("GO(e)", goe1);
+                                }
                             }
                         },
                         searchTerms: function (node, indexMe) {
-                            indexMe(node.entityId);
+                            indexMe(node.entity_id);
                             indexMe(node.kbid);
-                            if (node.userAnnotations !== undefined) {
-                                var annotations = node.userAnnotations;
+                            if (node.user_annotations !== undefined) {
+                                var annotations = node.user_annotations;
                                 if (annotations["functions"] !== undefined)
                                     indexMe(annotations["functions"]);
                             }
@@ -165,10 +189,11 @@
                     });
                     progress.show();
                     $.when(fetchAjax).done(function (result) {
-                        var maxGenes = 300;
+                        var maxGenes = 50000;
                         var geneCounter = 0;
+                        console.log("done fetching object");
                         var data = NetIndex(result.data, {
-                            maxEdges: 100000
+                            maxEdges: 100000 
                         });
                         progress.dismiss();
                         try {
@@ -257,7 +282,9 @@
                         allClusters.css("background-color", "#666").css("color", "#fff");
                         list.append(allClusters);
                         var clusters = [];
-
+						var firstClusterFlag = 'true';
+						var setFlag='false';
+					
                         // A bit of a Schwartzian Transform to sort by neighbors
                         _.map(
                             _.filter(data.nodes, function (n) {
@@ -275,7 +302,16 @@
                                     return -entry.neighbors;
                                 }),
                             function (entry) {
-                                var box = dropdownCheckbox(entry.node.id, "", true);
+                                if((setFlag === 'true') || (entry.neighbors > 20))
+                                {
+                                	firstClusterFlag=null;
+                                }
+                                else
+                                {
+                                	firstClusterFlag='true';
+                                	setFlag='true';
+                                }
+                                var box = dropdownCheckbox(entry.node.id, "", firstClusterFlag);
                                 var labelDiv = $("<div>", {
                                     style: "min-width:120px"
                                 })
@@ -283,7 +319,7 @@
                                         $("<span>", {
                                             style: "float: left"
                                         })
-                                        .html(entry.node.entityId)
+                                        .html(entry.node.entity_id)
                                 ).append(
                                     $("<span>", {
                                         style: "float:right;color:#aaa"
@@ -393,7 +429,7 @@
                                 };
                             else
                                 datasetFilter = function (edge) {
-                                    return edge.datasetId == id;
+                                    return edge.dataset_id == id;
                                 };
                             network.update();
                         });
@@ -422,14 +458,14 @@
                             }).append(linkText));
                     }
 
-                    function dropdownCheckbox(value, label, checked) {
+                    function dropdownCheckbox(value, label, checkFlag) {
                         return $("<div>", {
                             class: "dropdown-menu-item"
                         })
                             .append(_.template(CheckboxTemplate, {
                                 label: label,
                                 value: value,
-                                checked: checked
+                                checked: checkFlag
                             }));
                     }
 

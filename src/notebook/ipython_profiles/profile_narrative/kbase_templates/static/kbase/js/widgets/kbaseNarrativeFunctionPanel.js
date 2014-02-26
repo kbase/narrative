@@ -16,6 +16,7 @@
         version: '0.0.1',
         options: {
             loadingImage: 'static/kbase/images/ajax-loader.gif',
+            autopopulate: true,
         },
 
         /**
@@ -33,35 +34,39 @@
         init: function(options) {
             this._super(options);
 
+            console.debug("kbaseNarrativeFunctionPanel.init start");
+
             // DOM structure setup here.
             // After this, just need to update the function list
 
-//            this.$functionList = $('<ul>');
-
-            // Make and append the header.
-            this.$elem.append($('<div>')
-                              .addClass('kb-function-header')
-                              .append('Functions'));
+            /* There's a few bits here.
+             * 1. It's all in a Bootstrap Panel scaffold.
+             * 2. The panel-body section contains the core of the widget:
+             *    a. loading panel (just a blank thing with a spinning gif)
+             *    b. error panel
+             *    c. actual function widget setup.
+             *
+             * So, initialize the scaffold, bind the three core pieces in the
+             * panel-body, make sure the right one is being shown at the start,
+             * and off we go.
+             */
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body');
-//                                  .append(this.$functionList);
-            this.$elem.append(this.$functionPanel);
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
-                                 .addClass('kb-loading')
+                                 .addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">')
+                                 .append($('<div>')
+                                         .attr('id', 'message'))
                                  .hide();
-            this.$elem.append(this.$loadingPanel);
 
-            // The error panel should overlap everything.
+            // The error panel should be empty for now.
             this.$errorPanel = $('<div>')
                                .addClass('kb-error')
                                .hide();
-
-            this.$elem.append(this.$errorPanel);
 
             // The help element should be outside of the panel itself, so it can be manipulated separately.
             // It should hide itself when clicked.
@@ -71,9 +76,29 @@
                               .hide()
                               .click(function(event) { self.$helpPanel.hide(); });
 
-            this.$elem.append(this.$helpPanel);
+
+            this.$elem.append($('<div>')
+                              .addClass('panel panel-primary')
+                              .append($('<div>')
+                                      .addClass('panel-heading')
+                                      .append($('<div>')
+                                              .addClass('panel-title')
+                                              .css({'text-align': 'center'})
+                                              .append('Services')))
+                              .append($('<div>')
+                                      .addClass('panel-body kb-narr-panel-body')
+                                      .append(this.$functionPanel)
+                                      .append(this.$loadingPanel)
+                                      .append(this.$errorPanel)));
+
+            $('body').append(this.$helpPanel);
             this.refresh();
 
+            if (this.options.autopopulate === true) {
+                this.refresh();
+            }
+
+            console.debug("kbaseNarrativeFunctionPanel.init done");
             return this;
         },
         
@@ -84,42 +109,45 @@
          * @private
          */
         refresh: function() {
-            this.showLoadingMessage();
+            if (!IPython || !IPython.notebook || !IPython.notebook.kernel)
+                return;
+
+            this.showLoadingMessage("Loading available KBase Services...");
 
             // Command to load and fetch all functions from the kernel
             var fetchFunctionsCommand = 'import biokbase.narrative.common.service_root as root\n' + 
                                         'print root.service.get_all_services(as_json_schema=True)\n';
 
-            var self = this;
-            // We really only need the 'output' callback here.
             var callbacks = {
-                'output' : function(msgType, content) { 
-                    self.parseKernelResponse(msgType, content); 
-                    self.showFunctionPanel();
-                },
-                'execute_reply' : function(content) { 
-                    self.handleCallback("execute_reply", content); 
-                },
-                'clear_output' : function(content) { 
-                    self.handleCallback("clear_output", content); 
-                },
-                'set_next_input' : function(content) { 
-                    self.handleCallback("set_next_input", content); 
-                },
-                'input_request' : function(content) { 
-                    self.handleCallback("input_request", content); 
-                },
+                'output' : $.proxy(function(msgType, content) { 
+                    this.parseKernelResponse(msgType, content); 
+                    this.showFunctionPanel();
+                }, this),
+                'execute_reply' : $.proxy(function(content) { 
+                    this.handleCallback("execute_reply", content); 
+                }, this),
+                'clear_output' : $.proxy(function(content) { 
+                    this.handleCallback("clear_output", content); 
+                }, this),
+                'set_next_input' : $.proxy(function(content) { 
+                    this.handleCallback("set_next_input", content); 
+                }, this),
+                'input_request' : $.proxy(function(content) { 
+                    this.handleCallback("input_request", content); 
+                }, this),
             };
 
+            console.debug("kbaseNarrativeFunctionPanel.refresh running kernel command");
             var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
         },
 
         handleCallback: function(call, content) {
-            this.dbg("kbaseNarrativeFunctionPanel.handleCallback - " + call);
-            this.dbg(content);
-
             if (content.status === "error") {
                 this.showError(content);
+            }
+            else {
+                console.debug("kbaseNarrativeFunctionPanel." + call);
+                console.debug(content);
             }
         },
 
@@ -132,8 +160,8 @@
          */
         parseKernelResponse: function(msgType, content) {
             // if it's not a datastream, display some kind of error, and return.
-            this.dbg("kbaseNarrativeFunctionPanel.parseKernelResponse");
-            this.dbg(content);
+            // this.dbg("kbaseNarrativeFunctionPanel.parseKernelResponse");
+            // this.dbg(content);
 
             if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the function list.');
@@ -172,16 +200,6 @@
             }
 
             this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
-
-            /** pre-accordion code commented out below **/
-            // for (var serviceName in serviceSet) {
-            //     var service = serviceSet[serviceName];
-            //     for (var i=0; i<service.methods.length; i++) {
-            //         var method = service.methods[i];
-            //         method['service'] = serviceName;
-            //         this.addFunction(method);
-            //     }
-            // }
         },
 
         /**
@@ -201,11 +219,11 @@
             var $helpButton = $('<span>')
                               .addClass('glyphicon glyphicon-question-sign kb-function-help')
                               .css({'margin-top': '-5px'})
-                              .click(function(event) { event.preventDefault(); event.stopPropagation(); self.showHelpPopup(method); });
+                              .click(function(event) { event.preventDefault(); event.stopPropagation(); self.showHelpPopup(method, event); });
 
             var $newFunction = $('<li>')
                                .append(method.title)
-                               .click(function(event) { self.trigger('function_clicked.Narrative', method); })
+                               .click(function(event) {self.trigger('function_clicked.Narrative', method); })
                                .append($helpButton);
 
             return $newFunction;
@@ -253,8 +271,8 @@
          * description for populating the popup.
          * @private
          */
-        showHelpPopup: function(method) {
-            console.log(method);
+        showHelpPopup: function(method, event) {
+            this.$helpPanel.css({'left':event.pageX, 'top':event.pageY})
             this.$helpPanel.empty();
             this.$helpPanel.append($('<h1>').append(method.title + ' Help'))
                            .append(method.description)
@@ -266,7 +284,10 @@
          * Shows a loading spinner or message on top of the panel.
          * @private
          */
-        showLoadingMessage: function() {
+        showLoadingMessage: function(message) {
+            this.$loadingPanel.find('#message').empty();
+            if (message) 
+                this.$loadingPanel.find('#message').html(message);
             this.$functionPanel.hide();
             this.$errorPanel.hide();
             this.$loadingPanel.show();

@@ -105,7 +105,7 @@ M.sweep_delay = 30
 
 -- Default URL for authentication failure redirect, defaults to nil which means just error
 -- out without redirect
-M.auth_redirect = "http://gologin.kbase.us/?redirect=%s"
+M.auth_redirect = "/?redirect=%s"
 
 --
 -- Function that runs a netstat and returns a table of foreign IP:PORT
@@ -485,13 +485,13 @@ discover = function()
 -- Spin up a new instance
 --
 new_container = function( session_id)
-		   ngx.log( ngx.INFO, "Creating new notebook instance " )
-		   local status, res = pcall(notemgr.launch_notebook,session_key)
+		   ngx.log( ngx.INFO, "Creating new notebook instance for ",session_id )
+		   local status, res = pcall(notemgr.launch_notebook,session_id)
 		   if status then
 		      ngx.log( ngx.INFO, "New instance at: " .. res)
 		      -- do a none blocking sleep for 2 seconds to allow the instance to spin up
 		      ngx.sleep(5)
-		      local success,err,forcible = proxy_map:set(session_key,res)
+		      local success,err,forcible = proxy_map:set(session_id,res)
 		      if not success then
 			 ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
 			 ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
@@ -523,15 +523,10 @@ use_proxy = function(self)
 		  -- try to fetch the target again
 		  target = proxy_map:get(session_key)
 		  if target == nil then
-		     target = new_instance( session_key)
+		     target = new_container( session_key)
 		  end
 	       else
 		  ngx.log(ngx.WARN,"No session_key found!")
-		  if M.auth_redirect then
-		     local msg = string.format("Please try going to %s to authenticate and try again",
-					       string.format( M.auth_redirect, ngx.escape_uri(ngx.var.request_uri)))
-		     ngx.say( msg)
-		  end
 	       end
 	       if target ~= nil then
 		  ngx.var.target = target
@@ -542,8 +537,12 @@ use_proxy = function(self)
 		  end
 		  success,err,forcible = proxy_state:set(session_key,true)
 		  success,err,forcible = proxy_last_ip:set(session_key,client_ip)
+	       elseif M.auth_redirect then
+		  local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
+		  local returnurl = string.format("%s://%s/%s", scheme,ngx.var.host,ngx.var.request_uri)
+		  return ngx.redirect( string.format(M.auth_redirect, ngx.escape_uri(returnurl)))
 	       else
-		  ngx.exit(ngx.HTTP_NOT_FOUND)
+		  return(ngx.exit(ngx.HTTP_NOT_FOUND))
 	       end
 	    end
 

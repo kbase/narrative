@@ -16,8 +16,11 @@
             this._super(options);
 
             this.render();
+            this.refresh();
             return this;
         },
+
+        useSelect2: true,
 
         /**
          * Builds the input div for a function cell, based on the given method object.
@@ -26,62 +29,29 @@
          * @private
          */
         render: function() {
-
             // figure out all types from the method
             var method = this.options.method;
-            
             var params = method.properties.parameters;
-            var lookupTypes = [];
-            for (var p in params) {
-                lookupTypes.push(params[p].type);
+
+            var inputDiv = "<div class='kb-cell-params'><table class='table'>";
+            for (var i=0; i<Object.keys(params).length; i++) {
+                var pid = 'param' + i;
+                var p = params[pid];
+
+                var input_default = (p.default !== "" && p.default !== undefined) ?
+                                    " placeholder='" + p.default + "'" : "";
+                input = "<input class='form-control' style='width: 85%' name='" + pid + "'" + input_default +
+                        " value='' type='text'></input>";
+
+                var cellStyle = "border:none; vertical-align:middle;";
+                inputDiv += "<tr style='" + cellStyle + "'>" + 
+                                "<td style='" + cellStyle + "'>" + p.ui_name + "</td>" +
+                                "<td style='" + cellStyle + " width: 50%;'>" + input + "</td>" +
+                                "<td style='" + cellStyle + "'>" + p.description + "</td>" +
+                            "</tr>";
             }
-            this.trigger('dataLoadedQuery.Narrative', [lookupTypes, $.proxy(
-                function(objects) {
-
-                    var inputDiv = "<div class='kb-cell-params'><table class='table'>";
-                    for (var i=0; i<Object.keys(params).length; i++) {
-                        var pid = 'param' + i;
-                        var p = params[pid];
-
-                        var input = "";
-                        var input_default = (p.default !== "" && p.default !== undefined) ?
-                            " placeholder='" + p.default + "'" : "";
-                        if (objects[p.type] && objects[p.type].length > 1) {
-                            var objList = objects[p.type];
-                            objList.sort(function(a, b) {
-                                if (a[0] < b[0])
-                                    return -1;
-                                if (a[0] > b[0])
-                                    return 1;
-                                return 0;
-                            });
-                            var datalistUUID = this.genUUID();
-                            input = "<input type='text' name='" + pid + "'" + input_default +
-                                    " list='" + datalistUUID + "'>" +
-                                    "<datalist id='" + datalistUUID + "'>";
-
-                            for (var j=0; j < objects[p.type].length; j++) {
-                                input += "<option value='" + objList[j][0] + "'>" + objList[j][0] + "</option>";
-                            }
-                            input += "</datalist>";
-                        }
-                        else {
-                            input = "<input name='" + pid + "'" + input_default +
-                                    " value='' type='text'></input>";
-                        }
-
-                        var cellStyle = "border:none; vertical-align:middle;";
-                        inputDiv += "<tr style='" + cellStyle + "'>" + 
-                                        "<td style='" + cellStyle + "'>" + p.ui_name + "</td>" +
-                                        "<td style='" + cellStyle + "'>" + input + "</td>" +
-                                        "<td style='" + cellStyle + "'>" + p.description + "</td>" +
-                                    "</tr>";
-                    }
-                    inputDiv += "</table></div>";
-                    this.$elem.append(inputDiv);
-                },
-                this
-            )]);
+            inputDiv += "</table></div>";
+            this.$elem.append(inputDiv);
         },
 
         /**
@@ -94,7 +64,7 @@
             var paramList = [];
 
             $(this.$elem).find("[name^=param]").filter(":input").each(function(key, field) {
-                paramList.push(field.value);
+                paramList.push(field.value.trim());
             });
 
             return paramList;
@@ -153,11 +123,15 @@
             var method = this.options.method;
             var params = method.properties.parameters;
             var lookupTypes = [];
+            var tempObj = {};
             for (var p in params) {
-                lookupTypes.push(params[p].type);
+                if (!tempObj.hasOwnProperty(params[p].type)) {
+                    lookupTypes.push(params[p].type);
+                    tempObj[params[p].type] = 1;
+                }
             }
 
-            this.trigger('dataLoadedQuery.Narrative', [lookupTypes, $.proxy(
+            this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
                 function(objects) {
                     // we know from each parameter what each input type is.
                     // we also know how many of each type there is.
@@ -171,11 +145,17 @@
                         // input with name = pid present.
                         var $input = $($(this.$elem).find("[name=" + pid + "]"));
                         var objList = [];
+
+                        /*
+                         * New sorting - by date, then alphabetically within dates.
+                         */
                         if (objects[p.type] && objects[p.type].length > 0) {
                             objList = objects[p.type];
                             objList.sort(function(a, b) {
-                                if (a[0] < b[0]) return -1;
-                                if (a[0] > b[0]) return 1;
+                                if (a[3] > b[3]) return -1;
+                                if (a[3] < b[3]) return 1;
+                                if (a[1] < b[1]) return -1;
+                                if (a[1] > b[1]) return 1;
                                 return 0;
                             });
                         }
@@ -218,8 +198,8 @@
                             $datalist.empty();
                             for (var j=0; j<objList.length; j++) {
                                 $datalist.append($('<option>')
-                                                 .attr('value', objList[j][0])
-                                                 .append(objList[j][0]));
+                                                 .attr('value', objList[j][1])
+                                                 .append(objList[j][1]));
                             }
                         }
                     }

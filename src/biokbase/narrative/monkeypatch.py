@@ -18,6 +18,7 @@ import pprint
 import IPython.html.notebook.handlers
 import IPython.html.services.notebooks.handlers
 import IPython
+import biokbase.auth
 
 def monkeypatch_method(cls):
     """
@@ -81,12 +82,15 @@ def do_patching( c ):
             IPython.html.base.handlers.app_log.debug("user_id = " + sess.get('token','None'))
             IPython.html.base.handlers.app_log.debug("token = " + sess.get('token','None'))
             setattr(handler,'kbase_session', sess)
+            # also push the token into the environment hash so that KBase python clients pick it up
+            biokbase.auth.set_environ_token(sess.get('token','None'))
 
         IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.notebook.handlers.NamedNotebookHandler.get() in process {}".format(os.getpid()))
         old_get = IPython.html.notebook.handlers.NamedNotebookHandler.get
 
         @monkeypatch_method(IPython.html.notebook.handlers.NamedNotebookHandler)
         def get(self,notebook_id):
+            IPython.html.base.handlers.app_log.debug("notebook_id = " + notebook_id)
             if 'kbase_session' in self.cookies and hasattr(self,'notebook_manager'):
                 IPython.html.base.handlers.app_log.debug("kbase_session = " + self.cookies['kbase_session'].value)
                 cookie_pusher(self.cookies['kbase_session'].value, getattr(self,'notebook_manager'))

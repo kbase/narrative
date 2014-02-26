@@ -20872,13 +20872,13 @@ function (JQ, EventEmitter, DragBox, Scale) {
         var canvas = JQ("<canvas>")
             .attr("width", container.width())
             .attr("height", container.height())
-            .css("position", "absolute")
+            .css("position", "30px Arial")
             .css("z-index", options.z || 1);
         container.append(canvas);
         return canvas[0].getContext('2d');
     }
     var PI2 = Math.PI * 2;
-    var AXIS_COLOR  = '#CCC';
+    var AXIS_COLOR  = '#222';
     
     function ManhattanPlot(options) {
         var self = this;
@@ -21037,6 +21037,7 @@ function (JQ, EventEmitter, DragBox, Scale) {
                 if (options.callback) {
                     options.callback(axisContext);
                 }
+                axisContext.font = "small-caps bold 12px arial";;
                 axisContext.translate(x, y);
                 axisContext.rotate(-Math.PI/2);
                 axisContext.textAlign = options.align || "right";
@@ -21047,6 +21048,7 @@ function (JQ, EventEmitter, DragBox, Scale) {
             
             function horizontalLabeler(text, x, y, options) {
                 options = (options || {})
+                axisContext.font = "small-caps bold 12px arial";;
                 axisContext.save();
                 axisContext.textAlign = "center";
                 axisContext.textBaseline = options.baseline || "top";
@@ -37450,6 +37452,8 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
             }
             return false;
         }
+        var hub_x = 120;
+        var hub_y = 120;
         
         function update() {
             filterCache = {};
@@ -37501,6 +37505,9 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
                 .on("mouseover", function (d) {
                     self.emit("mouseover-node", [d, this]);
                 })
+                .on("mouseout", function (d) {
+                    hud.empty().dismiss();
+                })                
                 .on("mousedown", function (d) {
                     fixNodeTimer = {
                         time: new Date().getTime(),
@@ -37544,8 +37551,8 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
 
         var originalFill,
             hud = new HUD({
-                position: { bottom: 20, left: 20 },
-                width: 300,
+                position: { bottom: $element.x, left: $element.y },
+                width: 500,
                 title: "Node Properties",
                 z: 2000
             });
@@ -37597,7 +37604,7 @@ function (JQ, d3, _, Dock, EventEmitter, HUD, Revalidator) {
             if (options.nodeInfo === undefined) {
                 row("Name", d.name);
                 row("Type", d.type);
-                row("KBase ID", d.entityId);
+                row("KBase ID", d.entity_id);
                 row("Neighbors", self.neighbors(d).length);
             } else {
                 options.nodeInfo(d, row);
@@ -43604,8 +43611,8 @@ function (JQ, _, template) {
 KBVis.define('transformers/netindex',["underscore"], function (_) {
     
     var defaults = {
-        maxNodes: 500,
-        maxEdges: 2000,
+        maxNodes: 50000,
+        maxEdges: 100000,
         nodeFilter: function () { return true; },
         edgeFilter: function () { return true; }
     };
@@ -43638,13 +43645,13 @@ KBVis.define('transformers/netindex',["underscore"], function (_) {
         }
         i = 0;
         while (result.edges.length < numEdges && i < data.edges.length) {
-            if (nodeMap[data.edges[i].nodeId1] !== undefined &&
-                nodeMap[data.edges[i].nodeId2] !== undefined &&
+            if (nodeMap[data.edges[i].node_id1] !== undefined &&
+                nodeMap[data.edges[i].node_id2] !== undefined &&
                 options.edgeFilter(data.edges[i])
             ) {
                 var edge = _.extend({}, data.edges[i]);
-                edge.source = parseInt(nodeMap[edge.nodeId1], 0);
-                edge.target = parseInt(nodeMap[edge.nodeId2], 0);
+                edge.source = parseInt(nodeMap[edge.node_id1], 0);
+                edge.target = parseInt(nodeMap[edge.node_id2], 0);
                 edge.weight = 1;
                 result.edges.push(edge);
             }

@@ -4,7 +4,7 @@
 {% macro static_url(name) -%}
    {{ base_project_url }}static/{{ name }}
 {%- endmacro %}
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
@@ -14,7 +14,7 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     {% block stylesheet %}
     {% block lesscss %}
 	    {% if use_less %}
@@ -27,15 +27,27 @@
     <link rel="stylesheet" href="{{ static_url("custom/custom.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/narrative.css") }}" type="text/css" />
-    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <!--<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/3.2.1/css/font-awesome.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
     <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
     <script>
       require.config({
           baseUrl: '{{static_url() }}',
       });
     </script>
-
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      
+      ga('create', 'UA-48256002-1', 'kbase.us');
+      ga('send', 'pageview');
+      
+    </script>
     {% block meta %}
     {% endblock %}
 
@@ -50,42 +62,47 @@
   </div>
 </noscript>
 
-<!--
-<header role="banner">      
-    <div id="logo">
-        <a href="http://www.kbase.us"><img src="{{static_url("kbase/images/kbase_logo.png")}}" alt="KBase User Home" /></a>
+
+<div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
+    <a href="http://www.kbase.us" class="pull-left">
+        <img id="logo" src="static/kbase/images/kbase_logo.png" width="46">
+    </a>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li class="dropdown active">
+          <a href="/functional-site/#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            <li><a href="/functional-site/#/narrative/">Newsfeed</a></li>
+            <li><a href="/functional-site/#/narrative/projects/">Projects</a></li>
+          </ul>
+        </li>
+        <li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li>
+        <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>
+      </ul>
+
+              <form ng-controller="SearchController" ng-submit="startSearch(searchquery)" class="navbar-form navbar-left" role="search" style="width: 40%">
+                <div class="input-group">
+                    <input class="form-control" ng-model="searchquery" name="search" placeholder=" Search KBase Data" autocomplete="off" type="text"> 
+                    <div class="input-group-btn">
+                        <button class="btn" type="submit" style="background-color: #ebebeb; border-color: #adadad; border-left:none"><span class="glyphicon glyphicon-search" style="line-height: .9"></span></button>
+                    </div>
+                </div>
+              </form>
+      <div id="signin-button" class="pull-right"></div>
+      <ul class="nav navbar-nav pull-right">
+          <li class="dropdown help-dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a>
+                 <ul class="dropdown-menu">
+                 <li><a href="http://kbase.us/for-users/narrative-quick-start/" target="_new">Narrative Quick Start Guide</a></li>
+                 <li><a href="/functional-site/#/landing-pages-help">Landing Page Documentation</a></li>
+                 <li><a href="mailto:help@kbase.us">Email help@kbase.us</a></li>
+              </ul></li>
+      </ul>
     </div>
-    <nav role="navigation">
-        <ul>
-            <li><a href="#">Home</a></li>
-            <li><a href="#">Personal Data Store</a></li>
-            <li id="search_nav">
-                    <a href="#">Search</a>
-                    <input type="text" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input>
-                    
-                
-            </li>
-        </ul>
-    </nav>
--->
-<header id="header_banner" role="banner">
-  <div id="navrow" class="row">     
-    <div id="logo" class="col-sm-1">
-      <a href="http://narrative.kbase.us/home.shtml"><img src="static/kbase/images/kbase_logo.png" alt="KBase User Home" /></a>
-    </div>
-    <div class="col-sm-9">
-      <nav id="header_nav" role="navigation" class="row">
-        <ul>
-    	  <li><a href="http://narrative.kbase.us/datastore.shtml">Narrative</a></li>
-    	  <li><a href="http://www.kbase.us/services/docs/invocation/Iris/iris.html">Iris</a></li>
-        <li><a href="http://140.221.84.142/browse.html">Workspace</a></li>
-          <li id="searchlabel"><a href="https://niya.qb3.berkeley.edu/search_client/search_client.html">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>
-        </ul>
-      </nav>
-    </div>
+</div>
 
     {% block login_widget %}
-    
+
     <div id="login-info" class="pull-right">
       <div id="login-widget">
       </div>
@@ -102,15 +119,18 @@
       </div>
 
       {% endblock %}
-  </div>
-</header>
-
-
 
 <div id="site">
 {% block site %}
 {% endblock %}
 </div>
+
+        <div id="app" class="wrapper" ui-view></div>
+
+        </div> <!-- end wrap, this pushes the footer down -->
+            <div id="footer">
+              <div class="disclaimer">This site is for demonstration purposes only.</div>
+            </div>
 
 <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -122,17 +142,11 @@
 <!-- KBase Narrative Extensions -->
 <script src="{{ static_url("kbase/js/jquery.cookie.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbwidget.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbasePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseLogin.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseLoginFuncSite.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrativeLogin.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/header.js") }}" type="text/javascript" charset="utf-8"></script>
 <!-- End KBase Extensions -->
-
-<!--
-<script src = "http://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.3.1/jquery.cookie.min.js"></script>
-<script src="{{ static_url("kbase/js/kbase-ui-min.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/kbase.min.js") }}"  type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/kbase-narrative.js") }}" type="text/javascript" charset="utf-8"></script>
--->
 
 <script src="{{ static_url("auth/js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
 
@@ -144,7 +158,6 @@
 
 <script src="{{static_url("custom/custom.js") }}" type="text/javascript" charset="utf-8"></script>
 
-<div class="whiteout-pane"></div>
 </body>
 
 </html>

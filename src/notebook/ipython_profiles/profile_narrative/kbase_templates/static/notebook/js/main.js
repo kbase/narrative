@@ -50,7 +50,7 @@ function (marked) {
 
     IPython.page = new IPython.Page();
     IPython.layout_manager = new IPython.LayoutManager();
-    IPython.pager = new IPython.Pager('div#pager', 'div#pager_splitter');
+//    IPython.pager = new IPython.Pager('div#pager', 'div#pager_splitter');
     IPython.quick_help = new IPython.QuickHelp();
     IPython.login_widget = new IPython.LoginWidget('span#login_widget',{baseProjectUrl:baseProjectUrl});
     IPython.notebook = new IPython.Notebook('div#notebook',{baseProjectUrl:baseProjectUrl});
@@ -60,6 +60,11 @@ function (marked) {
     IPython.tooltip = new IPython.Tooltip()
     IPython.notification_area = new IPython.NotificationArea('#notification_area')
     IPython.notification_area.init_notification_widgets();
+
+    // Monkey patch to get the narrative 'start me up' event registered at the right time.
+    narrative.init();
+    // End Monkey patch.
+
 
     IPython.layout_manager.do_resize();
 
@@ -85,6 +90,7 @@ function (marked) {
             document.location.hash = hash;
         }
         IPython.notebook.set_autosave_interval(IPython.notebook.minimum_autosave_interval);
+
         // only do this once
         $([IPython.events]).off('notebook_loaded.Notebook', first_load);
     };

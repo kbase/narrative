@@ -14,6 +14,13 @@ M.repository_version = 'latest'
 -- This is the port that should be exposed from the container, the service in the container
 -- should have a listener on here configured
 M.private_port = 8888
+-- This is the path to the syslog Unix socket listener in the host environment
+-- it is imported into the container via a Volumes argument
+M.syslog_src = '/var/log/docker/log'
+
+-- This is the path to the syslog Unix socket listener in the container environment
+-- it is imported into the container via a Volumes argument
+M.syslog_dest = '/dev/log'
 
 --
 --  Query the docker container for a list of containers and
@@ -50,6 +57,9 @@ local function launch_notebook( name )
    conf.Image = string.format("%s:%s",M.repository_image,M.repository_version)
    conf.Cmd={name}
    conf.PortSpecs = {tostring(M.private_port)}
+   if M.syslog_src and M.syslog_dest then
+      conf.Volumes = { string.format('%s:%s', M.syslog_src, M.syslog_dest) }
+   end
    ngx.log(ngx.INFO,string.format("Spinning up instance of %s on port %d",conf.Image, M.private_port))
    --p.dump(conf)
    local res = docker.client:create_container{ payload = conf, name = name}

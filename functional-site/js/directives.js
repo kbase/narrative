@@ -230,6 +230,20 @@ angular.module('lp-directives')
         };
     })
 
+    .directive('pathways', function() {
+        return {
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'Pathways', 
+                                               type: 'Pathway',
+                                               rightLabel: scope.ws,
+                                               subText: scope.id});
+                p.loading();
+                $(p.body()).kbasePathways()
+
+            }
+        };
+    })
+
     .directive('mediadetail', function() {
         return {
             link: function(scope, element, attrs) {
@@ -253,9 +267,11 @@ angular.module('lp-directives')
     .directive('rxndetail', function() {
         return {
             link: function(scope, element, attrs) {
+                $(element).loading()
                 var prom = kb.req('fba', 'get_reactions',
                             {reactions: scope.ids})
                 $.when(prom).done(function(data){
+                    $(element).rmLoading();
                     $(element).kbaseRxn({data: data, ids: scope.ids});
                 })
             }
@@ -291,7 +307,9 @@ angular.module('lp-directives')
                                                rightLabel: scope.ws,
                                                subText: scope.id,
                                                widget: 'genomeoverview'});
-                p.loading(); // not sure why this isn't loading first.  I'm thinking data should be retrieved here.
+                p.loading(); 
+                // not sure why this isn't loading first.  
+                // I'm thinking data should be retrieved here.
 
                 $(p.body()).KBaseGenomeOverview({genomeID: scope.id, workspaceID: scope.ws, kbCache: kb})
             }
@@ -305,7 +323,7 @@ angular.module('lp-directives')
                                                rightLabel: scope.ws,
                                                subText: scope.id,
                                                widget: 'genomewiki'});
-                p.loading(); 
+                p.loading();
                 $(p.body()).KBaseWikiDescription({genomeID: scope.id, workspaceID: scope.ws, kbCache: kb})
             }
         };

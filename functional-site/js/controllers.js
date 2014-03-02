@@ -245,12 +245,13 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.selected_ws = $stateParams.ws;
 })
 
+
 .controller('WorkspaceBrowserLanding', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
 
-
     $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
+        handle: '.panel-heading',
         start: function() {
           $(this).find('.panel-body').addClass('hide');
           $(this).sortable('refreshPositions');

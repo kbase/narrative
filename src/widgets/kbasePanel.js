@@ -99,7 +99,8 @@ $.KBWidget({
                                     +right_label+'</span><br>');
         }
 
-
+        // change header cursor on only this widget
+        panel_header.css('cursor', 'move')
 
         // event for removing panel
         rm_panel_btn.click(function() {

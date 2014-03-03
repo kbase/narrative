@@ -129,7 +129,7 @@ rect:hover {
 }
 
 .label {
-    line-height: 1;
+    padding: .4em .6em .3em;
 }
 
 /* KBase navigation bar */

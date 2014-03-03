@@ -133,7 +133,6 @@ $.KBWidget({
                 data.push({'products': rxns[i].products, 'substrates': rxns[i].substrates})
             }
 
-
             var groups = [];
             var grouped_ids = [];
 
@@ -170,7 +169,7 @@ $.KBWidget({
 
 
             var oset = 12; // off set for arrows
-
+            var threshold = 2; // threshold for deciding if connection is linear
 
             // draw connections from substrate to product
             for (var j in groups) {
@@ -192,109 +191,108 @@ $.KBWidget({
                 var x = (Math.max.apply(Math, xs) + Math.min.apply(Math, xs)) / 2
                 var y = (Math.max.apply(Math, ys) + Math.min.apply(Math, ys)) / 2
 
-                //for (var i in rxn_set) { // only need to do this once, since there are groups
-                    var rxn = rxn_set[0];
+                // only need to do this once, since there are groups
+                var rxn = rxn_set[0];
 
-                    var prods = rxn.products;
-                    var subs = rxn.substrates;
+                var prods = rxn.products;
+                var subs = rxn.substrates;
 
-                    // draw product lines
-                    for (var i in prods) {
-                        var prod_id = prods[i].id
+                // draw product lines
+                for (var i in prods) {
+                    var prod_id = prods[i].id
 
-                        for (var i in cpds) {
-                            var cpd = cpds[i];
+                    for (var i in cpds) {
+                        var cpd = cpds[i];
 
-                            if (cpd.id != prod_id) continue;
+                        if (cpd.id != prod_id) continue;
 
-                            // for when centers are "on" the same x axis, don't offset the y, etc
-                            if (Math.abs(cpd.x-x) < 2) {
-                                var circ = svg.append("line")
-                                     .attr("x1", x)
-                                     .attr("y1", y)
-                                     .attr("x2", cpd.x)
-                                     .attr("y2", (cpd.y  > y ? cpd.y-oset : cpd.y+oset)) 
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color)
-                                     .attr('marker-end', "url(#end-arrow)");
-                            } else if (Math.abs(cpd.y-y) < 2) {
-                                var circ = svg.append("line")
-                                     .attr("x1", x)
-                                     .attr("y1", y)
-                                     .attr("x2", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
-                                     .attr("y2", cpd.y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color)
-                                     .attr('marker-end', "url(#end-arrow)");                            
-                            } else if (cpd.x > x && cpd.y > y ) {
-                                var circ = svg.append("line")
-                                     .attr("x1", x)
-                                     .attr("y1", y)
-                                     .attr("x2", cpd.x-oset)
-                                     .attr("y2", cpd.y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color)
-                                     .attr('marker-end', "url(#end-arrow)");                             
-                            } else {
-                                var circ = svg.append("line")
-                                     .attr("x1", x)
-                                     .attr("y1", y)
-                                     .attr("x2", cpd.x)
-                                     .attr("y2", cpd.y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color)
-                                     .attr('marker-end', "url(#end-arrow)")                         
-                            }
+                        // for when centers are "on" the same x axis, don't offset the y, etc
+                        if (Math.abs(cpd.x-x) < threshold) {
+                            var circ = svg.append("line")
+                                 .attr("x1", x)
+                                 .attr("y1", y)
+                                 .attr("x2", cpd.x)
+                                 .attr("y2", (cpd.y  > y ? cpd.y-oset : cpd.y+oset)) 
+                                 .attr("stroke-width", 2)
+                                 .attr("stroke", stroke_color)
+                                 .attr('marker-end', "url(#end-arrow)");
+                        } else if (Math.abs(cpd.y-y) < threshold) {
+                            var circ = svg.append("line")
+                                 .attr("x1", x)
+                                 .attr("y1", y)
+                                 .attr("x2", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
+                                 .attr("y2", cpd.y)
+                                 .attr("stroke-width", 2)
+                                 .attr("stroke", stroke_color)
+                                 .attr('marker-end', "url(#end-arrow)");                            
+                        } else if (cpd.x > x && cpd.y > y ) {
+                            var circ = svg.append("line")
+                                 .attr("x1", x)
+                                 .attr("y1", y)
+                                 .attr("x2", cpd.x-oset)
+                                 .attr("y2", cpd.y)
+                                 .attr("stroke-width", 2)
+                                 .attr("stroke", stroke_color)
+                                 .attr('marker-end', "url(#end-arrow)");                             
+                        } else {
+                            var circ = svg.append("line")
+                                 .attr("x1", x)
+                                 .attr("y1", y)
+                                 .attr("x2", cpd.x)
+                                 .attr("y2", cpd.y)
+                                 .attr("stroke-width", 2)
+                                 .attr("stroke", stroke_color)
+                                 .attr('marker-end', "url(#end-arrow)")                         
                         }
                     }
+                }
 
-                    // draw substrate lines
-                    for (var i in subs) {
-                        var sub_id = subs[i].id
+                // draw substrate lines
+                for (var i in subs) {
+                    var sub_id = subs[i].id
 
-                        for (var i in cpds) {
-                            var cpd = cpds[i];
+                    for (var i in cpds) {
+                        var cpd = cpds[i];
 
-                            if (cpd.id != sub_id ) continue;
+                        if (cpd.id != sub_id ) continue;
 
-                            // for when centers are "on" the same x axis, don't off setthe y, etc
-                            if (Math.abs(cpd.x-x) < 2) {
-                                svg.append("line")
-                                     .attr("x1", cpd.x)
-                                     .attr("y1", (cpd.y  > y ? cpd.y-oset : cpd.y+oset) )
-                                     .attr("x2", x)
-                                     .attr("y2", y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color);
-                            } else if (Math.abs(cpd.y-y) < 2) {
-                                svg.append("line")
-                                     .attr("x1", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
-                                     .attr("y1", cpd.y )
-                                     .attr("x2", x)
-                                     .attr("y2", y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color)                            
-                            } else if (Math.abs(cpd.x-x)< 8  && Math.abs(cpd.y-y)<8 ) {
-                                svg.append("line")
-                                     .attr("x1", cpd.x-oset )
-                                     .attr("y1", cpd.y )
-                                     .attr("x2", x)
-                                     .attr("y2", y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color);
-                            } else {
-                                svg.append("line")
-                                     .attr("x1", cpd.x )
-                                     .attr("y1", cpd.y )
-                                     .attr("x2", x)
-                                     .attr("y2", y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color);
-                            }
+                        // for when centers are "on" the same x axis, don't off setthe y, etc
+                        if (Math.abs(cpd.x-x) < threshold) {
+                            svg.append("line")
+                                 .attr("x1", cpd.x)
+                                 .attr("y1", (cpd.y  > y ? cpd.y-oset : cpd.y+oset) )
+                                 .attr("x2", x)
+                                 .attr("y2", y)
+                                 .attr("stroke-width", 2)
+                                 .attr("stroke", stroke_color);
+                        } else if (Math.abs(cpd.y-y) < threshold) {
+                            svg.append("line")
+                                 .attr("x1", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
+                                 .attr("y1", cpd.y )
+                                 .attr("x2", x)
+                                 .attr("y2", y)
+                                 .attr("stroke-width", 2)
+                                 .attr("stroke", stroke_color)                            
+                        } else if (Math.abs(cpd.x-x)< 8  && Math.abs(cpd.y-y)<8 ) {
+                            svg.append("line")
+                                 .attr("x1", cpd.x-oset )
+                                 .attr("y1", cpd.y )
+                                 .attr("x2", x)
+                                 .attr("y2", y)
+                                 .attr("stroke-width", 2)
+                                 .attr("stroke", stroke_color);
+                        } else {
+                            svg.append("line")
+                                 .attr("x1", cpd.x )
+                                 .attr("y1", cpd.y )
+                                 .attr("x2", x)
+                                 .attr("y2", y)
+                                 .attr("stroke-width", 2)
+                                 .attr("stroke", stroke_color);
                         }
-                    }     
-                //}
-            }  // end draw reactions
+                    }
+                }     
+            }  // end draw connections
 
 
             // draw reactions
@@ -313,6 +311,8 @@ $.KBWidget({
                                   .style('fill', '#fff')
                                   .style('stroke', stroke_color);
 
+                model_rxn = getModelRxn(rxn.id);
+
 
                 var subs = []
                 for (var i in rxn.substrates) {
@@ -329,6 +329,11 @@ $.KBWidget({
                               'Rxns: ' + rxn.rxns.join(', ')+'<br>'+
                               'Substrates: ' + subs.join(', ')+'<br>'+
                               'Products: ' + prods.join(', ')+'<br>';
+
+
+                if (model_rxn) {
+                    
+                }       
 
 
                 $(rect.node()).popover({html: true, content: content, 
@@ -373,7 +378,7 @@ $.KBWidget({
 
         function getModelRxn() {
 
-            
+
         }
 
 

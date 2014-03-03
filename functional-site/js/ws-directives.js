@@ -251,6 +251,11 @@ angular.module('ws-directives')
                             $('.select-box table').append('<tr class="no-ws-alert"><td>No Workspaces</td></tr>');
                         } 
                     }
+
+
+                    // help tooltips
+                    $('.btn-ws-settings').tooltip({title: 'Workspace Settings', placement: 'bottom', delay: {show: 800}})                     
+
                 } /* end events */
 
                 function manageModal(ws_name) {
@@ -915,7 +920,6 @@ angular.module('ws-directives')
                     var prom = kb.ws.list_objects({workspaces: [ws]});
                     var prom2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1})
                     $.when(prom, prom2).done(function(data, deleted_objs){
-                        console.log(data)
                         $(element).rmLoading();
 
                         var table_id = "obj-table-"+ws.replace(':',"_");
@@ -964,12 +968,13 @@ angular.module('ws-directives')
                             if (USER_ID) {
                                 var trash_btn = $('<a class="btn-trash pull-right">Trash \
                                             <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
+                                trash_btn.tooltip({title: 'View trash bin', placement: 'bottom', delay: {show: 700}})                                                            
+
                                 trash_btn.click(function(){
                                     displayTrashBin(deleted_objs)
                                 })
                                 $('.dataTables_filter').append(trash_btn);
                             }
-
 
                             // event for when an object checkbox is clicked
                             checkBoxObjectClickEvent('.obj-check-box');
@@ -1150,6 +1155,11 @@ angular.module('ws-directives')
                         })
                     })
 
+                    // help tooltips
+                    $('.show-versions').tooltip({title: 'Show history', placement: 'bottom', delay: {show: 700}});
+                    $('.obj-id').tooltip({title: 'View object', placement: 'bottom', delay: {show: 700}});
+                    $('.btn-show-info').tooltip({title: 'Meta data/spec, download, etc.', placement: 'bottom', delay: {show: 700}});
+
                     checkBoxObjectClickEvent()
                 }
 
@@ -1234,7 +1244,7 @@ angular.module('ws-directives')
                     var options = $('<span class="object-options">');
 
                     options.append('<button class="btn btn-danger btn-delete-obj">\
-                        <span class="glyphicon glyphicon-trash"></span></button> ');
+                        <span class="glyphicon glyphicon-trash"></span></button>');
 
                     options.append('<button class="btn btn-default btn-mv-dd" \
                                         data-toggle="dropdown">\
@@ -1262,6 +1272,9 @@ angular.module('ws-directives')
 
 
                     var container = $('.table-options').append(options);
+
+                    $('.btn-delete-obj').tooltip({title: 'Delete selected objects', placement: 'bottom', delay: {show: 700}}) 
+                    $('.btn-mv-dd').tooltip({title: 'Copy; click for options', placement: 'bottom', delay: {show: 700}})                      
                 }
  
                 // events for top row options on objects, after checked
@@ -1428,7 +1441,6 @@ angular.module('ws-directives')
                     } else {
                         $('#'+table_id+'-trash_wrapper').show()
                     }
-
                 }
 
 

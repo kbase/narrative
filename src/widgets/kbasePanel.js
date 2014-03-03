@@ -40,7 +40,8 @@ $.KBWidget({
                                     //(fav ? '<span class="glyphicon glyphicon-star"></span>'  :
                                     //    '<span class="glyphicon glyphicon-star-empty"></span>')+
                                     '</a>'+
-                                    '<div class="panel-subtitle"></div>'+
+                                    '<br>'+
+                                    '<div class="panel-subtitle pull-left"></div>'+
                                 '</div>'+
                                 '<div class="panel-body"></div>'+
                            '</div>');
@@ -92,7 +93,7 @@ $.KBWidget({
 
         if (title) this.title(title);
         if (body) this.body(body); 
-        if (subText) panel_header.append(subText)
+        if (subText) panel_subtitle.append(subText)
 
         if (right_label) {
             panel_header.append('<span class="label label-primary pull-right">'

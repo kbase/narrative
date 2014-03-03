@@ -21,7 +21,7 @@ $.KBWidget({
                         "sPaginationType": "bootstrap",
                         "iDisplayLength": 10,
                         "aaData": [],
-                        //"fnDrawCallback": events,
+                        "fnDrawCallback": events,
                         "aaSorting": [[ 1, "asc" ]],
                         "aoColumns": [
                             { "sTitle": "Name"}, //"sWidth": "10%"
@@ -63,32 +63,7 @@ $.KBWidget({
             var table = $('#'+table_id).dataTable(tableSettings);  
             container.find('.pathway-link').tooltip({title: 'Open path tab', placement: 'right', delay: {show: 500}})             
 
-            container.find('.pathway-link').click(function() {
-                var map_id = $(this).data('id');
-                var name = $(this).text()
 
-    
-                var tab = $('<li><a class="pathway-tab" href="#path-'+map_id+'"\
-                                data-id="'+map_id+'" data-toggle="tab">'
-                                    +name.slice(0, 10)+'</a>'+
-                            '</li>')          
-
-                container.find('.tab-content')
-                        .append('<div class="tab-pane" id="path-'+map_id+'"></div>');                 
-
-                container.find('.nav-tabs').append(tab)
-
-                container.find('.pathway-tab').unbind('click');
-                container.find('.pathway-tab').click(function() {
-                    var map_id = $(this).data('id');
-                    console.log('drawing', map_id);
-                    var p = $.getJSON('http://localhost/functional-site/assets/data/maps/xml/'+
-                                 map_id+'_graph.json');                    
-                    $.when(p).done(function(map_data){
-                        drawPathway(map_id, map_data);
-                    });
-                });
-            });
 
 
 
@@ -170,6 +145,7 @@ $.KBWidget({
 
             var oset = 12; // off set for arrows
             var threshold = 2; // threshold for deciding if connection is linear
+            var r = 12; // radial offset from circle.  Hooray for math degrees.
 
             // draw connections from substrate to product
             for (var j in groups) {
@@ -225,25 +201,17 @@ $.KBWidget({
                                  .attr("stroke-width", 2)
                                  .attr("stroke", stroke_color)
                                  .attr('marker-end', "url(#end-arrow)");                            
-                        } else if (cpd.x > x && cpd.y > y ) {
+                        } else { //else if (cpd.x > x && cpd.y > y )
+                            var d = Math.abs( Math.sqrt( Math.pow(cpd.y - y,2)+Math.pow(cpd.x - x,2) ) )
                             var circ = svg.append("line")
                                  .attr("x1", x)
                                  .attr("y1", y)
-                                 .attr("x2", cpd.x-oset)
-                                 .attr("y2", cpd.y)
+                                 .attr("x2", cpd.x - (r/d)*(cpd.x - x) )
+                                 .attr("y2", cpd.y - (r/d)*(cpd.y - y) )
                                  .attr("stroke-width", 2)
                                  .attr("stroke", stroke_color)
-                                 .attr('marker-end', "url(#end-arrow)");                             
-                        } else {
-                            var circ = svg.append("line")
-                                 .attr("x1", x)
-                                 .attr("y1", y)
-                                 .attr("x2", cpd.x)
-                                 .attr("y2", cpd.y)
-                                 .attr("stroke-width", 2)
-                                 .attr("stroke", stroke_color)
-                                 .attr('marker-end', "url(#end-arrow)")                         
-                        }
+                                 .attr('marker-end', "url(#end-arrow)");              
+                        } 
                     }
                 }
 
@@ -273,18 +241,11 @@ $.KBWidget({
                                  .attr("y2", y)
                                  .attr("stroke-width", 2)
                                  .attr("stroke", stroke_color)                            
-                        } else if (Math.abs(cpd.x-x)< 8  && Math.abs(cpd.y-y)<8 ) {
+                        } else { //(Math.abs(cpd.x-x)< 8  && Math.abs(cpd.y-y)<8 )
+                            var d = Math.abs( Math.sqrt( Math.pow(cpd.y - y,2)+Math.pow(cpd.x - x,2) ) ); 
                             svg.append("line")
-                                 .attr("x1", cpd.x-oset )
-                                 .attr("y1", cpd.y )
-                                 .attr("x2", x)
-                                 .attr("y2", y)
-                                 .attr("stroke-width", 2)
-                                 .attr("stroke", stroke_color);
-                        } else {
-                            svg.append("line")
-                                 .attr("x1", cpd.x )
-                                 .attr("y1", cpd.y )
+                                 .attr("x1", cpd.x - (r/d)*(cpd.x - x) )
+                                 .attr("y1", cpd.y - (r/d)*(cpd.y - y) )
                                  .attr("x2", x)
                                  .attr("y2", y)
                                  .attr("stroke-width", 2)
@@ -355,12 +316,14 @@ $.KBWidget({
             // draw compounds (circles)
             for (var i in cpds) {
                 var cpd = cpds[i];
+                console.log(cpd)
                 var r = cpd.w;
                 var circle = svg.append('circle').attr('cx', cpd.x)
                                   .attr('cy', cpd.y)
                                   .attr('r', r)
                                   .style('fill', '#fff')
                                   .style('stroke', '#666');
+
 
                 var content = 'ID: ' + cpd.id+'<br>'+
                               'kegg id: ' + cpd.name;
@@ -374,6 +337,37 @@ $.KBWidget({
 
         }
 
+
+        function events() {
+
+            container.find('.pathway-link').click(function() {
+                var map_id = $(this).data('id');
+                var name = $(this).text()
+
+    
+                var tab = $('<li><a class="pathway-tab" href="#path-'+map_id+'"\
+                                data-id="'+map_id+'" data-toggle="tab">'
+                                    +name.slice(0, 10)+'</a>'+
+                            '</li>')          
+
+                container.find('.tab-content')
+                        .append('<div class="tab-pane" id="path-'+map_id+'"></div>');                 
+
+                container.find('.nav-tabs').append(tab)
+
+                container.find('.pathway-tab').unbind('click');
+                container.find('.pathway-tab').click(function() {
+                    var map_id = $(this).data('id');
+                    console.log('drawing', map_id);
+                    var p = $.getJSON('http://localhost/functional-site/assets/data/maps/xml/'+
+                                 map_id+'_graph.json');                    
+                    $.when(p).done(function(map_data){
+                        drawPathway(map_id, map_data);
+                    });
+                });
+            });
+
+        }
 
 
         function getModelRxn() {

@@ -252,6 +252,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
     $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
         handle: '.panel-heading',
+        cancel: '.panel-title,.panel-subtitle,.label',
         start: function() {
           $(this).find('.panel-body').addClass('hide');
           $(this).sortable('refreshPositions');
@@ -260,7 +261,8 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
           $(this).find('.panel-body').removeClass('hide');
         }
     });
-    $( "#sortable-landing" ).disableSelection();
+
+    //$( "#sortable-landing" ).disableSelection();
 
 })
 

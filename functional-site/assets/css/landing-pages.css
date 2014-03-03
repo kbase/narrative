@@ -127,7 +127,6 @@ rect:hover {
     padding-top: 5px;
     padding-left: 8px;
 }
-
 .label {
     padding: .4em .6em .3em;
 }
@@ -363,6 +362,12 @@ div::-webkit-scrollbar-thumb {
 #sortable-landing li {
     padding: 0;
     list-style: none;
+}
+
+.panel-title, 
+.panel-subtitle,
+.panel-heading .label {
+    cursor: default;
 }
 
 .narrative-options-container {

@@ -896,8 +896,9 @@ angular.module('ws-directives')
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type", "sWidth": "20%"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
-                          { "sTitle": "Owner"},
-                          { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}
+                          { "sTitle": "Owner", bVisible: false},
+                          { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'},
+                          { "sTitle": "Size", sWidth: "10%"}
 
                       ],                         
                         "oLanguage": {
@@ -914,6 +915,7 @@ angular.module('ws-directives')
                     var prom = kb.ws.list_objects({workspaces: [ws]});
                     var prom2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1})
                     $.when(prom, prom2).done(function(data, deleted_objs){
+                        console.log(data)
                         $(element).rmLoading();
 
                         var table_id = "obj-table-"+ws.replace(':',"_");
@@ -1004,7 +1006,8 @@ angular.module('ws-directives')
                         var date = formateDate(timestamp);
                         var instance = obj[4];
                         var owner = obj[5];
-                        var ws = obj[7]
+                        var ws = obj[7];
+                        var size = readableSize(obj[9]);
 
 
                         var check = '<div class="ncheck obj-check-box check-option"'
@@ -1017,8 +1020,8 @@ angular.module('ws-directives')
                                        type,
                                        date,
                                        owner,
-                                       timestamp
-                                       ];
+                                       timestamp,
+                                       size];
 
                         if (type in type_counts) {
                             type_counts[type] = type_counts[type] + 1;
@@ -1552,8 +1555,14 @@ function parse_name(name) {
     }
 }
 
-
-
+// interesting solution from http://stackoverflow.com/questions
+// /15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript 
+function readableSize(bytes) {
+   var units = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+   if (bytes == 0) return '0 Bytes';
+   var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+   return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + units[i];
+};
 
 
 /*

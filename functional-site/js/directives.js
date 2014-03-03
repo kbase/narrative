@@ -238,7 +238,12 @@ angular.module('lp-directives')
                                                rightLabel: scope.ws,
                                                subText: scope.id});
                 p.loading();
-                $(p.body()).kbasePathways()
+
+                var prom = kb.req('fba', 'get_models',
+                            {models: [scope.id], workspaces: [scope.ws]})
+                $.when(prom).done(function(data) {
+                    $(p.body()).kbasePathways({modelData: data})                    
+                });
 
             }
         };

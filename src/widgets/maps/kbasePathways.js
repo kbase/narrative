@@ -10,7 +10,8 @@ $.KBWidget({
         var self = this;
         this._super(options);
 
-        //var map = options.map;
+        var model_data = options.modelData;
+        console.log('model', model_data )
 
         var container = this.$elem;
 
@@ -312,6 +313,7 @@ $.KBWidget({
                                   .style('fill', '#fff')
                                   .style('stroke', stroke_color);
 
+
                 var subs = []
                 for (var i in rxn.substrates) {
                     subs.push(rxn.substrates[i].cpd)
@@ -363,8 +365,16 @@ $.KBWidget({
 
 
 
+
+
         }
 
+
+
+        function getModelRxn() {
+
+            
+        }
 
 
 

@@ -920,6 +920,7 @@ angular.module('ws-directives')
                     var prom = kb.ws.list_objects({workspaces: [ws]});
                     var prom2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1})
                     $.when(prom, prom2).done(function(data, deleted_objs){
+                        console.log(deleted_objs)
                         $(element).rmLoading();
 
                         var table_id = "obj-table-"+ws.replace(':',"_");
@@ -963,19 +964,6 @@ angular.module('ws-directives')
                                 }    
                             });
 
-
-                            // if logged in, add trash bin link
-                            if (USER_ID) {
-                                var trash_btn = $('<a class="btn-trash pull-right">Trash \
-                                            <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
-                                trash_btn.tooltip({title: 'View trash bin', placement: 'bottom', delay: {show: 700}})                                                            
-
-                                trash_btn.click(function(){
-                                    displayTrashBin(deleted_objs)
-                                })
-                                $('.dataTables_filter').append(trash_btn);
-                            }
-
                             // event for when an object checkbox is clicked
                             checkBoxObjectClickEvent('.obj-check-box');
 
@@ -988,6 +976,19 @@ angular.module('ws-directives')
                             //    }
                             //})
                         }
+
+                        // if logged in, add trash bin link
+                        if (USER_ID) {
+                            var trash_btn = $('<a class="btn-trash pull-right">Trash \
+                                        <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
+                            trash_btn.tooltip({title: 'View trash bin', placement: 'bottom', delay: {show: 700}})                                                            
+
+                            trash_btn.click(function(){
+                                displayTrashBin(deleted_objs)
+                            })
+                            $('.dataTables_filter').append(trash_btn);
+                        }
+
                     }).fail(function(e){
                         $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
                     })

@@ -625,8 +625,9 @@ div::-webkit-scrollbar-thumb {
 }
 
 .btn-favorite, 
-.btn-rm-panel {
-    margin: -5px 0 0 0; /* adjust for container margin */
+.btn-rm-panel,
+.btn-min-panel {
+    margin: -5px 0 0 4px; /* adjust for container margin */
     font-size: 1.3em;
 }
 .fav-loading {

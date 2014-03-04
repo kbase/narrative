@@ -252,7 +252,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
     $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
         handle: '.panel-heading',
-        cancel: '.panel-title,.panel-subtitle,.label',
+        cancel: '.panel-title,.panel-subtitle,.label,.glyphicon',
         start: function() {
           $(this).find('.panel-body').addClass('hide');
           $(this).sortable('refreshPositions');

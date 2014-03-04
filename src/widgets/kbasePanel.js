@@ -35,7 +35,8 @@ $.KBWidget({
         var container = $('<div class="panel panel-default">'+
                                 '<div class="panel-heading">'+
                                     '<span class="panel-title"></span>'+
-                                    '<a class="pull-right btn-rm-panel text-muted"><span class="glyphicon glyphicon-remove"></span></a>'+
+                                    '<a class="pull-right btn-rm-panel text-muted hide"><span class="glyphicon glyphicon-remove"></span></a>'+
+                                    '<a class="pull-right btn-min-panel text-muted hide"><span class="glyphicon glyphicon-minus"></span></a> '+ 
                                     '<a class="btn-favorite pull-right" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'+
                                     //(fav ? '<span class="glyphicon glyphicon-star"></span>'  :
                                     //    '<span class="glyphicon glyphicon-star-empty"></span>')+
@@ -51,7 +52,8 @@ $.KBWidget({
         var panel_subtitle = container.find('.panel-subtitle');        
         var panel_body = container.find('.panel-body');
         var fav_btn = container.find('.btn-favorite');
-        var rm_panel_btn = container.find('.btn-rm-panel');        
+        var rm_panel_btn = container.find('.btn-rm-panel');
+        var min_panel_btn = container.find('.btn-min-panel');        
 
         this.header = function(data) {
             if (data) panel_header.html(data);
@@ -108,12 +110,24 @@ $.KBWidget({
             container.slideUp(400, function(){
                 $(this).remove();
             })
-        })
+        });
+
+        // event for minimizing panel
+        min_panel_btn.click(function() {
+            console.log('clicked')
+            panel_body.slideToggle(400);
+        });
+
+        // event for hover on panel header
+        panel_header.hover(function() {
+            $(this).find('.glyphicon').parent().toggleClass('hide');
+        })                
 
         // This is just a function for debugging purposes
         function resetQueue() {
             var p = kb.ujs.remove_state('favorites', 'queue');
         }
+
         //resetQueue();  //****THIS WILL DELETE the User's Favorites ****
 
         self.$elem.append(container);

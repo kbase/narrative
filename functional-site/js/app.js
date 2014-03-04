@@ -77,6 +77,10 @@ var app = angular.module('landing-pages',
           url: "genomes/:ws/:id",
           templateUrl: 'views/ws/sortable/genome.html',
           controller: 'WorkspaceBrowserLanding'
+        }).state('ws.media', {
+          url: "media/:ws/:id",
+          templateUrl: 'views/ws/sortable/media.html',
+          controller: 'WorkspaceBrowserLanding'
         })
 
 

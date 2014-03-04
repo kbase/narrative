@@ -899,11 +899,11 @@ angular.module('ws-directives')
                       "aoColumns": [
                           (USER_ID ? { "sTitle": "", bSortable: false, "sWidth": "1%"} : { "sTitle": "", bVisible: false, "sWidth": "1%"}),
                           { "sTitle": "Name"}, //"sWidth": "10%"
-                          { "sTitle": "Type", "sWidth": "20%"},
+                          { "sTitle": "Type"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
                           { "sTitle": "Owner", bVisible: false},
                           { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'},
-                          { "sTitle": "Size", sWidth: "10%"}
+                          { "sTitle": "Size"}
 
                       ],                         
                         "oLanguage": {
@@ -1078,7 +1078,7 @@ angular.module('ws-directives')
                         } else if (type == 'FBA') {
                             scope.$apply( $location.path('/ws/fbas/'+ws+'/'+id) );
                         } else if (type == 'Media') {
-                            scope.$apply( $location.path('/media/'+ws+'/'+id) );
+                            scope.$apply( $location.path('/ws/media/'+ws+'/'+id) );
                         } else if (type == 'Cmonkey') {
                             scope.$apply( $location.path('/cmonkey/'+ws+'/'+id) );                            
                         } else if (type == 'Bambi') {

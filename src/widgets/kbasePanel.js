@@ -53,7 +53,7 @@ $.KBWidget({
         var panel_body = container.find('.panel-body');
         var fav_btn = container.find('.btn-favorite');
         var rm_panel_btn = container.find('.btn-rm-panel');
-        var min_panel_btn = container.find('.btn-min-panel');        
+        var min_panel_btn = container.find('.btn-min-panel');       
 
         this.header = function(data) {
             if (data) panel_header.html(data);
@@ -95,8 +95,7 @@ $.KBWidget({
 
         if (title) this.title(title);
         if (body) this.body(body); 
-        if (subText) panel_subtitle.append(subText)
-
+        if (subText) panel_subtitle.append(subText);
         if (right_label) {
             panel_header.append('<span class="label label-primary pull-right">'
                                     +right_label+'</span><br>');
@@ -121,7 +120,11 @@ $.KBWidget({
         // event for hover on panel header
         panel_header.hover(function() {
             $(this).find('.glyphicon').parent().toggleClass('hide');
-        })                
+        })            
+
+
+        rm_panel_btn.tooltip({title: 'Remove panel', placement: 'bottom', delay: {show: 700}});
+        min_panel_btn.tooltip({title: 'Minimize panel', placement: 'bottom', delay: {show: 700}});
 
         // This is just a function for debugging purposes
         function resetQueue() {

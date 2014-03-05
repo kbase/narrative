@@ -436,7 +436,8 @@ div::-webkit-scrollbar-thumb {
     margin-left: auto;
     margin-right: auto;
 }
-.ncheck:hover {
+.ncheck:hover,
+.ncheck-hover {
     border: 1px solid #444 ;    
 }
 .ncheck-btn {

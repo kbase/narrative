@@ -510,9 +510,6 @@ angular.module('narrative-directives')
                                 }
                             });
 
-
-
-
                             $('.nar-selected .nar-link').parent().html(form);
                             input.focus();  
 

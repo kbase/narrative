@@ -297,12 +297,15 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                         text: 'View meta data, download the objects, etc', bVisible: true},
                     {element: '.ncheck', n: 2, text: 'Select objects by using checkboxes<br> and see options appear above', 
                         event: checkSomething},
-                    {element: '.type-filter', n: 0, text: 'Filter objects by type'},
-                    {element: '.btn-delete-obj', n: 0, text: 'Delete the objects selected in the table', 
+                    {element: '.type-filter', text: 'Filter objects by type'},
+                    {element: '.btn-delete-obj', text: 'Delete the objects selected in the table', 
                         bVisible: true},
-                    {element: '.btn-mv-dd', n: 0, text: 'Copy the colleagues objects to your own workspace', 
+                    {element: '.btn-mv-dd', text: 'Go ahead, copy your colleagues objects to your own workspace', 
                         bVisible: true},
-                    {element: '.btn-trash', n: 0, text: 'View the trash bin for this workspace.<br>  \
+                    {element: '.btn-rename-obj', text: 'Rename a selected object. <br>\
+                                 Note: this only works on the first selected object right now.', 
+                        bVisible: true},                        
+                    {element: '.btn-trash', text: 'View the trash bin for this workspace.<br>  \
                                     Unreferenced objects will be deleted after 30 days.', 
                         bVisible: true}]                        
 

@@ -1021,7 +1021,7 @@ angular.module('ws-directives')
 
 
                         var check = '<div class="ncheck obj-check-box check-option"'
-                                + ' data-workspace="' + ws + '"'
+                                + ' data-ws="' + ws + '"'
                                 + ' data-type="' + type + '"'
                                 + ' data-id="' + id + '"></div>';
 
@@ -1039,22 +1039,16 @@ angular.module('ws-directives')
                             type_counts[type] = 1;
                         }
 
-                        //if (type == 'FBA') {
-                        //    wsarray[0] = '<a class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
-                         //               +id+'</a> (<a class="show-versions">'+instance+'</a>)'
-                                        //+'<a class="add-to-mv pull-right">'
-                                        //+'add <span class="glyphicon glyphicon-plus-sign"></span> '
-                                        //+'</a>';
 
                         var match = ( type.split('-')[0].match(/^(Genome|FBAModel|Media|FBA|Annotation|Cmonkey)$/) 
                                         !== null ? true : false);
 
                         if (match) {
-                            var new_id = '<a class="obj-id" data-ws="'+ws+'" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                            var new_id = '<a class="obj-id" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'
                                     +id+'</a> (<a class="show-versions">'+instance+'</a>)\
                                         <a class="btn-show-info hide pull-right">More</a>'
                         } else {
-                            var new_id = '<span class="obj-id" data-obj-id="'+id+'" data-obj-type="'+type+'">'
+                            var new_id = '<span class="obj-id" data-id="'+id+'" data-type="'+type+'">'
                                     +id+'</span> (<a class="show-versions">'+instance+'</a>)\
                                         <a class="btn-show-info hide pull-right">More</a>';
                         }
@@ -1070,9 +1064,10 @@ angular.module('ws-directives')
                 function events() {
                     // event for clicking on a workspace id
                     $('.obj-id').unbind('click');                    
-                    $('.obj-id').click(function(){
-                        var type = $(this).data('obj-type').split('-')[0];
-                        var id = $(this).data('obj-id');
+                    $('.obj-id').click(function(e){
+                        e.stopPropagation();                        
+                        var type = $(this).data('type').split('-')[0];
+                        var id = $(this).data('id');
                         var ws = $(this).data('ws');
 
                         if (type == 'Genome') {
@@ -1098,27 +1093,27 @@ angular.module('ws-directives')
                     })
 
                     $('.btn-show-info').unbind('click');
-                    $('.btn-show-info').click(function() {
-//                        var type = $(this).prev('.obj-id').data('.obj-type').split('.')[0];
-                        var id = $(this).parent('td').find('.obj-id').data('obj-id');
-
+                    $('.btn-show-info').click(function(e) {
+                        e.stopPropagation();
+                        var id = $(this).parent('td').find('.obj-id').data('id');
                         showObjectInfo(ws, id);
                     })
 
                     // event for adding a object to, say, model viewer
                     $('.add-to-mv').unbind('click');
                     $('.add-to-mv').click(function(){
-                        var type = $(this).prev('.obj-id').data('obj-type');
-                        var id = $(this).prev('.obj-id').data('obj-id');
+                        var type = $(this).prev('.obj-id').data('type');
+                        var id = $(this).prev('.obj-id').data('id');
                         scope.selectedObjs.push({ws:ws, id:id, type:type});
                         scope.$apply();
                     })
 
                     // event for showing object history
                     $('.show-versions').unbind('click')
-                    $('.show-versions').click(function() {
-                        var type = $(this).prev('.obj-id').data('obj-type');
-                        var id = $(this).prev('.obj-id').data('obj-id');
+                    $('.show-versions').click(function(e) {
+                        e.stopPropagation();
+                        var type = $(this).prev('.obj-id').data('type');
+                        var id = $(this).prev('.obj-id').data('id');
 
                         var historyModal = $('<div class="history-modal"></div>').kbasePrompt({
                                 title : 'History of '+id,
@@ -1190,7 +1185,7 @@ angular.module('ws-directives')
                             scope.checkedList = [];
                             $('.obj-check-box').each(function(){
                                 var id = $(this).attr('data-id');
-                                var dataWS = $(this).attr('data-workspace');
+                                var dataWS = $(this).attr('data-ws');
                                 var dataType = $(this).attr('data-type');
                                 scope.checkedList.push([id, dataWS, dataType]);
                                 scope.$apply()
@@ -1206,17 +1201,24 @@ angular.module('ws-directives')
                         } 
                     })
 
+                    // effect for highlting checkbox on hover
+                    $('.obj-table tr').hover(function() {
+                        $(this).children('td').eq(0).find('.ncheck').addClass('ncheck-hover');
+                    }, function() {
+                        $(this).children('td').eq(0).find('.ncheck').removeClass('ncheck-hover');
+                    })
 
                     // checkbox click event
-                    $('.obj-check-box').unbind('click');
-                    $('.obj-check-box').click(function(){
-                        var id = $(this).attr('data-id');
+                    $('.obj-table tr').unbind('click');
+                    $('.obj-table tr').click(function(){
+                        var checkbox = $(this).children('td').eq(0).find('.ncheck');
+                        var id = checkbox.attr('data-id');
                         //var modelID = get_fba_model_id( $(this).attr('data-id') );            
-                        var dataWS = $(this).attr('data-workspace');
-                        var dataType = $(this).attr('data-type');
+                        var dataWS = checkbox.data('ws');
+                        var dataType = checkbox.data('type');
 
-                        if ($(this).hasClass('ncheck-checked')) { 
-                            $(this).removeClass('ncheck-checked');
+                        if (checkbox.hasClass('ncheck-checked')) { 
+                           checkbox.removeClass('ncheck-checked');
                             for (var i = 0; i < scope.checkedList.length; i++) {
                                 if (scope.checkedList[i][0] == id) {
                                     scope.checkedList.splice(i,1);
@@ -1226,7 +1228,7 @@ angular.module('ws-directives')
                         } else {
                             scope.checkedList.push([id, dataWS, dataType])
                             scope.$apply()
-                            $(this).addClass('ncheck-checked');
+                            checkbox.addClass('ncheck-checked');
                         }
 
                         if (!showObjOpts){
@@ -1257,8 +1259,11 @@ angular.module('ws-directives')
                                         <li><a class="btn-cp-obj">Copy</a></li>\
                                     </ul></span>');
 
-                    options.append(delete_btn);
-                    options.append(copy_btn)
+                    var rename_btn = $('<button class="btn btn-default btn-rename-obj">\
+                        <span class="glyphicon glyphicon-edit"></span></button>');                    
+
+                    options.append(delete_btn, copy_btn, rename_btn);
+
 
                     //options.append('<a class="btn btn-default btn-favorite"><span class="glyphicon glyphicon-star"></span></a>');
 
@@ -1270,15 +1275,16 @@ angular.module('ws-directives')
                     }
 
                     //options.find('.btn-mv-obj').on('click', moveObjects);
-                    options.find('.btn-cp-obj').on('click', copyObjects);
-                    options.find('.btn-mv-obj-to-nar').on('click', copyObjectsToNarrative);                                        
-
+                    copy_btn.find('.btn-cp-obj').on('click', copyObjects);
+                    copy_btn.find('.btn-mv-obj-to-nar').on('click', copyObjectsToNarrative);                                        
+                    rename_btn.on('click', renameObject);    
 
                     var container = $('.table-options').append(options);
                     //options.addClass('hide')
 
-                    //delete_btn.tooltip({title: 'Delete selected objects', placement: 'bottom', delay: {show: 700}}) 
-                    //copy_btn.tooltip({title: 'Copy; click for options', placement: 'bottom', delay: {show: 700}})                      
+                    delete_btn.tooltip({title: 'Delete selected objects', placement: 'bottom', delay: {show: 700}});
+                    copy_btn.tooltip({title: 'Copy; click for options', placement: 'bottom', delay: {show: 700}});  
+                    rename_btn.tooltip({title: 'Rename (first) selected object', placement: 'bottom', delay: {show: 700}})                                      
                 }
  
                 // events for top row options on objects, after checked
@@ -1464,6 +1470,66 @@ angular.module('ws-directives')
                     })
                 }
 
+
+                // event for rename object button
+                function renameObject() {
+                    var links = $('.ncheck-checked').eq(0).parents('tr').find('td').eq(1);
+                    var obj_id = links.find('.obj-id');
+                    var proj = obj_id.data('ws');
+                    var nar = obj_id.data('id');
+                    var version = $('.ncheck-checked').eq(0).parents('tr').find('.show-versions');
+                    var more = $('.ncheck-checked').eq(0).parents('tr').find('.btn-show-info');
+
+                    // add editable input to table
+                    var input = $('<input type="text" class="form-control">');
+                    var form = $('<div class="col-sm-4 input-group input-group-sm"></div>');
+                    form.append(input);
+                    input.val(nar);
+                    obj_id.parents('td').html(input);                            
+                    
+                    input.keypress(function (e) {
+                        if (e.which == 13) {
+                            $(this).blur();
+                        }
+                    })
+
+                    // save new name when focus is lost or when key entered
+                    input.focusout(function() {
+                        var new_name = $(this).val();
+
+                        // if new name is actually new
+                        if (new_name != nar) {
+                            var notice = $('<span>saving...</span>')
+                            input.parents('td').html(notice);
+
+                            var p = kb.ws.rename_object({obj: {workspace: proj, name: nar}, new_name: new_name})
+                            $.when(p).done(function(data) {
+                                //change link on page
+                                obj_id.data('id', new_name)
+                                obj_id.text(new_name);
+                                links.html('')
+                                links.append(obj_id, ' (', version, ')', more);
+                                notice.parents('td').html(links);
+                                events();
+                                //new FixedHeader( table , {offsetTop: 50, "zTop": 1000}); // no fixed header yet
+                            }).fail(function(e){
+                                notice.parents('td').html(links);
+                                links.append(' <span class="text-danger">'+e.error.message+'</span>');
+                                links.find('span').delay(2200).fadeOut(400, function(){
+                                    $(this).remove();
+                                });
+                            })
+                        } else {  // if didn't change name, replace link;
+                            links.html('')
+                            links.append(obj_id, ' (', version, ')', more);
+                            events();
+                        }
+                    });
+
+                    $('.nar-selected .nar-link').parent().html(form);
+                    input.focus();  
+
+                }
 
                 function copyObjects() {
                     var workspace = ws; // just getting current workspace

@@ -914,8 +914,8 @@ angular.module('ws-directives')
                           { "sTitle": "Last Modified", "iDataSort": 5},
                           { "sTitle": "Owner", bVisible: false},
                           { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'},
-                          { "sTitle": "Size"}
-
+                          { "sTitle": "Size", iDataSort: 7 },
+                          { "sTitle": "Byte Size", bVisible: false },
                       ],                         
                         "oLanguage": {
                             "sEmptyTable": "No objects in workspace",
@@ -1021,7 +1021,8 @@ angular.module('ws-directives')
                         var instance = obj[4];
                         var owner = obj[5];
                         var ws = obj[7];
-                        var size = readableSize(obj[9]);
+                        var bytesize = obj[9];
+                        var size = readableSize(bytesize);
 
 
                         var check = '<div class="ncheck obj-check-box check-option"'
@@ -1035,7 +1036,8 @@ angular.module('ws-directives')
                                        date,
                                        owner,
                                        timestamp,
-                                       size];
+                                       size,
+                                       bytesize];
 
                         if (type in type_counts) {
                             type_counts[type] = type_counts[type] + 1;

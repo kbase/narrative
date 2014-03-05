@@ -287,8 +287,8 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
         var tour = [{element: '.new-ws', text:'Create a new workspace here', placement: 'left'},
                     {element: '.btn-ws-settings', n: 2,
-                        text:'Manage workspace privileges and other settings, as \
-                        well as clone and delete workspaces using the settings button.', 
+                        text:'Manage workspsace sharing and other settings, as \
+                        well as clone and delete workspaces using the gear button.', 
                         bVisible: true, time: 4000},
                     {element: '.obj-id', n: 2, 
                         text: 'View data about the object, including visualizations and KBase widgets'},
@@ -300,10 +300,9 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     {element: '.type-filter', text: 'Filter objects by type'},
                     {element: '.btn-delete-obj', text: 'Delete the objects selected in the table', 
                         bVisible: true},
-                    {element: '.btn-mv-dd', text: 'Go ahead, copy your colleagues objects to your own workspace', 
+                    {element: '.btn-mv-dd', text: 'Go ahead, copy your colleague\'s objects to your own workspace', 
                         bVisible: true},
-                    {element: '.btn-rename-obj', text: 'Rename a selected object. <br>\
-                                 Note: this only works on the first selected object right now.', 
+                    {element: '.btn-rename-obj', text: 'Rename a selected object', 
                         bVisible: true},                        
                     {element: '.btn-trash', text: 'View the trash bin for this workspace.<br>  \
                                     Unreferenced objects will be deleted after 30 days.', 

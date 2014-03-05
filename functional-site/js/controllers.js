@@ -553,7 +553,7 @@ function Tour(settings) {
     $('body').prepend(options)
 
     var loop;
-    var i;
+    var i = 0;
     var bVisibles = [];
     $('.btn-start-tour').click(function() {
         clearInterval(loop);
@@ -585,6 +585,12 @@ function Tour(settings) {
     })
 
     $('.btn-play-tour').click(function() {
+        // if first play, show tip right away. #poetry
+        if (i == 0) {
+            showTourTip(tour[i]);
+            i++;
+        }
+
         tourLoop();
         $(this).toggleClass('btn-primary')        
         $('.btn-pause-tour').toggleClass('btn-primary')

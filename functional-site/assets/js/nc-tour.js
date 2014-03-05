@@ -135,7 +135,7 @@ function Tour(settings) {
         // remove all popovers
         $('.popover').remove();
 
-        // aww, shucks, no more exhibits to visit?  Then leave, the museum;
+        // aww, shucks, no more exhibits to visit?  Then, leave the museum;
         if (!exhibit) return;
 
         // if something needs to happen before the exhibit, make it happen

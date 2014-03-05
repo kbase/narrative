@@ -1048,7 +1048,7 @@ angular.module('ws-directives')
                                     +id+'</a> (<a class="show-versions">'+instance+'</a>)\
                                         <a class="btn-show-info hide pull-right">More</a>'
                         } else {
-                            var new_id = '<span class="obj-id" data-id="'+id+'" data-type="'+type+'">'
+                            var new_id = '<span class="obj-id" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'
                                     +id+'</span> (<a class="show-versions">'+instance+'</a>)\
                                         <a class="btn-show-info hide pull-right">More</a>';
                         }
@@ -1515,8 +1515,11 @@ angular.module('ws-directives')
                             }).fail(function(e){
                                 notice.parents('td').html(links);
                                 links.append(' <span class="text-danger">'+e.error.message+'</span>');
-                                links.find('span').delay(2200).fadeOut(400, function(){
-                                    $(this).remove();
+                                links.find('span').delay(3000).fadeOut(400, function(){
+                                    //$(this).remove();
+                                    links.html('')
+                                    links.append(obj_id, ' (', version, ')', more);
+                                    events();
                                 });
                             })
                         } else {  // if didn't change name, replace link;

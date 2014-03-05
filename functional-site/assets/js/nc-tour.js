@@ -60,7 +60,6 @@ function Tour(settings) {
 
         i = 0; 
         showTourTip(tour[i])
-        i++;
         tourLoop();
     })
 
@@ -109,17 +108,16 @@ function Tour(settings) {
         clearInterval(loop);
 
         // i is already i+1, for case 0
-        if (i == 0) i++;
-        showTourTip(tour[i]);
         i++;
+        showTourTip(tour[i]);
         $('.btn-pause-tour').removeClass('btn-primary');
         $('.btn-play-tour').addClass('btn-primary')        
     })    
 
     function tourLoop() {
         loop = setInterval(function(){
-            showTourTip(tour[i])
             i++;
+            showTourTip(tour[i])
 
             // stop interval after tour.
             if (i >= tour.length) {

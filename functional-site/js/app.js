@@ -407,7 +407,8 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
 
     //  Things that need to happen when a view changes.
     $rootScope.$on('$stateChangeSuccess', function() {
-        $('.fixedHeader').remove(); // fixme
+        $('.fixedHeader').remove(); 
+        $('.popover').remove(); // remove any dangling pop overs
         removeCards();
     })
 

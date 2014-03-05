@@ -61,12 +61,7 @@ $.KBWidget({
             $('#path-list').append('<table id="'+table_id+'" \
                            class="table table-bordered table-striped" style="width: 100%;"></table>');
             var table = $('#'+table_id).dataTable(tableSettings);  
-            container.find('.pathway-link').tooltip({title: 'Open path tab', placement: 'right', delay: {show: 500}})             
-
-
-
-
-
+            container.find('.pathway-link').tooltip({title: 'Open path tab', placement: 'right', delay: {show: 500}});
         });
 
         function drawPathway(map_id, map_data) {

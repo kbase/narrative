@@ -61,6 +61,10 @@ var app = angular.module('landing-pages',
           url: "/ws/",
           templateUrl: 'views/ws/ws.html',
           controller: 'WorkspaceBrowser'
+        }).state('ws.tour', {
+          url: "tour/",
+          templateUrl: 'views/ws/objtable.html',
+          controller: 'WorkspaceBrowserTour'
         }).state('ws.id', {
           url: "objtable/:ws",
           templateUrl: 'views/ws/objtable.html',

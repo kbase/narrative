@@ -19,7 +19,6 @@
          url('../fonts/Oxygen-Italic-webfont.svg#OxygenItalic') format('svg');
     font-weight: normal;
     font-style: normal;
-
 }
 
 @font-face {
@@ -727,6 +726,7 @@ div::-webkit-scrollbar-thumb {
     width: 100%;
     z-index: 1000;
 }
+
 
 
 

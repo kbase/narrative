@@ -1,0 +1,44 @@
+
+
+.tour {
+	position: absolute; 
+	z-index:9999; 
+    bottom: 0;
+    right:0; 
+    background: #fff; 
+    border: solid #888; 
+    border-width: 2px 0 0 2px;
+    -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6);        
+}
+
+.tour-modal-backdrop {
+	opacity: 0.2 !important;
+	z-index: 9000 !important;
+
+}
+
+.tour-options {
+	margin: 10px;
+	min-height: 0;
+    max-height: 300px;
+    min-width: 0;
+    max-width: 300px;	
+    overflow: auto;
+}
+
+.tour-controls {
+	margin: 10px 0 0 0;
+}
+.tour-controls2 {
+	margin: 10px 0 0 0;
+}
+
+.tour-options .glyphicon-remove {
+	cursor: pointer;
+	cursor: hand;
+}
+
+.tour-text {
+	font-weight: 700;
+}

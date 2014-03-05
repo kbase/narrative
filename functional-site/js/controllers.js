@@ -266,6 +266,54 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 })
 
+
+.controller('WorkspaceBrowserTour', function($scope, $stateParams, $location) {
+    $scope.selected_ws = 'chenryExample';  // workspace to use for tour
+
+    // if not logged in, prompt for login
+    if (!USER_ID) {
+        var signin_btn = $('#signin-button');
+        signin_btn.popover({content: "You must login before taking the tour", 
+                            trigger: 'manual', placement: 'bottom'})
+        signin_btn.popover('show');
+
+    // otherwise, do the tour
+    } else {
+        function checkSomething() {
+            $scope.checkedList.push([ 'kb|g.0.fbamdl', 'chenryExample', 'FBAModel-2.0' ]);
+            $('.ncheck').eq(2).addClass('ncheck-checked');
+            $scope.$apply();
+        }
+
+        var tour = [{element: '.new-ws', text:'Create a new workspace here', placement: 'left'},
+                    {element: '.btn-ws-settings', n: 2,
+                        text:'Manage workspace privileges and other settings, as \
+                        well as clone and delete workspaces here', 
+                        bVisible: true, time: 4000},
+                    {element: '.obj-id', n: 2, 
+                        text: 'View data about the object, including visualizations and KBase widgets'},
+                    {element: '.show-versions', n: 2, text: 'View the objects history.'},
+                    {element: '.btn-show-info', n: 2, 
+                        text: 'View meta data, download the objects, etc', bVisible: true},
+                    {element: '.ncheck', n: 2, text: 'Select objects by using checkboxes<br> and see options appear above', 
+                        event: checkSomething},
+                    {element: '.type-filter', n: 0, text: 'Filter objects by type'},
+                    {element: '.btn-delete-obj', n: 0, text: 'Delete the objects selected in the table', 
+                        bVisible: true},
+                    {element: '.btn-mv-dd', n: 0, text: 'Copy the colleagues objects to your own workspace', 
+                        bVisible: true},
+                    {element: '.btn-trash', n: 0, text: 'View the trash bin for this workspace.<br>  \
+                                    Unreferenced objects will be deleted after 30 days.', 
+                        bVisible: true}]                        
+
+        function exit_callback() {
+            $scope.$apply( $location.path( '/ws/' ) );
+        }
+
+        new Tour({tour: tour, exit_callback: exit_callback});
+    }   
+})
+
 .controller('Favorites', function($scope, $stateParams) {
 
 
@@ -431,13 +479,14 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) 
 };
 
 
-
+/*
 function Navigation($scope, $location) { 
     $scope.isActive = function (viewLocation) {
     console.log(viewLocation, $location.path()) 
         return viewLocation === $location.path();
     };
 }
+*/
 
 function LPHelp($scope, $stateParams, $location) {
     // Fixme: move out of controller
@@ -465,3 +514,138 @@ function ScrollCtrl($scope, $location, $anchorScroll) {
 
 
 
+function Tour(settings) {
+    /* todo:
+     *   - add ability to change times, using bootstrap event broadcasts
+     *
+     *
+     */
+
+    var tour = settings.tour;
+    var exit_callback = settings.exit_callback;
+    var position = settings.position
+
+    var options = ('<div class="tour">\
+                            <a class="glyphicon glyphicon-remove pull-right text-muted btn-exit-tour"></a>\
+                            <div class="tour-options">\
+                                <div class="tour-controls">\
+                                    <a class="btn btn-default btn-xs btn-prev-tour">\
+                                        <span class="glyphicon glyphicon-backward"></span>\
+                                    </a>\
+                                    <a class="btn btn-default btn-xs btn-pause-tour">\
+                                        <span class="glyphicon glyphicon-pause"></span>\
+                                    </a>\
+                                    <a class="btn btn-default btn-primary btn-xs btn-play-tour">\
+                                        <span class="glyphicon glyphicon-play"></span>\
+                                    </a>\
+                                    <a class="btn btn-default btn-xs btn-next-tour">\
+                                        <span class="glyphicon glyphicon-forward"></span>\
+                                    </a>\
+                                </div>\
+                                <div class="tour-controls2">\
+                                    <a class="btn btn-primary btn-start-tour">Start Tour</a>\
+                                    <a class="btn btn-danger btn-exit-tour hide">Exit Tour</a>\
+                                </div>\
+                            </div>\
+                        </div>');
+
+    $('body').append('<div class="modal-backdrop tour-modal-backdrop in"></div>')
+    $('body').prepend(options)
+
+    var loop;
+    var i;
+    var bVisibles = [];
+    $('.btn-start-tour').click(function() {
+        clearInterval(loop);
+
+        $(this).text('Restart Tour')
+
+        $('.btn-pause-tour').addClass('btn-primary');
+        $('.btn-play-tour').removeClass('btn-primary');
+
+        i = 0; 
+        showTourTip(tour[i])
+        i++;
+        tourLoop();
+    })
+
+    $('.btn-exit-tour').click(function() {
+        clearInterval(loop);
+        $('.tour, .tour-modal-backdrop, .popover').remove();
+        for (var i in bVisibles) {
+            bVisibles[i].addClass('hide');
+        }
+        exit_callback();
+    })
+
+    $('.btn-pause-tour').click(function() {
+        clearInterval(loop);
+        $(this).removeClass('btn-primary');
+        $('.btn-play-tour').addClass('btn-primary')        
+    })
+
+    $('.btn-play-tour').click(function() {
+        tourLoop();
+        $(this).toggleClass('btn-primary')        
+        $('.btn-pause-tour').toggleClass('btn-primary')
+    });
+
+    $('.btn-prev-tour').click(function() {
+        clearInterval(loop);
+        if (i > 0) i = i-1;
+        showTourTip(tour[i])
+        $('.btn-pause-tour').removeClass('btn-primary');
+        $('.btn-play-tour').addClass('btn-primary');
+    })
+
+    $('.btn-next-tour').click(function() {
+        clearInterval(loop);
+        if (i < tour.length) {
+            i = i+1;
+        } 
+        showTourTip(tour[i])
+        $('.btn-pause-tour').removeClass('btn-primary');
+        $('.btn-play-tour').addClass('btn-primary')        
+    })    
+
+    function tourLoop() {
+        loop = setInterval(function(){
+            showTourTip(tour[i])
+            i++;
+
+            // stop interval after tour.
+            if (i >= tour.length) {
+                clearInterval(loop);
+                $('.btn-exit-tour').removeClass('hide');
+                $('.btn-pause-tour').removeClass('btn-primary');
+                $('.btn-play-tour').addClass('btn-primary')                 
+            }
+        }, 3000)        
+    }
+
+    function showTourTip(exhibit) {
+        // remove all popovers
+        $('.popover').remove();
+
+        // if something things to happen in the UI, do it.
+        if (exhibit.event) exhibit.event();
+
+        // select the nth element if supplied
+        var n = exhibit.n;
+        var ele = n ? $(exhibit.element).eq(n) : $(exhibit.element);        
+        var text = exhibit.text;
+        var hover = exhibit.bVisible;
+        var placement = exhibit.placement ? exhibit.placement : 'bottom';
+
+        if (hover) {
+            ele.removeClass('hide');
+            bVisibles.push(ele);
+        }
+
+        ele.tooltip('destroy'); // destroy the regular tooltips
+        ele.popover({content: '<div class="tour-text">'+text+'</div>', placement: placement, 
+                              trigger:'manual', html: true, container: 'body'});
+        ele.popover('show');
+        $('.popover').css('z-index', 9999);
+    }
+}

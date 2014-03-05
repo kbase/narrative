@@ -2,6 +2,7 @@
     kbasePanel
 
     This is a helper widget for drawing panels.
+    The panels are removable and minimizable
 
     API Example:
         var panel = this.$elem.kbasePanel({title: 'Model Details', 

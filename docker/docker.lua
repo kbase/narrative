@@ -25,6 +25,7 @@ local function config()
 		    VolumesFrom = "",
 		    WorkingDir = ""
 		 }
+   config.Volumes['/dev/log'] = {}
    return config
 end
 

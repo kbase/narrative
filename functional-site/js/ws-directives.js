@@ -885,8 +885,12 @@ angular.module('ws-directives')
                 scope.checkedList = [];                
 
                 scope.$watch('checkedList', function() {
-                    if (scope.checkedList.length > 0) {
+                    if (scope.checkedList.length == 1) {
+                        $('.object-options, .btn-rename-obj').removeClass('hide');
+                    } else if (scope.checkedList.length > 1) {
                         $('.object-options').removeClass('hide');
+                        // hide options that can only be done on 1 object at a time
+                        $('.btn-rename-obj').addClass('hide');
                     } else {
                         $('.object-options').addClass('hide');
                     }

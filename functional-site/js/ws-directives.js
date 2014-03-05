@@ -1206,15 +1206,16 @@ angular.module('ws-directives')
                     })
 
                     // effect for highlting checkbox on hover
-                    $('.obj-table tr').hover(function() {
+                    $('.obj-table tbody tr').hover(function() {
                         $(this).children('td').eq(0).find('.ncheck').addClass('ncheck-hover');
                     }, function() {
                         $(this).children('td').eq(0).find('.ncheck').removeClass('ncheck-hover');
                     })
 
                     // checkbox click event
-                    $('.obj-table tr').unbind('click');
-                    $('.obj-table tr').click(function(){
+                    $('.obj-table tbody tr').unbind('click');
+                    $('.obj-table tbody tr').click(function(){
+                        if (!USER_ID) return;
                         var checkbox = $(this).children('td').eq(0).find('.ncheck');
                         var id = checkbox.attr('data-id');
                         //var modelID = get_fba_model_id( $(this).attr('data-id') );            

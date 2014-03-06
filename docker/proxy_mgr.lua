@@ -15,8 +15,15 @@
 -- proxy_last
 -- proxy_mgr
 --
--- Steve Chan
--- sychan@lbl.gov
+-- author: Steve Chan sychan@lbl.gov
+--
+-- Copyright 2013 The Regents of the University of California,
+--                Lawrence Berkeley National Laboratory
+--                United States Department of Energy
+--          	 The DOE Systems Biology Knowledgebase (KBase)
+-- Made available under the KBase Open Source License
+--
+
 --
 
 local M={}

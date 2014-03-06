@@ -2,7 +2,14 @@
 #
 # Assumes that we have clones of the boostrap repo (for bringing in the python
 # environment) and a narrative repo in this directory
-# sychan
+# Steve Chan sychan@lbl.gov
+#
+# Copyright 2013 The Regents of the University of California,
+#                Lawrence Berkeley National Laboratory
+#                United States Department of Energy
+#          	 The DOE Systems Biology Knowledgebase (KBase)
+# Made available under the KBase Open Source License
+#
 
 FROM ubuntu:latest
 MAINTAINER Steve Chan sychan@lbl.gov

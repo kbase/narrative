@@ -235,7 +235,7 @@ angular.module('lp-directives')
             link: function(scope, element, attrs) {
                 var p = $(element).kbasePanel({title: 'Pathways', 
                                                type: 'Pathway',
-                                               rightLabel: scope.ws,
+                                               rightLabel: 'N/A',
                                                subText: scope.id});
                 p.loading();
 

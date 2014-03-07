@@ -10,8 +10,8 @@ $.KBWidget({
         var self = this;
         this._super(options);
 
-        var model_data = options.modelData;
-        console.log('model', model_data )
+        self.models = options.modelData;
+
 
         var container = this.$elem;
 
@@ -73,6 +73,7 @@ $.KBWidget({
                                         .attr("width", 800)
                                        .attr("height", 1000);
 
+            // add arrow markers for use
             svg.append('svg:defs').append('svg:marker')
                 .attr('id', 'end-arrow')
                 .attr('viewBox', '0 -5 10 10')
@@ -96,241 +97,273 @@ $.KBWidget({
                 .attr('fill', '#000');            
 
             var rxns = map.reactions;
-            var cpds = map.compounds;        
+            var cpds = map.compounds;
+
+            var oset = 12; // off set for arrows
+            var threshold = 2; // threshold for deciding if connection is linear
+            var r = 12; // radial offset from circle.  Hooray for math degrees.            
 
             var data = []
             for (var i in rxns) {
                 data.push({'products': rxns[i].products, 'substrates': rxns[i].substrates})
             }
 
-            var groups = [];
-            var grouped_ids = [];
+            var groups = getGroups(rxns)
 
-            // create groups
-            for (var i in rxns) {
-                var group = [];
-                var rxn = rxns[i];
 
-                // skip any reaction that has already been grouped
-                if (grouped_ids.indexOf(rxn.id) > 0) continue;
 
-                group.push(rxn);
-                grouped_ids.push(rxn.id);
+            drawConnections();
+            drawCompounds();
+            drawReactions();
 
-                for (var j in rxns) {
-                    var rxn2 = rxns[j];
 
-                    // skip the reaction in question already
-                    if (rxn2.id == rxn.id) continue;
+
+            function getGroups() {
+                var groups = [];
+                var grouped_ids = [];
+
+                // create groups
+                for (var i in rxns) {
+                    var group = [];
+                    var rxn = rxns[i];
 
                     // skip any reaction that has already been grouped
-                    if (grouped_ids.indexOf(rxn2.id) > 0) continue;                    
+                    if (grouped_ids.indexOf(rxn.id) > 0) continue;
 
-                    // if reactions share same substrates and products, add to group
-                    if (angular.equals(rxn.products, rxn2.products) && 
-                        angular.equals(rxn.substrates, rxn2.substrates)) {
-                        group.push(rxn2);
-                        grouped_ids.push(rxn2.id);
-                    }
-                }
+                    group.push(rxn);
+                    grouped_ids.push(rxn.id);
 
-                groups.push(group)
-            }
+                    for (var j in rxns) {
+                        var rxn2 = rxns[j];
 
+                        // skip the reaction in question already
+                        if (rxn2.id == rxn.id) continue;
 
-            var oset = 12; // off set for arrows
-            var threshold = 2; // threshold for deciding if connection is linear
-            var r = 12; // radial offset from circle.  Hooray for math degrees.
+                        // skip any reaction that has already been grouped
+                        if (grouped_ids.indexOf(rxn2.id) > 0) continue;                    
 
-            // draw connections from substrate to product
-            for (var j in groups) {
-                var rxn_set = groups[j];
-
-                // get mid point of group
-                var xs = []
-                for (var i in rxn_set) {
-                    var rxn = rxn_set[i];
-                    xs.push(rxn.x)
-                }
-                // get mid point of group
-                var ys = []
-                for (var i in rxn_set) {
-                    var rxn = rxn_set[i];
-                    ys.push(rxn.y)
-                }
-
-                var x = (Math.max.apply(Math, xs) + Math.min.apply(Math, xs)) / 2
-                var y = (Math.max.apply(Math, ys) + Math.min.apply(Math, ys)) / 2
-
-                // only need to do this once, since there are groups
-                var rxn = rxn_set[0];
-
-                var prods = rxn.products;
-                var subs = rxn.substrates;
-
-                // draw product lines
-                for (var i in prods) {
-                    var prod_id = prods[i].id
-
-                    for (var i in cpds) {
-                        var cpd = cpds[i];
-
-                        if (cpd.id != prod_id) continue;
-
-                        // for when centers are "on" the same x axis, don't offset the y, etc
-                        if (Math.abs(cpd.x-x) < threshold) {
-                            var circ = svg.append("line")
-                                 .attr("x1", x)
-                                 .attr("y1", y)
-                                 .attr("x2", cpd.x)
-                                 .attr("y2", (cpd.y  > y ? cpd.y-oset : cpd.y+oset)) 
-                                 .attr("stroke-width", 2)
-                                 .attr("stroke", stroke_color)
-                                 .attr('marker-end', "url(#end-arrow)");
-                        } else if (Math.abs(cpd.y-y) < threshold) {
-                            var circ = svg.append("line")
-                                 .attr("x1", x)
-                                 .attr("y1", y)
-                                 .attr("x2", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
-                                 .attr("y2", cpd.y)
-                                 .attr("stroke-width", 2)
-                                 .attr("stroke", stroke_color)
-                                 .attr('marker-end', "url(#end-arrow)");                            
-                        } else { //else if (cpd.x > x && cpd.y > y )
-                            var d = Math.abs( Math.sqrt( Math.pow(cpd.y - y,2)+Math.pow(cpd.x - x,2) ) )
-                            var circ = svg.append("line")
-                                 .attr("x1", x)
-                                 .attr("y1", y)
-                                 .attr("x2", cpd.x - (r/d)*(cpd.x - x) )
-                                 .attr("y2", cpd.y - (r/d)*(cpd.y - y) )
-                                 .attr("stroke-width", 2)
-                                 .attr("stroke", stroke_color)
-                                 .attr('marker-end', "url(#end-arrow)");              
-                        } 
-                    }
-                }
-
-                // draw substrate lines
-                for (var i in subs) {
-                    var sub_id = subs[i].id
-
-                    for (var i in cpds) {
-                        var cpd = cpds[i];
-
-                        if (cpd.id != sub_id ) continue;
-
-                        // for when centers are "on" the same x axis, don't off setthe y, etc
-                        if (Math.abs(cpd.x-x) < threshold) {
-                            svg.append("line")
-                                 .attr("x1", cpd.x)
-                                 .attr("y1", (cpd.y  > y ? cpd.y-oset : cpd.y+oset) )
-                                 .attr("x2", x)
-                                 .attr("y2", y)
-                                 .attr("stroke-width", 2)
-                                 .attr("stroke", stroke_color);
-                        } else if (Math.abs(cpd.y-y) < threshold) {
-                            svg.append("line")
-                                 .attr("x1", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
-                                 .attr("y1", cpd.y )
-                                 .attr("x2", x)
-                                 .attr("y2", y)
-                                 .attr("stroke-width", 2)
-                                 .attr("stroke", stroke_color)                            
-                        } else { //(Math.abs(cpd.x-x)< 8  && Math.abs(cpd.y-y)<8 )
-                            var d = Math.abs( Math.sqrt( Math.pow(cpd.y - y,2)+Math.pow(cpd.x - x,2) ) ); 
-                            svg.append("line")
-                                 .attr("x1", cpd.x - (r/d)*(cpd.x - x) )
-                                 .attr("y1", cpd.y - (r/d)*(cpd.y - y) )
-                                 .attr("x2", x)
-                                 .attr("y2", y)
-                                 .attr("stroke-width", 2)
-                                 .attr("stroke", stroke_color);
+                        // if reactions share same substrates and products, add to group
+                        if (angular.equals(rxn.products, rxn2.products) && 
+                            angular.equals(rxn.substrates, rxn2.substrates)) {
+                            group.push(rxn2);
+                            grouped_ids.push(rxn2.id);
                         }
                     }
-                }     
-            }  // end draw connections
+
+                    groups.push(group)
+                }
+                return groups;
+            }
 
 
             // draw reactions
-            for (var i in rxns) {
-                var rxn = rxns[i];
-                console.log(rxn)
+            function drawReactions() {
+                for (var i in rxns) {
+                    var rxn = rxns[i];
 
-                var x = rxn.x - rxn.w/2;
-                var y = rxn.y - rxn.h/2;
+                    var x = rxn.x - rxn.w/2;
+                    var y = rxn.y - rxn.h/2;
 
-                // draw reactions (rectangles)
-                var rect = svg.append('rect').attr('x', x-1)
-                                  .attr('y', y-1)
-                                  .attr('width', rxn.w+2)
-                                  .attr('height', rxn.h+2)
-                                  .style('fill', '#fff')
-                                  .style('stroke', stroke_color);
+                    // draw reactions (rectangles)
+                    var outer_rect = svg.append('rect').attr('x', x-1)
+                                      .attr('y', y-1)
+                                      .attr('width', rxn.w+2)
+                                      .attr('height', rxn.h+2)
+                                      .style('fill', '#fff')
+                                      .style('stroke', stroke_color);
 
-                model_rxn = getModelRxn(rxn.id);
+                    found_rxns = getModelRxns(rxn.rxns);
+
+                    // divide box for number of models being displayed
+                    var w = rxn.w / self.models.length;
+
+                    for (var i in found_rxns) {
+                        var found_rxn = found_rxns[i];
+                            var rect = svg.append('rect').attr('x', x-1+(w*i))
+                                          .attr('y', y-1)
+                                          .attr('width', w)
+                                          .attr('height', rxn.h+2)
+
+                        if (found_rxn.length > 0) {
+                            rect.style('fill', '#bbe8f9')
+                        } else {
+                            rect.style('fill', '#fff')
+                        }
+                    }
 
 
-                var subs = []
-                for (var i in rxn.substrates) {
-                    subs.push(rxn.substrates[i].cpd)
+                    // get substrates and products
+                    var subs = []
+                    for (var i in rxn.substrates) {
+                        subs.push(rxn.substrates[i].cpd)
+                    }
+                    var prods = []
+                    for (var i in rxn.products) {
+                        prods.push(rxn.products[i].cpd)
+                    }
+
+                    // add reaction label
+                    var text = svg.append('text').text(rxn.name)
+                                      .attr('x', x+2)
+                                      .attr('y', y+rxn.h/2 + 2)
+                                      .style("font-size", "10px")
+                                      .style('stroke', stroke_color);
+
+
+
+                    //content for tooltip //fixme: need to do tooltips for each model
+                    var content = 'ID: ' + rxn.id+'<br>'+
+                                  'Rxns: ' + rxn.rxns.join(', ')+'<br>'+
+                                  'Substrates: ' + subs.join(', ')+'<br>'+
+                                  'Products: ' + prods.join(', ')+'<br>';
+                    $(outer_rect.node()).popover({html: true, content: content, 
+                                            container: 'body', trigger: 'hover'});
+                    //fixme optimize
+                    $(outer_rect.node()).hover(function() {
+                        $(this).next('text').addClass('hide')
+                    }, function() {
+                        $(this).next('text').removeClass('hide')
+                    })
                 }
 
-                var prods = []
-                for (var i in rxn.products) {
-                    prods.push(rxn.products[i].cpd)
+
+                // bad attempt at adding data for use later
+                var rects = svg.selectAll("rect");
+                rects.data(data);
+            }
+           
+
+            function drawCompounds() {
+                for (var i in cpds) {
+                    var cpd = cpds[i];
+                    var r = cpd.w;
+                    var circle = svg.append('circle').attr('cx', cpd.x)
+                                      .attr('cy', cpd.y)
+                                      .attr('r', r)
+                                      .style('fill', '#fff')
+                                      .style('stroke', '#666');
+
+
+                    var content = 'ID: ' + cpd.id+'<br>'+
+                                  'kegg id: ' + cpd.name;
+                    $(circle.node()).popover({html: true, content: content, 
+                                            container: 'body', trigger: 'hover'});
                 }
-
-
-                var content = 'ID: ' + rxn.id+'<br>'+
-                              'Rxns: ' + rxn.rxns.join(', ')+'<br>'+
-                              'Substrates: ' + subs.join(', ')+'<br>'+
-                              'Products: ' + prods.join(', ')+'<br>';
-
-
-                if (model_rxn) {
-                    
-                }       
-
-
-                $(rect.node()).popover({html: true, content: content, 
-                                        container: 'body', trigger: 'hover'});
-
-                // add reaction label
-                svg.append('text').text(rxn.name)
-                                  .attr('x', x+2)
-                                  .attr('y', y+rxn.h/2 + 2)
-                                  .style("font-size", "10px")
-                                  .style('stroke', stroke_color);
-
             }
 
-            var rects = svg.selectAll("rect");
-            rects.data(data);
+            function drawConnections() {
+                 // draw connections from substrate to product
+                for (var j in groups) {
+                    var rxn_set = groups[j];
+
+                    // get mid point of group
+                    var xs = []
+                    for (var i in rxn_set) {
+                        var rxn = rxn_set[i];
+                        xs.push(rxn.x)
+                    }
+                    // get mid point of group
+                    var ys = []
+                    for (var i in rxn_set) {
+                        var rxn = rxn_set[i];
+                        ys.push(rxn.y)
+                    }
+
+                    var x = (Math.max.apply(Math, xs) + Math.min.apply(Math, xs)) / 2
+                    var y = (Math.max.apply(Math, ys) + Math.min.apply(Math, ys)) / 2
+
+                    // only need to do this once, since there are groups
+                    var rxn = rxn_set[0];
+
+                    var prods = rxn.products;
+                    var subs = rxn.substrates;
+
+                    // draw product lines
+                    for (var i in prods) {
+                        var prod_id = prods[i].id
+
+                        for (var i in cpds) {
+                            var cpd = cpds[i];
+
+                            if (cpd.id != prod_id) continue;
+
+                            // for when centers are "on" the same x axis, don't offset the y, etc
+                            if (Math.abs(cpd.x-x) < threshold) {
+                                var circ = svg.append("line")
+                                     .attr("x1", x)
+                                     .attr("y1", y)
+                                     .attr("x2", cpd.x)
+                                     .attr("y2", (cpd.y  > y ? cpd.y-oset : cpd.y+oset)) 
+                                     .attr("stroke-width", 2)
+                                     .attr("stroke", stroke_color)
+                                     .attr('marker-end', "url(#end-arrow)");
+                            } else if (Math.abs(cpd.y-y) < threshold) {
+                                var circ = svg.append("line")
+                                     .attr("x1", x)
+                                     .attr("y1", y)
+                                     .attr("x2", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
+                                     .attr("y2", cpd.y)
+                                     .attr("stroke-width", 2)
+                                     .attr("stroke", stroke_color)
+                                     .attr('marker-end', "url(#end-arrow)");                            
+                            } else { 
+                                var d = Math.abs( Math.sqrt( Math.pow(cpd.y - y,2)+Math.pow(cpd.x - x,2) ) )
+                                var circ = svg.append("line")
+                                     .attr("x1", x)
+                                     .attr("y1", y)
+                                     .attr("x2", cpd.x - (r/d)*(cpd.x - x) )
+                                     .attr("y2", cpd.y - (r/d)*(cpd.y - y) )
+                                     .attr("stroke-width", 2)
+                                     .attr("stroke", stroke_color)
+                                     .attr('marker-end', "url(#end-arrow)");              
+                            } 
+                        }
+                    }
+
+                    // draw substrate lines
+                    for (var i in subs) {
+                        var sub_id = subs[i].id
+
+                        for (var i in cpds) {
+                            var cpd = cpds[i];
+
+                            if (cpd.id != sub_id ) continue;
+
+                            // for when centers are "on" the same x axis, don't off setthe y, etc
+                            if (Math.abs(cpd.x-x) < threshold) {
+                                svg.append("line")
+                                     .attr("x1", cpd.x)
+                                     .attr("y1", (cpd.y  > y ? cpd.y-oset : cpd.y+oset) )
+                                     .attr("x2", x)
+                                     .attr("y2", y)
+                                     .attr("stroke-width", 2)
+                                     .attr("stroke", stroke_color);
+                            } else if (Math.abs(cpd.y-y) < threshold) {
+                                svg.append("line")
+                                     .attr("x1", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
+                                     .attr("y1", cpd.y )
+                                     .attr("x2", x)
+                                     .attr("y2", y)
+                                     .attr("stroke-width", 2)
+                                     .attr("stroke", stroke_color)                            
+                            } else { 
+                                var d = Math.abs( Math.sqrt( Math.pow(cpd.y - y,2)+Math.pow(cpd.x - x,2) ) ); 
+                                svg.append("line")
+                                     .attr("x1", cpd.x - (r/d)*(cpd.x - x) )
+                                     .attr("y1", cpd.y - (r/d)*(cpd.y - y) )
+                                     .attr("x2", x)
+                                     .attr("y2", y)
+                                     .attr("stroke-width", 2)
+                                     .attr("stroke", stroke_color);
+                            }
+                        }
+                    }     
+                } 
+            } // end draw connections
+
+        } // end draw pathway
 
 
-            // draw compounds (circles)
-            for (var i in cpds) {
-                var cpd = cpds[i];
-                console.log(cpd)
-                var r = cpd.w;
-                var circle = svg.append('circle').attr('cx', cpd.x)
-                                  .attr('cy', cpd.y)
-                                  .attr('r', r)
-                                  .style('fill', '#fff')
-                                  .style('stroke', '#666');
-
-
-                var content = 'ID: ' + cpd.id+'<br>'+
-                              'kegg id: ' + cpd.name;
-                $(circle.node()).popover({html: true, content: content, 
-                                        container: 'body', trigger: 'hover'});
-            }
-
-
-
-
-
-        }
 
 
         function events() {
@@ -353,7 +386,7 @@ $.KBWidget({
                 container.find('.pathway-tab').unbind('click');
                 container.find('.pathway-tab').click(function() {
                     var map_id = $(this).data('id');
-                    console.log('drawing', map_id);
+
                     var p = $.getJSON('http://localhost/functional-site/assets/data/maps/xml/'+
                                  map_id+'_graph.json');                    
                     $.when(p).done(function(map_data){
@@ -365,9 +398,32 @@ $.KBWidget({
         }
 
 
-        function getModelRxn() {
+        function getModelRxns(rxn_ids) {
+            // get a list of rxn objects (or undefined) 
+            // for each model supplied          
 
+            // this is a list of lists, where is list are rxnobjs 
+            // for each model for a given set of rxn_ids.  phew.
+            var found_rxns = [];
 
+            // for each model, look for model data
+            for (var j in self.models) {
+                var model = self.models[j];
+                rxn_objs = model.reactions;
+
+                // see if we can find the rxn in that model's list of reactions
+                var found_rxn = [];
+                for (var i in rxn_objs) {
+                    rxn_obj = rxn_objs[i];
+                    if (rxn_ids.indexOf(rxn_obj.reaction) != -1) {
+                        found_rxn.push(rxn_obj);
+                    }
+                }
+
+                found_rxns.push(found_rxn); // either an raction object or undefined
+            }
+        
+            return found_rxns;
         }
 
 

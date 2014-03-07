@@ -15,15 +15,14 @@
 .tour-modal-backdrop {
 	opacity: 0.2 !important;
 	z-index: 9000 !important;
-
 }
 
 .tour-options {
 	margin: 10px;
 	min-height: 0;
     max-height: 300px;
-    min-width: 0;
-    max-width: 300px;	
+    min-width: 110px;
+    max-width: 300px;
     overflow: auto;
 }
 

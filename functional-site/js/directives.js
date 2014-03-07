@@ -285,9 +285,12 @@ angular.module('lp-directives')
     .directive('cpddetail', function() {
         return {
             link: function(scope, element, attrs) {
+                $(element).loading()
                 var prom = kb.req('fba', 'get_compounds',
-                            {compounds: scope.ids})                
+                            {compounds: scope.ids});
+
                 $.when(prom).done(function(data){
+                    $(element).rmLoading();                     
                     $(element).kbaseCpd({data: data, ids: scope.ids});
                 })
             }

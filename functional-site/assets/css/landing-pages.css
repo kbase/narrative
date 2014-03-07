@@ -393,7 +393,9 @@ div::-webkit-scrollbar-thumb {
     height: 34px; /* make all buttons equal height */
     margin: 0 3px 0 0;
 }
-.obj-table .dataTables_length label {
+
+/* fix me */
+.dataTables_length label { 
     margin: 7px 0 0 0;
 }
 

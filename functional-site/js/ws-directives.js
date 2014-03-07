@@ -912,7 +912,7 @@ angular.module('ws-directives')
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
-                          { "sTitle": "Owner", bVisible: false},
+                          { "sTitle": "Owner", bVisible: true},
                           { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'},
                           { "sTitle": "Size", iDataSort: 7 },
                           { "sTitle": "Byte Size", bVisible: false },
@@ -931,6 +931,7 @@ angular.module('ws-directives')
                     var prom = kb.ws.list_objects({workspaces: [ws]});
                     var prom2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1})
                     $.when(prom, prom2).done(function(data, deleted_objs){
+                        console.log(data)
                         $(element).rmLoading();
 
                         var table_id = "obj-table-"+ws.replace(':',"_");

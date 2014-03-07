@@ -544,10 +544,11 @@ angular.module('narrative-directives')
                     // event for putting fixed header back on page
                     //    this special event uses .row since that container should be 
                     //    replaced via angular when view changes
-                    $('.row').unbind('click');
-                    $('.row').click(function() {
+                    $('body').not('#project-table tr').unbind('click')
+                    $('body').not('#project-table tr').click(function() {
+                        $('.fixedHeader').remove();
                         $('#project-table tr').removeClass('nar-selected');
-                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                            
+                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});       
                     })
                 }
 

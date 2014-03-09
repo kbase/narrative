@@ -60,7 +60,7 @@ $.KBWidget({
             for (var i in models) {
                 org_names.push(models[i].name)
             }
-            console.log('MODELS,', models)
+
             // Adding data structures to core data or each organism
             for (var i in core) {
                 var obj = core[i];
@@ -274,7 +274,7 @@ $.KBWidget({
                     if (orgs[kbid][0]) var org_name = orgs[kbid][0].org_name;
                     else var org_name = ''
 
-                    $(rect.node).popover({content: tip,
+                    $(rect.node).popover({content: tip, animation: false,
                             title: org_name,
                             trigger: 'hover', html: true,
                             container: 'body', placement: 'bottom'});

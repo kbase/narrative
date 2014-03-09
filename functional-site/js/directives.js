@@ -239,12 +239,13 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
+                // fixme: seperate api for models and fba, add error messages
                 var p1 = kb.req('fba', 'get_models',
                             {models: [scope.id], workspaces: [scope.ws]});
-                var p2 = kb.req('fba', 'get_fba',
-                            {fba: [scope.id], workspaces: [scope.ws]})                
-                $.when(p1, p2).done(function(d1, d2) {
-                    $(p.body()).kbasePathways({modelData: d1, fbaData: d2})                    
+                //var p2 = kb.req('fba', 'get_fbas',
+                //            {fbas: [scope.id], workspaces: [scope.ws]})                
+                $.when(p1).done(function(d1, d2) {
+                    $(p.body()).kbasePathways({modelData: d1})   
                 });
 
             }

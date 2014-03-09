@@ -217,13 +217,14 @@ $.KBWidget({
                                   'Rxns: ' + rxn.rxns.join(', ')+'<br>'+
                                   'Substrates: ' + subs.join(', ')+'<br>'+
                                   'Products: ' + prods.join(', ')+'<br>';
-                    $(outer_rect.node()).popover({html: true, content: content, 
+                    $(outer_rect.node()).popover({html: true, content: content, animation: false,
                                             container: 'body', trigger: 'hover'});
                     //fixme optimize
                     $(outer_rect.node()).hover(function() {
-                        $(this).next('text').addClass('hide');
+                        console.log($(this).siblings('text'))
+                        $(this).next('text').remove();
                     }, function() {
-                        $(this).next('text').removeClass('hide');
+                        //$(this).next('text').removeClass('hide');
                     })
                 }
 

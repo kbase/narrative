@@ -11,7 +11,7 @@ $.KBWidget({
         this._super(options);
 
         self.models = options.modelData;
-
+        self.fba = options.fbaData
 
         var container = this.$elem;
 
@@ -39,10 +39,10 @@ $.KBWidget({
 
         container.append('<ul class="nav nav-tabs">\
                               <li class="active"><a href="#path-list" data-toggle="tab">Maps</a></li>\
-                        </ul>')
+                        </ul>');
         container.append('<div class="tab-content">\
                               <div class="tab-pane active" id="path-list"></div>\
-                          </div>')
+                          </div>');
 
 
         var proms = getPathwayTableData();  // replace with workspace api call
@@ -67,7 +67,7 @@ $.KBWidget({
         function drawPathway(map_id, map_data) {
             var map = map_data;
 
-            container.find('#path-'+map_id).html('<div class="pathway"></div>')
+            container.find('#path-'+map_id).html('<div class="pathway"></div>');
 
             var svg = d3.select('#path-'+map_id+" .pathway").append("svg")
                                         .attr("width", 800)
@@ -175,31 +175,32 @@ $.KBWidget({
                     found_rxns = getModelRxns(rxn.rxns);
 
                     // divide box for number of models being displayed
-                    var w = rxn.w / self.models.length;
+                    if (self.models) {
+                        var w = rxn.w / self.models.length;
 
-                    for (var i in found_rxns) {
-                        var found_rxn = found_rxns[i];
-                            var rect = svg.append('rect').attr('x', x-1+(w*i))
-                                          .attr('y', y-1)
-                                          .attr('width', w)
-                                          .attr('height', rxn.h+2)
+                        for (var i in found_rxns) {
+                            var found_rxn = found_rxns[i];
+                                var rect = svg.append('rect').attr('x', x+(w*i))
+                                            .attr('y', y-1)
+                                            .attr('width', w)
+                                            .attr('height', rxn.h+2)
 
-                        if (found_rxn.length > 0) {
-                            rect.style('fill', '#bbe8f9')
-                        } else {
-                            rect.style('fill', '#fff')
+                            if (found_rxn.length > 0) {
+                                rect.style('fill', '#bbe8f9')
+                            } else {
+                                rect.style('fill', '#fff')
+                            }
                         }
                     }
-
 
                     // get substrates and products
                     var subs = []
                     for (var i in rxn.substrates) {
-                        subs.push(rxn.substrates[i].cpd)
+                        subs.push(rxn.substrates[i].cpd);
                     }
                     var prods = []
                     for (var i in rxn.products) {
-                        prods.push(rxn.products[i].cpd)
+                        prods.push(rxn.products[i].cpd);
                     }
 
                     // add reaction label
@@ -220,12 +221,11 @@ $.KBWidget({
                                             container: 'body', trigger: 'hover'});
                     //fixme optimize
                     $(outer_rect.node()).hover(function() {
-                        $(this).next('text').addClass('hide')
+                        $(this).next('text').addClass('hide');
                     }, function() {
-                        $(this).next('text').removeClass('hide')
+                        $(this).next('text').removeClass('hide');
                     })
                 }
-
 
                 // bad attempt at adding data for use later
                 var rects = svg.selectAll("rect");
@@ -257,16 +257,16 @@ $.KBWidget({
                     var rxn_set = groups[j];
 
                     // get mid point of group
-                    var xs = []
+                    var xs = [];
                     for (var i in rxn_set) {
                         var rxn = rxn_set[i];
-                        xs.push(rxn.x)
+                        xs.push(rxn.x);
                     }
                     // get mid point of group
                     var ys = []
                     for (var i in rxn_set) {
                         var rxn = rxn_set[i];
-                        ys.push(rxn.y)
+                        ys.push(rxn.y);
                     }
 
                     var x = (Math.max.apply(Math, xs) + Math.min.apply(Math, xs)) / 2
@@ -288,34 +288,22 @@ $.KBWidget({
                             if (cpd.id != prod_id) continue;
 
                             // for when centers are "on" the same x axis, don't offset the y, etc
+                            var line = svg.append("line")
+                                     .attr("x1", x)
+                                     .attr("y1", y)
+                                     .attr("stroke-width", 2)
+                                     .attr("stroke", stroke_color)
+                                     .attr('marker-end', "url(#end-arrow)");                                     
                             if (Math.abs(cpd.x-x) < threshold) {
-                                var circ = svg.append("line")
-                                     .attr("x1", x)
-                                     .attr("y1", y)
-                                     .attr("x2", cpd.x)
-                                     .attr("y2", (cpd.y  > y ? cpd.y-oset : cpd.y+oset)) 
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color)
-                                     .attr('marker-end', "url(#end-arrow)");
+                                var line = line.attr("x2", cpd.x)
+                                               .attr("y2", (cpd.y  > y ? cpd.y-oset : cpd.y+oset));
                             } else if (Math.abs(cpd.y-y) < threshold) {
-                                var circ = svg.append("line")
-                                     .attr("x1", x)
-                                     .attr("y1", y)
-                                     .attr("x2", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
-                                     .attr("y2", cpd.y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color)
-                                     .attr('marker-end', "url(#end-arrow)");                            
+                                var line = line.attr("x2", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
+                                               .attr("y2", cpd.y);
                             } else { 
                                 var d = Math.abs( Math.sqrt( Math.pow(cpd.y - y,2)+Math.pow(cpd.x - x,2) ) )
-                                var circ = svg.append("line")
-                                     .attr("x1", x)
-                                     .attr("y1", y)
-                                     .attr("x2", cpd.x - (r/d)*(cpd.x - x) )
-                                     .attr("y2", cpd.y - (r/d)*(cpd.y - y) )
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color)
-                                     .attr('marker-end', "url(#end-arrow)");              
+                                var line = line.attr("x2", cpd.x - (r/d)*(cpd.x - x) )
+                                               .attr("y2", cpd.y - (r/d)*(cpd.y - y) )
                             } 
                         }
                     }
@@ -330,31 +318,25 @@ $.KBWidget({
                             if (cpd.id != sub_id ) continue;
 
                             // for when centers are "on" the same x axis, don't off setthe y, etc
-                            if (Math.abs(cpd.x-x) < threshold) {
-                                svg.append("line")
-                                     .attr("x1", cpd.x)
-                                     .attr("y1", (cpd.y  > y ? cpd.y-oset : cpd.y+oset) )
-                                     .attr("x2", x)
+                            var line = svg.append("line").attr("x2", x)
                                      .attr("y2", y)
                                      .attr("stroke-width", 2)
                                      .attr("stroke", stroke_color);
+
+                            if (Math.abs(cpd.x-x) < threshold) {
+                                var line = line.attr("x1", cpd.x)
+                                               .attr("y1", (cpd.y  > y ? cpd.y-oset : cpd.y+oset) )
                             } else if (Math.abs(cpd.y-y) < threshold) {
-                                svg.append("line")
-                                     .attr("x1", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
-                                     .attr("y1", cpd.y )
-                                     .attr("x2", x)
-                                     .attr("y2", y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color)                            
+                                var line = line.attr("x1", (cpd.x  > x ? cpd.x-oset : cpd.x+oset))
+                                              .attr("y1", cpd.y );
                             } else { 
                                 var d = Math.abs( Math.sqrt( Math.pow(cpd.y - y,2)+Math.pow(cpd.x - x,2) ) ); 
-                                svg.append("line")
-                                     .attr("x1", cpd.x - (r/d)*(cpd.x - x) )
-                                     .attr("y1", cpd.y - (r/d)*(cpd.y - y) )
-                                     .attr("x2", x)
-                                     .attr("y2", y)
-                                     .attr("stroke-width", 2)
-                                     .attr("stroke", stroke_color);
+                                var line = line.attr("x1", cpd.x - (r/d)*(cpd.x - x) )
+                                               .attr("y1", cpd.y - (r/d)*(cpd.y - y) )
+                                               .attr("x2", x)
+                                               .attr("y2", y)
+                                               .attr("stroke-width", 2)
+                                               .attr("stroke", stroke_color);
                             }
                         }
                     }     
@@ -364,10 +346,7 @@ $.KBWidget({
         } // end draw pathway
 
 
-
-
         function events() {
-
             container.find('.pathway-link').click(function() {
                 var map_id = $(this).data('id');
                 var name = $(this).text()
@@ -395,7 +374,7 @@ $.KBWidget({
                 });
             });
 
-        }
+        } // end events
 
 
         function getModelRxns(rxn_ids) {
@@ -495,19 +474,3 @@ $.KBWidget({
 })
 }( jQuery ) );
 
-
-
-
-
-/*
-                svg.append("svg:defs")
-                  .append("svg:marker")
-                    .attr("id", "arrowhead")
-                    .attr('viewBox', '0 -5 10 10')
-                    .attr('refX', 7)
-                    .attr('refY', 0)
-                    .attr("markerWidth", 3)
-                    .attr("markerHeight", 3)
-                  .append("svg:path")
-                    .attr('d', 'M0,-5L10,0L0,5');
-                    */

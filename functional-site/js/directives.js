@@ -239,10 +239,12 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var prom = kb.req('fba', 'get_models',
-                            {models: [scope.id], workspaces: [scope.ws]})
-                $.when(prom).done(function(data) {
-                    $(p.body()).kbasePathways({modelData: data})                    
+                var p1 = kb.req('fba', 'get_models',
+                            {models: [scope.id], workspaces: [scope.ws]});
+                var p2 = kb.req('fba', 'get_fba',
+                            {fba: [scope.id], workspaces: [scope.ws]})                
+                $.when(p1, p2).done(function(d1, d2) {
+                    $(p.body()).kbasePathways({modelData: d1, fbaData: d2})                    
                 });
 
             }
@@ -263,7 +265,7 @@ angular.module('lp-directives')
                         {medias: [scope.id], workspaces: [scope.ws]})
                 $.when(prom).done(function(data) {
                     $(p.body()).kbaseMediaEditor({ids: [scope.id], 
-                                                workspaces : [scope.ws],
+                                                  workspaces : [scope.ws],
                                                 data: data});
                 })
             }

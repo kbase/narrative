@@ -990,7 +990,7 @@ angular.module('ws-directives')
                         trash_btn.tooltip({title: 'View trash bin', placement: 'bottom', delay: {show: 700}})                                                            
 
                         trash_btn.click(function(){
-                            displayTrashBin(deleted_objs)
+                            displayTrashBin(deleted_objs, obj_mapping)
                         })
                         $('.dataTables_filter').append(trash_btn);
 
@@ -1406,7 +1406,7 @@ angular.module('ws-directives')
                 }
 
                 var trashbin;
-                function displayTrashBin(objs) {
+                function displayTrashBin(objs, obj_mapping) {
                     var tableSettings = {
                         "sPaginationType": "bootstrap",
                         //"sPaginationType": "full_numbers",
@@ -1454,7 +1454,7 @@ angular.module('ws-directives')
                         $(element).append('<table id="'+table_id+'-trash" \
                             class="table table-bordered table-striped" style="width: 100%;"></table>');
 
-                        var tableobjs = formatObjs(objs);
+                        var tableobjs = formatObjs(objs, obj_mapping);
                         var wsobjs = tableobjs[0];
                         var type_counts = tableobjs[1];
 

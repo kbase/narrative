@@ -116,7 +116,9 @@ body {
 }
 
 a:hover, 
-rect:hover {
+rect:hover,
+g:hover,
+circle:hover {
     cursor: hand;
     cursor: pointer;
 }
@@ -191,7 +193,8 @@ table {
 }
 
 /* landing page */
-#core-model { 
+#core-model,
+.pathway { 
     overflow-x: auto; 
 }
 /* for adjusting height on drag */

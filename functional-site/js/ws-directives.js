@@ -881,8 +881,9 @@ angular.module('ws-directives')
         return {
             link: function(scope, element, attrs) {
                 var ws = scope.selected_ws;
-                var showObjOpts = false; 
-                scope.checkedList = [];                
+                var showObjOpts = false;
+
+                scope.checkedList = [];
 
                 scope.$watch('checkedList', function() {
                     if (scope.checkedList.length == 1) {
@@ -908,7 +909,8 @@ angular.module('ws-directives')
                         "fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
                       "aoColumns": [
-                          (USER_ID ? { "sTitle": "", bSortable: false, "sWidth": "1%"} : { "sTitle": "", bVisible: false, "sWidth": "1%"}),
+                          (USER_ID ? { "sTitle": "", bSortable: false, "sWidth": "1%"} 
+                                   : { "sTitle": "", bVisible: false, "sWidth": "1%"}),
                           { "sTitle": "Name"}, //"sWidth": "10%"
                           { "sTitle": "Type"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
@@ -928,17 +930,19 @@ angular.module('ws-directives')
                     $(element).loading('loading '+ws+'...')
 
                     // load workspace objects
-                    var prom = kb.ws.list_objects({workspaces: [ws]});
-                    var prom2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1})
-                    $.when(prom, prom2).done(function(data, deleted_objs){
-                        console.log(data)
+                    var p = kb.ws.list_objects({workspaces: [ws]});
+                    var p2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1});
+                    var p3 = $.getJSON('landing_page_map.json');
+
+                    $.when(p, p2, p3).done(function(data, deleted_objs, obj_mapping){
+                        var obj_mapping = obj_mapping[0];
                         $(element).rmLoading();
 
                         var table_id = "obj-table-"+ws.replace(':',"_");
                         $(element).append('<table id="'+table_id+'" \
                             class="table table-bordered table-striped" style="width: 100%;"></table>')    
 
-                        var tableobjs = formatObjs(data);
+                        var tableobjs = formatObjs(data, obj_mapping);
                         var wsobjs = tableobjs[0];
                         var type_counts = tableobjs[1];
 
@@ -949,7 +953,7 @@ angular.module('ws-directives')
 
                         // if there are objects, add 'select all' button, type filter,
                         // and trash bin.
-                        if (data.length > 0) {
+                        if (data.length) {
                             // if logged in, add select all button to table options 
                             //datatables.bootstrap file for template
 
@@ -995,8 +999,12 @@ angular.module('ws-directives')
                         // show these options if logged in.
                         if (USER_ID) {
                             trash_btn.removeClass('hide');
+                        }
+
+                        if (USER_ID && data.length) {
                             select_all.removeClass('hide');
                         }
+
 
                     }).fail(function(e){
                         $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
@@ -1009,14 +1017,18 @@ angular.module('ws-directives')
                 scope.loadObjTable();
 
                 // function that takes json for the object table and formats
-                function formatObjs(objs) {
+                function formatObjs(objs, obj_mapping) {
+                    $.getJSON
+
                     var wsobjs = []
                     var type_counts = {}
 
                     for (var i in objs) {
                         var obj = objs[i];
                         var id = obj[1];
+                        var module = obj[2].split('.')[0];
                         var type = obj[2].slice(obj[2].indexOf('.')+1);
+                        var kind = type.split('-')[0];
                         var timestamp = getTimestamp(obj[3].split('+')[0]);
                         var date = formateDate(timestamp);
                         var instance = obj[4];
@@ -1047,13 +1059,14 @@ angular.module('ws-directives')
                         }
 
 
-                        var match = ( type.split('-')[0].match(/^(Genome|FBAModel|Media|FBA|Annotation|Cmonkey)$/) 
-                                        !== null ? true : false);
+                        if (module in obj_mapping && obj_mapping[module] 
+                            && obj_mapping[module][kind] ) {
+                            var sub = obj_mapping[module][kind];
 
-                        if (match) {
-                            var new_id = '<a class="obj-id" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'
-                                    +id+'</a> (<a class="show-versions">'+instance+'</a>)\
-                                        <a class="btn-show-info hide pull-right">More</a>'
+                            var new_id = '<a class="obj-id" data-ws="'+ws+'" data-id="'+id+'" \
+                                            data-type="'+type+'" data-sub="'+sub+'" >'
+                                            +id+'</a> (<a class="show-versions">'+instance+'</a>)\
+                                          <a class="btn-show-info hide pull-right">More</a>'
                         } else {
                             var new_id = '<span class="obj-id" data-ws="'+ws+'" data-id="'+id+'" data-type="'+type+'">'
                                     +id+'</span> (<a class="show-versions">'+instance+'</a>)\
@@ -1076,19 +1089,12 @@ angular.module('ws-directives')
                         var type = $(this).data('type').split('-')[0];
                         var id = $(this).data('id');
                         var ws = $(this).data('ws');
+                        var sub = $(this).data('sub');
 
-                        if (type == 'Genome') {
-                            scope.$apply( $location.path('/genomes/'+ws+'/'+id) );
-                        } else if (type == 'FBAModel') {
-                            scope.$apply( $location.path('/ws/models/'+ws+'/'+id) );
-                        } else if (type == 'FBA') {
-                            scope.$apply( $location.path('/ws/fbas/'+ws+'/'+id) );
-                        } else if (type == 'Media') {
-                            scope.$apply( $location.path('/ws/media/'+ws+'/'+id) );
-                        } else if (type == 'Cmonkey') {
-                            scope.$apply( $location.path('/cmonkey/'+ws+'/'+id) );                            
-                        } else if (type == 'Bambi') {
-                            scope.$apply( $location.path('/bambi/'+ws+'/'+id) );                            
+                        if (type == 'FBAModel' || type == 'FBA' || type == 'Media') {
+                            scope.$apply( $location.path('/ws/'+sub+'/'+ws+'/'+id) );
+                        } else {
+                            scope.$apply( $location.path('/'+sub+'/'+ws+'/'+id) );
                         }
                     })
 

@@ -36,14 +36,12 @@ $.KBWidget({
                         }
                     }
 
-
         container.append('<ul class="nav nav-tabs">\
                               <li class="active"><a href="#path-list" data-toggle="tab">Maps</a></li>\
                         </ul>');
         container.append('<div class="tab-content">\
                               <div class="tab-pane active" id="path-list"></div>\
                           </div>');
-
 
         var proms = getPathwayTableData();  // replace with workspace api call
         $.when.apply($, proms).done(function(){
@@ -61,7 +59,6 @@ $.KBWidget({
             $('#path-list').append('<table id="'+table_id+'" \
                            class="table table-bordered table-striped" style="width: 100%;"></table>');
             var table = $('#'+table_id).dataTable(tableSettings);  
-            container.find('.pathway-link').tooltip({title: 'Open path tab', placement: 'right', delay: {show: 500}});
         });
 
         function drawPathway(map_id, map_data) {
@@ -98,10 +95,14 @@ $.KBWidget({
 
             var rxns = map.reactions;
             var cpds = map.compounds;
+            var maplinks = map.maplinks;
 
-            var oset = 12; // off set for arrows
-            var threshold = 2; // threshold for deciding if connection is linear
-            var r = 12; // radial offset from circle.  Hooray for math degrees.            
+            var oset = 12, // off set for arrows
+                threshold = 2, // threshold for deciding if connection is linear
+                r = 12, // radial offset from circle.  Hooray for math degrees.
+                max_x = 0,  // used for canvas size
+                max_y = 0,  // used for canvas size
+                c_pad = 200;  // padding around max_x/max_y
 
             var data = []
             for (var i in rxns) {
@@ -109,14 +110,14 @@ $.KBWidget({
             }
 
             var groups = getGroups(rxns)
-
-
-
             drawConnections();
             drawCompounds();
             drawReactions();
+            drawMapLinks();
 
-
+            // addjust canvas size for map size //fixme: this could be precomputed
+            svg.attr("width", max_x)
+               .attr("height", max_y);            
 
             function getGroups() {
                 var groups = [];
@@ -161,14 +162,20 @@ $.KBWidget({
                 for (var i in rxns) {
                     var rxn = rxns[i];
 
-                    var x = rxn.x - rxn.w/2;
-                    var y = rxn.y - rxn.h/2;
+                    var x = rxn.x - rxn.w/2,
+                        y = rxn.y - rxn.h/2,
+                        w = rxn.w+2,
+                        h = rxn.h+2;
+                    if (x > max_x) max_x = x+w+c_pad;
+                    if (y > max_y) max_y = y+h+c_pad;                    
+
+                    var group = svg.append('g')
 
                     // draw reactions (rectangles)
-                    var outer_rect = svg.append('rect').attr('x', x-1)
+                    var outer_rect = group.append('rect').attr('x', x-1)
                                       .attr('y', y-1)
-                                      .attr('width', rxn.w+2)
-                                      .attr('height', rxn.h+2)
+                                      .attr('width', w)
+                                      .attr('height', h)
                                       .style('fill', '#fff')
                                       .style('stroke', stroke_color);
 
@@ -180,10 +187,10 @@ $.KBWidget({
 
                         for (var i in found_rxns) {
                             var found_rxn = found_rxns[i];
-                                var rect = svg.append('rect').attr('x', x+(w*i))
+                                var rect = group.append('rect').attr('x', x+(w*i))
                                             .attr('y', y-1)
                                             .attr('width', w)
-                                            .attr('height', rxn.h+2)
+                                            .attr('height', h)
 
                             if (found_rxn.length > 0) {
                                 rect.style('fill', '#bbe8f9')
@@ -204,9 +211,9 @@ $.KBWidget({
                     }
 
                     // add reaction label
-                    var text = svg.append('text').text(rxn.name)
+                    var text = group.append('text').text(rxn.name)
                                       .attr('x', x+2)
-                                      .attr('y', y+rxn.h/2 + 2)
+                                      .attr('y', y+h/2 + 2)
                                       .style("font-size", "10px")
                                       .style('stroke', stroke_color);
 
@@ -217,14 +224,15 @@ $.KBWidget({
                                   'Rxns: ' + rxn.rxns.join(', ')+'<br>'+
                                   'Substrates: ' + subs.join(', ')+'<br>'+
                                   'Products: ' + prods.join(', ')+'<br>';
-                    $(outer_rect.node()).popover({html: true, content: content, animation: false,
+                    $(group.node()).popover({html: true, content: content, animation: false,
                                             container: 'body', trigger: 'hover'});
-                    //fixme optimize
-                    $(outer_rect.node()).hover(function() {
-                        console.log($(this).siblings('text'))
-                        $(this).next('text').remove();
+
+                    // hide and show text on hoverover
+                    $(group.node()).hover(function() {
+                        console.log($(this).find('text'))
+                        $(this).find('text').hide();
                     }, function() {
-                        //$(this).next('text').removeClass('hide');
+                        $(this).find('text').show();
                     })
                 }
 
@@ -247,7 +255,7 @@ $.KBWidget({
 
                     var content = 'ID: ' + cpd.id+'<br>'+
                                   'kegg id: ' + cpd.name;
-                    $(circle.node()).popover({html: true, content: content, 
+                    $(circle.node()).popover({html: true, content: content, animation: false,
                                             container: 'body', trigger: 'hover'});
                 }
             }
@@ -334,24 +342,84 @@ $.KBWidget({
                                 var d = Math.abs( Math.sqrt( Math.pow(cpd.y - y,2)+Math.pow(cpd.x - x,2) ) ); 
                                 var line = line.attr("x1", cpd.x - (r/d)*(cpd.x - x) )
                                                .attr("y1", cpd.y - (r/d)*(cpd.y - y) )
-                                               .attr("x2", x)
-                                               .attr("y2", y)
-                                               .attr("stroke-width", 2)
-                                               .attr("stroke", stroke_color);
                             }
                         }
                     }     
                 } 
             } // end draw connections
 
+            function drawMapLinks() {
+                for (var i in maplinks) {
+                    var map = maplinks[i];
+
+                    var x = map.x - map.w/2,
+                        y = map.y - map.h/2,
+                        w = parseInt(map.w)+2,
+                        h = parseInt(map.h)+2;
+                    if (x > max_x) max_x = x+w+c_pad;
+                    if (y > max_y) max_y = y+h+c_pad;                          
+
+                    console.log(x, y, map.w, map.h)
+
+                    var group = svg.append('g');
+
+                    // draw reactions (rectangles)
+                    var rect = group.append('rect').attr('x', x)
+                                      .attr('y', y)
+                                      .attr('width', w)
+                                      .attr('height', h)
+                                      .style('fill', '#fff')
+                                      .style('stroke', stroke_color)
+
+                    var text = group.append('text').text(map.name)
+                                      .attr('x', x+2)
+                                      .attr('y', y+h/2)
+                                      .style("font-size", "10px")
+                                      .style('stroke', stroke_color)
+                                      .call(wrap, w+2);
+
+                }
+            
+
+            }
+
         } // end draw pathway
 
 
+        function wrap(text, width) {
+            //var dy = 3;
+            var dy = 0;
+
+            text.each(function() {
+                var text = d3.select(this),
+                    words = text.text().split(/\s+/).reverse(),
+                    word,
+                    line = [],
+                    lineNumber = 0,
+                    lineHeight = 1.1, // ems
+                    y = text.attr("y"),
+                    x = text.attr('x'),
+                    tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+
+                while (word = words.pop()) {
+                  line.push(word);
+                  tspan.text(line.join(" "));
+                  if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+                    tspan.text(line.join(" "));
+                    line = [word];
+                    tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+                  }
+                }
+            });
+        }
+
         function events() {
+            // event for clicking on pathway link
+            container.find('.pathway-link').unbind('click')
             container.find('.pathway-link').click(function() {
                 var map_id = $(this).data('id');
-                var name = $(this).text()
-
+                var name = $(this).text();
     
                 var tab = $('<li><a class="pathway-tab" href="#path-'+map_id+'"\
                                 data-id="'+map_id+'" data-toggle="tab">'
@@ -361,7 +429,7 @@ $.KBWidget({
                 container.find('.tab-content')
                         .append('<div class="tab-pane" id="path-'+map_id+'"></div>');                 
 
-                container.find('.nav-tabs').append(tab)
+                container.find('.nav-tabs').append(tab);
 
                 container.find('.pathway-tab').unbind('click');
                 container.find('.pathway-tab').click(function() {
@@ -374,6 +442,9 @@ $.KBWidget({
                     });
                 });
             });
+        
+            // tooltip for hover on pathway name
+            container.find('.pathway-link').tooltip({title: 'Open path tab', placement: 'right', delay: {show: 500}});
 
         } // end events
 

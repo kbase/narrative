@@ -85,8 +85,11 @@ var app = angular.module('landing-pages',
           url: "media/:ws/:id",
           templateUrl: 'views/ws/sortable/media.html',
           controller: 'WorkspaceBrowserLanding'
+        }).state('ws.json', {
+          url: "json/:ws/:id",
+          templateUrl: 'views/ws/json.html',
+          controller: 'WorkspaceBrowserJson'
         })
-
 
     $stateProvider
         .state('favorites', {
@@ -98,40 +101,6 @@ var app = angular.module('landing-pages',
           templateUrl: 'views/ws/favorites.all.html',
           controller: 'Favorites'
         })
-
-    /*
-    $stateProvider
-        .state('mv', {
-          url: "/mv/",
-          templateUrl: 'views/mv/mv.html',
-          controller: 'ModelViewer'
-        })   
-        .state('mv.objtable', {
-          url: "objtable/?selected_ws&ws&ids",
-          templateUrl: 'views/mv/objtable.html',
-          controller: 'ModelViewer'
-        })
-        .state('mv.objtable.selectedobjs', {
-          url: "?selected_ws&ws&ids",
-          templateUrl: 'views/mv/objtable.html',
-          controller: 'ModelViewer'
-        })
-        .state('mv.core', {
-            url: "core/?ws&ids",
-            templateUrl: 'views/mv/core.html',
-            controller: 'ModelViewer'
-        })
-        .state('mv.heatmap', {
-            url: "heatmap/?ws&ids",
-            templateUrl: 'views/mv/heatmap.html',
-            controller: 'ModelViewer'
-        })
-        .state('mv.tree', {
-            url: "tree/?ws&ids",
-            templateUrl: 'views/mv/tree.html',
-            controller: 'ModelViewer'
-        })
-    */   
 
     $stateProvider
         .state('trees', {

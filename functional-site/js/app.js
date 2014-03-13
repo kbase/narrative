@@ -88,7 +88,7 @@ var app = angular.module('landing-pages',
         }).state('ws.json', {
           url: "json/:ws/:id",
           templateUrl: 'views/ws/json.html',
-          controller: 'WorkspaceBrowserJson'
+          controller: 'WorkspaceBrowserJSON'
         })
 
     $stateProvider

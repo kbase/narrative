@@ -299,6 +299,32 @@ angular.module('lp-directives')
             }
         };
     })
+    .directive('jsonviewer', function() {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).loading()
+                var p = kb.req('ws', 'get_object', 
+                        {workspace: scope.ws, id: scope.id})
+                $.when(p).done(function(data) {
+                    $(element).rmLoading();
+                    scope.data = data;
+                    displayData(data)
+                })
+
+                function displayData(data) {
+                    for (key in data) {
+                        $(element).append('<h3>'+key+'</h3><br>');
+                        var c = $('<div id="data">')
+                        $(element).append(c)
+                        c.JSONView(JSON.stringify(data[key], {collapsed: true}))
+                    }
+                }
+
+            }
+        };
+    })
+
+
     .directive('backbutton', function() {
         return {
             link: function(scope, element, attrs) {

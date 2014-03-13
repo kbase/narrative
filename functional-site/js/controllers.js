@@ -265,7 +265,11 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     //$( "#sortable-landing" ).disableSelection();
 
 })
+.controller('WorkspaceBrowserJSON', function($scope, $stateParams) {
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
 
+})
 
 .controller('WorkspaceBrowserTour', function($scope, $stateParams, $location) {
     $scope.selected_ws = 'chenryExample';  // workspace to use for tour

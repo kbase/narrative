@@ -935,6 +935,7 @@ angular.module('ws-directives')
                     var p3 = $.getJSON('landing_page_map.json');
 
                     $.when(p, p2, p3).done(function(data, deleted_objs, obj_mapping){
+                        console.log(data)
                         var obj_mapping = obj_mapping[0];
                         $(element).rmLoading();
 

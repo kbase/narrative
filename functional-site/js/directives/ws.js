@@ -903,12 +903,11 @@ angular.module('ws-directives')
 
                     var tableSettings = {
                         "sPaginationType": "bootstrap",
-                        //"sPaginationType": "full_numbers",
                         "iDisplayLength": 10,
                         "aaData": [],
                         "fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
-                      "aoColumns": [
+                        "aoColumns": [
                           (USER_ID ? { "sTitle": "", bSortable: false, "sWidth": "1%"} 
                                    : { "sTitle": "", bVisible: false, "sWidth": "1%"}),
                           { "sTitle": "Name"}, //"sWidth": "10%"
@@ -918,7 +917,7 @@ angular.module('ws-directives')
                           { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'},
                           { "sTitle": "Size", iDataSort: 7 },
                           { "sTitle": "Byte Size", bVisible: false },
-                      ],                         
+                        ],                         
                         "oLanguage": {
                             "sEmptyTable": "No objects in workspace",
                             "sSearch": "Search:"

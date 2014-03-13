@@ -903,6 +903,7 @@ angular.module('ws-directives')
 
                     var tableSettings = {
                         "sPaginationType": "bootstrap",
+                        "bStateSave": true,                        
                         "iDisplayLength": 10,
                         "aaData": [],
                         "fnDrawCallback": events,

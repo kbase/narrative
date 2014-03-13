@@ -903,7 +903,16 @@ angular.module('ws-directives')
 
                     var tableSettings = {
                         "sPaginationType": "bootstrap",
-                        "bStateSave": true,                        
+                        "bStateSave": true,
+                        "fnStateSave": function (oSettings, oData) {
+                            localStorage.setItem( 'DataTables', JSON.stringify(oData) );
+                        },
+                        "fnStateLoad": function (oSettings) {
+                            return JSON.parse( localStorage.getItem('DataTables') );
+                        },
+                        "oColVis": {
+                            "buttonText": '<span class="glyphicon glyphicon-cog"></span>'
+                        },
                         "iDisplayLength": 10,
                         "aaData": [],
                         "fnDrawCallback": events,
@@ -935,7 +944,6 @@ angular.module('ws-directives')
                     var p3 = $.getJSON('landing_page_map.json');
 
                     $.when(p, p2, p3).done(function(data, deleted_objs, obj_mapping){
-                        console.log(data)
                         var obj_mapping = obj_mapping[0];
                         $(element).rmLoading();
 
@@ -951,6 +959,14 @@ angular.module('ws-directives')
 
                         // load object table
                         var table = $('#'+table_id).dataTable(tableSettings);
+
+                        function fnShowHide( iCol ){
+                            /* Get the DataTables object again - this is not a recreation, just a get of the object */
+                            var oTable = $('#'+table_id).dataTable();
+                            
+                            var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
+                            oTable.fnSetColumnVis( iCol, bVis ? false : true );
+                        }                        
 
                         // if there are objects, add 'select all' button, type filter,
                         // and trash bin.
@@ -995,6 +1011,11 @@ angular.module('ws-directives')
                         })
                         $('.dataTables_filter').append(trash_btn);
 
+                        // add column selector
+
+                        var col_btn = $('<a class="btn-col-disp pull-right hide"> ><a>');
+
+
                         addOptionButtons();
 
                         // show these options if logged in.
@@ -1005,6 +1026,11 @@ angular.module('ws-directives')
                         if (USER_ID && data.length) {
                             select_all.removeClass('hide');
                         }
+
+                        // add show/hide column button
+                        //var colvis = new $.fn.dataTable.ColVis( table );
+                        //$( colvis.button() ).insertAfter('div.info');
+
 
 
                     }).fail(function(e){

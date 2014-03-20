@@ -9,6 +9,10 @@
              "fba_url" : "http://140.221.85.73:4043/",
              "user_job_state_url": "http://140.221.84.180:7083" },
 
+    "wsdev": { "workspace_url": "http://140.221.84.209:7058",
+               "fba_url" : "http://kbase.us/services/KBaseFBAModeling/",
+               "user_job_state_url": "http://140.221.84.180:7083" },             
+
     "narrative_url": "//narrative.kbase.us/narrative"
 
 }

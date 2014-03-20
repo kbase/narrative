@@ -4,8 +4,15 @@ $.extend( true, $.fn.dataTable.defaults, {
 	"sPaginationType": "bootstrap",
 	"oLanguage": {
 		"sLengthMenu": "_MENU_ records per page"
+	},
+	fnInitComplete: function() {
+		$('.ColVis').hide();
+		$('.ColVis button').addClass('btn btn-default');
+		//$('.ColVis_collectionBackground').remove();
 	}
 } );
+
+
 
 // old layout
 //"<'row'<'col-xs-8 table-options'><'col-xs-4'f>r>t<'row'<'col-xs-6'il><'col-xs-6'p>>"

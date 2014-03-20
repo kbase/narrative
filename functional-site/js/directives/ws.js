@@ -1009,11 +1009,8 @@ angular.module('ws-directives')
                         trash_btn.click(function(){
                             displayTrashBin(deleted_objs, obj_mapping)
                         })
-                        $('.dataTables_filter').append(trash_btn);
+                        $('.dataTables_filter').after(trash_btn);
 
-                        // add column selector
-
-                        var col_btn = $('<a class="btn-col-disp pull-right hide"> ><a>');
 
 
                         addOptionButtons();
@@ -1028,8 +1025,26 @@ angular.module('ws-directives')
                         }
 
                         // add show/hide column button
-                        //var colvis = new $.fn.dataTable.ColVis( table );
-                        //$( colvis.button() ).insertAfter('div.info');
+                        var btn = $('<button class="btn btn-default">\
+                                    <span class="glyphicon glyphicon-cog"></span>\
+                                    </button>')
+
+                        var dd = $('<div class="checkbox pull-left" style="margin: 35px 25px;">'+
+                                  '<label><input type="checkbox" value="">owner</label>'+
+                                '</div>')
+
+                        var cols = tableSettings.aoColumns;
+                        for (var i in cols) {
+                            dd.append('<label><input type="checkbox" value="">'+cols[i].sTitle+'</label>');
+
+                        }
+
+
+                        btn.click(function() {
+                            $(this).popover({container: 'body', content: dd, html: true})
+                        })
+
+                        $('.table-options').append(btn);
 
 
 

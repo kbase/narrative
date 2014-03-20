@@ -256,7 +256,7 @@ ColVis.prototype = {
 
 		this.dom.catcher = this._fnDomCatcher();
 		this.dom.collection = this._fnDomCollection();
-		this.dom.background = this._fnDomBackground();
+		//this.dom.background = this._fnDomBackground();
 
 		this._fnAddGroups();
 		this._fnAddButtons();
@@ -726,7 +726,7 @@ ColVis.prototype = {
 		var that = this, i, iLen, iLeft;
 		var oPos = $(this.dom.button).offset();
 		var nHidden = this.dom.collection;
-		var nBackground = this.dom.background;
+		//var nBackground = this.dom.background;
 		var iDivX = parseInt(oPos.left, 10);
 		var iDivY = parseInt(oPos.top + $(this.dom.button).outerHeight(), 10);
 
@@ -741,8 +741,8 @@ ColVis.prototype = {
 			'opacity': 0
 		} );
 
-		nBackground.style.bottom ='0px';
-		nBackground.style.right = '0px';
+		//nBackground.style.bottom ='0px';
+		//nBackground.style.right = '0px';
 
 		var oStyle = this.dom.catcher.style;
 		oStyle.height = $(this.dom.button).outerHeight()+"px";
@@ -750,7 +750,7 @@ ColVis.prototype = {
 		oStyle.top = oPos.top+"px";
 		oStyle.left = iDivX+"px";
 
-		document.body.appendChild( nBackground );
+		//document.body.appendChild( nBackground );
 		document.body.appendChild( nHidden );
 		document.body.appendChild( this.dom.catcher );
 
@@ -758,15 +758,12 @@ ColVis.prototype = {
 		 * much smoother. If you don't want the animation, then the setTimeout can be removed
 		 */
 		$(nHidden).animate({"opacity": 1}, that.s.iOverlayFade);
-		$(nBackground).animate({"opacity": 0.1}, that.s.iOverlayFade, 'linear', function () {
-			/* In IE6 if you set the checked attribute of a hidden checkbox, then this is not visually
-			 * reflected. As such, we need to do it here, once it is visible. Unbelievable.
-			 */
+		/*$(nBackground).animate({"opacity": 0.1}, that.s.iOverlayFade, 'linear', function () {
 			if ( $.browser && $.browser.msie && $.browser.version == "6.0" )
 			{
 				that._fnDrawCallback();
 			}
-		});
+		});*/
 
 		/* Visual corrections to try and keep the collection visible */
 		if ( !this.s.bCssPosition )

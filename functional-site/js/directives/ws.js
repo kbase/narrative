@@ -900,18 +900,23 @@ angular.module('ws-directives')
 
                 scope.loadObjTable = function() {
                     showObjOpts = false;
+                    var table_id = "obj-table-"+ws.replace(':',"_");                    
 
                     var tableSettings = {
                         "sPaginationType": "bootstrap",
                         "bStateSave": true,
                         "fnStateSave": function (oSettings, oData) {
-                            localStorage.setItem( 'DataTables', JSON.stringify(oData) );
+                            if (USER_ID) {                            
+                                localStorage.setItem( 'DataTables', JSON.stringify(oData) );
+                            }
                         },
                         "fnStateLoad": function (oSettings) {
-                            return JSON.parse( localStorage.getItem('DataTables') );
+                            if (USER_ID) {
+                                return JSON.parse( localStorage.getItem('DataTables') );                            return JSON.parse( localStorage.getItem('DataTables') );                                
+                            }
                         },
-                        "oColVis": {
-                            "buttonText": '<span class="glyphicon glyphicon-cog"></span>'
+                        "oColReorder": {
+                            "iFixedColumns": (USER_ID ? 1 :0 )
                         },
                         "iDisplayLength": 10,
                         "aaData": [],
@@ -947,7 +952,7 @@ angular.module('ws-directives')
                         var obj_mapping = obj_mapping[0];
                         $(element).rmLoading();
 
-                        var table_id = "obj-table-"+ws.replace(':',"_");
+
                         $(element).append('<table id="'+table_id+'" \
                             class="table table-bordered table-striped" style="width: 100%;"></table>')    
 
@@ -958,15 +963,7 @@ angular.module('ws-directives')
                         tableSettings.aaData = wsobjs;
 
                         // load object table
-                        var table = $('#'+table_id).dataTable(tableSettings);
-
-                        function fnShowHide( iCol ){
-                            /* Get the DataTables object again - this is not a recreation, just a get of the object */
-                            var oTable = $('#'+table_id).dataTable();
-                            
-                            var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
-                            oTable.fnSetColumnVis( iCol, bVis ? false : true );
-                        }                        
+                        var table = $('#'+table_id).dataTable(tableSettings);                    
 
                         // if there are objects, add 'select all' button, type filter,
                         // and trash bin.
@@ -1011,10 +1008,6 @@ angular.module('ws-directives')
                         })
                         $('.dataTables_filter').after(trash_btn);
 
-
-
-                        addOptionButtons();
-
                         // show these options if logged in.
                         if (USER_ID) {
                             trash_btn.removeClass('hide');
@@ -1025,28 +1018,46 @@ angular.module('ws-directives')
                         }
 
                         // add show/hide column button
-                        var btn = $('<button class="btn btn-default">\
-                                    <span class="glyphicon glyphicon-cog"></span>\
-                                    </button>')
+                        var col_btn = $('<button class="btn btn-default">\
+                                       <span class="glyphicon glyphicon-cog"></span>\
+                                     </button>');
 
-                        var dd = $('<div class="checkbox pull-left" style="margin: 35px 25px;">'+
-                                  '<label><input type="checkbox" value="">owner</label>'+
-                                '</div>')
+                        var dd = $('<div class="dd-columns">Show/Hide Columns:</div>');
 
                         var cols = tableSettings.aoColumns;
                         for (var i in cols) {
-                            dd.append('<label><input type="checkbox" value="">'+cols[i].sTitle+'</label>');
-
+                            if (cols[i].sTitle == '') continue;  // ignore checkbox col
+                            dd.append('<div class="checkbox">'+
+                                         '<label><input type="checkbox" data-col="'+cols[i].sTitle+'" '+
+                                                (cols[i].bVisible == false ? '' : 'checked="checked"')+ 
+                                         '>'+cols[i].sTitle+'</label>\
+                                       </div>');
                         }
 
+                        col_btn.popover({container: 'body', content: dd, 
+                                         html: true, placement: 'bottom', trigger:'manual'})
 
-                        btn.click(function() {
-                            $(this).popover({container: 'body', content: dd, html: true})
+                        col_btn.click(function() {
+                            col_btn.popover('toggle')
+                            dd.find('input').change(function() {
+                                var col_name = $(this).data('col')
+                                fnShowHide(table, col_name);
+                            }) 
                         })
 
-                        $('.table-options').append(btn);
+                        // event for hiding settings popover
+                        $('body').unbind('click')
+                        $('body').on('click', function (e) {
+                            if (!$(col_btn).is(e.target) && $(col_btn).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+                                col_btn.popover('hide')
+                                // need to remove div due to styling conflicts
+                                $('.popover').remove(); 
+                            }
+                        });
 
+                        $('.table-options').append(col_btn);
 
+                        addOptionButtons();
 
                     }).fail(function(e){
                         $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
@@ -1058,10 +1069,21 @@ angular.module('ws-directives')
 
                 scope.loadObjTable();
 
+
+                function fnShowHide(table, col_name ){
+                    var cols = table.fnSettings().aoColumns;
+                    var bVis;
+                    for (i=0; i<cols.length; i++) {
+                        if (cols[i].sTitle == col_name) {
+                            bVis = cols[i].bVisible;
+                            break;
+                        }
+                    }
+                    table.fnSetColumnVis( i, bVis ? false : true );
+                }    
+
                 // function that takes json for the object table and formats
                 function formatObjs(objs, obj_mapping) {
-                    $.getJSON
-
                     var wsobjs = []
                     var type_counts = {}
 
@@ -1078,7 +1100,6 @@ angular.module('ws-directives')
                         var ws = obj[7];
                         var bytesize = obj[9];
                         var size = readableSize(bytesize);
-
 
                         var check = '<div class="ncheck obj-check-box check-option"'
                                 + ' data-ws="' + ws + '"'
@@ -1099,7 +1120,6 @@ angular.module('ws-directives')
                         } else {
                             type_counts[type] = 1;
                         }
-
 
                         if (module in obj_mapping && obj_mapping[module] 
                             && obj_mapping[module][kind] ) {
@@ -1180,14 +1200,13 @@ angular.module('ws-directives')
 
                         historyModal.openPrompt();
                         var modal_body = historyModal.data('dialogModal').find('.modal-body').loading();
-                        historyModal.data('dialogModal').find('.modal-dialog').css('width', '800px')
+                        historyModal.data('dialogModal').find('.modal-dialog').css('width', '800px');
 
                         var prom = kb.ws.get_object_history({workspace: ws, name: id});
                         $.when(prom).done(function(data) {
                             modal_body.rmLoading();
                             modal_body.append('<span class="h5"><b>Name</b></span>: '+id+'<br>')                            
                             modal_body.append('<span class="h5"><b>Database ID</b></span>: '+data[0][0]+'<br>')
-                            //modal_body.append('<b>Type</b>: '+data[0][2])                            
                             var info = $('<table class="table table-striped table-bordered table-condensed">');
                             var header = $('<tr><th>Mod Date</th>\
                                                 <th>Vers</th>\
@@ -1206,7 +1225,7 @@ angular.module('ws-directives')
                                 info.append(row);
                             }
 
-                            modal_body.append(info)
+                            modal_body.append(info);
                         })
                     })
 
@@ -1215,8 +1234,7 @@ angular.module('ws-directives')
                     $('.obj-id').tooltip({title: 'View object', placement: 'bottom', delay: {show: 700}});
                     $('.btn-show-info').tooltip({title: 'Meta data/spec, download, etc.', placement: 'bottom', delay: {show: 700}});
                 
-                    checkBoxObjectClickEvent()
-
+                    checkBoxObjectClickEvent();
                 }
 
 
@@ -1248,7 +1266,7 @@ angular.module('ws-directives')
                         }
 
                         if (!showObjOpts){
-                            objOptClick()
+                            objOptClick();
                             showObjOpts = true;
                         }
                         if (scope.checkedList.length == 0){
@@ -1282,13 +1300,13 @@ angular.module('ws-directives')
                                 }
                             }
                         } else {
-                            scope.checkedList.push([id, dataWS, dataType])
-                            scope.$apply()
+                            scope.checkedList.push([id, dataWS, dataType]);
+                            scope.$apply();
                             checkbox.addClass('ncheck-checked');
                         }
 
-                        if (!showObjOpts){
-                            objOptClick()
+                        if (!showObjOpts) {
+                            objOptClick();
                             showObjOpts = true;
                         }
 
@@ -1339,7 +1357,7 @@ angular.module('ws-directives')
                     //options.addClass('hide')
 
                     delete_btn.tooltip({title: 'Delete selected objects', placement: 'bottom', delay: {show: 700}});
-                    copy_btn.tooltip({title: 'Copy; click for options', placement: 'bottom', delay: {show: 700}});  
+                    //copy_btn.tooltip({title: 'Copy; click for options', placement: 'bottom', delay: {show: 700}});  
                     rename_btn.tooltip({title: 'Rename (first) selected object', placement: 'bottom', delay: {show: 700}})                                      
                 }
  
@@ -1436,15 +1454,10 @@ angular.module('ws-directives')
                             $.when(prom).done(function(json) {
                                 jsonWindow.document.body.innerHTML = ''
                                 jsonWindow.document.write(JSON.stringify(json[0]));
-                            })                            
+                            })
                         })
                         info_modal.data('dialogModal').find('.modal-footer .text-left').append(open);
                     })
-
-
-
-
-
                 }
 
                 var trashbin;
@@ -1462,7 +1475,7 @@ angular.module('ws-directives')
                           { "sTitle": "Type", "sWidth": "20%"},
                           { "sTitle": "Last Modified", "iDataSort": 5},
                           { "sTitle": "Owner"},
-                          { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'}                   
+                          { "sTitle": "Time Stamp", "bVisible": false, "sType": 'numeric'}                   
 
                       ],                         
                         "oLanguage": {
@@ -1505,7 +1518,7 @@ angular.module('ws-directives')
                         // load object table
                         trashbin = $('#'+table_id+'-trash').dataTable(tableSettings);
                     } else {
-                        $('#'+table_id+'-trash_wrapper').show()
+                        $('#'+table_id+'-trash_wrapper').show();
                     }
                 }
 
@@ -1520,8 +1533,8 @@ angular.module('ws-directives')
                         obj_ids.push(obj);
                     }
 
-                    var prom = kb.ws.delete_objects(obj_ids)
-                    $.when(prom).done(function(data){
+                    var prom = kb.ws.delete_objects(obj_ids);
+                    $.when(prom).done(function(data) {
                         scope.loadObjTable();
                     })
                 }
@@ -1555,7 +1568,7 @@ angular.module('ws-directives')
 
                         // if new name is actually new
                         if (new_name != nar) {
-                            var notice = $('<span>saving...</span>')
+                            var notice = $('<span>saving...</span>');
                             input.parents('td').html(notice);
 
                             var p = kb.ws.rename_object({obj: {workspace: proj, name: nar}, new_name: new_name})
@@ -1586,11 +1599,10 @@ angular.module('ws-directives')
                     });
 
                     $('.nar-selected .nar-link').parent().html(form);
-                    input.focus();  
-
+                    input.focus();
                 }
 
-                function copyObjects() {
+                function copyObjects(){
                     var workspace = ws; // just getting current workspace
 
                     var wsSelect = $('<form class="form-horizontal" role="form">\
@@ -1707,7 +1719,6 @@ function readableSize(bytes) {
 
 
 /*
-
         function addFavorite(ws, id, type, widget) {
             var get_state_prom = kb.ujs.get_state('favorites', 'queue', 0);
             var prom = $.when(get_state_prom).then(function(queue) {

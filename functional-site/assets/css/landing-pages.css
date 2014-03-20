@@ -391,8 +391,7 @@ div::-webkit-scrollbar-thumb {
 
 
 
-
-.object-options .btn {
+.table-options .btn {
     height: 34px; /* make all buttons equal height */
     margin: 0 3px 0 0;
 }
@@ -402,13 +401,13 @@ div::-webkit-scrollbar-thumb {
     margin: 7px 0 0 0;
 }
 
-
 .dataTables_info {
     margin: 0 10px 0 0;
 }
 .dataTables_length, .dataTables_info {
     float: left;
 }
+
 .ellipsis {
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -424,7 +423,6 @@ div::-webkit-scrollbar-thumb {
     overflow: hidden;
     display: inline-block;
 }
-
 
 .drag-placeholder { 
     height: 58px;
@@ -476,20 +474,15 @@ div::-webkit-scrollbar-thumb {
     margin: 3px 20px 0 0;
 }
 
-
 .btn-show-info .glyphicon{
     padding: 0px 0px 4px 0px;
 }
-
 
 .open-obj {
     margin: 7px 0 0 20px;
 }
 
-
-
 /******************     narrative     ***************/
-
 #login-form {
     margin: 70px 0 0 0;
 }
@@ -522,7 +515,6 @@ div::-webkit-scrollbar-thumb {
     cursor: pointer;
 }
 
-
 .nar-selected, 
 .table-hover .nar-selected:hover > td { /* override boostrap hover */
     background-color: #e0f7ff !important; 
@@ -552,7 +544,6 @@ div::-webkit-scrollbar-thumb {
     background: #fff;
     margin: -6px 0 0px 0;
     height: 44px;
-
 }
 
 .narrative-sidebar li {
@@ -747,127 +738,3 @@ div.DTCR_pointer {
     background-color: #0259C4;
     z-index: 201;
 }
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * ColVis styles
- */
-div.ColVis {
-    float: right;
-    margin-bottom: 1em;
-}
-
-
-button.ColVis_Button {
-    height: 30px;
-    padding: 3px 8px;
-}
-
-button.ColVis_Button::-moz-focus-inner { 
-    border: none !important;
-    padding: 0;
-}
-
-button.ColVis_Button:active { 
-    outline: none;
-}
-
-
-div.ColVis_collectionBackground {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    background-color: black;
-    z-index: 1100;
-}
-
-ul.ColVis_collection {
-    width: 150px;
-    padding: 8px 8px 4px 8px;
-    margin: 0;
-    border: 1px solid #ccc;
-    border: 1px solid rgba( 0, 0, 0 );
-    background-color: #f3f3f3;
-    background-color: rgba( 255, 255, 255 );
-    overflow: hidden;
-    z-index: 2002;
-
-    -webkit-border-radius: 5px;
-       -moz-border-radius: 5px;
-        -ms-border-radius: 5px;
-         -o-border-radius: 5px;
-            border-radius: 5px;
-    
-}
-
-ul.ColVis_collection li {
-    position: relative;
-    height: auto;
-    left: 0;
-    right: 0;
-    padding: 0.5em;
-
-    display: block;
-    float: none;
-    margin-bottom: 4px;
-    background: #eee;
-    -webkit-border-radius: 5px;
-       -moz-border-radius: 5px;
-        -ms-border-radius: 5px;
-         -o-border-radius: 5px;
-            border-radius: 5px;    
-}
-
-ul.ColVis_collection li {
-    text-align: left;
-}
-
-ul.ColVis_collection li.ColVis_Button:hover {
-    border: 1px solid #999;
-    background-color: #f0f0f0;
-}
-
-ul.ColVis_collection li span {
-    display: inline-block;
-    padding-left: 0.5em;
-    cursor: pointer;
-}
-
-
-ul.ColVis_collection li.ColVis_Special {
-    border-color: #555;
-    background: rgb(237,237,237); /* Old browsers */
-    background: -webkit-linear-gradient(top, rgba(237,237,237,1) 0%,rgba(214,214,214,1) 77%,rgba(232,232,232,1) 100%); /* Chrome10+,Safari5.1+ */
-    background:    -moz-linear-gradient(top, rgba(237,237,237,1) 0%, rgba(214,214,214,1) 77%, rgba(232,232,232,1) 100%); /* FF3.6+ */
-    background:     -ms-linear-gradient(top, rgba(237,237,237,1) 0%,rgba(214,214,214,1) 77%,rgba(232,232,232,1) 100%); /* IE10+ */
-    background:      -o-linear-gradient(top, rgba(237,237,237,1) 0%,rgba(214,214,214,1) 77%,rgba(232,232,232,1) 100%); /* Opera 11.10+ */
-    background:         linear-gradient(to bottom, rgba(237,237,237,1) 0%,rgba(214,214,214,1) 77%,rgba(232,232,232,1) 100%); /* W3C */
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ededed', endColorstr='#e8e8e8',GradientType=0 ); /* IE6-9 */
-}
-
-ul.ColVis_collection li.ColVis_Special:hover {
-    background: #e2e2e2; /* Old browsers */
-    background: -webkit-linear-gradient(top, #d0d0d0 0%,#d5d5d5 89%,#e2e2e2 100%); /* Chrome10+,Safari5.1+ */
-    background:    -moz-linear-gradient(top, #d0d0d0 0%,#d5d5d5 89%,#e2e2e2 100%); /* FF3.6+ */
-    background:     -ms-linear-gradient(top, #d0d0d0 0%,#d5d5d5 89%,#e2e2e2 100%); /* IE10+ */
-    background:      -o-linear-gradient(top, #d0d0d0 0%,#d5d5d5 89%,#e2e2e2 100%); /* Opera 11.10+ */
-    background:         linear-gradient(top, #d0d0d0 0%,#d5d5d5 89%,#e2e2e2 100%); /* W3C */
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f3f3f3', endColorstr='#e2e2e2',GradientType=0 ); /* IE6-9 */
-}
-
-
-span.ColVis_radio {
-    display: inline-block;
-    width: 20px;
-}
-
-div.ColVis_catcher {
-    position: absolute;
-    z-index: 1101;
-}
-
-.disabled {
-    color: #999;
-}
-

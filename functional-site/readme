@@ -16,3 +16,13 @@
  *  Views (templates): views/* 
  *
 */
+
+
+You can run the functional site anywhere by:
+1) git clone kbase@git.kbase.us:ui-common.git  <whatever_path>
+2) point nginx or apache to  <whatever_path>
+3) The codes uses the production urls for workspaces and fba by default.  To use different urls, edit <whatever_path>/functional-site/config.json.  i.e., in config.json, change the value of 'setup' to 'wsdev', instead of 'prod', and then it will use these urls:
+
+    "wsdev": { "workspace_url": "http://140.221.84.209:7058",
+               "fba_url" : "http://kbase.us/services/KBaseFBAModeling/",
+               "user_job_state_url": "http://140.221.84.180:7083" }

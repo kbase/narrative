@@ -288,9 +288,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
             $('.ncheck').eq(2).addClass('ncheck-checked');
             $scope.$apply();
         }
-        function showSettings() {
-            $('.btn-obj-table-settings').popover('show');
-        }
 
         var tour = [{element: '.new-ws', text:'Create a new workspace here', placement: 'left'},
                     {element: '.btn-ws-settings', n: 2,
@@ -305,7 +302,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     {element: '.ncheck', n: 2, text: 'Select objects by using checkboxes<br> and see options appear above', 
                         event: checkSomething},
                     {element: '.type-filter', text: 'Filter objects by type'},
-                    {element: '.btn-obj-table-settings', placement: 'right', event: showSettings},   
+                    {element: '.btn-obj-table-settings', text: 'Show and hide columns and set other object table settings'},   
                     {element: '.btn-delete-obj', text: 'Delete the objects selected in the table'},
                     {element: '.btn-mv-dd', text: 'Go ahead, copy your colleague\'s objects to your own workspace'},
                     {element: '.btn-rename-obj', text: 'Rename a selected object'},                        

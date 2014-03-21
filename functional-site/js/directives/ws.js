@@ -61,7 +61,7 @@ angular.module('ws-directives')
 
                 // This method loads the sidebar data.  
                 // Note: this is only called after instantiation when sidebar needs to be refreshed
-                scope.loadObjectTable = function() {
+                scope.loadWSTable = function() {
                     $('#select-box .table').remove();
                     $('#select-box').append('<table class="table table-bordered table-condensed table-hover"></table>');
                     workspaces = []
@@ -136,7 +136,7 @@ angular.module('ws-directives')
                 }
 
                 // load the content of the ws selector
-                scope.loadObjectTable();
+                scope.loadWSTable();
 
                 function events() {
                     var filterCollapse = $('.perm-filters');
@@ -741,7 +741,7 @@ angular.module('ws-directives')
                                             $prompt.getCover().loading()
                                             $.when(prom).done(function(){
                                                 $prompt.addCover('Created workspace: '+ws_name, 'success');
-                                                    scope.loadObjectTable()
+                                                    scope.loadWSTable()
 
                                                 var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                                 btn.click(function() { 
@@ -817,7 +817,7 @@ angular.module('ws-directives')
                                         $prompt.getCover().loading()
                                         $.when(prom).done(function(){
                                             $prompt.addCover('Cloned workspace: '+new_ws_id);
-                                            scope.loadObjectTable();
+                                            scope.loadWSTable();
                                         }).fail(function() {
                                             $prompt.addCover('This workspace name already exists.', 'danger');
                                         })
@@ -857,7 +857,7 @@ angular.module('ws-directives')
                                     $prompt.getCover().loading()
                                     $.when(prom).done(function(){
                                         $prompt.addCover('Deleted workspace: '+ws_name);
-                                        scope.loadObjectTable();
+                                        scope.loadWSTable();
                                         var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                         btn.click(function() { $prompt.closePrompt(); })
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);
@@ -902,42 +902,43 @@ angular.module('ws-directives')
                     showObjOpts = false;
                     var table_id = "obj-table-"+ws.replace(':',"_");                    
 
+                    var columns =  [(USER_ID ? { "sTitle": "", bSortable: false, "sWidth": "1%"} 
+                                             : { "sTitle": "", bVisible: false, "sWidth": "1%"}),
+                                    { "sTitle": "Name"}, //"sWidth": "10%"
+                                    { "sTitle": "Type"},
+                                    { "sTitle": "Last Modified", "iDataSort": 5},
+                                    { "sTitle": "Owner", bVisible: true},
+                                    { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'},
+                                    { "sTitle": "Size", iDataSort: 7 },
+                                    { "sTitle": "Byte Size", bVisible: false }];
+
                     var tableSettings = {
                         "sPaginationType": "bootstrap",
                         "bStateSave": true,
                         "fnStateSave": function (oSettings, oData) {
-                            if (USER_ID) {                            
-                                localStorage.setItem( 'DataTables', JSON.stringify(oData) );
+                            if (USER_ID) {   
+                                save_dt_view(oSettings, oData);
                             }
                         },
                         "fnStateLoad": function (oSettings) {
                             if (USER_ID) {
-                                return JSON.parse( localStorage.getItem('DataTables') );                            return JSON.parse( localStorage.getItem('DataTables') );                                
+                                return load_dt_view(oSettings);
                             }
                         },
                         "oColReorder": {
-                            "iFixedColumns": (USER_ID ? 1 :0 )
+                            "iFixedColumns": (USER_ID ? 1 :0 ),
                         },
                         "iDisplayLength": 10,
                         "aaData": [],
                         "fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
-                        "aoColumns": [
-                          (USER_ID ? { "sTitle": "", bSortable: false, "sWidth": "1%"} 
-                                   : { "sTitle": "", bVisible: false, "sWidth": "1%"}),
-                          { "sTitle": "Name"}, //"sWidth": "10%"
-                          { "sTitle": "Type"},
-                          { "sTitle": "Last Modified", "iDataSort": 5},
-                          { "sTitle": "Owner", bVisible: true},
-                          { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'},
-                          { "sTitle": "Size", iDataSort: 7 },
-                          { "sTitle": "Byte Size", bVisible: false },
-                        ],                         
+                        "aoColumns": columns,
                         "oLanguage": {
                             "sEmptyTable": "No objects in workspace",
                             "sSearch": "Search:"
                         }
                     }
+
 
                     // clear object view every load
                     $(element).html('')
@@ -1033,6 +1034,10 @@ angular.module('ws-directives')
                                          '>'+cols[i].sTitle+'</label>\
                                        </div>');
                         }
+                        dd.append('<hr>')
+                        var reset_btn = $('<button class="btn btn-default">Default Settings</button>')
+
+                        dd.append(reset_btn)
 
                         col_btn.popover({container: 'body', content: dd, 
                                          html: true, placement: 'bottom', trigger:'manual'})
@@ -1043,13 +1048,18 @@ angular.module('ws-directives')
                                 var col_name = $(this).data('col')
                                 fnShowHide(table, col_name);
                             }) 
+                            reset_btn.click( function () {
+                                reset_dt_view()
+                                scope.loadObjTable();
+                                 $('.popover').remove(); 
+                            } );
+
                         })
 
                         // event for hiding settings popover
                         $('body').unbind('click')
                         $('body').on('click', function (e) {
                             if (!$(col_btn).is(e.target) && $(col_btn).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-                                col_btn.popover('hide')
                                 // need to remove div due to styling conflicts
                                 $('.popover').remove(); 
                             }
@@ -1057,6 +1067,7 @@ angular.module('ws-directives')
 
                         $('.table-options').append(col_btn);
 
+                        searchColumns
                         addOptionButtons();
 
                     }).fail(function(e){
@@ -1671,7 +1682,7 @@ angular.module('ws-directives')
 
                                     $.when.apply($, proms).done(function() {
                                         $prompt.addCover('Copied objects to: <i>'+new_ws+'</i>');
-                                        scope.loadObjectTable();
+                                        scope.loadWSTable();
                                         var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                         btn.click(function() { $prompt.closePrompt(); })
                                         $prompt.data('dialogModal').find('.modal-footer').html(btn);
@@ -1706,6 +1717,47 @@ function parse_name(name) {
     } else {
         return name;
     }
+}
+function save_dt_view (oSettings, oData) {
+  localStorage.setItem( 'DataTables_'+window.location.pathname, JSON.stringify(oData) );
+}
+function load_dt_view (oSettings) {
+  return JSON.parse( localStorage.getItem('DataTables_'+window.location.pathname) );
+}
+function reset_dt_view() {
+  localStorage.removeItem('DataTables_'+window.location.pathname);
+}
+
+function searchColumns() {
+    /* Add the events etc before DataTables hides a column */
+    $("thead input").keyup( function () {
+        /* Filter on the column (the index) of this element */
+        oTable.fnFilter( this.value, oTable.oApi._fnVisibleToColumnIndex( 
+            oTable.fnSettings(), $("thead input").index(this) ) );
+    } );
+    
+    /*
+     * Support functions to provide a little bit of 'user friendlyness' to the textboxes
+     */
+    $("thead input").each( function (i) {
+        this.initVal = this.value;
+    } );
+    
+    $("thead input").focus( function () {
+        if ( this.className == "search_init" )
+        {
+            this.className = "";
+            this.value = "";
+        }
+    } );
+    
+    $("thead input").blur( function (i) {
+        if ( this.value == "" )
+        {
+            this.className = "search_init";
+            this.value = this.initVal;
+        }
+    } );
 }
 
 // interesting solution from http://stackoverflow.com/questions

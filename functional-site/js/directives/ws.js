@@ -908,7 +908,7 @@ angular.module('ws-directives')
                                     { "sTitle": "Type"},
                                     { "sTitle": "Last Modified", "iDataSort": 5},
                                     { "sTitle": "Owner", bVisible: true},
-                                    { "sTitle": "unix time", "bVisible": false, "sType": 'numeric'},
+                                    { "sTitle": "Timestamp", "bVisible": false, "sType": 'numeric'},
                                     { "sTitle": "Size", iDataSort: 7 },
                                     { "sTitle": "Byte Size", bVisible: false }];
 
@@ -1019,9 +1019,9 @@ angular.module('ws-directives')
                         }
 
                         // add show/hide column button
-                        var col_btn = $('<button class="btn btn-default">\
-                                       <span class="glyphicon glyphicon-cog"></span>\
-                                     </button>');
+                        var col_btn = $('<button class="btn btn-default btn-obj-table-settings">\
+                                            <span class="glyphicon glyphicon-cog"></span>\
+                                        </button>');
 
                         var dd = $('<div class="dd-columns">Show/Hide Columns:</div>');
 
@@ -1042,6 +1042,7 @@ angular.module('ws-directives')
                         col_btn.popover({container: 'body', content: dd, 
                                          html: true, placement: 'bottom', trigger:'manual'})
 
+                        col_btn.unbind('click')
                         col_btn.click(function() {
                             col_btn.popover('toggle')
                             dd.find('input').change(function() {
@@ -1061,7 +1062,7 @@ angular.module('ws-directives')
                         $('body').on('click', function (e) {
                             if (!$(col_btn).is(e.target) && $(col_btn).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
                                 // need to remove div due to styling conflicts
-                                $('.popover').remove(); 
+                                $('.dd-columns').parents('.popover').remove(); 
                             }
                         });
 

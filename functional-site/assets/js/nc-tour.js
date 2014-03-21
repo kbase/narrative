@@ -153,9 +153,13 @@ function Tour(settings) {
         }
 
         ele.tooltip('destroy'); // destroy the regular tooltips
-        ele.popover({content: '<div class="tour-text">'+text+'</div>', placement: placement, 
-                              trigger:'manual', html: true, container: 'body'});
-        ele.popover('show');
-        $('.popover').css('z-index', 9999);
+        
+        if (text) {
+            ele.popover({content: '<div class="tour-text">'+text+'</div>', placement: placement, 
+                                  trigger:'manual', html: true, container: 'body'});
+            ele.popover('show');
+            $('.popover').css('z-index', 9999);            
+        }
+
     }
 }

@@ -36,6 +36,7 @@ class URLS:
     #fba = "http://140.221.84.183:7036"
     fba = "https://kbase.us/services/KBaseFBAModeling"
     genomeCmp = "http://140.221.85.57:8283/jsonrpc"
+    treeDev = "http://140.221.85.58:8284"
 
 ## Exceptions
 

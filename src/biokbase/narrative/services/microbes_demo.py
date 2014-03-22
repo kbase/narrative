@@ -1186,6 +1186,35 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     #model2 = modeldata[1]
     return json.dumps({'ws_name': workspace, 'fba_model1_id': fba_model1, 'fba_model2_id': fba_model2, 'proteome_cmp': proteome_cmp})
 
+@method(name="Insert Genome into Species Tree")
+def _insert_genome_into_species_tree(meth, genome):
+    """ Insert a Genome into a global genome tree composed of 50 conserved COGs from 1400 genomes [20]
+
+    :param genome: a Genome to insert into the tree [20.1]
+    :type genome: kbtypes.KBaseGenomes.Genome
+    :ui_name genome: Genome ID
+    :return: Species Tree Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseTreeNarrative
+    """
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    return json.dumps({'blah': 'blah'})
+
+@method(name="View Species Tree")
+def _view_species_tree(meth, tree_id):
+    """ View a Species Tree from your workspace [21]
+
+    :param tree_id: a Species Tree id [21.1]
+    :type tree_id: kbtypes.Unicode
+    :ui_name tree_id: Tree ID
+    :return: Species Tree Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseTree
+    """
+    meth.stages = 1
+    workspace = meth.workspace_id
+    return json.dumps({'treeID': tree_id, 'workspaceID': workspace, 'height':'500px'})
 
 #
 #@method(name="Edit Data")

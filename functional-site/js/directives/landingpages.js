@@ -112,7 +112,7 @@ angular.module('lp-directives')
                 var prom = kb.req('fba', 'get_models',
                             {models: [id], workspaces: [ws]});
                 $.when(prom).done(function(data){
-                    $(p.body()).kbaseModelTabs({modelsData: data, api: kb.fba});
+                    $(p.body()).kbaseModelTabs({modelsData: data, api: kb.fba, ws: ws});
                     $(document).on('rxnClick', function(e, data) {
                         var url = '/rxns/'+data.ids;
                         scope.$apply( $location.path(url) );

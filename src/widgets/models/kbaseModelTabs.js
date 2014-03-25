@@ -19,10 +19,11 @@ $.KBWidget({
         this._super(options);
         var self = this;        
         var models = options.id;
+        var ws = options.ws
         var data = options.modelsData;
         var token = options.token;
         var fba = new fbaModelServices("http://kbase.us/services/fba_model_services"); //options.api;
-        console.log(models)
+        console.log(data)
 
         var container = this.$elem;
 
@@ -228,7 +229,7 @@ $.KBWidget({
                     var intGap = intGapfills[i];
                     if (intGap.length == 6) {
                         intGap.splice(0, 0, "Yes");
-                        intGap.splice(2, 1, '<a class="show-gap" data-ref="'+intGap[2]+'" data-ws="'+workspaces[0]+'">'
+                        intGap.splice(2, 1, '<a class="show-gap" data-ref="'+intGap[2]+'" data-ws="'+ws+'">'
                             +intGap[2]+'</a>');
                     }
                 }
@@ -238,7 +239,7 @@ $.KBWidget({
                     var unIntGap = unIntGapfills[i];
                     if (unIntGap.length == 6) {            
                         unIntGap.splice(0, 0, "No")
-                        unIntGap.splice(2, 1, '<a class="show-gap" data-ref="'+unIntGap[2]+'" data-ws="'+workspaces[0]+'" >'+
+                        unIntGap.splice(2, 1, '<a class="show-gap" data-ref="'+unIntGap[2]+'" data-ws="'+ws+'" >'+
                             unIntGap[2]+'</a>');
                     }
                 }
@@ -281,7 +282,8 @@ $.KBWidget({
             }
 
             function showGapfillSolutions(tr, gapRef) {
-                var gapAJAX = fba.get_gapfills({gapfills: [gapRef], workspaces: ws, auth: USER_TOKEN});
+                var gap_id = gapRef.split('/')[1]
+                var gapAJAX = fba.get_gapfills({gapfills: [gap_id], workspaces: [ws]});
                 $.when(gapAJAX).done(function(data) {
                     var data = data[0];  // only one gap fill solution at a time is cliclsked
                     var sols = data.solutions;
@@ -296,7 +298,7 @@ $.KBWidget({
 
                         if (sol.integrated == "1") {
                             solList.append('<div> <a type="button" class="gap-sol"\
-                                data-toggle="collapse" data-target="#'+gapRef+solID.replace(/\./g,'_')+'" >'+
+                                data-toggle="collapse" data-target="#'+gap_id+solID.replace(/\./g,'_')+'" >'+
                                 solID+'</a> <span class="caret" style="vertical-align: middle;"></span>\
                                  </div>');
                             /*
@@ -308,7 +310,7 @@ $.KBWidget({
                             */
                         } else {
                             solList.append('<div> <a type="button" class="gap-sol"\
-                                data-toggle="collapse" data-target="#'+gapRef+solID.replace(/\./g,'_')+'" >'+
+                                data-toggle="collapse" data-target="#'+gap_id+solID.replace(/\./g,'_')+'" >'+
                                 solID+'</a> <span class="caret" style="vertical-align: middle;"></span>\
                                 </div>');
 
@@ -339,7 +341,7 @@ $.KBWidget({
                             }
                         }
 
-                        var solResults = $('<div id="'+gapRef+solID.replace(/\./g,'_')+'" class="collapse">')
+                        var solResults = $('<div id="'+gap_id+solID.replace(/\./g,'_')+'" class="collapse">')
                         solResults.append(rxnInfo);
 
                         solList.append(solResults);
@@ -378,7 +380,6 @@ $.KBWidget({
                             model_workspace: ws,
                             gapfillSolutions: [gapfill_id],
                             gapgenSolutions: [''],
-                            auth: USER_TOKEN, 
                             workspace: ws})
 
                         $.when(fbaAJAX).done(function(data){

@@ -964,7 +964,8 @@ angular.module('ws-directives')
                         tableSettings.aaData = wsobjs;
 
                         // load object table
-                        var table = $('#'+table_id).dataTable(tableSettings);                    
+                        var table = $('#'+table_id).dataTable(tableSettings);       
+                        scope.$apply();             
 
                         // if there are objects, add 'select all' button, type filter,
                         // and trash bin.
@@ -1138,7 +1139,7 @@ angular.module('ws-directives')
                             var sub = obj_mapping[module][kind];
 
                             var new_id = '<a class="obj-id" data-ws="'+ws+'" data-id="'+id+'" \
-                                            data-type="'+type+'" data-sub="'+sub+'" >'
+                                            data-type="'+type+'" data-sub="'+sub+'" ui-sref="ws.'+sub+'({ws:'+ws+',id:'+id+'})" >'
                                             +id+'</a> (<a class="show-versions">'+instance+'</a>)\
                                           <a class="btn-show-info hide pull-right">More</a>'
                         } else {

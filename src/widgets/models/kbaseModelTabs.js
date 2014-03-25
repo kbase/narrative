@@ -19,11 +19,10 @@ $.KBWidget({
         this._super(options);
         var self = this;        
         var models = options.id;
-        var workspaces = options.ws;
         var data = options.modelsData;
         var token = options.token;
         var fba = new fbaModelServices("http://kbase.us/services/fba_model_services"); //options.api;
-
+        console.log(models)
 
         var container = this.$elem;
 
@@ -173,7 +172,7 @@ $.KBWidget({
             var active = false;
 
             var init_data = {
-              "sPaginationType": "full_numbers",
+             "sPaginationType": "bootstrap",                
               "fnDrawCallback": events,      
               "iDisplayLength": 20,
               "aoColumns": [
@@ -229,7 +228,7 @@ $.KBWidget({
                     var intGap = intGapfills[i];
                     if (intGap.length == 6) {
                         intGap.splice(0, 0, "Yes");
-                        intGap.splice(2, 1, '<a class="show-gap" data-ref="'+intGap[2]+'" >'
+                        intGap.splice(2, 1, '<a class="show-gap" data-ref="'+intGap[2]+'" data-ws="'+workspaces[0]+'">'
                             +intGap[2]+'</a>');
                     }
                 }
@@ -239,7 +238,7 @@ $.KBWidget({
                     var unIntGap = unIntGapfills[i];
                     if (unIntGap.length == 6) {            
                         unIntGap.splice(0, 0, "No")
-                        unIntGap.splice(2, 1, '<a class="show-gap" data-ref="'+unIntGap[2]+'" >'+
+                        unIntGap.splice(2, 1, '<a class="show-gap" data-ref="'+unIntGap[2]+'" data-ws="'+workspaces[0]+'" >'+
                             unIntGap[2]+'</a>');
                     }
                 }
@@ -267,6 +266,7 @@ $.KBWidget({
                 $('.show-gap').unbind('click');
                 $('.show-gap').click(function() {
                     var gapRef = $(this).data('ref');
+                    var ws = $(this).data('ref');                    
 
                     var tr = $(this).closest('tr')[0];
                     if ( gapTable.fnIsOpen( tr ) ) {
@@ -275,15 +275,15 @@ $.KBWidget({
                         gapTable.fnOpen( tr, '', "info_row" );
                         $(this).closest('tr').next('tr').children('.info_row').append('<p class="muted loader-gap-sol"> \
                             <img src="assets/img/ajax-loader.gif"> loading possible solutions...</p>')                
-                        showGapfillSolutions(tr, gapRef)   
+                        showGapfillSolutions(tr, gapRef, ws)   
                     }
                 });
             }
 
             function showGapfillSolutions(tr, gapRef) {
-                var gapAJAX = fba.get_gapfills({gapfills: [gapRef], workspaces: ["NO_WORKSPACE"], auth: USER_TOKEN});
+                var gapAJAX = fba.get_gapfills({gapfills: [gapRef], workspaces: ws, auth: USER_TOKEN});
                 $.when(gapAJAX).done(function(data) {
-                    var data = data[0];  // only one gap fill solution at a time is clicked
+                    var data = data[0];  // only one gap fill solution at a time is cliclsked
                     var sols = data.solutions;
 
                     //$(tr).next().children('td').append('<h5>Gapfill Details</h5>');

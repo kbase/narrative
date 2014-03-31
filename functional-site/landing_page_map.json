@@ -28,7 +28,8 @@
     "KBaseBiochem" : {
         "Biochemistry" : null,
         "Media" : "media",
-        "BiochemistryStructures" : null
+        "BiochemistryStructures" : null,
+        "MetabolicMap": "maps"
     },
 
     "KBaseCommunities" : {
@@ -141,6 +142,11 @@
     "ProbabilisticAnnotation" : {
         "RxnProbs" : null,
         "ProbAnno" : null
-    }
+    },
+
+    "Meta" : {
+        "RxnProbs" : null,
+        "ProbAnno" : null
+    }    
 
 }

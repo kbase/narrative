@@ -1166,7 +1166,8 @@ angular.module('ws-directives')
                         var ws = $(this).data('ws');
                         var sub = $(this).data('sub');
 
-                        if (type == 'FBAModel' || type == 'FBA' || type == 'Media') {
+                        if (type == 'FBAModel' || type == 'FBA' || type == 'Media' 
+                            || type == 'MetabolicMap') {
                             scope.$apply( $location.path('/ws/'+sub+'/'+ws+'/'+id) );
                         } else {
                             scope.$apply( $location.path('/'+sub+'/'+ws+'/'+id) );

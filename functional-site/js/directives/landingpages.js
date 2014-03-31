@@ -252,6 +252,28 @@ angular.module('lp-directives')
         };
     })
 
+    .directive('pathway', function() {
+        return {
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'Metabolic Pathway', 
+                                               type: 'Pathway',
+                                               rightLabel: 'N/A',
+                                               subText: scope.id});
+                p.loading();
+
+                console.log(scope.id, scope.ws)
+                var p1 = kb.req('ws', 'get_object',
+                            {id: scope.id, workspace: scope.ws});
+                $.when(p1).done(function(d) {
+                    $(p.body()).kbasePathway({map_id: scope.id, 
+                                              map_data: d.data, 
+                                              editable:true})
+                });
+
+            }
+        };
+    })    
+
     .directive('mediadetail', function() {
         return {
             link: function(scope, element, attrs) {

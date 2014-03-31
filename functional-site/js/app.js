@@ -85,6 +85,10 @@ var app = angular.module('landing-pages',
           url: "media/:ws/:id",
           templateUrl: 'views/ws/sortable/media.html',
           controller: 'WorkspaceBrowserLanding'
+        }).state('ws.map', {
+          url: "maps/:ws/:id",
+          templateUrl: 'views/ws/sortable/metabolic_map.html',
+          controller: 'WorkspaceBrowserLanding'
         }).state('ws.json', {
           url: "json/:ws/:id",
           templateUrl: 'views/ws/json.html',

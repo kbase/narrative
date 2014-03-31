@@ -64,7 +64,6 @@ $.KBWidget({
         function drawPathway(map_id, map_data) {
             var map = map_data;
 
-            container.find('#path-'+map_id).html('<div class="pathway"></div>');
 
             var svg = d3.select('#path-'+map_id+" .pathway").append("svg")
                                         .attr("width", 800)
@@ -438,6 +437,7 @@ $.KBWidget({
                     var p = $.getJSON('http://localhost/functional-site/assets/data/maps/xml/'+
                                  map_id+'_graph.json');                    
                     $.when(p).done(function(map_data){
+                        //$(kbasePathway({map_id: map_id, map_data: map_data})                        
                         drawPathway(map_id, map_data);
                     });
                 });

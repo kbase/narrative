@@ -16,13 +16,14 @@ MAINTAINER Steve Chan sychan@lbl.gov
 
 EXPOSE 8888
 ADD ./sources.list /etc/apt/sources.list
+ADD ./r-packages.R /root/r-packages.R
 
 # Create a deployment directory
 RUN mkdir -p /kb/deployment/services/narrative
 
-# Add the MongoDB repo
-#RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
-#RUN echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/10gen.list
+# Add the R CRAN repo
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
+RUN echo 'deb http://cran.r-project.org/bin/linux/ubuntu precise/' | tee /etc/apt/sources.list.d/cran.list
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
 
@@ -36,7 +37,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -f upgrade -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-base perl-modules make
 # Maybe this will get all the necessary dependencies!
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4 python-pip python-setuptools ipython-notebook python-matplotlib python-dev python-scipy python-numpy python-lxml python-sklearn python-sympy python-pandas
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev libcairo2-dev texlive-latex-base texlive-fonts-recommended curl git-core libzmq-dev libreadline6-dev libreadline-dev libssl-dev libxml2-dev libxslt1-dev r-recommended
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev libcairo2-dev texlive-latex-base texlive-fonts-recommended curl libcurl4-gnutls-dev git-core libzmq-dev libreadline6-dev libreadline-dev libssl-dev libxml2-dev libxslt1-dev
+
+# install R packages that seem to be handy
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended r-base-dev r-cran-lattice r-cran-matrix r-cran-mgcv r-cran-nlme r-cran-survival
+RUN R --vanilla < /root/r-packages.R
 
 # Clone in the python bootstrap and run it
 ADD ./bootstrap/kb_python_runtime /mini-bootstrap/kb_python_runtime

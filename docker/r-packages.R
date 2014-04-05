@@ -1,4 +1,4 @@
-options(repos = c(CRAN = "http://cran.rstudio.com/"))
+options(repos = c(CRAN = "http://cran.r-project.org/"))
 install.packages("ggplot2")  # powerful printing system
 install.packages("devtools")  # make dev life easier
 

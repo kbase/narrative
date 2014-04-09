@@ -60,39 +60,39 @@ var app = angular.module('landing-pages',
         .state('ws', {
           url: "/ws/",
           templateUrl: 'views/ws/ws.html',
-          controller: 'WorkspaceBrowser'
+          controller: 'WB'
         }).state('ws.tour', {
           url: "tour/",
           templateUrl: 'views/ws/objtable.html',
-          controller: 'WorkspaceBrowserTour'
+          controller: 'WBTour'
         }).state('ws.id', {
           url: "objtable/:ws",
           templateUrl: 'views/ws/objtable.html',
-          controller: 'WorkspaceBrowser'
+          controller: 'WB'
         }).state('ws.models', {
-          url: "models/:ws/:id",
+          url: "models/:ws/:id?map",
           templateUrl: 'views/ws/sortable/model.html',
-          controller: 'WorkspaceBrowserLanding'
+          controller: 'WBModelLanding'
         }).state('ws.fbas', {
-          url: "fbas/:ws/:id",
+          url: "fbas/:ws/:id?map",
           templateUrl: 'views/ws/sortable/fba.html',
-          controller: 'WorkspaceBrowserLanding'
+          controller: 'WBModelLanding'
         }).state('ws.genomes', {
           url: "genomes/:ws/:id",
           templateUrl: 'views/ws/sortable/genome.html',
-          controller: 'WorkspaceBrowserLanding'
+          controller: 'WBLanding'
         }).state('ws.media', {
           url: "media/:ws/:id",
           templateUrl: 'views/ws/sortable/media.html',
-          controller: 'WorkspaceBrowserLanding'
+          controller: 'WBLanding'
         }).state('ws.map', {
           url: "maps/:ws/:id",
           templateUrl: 'views/ws/sortable/metabolic_map.html',
-          controller: 'WorkspaceBrowserLanding'
+          controller: 'WBLanding'
         }).state('ws.json', {
           url: "json/:ws/:id",
           templateUrl: 'views/ws/json.html',
-          controller: 'WorkspaceBrowserJSON'
+          controller: 'WBJSON'
         })
 
     $stateProvider
@@ -395,7 +395,6 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
     kb = new KBCacheClient(USER_TOKEN);
     kb.nar.ensure_home_project(USER_ID);
-
 
     // global state object to store state
     state = new State();

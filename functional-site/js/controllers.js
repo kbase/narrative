@@ -79,6 +79,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                                             direction: 'left',
                                             duration: 'fast'});
                                     }
+
         });
     }
 
@@ -241,12 +242,12 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.id = $stateParams.id;
 })
 
-.controller('WorkspaceBrowser', function($scope, $stateParams) {
+.controller('WB', function($scope, $stateParams) {
     $scope.selected_ws = $stateParams.ws;
 })
 
 
-.controller('WorkspaceBrowserLanding', function($scope, $stateParams) {
+.controller('WBLanding', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
 
@@ -263,15 +264,23 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     });
 
     //$( "#sortable-landing" ).disableSelection();
-
 })
-.controller('WorkspaceBrowserJSON', function($scope, $stateParams) {
+
+
+.controller('WBModelLanding', function($scope, $stateParams, $state) {
+    $scope.$state = $state;
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+    $scope.defaultMap = $stateParams.map;
+})
+
+.controller('WBJSON', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
 
 })
 
-.controller('WorkspaceBrowserTour', function($scope, $stateParams, $location) {
+.controller('WBTour', function($scope, $stateParams, $location) {
     $scope.selected_ws = 'chenryExample';  // workspace to use for tour
 
     // if not logged in, prompt for login

@@ -14,7 +14,7 @@ $.KBWidget({
         self.fbas = options.fbaData;
         self.ws = options.ws;
         self.default_map = options.defaultMap
-        self.state = options.state;  //this should be an angular widget
+        self.scope = options.scope;  //this should be an angular widget
 
         console.log(self.state)
         console.log(self.fbas)
@@ -122,11 +122,11 @@ $.KBWidget({
             container.find('.pathway-tab').click(function() {
                 var map = $(this).data('map');
                 if (self.models) {
-                    self.state.transitionTo('ws.models', {map: map})
+                    self.scope.$state.go('ws.models', {map: map})
                 } else if (self.fbas) {
                     console.log('calling', map)
-                    console.log(self.state)
-                    self.state.transitionTo('ws.fbas', {map: map})
+                    console.log(self.self.scope.$state)
+                    self.scope.$state.go('ws.fbas', {map: map})
                 }
             });
         }

@@ -72,11 +72,13 @@ var app = angular.module('landing-pages',
         }).state('ws.models', {
           url: "models/:ws/:id?map",
           templateUrl: 'views/ws/sortable/model.html',
-          controller: 'WBModelLanding'
+          controller: 'WBModelLanding',
+          reloadOnSearch: false
         }).state('ws.fbas', {
           url: "fbas/:ws/:id?map",
           templateUrl: 'views/ws/sortable/fba.html',
-          controller: 'WBModelLanding'
+          controller: 'WBModelLanding',
+          reloadOnSearch: false          
         }).state('ws.genomes', {
           url: "genomes/:ws/:id",
           templateUrl: 'views/ws/sortable/genome.html',
@@ -207,12 +209,6 @@ var app = angular.module('landing-pages',
             {url:'/media/:ws/:id',
              templateUrl: 'views/objects/media.html',
              controller: 'MediaDetail'})
-
-    $stateProvider
-        .state('mvhelp',
-            {url: '/mv-help',
-             templateUrl: 'views/mv/mv-help.html',
-             controller: 'MVHelp'})
 
 
     $stateProvider

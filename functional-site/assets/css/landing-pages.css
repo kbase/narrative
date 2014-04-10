@@ -115,13 +115,11 @@ body {
     color: #333333;     
 }
 
-a:hover, 
-rect:hover,
-g:hover,
-circle:hover {
+a:hover {
     cursor: hand;
     cursor: pointer;
 }
+
 
 /* adjustments for fonts */
 .badge {

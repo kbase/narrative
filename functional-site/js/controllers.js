@@ -9,98 +9,9 @@
 */
 
 
-app.controller('ModelViewer', function($scope, $stateParams, $location) {
-    // style active tab
-    var tab = $location.path().split('/')[2];
-    $('.mv-tabs li').removeClass('active');
-    $('.'+tab+'-tab').addClass('active');
-
-
-    var q_string = $location.search();
-
-    // set selected workspace.
-    // this is only used for the objtable tab right now
-    //$scope.selected_ws = q_string.selected_ws;
-    //$scope.selected_ws = q_string.selected_ws ? q_string.selected_ws :
-    //                    $stateParams.selected_ws;
-    $scope.selected_ws = q_string.selected_ws ? q_string.selected_ws : false;
-
-
-    // set workspaces and ids.
-    $scope.ws_param = q_string.ws;
-    $scope.ids_param = q_string.ids;
-    $scope.ws = q_string.ws ? q_string.ws.split('+') : '';
-    $scope.ids = q_string.ids ? q_string.ids.split('+') : '';
-
-    // show tabs if there are objects selected
-    if ($scope.ids.length > 0) {
-        $('.core-tab').removeClass('hide');
-        $('.heatmap-tab').removeClass('hide');
-    } else {
-        $('.core-tab').addClass('hide');
-        $('.heatmap-tab').addClass('hide');
-    }
-
-    // events for workspace and selected object sidebar
-    $('.show-ws').unbind('click');
-    $('.show-ws').click(function(){
-        $(this).siblings('button').removeClass('active');
-        $(this).addClass('active');
-        $scope.showWSSelector();
-    });
-
-    $('.show-objs').unbind('click');    
-    $('.show-objs').click(function(){
-        $(this).siblings('button').removeClass('active');
-        $(this).addClass('active');
-        $scope.showSelectedObjs();
-
-    });
-
-    // define some functions for the navigation of the left sidebar
-    $scope.showSelectedObjs = function() {
-        $('.wsselector').toggle('slide', {
-                                direction: 'left',
-                                duration: 'fast',
-                                    complete: function() {
-                                    $('.selectedobjs').toggle('slide', {
-                                        direction: 'left',
-                                        duration: 'fast'});
-                                }
-        });
-    }
-
-    $scope.showWSSelector = function() {
-        $('.selectedobjs').toggle('slide', {
-                                    direction: 'left',
-                                    duration: 'fast',
-                                    complete: function() {
-                                        $('.wsselector').toggle('slide', {
-                                            direction: 'left',
-                                            duration: 'fast'});
-                                    }
-
-        });
-    }
-
-
-
-    // removes items from the selected objects view
-    $scope.removeItem = function(index){
-        $scope.selectedObjs.splice(index, 1);
-    }
-
-})
-
-
-.controller('Selector', function($scope, $location) {
-
-})
-
-.controller('RxnDetail', function($scope, $stateParams) {
+app.controller('RxnDetail', function($scope, $stateParams) {
     $scope.ids = $stateParams.ids.split('&');
 })
-
 
 .controller('CpdDetail', function($scope, $stateParams) {
     $scope.ids = $stateParams.ids.split('&');
@@ -118,7 +29,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
         $scope.$apply( $location.path( url ) );
     });
 })
-
 
 .controller('GenomeDetail', function($scope, $stateParams) {
     $scope.params = {'genomeID' : $stateParams.id,
@@ -267,17 +177,25 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 })
 
 
-.controller('WBModelLanding', function($scope, $stateParams, $state) {
-    $scope.$state = $state;
+.controller('WBModelLanding', function($scope, $stateParams, $location) {
+
+    var type = $location.path().split('/')[2];
+    if (type == 'fbas') {
+        type = "FBA";
+    } else if (type == "models") {
+        type = "Model";
+    }
+
+    $scope.type = type;  
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
     $scope.defaultMap = $stateParams.map;
+
 })
 
 .controller('WBJSON', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
-
 })
 
 .controller('WBTour', function($scope, $stateParams, $location) {

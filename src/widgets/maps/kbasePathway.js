@@ -21,7 +21,8 @@ $.KBWidget({
         var container = this.$elem;
 
         var stroke_color = '#666';
-        var stroke_width = 2;
+        var stroke_color2 = '#000';
+        var stroke_width = '1.5px';
         var highlight = 'steelblue';
 
         var flux_threshold = 0.001;
@@ -29,7 +30,7 @@ $.KBWidget({
         var neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00'];
         var gapfill_color = '#f000ff';
         var gene_stroke = '#777';
-        var g_present_color = '#8bc7e5';   
+        var g_present_color = '#8bc7e5';
 
         var rxns = map.reactions;
         var cpds = map.compounds;
@@ -64,10 +65,10 @@ $.KBWidget({
               .enter().append("svg:marker")    // This section adds in the arrows
                 .attr("id", 'end-arrow')
                 .attr("viewBox", "0 -5 10 10")
-                .attr("refX", 18)
+                .attr("refX", 16)
                 .attr("refY", 0)
-                .attr("markerWidth", 5)
-                .attr("markerHeight", 5)
+                .attr("markerWidth", 7)
+                .attr("markerHeight", 7)
                 .attr("orient", "auto")
                 .attr('fill', '#666')
               .append("svg:path")
@@ -156,12 +157,12 @@ $.KBWidget({
                 var group = svg.append('g').attr('class', 'rect');
 
                 // draw reactions (rectangles)
-                var outer_rect = group.append('rect').attr('x', x-1)
-                                  .attr('y', y-1)
+                var outer_rect = group.append('rect')
+                                  .attr('class', 'rxn')
+                                  .attr('x', x-1)
+                                  .attr('y', y-2)
                                   .attr('width', w)
                                   .attr('height', h)
-                                  .attr('fill', '#fff')
-                                  .attr('stroke', stroke_color);
 
                 found_rxns = getModelRxns(rxn.rxns);
 
@@ -171,13 +172,16 @@ $.KBWidget({
 
                     for (var i in found_rxns) {
                         var found_rxn = found_rxns[i];
-                            var rect = group.append('rect').attr('x', x+(w*i))
-                                        .attr('y', y-1)
+                            var rect = group.append('rect')
+                                        .attr('x', x+(w*i))
+                                        .attr('y', y-2)
                                         .attr('width', w)
                                         .attr('height', h)
 
                         if (found_rxn.length > 0) {
-                            rect.attr('fill', '#bbe8f9')
+                            rect.attr('fill', '#bbe8f9');
+                            rect.attr('stroke', stroke_color2);
+                            outer_rect.remove()
                         } else {
                             rect.attr('fill', '#fff')
                         }
@@ -193,7 +197,7 @@ $.KBWidget({
                     for (var i in fba_rxns) {
                         var found_rxn = fba_rxns[i];
                         var rect = group.append('rect').attr('x', x+(w*i))
-                                        .attr('y', y-1)
+                                        .attr('y', y-2)
                                         .attr('width', w)
                                         .attr('height', h)
 
@@ -203,7 +207,11 @@ $.KBWidget({
 
                         var color = get_heat_color(flux)
 
-                        rect.attr({'fill':color});
+                        rect.attr('fill', color);
+                        if (color != '#fff') {
+                            rect.attr('stroke', stroke_color2)
+                            outer_rect.remove()
+                        }
                     }
                 }                
 
@@ -221,8 +229,8 @@ $.KBWidget({
                 var text = group.append('text').text(rxn.name)
                                   .attr('x', x+2)
                                   .attr('y', y+h/2 + 2)
-                                  .style("font-size", "10px")
-                                  .style('stroke', stroke_color);
+                                  .attr('class', 'rxn-label')
+                                  .style('display', 'none');
 
 
                 //content for tooltip //fixme: need to do tooltips for each model
@@ -235,9 +243,13 @@ $.KBWidget({
 
                 // hide and show text on hoverover
                 $(group.node()).hover(function() {
-                    $(this).find('text').hide();
+                    if ($('[data-type=rxn-label]').attr('checked')) {
+                        $(this).find('text').hide();
+                    }
                 }, function() {
-                    $(this).find('text').show();
+                    if ($('[data-type=rxn-label]').attr('checked')) {
+                        $(this).find('text').show();
+                    }
                 })
             }
 
@@ -252,13 +264,11 @@ $.KBWidget({
                 var cpd = cpds[i];
                 var r = cpd.w;
                 var g = svg.append('g').attr('class', 'circle');
-                var circle = g.append('circle').attr('cx', cpd.x)
+                var circle = g.append('circle')
+                                  .attr('class', 'cpd')
+                                  .attr('cx', cpd.x)
                                   .attr('cy', cpd.y)
-                                  .attr('r', r)
-    	   						  .attr("stroke-width", stroke_width)                              
-                                  .style('fill', '#fff')
-                                  .style('stroke', stroke_color);
-
+                                  .attr('r', r);
 
                 var content = 'ID: ' + cpd.id+'<br>'+
                               'kegg id: ' + cpd.name;
@@ -293,7 +303,6 @@ $.KBWidget({
                 // since there are groups of reactions
                 var prods = rxn.product_refs;
                 var subs = rxn.substrate_refs;
-                console.log(model_rxns)
 
                 // draw substrate lines
                 for (var i in subs) {
@@ -313,33 +322,33 @@ $.KBWidget({
 
                             // create link from existing node to next node
                             links.push({source: node_ids.indexOf(id), target: nodes.length, 
-                                       value: 1, cpd_id: id, group_index: j, rxns:model_rxns,
-                                       line_type: 'substrate'}); 
+                                        value: 1, cpd_id: id, group_index: j, rxns:model_rxns,
+                                        line_type: 'substrate'}); 
 
                             // if there is a special path to draw the line on,
                             // draw nodes and links along path.
                             if (group.substrate_path) { 
                                 var path = group.substrate_path;
                                 links.push({source: nodes.length, target: nodes.length+1, 
-                                       value: 1, cpd_id: id, group_index: j, rxns: model_rxns,
-                                       line_type: 'substrate'}); 
+                                            value: 1, cpd_id: id, group_index: j, rxns: model_rxns,
+                                            line_type: 'substrate'}); 
                                 for (var k=1; k < path.length; k++) {
-                                    nodes.push({ x:path[k][0], y: path[k][1], fixed: true, 
-                                                point: 'point'});
+                                    nodes.push({x:path[k][0], y: path[k][1], fixed: true, 
+                                                style: 'point'});
                                     node_ids.push('null');
                                 }
                             } else {
-                                nodes.push({ x:x, y:y, fixed: true, point: 'point'});
+                                nodes.push({ x:x, y:y, fixed: true, style: 'point'});
                                 node_ids.push('null');
                             }
 
                         }  else {
                             links.push({source: nodes.length, target: nodes.length+1, value: 1,
                                         cpd_id: id, group_index: j, line_type: 'substrate', rxns:model_rxns}); 
-                            nodes.push({ x: cpd.x, y:cpd.y, fixed: true, type: 'compound', 
+                            nodes.push({x: cpd.x, y:cpd.y, fixed: true, type: 'compound', 
                                         name: cpd.label, cpd_index: k, rxns: model_rxns,
                                         label_x: cpd.label_x, label_y: cpd.label_y});
-                            nodes.push({ x:x, y:y, fixed: true, point: 'reaction'});
+                            nodes.push({x:x, y:y, fixed: true, style: 'reaction'});
                             node_ids.push(id);
                             node_ids.push('null');
                         }
@@ -357,6 +366,8 @@ $.KBWidget({
 
                         var id = cpd.id
 
+                        // if there is a special path to draw the line on,
+                        // draw nodes and links along path.
                         if (node_ids.indexOf(id) != -1 ) {
                             links.push({source: nodes.length, target: node_ids.indexOf(id), 
                                         value: 1, type: 'arrow', cpd_id: id, group_index: j,
@@ -369,11 +380,11 @@ $.KBWidget({
                                        line_type: 'product', rxns:model_rxns});                                 
                                 for (var k=1; k < path.length; k++) {
                                     nodes.push({ x:path[k][0], y: path[k][1], fixed: true, 
-                                                point: 'point'});
+                                                style: 'point'});
                                     node_ids.push('null');
                                 }
                             } else {
-                                nodes.push({ x: x, y:y, fixed:true})
+                                nodes.push({ x: x, y:y, fixed:true, style:'point'})
                                 node_ids.push('null');
                             }
 
@@ -381,10 +392,10 @@ $.KBWidget({
                             links.push({source: nodes.length, target: nodes.length+1, 
                                         value: 1, type: 'arrow', cpd_id: id, group_index: j,
                                         line_type: 'product', rxns:model_rxns})
-                            nodes.push({ x: x, y:y, fixed:true, point:'reaction'})
-                            nodes.push({ x:cpd.x, y:cpd.y, fixed: true, point: 'compound', 
-                                        name: cpd.label, cpd_index: k,
-                                        label_x: cpd.label_x, label_y: cpd.label_y})
+                            nodes.push({ x: x, y:y, fixed:true, style:'reaction'})
+                            nodes.push({ x:cpd.x, y:cpd.y, fixed: true, style: 'compound', 
+                                         name: cpd.label, cpd_index: k,
+                                         label_x: cpd.label_x, label_y: cpd.label_y})
                             node_ids.push('null');
                             node_ids.push(id);
                         }
@@ -402,33 +413,33 @@ $.KBWidget({
                             .on('tick', tick)
                             .start()
 
+            // define connections between compounds and reactions (nodes)
             var link = svg.selectAll(".link")
                   .data(links)
                 .enter().append("g").append('line')
                   .attr("class", "link")
-                  .style("stroke-width", 2)
+                  .style("stroke-width", stroke_width)
                   .style('stroke', function(d) {
-                    // fixme: this only works for one model
-                    console.log('model_rxns used', d.rxns)
-                    var found_rxns = getFbaRxns(d.rxns)[0]
-                    console.log('result', found_rxns)
-
-                    if (found_rxns.length) {
-                        // fixme: only using first flux value from first model
-                        var flux = found_rxns[0][1];
-                        console.log(flux)
-
-                        if (flux > flux_threshold) {
-                            var c = '#f28e8e'
-                        } else if (-flux > flux_threshold) {
-                            var c = '#c9d33e'
-                        } else {
-                           c = '#666'; 
-                       }
-                    } else {
                         c = '#666';
-                    }
-                    return c;
+    
+                        // if there is fba data, color lines
+                        if (self.fbas) {
+                            // fixme: this only works for one model
+                            var found_rxns = getFbaRxns(d.rxns)[0]
+
+                            if (found_rxns.length) {
+                                // fixme: only using first flux value from first model
+                                var flux = found_rxns[0][1];
+
+                                if (flux > flux_threshold) {
+                                    var c = '#f28e8e';
+                                } else if (-flux > flux_threshold) {
+                                    var c = '#c9d33e';
+                                } 
+                            }
+                        } else {
+                            return c;
+                        }
                   })
 
             var node = svg.selectAll(".node")
@@ -439,7 +450,7 @@ $.KBWidget({
 
             node.append("circle")
                   .attr('fill', '#fff')
-                  .attr('stroke-width', '2')
+                  .style('stroke-width', stroke_width)
                   .attr('stroke', stroke_color)
 
             node.append("text")
@@ -468,9 +479,9 @@ $.KBWidget({
             
                 // size the circles depending on kind of point
                 node.select('circle').attr("r", function(d) { 
-                        if (d.point == "point") {
+                        if (d.style == "point") {
                             return 0;
-                        } else if (d.point == "reaction") {
+                        } else if (d.style == "reaction") {
                             return 1;
                         } else {
                             return 7;
@@ -494,18 +505,18 @@ $.KBWidget({
                 var group = svg.append('g');
 
                 // draw reactions (rectangles)
-                var rect = group.append('rect').attr('x', x)
+                var rect = group.append('rect')
+                                  .attr('class', 'map')
+                                  .attr('x', x)
                                   .attr('y', y)
                                   .attr('width', w)
                                   .attr('height', h)
-                                  .style('fill', '#fff')
-                                  .style('stroke', stroke_color)
 
-                var text = group.append('text').text(map.name)
+                var text = group.append('text')
+                                  .attr('class', 'map-label')
+                                  .text(map.name)
                                   .attr('x', x+2)
-                                  .attr('y', y+h/2)
-                                  .style("font-size", "10px")
-                                  .style('stroke', stroke_color)
+                                  .attr('y', y+10)
                                   .call(wrap, w+2);
 
             }
@@ -729,6 +740,9 @@ $.KBWidget({
 
             var opts = $('<div class="opts-dd">Display:\
                         <div class="checkbox">\
+                            <label><input type="checkbox" data-type="rxn-label" value="">Enzymes Labels</label>\
+                        </div>\
+                        <div class="checkbox">\
                             <label><input type="checkbox" data-type="rect" value="" checked="checked">Enzymes</label>\
                         </div>\
                         <div class="checkbox">\
@@ -738,7 +752,7 @@ $.KBWidget({
                             <label><input type="checkbox" data-type="line" checked="checked">Lines</label>\
                         </div>\
                         <div class="checkbox">\
-                            <label><input type="checkbox" data-type="cpd-label" checked="checked">Labels</label>\
+                            <label><input type="checkbox" data-type="cpd-label" checked="checked">Compound Labels</label>\
                         </div>\
                         </div>')
 
@@ -844,10 +858,6 @@ $.KBWidget({
                  .append("circle").attr({
                    r: 0,
                  }).attr('class','line-start')
-                 .style("fill", "#F00")
-                 .attr('fill-opacity', .3)
-                 .attr('stroke', '#000')
-                 .attr('stroke-width', 1)
                  .transition()
                       .duration(750)
                       .ease("elastic")
@@ -862,10 +872,6 @@ $.KBWidget({
                  .append("circle").attr({
                    r: 0,
                  }).attr('class','line-end')
-                 .style("fill", "#F00")
-                 .attr('fill-opacity', .3)
-                 .attr('stroke', '#000')
-                 .attr('stroke-width', 1)
                  .transition()
                       .duration(750)
                       .ease("elastic")
@@ -894,9 +900,6 @@ $.KBWidget({
                                  .attr("y1", y1)
                                  .attr("x2", x)
                                  .attr("y2", y)
-                                 .attr("stroke-width", stroke_width)
-                                 .attr("stroke", stroke_color)
-                                 .attr("fill", stroke_color)
 
                     var line2 = d3.select(g).append("line")
                                  .attr('class', 'line2')
@@ -904,9 +907,6 @@ $.KBWidget({
                                  .attr("y1", y)
                                  .attr("x2", x2)
                                  .attr("y2", y2)
-                                 .attr("stroke-width", stroke_width)
-                                 .attr("stroke", stroke_color)
-                                 .attr("fill", stroke_color)
 
                     if (type == 'arrow') {
                         line2.attr('marker-end', "url(#end-arrow)");
@@ -914,33 +914,15 @@ $.KBWidget({
 
                     // to be stored
                     var wayPoints = [[x1, y1], [x,y], [x2,y2]]
-                    /*
-                    svg.append("circle")
-                      .attr("r", 1e-6)
-                      .attr("cx", x)
-                      .attr("cy", y)
-                      .attr('class', 'middle')
-                      .style("fill", "#F00")
-                      .attr('fill-opacity', .3)
-                      .attr('stroke', '#000')
-                      .attr('stroke-width', 1)                                           
-                    .transition()
-                      .duration(750)
-                      .ease("elastic")
-                      .attr("r", 6.5)*/
 
-                      // mid, draggable circle
-                      var mid = d3.select(g).append("g")
+                    // mid, draggable circle
+                    var mid = d3.select(g).append("g")
                          .attr("transform", "translate(" + x + "," + y + ")")
                          .attr("class", "middle")
                          .call(drag)
                          .append("circle").attr({
                            r: 0,
-                         }).attr('class','line-end')
-                         .style("fill", "#F00")
-                         .attr('fill-opacity', .3)
-                         .attr('stroke', '#000')
-                         .attr('stroke-width', 1)
+                         }).attr('class','line-middle')
                          .transition()
                               .duration(750)
                               .ease("elastic")

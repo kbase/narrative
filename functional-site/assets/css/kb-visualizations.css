@@ -1,0 +1,64 @@
+
+
+
+rect:hover,
+circle:hover,
+line,
+.cpd-label,
+.edited-label{
+    cursor: hand;
+    cursor: pointer;
+}
+
+/*
+        var stroke_color = '#666';
+        var stroke_color2 = '#000';
+        var stroke_width = '1.5px';
+        var highlight = 'steelblue';
+
+        var flux_threshold = 0.001;
+        var heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
+        var neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00'];
+        var gapfill_color = '#f000ff';
+        var gene_stroke = '#777';
+        var g_present_color = '#8bc7e5';
+        */
+
+/* kegg map styling */
+.line1, 
+.line2,
+.link {
+	stroke-width: 1.5px;
+	stroke: #666;
+}
+
+
+.line-start, 
+.line-middle, 
+.line-end {
+	fill: #F00;
+	fill-opacity: 0.3;
+	stroke: #000;
+	style-width: 1.5px;
+}
+
+
+.rxn, 
+.map{
+	fill: #fff;
+	stroke-width: 1.5px;
+	stroke: #666;
+}
+
+.rxn-label,
+.map-label {
+	font-size: 10px;
+	stroke: #666;
+}
+
+.cpd {
+	stroke-width: 1.5px;
+	fill: #fff;
+	stroke: #666;
+}
+

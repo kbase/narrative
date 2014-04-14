@@ -922,7 +922,7 @@ angular.module('ws-directives')
                         "oColReorder": {
                             "iFixedColumns": (USER_ID ? 1 :0 ),
                         },
-                        "iDisplayLength": 10,
+                        "iDisplayLength": 100,
                         "aaData": [],
                         "fnDrawCallback": events,
                         "aaSorting": [[ 3, "desc" ]],
@@ -967,11 +967,6 @@ angular.module('ws-directives')
                             // if logged in, add select all button to table options 
                             //datatables.bootstrap file for template
 
-                            //var select_all = $('<button class="btn btn-default btn-select-all hide">\
-                            //        <div class="ncheck check-option"></div></button> ');
-                            //$('.table-options').append(select_all);
-
-
                             // add type filter
                             var type_filter = $('<select class=" type-filter form-control">\
                                                 <option selected="selected">All Types</option> \
@@ -1008,10 +1003,6 @@ angular.module('ws-directives')
                         if (USER_ID) {
                             trash_btn.removeClass('hide');
                         }
-
-                        //if (USER_ID && data.length) {
-                        //    select_all.removeClass('hide');
-                        //}
 
                         // add show/hide column button
                         var col_btn = $('<button class="btn btn-default btn-obj-table-settings">\

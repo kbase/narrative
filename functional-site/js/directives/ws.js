@@ -67,22 +67,19 @@ angular.module('ws-directives')
                     workspaces = []
                     scope.workspace_dict = {}
 
-                    var prom = kb.ws.list_workspaces({});
+                    var prom = kb.ws.list_workspace_info({});
                     $('.select-box').loading();
                     $.when(prom).done(function(data) {
-
                         $('.select-box').rmLoading();
 
                         var sorted_ws = [];
                         var owned_ws = [];
                         for (var i in data) {
                             var ws = data[i];
+                            var user = ws[2];
 
                             //quick fix to hide search workspaces
-                            if (ws[1]== "kbasesearch") continue;  
-
-                            var user = ws[1];
-                            var perm = ws[4];
+                            if (user == "kbasesearch") continue;  
 
                             if (user == USER_ID) {
                                 owned_ws.push(ws);
@@ -92,25 +89,21 @@ angular.module('ws-directives')
                         }
 
                         var data = owned_ws.concat(sorted_ws);
-
                         for (var i in data) {
                             var ws = data[i];
-                            var name = ws[0];
-                            var user = ws[1];
-                            var obj_count = ws[3];
-                            var perm = ws[4];
-                            var global_perm = ws[5];
+                            var name = ws[1];
+                            var user = ws[2];
+                            var obj_count = ws[4];
+                            var perm = ws[5];
+                            var global_perm = ws[6];
                             //var short_ws = ws[0].slice(0,12) + '...'
 
-                            if (user == USER_ID) {
-                                var selector = $('<tr><td class="select-ws" data-ws="'+name+'">\
-                                                                <div class="badge pull-left">'+obj_count+'</div>'+
-                                                            ' &nbsp;<div class="pull-left ellipsis"> <b>'+name+'</b></div></td></tr>');
-                            } else {
-                                var selector = $('<tr><td class="select-ws" data-ws="'+name+'">\
-                                                                <div class="badge pull-left">'+obj_count+'</div>'+
-                                                            ' &nbsp;<div class="pull-left ellipsis">'+name+'</div></td></tr>');
-                            }
+
+                            var selector = $('<tr><td class="select-ws" data-ws="'+name+'">'+
+                                                '<div class="badge pull-left">'+obj_count+'</div>'+
+                                                ' &nbsp;<div class="pull-left ellipsis"> '+
+                                                (user == USER_ID ? '<b>'+name+'</b>': name)+'</div></td></tr>');
+
                             selector.find('td').append('<button type="button" class="btn \
                                                 btn-default btn-xs btn-ws-settings hide pull-right" data-ws="'+name+'">\
                                                 <span class="glyphicon glyphicon-cog"></span></button>');
@@ -902,8 +895,9 @@ angular.module('ws-directives')
                     showObjOpts = false;
                     var table_id = "obj-table-"+ws.replace(':',"_");                    
 
-                    var columns =  [(USER_ID ? { "sTitle": "", bSortable: false, "sWidth": "1%"} 
-                                             : { "sTitle": "", bVisible: false, "sWidth": "1%"}),
+                    var columns =  [ (USER_ID ? { "sTitle": '<div class="ncheck check-option btn-select-all"></div>',
+                                                 bSortable: false, "sWidth": "1%"} 
+                                              : { "sTitle": '', bVisible: false, "sWidth": "1%"}),
                                     { "sTitle": "Name"}, //"sWidth": "10%"
                                     { "sTitle": "Type"},
                                     { "sTitle": "Last Modified", "iDataSort": 5},
@@ -973,9 +967,9 @@ angular.module('ws-directives')
                             // if logged in, add select all button to table options 
                             //datatables.bootstrap file for template
 
-                            var select_all = $('<button class="btn btn-default btn-select-all hide">\
-                                    <div class="ncheck check-option"></div></button> ');
-                            $('.table-options').append(select_all);
+                            //var select_all = $('<button class="btn btn-default btn-select-all hide">\
+                            //        <div class="ncheck check-option"></div></button> ');
+                            //$('.table-options').append(select_all);
 
 
                             // add type filter
@@ -1015,9 +1009,9 @@ angular.module('ws-directives')
                             trash_btn.removeClass('hide');
                         }
 
-                        if (USER_ID && data.length) {
-                            select_all.removeClass('hide');
-                        }
+                        //if (USER_ID && data.length) {
+                        //    select_all.removeClass('hide');
+                        //}
 
                         // add show/hide column button
                         var col_btn = $('<button class="btn btn-default btn-obj-table-settings">\
@@ -1258,16 +1252,16 @@ angular.module('ws-directives')
                     $('.btn-select-all').unbind('click') 
                     $('.btn-select-all').click(function(){
                         // if select all button is already checked, removed all checked
-                        if ($(this).find('.check-option').hasClass('ncheck-checked')) {
+                        if ($(this).hasClass('ncheck-checked')) {
                             $('.obj-check-box').removeClass('ncheck-checked');
-                            $(this).find('.check-option').removeClass('ncheck-checked');
+                            $(this).removeClass('ncheck-checked');
                             scope.checkedList = []
                             scope.$apply()
                         // otherwise, check all
                         } else {
                             $('.obj-check-box').addClass('ncheck-checked');
-                            $(this).find('.check-option').removeClass('ncheck-minus');
-                            $(this).find('.check-option').addClass('ncheck-checked');
+                            $(this).removeClass('ncheck-minus');
+                            $(this).addClass('ncheck-checked');
 
                             scope.checkedList = [];
                             $('.obj-check-box').each(function(){
@@ -1325,7 +1319,7 @@ angular.module('ws-directives')
                         }
 
                         if (scope.checkedList.length == 0){
-                            $('.btn-select-all').find('.check-option')
+                            $('.btn-select-all')
                                         .removeClass('ncheck-checked');                            
                             showObjOpts = false;
                         } 

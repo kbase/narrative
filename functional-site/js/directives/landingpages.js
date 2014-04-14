@@ -230,7 +230,7 @@ angular.module('lp-directives')
         };
     })
 
-    .directive('pathways', function($location) {
+    .directive('pathways', function($location, $compile) {
         return {
             link: function(scope, element, attrs) {
                 var type = scope.type;
@@ -242,13 +242,14 @@ angular.module('lp-directives')
                 p.loading();
 
                 if (type == "Model") {
-                    var prom = kb.req('fba', 'get_models',
-                                {models: [scope.id], workspaces: [scope.ws]});
+                    var prom = kb.req('ws', 'get_objects',
+                                [{objid: scope.id, workspace: scope.ws}]);
                                        
                     $.when(prom).done(function(d) {
+                        console.log(d)
                         $(p.body()).pathways({modelData: d, 
                                     ws: map_ws, defaultMap: scope.defaultMap,
-                                    scope: scope})   
+                                    scope: scope});
                     }).fail(function(e){
                         $(p.body()).append('<div class="alert alert-danger">'+
                                     e.error.message+'</div>');
@@ -327,8 +328,13 @@ angular.module('lp-directives')
                             var aaData = [];
                             for (var i in d) {
 
-                                var obj = d[i]
-                                var name = '<a class="pathway-link" data-map="'+obj[1]+'">'+obj[1]+'</a>';
+                                var obj = d[i]  //ui-sref="contacts.detail({ id: contact.id })"
+                                var link = '<a href="#/ws/models/'+scope.ws+'/'+scope.id+'" \
+                                        class="pathway-link" data-map="'+obj[1]+'">'+obj[1]+'</a>'
+                                var name = link
+                                console.log(link)
+                                //var name = $compile(link)(scope);
+                           $(element).append(name)                                
                                 aaData.push([name])
                             }
 
@@ -344,6 +350,7 @@ angular.module('lp-directives')
                         });
                     }
                     load_map_list()
+                    //scope.$compile()
 
 
 
@@ -465,6 +472,9 @@ angular.module('lp-directives')
                                               map_id: scope.id, 
                                               map_data: d.data, 
                                               editable:true})
+                }).fail(function(e){
+                        $(p.body()).append('<div class="alert alert-danger">'+
+                                    e.error.message+'</div>');
                 });
 
             }

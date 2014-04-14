@@ -459,11 +459,6 @@ div::-webkit-scrollbar-thumb {
     background-image: -webkit-image-set(url(../img/checkmark-partial.png) 1x,url(../img/checkmark-partial_2x.png) 2x);
 }
 
-.btn-select-all {
-    height: 34px;
-    margin: 0 20px 0 0;
-}
-
 .type-filter {
     margin: 0 20px 0 0;
 }

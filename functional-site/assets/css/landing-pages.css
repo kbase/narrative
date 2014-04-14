@@ -120,6 +120,10 @@ a:hover {
     cursor: pointer;
 }
 
+/* line with smaller margin */
+.hr {
+    margin: 5px 0;
+}
 
 /* adjustments for fonts */
 .badge {
@@ -308,6 +312,12 @@ div::-webkit-scrollbar-thumb {
 .select-ws .btn-ws-settings {
     padding: 3px 7px 0 7px;
     margin: -3px;
+}
+
+.btn-settings-opt {
+    width: 80%;
+    margin-right: auto;
+    margin-left: auto;
 }
 
 .modal-alert {

@@ -961,6 +961,60 @@ angular.module('ws-directives')
                         var table = $('#'+table_id).dataTable(tableSettings);       
                         scope.$apply();             
 
+
+
+                        // add trashbin
+                        var trash_btn = $('<a class="btn-trash pull-right hide">Trash \
+                                    <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
+                        trash_btn.tooltip({title: 'View trash bin', placement: 'bottom', delay: {show: 700}})                                                            
+
+                        trash_btn.click(function(){
+                            displayTrashBin(deleted_objs, obj_mapping)
+                        })
+                        $('.dataTables_filter').after(trash_btn);
+
+                        // show these options if logged in.
+                        if (USER_ID) {
+                            trash_btn.removeClass('hide');
+                        }
+
+                        // add show/hide column settings button
+                        var settings_btn = $('<div class="dropdown pull-left">'+
+                                  '<a class="btn btn-default" data-toggle="dropdown" href="#">'+
+                                    '<span class="glyphicon glyphicon-cog"></span> <span class="caret"></span>'+
+                                  '</a>'+
+                                '</div>')
+
+                        var dd = $('<ul class="dropdown-menu" role="menu"></ul>');
+                        settings_btn.append(dd)
+
+                        var cols = tableSettings.aoColumns;
+                        for (var i in cols) {
+                            if (cols[i].sTitle.indexOf('ncheck') != -1) continue;  // ignore checkbox col
+                            dd.append('<div class="btn-settings-opt">'+
+                                         '<label><input type="checkbox" data-col="'+cols[i].sTitle+'" '+
+                                                (cols[i].bVisible == false ? '' : 'checked="checked"')+ 
+                                         '>'+cols[i].sTitle+'</label>\
+                                       </div>');
+                        }
+                        dd.append('<hr class="hr">')
+                        var reset_btn = $('<button class="btn btn-default btn-settings-opt">Default Settings</button>')
+
+                        dd.append(reset_btn)
+
+                            dd.find('input').change(function() {
+                                var col_name = $(this).data('col')
+                                console.log(col_name)
+                                fnShowHide(table, col_name);
+                            }) 
+                            reset_btn.click( function () {
+                                reset_dt_view()
+                                scope.loadObjTable();
+                            } );                        
+
+                        $('.table-options').append(settings_btn);
+
+
                         // if there are objects, add 'select all' button, type filter,
                         // and trash bin.
                         if (data.length) {
@@ -988,71 +1042,6 @@ angular.module('ws-directives')
                             // event for when an object checkbox is clicked
                             checkBoxObjectClickEvent('.obj-check-box');
                         }
-
-                        // add trashbin
-                        var trash_btn = $('<a class="btn-trash pull-right hide">Trash \
-                                    <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
-                        trash_btn.tooltip({title: 'View trash bin', placement: 'bottom', delay: {show: 700}})                                                            
-
-                        trash_btn.click(function(){
-                            displayTrashBin(deleted_objs, obj_mapping)
-                        })
-                        $('.dataTables_filter').after(trash_btn);
-
-                        // show these options if logged in.
-                        if (USER_ID) {
-                            trash_btn.removeClass('hide');
-                        }
-
-                        // add show/hide column button
-                        var col_btn = $('<button class="btn btn-default btn-obj-table-settings">\
-                                            <span class="glyphicon glyphicon-cog"></span>\
-                                        </button>');
-
-                        var dd = $('<div class="dd-columns">Show/Hide Columns:</div>');
-
-                        var cols = tableSettings.aoColumns;
-                        for (var i in cols) {
-                            if (cols[i].sTitle == '') continue;  // ignore checkbox col
-                            dd.append('<div class="checkbox">'+
-                                         '<label><input type="checkbox" data-col="'+cols[i].sTitle+'" '+
-                                                (cols[i].bVisible == false ? '' : 'checked="checked"')+ 
-                                         '>'+cols[i].sTitle+'</label>\
-                                       </div>');
-                        }
-                        dd.append('<hr>')
-                        var reset_btn = $('<button class="btn btn-default">Default Settings</button>')
-
-                        dd.append(reset_btn)
-
-                        col_btn.popover({container: 'body', content: dd, 
-                                         html: true, placement: 'bottom', trigger:'manual'})
-
-                        col_btn.unbind('click')
-                        col_btn.click(function() {
-                            col_btn.popover('toggle')
-                            dd.find('input').change(function() {
-                                var col_name = $(this).data('col')
-                                fnShowHide(table, col_name);
-                            }) 
-                            reset_btn.click( function () {
-                                reset_dt_view()
-                                scope.loadObjTable();
-                                 $('.popover').remove(); 
-                            } );
-
-                        })
-
-                        // event for hiding settings popover
-                        $('body').unbind('click')
-                        $('body').on('click', function (e) {
-                            if (!$(col_btn).is(e.target) && $(col_btn).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-                                // need to remove div due to styling conflicts
-                                $('.dd-columns').parents('.popover').remove(); 
-                            }
-                        });
-
-                        $('.table-options').append(col_btn);
 
                         searchColumns
                         addOptionButtons();

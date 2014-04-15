@@ -3,6 +3,7 @@
 # sychan 7/12/2013
 #
 
+from __future__ import print_function
 from IPython.core.magic import (Magics, magics_class, line_magic,
                                 cell_magic, line_cell_magic)
 
@@ -13,6 +14,9 @@ import random
 import string
 import os
 import time
+import sys
+import types
+
 from IPython.core.display import display, Javascript
 from ast import literal_eval
 from IPython.display import HTML
@@ -36,45 +40,6 @@ endpoint = { 'invocation' : 'https://kbase.us/services/invocation',
 # IPython interpreter object
 ip = None
 
-#
-# Some helper code to prompt for a password from
-# https://github.com/minrk/ipython_extensions/blob/master/nbinput.py
-#
-# This code is supposed to be obsolete once we merge with IPython 1.0
-# and will be removed
-#
-def nbgetpass(user_id):
-    display(Javascript("""
-var dialog = $('<div/>').append(
-    $('<input/>')
-    .attr('id', 'password')
-    .attr('name', 'password')
-    .attr('type', 'password')
-    .attr('value', '')
-);
-$(document).append(dialog);
-dialog.dialog({
-    resizable: false,
-    modal: true,
-    title: "Password for %s",
-    closeText: '',
-    buttons : {
-        "Okay": function () {
-            IPython.notebook.kernel.execute(
-                "biokbase.narrative.do_login( '%s', '" + $("input#password").attr('value') + "')"
-            );
-            $(this).dialog('close');
-            dialog.remove();
-        },
-        "Cancel": function () {
-            $(this).dialog('close');
-            dialog.remove();
-        }
-    }
-});
-""" % (user_id,user_id)), include=['application/javascript'])
-                                  
-
 # Actually performs the login with username and password
 def do_login( user, password):
     global user_id, token, user_profile, inv_client, inv_session
@@ -85,23 +50,21 @@ def do_login( user, password):
         else:
             raise biokbase.auth.AuthFail( "Could not get token with username and password given")
     except biokbase.auth.AuthFail, a:
-        print "Failed to login with username password provided. Please try again."
+        print("Failed to login with username password provided. Please try again.",file=sys.stderr)
         token = None
     if token is not None:
-        print "Logged in as %s" % user_id
+        print("Logged in as %s" % user_id,file=sys.stderr)
 
 def set_token( newtoken):
     global user_id, token, user_profile, inv_client, inv_session
     if newtoken:
         token = newtoken
-        #print "Calling biokbase.auth.set_environ_token"
         biokbase.auth.set_environ_token( token)
-        #print "%s = %s" % (biokbase.auth.tokenenv, os.environ[ biokbase.auth.tokenenv])
         user_profile = biokbase.auth.User( token = token)
         user_id = user_profile.user_id
         # If we had a previous session, clear it out
         if inv_session is not None:
-            print "Clearing anonymous invocation session"
+            print("Clearing anonymous invocation session",file=sys.stderr)
             inv_client.exit_session( inv_session)
         inv_client = None
         inv_session = None
@@ -110,14 +73,14 @@ def set_token( newtoken):
 def clear_token():
     global user_id, token, user_profile, inv_client, inv_session
     if token is not None:
-        print "Clearing credentials and profile for %s" % user_id
+        print("Clearing credentials and profile for %s" % user_id,file=sys.stderr)
         user_id = None
         token = None
         user_profile = None
     biokbase.auth.set_environ_token( None)
     # If we had a previous session, clear it out
     if inv_session is not None:
-        print "Clearing anonymous invocation session"
+        print("Clearing anonymous invocation session",file=sys.stderr)
         inv_client.exit_session( inv_session)
     inv_client = None
     inv_session = None
@@ -139,9 +102,9 @@ class kbasemagics(Magics):
         global user_id, token, user_profile, inv_client, inv_session
         # display(Javascript("IPython.notebook.kernel.execute( 'biokbase.narrative.have_browser = 1')"))
         if user_id is not None:
-            print "Already logged in as %s. Please kblogout first if you want to re-login" % user_id
+            print("Already logged in as %s. Please kblogout first if you want to re-login" % user_id,file=sys.stderr)
         elif user is None:
-            print "kblogin requires at least a username"
+            print("kblogin requires at least a username",file=sys.stderr)
         else:
             try:
                 # try to login with only user_id in case there is an ssh_agent running
@@ -155,7 +118,7 @@ class kbasemagics(Magics):
                 else:
                     raise biokbase.auth.AuthFail( "Could not get token with username and password given")
             except biokbase.auth.AuthFail, a:
-                print "Failed to login with username password provided. Please try again."
+                print("Failed to login with username password provided. Please try again.",file=sys.stderr)
                 token = None
         if token is not None:
             return user_id
@@ -176,7 +139,7 @@ class kbasemagics(Magics):
         if user_id is not None:
             raise Exception( "Already logged in as %s. Please logout first if you want to re-login" % user_id)
         if user is None:
-            print "kb_nblogin requires at least a username"
+            print("kb_nblogin requires at least a username",file=sys.stderr)
         else:
             # try to login with only user_id in case there is an ssh_agent running
             try:
@@ -199,23 +162,24 @@ class kbasemagics(Magics):
         clear_token()
         return
         
-    def invoke_session(self):
-        "Return the current invocation session id, create one if necessary"
+    @line_magic
+    def invoke_session(self, line):
+        "Return the current invocation session id, create one if necessary. Parameters are ignored"
         global user_id, token, user_profile, inv_client, inv_session, endpoint
 
         if inv_client is None:
             if token is None:
-                print "You are not currently logged in, using anonymous, unauthenticated access"
+                print("You are not currently logged in, using anonymous, unauthenticated access",file=sys.stderr)
             try:
                 inv_client = InvocationClient( url = endpoint['invocation'], token = token)
                 sess_id = "nrtv_" + str(int(time.time())) + "_" + ''.join(random.choice(string.hexdigits) for x in range(6))
                 inv_session = inv_client.start_session(sess_id)
                 if inv_session == sess_id:
-                    print "New anonymous session created : %s" % inv_session
+                    print("New anonymous session created : %s" % inv_session,file=sys.stderr)
                 else:
-                    print "New authenticated session created for user %s" % user_id
+                    print("New authenticated session created for user %s" % user_id,file=sys.stderr)
             except Exception, e:
-                print "Error initializing a new invocation service client: %s" % e
+                print("Error initializing a new invocation service client: %s" % e,file=sys.stderr)
         return inv_session
                 
     @line_cell_magic
@@ -224,7 +188,8 @@ class kbasemagics(Magics):
         global user_id, token, user_profile, inv_client, inv_session
         sess = self.invoke_session()
         res = inv_client.run_pipeline( sess, line, [], 200, '/')
-        
+        if res[1]:
+            print("".join(res[1]),file=sys.stderr)
         return res[0]
 
     @line_magic
@@ -250,7 +215,7 @@ class kbasemagics(Magics):
         global user_id, token, user_profile, inv_client, inv_session,inv_cwd
         sess = self.invoke_session()
         if len(line) < 1:
-            print "Error - must specify a new directory name"
+            print("Error - must specify a new directory name",file=sys.stderr)
             res = None
         else:
             cwd = inv_cwd
@@ -264,7 +229,7 @@ class kbasemagics(Magics):
         global user_id, token, user_profile, inv_client, inv_session,inv_cwd
         sess = self.invoke_session()
         if len(line) < 1:
-            print "Error - must specify a directory to remove"
+            print("Error - must specify a directory to remove",file=sys.stderr)
             res = None
         else:
             cwd = inv_cwd
@@ -282,7 +247,7 @@ class kbasemagics(Magics):
             res = inv_client.change_directory( sess, inv_cwd,d)
             inv_cwd = res
         else:
-            print "Error - please specify a directory"
+            print("Error - please specify a directory",file=sys.stderr)
         return res
 
     @line_magic
@@ -359,7 +324,45 @@ if ip is not None:
         user_id = t.user_id
         token = t.token
         user_profile = biokbase.auth.User( token = token)
-        print "Logged in automatically as %s from environment defaults" % user_id
+        print("Logged in automatically as %s from environment defaults" % user_id,file=sys.stderr)
     else:
-        print "You are not currently logged in. Access to kbase will be unauthenticated (where allowed).\nPlease login with kblogin for personal access"
-    print "KBase narrative module loaded.\nUse 'kblogin {username}' and 'kblogout' to acquire and dispose of KBase credentials.\nIPython magics defined for invocation service access are prefixed with invoke_*\n"
+        print("You are not currently logged in. Access to kbase will be unauthenticated (where allowed).\n",file=sys.stderr)
+        print("Please login with kblogin for personal access",file=sys.stderr)
+    # initialize an invocation session
+    ip.magic("invoke_session")
+    print("KBase narrative module loaded.\nUse 'kblogin {username}' and 'kblogout' to acquire and dispose of KBase credentials.\n",file=sys.stderr)
+    print("IPython magics defined for invocation service access are prefixed with invoke_*\n",file=sys.stderr)
+
+    # build a bunch of helper functions under the "invoker" namespace
+    # that simply run the various commands available from "valid_command"
+    # Dynamically create the module, and sub-modules based on command categories
+    # and then import it.
+    # based heavily on method here:
+    # http://dietbuddha.blogspot.com/2012/11/python-metaprogramming-dynamic-module.html
+
+    invoker = types.ModuleType('invoker',"Top level module for invocation command helper functions")
+    sys.modules['invoker'] = invoker
+
+    def mkfn(script):
+        def fn( *args):
+            args2 = [script]
+            args2 += list(args)
+            stdout, stderr = inv_client.run_pipeline(inv_session," ".join(args2),[],200,'/')
+            if stderr:
+                print( "".join(stderr), file=sys.stderr)
+            return stdout
+        return fn
+
+    cmds = inv_client.valid_commands()
+    for category in cmds:
+        catname = str(category['name']).replace('-','_')
+        m = types.ModuleType(catname,category['title'])
+        setattr(invoker,catname, m)
+        sys.modules[ 'invoker.%s' % catname] = m
+        for item in category['items']:
+            script = str(item['cmd']).replace('-','_')
+            fn = mkfn(str(item['cmd']))
+            fn.__name__ = script
+            setattr( m, script, fn)
+    ip.ex('import invoker')
+    print("Invocation service script helper functions have been loaded under the invoker.* namespace\n",file=sys.stderr)

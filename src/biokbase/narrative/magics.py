@@ -125,36 +125,6 @@ class kbasemagics(Magics):
         else:
             return None
 
-
-    @line_magic
-    def kb_nblogin(self,line):
-        """Notebook interface specific Login using username and password to KBase and then push necessary info into the environment"""
-        global user_id, token, user_profile, inv_client, inv_session
-        try:
-            (user,password) = line.split();
-        except ValueError:
-            user = line
-            password = None
-
-        if user_id is not None:
-            raise Exception( "Already logged in as %s. Please logout first if you want to re-login" % user_id)
-        if user is None:
-            print("kb_nblogin requires at least a username",file=sys.stderr)
-        else:
-            # try to login with only user_id in case there is an ssh_agent running
-            try:
-                t = biokbase.auth.Token( user_id = user)
-                if t.token:
-                    set_token(t.token)
-            except biokbase.auth.AuthFail, a:
-                # use javascript callback
-                nbgetpass( user)
-        if token is not None:
-            return user_id
-        else:
-            # The JS callback was used return None
-            return None
-
     @line_magic
     def kblogout(self,line):
         "Logout by removing credentials from environment and clearing session objects"
@@ -163,7 +133,7 @@ class kbasemagics(Magics):
         return
         
     @line_magic
-    def invoke_session(self, line):
+    def invoke_session(self, line=None):
         "Return the current invocation session id, create one if necessary. Parameters are ignored"
         global user_id, token, user_profile, inv_client, inv_session, endpoint
 
@@ -189,7 +159,7 @@ class kbasemagics(Magics):
         sess = self.invoke_session()
         res = inv_client.run_pipeline( sess, line, [], 200, '/')
         if res[1]:
-            print("".join(res[1]),file=sys.stderr)
+            print("\n".join(res[1]),file=sys.stderr)
         return res[0]
 
     @line_magic
@@ -207,6 +177,10 @@ class kbasemagics(Magics):
             cwd = inv_cwd
             d = ''
         res = inv_client.list_files( sess, cwd,d)
+        dirs = [ "%12s   %s   %s" % ('directory', d['mod_date'],d['name']) for d in res[0]]
+        print( "\n".join(dirs))
+        files = [ "%12d   %s   %s" % (f['size'], f['mod_date'],f['name']) for f in res[1]]
+        print( "\n".join(files))
         return res
 
     @line_magic
@@ -338,8 +312,8 @@ if ip is not None:
     # based heavily on method here:
     # http://dietbuddha.blogspot.com/2012/11/python-metaprogramming-dynamic-module.html
 
-    invoker = types.ModuleType('invoker',"Top level module for invocation command helper functions")
-    sys.modules['invoker'] = invoker
+    icmd = types.ModuleType('icmd',"Top level module for invocation command helper functions")
+    sys.modules['icmd'] = icmd
 
     def mkfn(script):
         def fn( *args):
@@ -349,7 +323,7 @@ if ip is not None:
                 ip.magic("invoke_session")
             stdout, stderr = inv_client.run_pipeline(inv_session," ".join(args2),[],200,'/')
             if stderr:
-                print( "".join(stderr), file=sys.stderr)
+                print( "\n".join(stderr), file=sys.stderr)
             return stdout
         return fn
 
@@ -359,12 +333,13 @@ if ip is not None:
     for category in cmds:
         catname = str(category['name']).replace('-','_')
         m = types.ModuleType(catname,category['title'])
-        setattr(invoker,catname, m)
-        sys.modules[ 'invoker.%s' % catname] = m
+        setattr(icmd,catname, m)
+        sys.modules[ 'icmd.%s' % catname] = m
         for item in category['items']:
             script = str(item['cmd']).replace('-','_')
             fn = mkfn(str(item['cmd']))
             fn.__name__ = script
+            fn.__doc__ = "Runs the %s script via invocation service" % item['cmd']
             setattr( m, script, fn)
-    ip.ex('import invoker')
-    print("Invocation service script helper functions have been loaded under the invoker.* namespace\n",file=sys.stderr)
+    ip.ex('import icmd')
+    print("Invocation service script helper functions have been loaded under the icmd.* namespace\n",file=sys.stderr)

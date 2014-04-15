@@ -328,8 +328,6 @@ if ip is not None:
     else:
         print("You are not currently logged in. Access to kbase will be unauthenticated (where allowed).\n",file=sys.stderr)
         print("Please login with kblogin for personal access",file=sys.stderr)
-    # initialize an invocation session
-    ip.magic("invoke_session")
     print("KBase narrative module loaded.\nUse 'kblogin {username}' and 'kblogout' to acquire and dispose of KBase credentials.\n",file=sys.stderr)
     print("IPython magics defined for invocation service access are prefixed with invoke_*\n",file=sys.stderr)
 
@@ -347,12 +345,16 @@ if ip is not None:
         def fn( *args):
             args2 = [script]
             args2 += list(args)
+            if inv_client is None:
+                ip.magic("invoke_session")
             stdout, stderr = inv_client.run_pipeline(inv_session," ".join(args2),[],200,'/')
             if stderr:
                 print( "".join(stderr), file=sys.stderr)
             return stdout
         return fn
 
+    # initialize an invocation session
+    ip.magic("invoke_session")
     cmds = inv_client.valid_commands()
     for category in cmds:
         catname = str(category['name']).replace('-','_')

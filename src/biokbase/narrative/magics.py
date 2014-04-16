@@ -133,7 +133,7 @@ class kbasemagics(Magics):
         return
         
     @line_magic
-    def invoke_session(self, line=None):
+    def inv_session(self, line=None):
         "Return the current invocation session id, create one if necessary. Parameters are ignored"
         global user_id, token, user_profile, inv_client, inv_session, endpoint
 
@@ -153,20 +153,24 @@ class kbasemagics(Magics):
         return inv_session
                 
     @line_cell_magic
-    def invoke_run(self,line, cell=None):
+    def inv_run(self,line, cell=None):
         "If we are logged in, make sure we have a session and then use the invocation run_pipeline() method to executing something"
         global user_id, token, user_profile, inv_client, inv_session
-        sess = self.invoke_session()
-        res = inv_client.run_pipeline( sess, line, [], 200, '/')
-        if res[1]:
-            print("\n".join(res[1]),file=sys.stderr)
+        sess = self.inv_session()
+        try:
+            res = inv_client.run_pipeline( sess, line, [], 200, '/')
+            if res[1]:
+                print("\n".join(res[1]),file=sys.stderr)
+        except Exception, e:
+            print("Error: %s" % str(e),file=sys.stderr)
+            return None
         return res[0]
 
     @line_magic
-    def invoke_ls(self,line):
+    def inv_ls(self,line):
         "Invocation service list files"
         global user_id, token, user_profile, inv_client, inv_session, inv_cwd
-        sess = self.invoke_session()
+        sess = self.inv_session()
         if len(line) > 0:
             try:
                 (cwd,d) = line.split()
@@ -176,32 +180,42 @@ class kbasemagics(Magics):
         else:
             cwd = inv_cwd
             d = ''
-        res = inv_client.list_files( sess, cwd,d)
-        dirs = [ "%12s   %s   %s" % ('directory', d['mod_date'],d['name']) for d in res[0]]
-        print( "\n".join(dirs))
-        files = [ "%12d   %s   %s" % (f['size'], f['mod_date'],f['name']) for f in res[1]]
-        print( "\n".join(files))
+        try:
+            res = inv_client.list_files( sess, cwd,d)
+            dirs = [ "%12s   %s   %s" % ('directory', d['mod_date'],d['name']) for d in res[0]]
+            print( "\n".join(dirs))
+            files = [ "%12d   %s   %s" % (f['size'], f['mod_date'],f['name']) for f in res[1]]
+            print( "\n".join(files))
+        except Exception, e:
+            print("Error: %s" % str(e),file=sys.stderr)
+            res = None
         return res
 
     @line_magic
-    def invoke_make_directory(self,line):
+    def inv_make_directory(self,line):
         "Invocation service make directory"
         global user_id, token, user_profile, inv_client, inv_session,inv_cwd
-        sess = self.invoke_session()
+        sess = self.inv_session()
         if len(line) < 1:
             print("Error - must specify a new directory name",file=sys.stderr)
             res = None
         else:
             cwd = inv_cwd
             d = line
-            res = inv_client.make_directory( sess, cwd,d)
+            try:
+                res = inv_client.make_directory( sess, cwd,d)
+            except Exception, e:
+                print("Error: %s" % str(e),file=sys.stderr)
+                res = None
         return res
 
     @line_magic
-    def invoke_remove_directory(self,line):
-        "Invocation service make directory"
+    def inv_remove_directory(self,line):
+        """
+        Invocation service remove directory
+        """
         global user_id, token, user_profile, inv_client, inv_session,inv_cwd
-        sess = self.invoke_session()
+        sess = self.inv_session()
         if len(line) < 1:
             print("Error - must specify a directory to remove",file=sys.stderr)
             res = None
@@ -212,10 +226,10 @@ class kbasemagics(Magics):
         return res
 
     @line_magic
-    def invoke_cd(self,line):
-        "Invocation service make directory"
+    def inv_cd(self,line):
+        "Invocation service change directory"
         global user_id, token, user_profile, inv_client, inv_session,inv_cwd
-        sess = self.invoke_session()
+        sess = self.inv_session()
         if len(line) > 0:
             d = line
             res = inv_client.change_directory( sess, inv_cwd,d)
@@ -225,55 +239,143 @@ class kbasemagics(Magics):
         return res
 
     @line_magic
-    def invoke_cwd(self,line):
+    def inv_cwd(self,line):
         "Invocation service current working directory"
         global user_id, token, user_profile, inv_client, inv_session,cwd
-        sess = self.invoke_session()
+        sess = self.inv_session()
         return inv_cwd
 
     @line_magic
-    def invoke_valid_commands(self,line):
-        "Invocation service make directory"
+    def inv_valid_commands(self,line):
+        "Invocation service inventory of command scripts"
         global user_id, token, user_profile, inv_client, inv_session
-        sess = self.invoke_session()
+        sess = self.inv_session()
         res = inv_client.valid_commands()
         return res
 
     @line_magic
-    def invoke_remove_files(self,line):
-        "Invocation service remove files"
+    def inv_remove_files(self,line):
+        """
+        Invocation service remove files
+        Parameters are: [cwd] filename
+        If only a single parameter is given, it is assumed to be a filename
+        """
         global user_id, token, user_profile, inv_client, inv_session
-        sess = self.invoke_session()
+        if len(line) < 1:
+            print("Must specify filename and optionally a cwd",file=sys.stderr)
+            res = None
+        else:
+            try:
+                (cwd,filename) = line.split()
+            except:
+                filename = line
+                cwd = inv_cwd
+            sess = self.inv_session()
+            res = inv_client.remove_files( sess, cwd, filename)
         return res
 
     @line_magic
-    def invoke_rename_files(self,line):
-        "Invocation service remove files"
+    def inv_rename_files(self,line):
+        "Invocation service rename files"
         global user_id, token, user_profile, inv_client, inv_session
-        sess = self.invoke_session()
+        if len(line) < 1:
+            print("Must specify: cwd from_filename to_filename",file=sys.stderr)
+            res = None
+        else:
+            try:
+                (cwd, fromfn, tofn) = line.split()
+            except:
+                try:
+                    (fromfn, tofn) = line.split()
+                except:
+                    print("Must at least from_filename and to_filename",file=sys.stderr)
+                    return(None)
+                cwd = inv_cwd
+            sess = self.inv_session()
+            try:
+                res = inv_client.rename_file( sess, cwd, fromfn, tofn)
+            except Exception, e:
+                print("Unable to rename %s to %s in directory %s: %s" % (fromfn,tofn,cwd,str(e)),file=sys.stderr)
+                return None
         return res
 
     @line_magic
-    def invoke_copy(self,line):
+    def inv_copy(self,line):
         "Invocation service copy file"
         global user_id, token, user_profile, inv_client, inv_session
-        sess = self.invoke_session()
+        if len(line) < 1:
+            print("Must specify: cwd from_filename to_filename",file=sys.stderr)
+            res = None
+        else:
+            try:
+                (cwd, fromfn, tofn) = line.split()
+            except:
+                try:
+                    (fromfn, tofn) = line.split()
+                except:
+                    print("Must at least from_filename and to_filename",file=sys.stderr)
+                    return(None)
+                cwd = inv_cwd
+            sess = self.inv_session()
+            try:
+                res = inv_client.copy( sess, cwd, fromfn, tofn)
+            except Exception, e:
+                print("Unable to copy %s to %s in directory %s: %s" % (fromfn,tofn,cwd,str(e)),file=sys.stderr)
+                return None
         return res
 
     @line_magic
-    def invoke_put_file(self,line):
-        "Invocation service make directory"
+    def inv_put_file(self,line):
+        """
+        Invocation service put a file on the server.
+        Parameters are filename contents [cwd]
+        As usual, parameters are whitespace separated and the contents parameter is evaluated as
+        a python expression, so you can use a variable to contain file contents. Must be castable
+        to a string type
+        """
         global user_id, token, user_profile, inv_client, inv_session
+        if len(line) < 1:
+            print("Must specify filename, contents and optionally a cwd",file=sys.stderr)
+            res = None
+        else:
+            try:
+                (filename, contents, cwd) = line.split()
+            except:
+                try:
+                    (filename, contents) = line.split()
+                except:
+                    print("Must at least filename and contents",file=sys.stderr)
+                    return(None)
+                cwd = inv_cwd
+            sess = self.inv_session()
+            try:
+                con1 = ip.ev(contents)
+                contstr = str(con1)
+            except Exception, e:
+                print("Unable to convert %s to string: %s" % (contents,e),file=sys.stderr)
+                return None
+            res = inv_client.put_file( sess, filename, contstr, cwd)
         return res
 
     @line_magic
-    def invoke_get_file(self,line):
-        "Invocation service make directory"
+    def inv_get_file(self,line):
+        "Invocation service get file contents"
         global user_id, token, user_profile, inv_client, inv_session
+        if len(line) < 1:
+            print("Must specify filename and optionally a cwd",file=sys.stderr)
+            res = None
+        else:
+            try:
+                (filename,cwd) = line.split()
+            except:
+                filename = line
+                cwd = inv_cwd
+            sess = self.inv_session()
+            res = inv_client.get_file( sess, filename, cwd)
         return res
 
     @line_magic
-    def invoke_get_tutorial_text(self,line):
+    def inv_get_tutorial_text(self,line):
         "Invocation service make directory"
         global user_id, token, user_profile, inv_client, inv_session
         return res
@@ -303,7 +405,7 @@ if ip is not None:
         print("You are not currently logged in. Access to kbase will be unauthenticated (where allowed).\n",file=sys.stderr)
         print("Please login with kblogin for personal access",file=sys.stderr)
     print("KBase narrative module loaded.\nUse 'kblogin {username}' and 'kblogout' to acquire and dispose of KBase credentials.\n",file=sys.stderr)
-    print("IPython magics defined for invocation service access are prefixed with invoke_*\n",file=sys.stderr)
+    print("IPython magics defined for invocation service access are prefixed with inv_*\n",file=sys.stderr)
 
     # build a bunch of helper functions under the "invoker" namespace
     # that simply run the various commands available from "valid_command"
@@ -320,7 +422,7 @@ if ip is not None:
             args2 = [script]
             args2 += list(args)
             if inv_client is None:
-                ip.magic("invoke_session")
+                ip.magic("inv_session")
             stdout, stderr = inv_client.run_pipeline(inv_session," ".join(args2),[],200,'/')
             if stderr:
                 print( "\n".join(stderr), file=sys.stderr)
@@ -328,7 +430,7 @@ if ip is not None:
         return fn
 
     # initialize an invocation session
-    ip.magic("invoke_session")
+    ip.magic("inv_session")
     cmds = inv_client.valid_commands()
     for category in cmds:
         catname = str(category['name']).replace('-','_')

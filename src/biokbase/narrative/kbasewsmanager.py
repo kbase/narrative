@@ -445,3 +445,4 @@ for handlerstr in tgt_handlers:
 
 # Load the plupload handler
 import upload_handler
+upload_handler.insert_plupload_handler()

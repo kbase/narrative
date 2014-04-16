@@ -16,10 +16,12 @@ import os
 import time
 import sys
 import types
+import biokbase.narrative.upload_handler
 
 from IPython.core.display import display, Javascript
 from ast import literal_eval
 from IPython.display import HTML
+
 
 # Module variables for maintaining KBase Notebook state
 user_id = None
@@ -131,6 +133,11 @@ class kbasemagics(Magics):
         # Call the clear_token method
         clear_token()
         return
+        
+    @line_magic
+    def uploader(self,line):
+        "Bring up an html cell that allows file uploads"
+        return HTML( biokbase.narrative.upload_handler.HTML_EXAMPLE)
         
     @line_magic
     def inv_session(self, line=None):

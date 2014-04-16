@@ -18,7 +18,7 @@ EXPOSE 8888
 ADD ./sources.list /etc/apt/sources.list
 
 # Create a deployment directory
-RUN mkdir -p /kb/deployment/services/narrative
+RUN mkdir -p /kb/deployment/services/narrative /tmp/narrative
 
 # Add the MongoDB repo
 #RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
@@ -45,6 +45,7 @@ RUN cd /mini-bootstrap/kb_python_runtime/; TARGET=/kb/deployment /bin/bash insta
 # Copy in the narrative repo
 ADD ./narrative /kb/dev_container/narrative
 RUN cd /kb/dev_container/narrative; /bin/bash install.sh -p /kb/deployment/services narrative
+RUN cd /tmp/narrative
 
 # Setup the container to automatically run a script that uses the narrative_mongo profile
 # and configures the notebook server to use /narrative/{CMD} as the prefix for a reverse

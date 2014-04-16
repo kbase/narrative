@@ -442,3 +442,6 @@ for handlerstr in tgt_handlers:
     IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
     handler = importlib.import_module(handlerstr)
     handler_route_replace( handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')
+
+# Load the plupload handler
+import upload_handler

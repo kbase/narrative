@@ -5,7 +5,7 @@ import tornado.web
 import tornado.ioloop
 import logging
 import os.path
- 
+import re 
 import IPython.html.base.handlers
 import importlib
 
@@ -25,7 +25,7 @@ def get_or_create_file(chunk, dst):
  
 HTML_EXAMPLE = """
 
-<script type="text/javascript" src="/static/kbase/js/plupload/plupload.full.min.js"></script>
+<script type="text/javascript" src="{{BASE_URL}}/static/kbase/js/plupload/plupload.full.min.js"></script>
 
 <div id="filelist">Your browser doesn't have Flash, Silverlight or HTML5 support.</div>
 <br/><hr/>
@@ -43,7 +43,7 @@ var uploader = new plupload.Uploader({
     browse_button : 'pickfiles', // you can pass in id...
     container: document.getElementById('container'), // ... or DOM Element itself
      
-    url : "/_plupload",
+    url : "{{BASE_URL}}/_plupload",
      
     filters : {
         max_file_size : '2gb',
@@ -85,9 +85,9 @@ uploader.init();
 """
 
 JQUERY_UI_EXAMPLE = """
-<link rel="stylesheet" href="/static/kbase/js/plupload/jquery.ui.plupload/css/jquery.ui.plupload.css" type="text/css" />
-<script type="text/javascript" src="/static/kbase/js/plupload/plupload.full.min.js"></script>
-<script type="text/javascript" src="/static/kbase/js/plupload/jquery.ui.plupload/jquery.ui.plupload.js"></script>
+<link rel="stylesheet" href="{{BASE_URL}}/static/kbase/js/plupload/jquery.ui.plupload/css/jquery.ui.plupload.css" type="text/css" />
+<script type="text/javascript" src="{{BASE_URL}}/static/kbase/js/plupload/plupload.full.min.js"></script>
+<script type="text/javascript" src="{{BASE_URL}}/static/kbase/js/plupload/jquery.ui.plupload/jquery.ui.plupload.js"></script>
 
 <form id="form" method="post" action="javascript:#">
     <div id="uploader">
@@ -101,7 +101,7 @@ JQUERY_UI_EXAMPLE = """
 $("#uploader").plupload({
 // General settings
 runtimes : 'html5,flash,html4',
-url : '/_plupload',
+url : '{{BASE_URL}}/_plupload',
 // User can upload no more then 20 files in one go (sets multiple_queues to false)
 max_file_count: 20,
 
@@ -127,7 +127,7 @@ list: true,
 },
 
 // Flash settings
-flash_swf_url : '/static/kbase/js/plupload/Moxie.swf',
+flash_swf_url : '{{BASE_URL}}/static/kbase/js/plupload/Moxie.swf',
 
 });
 
@@ -150,6 +150,15 @@ return false; // Keep the form from submitting
 });
 </script>
 """
+
+# Replace the {{BASE_URL}} string in the HTML examples with the current baseurl
+ip = IPython.get_ipython()
+try:
+    base_url = ip.config['NotebookApp']['base_project_url']
+except:
+    base_url = ''
+JQUERY_UI_EXAMPLE = JQUERY_UI_EXAMPLE.replace('{{BASE_URL}}',base_url)
+HTML_EXAMPLE = HTML_EXAMPLE.replace('{{BASE_URL}}',base_url)
 
 class UploadHandler(tornado.web.RequestHandler):
     CORS_ORIGIN = '*'
@@ -210,6 +219,10 @@ def insert_plupload_handler() :
     # add a handler for plupload file uploads
     IPython.html.base.handlers.app_log.error("Adding handler for plupload at /_plupload")
     handler = importlib.import_module('IPython.html.notebook.handlers')
-    handler.default_handlers.append( (r"/_plupload", UploadHandler))
+    if base_url:
+        upload_url = r"/_plupload"
+    else:
+        upload_url = re.escape(base_url) + r"/_plupload"
+    handler.default_handlers.append( (upload_url, UploadHandler))
     IPython.html.base.handlers.app_log.debug("New routes are: %s" % str(handler.default_handlers))
 

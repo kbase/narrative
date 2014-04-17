@@ -12,26 +12,8 @@ angular.module('fav-directives', []);
 angular.module('fav-directives')
     .directive('favoritesidebar', function($location) {
         return {
-            template: '<div class="fav-filters">'+
-                          '<a data-type="all">Display All</a><br>'+
-                          '<a data-type="Genome">Genomes</a><br>'+            
-                          '<a data-type="Model">Models</a><br><br>'+
-                          '<a data-type="Media">Media</a><br><br>'+                          
-                          'options/filtering are in the works.'+
-                      '</div>',
             link: function(scope, element, attrs) {
-                $('.fav-filters a').click(function() {
-                    console.log('click')
-                    $('.widget').hide();                    
 
-                    var type = $(this).data('type');
-                    console.log(type)
-                    if (type == "all") {
-                        $('.widget').show();                         
-                    } else {
-                        $('.widget-type-'+type).show();                        
-                    }
-                })
 
             }
         };
@@ -43,15 +25,13 @@ angular.module('fav-directives')
 
             link: function(scope, element, attrs, compile) {
                 // retrieve again
-                var prom = kb.ujs.get_state('favorites', 'queue', 0);
-                $.when(prom).done(function(data) {
-                    scope.favorites = data
-                    showWidgets(data)
-                })
+
+
+
+
 
                 function showWidgets(data) {
                     for (var i in data) {
-
                         var obj = data[i];
                         if (obj == null) continue;
                         scope.ws = obj.ws; 
@@ -75,19 +55,6 @@ angular.module('fav-directives')
             }
         };
     })
-
-
-
-function addFavorite(ws, id, type) {
-    var get_state_prom = kb.ujs.get_state('favorites', 'queue');
-    var prom = $.when(prom).then(function(queue) {
-        queue.push({ws: ws, id: id, type: type});
-        var p = kb.ujs.set_state('favorites', 'queue', queue);
-        return p;
-    });
-
-    return prom;
-}
 
 
 

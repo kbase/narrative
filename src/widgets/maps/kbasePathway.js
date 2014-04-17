@@ -11,8 +11,8 @@ $.KBWidget({
         this._super(options);
 
         self.models = options.modelData;
-        self.fbas = options.fbaData
-        self.workspace = options.ws
+        self.fbas = options.fbaData;
+        self.workspace = options.ws;
 
 
         var map = options.mapData;
@@ -202,7 +202,7 @@ $.KBWidget({
                                         .attr('height', h)
 
                         if (found_rxn.length) {
-                            var flux = found_rxn[i][1]
+                            var flux = found_rxn[i].value
                         }
 
                         var color = get_heat_color(flux)
@@ -566,13 +566,13 @@ $.KBWidget({
             // for each model, look for model data
             for (var j in self.models) {
                 var model = self.models[j];
-                rxn_objs = model.reactions;
+                rxn_objs = model.modelreactions;
 
                 // see if we can find the rxn in that model's list of reactions
                 var found_rxn = [];
                 for (var i in rxn_objs) {
                     rxn_obj = rxn_objs[i];
-                    if (rxn_ids.indexOf(rxn_obj.reaction) != -1) {
+                    if (rxn_ids.indexOf(rxn_obj.id.split('_')[0]) != -1) {
                         found_rxn.push(rxn_obj);
                     }
                 }
@@ -592,14 +592,14 @@ $.KBWidget({
             // for each model, look for model data
             for (var j in self.fbas) {
                 var fba_obj = self.fbas[j];
-                fba_arrays = fba_obj.reactionFluxes;
+                fba_arrays = fba_obj.FBAReactionVariables;
 
                 // see if we can find the rxn in that fbas's list of reactions
                 var found_rxn = [];
 
                 for (var i in fba_arrays) {
                     fba_array = fba_arrays[i];
-                    if (rxn_ids.indexOf(fba_array[0].split('_')[0]) != -1) {
+                    if (rxn_ids.indexOf(fba_array.modelreaction_ref.split('/')[5].split('_')[0]) != -1) {
                         found_rxn.push(fba_array);
                     }
                 }

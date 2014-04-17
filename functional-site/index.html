@@ -252,6 +252,7 @@
         <script src="js/directives/trees.js"></script>        
 	    <script src="js/directives/narrative.js"></script>
         <script src="js/controllers.js"></script>
+        <script src="js/services/favorites.js"></script>
         <script src="js/cacheclient.js"></script>
         <script src="assets/js/header.js"></script>
     </head>
@@ -289,11 +290,13 @@
                     </div>
                 </div>
               </form>
-              <!--
+              
               <ul class="nav navbar-nav"> 
-                <li ng-class="{ active: $state.includes('favorites')}"><a href="#/favorites/all/">Favorites <span class="badge  favorite-count"></span></a></li>
+                <li ng-class="{ active: $state.includes('favorites')}">
+                    <a href="#/favorites/">Viewer <span class="badge favorite-count"></span></a>
+                </li>
                 <li class="fav-loading"></li>
-              </ul>-->
+              </ul>
 
              
               <div id="signin-button" class="pull-right"></div>

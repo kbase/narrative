@@ -244,7 +244,35 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     }   
 })
 
-.controller('Favorites', function($scope, $stateParams) {
+.controller('Favorites', function($scope, $stateParams, favoriteService) {
+    var prom = kb.ujs.get_state('favorites', 'queue', 0);
+    $.when(prom).done(function(data) {
+        $scope.favs = data;
+        console.log($scope.favs)
+        $scope.$apply();
+    })
+
+    $scope.rmObject = function(ws, id, type) {
+        console.log('revmoving object', ws , id , type)
+        for (var i in $scope.favs) {
+            if ($scope.favs[i].ws == ws
+                && $scope.favs[i].id == id
+                && $scope.favs[i].type == type) {
+                $scope.favs.splice(i, 1);
+            }
+        }
+        favoriteService.remove(ws, id, type);
+
+        console.log('new favs', $scope.favs)
+
+    }
+
+    $scope.clearList = function() {
+        console.log('clearing list')
+        favoriteService.clear();
+        $scope.favs = [];
+        $scope.$apply();
+    }
 
 
 })

@@ -87,7 +87,7 @@ var app = angular.module('landing-pages',
           url: "media/:ws/:id",
           templateUrl: 'views/ws/sortable/media.html',
           controller: 'WBLanding'
-        }).state('ws.map', {
+        }).state('ws.maps', {
           url: "maps/:ws/:id",
           templateUrl: 'views/ws/sortable/metabolic_map.html',
           controller: 'WBLanding'
@@ -101,10 +101,6 @@ var app = angular.module('landing-pages',
         .state('favorites', {
           url: "/favorites/",
           templateUrl: 'views/ws/favorites.html',
-          controller: 'Favorites'
-        }).state('favorites.all', {
-          url: "all/",
-          templateUrl: 'views/ws/favorites.all.html',
           controller: 'Favorites'
         })
 
@@ -403,8 +399,9 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     // create global favorites list (should be overwritten)
     var prom = kb.ujs.get_state('favorites', 'queue', 0);
     $.when(prom).done(function(queue) {
-        favorites = queue;
-        $('.favorite-count').text(queue.length);
+        var favorites = queue;
+        console.log('favs', favorites)
+        $('.favorite-count').text(favorites.length);
     });
 });
 

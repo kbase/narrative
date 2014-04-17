@@ -306,6 +306,7 @@ div::-webkit-scrollbar-thumb {
 }
 
 
+
 .select-ws .badge {
     margin: 0 4px 0 0 ;
 }
@@ -318,6 +319,14 @@ div::-webkit-scrollbar-thumb {
     width: 80%;
     margin-right: auto;
     margin-left: auto;
+}
+
+.btn-ws-label {
+    cursor: hand;
+    cursor: pointer;
+}
+.btn-ws-label:hover{
+    opacity: .9;
 }
 
 .modal-alert {
@@ -379,6 +388,10 @@ div::-webkit-scrollbar-thumb {
 .panel-heading .label {
     cursor: default;
 }
+
+
+
+/* narrative project page */
 
 .narrative-options-container {
     border-bottom: 1px solid #ccc;

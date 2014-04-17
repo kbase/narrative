@@ -28,6 +28,9 @@ function Cache() {
     }
 }
 
+var kb = new KBCacheClient()
+
+kb.req()
 
 function KBCacheClient(token) {
     var auth = {};
@@ -53,6 +56,7 @@ function KBCacheClient(token) {
     var ujs = new UserAndJobState(ujs_url, auth);
 
     var cache = new Cache();
+
 
     this.req = function(service, method, params) {
         if (service == 'fba') { 

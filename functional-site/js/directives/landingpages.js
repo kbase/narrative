@@ -243,11 +243,11 @@ angular.module('lp-directives')
 
                 if (type == "Model") {
                     var prom = kb.req('ws', 'get_objects',
-                                [{objid: scope.id, workspace: scope.ws}]);
+                                [{name: scope.id, workspace: scope.ws}]);
                                        
                     $.when(prom).done(function(d) {
-                        console.log(d)
-                        $(p.body()).pathways({modelData: d, 
+                        var data = [d[0].data];
+                        $(p.body()).pathways({modelData: data, 
                                     ws: map_ws, defaultMap: scope.defaultMap,
                                     scope: scope});
                     }).fail(function(e){
@@ -256,10 +256,12 @@ angular.module('lp-directives')
                     });
 
                 } else if (type == "FBA") {
-                    var prom = kb.req('fba', 'get_fbas',
-                                {fbas: [scope.id], workspaces: [scope.ws]});                    
+                    var prom = kb.req('ws', 'get_objects',
+                                [{name: scope.id, workspace: scope.ws}]);
                     $.when(prom).done(function(d) {
-                        $(p.body()).pathways({fbaData: d, 
+                        var data = [d[0].data];
+                        console.log(data)
+                        $(p.body()).pathways({fbaData: data, 
                                     ws: map_ws, defaultMap: scope.defaultMap,
                                     scope: scope})   
                     }).fail(function(e){
@@ -268,14 +270,13 @@ angular.module('lp-directives')
                     });
                 }
 
-
                 $.fn.pathways = function(options) {
                     self.models = options.modelData;
                     self.fbas = options.fbaData;
                     self.ws = options.ws;
                     self.default_map = options.defaultMap
 
-
+                    console.log('fba data', self.fbas)
                     var container = $(this);
 
                     var stroke_color = '#666';
@@ -328,13 +329,18 @@ angular.module('lp-directives')
                             var aaData = [];
                             for (var i in d) {
 
-                                var obj = d[i]  //ui-sref="contacts.detail({ id: contact.id })"
-                                var link = '<a href="#/ws/models/'+scope.ws+'/'+scope.id+'" \
-                                        class="pathway-link" data-map="'+obj[1]+'">'+obj[1]+'</a>'
+                                var obj = d[i];
+
+                                if (type == 'Model') {
+                                    var route = 'models';
+                                } else {
+                                    var route = 'fbas';
+                                }
+                                var url = 'ws.'+route+"({ws:'"+scope.ws+"', id:'"+scope.id+"'})";
+                                var link = '<a ui-sref="'+url+'" '+
+                                        'class="pathway-link" data-map="'+obj[1]+'">'+obj[1]+'</a>'
                                 var name = link
-                                console.log(link)
-                                //var name = $compile(link)(scope);
-                           $(element).append(name)                                
+
                                 aaData.push([name])
                             }
 
@@ -344,15 +350,13 @@ angular.module('lp-directives')
                             $('#path-list').append('<table id="'+table_id+'" \
                                            class="table table-bordered table-striped" style="width: 100%;"></table>');
                             var table = $('#'+table_id).dataTable(tableSettings);  
+                            $compile(table)(scope);
                         }).fail(function(e){
                             container.prepend('<div class="alert alert-danger">'+
                                         e.error.message+'</div>')
                         });
                     }
                     load_map_list()
-                    //scope.$compile()
-
-
 
                     self.loadMap = function(map) {
                         // there needs to be all this manual tab styling due to 
@@ -413,8 +417,10 @@ angular.module('lp-directives')
                     }
 
                     if (self.default_map) {
-                        new_map_tab(self.default_map);
-                        self.loadMap(self.default_map);
+                        if (self.default_map != 'list') {
+                            new_map_tab(self.default_map);
+                            self.loadMap(self.default_map);
+                        }
                     } 
                 }    
 
@@ -443,9 +449,6 @@ angular.module('lp-directives')
                     $(p.body()).pathways({fbaData: fbas_data, 
                                 ws: map_ws, defaultMap: scope.defaultMap,
                                 scope: scope})
-                    //$(p.body()).kbasePathways({fbaData: fbas_data, 
-                    //            ws: map_ws, defaultMap: scope.defaultMap,
-                    //            scope: scope})   
 
                 }).fail(function(e){
                         $(p.body()).append('<div class="alert alert-danger">'+
@@ -465,12 +468,14 @@ angular.module('lp-directives')
                                                subText: scope.id});
                 p.loading();
 
-                var p1 = kb.req('ws', 'get_object',
-                            {id: scope.id, workspace: scope.ws});
+                var p1 = kb.req('ws', 'get_objects',
+                            [{name: scope.id, workspace: scope.ws}]);
                 $.when(p1).done(function(d) {
+                    var d = d[0].data;
+                    console.log(d)
                     $(p.body()).kbasePathway({ws: scope.ws,
-                                              map_id: scope.id, 
-                                              map_data: d.data, 
+                                              mapID: scope.id, 
+                                              mapData: d, 
                                               editable:true})
                 }).fail(function(e){
                         $(p.body()).append('<div class="alert alert-danger">'+
@@ -531,24 +536,31 @@ angular.module('lp-directives')
     .directive('jsonviewer', function() {
         return {
             link: function(scope, element, attrs) {
+                $(element).append('<b>Sorry!</b>  No landing page is availble for this object. \
+                                In the meantime, view the JSON below or consider contributing.')
+
                 $(element).loading()
+                console.log('here!')
                 var p = kb.req('ws', 'get_object', 
                         {workspace: scope.ws, id: scope.id})
                 $.when(p).done(function(data) {
+                    var data = data;
                     $(element).rmLoading();
                     scope.data = data;
-                    displayData(data)
+                    displayData(data);
                 })
 
                 function displayData(data) {
-                    for (key in data) {
-                        $(element).append('<h3>'+key+'</h3><br>');
-                        var c = $('<div id="data">')
-                        $(element).append(c)
-                        c.JSONView(JSON.stringify(data[key], {collapsed: true}))
-                    }
-                }
+                    $(element).append('<h3>Metadata</h3><br>');
+                    var c = $('<div id="metadata">');
+                    $(element).append(c);
+                    c.JSONView(JSON.stringify(data.metadata));
 
+                    $(element).append('<h3>Data</h3><br>');
+                    var c = $('<div id="data">');
+                    $(element).append(c);
+                    c.JSONView(JSON.stringify(data.data))
+                }
             }
         };
     })

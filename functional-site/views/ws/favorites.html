@@ -3,7 +3,27 @@
     <div class="col-md-3">
         <div class="narrative-sidebar">
             
-            <div favoritesidebar></div>
+            <div favoritesidebar>
+
+                <div>
+                    <div class="h3 pull-left">Models</div>
+                    <a class="btn btn-sm btn-default pull-right" ng-click="clearList()">Clear</a>
+                </div>
+                <br>
+                <hr>
+                <ul class="list-group">
+                    <div ng-repeat="fav in favs">
+                        <li class="list-group-item">
+                            <a class="pull-right btn-rm-fav text-muted">
+                                <span class="glyphicon glyphicon-remove" ng-click="rmObject(fav.ws, fav.id, fav.type)"></span>
+                            </a>
+                            {{fav.id}}<br>
+                            <a class="label label-primary btn-ws-label" ui-sref="ws.id({ws: fav.ws})">{{fav.ws}}</a>
+                        </li>
+                    </div>
+                </ul>
+
+            </div>
         </div>
     </div>
 

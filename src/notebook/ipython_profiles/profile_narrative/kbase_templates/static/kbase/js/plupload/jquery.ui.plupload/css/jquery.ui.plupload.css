@@ -9,7 +9,7 @@
 
 .plupload_wrapper {
 	font: normal 11px Verdana,sans-serif;
-	width: 100%;
+	width: 95%;
 	min-width: 520px;
 }
 
@@ -85,7 +85,7 @@
 	border-right: none;
 	margin: 0;
 	padding: 0;
-	width: 100%;
+	width: 95%;
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;

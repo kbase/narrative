@@ -27,7 +27,7 @@ RUN echo 'deb http://cran.r-project.org/bin/linux/ubuntu precise/' | tee /etc/ap
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended libglu1-mesa-dev
 
 # There are a bunch of packages that are related to kernel operation
 # which we can't upgrade within a container. Mark them for "hold" before

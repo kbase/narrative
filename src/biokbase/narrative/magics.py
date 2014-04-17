@@ -140,6 +140,11 @@ class kbasemagics(Magics):
         return HTML( biokbase.narrative.upload_handler.HTML_EXAMPLE)
         
     @line_magic
+    def jquploader(self,line):
+        "Bring up an html cell with JQuery UI thingy that allows file uploads"
+        return HTML( biokbase.narrative.upload_handler.JQUERY_UI_EXAMPLE)
+        
+    @line_magic
     def inv_session(self, line=None):
         "Return the current invocation session id, create one if necessary. Parameters are ignored"
         global user_id, token, user_profile, inv_client, inv_session, endpoint

@@ -39,7 +39,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -f upgrade -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-base perl-modules make
 
 # Maybe this will get all the necessary dependencies!
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4 python-pip python-setuptools ipython-notebook python-matplotlib python-dev python-scipy python-numpy python-lxml python-sklearn python-sympy python-pandas python-rpy2
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4 python-vitualenv python-pip python-setuptools ipython-notebook python-matplotlib python-dev python-scipy python-numpy python-lxml python-sklearn python-sympy python-pandas python-rpy2
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev libcairo2-dev texlive-latex-base texlive-fonts-recommended curl libcurl4-gnutls-dev git-core libzmq-dev libreadline6-dev libreadline-dev libssl-dev libxml2-dev libxslt1-dev
 
 # install R packages that seem to be handy

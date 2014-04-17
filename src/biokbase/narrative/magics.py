@@ -451,4 +451,5 @@ if ip is not None:
             fn.__doc__ = "Runs the %s script via invocation service" % item['cmd']
             setattr( m, script, fn)
     ip.ex('import icmd')
+    os.chdir('/tmp/narrative')
     print("Invocation service script helper functions have been loaded under the icmd.* namespace\n",file=sys.stderr)

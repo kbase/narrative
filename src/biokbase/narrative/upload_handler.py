@@ -31,8 +31,8 @@ HTML_EXAMPLE = """
 <br/><hr/>
 
 <div id="container">
-    <a id="pickfiles" href="javascript:;">[Select files]</a>
-    <a id="uploadfiles" href="javascript:;">[Upload files]</a>
+    <button type="button" id="pickfiles" class="btn btn-primary">Select files</button>
+    <button type="button" id="uploadfiles" class="btn btn-success">Upload files</button>
 </div>
 <hr/>
 <pre id="console"></pre>

@@ -4,8 +4,8 @@
 app.service('favoriteService', function() {
     var state_name = 'favorites';
     var state_key = 'queue';
-    var status_ele = $('.fav-loading')
-    var fav_count_ele = $('.favorite-count')
+    var status_ele = $('.fav-loading');
+    var fav_count_ele = $('.favorite-count');
 
     this.add = function(ws, id, type) {
         console.log('adding', ws, id, type)

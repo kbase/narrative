@@ -1009,6 +1009,10 @@ angular.module('ws-directives')
                     var table = $('#'+table_id).dataTable(tableSettings);       
                     $compile(table)(scope);
 
+                    // reset filter.  
+                    // critical for ignoring cached filter
+                    table.fnFilter('', 2)
+
                     // add trashbin
                     var trash_btn = $('<a class="btn-trash pull-right hide">Trash \
                                 <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
@@ -1366,7 +1370,6 @@ angular.module('ws-directives')
                     if (checkbox.hasClass('ncheck-checked')) {
                         removeCheck(id, dataWS, dataType)
                     } else {
-                        console.log('adding to list')
                         scope.checkedList.push({id: id, ws: dataWS, type: dataType});
                         scope.$apply();
                     }

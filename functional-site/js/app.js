@@ -23,7 +23,10 @@ var cardManager = undefined;
 var app = angular.module('landing-pages', 
     ['lp-directives', 'card-directives',
      'trees-directives', 'fav-directives',
-     'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin', 'FeedLoad', 'ui.bootstrap'])
+     'ws-directives', 'modeling-directives',
+     'narrative-directives', 
+     'ui.router', 'kbaseLogin', 
+     'FeedLoad', 'ui.bootstrap'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
 
@@ -396,12 +399,9 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     $rootScope.$stateParams = $stateParams;
 
     // if logged in, display favorite count in navbar
-    // create global favorites list (should be overwritten)
     var prom = kb.ujs.get_state('favorites', 'queue', 0);
     $.when(prom).done(function(queue) {
-        var favorites = queue;
-        console.log('favs', favorites)
-        $('.favorite-count').text(favorites.length);
+        $('.favorite-count').text(queue.length);
     });
 });
 

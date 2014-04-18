@@ -245,8 +245,9 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 })
 
 .controller('Favorites', function($scope, $stateParams, favoriteService) {
-    var prom = kb.ujs.get_state('favorites', 'queue', 0);
-    $.when(prom).done(function(data) {
+    $scope.prom = kb.ujs.get_state('favorites', 'queue', 0);
+
+    $.when($scope.prom).done(function(data) {
         $scope.favs = data;
         console.log($scope.favs)
         $scope.$apply();

@@ -28,7 +28,7 @@ line,
 .line1, 
 .line2,
 .link {
-	stroke-width: 1.5px;
+	stroke-width: 2px;
 	stroke: #666;
 }
 
@@ -39,14 +39,14 @@ line,
 	fill: #F00;
 	fill-opacity: 0.3;
 	stroke: #000;
-	style-width: 1.5px;
+	style-width: 2px;
 }
 
 
 .rxn, 
 .map{
 	fill: #fff;
-	stroke-width: 1.5px;
+	stroke-width: 2px;
 	stroke: #666;
 }
 
@@ -57,8 +57,43 @@ line,
 }
 
 .cpd {
-	stroke-width: 1.5px;
+	stroke-width: 2px;
 	fill: #fff;
 	stroke: #666;
+}
+
+svg {
+	shape-rendering: geometricPrecision;
+}
+
+/* cdd viewer */
+
+.cdd-box {
+	fill: lightsteelblue;
+	stroke: steelblue;
+	stroke-width: 1px;
+
+}
+
+.grid-line {
+    stroke-width: 1px;
+	stroke: #999;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+
+.overlay {
+  fill: none;
+  pointer-events: all;
 }
 

@@ -6,7 +6,7 @@
             <div favoritesidebar>
 
                 <div>
-                    <div class="h3 pull-left">Models</div>
+                    <div class="h3 pull-left">Objects</div>
                     <a class="btn btn-sm btn-default pull-right" ng-click="clearList()">Clear</a>
                 </div>
                 <br>
@@ -29,10 +29,13 @@
 
     <div class="col-md-9">
         <div class="favorites-view" ui-view>
-            <div ng-show="!favorites">
+            <!--<div ng-show="!favs">
                 <span class="text-danger">You don't have any favorites selected yet.</span><br>
                 <small>Look to the stars to save favorites.</small>
-            </div>
+            </div>-->
+
+            <div cddviewer></div>
+
         </div>
     </div>
 </div>

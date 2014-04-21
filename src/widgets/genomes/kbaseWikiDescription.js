@@ -38,7 +38,7 @@
             this.wikiClient = new WikiScraper(this.wikiScraperURL);
 
             if (this.options.workspaceID) {
-                this.renderWorkspace();
+//                this.renderWorkspace();
             }
             else
                 this.render();

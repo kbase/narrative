@@ -135,6 +135,11 @@
                     genome = genome[this.options.genomeID];
                     this.genome = genome; // store it for now.
 
+                    if (!genome) {
+                        this.renderError("Genome '" + this.options.genomeID + "' not found.");
+                        return;
+                    }
+
                     this.$infoTable.empty()
                                    .append(this.addInfoRow("ID", genome.id))
                                    .append(this.addInfoRow("Name", genome.scientific_name))

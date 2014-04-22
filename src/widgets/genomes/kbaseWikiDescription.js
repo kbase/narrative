@@ -18,7 +18,6 @@
             loadingImage: null
         },
 
-        wikiScraperURL: "http://140.221.85.43:7077",
         cdmiURL: "https://kbase.us/services/cdmi_api",
 
         init: function(options) {
@@ -35,7 +34,6 @@
 
             this.cdmiClient = new CDMI_API(this.cdmiURL);
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
-            this.wikiClient = new WikiScraper(this.wikiScraperURL);
 
             if (this.options.workspaceID) {
                 this.renderWorkspace();
@@ -86,17 +84,31 @@
             var searchTerms = taxonomy;
             var strainName = taxonomy[0];
 
-            console.log('searching for...');
-            console.log(searchTerms);
-
             this.dbpediaLookup(searchTerms, $.proxy(
                 function(desc) {
+                    // If we've found something, desc.description will exist and be non-null
                     if (desc.hasOwnProperty('description') && desc.description != null) {
                         if (desc.description.length > this.options.maxNumChars) {
                             desc.description = desc.description.substr(0, this.options.maxNumChars);
                             var lastBlank = desc.description.lastIndexOf(" ");
                             desc.description = desc.description.substr(0, lastBlank) + "...";
                         }
+
+                        /* the viz is set up like this:
+                         * 1. Description Tab
+                         *
+                         * ['not found' header, if applicable]
+                         * Showing description for <search term>
+                         * ['redirect header', if applicable]
+                         *
+                         * Description (a fragment of the abstract from Wikipedia)
+                         *
+                         * <Wikipedia link>
+                         *
+                         * 2. Image Tab
+                         * ['not found' header, if applicable, with link to Wikipedia]
+                         * Image
+                         */
 
                         var descStr = "<p style='text-align:justify;'>" + desc.description + "</p>"
 

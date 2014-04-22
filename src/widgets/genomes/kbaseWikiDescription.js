@@ -128,7 +128,7 @@
                             imageHtml = "<img src='" + desc.imageUri + "' />";
                     }
                     else {
-                        descHtml = this.notFoundHeader(strainName, desc.searchTerm, desc.redirectFrom) + descStr + this.descFooter(desc.wikiUri);
+                        descHtml = this.notFoundHeader(strainName);
                     }
 
 
@@ -302,6 +302,9 @@
                     errorCallback("No search term given");
                 }
             }
+            console.log('searching for...');
+            console.log(termList);
+
             var searchTerm = termList.shift();
             var usTerm = searchTerm.replace(/\s+/g, '_');
 
@@ -325,11 +328,13 @@
                     if (!resource[wikiLinkKey] || !resource[abstractKey]) {
                         if (resource[redirectKey]) {
                             var tokens = resource[redirectKey][0]['value'].split('/');
-                            console.log('redirect! ' + tokens);
                             this.dbpediaLookup([tokens[tokens.length - 1]], successCallback, errorCallback, searchTerm);
                         }
                         else {
-                            this.dbpediaLookup(termList, successCallback, errorCallback);
+                            if (termList.length > 0)
+                                this.dbpediaLookup(termList, successCallback, errorCallback);
+                            else
+                                successCallback(processedHit);
                         }
                     }
                     else {

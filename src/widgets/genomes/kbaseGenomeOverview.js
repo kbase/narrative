@@ -136,7 +136,7 @@
                     this.genome = genome; // store it for now.
 
                     if (!genome) {
-                        this.renderError("Genome '" + this.options.genomeID + "' not found.");
+                        this.renderError("Genome '" + this.options.genomeID + "' not found in the KBase Central Store.");
                         return;
                     }
 

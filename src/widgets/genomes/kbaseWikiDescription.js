@@ -67,7 +67,7 @@
                         this.renderFromTaxonomy(taxonomy.reverse());
                     }
                     else {
-                        this.renderError();
+                        this.renderError("Genome '" + this.options.genomeID + "' not found in the KBase Central Store.");
                     }
                 }, this),
 

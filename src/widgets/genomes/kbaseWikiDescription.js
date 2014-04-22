@@ -124,8 +124,12 @@
                         }
 
                         var imageHtml = "Unable to find an image. If you have one, you might consider <a href='" + desc.wikiUri + "' target='_new'>adding it to Wikipedia</a>.";
-                        if (desc.imageUri != null)
-                            imageHtml = "<img src='" + desc.imageUri + "' />";
+                        if (desc.imageUri != null) {
+                            imageHtml = "<img src='" + desc.imageUri + "'";
+                            if (this.options.width)
+                                imageHtml += "style='max-width: 100%'";
+                            imageHtml += "/>";
+                        }
                     }
                     else {
                         descHtml = this.notFoundHeader(strainName);
@@ -302,8 +306,6 @@
                     errorCallback("No search term given");
                 }
             }
-            console.log('searching for...');
-            console.log(termList);
 
             var searchTerm = termList.shift();
             var usTerm = searchTerm.replace(/\s+/g, '_');

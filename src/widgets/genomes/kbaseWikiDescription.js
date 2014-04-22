@@ -63,7 +63,12 @@
             this.cdmiClient.genomes_to_taxonomies([this.options.genomeID], 
                 $.proxy(function(taxonomy) {
                     taxonomy = taxonomy[this.options.genomeID];
-                    this.renderFromTaxonomy(taxonomy.reverse());
+                    if (taxonomy) {
+                        this.renderFromTaxonomy(taxonomy.reverse());
+                    }
+                    else {
+                        this.renderError();
+                    }
                 }, this),
 
                 this.renderError
@@ -288,7 +293,7 @@
             errString = "Sorry, an unknown error occurred";
             if (typeof error === "string")
                 errString = error;
-            else if (error.error && error.error.message)
+            else if (error && error.error && error.error.message)
                 errString = error.error.message;
 
             

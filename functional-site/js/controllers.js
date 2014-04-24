@@ -245,16 +245,38 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 })
 
 .controller('Favorites', function($scope, $stateParams, favoriteService) {
+
+    $scope.selected = [{workspace: 'chenrydemo', 
+                        name: 'kb|g.9.fbamdl.25.fba.55'}];
+    $scope.type = 'FBA'                        
+
     $scope.prom = kb.ujs.get_state('favorites', 'queue', 0);
 
     $.when($scope.prom).done(function(data) {
         $scope.favs = data;
-        console.log($scope.favs)
+        $scope.fav_by_kind = $scope.processData();
         $scope.$apply();
+        console.log('fav_by_kind', $scope.fav_by_kind);
     })
 
+
+
+    $scope.processData = function() {
+        fav_by_kind = {}
+        for (var i in $scope.favs) {
+            var kind = $scope.favs[i].type.split('-')[0];
+            if (kind in fav_by_kind) {
+                fav_by_kind[kind].push($scope.favs[i])
+            } else {
+                fav_by_kind[kind] = []
+                fav_by_kind[kind].push($scope.favs[i])
+            }
+        }
+
+        return fav_by_kind;
+    }
+
     $scope.rmObject = function(ws, id, type) {
-        console.log('revmoving object', ws , id , type)
         for (var i in $scope.favs) {
             if ($scope.favs[i].ws == ws
                 && $scope.favs[i].id == id
@@ -263,9 +285,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
             }
         }
         favoriteService.remove(ws, id, type);
-
-        console.log('new favs', $scope.favs)
-
+        $scope.fav_by_kind = $scope.processData();
     }
 
     $scope.clearList = function() {
@@ -276,9 +296,32 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     }
 
 
+    $scope.displayViewer = function(ws, id, type) {
+        console.log(this)
+        console.log(ws,id,type)
+
+    }
+
+
+    //$scope.displayViewer('chenrydemo', 'kb|g.9.fbamdl.25.fba.55', 'FBA')
+
+
+    $scope.AccordionCtrl = function($scope) {
+      $scope.oneAtATime = true;
+
+
+
+      $scope.items = ['Item 1', 'Item 2', 'Item 3'];
+
+      $scope.addItem = function() {
+        var newItemNo = $scope.items.length + 1;
+        $scope.items.push('Item ' + newItemNo);
+      };
+    }
+
+
+
 })
-
-
 
 
 .controller('Narrative', function($scope, $stateParams, $location, kbaseLogin, $modal, FeedLoad) {
@@ -437,15 +480,6 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) 
 
 };
 
-
-/*
-function Navigation($scope, $location) { 
-    $scope.isActive = function (viewLocation) {
-    console.log(viewLocation, $location.path()) 
-        return viewLocation === $location.path();
-    };
-}
-*/
 
 function LPHelp($scope, $stateParams, $location) {
     // Fixme: move out of controller

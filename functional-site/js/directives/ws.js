@@ -252,9 +252,10 @@ angular.module('ws-directives')
 
             function manageModal(ws_name) {
                 var settings = scope.workspace_dict[ws_name];
+                console.log('settings', settings)
 
                 var isAdmin;
-                if (settings[4] == 'a') {
+                if (settings[5] == 'a') {
                     isAdmin = true;
                 } else {
                     isAdmin = false;
@@ -263,10 +264,10 @@ angular.module('ws-directives')
                 // table of meta data
                 var table = $('<table class="table table-bordered table-condensed table-striped manage-table">');                
                 var data = [
-                    ['Name', settings[0]],
-                    ['Objects', '~ ' + settings[3] ],
-                    ['Owner', settings[1] ],
-                    ['Your Permission', perm_dict[settings[4]] ],
+                    ['Name', settings[1]],
+                    ['Objects', '~ ' + settings[4] ],
+                    ['Owner', settings[2] ],
+                    ['Your Permission', perm_dict[settings[5]] ],
                     //['Global Permission', perm_dict[settings[5]] ]
                 ];
                 for (var i=0; i<data.length; i++) {
@@ -430,7 +431,7 @@ angular.module('ws-directives')
                 // if user is logged in and admin 
                 if (USER_ID && isAdmin ) {
                     var params = {workspace: ws_name}
-
+                    console.log('calling get perms', params)
                     var prom = kb.ws.get_permissions(params);
 
                     //var newPerms;

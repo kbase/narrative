@@ -126,10 +126,8 @@ app.service('favoriteService', function() {
    
 
     function set_ui_count(count) { 
-        console.log('setting set_ui_count')
         fav_count_ele.text(count);
         status_ele.rmLoading();
-
     }
 
 });

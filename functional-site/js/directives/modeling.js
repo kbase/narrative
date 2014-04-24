@@ -7,15 +7,17 @@ angular.module('modeling-directives')
         link: function(scope, element, attrs) {
             var type = scope.type;
             var map_ws = 'nconrad:paths';
+            console.log(type, map_ws)
+
             var p = $(element).kbasePanel({title: 'Pathways', 
                                            type: 'Pathway',
                                            rightLabel: map_ws,
                                            subText: scope.id});
             p.loading();
 
+
             if (type == "Model") {
-                var prom = kb.req('ws', 'get_objects',
-                            [{name: scope.id, workspace: scope.ws}]);
+                var prom = get_objects(scope.ids, scope.ws)
                                    
                 $.when(prom).done(function(d) {
                     var data = [d[0].data];
@@ -28,8 +30,10 @@ angular.module('modeling-directives')
                 });
 
             } else if (type == "FBA") {
-                var prom = kb.req('ws', 'get_objects',
-                            [{name: scope.id, workspace: scope.ws}]);
+                //var prom = get_objects(scope.ids, scope.ws);
+                console.log('calling!')
+                var prom = kb.req('ws', 'get_objects', scope.selected);
+
                 $.when(prom).done(function(d) {
                     var data = [d[0].data];
                     console.log(data)
@@ -40,6 +44,19 @@ angular.module('modeling-directives')
                     $(p.body()).append('<div class="alert alert-danger">'+
                                 e.error.message+'</div>');
                 });
+            }
+
+
+            function get_objects(ids, workspaces) {
+                var identities = []
+                for (var i=0; i< ids.length; i++) {
+                    var identity = {}
+                    identity.name = ids[i];
+                    identity.workspace = workspaces[i]
+                }
+
+                var prom = kb.req('ws', 'get_objects', identities);
+                return prom;
             }
 
             $.fn.pathways = function(options) {
@@ -76,8 +93,10 @@ angular.module('modeling-directives')
 
                 var tab = $('<li class="tab active"><a>Maps</a></li>')
                 tab.click(function(){
-                    $location.search({map: 'list'})
-                    scope.$apply();
+                    if(scope.id && scope.ws) {
+                        $location.search({map: 'list'})
+                        scope.$apply();
+                    }
                     $('.tab').removeClass('active');
                     $(this).addClass('active')
                     $('.tab-pane').removeClass('active');                             
@@ -108,8 +127,13 @@ angular.module('modeling-directives')
                             } else {
                                 var route = 'fbas';
                             }
-                            var url = 'ws.'+route+"({ws:'"+scope.ws+"', id:'"+scope.id+"'})";
-                            var link = '<a ui-sref="'+url+'" '+
+
+                            // if this is a usual page (and not another app)
+                            if (scope.ws && scope.id) {
+                                var url = 'ws.'+route+"({ws:'"+scope.ws+"', id:'"+scope.id+"'})";
+                            }
+
+                            var link = '<a '+(url ? 'ui-sref="'+url+'" ' : '')+
                                     'class="pathway-link" data-map="'+obj[1]+'">'+obj[1]+'</a>'
                             var name = link
 
@@ -158,6 +182,11 @@ angular.module('modeling-directives')
                     // event for clicking on pathway link
                     container.find('.pathway-link').unbind('click')
                     container.find('.pathway-link').click(function() {
+                        var exists;
+                        $('.pathway-tab').each(function() {
+                            var map = $(this).data('map');
+                            new_map_tab(map)                            
+                        })
                         var map = $(this).data('map');
                         new_map_tab(map)
                     });

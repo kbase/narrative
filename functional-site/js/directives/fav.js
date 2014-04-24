@@ -12,24 +12,30 @@ angular.module('fav-directives', []);
 angular.module('fav-directives')
 .directive('favoritesidebar', function($location) {
     return {
-        link: function(scope, element, attrs) {
-
+        link: function(scope, ele, attrs) {
 
         }
     };
 })
+.directive('favoriteviewer', function($location) {
+    return {
+        link: function(scope, ele, attrs) {
 
+
+            scope.drawPathways = function() {
+                console.log('called')
+                $(ele).append('<div pathways></div>')
+            }
+
+        }
+    };
+})
 
 .directive('favoritetable', function($location, $compile) {
     return {
 
         link: function(scope, element, attrs, compile) {
             // retrieve again
-
-
-
-
-
             function showWidgets(data) {
                 for (var i in data) {
                     var obj = data[i];
@@ -87,17 +93,13 @@ angular.module('fav-directives')
 
             function process(data) {
                 var featuredomains = data.featuredomains;
-                console.log('feature domains', featuredomains)
                 var domains = []
                 for (var i in featuredomains) {
                     if ( featuredomains[i].domains) {
-
                         var d = featuredomains[i].domains
                         domains.push(d)
-
                     }
                 }
-                console.log(domains)
             }
 
 
@@ -338,10 +340,7 @@ angular.module('fav-directives')
                     var y = coordinates[1];
 
                 });                
-
             }            
-
-
         }
     };
 })

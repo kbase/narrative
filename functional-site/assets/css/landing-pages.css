@@ -636,6 +636,9 @@ div::-webkit-scrollbar-thumb {
     padding: 7px 15px;
 }
 
+
+/* favorite stuff */
+
 .btn-favorite, 
 .btn-rm-panel,
 .btn-min-panel {
@@ -646,13 +649,19 @@ div::-webkit-scrollbar-thumb {
     margin: 10px 0 0 0;
 }
 
-/*
-.favorite-count {
-    background-color: #428bca;
+
+
+.fav-viewer-obj:hover { 
+    cursor: hand; 
+    cursor: pointer;    
+    background: #f3f3f3
 }
-.active .favorite-count {
-    background-color: #2a6496;
-}*/
+
+
+/* end favorite stuff */
+
+
+
 .navbar-nav {
     color: #6DA8CF;
     font-family: 'RobotoBlack', Arial, sans-serif;

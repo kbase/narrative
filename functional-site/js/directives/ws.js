@@ -990,17 +990,17 @@ angular.module('ws-directives')
                 // load workspace objects
                 var p = kb.ws.list_objects({workspaces: [ws]});
                 var p2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1});
-                var p3 = kb.ujs.get_state('favorites', 'queue', 0);
+                //var p3 = kb.ujs.get_state('favorites', 'queue', 0);
                 var p4 = $.getJSON('landing_page_map.json');
 
-                $.when(p, p2, p3, p4).done(function(data, deleted_objs, favs, obj_mapping){
+                $.when(p, p2, p4).done(function(data, deleted_objs, obj_mapping){
                     var obj_mapping = obj_mapping[0];
                     $(element).rmLoading();
 
                     $(element).append('<table id="'+table_id+'" \
                         class="table table-bordered table-striped" style="width: 100%;"></table>')    
 
-                    var tableobjs = formatObjs(data, obj_mapping, favs);
+                    var tableobjs = formatObjs(data, obj_mapping)//favs);
                     var wsobjs = tableobjs[0];
                     var type_counts = tableobjs[1];
 

@@ -304,7 +304,7 @@ angular.module('lp-directives')
             $.when(prom).done(function(data) {
                 $(p.body()).kbaseMediaEditor({ids: [scope.id], 
                                               workspaces : [scope.ws],
-                                            data: data});
+                                              data: data});
             })
         }
     };

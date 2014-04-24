@@ -12,8 +12,6 @@ $.KBWidget({
         var ws = options.workspaces[0];        
         var mediadata = options.data[0];
         var container = this.$elem;
-        var fbaserv = new fbaModelServices('http://140.221.85.73:4043/');
-        
         media_view(container, mediadata);
 
         function media_view(container, data) {
@@ -157,7 +155,7 @@ $.KBWidget({
                 minflux.push(data.media_compounds[i].min_flux);
                 maxflux.push(data.media_compounds[i].max_flux);
             }
-            var ajax = fbaserv.addmedia({
+            var ajax = kb.fba.addmedia({
                 media: data.wsid,
                 workspace: data.ws,
                 name: data.name,

@@ -13,9 +13,11 @@ import getpass
 import random
 import string
 import os
+import errno
 import time
 import sys
 import types
+import re
 import biokbase.narrative.upload_handler
 
 from IPython.core.display import display, Javascript
@@ -41,6 +43,9 @@ endpoint = { 'invocation' : 'https://kbase.us/services/invocation',
 
 # IPython interpreter object
 ip = None
+
+# default start directory
+workdir = "/tmp/narrative"
 
 # Actually performs the login with username and password
 def do_login( user, password):
@@ -95,7 +100,14 @@ class kbasemagics(Magics):
 
     @line_magic
     def kblogin(self,line):
-        """Login using username and password to KBase and then push necessary info into the environment"""
+        """
+        Login using username and password to KBase and then push login token into the environment.
+        Usage is: kblogin {userid}
+        If you have an ssh-agent with keys loaded, kblogin will attempt to use your ssh-key to
+        get an Globus token, if not, then you will be prompted for your password.
+        The token will be pushed into the KBASE_AUTH_TOKEN environment variable and picked up
+        by any libraries that have implemented that support.
+        """
         try:
             (user,password) = line.split();
         except ValueError:
@@ -136,12 +148,19 @@ class kbasemagics(Magics):
         
     @line_magic
     def uploader(self,line):
-        "Bring up an html cell that allows file uploads"
+        """
+        Bring up basic input form that allows you to upload files into /tmp/narrative
+        using PLUpload client libraries
+        Note that this is a demonstration prototype!
+        """
         return HTML( biokbase.narrative.upload_handler.HTML_EXAMPLE)
         
     @line_magic
     def jquploader(self,line):
-        "Bring up an html cell with JQuery UI thingy that allows file uploads"
+        """
+        Bring up an html cell with JQuery UI PLUpload widget that supports drag and drop
+        Note that this is a demonstration prototype!
+        """
         return HTML( biokbase.narrative.upload_handler.JQUERY_UI_EXAMPLE)
         
     @line_magic
@@ -166,7 +185,10 @@ class kbasemagics(Magics):
                 
     @line_cell_magic
     def inv_run(self,line, cell=None):
-        "If we are logged in, make sure we have a session and then use the invocation run_pipeline() method to executing something"
+        """
+        If we are logged in, make sure we have an invocation session and then use the invocation run_pipeline()
+        method to executing the rest of the line
+        """
         global user_id, token, user_profile, inv_client, inv_session
         sess = self.inv_session()
         try:
@@ -180,7 +202,9 @@ class kbasemagics(Magics):
 
     @line_magic
     def inv_ls(self,line):
-        "Invocation service list files"
+        """
+        List files on the invocation service for this session
+        """
         global user_id, token, user_profile, inv_client, inv_session, inv_cwd
         sess = self.inv_session()
         if len(line) > 0:
@@ -234,7 +258,11 @@ class kbasemagics(Magics):
         else:
             cwd = inv_cwd
             d = line
-            res = inv_client.remove_directory( sess, cwd,d)
+            try:
+                res = inv_client.remove_directory( sess, cwd,d)
+            except Exception, e:
+                print("Error: %s" % str(e),file=sys.stderr)
+                res = None
         return res
 
     @line_magic
@@ -244,10 +272,15 @@ class kbasemagics(Magics):
         sess = self.inv_session()
         if len(line) > 0:
             d = line
-            res = inv_client.change_directory( sess, inv_cwd,d)
-            inv_cwd = res
+            try:
+                res = inv_client.change_directory( sess, inv_cwd,d)
+                inv_cwd = res
+            except Exception as e:
+                print("Error: %s" % str(e),file=sys.stderr)
+                res = None
         else:
             print("Error - please specify a directory",file=sys.stderr)
+            res = None
         return res
 
     @line_magic
@@ -262,7 +295,11 @@ class kbasemagics(Magics):
         "Invocation service inventory of command scripts"
         global user_id, token, user_profile, inv_client, inv_session
         sess = self.inv_session()
-        res = inv_client.valid_commands()
+        try:
+            res = inv_client.valid_commands()
+        except Exception as e:
+            print("Error: %s" % str(e),file=sys.stderr)
+            res = None
         return res
 
     @line_magic
@@ -273,9 +310,9 @@ class kbasemagics(Magics):
         If only a single parameter is given, it is assumed to be a filename
         """
         global user_id, token, user_profile, inv_client, inv_session
+        res = None
         if len(line) < 1:
             print("Must specify filename and optionally a cwd",file=sys.stderr)
-            res = None
         else:
             try:
                 (cwd,filename) = line.split()
@@ -283,16 +320,19 @@ class kbasemagics(Magics):
                 filename = line
                 cwd = inv_cwd
             sess = self.inv_session()
-            res = inv_client.remove_files( sess, cwd, filename)
+            try:
+                res = inv_client.remove_files( sess, cwd, filename)
+            except Exception as e:
+                print("Error: %s" % str(e),file=sys.stderr)
         return res
 
     @line_magic
     def inv_rename_files(self,line):
         "Invocation service rename files"
         global user_id, token, user_profile, inv_client, inv_session
+        res = None
         if len(line) < 1:
             print("Must specify: cwd from_filename to_filename",file=sys.stderr)
-            res = None
         else:
             try:
                 (cwd, fromfn, tofn) = line.split()
@@ -306,18 +346,17 @@ class kbasemagics(Magics):
             sess = self.inv_session()
             try:
                 res = inv_client.rename_file( sess, cwd, fromfn, tofn)
-            except Exception, e:
+            except Exception as e:
                 print("Unable to rename %s to %s in directory %s: %s" % (fromfn,tofn,cwd,str(e)),file=sys.stderr)
-                return None
         return res
 
     @line_magic
     def inv_copy(self,line):
         "Invocation service copy file"
         global user_id, token, user_profile, inv_client, inv_session
+        res = None
         if len(line) < 1:
             print("Must specify: cwd from_filename to_filename",file=sys.stderr)
-            res = None
         else:
             try:
                 (cwd, fromfn, tofn) = line.split()
@@ -331,9 +370,8 @@ class kbasemagics(Magics):
             sess = self.inv_session()
             try:
                 res = inv_client.copy( sess, cwd, fromfn, tofn)
-            except Exception, e:
+            except Exception as e:
                 print("Unable to copy %s to %s in directory %s: %s" % (fromfn,tofn,cwd,str(e)),file=sys.stderr)
-                return None
         return res
 
     @line_magic
@@ -342,13 +380,26 @@ class kbasemagics(Magics):
         Invocation service put a file on the server.
         Parameters are filename contents [cwd]
         As usual, parameters are whitespace separated and the contents parameter is evaluated as
-        a python expression, so you can use a variable to contain file contents. Must be castable
-        to a string type
+        a python expression, so you can use a variable to contain file contents, however if contents
+        is a literal prefixed with a <, it will be treated as a filename in the current working
+        directory.
+        Examples:
+
+        inv_put_file newdata 012345
+        The line above will write a file called "newdata" to the invocation server, containing the text "012345"
+
+        inv_put_file newdata <newdata.txt
+        This line will look for a file called newdata.txt and upload the contents to the file newdata
+
+        inv_put_file newdata newdata
+        This line will take the contents of the newdata variable and send it to the newdata file. If there
+        is an error evaluating the value of newdata (such as, it is undefined) nothing will be written
         """
         global user_id, token, user_profile, inv_client, inv_session
+        res = None
+        constr = None
         if len(line) < 1:
             print("Must specify filename, contents and optionally a cwd",file=sys.stderr)
-            res = None
         else:
             try:
                 (filename, contents, cwd) = line.split()
@@ -360,22 +411,35 @@ class kbasemagics(Magics):
                     return(None)
                 cwd = inv_cwd
             sess = self.inv_session()
-            try:
-                con1 = ip.ev(contents)
-                contstr = str(con1)
-            except Exception, e:
-                print("Unable to convert %s to string: %s" % (contents,e),file=sys.stderr)
-                return None
-            res = inv_client.put_file( sess, filename, contstr, cwd)
+            filematch = re.match('<(.+)',filename)
+            if filematch:
+                filename = filematch.groups()[0]
+                try:
+                    with open( filename, "r") as myfile:
+                        constr = myfile.read()
+                except Exception as e:
+                    print("Error: %s" % str(e),file=sys.stderr)                    
+            else:
+                try:
+                    con1 = ip.ev(contents)
+                    contstr = str(con1)
+                except Exception as e:
+                    print("Unable to convert %s to string: %s" % (contents,e),file=sys.stderr)
+                    constr = None
+            if constr:
+                try:
+                    res = inv_client.put_file( sess, filename, contstr, cwd)
+                except Exception as e:
+                    print("Error: %s" % str(e),file=sys.stderr)
         return res
 
     @line_magic
     def inv_get_file(self,line):
         "Invocation service get file contents"
         global user_id, token, user_profile, inv_client, inv_session
+        res = None
         if len(line) < 1:
             print("Must specify filename and optionally a cwd",file=sys.stderr)
-            res = None
         else:
             try:
                 (filename,cwd) = line.split()
@@ -383,7 +447,10 @@ class kbasemagics(Magics):
                 filename = line
                 cwd = inv_cwd
             sess = self.inv_session()
-            res = inv_client.get_file( sess, filename, cwd)
+            try:
+                res = inv_client.get_file( sess, filename, cwd)
+            except Exception as e:
+                print("Error: %s" % str(e),file=sys.stderr)
         return res
 
     @line_magic
@@ -456,5 +523,10 @@ if ip is not None:
             fn.__doc__ = "Runs the %s script via invocation service" % item['cmd']
             setattr( m, script, fn)
     ip.ex('import icmd')
-    os.chdir('/tmp/narrative')
+    try:
+        os.makedirs(workdir)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+    os.chdir(workdir)
     print("Invocation service script helper functions have been loaded under the icmd.* namespace\n",file=sys.stderr)

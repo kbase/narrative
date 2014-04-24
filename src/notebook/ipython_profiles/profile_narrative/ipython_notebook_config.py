@@ -510,3 +510,18 @@ c.IPKernelApp.pylab = 'inline'
 # NotebookApp.kbase_auth = True then the monkeypatch code should patch all the notebook app
 # handlers to enforce and pass along kbase auth tokens
 monkeypatch.do_patching(c)
+
+# The default aliases for IPython have dysfunction entries for mv, rm and cp that include the "-i"
+# flag, requesting a prompt which cannot be passed through to a notebook cell, thus hanging the
+# interpreter. There is a bug for this, which hasn't been fixed in ages:
+# https://github.com/ipython/ipython/issues/514
+# I am using the method described here to reset the aliases:
+# http://alexgaudio.com/2011/10/04/ipython-shell-integration.html
+new_aliases = [('mv', 'mv'),
+               ('rm', 'rm'),
+               ('cp', 'cp'),
+               ('grep', 'grep'),
+               ('uniq', 'uniq'),
+               ('count', 'count'),
+               ('sort', 'sort')]
+c.AliasManager.user_aliases = new_aliases

@@ -119,12 +119,14 @@ angular.module('modeling-directives')
                         for (var i in d) {
                             var obj = d[i];
                             console.log(obj)
+                            console.log('type!', type)
 
                             if (type == 'Model') {
                                 var route = 'models';
                             } else {
                                 var route = 'fbas';
                             }
+                            console.log('route', route)
 
                             // if this is a usual page (and not another app)
                             if (scope.ws && scope.id) {

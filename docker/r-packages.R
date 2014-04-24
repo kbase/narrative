@@ -11,8 +11,10 @@ install.packages("table", type="source")
 install.packages("ggplot2", type="source")
 install.packages("lme4", type="source")
 install.packages("reshape", type="source")
-install.packages("pheatmap", type="source")
-install.packages(c("RCcolorBrewer","pheatmap","amap","clValid","gplots","png","tiff","lattice","RXKCD","wordcloud","tm",igraph"), type="source")
+# Marcin's requested packages
+install.packages(c("RCcolorBrewer","pheatmap","amap","clValid","gplots","png","tiff","lattice","RXKCD","wordcloud","tm","igraph"), type="source", dependencies=TRUE)
+# Possibly useful for KBase Svcs clients
+install.packages(c("RJSONIO","RCurl"), type="source")
  
 install.packages("Rglpk", type="source")  # powerful solver for mixed integer linear programming
 install.packages("goalprog", type="source")  # goal programming

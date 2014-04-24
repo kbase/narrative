@@ -43,15 +43,23 @@ line,
 }
 
 
-.rxn, 
-.map{
+.rxn {
 	fill: #fff;
 	stroke-width: 2px;
 	stroke: #666;
 }
 
-.rxn-label,
+.map {
+    fill: #fff;
+    stroke-width: 1px;
+    stroke: #666;    
+}
+.cpd-label,
 .map-label {
+    fill: #666;
+}
+
+.rxn-label {
 	font-size: 10px;
 	stroke: #666;
 }

@@ -189,8 +189,22 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     $scope.type = type;  
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
+    $scope.selected = [{workspace: $scope.ws, name: $scope.id}]
+
     $scope.defaultMap = $stateParams.map;
 
+
+    $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
+        handle: '.panel-heading',
+        cancel: '.panel-title,.panel-subtitle,.label,.glyphicon',
+        start: function() {
+          $(this).find('.panel-body').addClass('hide');
+          $(this).sortable('refreshPositions');
+        },
+        stop: function() {
+          $(this).find('.panel-body').removeClass('hide');
+        }
+    });
 })
 
 .controller('WBJSON', function($scope, $stateParams) {

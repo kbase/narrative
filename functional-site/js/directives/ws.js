@@ -1207,6 +1207,12 @@ angular.module('ws-directives')
             // events for object table.  
             // This is reloaded on table change/pagination
             function events() {
+
+                // ignore other events when clicking landingpage href
+                $('.obj-id').click(function(e) {
+                    e.stopPropagation();
+                })
+
                 $('.btn-fav').hover(function() {
                     $(this).addClass('glyphicon-star-empty');
                 }, function() {
@@ -1216,6 +1222,7 @@ angular.module('ws-directives')
                 $('.btn-fav').unbind('click');
                 $('.btn-fav').click(function(e) {
                     e.stopPropagation();
+
                     var link = $(this).parent('td').find('.obj-id');
                     var id = link.data('id');
                     var ws = link.data('ws');
@@ -1363,7 +1370,6 @@ angular.module('ws-directives')
                     if (!USER_ID) return;
                     var checkbox = $(this).children('td').eq(0).find('.ncheck');
                     var id = checkbox.attr('data-id');
-                    //var modelID = get_fba_model_id( $(this).attr('data-id') );
                     var dataWS = checkbox.data('ws');
                     var dataType = checkbox.data('type');
 

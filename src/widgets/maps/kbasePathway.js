@@ -26,8 +26,8 @@ $.KBWidget({
         var highlight = 'steelblue';
 
         var flux_threshold = 0.001;
-        var heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
-        var neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00'];
+        var heat_colors = ['#8A0000','#AD3333', '#C26666', '#E0B2B2', '#f28e8e'];
+        var neg_heat_colors = ['#007A00','#19A319', '#80CC80', '#B2E0B2', '#dded00'];
         var gapfill_color = '#f000ff';
         var gene_stroke = '#777';
         var g_present_color = '#8bc7e5';
@@ -145,6 +145,8 @@ $.KBWidget({
 
             // for each rxn on the map
             for (var i in rxns) {
+                var color = '#fff'
+
                 var rxn = rxns[i];
 
                 var x = rxn.x - rxn.w/2,
@@ -195,18 +197,31 @@ $.KBWidget({
                     var w = rxn.w / self.fbas.length;
 
                     for (var i in fba_rxns) {
-                        var found_rxn = fba_rxns[i];
+                        var flux;
+                        var found_rxns = fba_rxns[i];
                         var rect = group.append('rect').attr('x', x+(w*i))
                                         .attr('y', y-2)
                                         .attr('width', w)
                                         .attr('height', h)
 
-                        if (found_rxn.length) {
-                            var flux = found_rxn[i].value
+                        if (found_rxns.length) {
+                            //find largest magnitude flux
+                            flux = 0
+                            for (var j in found_rxns) {
+                                if (Math.abs(found_rxns[j].value) > Math.abs(flux) ) {
+                                    flux = found_rxns[j].value
+                                }
+                            }
+        
+                        }
+    
+                        if (flux) {
+                            var color = get_heat_color(flux)
                         }
 
-                        var color = get_heat_color(flux)
-
+                        
+                        //$('.col-md-9').append('flux: '+ flux + ' color: '+color + '  '+JSON.stringify(found_rxns)+'<br>')
+                        //$('.col-md-9').append('rxn '+ JSON.stringify(rxn.rxns)+' color: '+ color+'<br>')
                         rect.attr('fill', color);
                         if (color != '#fff') {
                             rect.attr('stroke', stroke_color2)
@@ -217,12 +232,12 @@ $.KBWidget({
 
                 // get substrates and products
                 var subs = []
-                for (var i in rxn.substrates_refs) {
-                    subs.push(rxn.substrates);
+                for (var i in rxn.substrate_refs) {
+                    subs.push(rxn.substrate_refs[i].compound_ref);
                 }
                 var prods = []
-                for (var i in rxn.products_refs) {
-                    prods.push(rxn.products);
+                for (var i in rxn.product_refs) {
+                    prods.push(rxn.product_refs[i].compound_ref);
                 }
 
                 // add reaction label
@@ -237,7 +252,10 @@ $.KBWidget({
                 var content = 'ID: ' + rxn.id+'<br>'+
                               'Rxns: ' + rxn.rxns.join(', ')+'<br>'+
                               'Substrates: ' + subs.join(', ')+'<br>'+
-                              'Products: ' + prods.join(', ')+'<br>';
+                              'Products: ' + prods.join(', ')+'<br><br>'+
+                              'Flux: '+ (flux ? flux : 'None');
+
+
                 $(group.node()).popover({html: true, content: content, animation: false,
                                         container: 'body', trigger: 'hover'});
 
@@ -426,16 +444,25 @@ $.KBWidget({
                         if (self.fbas) {
                             // fixme: this only works for one model
                             var found_rxns = getFbaRxns(d.rxns)[0]
+                            //console.log('found rxns', found_rxns)
 
+                            var flux;
                             if (found_rxns.length) {
                                 // fixme: only using first flux value from first model
-                                var flux = found_rxns[0][1];
+                                flux = 0
+                                for (var j in found_rxns) {
+                                    if (Math.abs(found_rxns[j].value) > Math.abs(flux) ) {
+                                        flux = found_rxns[j].value
+                                    }
+                                }
+                                //console.log(flux)
 
                                 if (flux > flux_threshold) {
-                                    var c = '#f28e8e';
-                                } else if (-flux > flux_threshold) {
-                                    var c = '#c9d33e';
+                                    var c = '#FF3333';
+                                } else if (-1*flux > flux_threshold) {
+                                    var c = '#33AD33';
                                 } 
+                                return c;
                             }
                         } else {
                             return c;
@@ -514,6 +541,7 @@ $.KBWidget({
 
                 var text = group.append('text')
                                   .attr('class', 'map-label')
+                                  .style('font-size', '8pt')
                                   .text(map.name)
                                   .attr('x', x+2)
                                   .attr('y', y+10)
@@ -591,26 +619,27 @@ $.KBWidget({
 
             // for each model, look for model data
             for (var j in self.fbas) {
-                var fba_obj = self.fbas[j];
-                fba_arrays = fba_obj.FBAReactionVariables;
+                var fba = self.fbas[j];
+                fba_objs = fba.FBAReactionVariables;
 
                 // see if we can find the rxn in that fbas's list of reactions
                 var found_rxn = [];
 
-                for (var i in fba_arrays) {
-                    fba_array = fba_arrays[i];
-                    if (rxn_ids.indexOf(fba_array.modelreaction_ref.split('/')[5].split('_')[0]) != -1) {
-                        found_rxn.push(fba_array);
+                for (var i in fba_objs) {
+                    fba_obj = fba_objs[i];
+                    if (rxn_ids.indexOf(fba_obj.modelreaction_ref.split('/')[5].split('_')[0]) != -1) {
+                        console.log('found', fba_obj.modelreaction_ref)
+                        found_rxn.push(fba_obj);
                     }
                 }
 
-                found_rxns.push(found_rxn); // either an raction object or undefined
+                found_rxns.push(found_rxn); // either an reaction object or undefined
             }
-        
             return found_rxns;
         }
 
         function get_heat_color(flux) {
+            console.log(flux)
             if (flux >= 100){
                 var color = heat_colors[0];
             } else if (flux >= 50) {
@@ -728,7 +757,7 @@ $.KBWidget({
             var edit_opts = $('<div class="map-opts pull-left">\
                                   <!--<button class="btn btn-primary btn-edit-map">Edit Map</button>-->\
                                   <button class="btn btn-default btn-map-opts">Options <div class="caret"></div></button>\
-                                  <button class="btn btn-default btn-map-cancel">Done</button>\
+                                  <!--<button class="btn btn-default btn-map-cancel">Done</button>-->\
                                   <button class="btn btn-default btn-map-save">Save</button>\
                                </div>\
                                <span class="mouse-pos pull-right">\
@@ -985,30 +1014,36 @@ $.KBWidget({
                 cpds[cpd_index].label_y = y
             })
 
+            // have to get meta data to resave object 
+            var prom = kb.ws.get_object_info([{workspace: self.workspace, 
+                                               name: map_id}], 1)
+            $.when(prom).done(function(data) {
+                var metadata = data[0][10];
+                // saving object to workspace
+                var p = kb.ws.save_object({'workspace': self.workspace, 
+                        'data': new_map, 
+                        'id': map_id,
+                        'type': 'KBaseBiochem.MetabolicMap',
+                        'metadata': {'compound_ids': 'cpd00029,cpd00027,cpd00089,cpd00482,cpd00027,cpd00190,cpd00095,cpd00863,cpd00079,cpd00072,cpd00061,cpd00169,cpd00203,cpd00159,cpd00213,cpd00363,cpd00020,cpd03049,cpd00022,cpd00071,cpd00836,cpd00449,cpd00290,cpd03696,cpd03697,cpd03698,cpd01030,cpd00032,cpd00853,cpd00102,cpd00056', 'name': 'Glycolysis / Gluconeogenesis', 'reaction_ids': 'rxn00786,rxn00506,rxn00172,rxn00507,rxn00544,rxn00536,rxn00543,rxn00011,rxn00011,rxn02342,rxn01871,rxn00499,rxn00148,rxn00459,rxn01106,rxn00781,rxn00747,rxn00545,rxn00549,rxn06231,rxn00558,rxn00704,rxn02380,rxn01169,rxn01169,rxn01977,rxn01977,rxn01171,rxn00216,rxn00216,rxn00220,rxn00221,rxn00705,rxn01241,rxn01100,rxn06118,rxn06120,rxn06860,rxn06678,rxn03481,rxn03482,rxn00305,rxn00519,R09127,rxn00247,rxn00781,rxn00782,rxn07191,rxn00779,rxn13974,rxn01104,rxn01216,rxn00175,R09084,R09085,R09086,rxn03517,rxn01106'}
+                        })
 
-            // saving object to workspace
-            var p = kb.ws.save_object({'workspace': self.workspace, 
-                    'data': new_map, 
-                    'id': map_id,
-                    'type': 'KBaseBiochem.MetabolicMap'
-                    })
+                $.when(p).done(function(d) {
+                    var msg = $('<div class="alert alert-success pull-left">Saved.</div>')
+                    msg.css('padding', '7px');  // one exception for putting this in js
+                    msg.css('margin-left', '10px')
+                    msg.css('margin-bottom', 0);
+                    container.find('.map-opts').after(msg);
+                    msg.delay(3000).fadeOut(500);
 
-            $.when(p).done(function(d) {
-                var msg = $('<div class="alert alert-success pull-left">Saved.</div>')
-                msg.css('padding', '7px');  // one exception for putting this in js
-                msg.css('margin-left', '10px')
-                msg.css('margin-bottom', 0);
-                container.find('.map-opts').after(msg);
-                msg.delay(3000).fadeOut(500);
+                    // redraw map
+                    self.drawMap();
 
-                // redraw map
-                self.drawMap();
+                }).fail(function(e){
+                    container.prepend('<div class="alert alert-danger">'+
+                                    e.error.message+'</div>')
+                })
 
-            }).fail(function(e){
-                container.prepend('<div class="alert alert-danger">'+
-                                e.error.message+'</div>')
             })
-    
         }
 
         //Drag handler

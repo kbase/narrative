@@ -7,7 +7,7 @@ angular.module('modeling-directives')
         link: function(scope, element, attrs) {
             var type = scope.type;
             var map_ws = 'nconrad:paths';
-            console.log(type, map_ws)
+            //var ids = (scope.ids ? scope.ids : [scope.id]); //fixme
 
             var p = $(element).kbasePanel({title: 'Pathways', 
                                            type: 'Pathway',
@@ -17,7 +17,7 @@ angular.module('modeling-directives')
 
 
             if (type == "Model") {
-                var prom = get_objects(scope.ids, scope.ws)
+                var prom = kb.req('ws', 'get_objects', scope.selected);
                                    
                 $.when(prom).done(function(d) {
                     var data = [d[0].data];
@@ -31,12 +31,10 @@ angular.module('modeling-directives')
 
             } else if (type == "FBA") {
                 //var prom = get_objects(scope.ids, scope.ws);
-                console.log('calling!')
                 var prom = kb.req('ws', 'get_objects', scope.selected);
 
                 $.when(prom).done(function(d) {
                     var data = [d[0].data];
-                    console.log(data)
                     $(p.body()).pathways({fbaData: data, 
                                 ws: map_ws, defaultMap: scope.defaultMap,
                                 scope: scope})   
@@ -65,12 +63,10 @@ angular.module('modeling-directives')
                 self.ws = options.ws;
                 self.default_map = options.defaultMap
 
-                console.log('fba data', self.fbas)
                 var container = $(this);
 
                 var stroke_color = '#666';
 
-                console.log('called widget again')
 
                 var tableSettings = {
                                 "sPaginationType": "bootstrap",
@@ -80,7 +76,9 @@ angular.module('modeling-directives')
                                 "aaSorting": [[ 1, "asc" ]],
                                 "aoColumns": [
                                     { "sTitle": "Name"}, //"sWidth": "10%"
-                                    //{ "sTitle": "Map id"} ,                            
+                                    { "sTitle": "Map ID"},
+                                    { "sTitle": "Rxn Count", "sWidth": "10%"} , 
+                                    { "sTitle": "Cpd Count", "sWidth": "10%"} ,                                                                                            
                                     //{ "sTitle": "Rxn Count", "sWidth": "12%"},
                                     //{ "sTitle": "Cpd Count", "sWidth": "12%"},
                                     //{ "sTitle": "Source","sWidth": "10%"},
@@ -115,12 +113,12 @@ angular.module('modeling-directives')
 
                 function load_map_list() {
                     // load table for maps
-                    var p = kb.ws.list_objects({workspaces: [self.ws]})
+                    var p = kb.ws.list_objects({workspaces: [self.ws], includeMetadata: 1})
                     $.when(p).done(function(d){
                         var aaData = [];
                         for (var i in d) {
-
                             var obj = d[i];
+                            console.log(obj)
 
                             if (type == 'Model') {
                                 var route = 'models';
@@ -134,10 +132,13 @@ angular.module('modeling-directives')
                             }
 
                             var link = '<a '+(url ? 'ui-sref="'+url+'" ' : '')+
-                                    'class="pathway-link" data-map="'+obj[1]+'">'+obj[1]+'</a>'
-                            var name = link
+                                    'class="pathway-link" data-map="'+obj[1]+'">'+obj[10].name+'</a>'
+                            var name = link;
 
-                            aaData.push([name])
+                            var rxn_count = obj[10].reaction_ids.split(',').length;
+                            var cpd_count = obj[10].compound_ids.split(',').length;
+                            aaData.push([name, obj[1], rxn_count, cpd_count])
+                            //aaData.push([name, obj[1]])
                         }
 
                         tableSettings.aaData = aaData; 
@@ -182,13 +183,20 @@ angular.module('modeling-directives')
                     // event for clicking on pathway link
                     container.find('.pathway-link').unbind('click')
                     container.find('.pathway-link').click(function() {
-                        var exists;
-                        $('.pathway-tab').each(function() {
-                            var map = $(this).data('map');
-                            new_map_tab(map)                            
-                        })
                         var map = $(this).data('map');
-                        new_map_tab(map)
+                        var name = $(this).text();
+                        var exists;
+
+                        // see if map tab already exists
+                        $('.pathway-tab').each(function() {
+                            var existing_map = $(this).data('map');
+                            if (map == existing_map) {
+                                exists = true;
+                                return
+                            }          
+                        })
+
+                        if (!exists) new_map_tab(map, name);
                     });
 
                     // tooltip for hover on pathway name
@@ -197,9 +205,9 @@ angular.module('modeling-directives')
                 } // end events
 
 
-                function new_map_tab(map) {
+                function new_map_tab(map, name) {
                     var tab = $('<li class="tab pathway-tab" data-map="'+map+'" id="path-tab-'+map+'"><a>'
-                                        +map.slice(0, 10)+'</a>'+
+                                        +name.slice(0, 12)+'...</a>'+
                                 '</li>')          
 
                     container.find('.tab-content')

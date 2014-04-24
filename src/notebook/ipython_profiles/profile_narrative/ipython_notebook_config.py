@@ -522,6 +522,5 @@ new_aliases = [('mv', 'mv'),
                ('cp', 'cp'),
                ('grep', 'grep'),
                ('uniq', 'uniq'),
-               ('count', 'count'),
-               ('sort', 'sort')]
+               ('wc', 'wc')]
 c.AliasManager.user_aliases = new_aliases

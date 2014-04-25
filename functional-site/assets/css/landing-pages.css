@@ -283,15 +283,11 @@ table {
     background-color: #428bca !important;
 }
 
-
-.side-bar-switch {
-    margin: 0 0 10px 0;
+.settings-dropdown { 
+    padding: 5px 10px 10px 10px;
 }
-.side-bar-switch li {
-    font-size: 12px;
-}
-.side-bar-switch li a {
-    padding: 5px 10px;
+.settings-dropdown .btn {
+    width: 100%;
 }
 
 .selected-obj-alert {

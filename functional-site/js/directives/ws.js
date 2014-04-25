@@ -1033,7 +1033,7 @@ angular.module('ws-directives')
                               '</a>'+
                             '</div>');
 
-                    var dd = $('<ul class="dropdown-menu" role="menu"></ul>');
+                    var dd = $('<ul class="dropdown-menu settings-dropdown" role="menu"></ul>');
                     dd.append('Columns:<br>');
                     settings_btn.append(dd);
 
@@ -1635,6 +1635,7 @@ angular.module('ws-directives')
                 var prom = kb.ws.delete_objects(obj_ids);
                 $.when(prom).done(function(data) {
                     scope.loadObjTable();
+                    //kb.notify('Moved '+obj_ids.length+'objects to trashbin')
                 })
                 return prom;
             }

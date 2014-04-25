@@ -20,6 +20,7 @@ $.KBWidget({
         var workspaces = options.workspaces;
         var data = options.fbaData;
 
+        console.log('loading fba')
         var container = this.$elem;
 
         var tables = ['Reactions', 'Compounds'];

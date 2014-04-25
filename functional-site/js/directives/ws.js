@@ -742,19 +742,15 @@ angular.module('ws-directives')
                                             description: descript
                                         };                                            
                                         var prom = kb.ws.create_workspace(params);
-                                        $prompt.addCover()
-                                        $prompt.getCover().loading()
-                                        $.when(prom).done(function(){
-                                            $prompt.addCover('Created workspace: '+ws_name, 'success');
-                                                scope.loadWSTable()
-
-                                            var btn = $('<button type="button" class="btn btn-primary">Close</button>');
-                                            btn.click(function() { 
-                                                $prompt.closePrompt(); 
-                                            });
+                                        $prompt.data('dialogModal').find('.modal-body').loading()
+                                        $.when(prom).done(function(){                                            
+                                            scope.loadWSTable();
+                                            kb.notify('Created workspace: '+ws_name, 'success');                                            
+                                            $prompt.closePrompt(); 
 
                                             $prompt.data('dialogModal').find('.modal-footer').html(btn);                                            
                                         }).fail(function(e) {
+                                            $prompt.data('dialogModal').find('.modal-body').rmLoading()
                                             $prompt.addCover(e.error.message, 'danger');                                            
                                         })
                                     }
@@ -987,6 +983,7 @@ angular.module('ws-directives')
                 $(element).loading('loading '+ws+'...')
 
 
+
                 // load workspace objects
                 var p = kb.ws.list_objects({workspaces: [ws]});
                 var p2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1});
@@ -1095,13 +1092,23 @@ angular.module('ws-directives')
 
                     //searchColumns()
                     addOptionButtons();
+                    // resinstantiate all events.
+                    events();    
+
+                    //kb.notify('blah blah blah', 'error')
+                    btn.click(function() {
+                        kb.notify('blah blah blah', 'error')
+                    })
+
+
+                    $(element).append(btn)
 
                 }).fail(function(e){
                     $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
                 })
 
-                // resinstantiate all events.
-                events();
+
+
             } // end scope.loadObjTable
 
             scope.loadObjTable();
@@ -1240,13 +1247,6 @@ angular.module('ws-directives')
 
                 })
 
-                $('.obj-id').parents('td').unbind('click');
-                $('.obj-id').parents('td').hover(function() {
-                    $(this).find('.btn-show-info').removeClass('hide');
-                }, function() {
-                    $(this).find('.btn-show-info').addClass('hide');
-                })
-
                 $('.btn-show-info').unbind('click');
                 $('.btn-show-info').click(function(e) {
                     e.stopPropagation();
@@ -1357,11 +1357,13 @@ angular.module('ws-directives')
                     } 
                 })
 
-                // effect for highlting checkbox on hover
+                // effect for highlighting checkbox on hover
                 $('.obj-table tbody tr').hover(function() {
                     $(this).children('td').eq(0).find('.ncheck').addClass('ncheck-hover');
+                    $(this).find('.btn-show-info').removeClass('hide');
                 }, function() {
                     $(this).children('td').eq(0).find('.ncheck').removeClass('ncheck-hover');
+                    $(this).find('.btn-show-info').addClass('hide');
                 })
 
                 // checkbox click event
@@ -1755,7 +1757,7 @@ angular.module('ws-directives')
                             type : 'primary',
                             callback : function(e, $prompt) {
                                 var ws = $('.select-ws option:selected').val()
-                                confirmCopy(ws);
+                                confirmCopy(ws, $prompt);
                             }
                         }]
                     }
@@ -1770,7 +1772,7 @@ angular.module('ws-directives')
             }
 
 
-            function confirmCopy(new_ws) {
+            function confirmCopy(new_ws, $copyprompt) {
                 var alert = '<div class="alert alert-danger"><strong>Warning</strong> Are you sure you want to copy these <b>'
                         +scope.checkedList.length+'</b> objects to <i>'+new_ws+'</i>?';
 
@@ -1799,10 +1801,12 @@ angular.module('ws-directives')
                                 }
 
                                 $.when.apply($, proms).done(function() {
-                                    $prompt.addCover('Copied objects to: <i>'+new_ws+'</i>');
                                     scope.loadWSTable();
-                                    var btn = $('<button type="button" class="btn btn-primary">Close</button>');
-                                    btn.click(function() { $prompt.closePrompt(); })
+                                    kb.notify('Copied objects to: <i>'+new_ws+'</i>');
+                                    $copyprompt.closePrompt();
+                                    $prompt.closePrompt();
+                                    //var btn = $('<button type="button" class="btn btn-primary">Close</button>');
+                                    //btn.click(function() { $prompt.closePrompt(); })
                                     $prompt.data('dialogModal').find('.modal-footer').html(btn);
                                 }).fail(function(e) {
                                     $prompt.addCover('Could not copy some or all of the objects. '

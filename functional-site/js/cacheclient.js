@@ -91,12 +91,50 @@ function KBCacheClient(token) {
     this.fba = fba;
     this.ws = kbws;
     this.ujs = ujs
-
     this.nar = new ProjectAPI(ws_url, token);
 
     this.token = token;
+
+    var utils = new KBUtils();
+    this.notify = utils.notify;
+
 }
 
+
+
+function KBUtils() {
+
+    // this method will display an absolutely position notification
+    // in the app on the 'body' tag.  This is useful for api success/failure 
+    // notifications
+    this.notify = function(text, type, keep) {
+        var ele = $('<div id="notification-container">'+
+                        '<div id="notification" class="'+type+'">'+
+                            (keep ? ' <small><div class="close">'+
+                                        '<span class="glyphicon glyphicon-remove pull-right">'+
+                                        '</span>'+
+                                    '</div></small>' : '')+
+                            text+
+                        '</div>'+
+                    '</div>');
+
+        $(ele).find('.close').click(function() {
+             $('#notification').animate({top: 0}, 200, 'linear');
+        })
+
+        $('body').append(ele)
+        $('#notification')
+              .delay(200)
+              .animate({top: 50}, 400, 'linear',
+                        function() {
+                            if (!keep) {
+                                $('#notification').delay(2000)
+                                                  .animate({top: 0}, 200, 'linear');
+                            }
+                        })
+    }
+
+}
 
 
 

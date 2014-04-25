@@ -444,7 +444,6 @@ $.KBWidget({
                         if (self.fbas) {
                             // fixme: this only works for one model
                             var found_rxns = getFbaRxns(d.rxns)[0]
-                            //console.log('found rxns', found_rxns)
 
                             var flux;
                             if (found_rxns.length) {
@@ -455,7 +454,6 @@ $.KBWidget({
                                         flux = found_rxns[j].value
                                     }
                                 }
-                                //console.log(flux)
 
                                 if (flux > flux_threshold) {
                                     var c = '#FF3333';
@@ -628,7 +626,6 @@ $.KBWidget({
                 for (var i in fba_objs) {
                     fba_obj = fba_objs[i];
                     if (rxn_ids.indexOf(fba_obj.modelreaction_ref.split('/')[5].split('_')[0]) != -1) {
-                        console.log('found', fba_obj.modelreaction_ref)
                         found_rxn.push(fba_obj);
                     }
                 }
@@ -852,7 +849,6 @@ $.KBWidget({
 
 
             edit_opts.find('.btn-map-save').click(function() {
-                console.log('saving map')
                 saveMap();
             })
 
@@ -990,7 +986,6 @@ $.KBWidget({
                     groups[group_index]['product_path'] = path;
                 }
 
-                console.log('saving new group', group_index, 'with:', path)
             })
 
             // get data on edited compound labels 
@@ -1009,7 +1004,6 @@ $.KBWidget({
 
 
                 var cpds = new_map.compounds;
-                console.log('saving cpd label with index', cpd_index, 'at', x, y)
                 cpds[cpd_index].label_x = x
                 cpds[cpd_index].label_y = y
             })

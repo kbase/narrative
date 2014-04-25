@@ -284,7 +284,7 @@ angular.module('ws-directives')
                                <div class="ws-info">\
                                     <h5>Info</h5>\
                                </div>'+
-                               (USER_ID ?
+                               ( (USER_ID && settings[5] != 'n') ?
                                '<div class="ws-perms">\
                                     <h5>User Permisions</h5>\
                                     <div class="perm-container"></div>\
@@ -428,7 +428,7 @@ angular.module('ws-directives')
                 });
 
 
-                // if user is logged in and admin 
+                // if user is logged in and admin
                 if (USER_ID && isAdmin ) {
                     var params = {workspace: ws_name}
                     console.log('calling get perms', params)
@@ -1031,10 +1031,11 @@ angular.module('ws-directives')
                               '<a class="btn btn-default" data-toggle="dropdown">'+
                                 '<span class="glyphicon glyphicon-cog"></span> <span class="caret"></span>'+
                               '</a>'+
-                            '</div>')
+                            '</div>');
 
                     var dd = $('<ul class="dropdown-menu" role="menu"></ul>');
-                    settings_btn.append(dd)
+                    dd.append('Columns:<br>');
+                    settings_btn.append(dd);
 
                     var cols = tableSettings.aoColumns;
                     for (var i in cols) {
@@ -1042,7 +1043,7 @@ angular.module('ws-directives')
                         dd.append('<div class="btn-settings-opt">'+
                                      '<label><input type="checkbox" data-col="'+cols[i].sTitle+'" '+
                                             (cols[i].bVisible == false ? '' : 'checked="checked"')+ 
-                                     '>'+cols[i].sTitle+'</label>\
+                                     '> '+cols[i].sTitle+'</label>\
                                    </div>');
                     }
                     dd.append('<hr class="hr">')
@@ -1106,8 +1107,6 @@ angular.module('ws-directives')
                 }).fail(function(e){
                     $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
                 })
-
-
 
             } // end scope.loadObjTable
 

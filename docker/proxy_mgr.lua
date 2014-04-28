@@ -310,6 +310,9 @@ set_proxy = function(self)
 			if key2 ~= key then
 			   response["msg"] = "malformed key: " .. key
 			   ngx.status = ngx.HTTP_BAD_REQUEST
+			elseif proxy_map:get(key) then
+			   response["msg"] = "entry already exists: " .. key
+			   ngx.status = ngx.HTTP_BAD_REQUEST
 			elseif val ~="" and val2 ~= val then
 			   response["msg"] = "malformed value : " .. val
 			   ngx.status = ngx.HTTP_BAD_REQUEST
@@ -426,6 +429,7 @@ set_proxy = function(self)
 			response = "Marked for reaping"
 			-- mark the proxy instance for deletion
 			proxy_state:set(key,false)
+			ngx.log( ngx.NOTICE, "Makred for reaping: " .. key )
 		     end
 		  else 
 		     response = "No key specified"
@@ -524,6 +528,8 @@ new_container = function( session_id)
 			 ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
 			 response = "Unable to set routing for notebook " .. err
 		      else
+			 success,err,forcible = proxy_state:set(session_id,true)
+			 success,err,forcible = proxy_last:set(session_id,os.time())
 			 return res
 		      end
 		   else

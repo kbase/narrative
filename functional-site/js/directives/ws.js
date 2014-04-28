@@ -1042,6 +1042,11 @@ angular.module('ws-directives')
                             '</div>');
 
                     var dd = $('<ul class="dropdown-menu settings-dropdown" role="menu"></ul>');
+
+                    // ignore close on click inside               
+                    dd.click(function(e) {
+                        e.stopPropagation();
+                    });
                     dd.append('Columns:<br>');
                     settings_btn.append(dd);
 

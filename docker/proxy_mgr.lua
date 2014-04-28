@@ -291,10 +291,15 @@ set_proxy = function(self)
 	       -- get the reaper functions into the run queue if not already
 	       check_marker()
 	       if method == "POST" then
+		  -- POST method takes either a key and a IP_ADDR:PORT port, or
+		  -- else an empty string for the IP_ADDR:PORT. If an actual
+		  -- value is given then setup a route entry for that destination
+		  -- if an empty value is given then spin up a new instance for the
+		  -- name given and bind the ip_addr:port to that name
 		  local response = {}
 		  local argc = 0
-		  ngx.req:read_body()
-		  local args = ngx.req:get_post_args()
+		  ngx.req.read_body()
+		  local args = ngx.req.get_post_args()
 		  if not args then
 		     response["msg"] = "failed to get post args: "
 		     ngx.status = ngx.HTTP_BAD_REQUEST
@@ -305,13 +310,24 @@ set_proxy = function(self)
 			if key2 ~= key then
 			   response["msg"] = "malformed key: " .. key
 			   ngx.status = ngx.HTTP_BAD_REQUEST
-			elseif val == "" or val2 ~= val then
+			elseif val ~="" and val2 ~= val then
 			   response["msg"] = "malformed value : " .. val
 			   ngx.status = ngx.HTTP_BAD_REQUEST
 			elseif type(val) == "table" then
 			   response["msg"] = "bad post argument: " .. key
 			   ngx.status = ngx.HTTP_BAD_REQUEST
 			   break
+			elseif val == "" then
+			   -- Spin up a new container if the dest ip:port is empty
+			   -- check to see if NGX status reports an error
+			   -- (real exception handling should be added here!)
+			   ngx.log( ngx.NOTICE, "Inserting: " .. key .. " -> " .. val)
+			   val = new_container(key)
+			   if ngx.status == ngx.HTTP_INTERNAL_SERVER_ERROR then
+			      response["msg"] = val
+			      break
+			   end
+			   argc = argc + 1
 			else
 			   argc = argc + 1
 			   ngx.log( ngx.NOTICE, "Inserting: " .. key .. " -> " .. val)
@@ -354,8 +370,12 @@ set_proxy = function(self)
 		  else 
 		     local keys = proxy_map:get_keys() 
 		     for key = 1, #keys do
-			local target, flags = proxy_map:get( keys[key])
-			response[keys[key]] = target
+			local last, flags = proxy_last:get(key)
+			response[keys[key]] = { proxy_target = proxy_map:get( keys[key]),
+						last_seen = os.date("%c",last),
+						last_ip = proxy_last_ip:get(keys[key]),
+						active = tostring(proxy_state:get(keys[key]))
+					     }
 		     end
 		  end
 		  ngx.say(json.encode( response ))

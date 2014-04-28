@@ -69,7 +69,7 @@ var app = angular.module('landing-pages',
           templateUrl: 'views/ws/objtable.html',
           controller: 'WBTour'
         }).state('ws.id', {
-          url: "objtable/:ws",
+          url: "objtable/:ws?type",
           templateUrl: 'views/ws/objtable.html',
           controller: 'WB'
         }).state('ws.models', {

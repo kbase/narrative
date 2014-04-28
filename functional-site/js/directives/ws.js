@@ -948,7 +948,8 @@ angular.module('ws-directives')
                                 { "sTitle": "Owner", bVisible: true},
                                 { "sTitle": "Timestamp", "bVisible": false, "sType": 'numeric'},
                                 { "sTitle": "Size", iDataSort: 7 },
-                                { "sTitle": "Byte Size", bVisible: false }];
+                                { "sTitle": "Byte Size", bVisible: false },
+                                { "sTitle": "Module", bVisible: false }];
 
                 var tableSettings = {
                     "sPaginationType": "bootstrap",
@@ -983,9 +984,13 @@ angular.module('ws-directives')
                 $(element).loading('loading '+ws+'...')
 
 
-
-                // load workspace objects
-                var p = kb.ws.list_objects({workspaces: [ws]});
+                // load workspace objects (filter by type, if that was specified)
+                if (scope.type) {
+                    var p = kb.ws.list_objects({workspaces: [ws], type: scope.type});   
+                } else {
+                    var p = kb.ws.list_objects({workspaces: [ws]});
+                }
+        
                 var p2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1});
                 //var p3 = kb.ujs.get_state('favorites', 'queue', 0);
                 var p4 = $.getJSON('landing_page_map.json');
@@ -999,7 +1004,7 @@ angular.module('ws-directives')
 
                     var tableobjs = formatObjs(data, obj_mapping)//favs);
                     var wsobjs = tableobjs[0];
-                    var type_counts = tableobjs[1];
+                    var kind_counts = tableobjs[1];
 
                     tableSettings.aaData = wsobjs;
 
@@ -1009,7 +1014,10 @@ angular.module('ws-directives')
 
                     // reset filter.  
                     // critical for ignoring cached filter
-                    table.fnFilter('', 2)
+                    //var colReorder = new $.fn.dataTable.ColReorder( table );
+                    //var curr = colReorder.fnOrder();         
+                    //console.log(getCols(table, 'Type'))            
+                    table.fnFilter('', getCols(table, 'Type'))
 
                     // add trashbin
                     var trash_btn = $('<a class="btn-trash pull-right hide">Trash \
@@ -1073,17 +1081,21 @@ angular.module('ws-directives')
                         var type_filter = $('<select class=" type-filter form-control">\
                                             <option selected="selected">All Types</option> \
                                         </select>')
-                        for (var type in type_counts) {
-                            type_filter.append('<option data-type="'+type+'">'+type+'  ('+type_counts[type]+')</option>');
+                        for (var kind in kind_counts) {
+                            type_filter.append('<option data-type="'+kind+'">'+kind+'  ('+kind_counts[kind]+')</option>');
                         }
                         $('.table-options').append(type_filter);                     
 
                         // event for type filter
+
                         $('.type-filter').change( function () {
+                            var curr = getCols(table, 'Type')
+                            console.log('filtering on', curr.indexOf(2))
                             if ($(this).val() == "All Types") {
-                                table.fnFilter('', 2)
+                                // look for type column (init column 2) in current order
+                                table.fnFilter('', curr)
                             } else {
-                                table.fnFilter( $(this).find('option:selected').data('type'), 2);
+                                table.fnFilter( $(this).find('option:selected').data('type'), curr);
                             }    
                         });
 
@@ -1093,16 +1105,10 @@ angular.module('ws-directives')
 
                     //searchColumns()
                     addOptionButtons();
+
                     // resinstantiate all events.
                     events();    
 
-                    //kb.notify('blah blah blah', 'error')
-                    btn.click(function() {
-                        kb.notify('blah blah blah', 'error')
-                    })
-
-
-                    $(element).append(btn)
 
                 }).fail(function(e){
                     $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
@@ -1111,6 +1117,7 @@ angular.module('ws-directives')
             } // end scope.loadObjTable
 
             scope.loadObjTable();
+
 
 
             function fnShowHide(table, col_name ){
@@ -1128,14 +1135,15 @@ angular.module('ws-directives')
             // function that takes json for the object table and formats
             function formatObjs(objs, obj_mapping, favs) {
                 var wsobjs = []
-                var type_counts = {}
+                var kind_counts = {}
 
                 for (var i in objs) {
                     var obj = objs[i];
                     var objid = obj[0]
                     var id = obj[1];
-                    var module = obj[2].split('.')[0];
-                    var type = obj[2].slice(obj[2].indexOf('.')+1);
+                    var full_type = obj[2];
+                    var module = full_type.split('.')[0];
+                    var type = full_type.slice(full_type.indexOf('.')+1);
                     var kind = type.split('-')[0];
                     var timestamp = getTimestamp(obj[3].split('+')[0]);
                     var date = formateDate(timestamp);
@@ -1158,12 +1166,13 @@ angular.module('ws-directives')
                                    owner,
                                    timestamp,
                                    size,
-                                   bytesize];
+                                   bytesize,
+                                   module];
 
-                    if (type in type_counts) {
-                        type_counts[type] = type_counts[type] + 1;
+                    if (kind in kind_counts) {
+                        kind_counts[kind] = kind_counts[kind] + 1;
                     } else {
-                        type_counts[type] = 1;
+                        kind_counts[kind] = 1;
                     }
 
                     if (module in obj_mapping && obj_mapping[module] 
@@ -1207,7 +1216,7 @@ angular.module('ws-directives')
                     wsarray[1] = new_id;
                     wsobjs.push(wsarray);
                 }
-                return [wsobjs, type_counts]
+                return [wsobjs, kind_counts]
             }
 
             // events for object table.  
@@ -1610,7 +1619,7 @@ angular.module('ws-directives')
 
                     var tableobjs = formatObjs(objs, obj_mapping, favs);
                     var wsobjs = tableobjs[0];
-                    var type_counts = tableobjs[1];
+                    var kind_counts = tableobjs[1];
 
                     tableSettings.aaData = wsobjs;
 
@@ -1880,6 +1889,24 @@ function searchColumns() {
             this.value = this.initVal;
         }
     } );
+}
+
+function getCols(table, title) {
+    var cols = table.fnSettings().aoColumns;
+
+    if (title) {
+        var col_num;
+
+        for (var i in cols) {
+            if (cols[i].sTitle == title) {
+                col_num = i;
+                break;
+            }
+        }
+        return col_num
+    }
+
+    return cols;
 }
 
 // interesting solution from http://stackoverflow.com/questions

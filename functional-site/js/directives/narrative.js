@@ -205,8 +205,8 @@ angular.module('narrative-directives')
 
                             var tstamp = kb.ui.getTimestamp(nar[3]);
                             nar_dict.timestamp = tstamp;
-                            nar_dict.moddate = formateDate(tstamp) ? 
-                                    formateDate(tstamp) : nar[3].replace('T',' ').split('+')[0];
+                            nar_dict.moddate = kb.ui.formateDate(tstamp) ? 
+                                    kb.ui.formateDate(tstamp) : nar[3].replace('T',' ').split('+')[0];
 
                             if (USER_ID) {
                                 nar_dict.sharedwith = isSharedWith(proj, nar_dict.owner) ? 'Yes' : 'No'
@@ -892,7 +892,7 @@ angular.module('narrative-directives')
 
                         placeholder.rmLoading();
 
-                        modal_body.append('<h5>User Permissions <small><a class="edit-perms">Edit</a></small><h5>')
+                        modal_body.append('<h5>User Permissions<h5>')
 
 
                         var perm_container = $('<div class="perm-container"></div>');

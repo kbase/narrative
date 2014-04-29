@@ -1,16 +1,17 @@
 
 /*
- *  Directives
+ *  Workspace Directives
  *  
- *  These can be thought of as the 'widgets' on a page.  
- *  Scope comes from the controllers.
+ *   This file has the left hand (wsselector)
+ *   and right hand (objtable) directives of the workspace
+ *   browser.
  *
 */
 
 
 angular.module('ws-directives', []);
 angular.module('ws-directives')
-.directive('wsselector', function($location) {
+.directive('wsselector', function($location, $compile, $state) {
     return {
         template: '<div class="ws-selector">'+
                     '<div class="ws-selector-header">'+
@@ -99,10 +100,12 @@ angular.module('ws-directives')
                         //var short_ws = ws[0].slice(0,12) + '...'
 
 
+                        //var url = "ws.id({ws:'"+name+"'})"
                         var selector = $('<tr><td class="select-ws" data-ws="'+name+'">'+
                                             '<div class="badge pull-left">'+obj_count+'</div>'+
                                             ' &nbsp;<div class="pull-left ellipsis"> '+
                                             (user == USER_ID ? '<b>'+name+'</b>': name)+'</div></td></tr>');
+                        
 
                         selector.find('td').append('<button type="button" class="btn \
                                             btn-default btn-xs btn-ws-settings hide pull-right" data-ws="'+name+'">\
@@ -114,7 +117,9 @@ angular.module('ws-directives')
                         }, function() {
                             $(this).find('.btn-ws-settings').addClass('hide');
                         })
-                        $(".select-box table").append(selector);
+                        var blah = $(".select-box table").append(selector);
+                        //$compile(blah)
+
 
                         scope.workspace_dict[name] = ws; //store in dictionary for optimization
                     }
@@ -182,8 +187,9 @@ angular.module('ws-directives')
                     var ws = $(this).data('ws');
                     $('.select-ws').removeClass('selected-ws');
                     $(this).addClass('selected-ws');
-
-                    scope.$apply( $location.path('/ws/objtable/'+ws) );
+                    console.log('calling with '+ ws)
+                    $state.transitionTo("ws.id", {ws: ws});
+                    scope.$apply();
                 });
 
                 // event for settings (manage modal) button
@@ -985,18 +991,20 @@ angular.module('ws-directives')
 
 
                 // load workspace objects (filter by type, if that was specified)
-                if (scope.type) {
-                    var p = kb.ws.list_objects({workspaces: [ws], type: scope.type});   
-                } else {
+                //if (scope.type) {
+                //    var p = kb.ws.list_objects({workspaces: [ws], type: scope.type});   
+                //} else {
                     var p = kb.ws.list_objects({workspaces: [ws]});
-                }
+                //}
         
                 var p2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1});
                 //var p3 = kb.ujs.get_state('favorites', 'queue', 0);
                 var p4 = $.getJSON('landing_page_map.json');
 
                 $.when(p, p2, p4).done(function(data, deleted_objs, obj_mapping){
-                    var obj_mapping = obj_mapping[0];
+                    scope.deleted_objs = deleted_objs;
+                    scope.obj_mapping = obj_mapping[0];
+
                     $(element).rmLoading();
 
                     $(element).append('<table id="'+table_id+'" \
@@ -1014,19 +1022,11 @@ angular.module('ws-directives')
 
                     // reset filter.  
                     // critical for ignoring cached filter
-                    //var colReorder = new $.fn.dataTable.ColReorder( table );
-                    //var curr = colReorder.fnOrder();         
-                    //console.log(getCols(table, 'Type'))            
-                    table.fnFilter('', getCols(table, 'Type'))
+                    console.log('tpe!', scope.type)
+                    table.fnFilter((scope.type ? scope.type+'-.*' : ''), getCols(table, 'Type'), true)
 
                     // add trashbin
-                    var trash_btn = $('<a class="btn-trash pull-right hide">Trash \
-                                <span class="badge trash-count">'+deleted_objs.length+'</span><a>');
-                    trash_btn.tooltip({title: 'View trash bin', placement: 'bottom', delay: {show: 700}})                                                            
-
-                    trash_btn.click(function(){
-                        displayTrashBin(deleted_objs, obj_mapping)
-                    })
+                    var trash_btn = getTrashBtn();
                     $('.dataTables_filter').after(trash_btn);
 
                     // show these options if logged in.
@@ -1035,44 +1035,7 @@ angular.module('ws-directives')
                     }
 
                     // add show/hide column settings button
-                    var settings_btn = $('<div class="dropdown pull-left">'+
-                              '<a class="btn btn-default" data-toggle="dropdown">'+
-                                '<span class="glyphicon glyphicon-cog"></span> <span class="caret"></span>'+
-                              '</a>'+
-                            '</div>');
-
-                    var dd = $('<ul class="dropdown-menu settings-dropdown" role="menu"></ul>');
-
-                    // ignore close on click inside               
-                    dd.click(function(e) {
-                        e.stopPropagation();
-                    });
-                    dd.append('Columns:<br>');
-                    settings_btn.append(dd);
-
-                    var cols = tableSettings.aoColumns;
-                    for (var i in cols) {
-                        if (cols[i].sTitle.indexOf('ncheck') != -1) continue;  // ignore checkbox col
-                        dd.append('<div class="btn-settings-opt">'+
-                                     '<label><input type="checkbox" data-col="'+cols[i].sTitle+'" '+
-                                            (cols[i].bVisible == false ? '' : 'checked="checked"')+ 
-                                     '> '+cols[i].sTitle+'</label>\
-                                   </div>');
-                    }
-                    dd.append('<hr class="hr">')
-                    var reset_btn = $('<button class="btn btn-default btn-settings-opt">Default Settings</button>')
-
-                    dd.append(reset_btn)
-
-                    dd.find('input').change(function() {
-                        var col_name = $(this).data('col')
-                        fnShowHide(table, col_name);
-                    }) 
-                    reset_btn.click( function () {
-                        reset_dt_view()
-                        scope.loadObjTable();
-                    } );                        
-
+                    var settings_btn = getSettingsBtn(table)
                     $('.table-options').append(settings_btn);
 
 
@@ -1083,26 +1046,8 @@ angular.module('ws-directives')
                         //datatables.bootstrap file for template
 
                         // add type filter
-                        var type_filter = $('<select class=" type-filter form-control">\
-                                            <option selected="selected">All Types</option> \
-                                        </select>')
-                        for (var kind in kind_counts) {
-                            type_filter.append('<option data-type="'+kind+'">'+kind+'  ('+kind_counts[kind]+')</option>');
-                        }
+                        var type_filter = getTypeFilterBtn(table, kind_counts, scope.type)
                         $('.table-options').append(type_filter);                     
-
-                        // event for type filter
-
-                        $('.type-filter').change( function () {
-                            var curr = getCols(table, 'Type')
-                            console.log('filtering on', curr.indexOf(2))
-                            if ($(this).val() == "All Types") {
-                                // look for type column (init column 2) in current order
-                                table.fnFilter('', curr)
-                            } else {
-                                table.fnFilter( $(this).find('option:selected').data('type'), curr);
-                            }    
-                        });
 
                         // event for when an object checkbox is clicked
                         checkBoxObjectClickEvent('.obj-check-box');
@@ -1123,7 +1068,81 @@ angular.module('ws-directives')
 
             scope.loadObjTable();
 
+            function getSettingsBtn(table) {
+                var settings_btn = $('<div class="dropdown pull-left">'+
+                          '<a class="btn btn-default" data-toggle="dropdown">'+
+                            '<span class="glyphicon glyphicon-cog"></span> <span class="caret"></span>'+
+                          '</a>'+
+                        '</div>');
 
+                var dd = $('<ul class="dropdown-menu settings-dropdown" role="menu"></ul>');
+
+                // ignore close on click inside               
+                dd.click(function(e) {
+                    e.stopPropagation();
+                });
+                dd.append('Columns:<br>');
+                settings_btn.append(dd);
+
+                var cols = getCols(table)
+                for (var i in cols) {
+                    if (cols[i].sTitle.indexOf('ncheck') != -1) continue;  // ignore checkbox col
+                    dd.append('<div class="btn-settings-opt">'+
+                                 '<label><input type="checkbox" data-col="'+cols[i].sTitle+'" '+
+                                        (cols[i].bVisible == false ? '' : 'checked="checked"')+ 
+                                 '> '+cols[i].sTitle+'</label>\
+                               </div>');
+                }
+                dd.append('<hr class="hr">')
+                var reset_btn = $('<button class="btn btn-default btn-settings-opt">Default Settings</button>')
+
+                dd.append(reset_btn)
+
+                dd.find('input').change(function() {
+                    var col_name = $(this).data('col')
+                    fnShowHide(table, col_name);
+                }) 
+                reset_btn.click( function () {
+                    reset_dt_view()
+                    scope.loadObjTable();
+                } );
+
+                return settings_btn;
+            }
+
+            function getTypeFilterBtn(table, type_counts, selected) {
+                var type_filter = $('<select class=" type-filter form-control">\
+                                    <option selected="selected">All Types</option> \
+                                </select>')
+                for (var type in type_counts) {
+                    type_filter.append('<option data-type="'+type+'" '+
+                                    (type == selected ? 'selected' : '')+
+                                    '>'+type+'  ('+type_counts[type]+')</option>'); 
+                }
+                type_filter.change( function () {
+                    var curr = getCols(table, 'Type')
+                    if ($(this).val() == "All Types") {
+                        // look for type column (init column 2) in current order
+                        table.fnFilter('', curr)
+                    } else {
+                        table.fnFilter( $(this).find('option:selected').data('type')+'-*', curr, true);
+                    }    
+                });
+
+                return type_filter;
+            }
+
+            function getTrashBtn() {
+                var trash_btn = $('<a class="btn-trash pull-right hide">Trash \
+                            <span class="badge trash-count">'+scope.deleted_objs.length+'</span><a>');
+                trash_btn.tooltip({title: 'View trash bin', placement: 'bottom', delay: {show: 700}});
+
+                trash_btn.click(function(){
+                    displayTrashBin()
+                })      
+
+                return trash_btn;          
+            }
 
             function fnShowHide(table, col_name ){
                 var cols = table.fnSettings().aoColumns;
@@ -1574,7 +1593,7 @@ angular.module('ws-directives')
             }
 
             var trashbin;
-            function displayTrashBin(objs, obj_mapping) {
+            function displayTrashBin() {
                 var tableSettings = {
                     "sPaginationType": "bootstrap",
                     //"sPaginationType": "full_numbers",
@@ -1622,9 +1641,8 @@ angular.module('ws-directives')
                     $(element).append('<table id="'+table_id+'-trash" \
                         class="table table-bordered table-striped" style="width: 100%;"></table>');
 
-                    var tableobjs = formatObjs(objs, obj_mapping, favs);
+                    var tableobjs = formatObjs(scope.deleted_obj, scope.obj_mapping) //,fav);
                     var wsobjs = tableobjs[0];
-                    var kind_counts = tableobjs[1];
 
                     tableSettings.aaData = wsobjs;
 

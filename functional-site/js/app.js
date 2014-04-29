@@ -75,13 +75,13 @@ var app = angular.module('landing-pages',
         }).state('ws.models', {
           url: "models/:ws/:id?map",
           templateUrl: 'views/ws/sortable/model.html',
-          controller: 'WBModelLanding',
-          reloadOnSearch: false
+          controller: 'WBModelLanding'
+          //reloadOnSearch: false
         }).state('ws.fbas', {
           url: "fbas/:ws/:id?map",
           templateUrl: 'views/ws/sortable/fba.html',
-          controller: 'WBModelLanding',
-          reloadOnSearch: false          
+          controller: 'WBModelLanding'
+          //reloadOnSearch: false          
         }).state('ws.genomes', {
           url: "genomes/:ws/:id",
           templateUrl: 'views/ws/sortable/genome.html',
@@ -410,7 +410,7 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
 
 /*
  *   landing page app helper functions
- */
+ */ 
 
 
 function login_change() {

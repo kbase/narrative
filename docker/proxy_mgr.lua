@@ -580,7 +580,7 @@ new_container = function( session_id)
 			 return res
 		      end
 		   else
-		      ngx.log( ngx.ERR, "Failed to launch new instance :" .. res['response']['body'])
+		      ngx.log( ngx.ERR, "Failed to launch new instance :" .. res)
 		   end
 		end
 

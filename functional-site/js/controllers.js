@@ -154,6 +154,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
 .controller('WB', function($scope, $stateParams) {
     $scope.selected_ws = $stateParams.ws;
+
     $scope.type = $stateParams.type;
 })
 
@@ -263,7 +264,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
     $scope.selected = [{workspace: 'chenrydemo', 
                         name: 'kb|g.9.fbamdl.25.fba.55'}];
-    $scope.type = 'FBA'                        
+    $scope.type = 'FBA';
 
     $scope.prom = kb.ujs.get_state('favorites', 'queue', 0);
 
@@ -271,10 +272,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
         $scope.favs = data;
         $scope.fav_by_kind = $scope.processData();
         $scope.$apply();
-        console.log('fav_by_kind', $scope.fav_by_kind);
     })
-
-
 
     $scope.processData = function() {
         fav_by_kind = {}

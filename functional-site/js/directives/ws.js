@@ -11,7 +11,7 @@
 
 angular.module('ws-directives', []);
 angular.module('ws-directives')
-.directive('wsselector', function($location, $compile, $state) {
+.directive('wsselector', function($location, $compile, $state, $stateParams) {
     return {
         template: '<div class="ws-selector">'+
                     '<div class="ws-selector-header">'+
@@ -46,7 +46,6 @@ angular.module('ws-directives')
                   ,
 
         link: function(scope, element, attrs) {
-
             var perm_dict = {'a': 'Admin',
                              'r': 'Read',
                              'w': 'Write',
@@ -101,7 +100,9 @@ angular.module('ws-directives')
 
 
                         //var url = "ws.id({ws:'"+name+"'})"
-                        var selector = $('<tr><td class="select-ws" data-ws="'+name+'">'+
+                        var selector = $('<tr><td class="select-ws '
+                                                +($stateParams.ws == name ? 'selected-ws' : '' )+
+                                            '" data-ws="'+name+'">'+
                                             '<div class="badge pull-left">'+obj_count+'</div>'+
                                             ' &nbsp;<div class="pull-left ellipsis"> '+
                                             (user == USER_ID ? '<b>'+name+'</b>': name)+'</div></td></tr>');
@@ -187,7 +188,6 @@ angular.module('ws-directives')
                     var ws = $(this).data('ws');
                     $('.select-ws').removeClass('selected-ws');
                     $(this).addClass('selected-ws');
-                    console.log('calling with '+ ws)
                     $state.transitionTo("ws.id", {ws: ws});
                     scope.$apply();
                 });
@@ -436,7 +436,6 @@ angular.module('ws-directives')
                 // if user is logged in and admin
                 if (USER_ID && isAdmin ) {
                     var params = {workspace: ws_name}
-                    console.log('calling get perms', params)
                     var prom = kb.ws.get_permissions(params);
 
                     //var newPerms;
@@ -1021,7 +1020,6 @@ angular.module('ws-directives')
 
                     // reset filter.  
                     // critical for ignoring cached filter
-                    console.log('tpe!', scope.type)
                     table.fnFilter((scope.type ? scope.type+'-.*' : ''), getCols(table, 'Type'), true)
 
                     // add trashbin
@@ -1198,11 +1196,10 @@ angular.module('ws-directives')
                         kind_counts[kind] = 1;
                     }
 
-                    if (module in obj_mapping && obj_mapping[module] 
-                        && obj_mapping[module][kind] ) {
-                        var sub = obj_mapping[module][kind];
+                    if (module in scope.obj_mapping && scope.obj_mapping[module] 
+                        && scope.obj_mapping[module][kind] ) {
+                        var sub = scope.obj_mapping[module][kind];
                     }
-
 
                     // determine if saved to favorites
                     var isFav = false;

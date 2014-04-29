@@ -64,14 +64,14 @@ var app = angular.module('landing-pages',
           url: "/ws/",
           templateUrl: 'views/ws/ws.html',
           controller: 'WB'
-        }).state('ws.tour', {
-          url: "tour/",
-          templateUrl: 'views/ws/objtable.html',
-          controller: 'WBTour'
         }).state('ws.id', {
           url: "objtable/:ws?type",
           templateUrl: 'views/ws/objtable.html',
           controller: 'WB'
+        }).state('ws.tour', {
+          url: "tour/",
+          templateUrl: 'views/ws/objtable.html',
+          controller: 'WBTour'
         }).state('ws.models', {
           url: "models/:ws/:id?map",
           templateUrl: 'views/ws/sortable/model.html',

@@ -1297,47 +1297,7 @@ angular.module('ws-directives')
                     e.stopPropagation();
                     var type = $(this).prev('.obj-id').data('type');
                     var id = $(this).prev('.obj-id').data('id');
-
-                    var historyModal = $('<div class="history-modal"></div>').kbasePrompt({
-                            title : 'History of '+id,
-                            //body : '',
-                            modalClass : '', 
-                            controls : ['closeButton']
-                        }
-                    );
-
-                    historyModal.openPrompt();
-                    var modal_body = historyModal.data('dialogModal').find('.modal-body').loading();
-                    historyModal.data('dialogModal').find('.modal-dialog').css('width', '800px');
-
-                    var prom = kb.ws.get_object_history({workspace: ws, name: id});
-                    $.when(prom).done(function(data) {
-                        modal_body.rmLoading();
-                        modal_body.append('<span class="h5"><b>Name</b></span>: '+id+'<br>')                            
-                        modal_body.append('<span class="h5"><b>Database ID</b></span>: '+data[0][0]+'<br>')
-                        var info = $('<table class="table table-striped table-bordered table-condensed">');
-                        var header = $('<tr><th>Mod Date</th>\
-                                            <th>Vers</th>\
-                                            <th>Type</th>\
-                                            <th>Owner</th>\
-                                            <th>Cmd</th></tr>');
-                        info.append(header);
-                        for (var i=0; i<data.length; i++) {
-                            var ver = data[i];
-                            var row = $('<tr>');
-                            row.append('<td>' + ver[3].split('+')[0].replace('T',' ') + '</td>'
-                                     + '<td>' + ver[4] + '</td>'
-                                     + '<td>' + ver[2] + '</td>'
-                                     + '<td>' + ver[5] + '</td>'
-                                     + '<td>' + ver[7] + '</td>');
-                            info.append(row);
-                        }
-
-                        modal_body.append(info);
-                    }).fail(function(e){
-                        modal_body.append('<div class="alert alert-danger">'+
-                                e.error.message+'</div>');
-                    });
+                    showObjectVersions(ws, id);
                 })
 
                 // help tooltips
@@ -1503,6 +1463,85 @@ angular.module('ws-directives')
                 })
             }
 
+            function showObjectVersions(ws, id) {
+                var historyModal = $('<div class="history-modal"></div>').kbasePrompt({
+                        title : 'History of '+id,
+                        modalClass : '', 
+                        controls : ['cancelButton']
+                    }
+                );
+
+                historyModal.openPrompt();
+                var modal_body = historyModal.data('dialogModal').find('.modal-body').loading();
+                historyModal.data('dialogModal').find('.modal-dialog').css('width', '800px');
+
+                var prom = kb.ws.get_object_history({workspace: ws, name: id});
+                $.when(prom).done(function(data) {
+                    modal_body.rmLoading();
+                    modal_body.append('<span class="h5"><b>Name</b></span>: '+id+'<br>')                            
+                    modal_body.append('<span class="h5"><b>Database ID</b></span>: '+data[0][0]+'<br>')
+                    var info = $('<table class="table table-striped table-bordered table-condensed">');
+                    var header = $('<tr class="table-header"><th>Mod Date</th>\
+                                        <th>Vers</th>\
+                                        <th>Type</th>\
+                                        <th>Owner</th>\
+                                        <th>Cmd</th></tr>');
+                    info.append(header);
+                    for (var i=data.length-1; i >= 0; i--) {
+                        var ver = data[i];
+                        var row = getRow(ver);
+                        info.append(row);
+                    }
+
+                    revert_btn = $('<a class="btn btn-primary btn-revert-object" disabled>Revert</a>')
+
+                    modal_body.append(info);
+                    info.find('tbody tr').not('.table-header').click( function(e) {
+                        e.stopPropagation();                        
+                        info.find('tbody tr').removeClass('selected');
+                        $(this).addClass('selected');
+                        revert_btn.removeAttr('disabled');
+                    })
+                    /* fixme: need modal api for this.  too much code */
+                    var modal_content = historyModal.data('dialogModal').find('.modal-content');
+                    modal_content.click(function(e) {
+                        info.find('tbody tr').removeClass('selected');
+                        revert_btn.attr('disabled', '')
+                    })
+
+                    revert_btn.click(function() {
+                        var ver = info.find('.selected').data('ver');
+
+                        historyModal.addCover().getCover().loading();
+                        var p = kb.ws.revert_object({workspace: ws, name: id, ver: ver})
+                        $.when(p).done(function(data) {
+                            var row = getRow(data);
+                            // insert new version
+                            info.find('.table-header').after(row);
+                            historyModal.addCover('Reverted to version '+ver);
+                            historyModal.getCover().delay(2000).fadeOut(500);
+                        }).fail(function(e) {
+                            historyModal.addCover(e.error.message, 'danger');
+                        })
+                    })
+
+                    modal_body.append(revert_btn)
+                }).fail(function(e){
+                    modal_body.append('<div class="alert alert-danger">'+
+                            e.error.message+'</div>');
+                });
+
+                function getRow(ver) { 
+                    var row = $('<tr data-ver="'+ver[4]+'">');                    
+                    row.append('<td>' + ver[3].split('+')[0].replace('T',' ') + '</td>'
+                               + '<td>' + ver[4] + '</td>'
+                               + '<td>' + ver[2] + '</td>'
+                               + '<td>' + ver[5] + '</td>'
+                               + '<td>' + ver[7] + '</td>');
+                    return row;
+                }
+            }
+
             function showObjectInfo(ws, id) {
                 var info_modal = $('<div></div>').kbasePrompt({
                         title : id,
@@ -1515,22 +1554,27 @@ angular.module('ws-directives')
                 var modal_body = info_modal.data('dialogModal').find('.modal-body');
 
                 var params = [{workspace: ws, name: id}]
-                var prom = kb.ws.get_object_info(params);
+                var prom = kb.ws.get_object_info(params, 1);
                 modal_body.loading();
                 $.when(prom).done(function(data) {
+                    console.log('object info', data)
                     modal_body.rmLoading();
                     var data = data[0];  // only 1 object was requested
 
-                    modal_body.append('<h4>Meta Data</h4>');
-                    if (data[10] > 0) {
+                    modal_body.append('<h4>User Meta Data</h4>');
+                    var usermeta = data[10];
+                    if ($.isEmptyObject(usermeta)) {
+                        modal_body.append('none');
+                    } else {
+                        var container = $('<div class="scroll-pane overflow-x">');
                         var table = $('<table class="table table-striped table-bordered table-condensed">');
                         var keys = [];
-                        for (var key in data[10]) {
-                            table.append('<tr><td><b>'+key+'</b></td><td>'+data[i]+'</td></tr>')
+                        for (var key in usermeta) {
+                            console.log(usermeta)
+                            table.append('<tr><td><b>'+key+'</b></td><td>'+ usermeta[key]+'</td></tr>')
                         }
-                        modal_body.append(table);
-                    } else {
-                        modal_body.append('none');                            
+                        container.append(table)
+                        modal_body.append(container);
                     }
 
                     var items = ['ID', 'Name', 'Type', 'Moddate', 'Instance','Command',

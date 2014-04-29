@@ -259,9 +259,11 @@ table {
 }
 
 .scroll-pane {
-    height: 200px;
+
     overflow-y: scroll; 
-    overflow-x: hi;
+}
+.scroll-pane.overflow-x {
+    overflow-x: scroll;
 }
 
 
@@ -274,12 +276,14 @@ table {
     background-color: #eee;
 }*/
 
-.selected-ws {
-    background-color: #428bca;
+.selected-ws,
+.selected,
+.selected td{
+    background-color: #428bca !important;
     color: #fff;
 }
 
-.selected-ws:hover { /* fixme */
+.selected-ws:hover{ /* fixme */
     background-color: #428bca !important;
 }
 

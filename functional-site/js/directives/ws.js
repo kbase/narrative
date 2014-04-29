@@ -258,7 +258,6 @@ angular.module('ws-directives')
 
             function manageModal(ws_name) {
                 var settings = scope.workspace_dict[ws_name];
-                console.log('settings', settings)
 
                 var isAdmin;
                 if (settings[5] == 'a') {

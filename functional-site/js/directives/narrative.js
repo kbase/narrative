@@ -30,9 +30,9 @@ angular.module('narrative-directives')
                                 nar.wsid = results[i][6]
                                 nar.ws = results[i][7];
 
-                                nar.timestamp = getTimestamp(results[i][3]);
-                                nar.nealtime = formateDate(nar.timestamp) 
-                                                ? formateDate(nar.timestamp) : results[i][3].replace('T',' ').split('+')[0];
+                                nar.timestamp = kb.ui.getTimestamp(results[i][3]);
+                                nar.nealtime = kb.ui.formateDate(nar.timestamp) 
+                                                ? kb.ui.formateDate(nar.timestamp) : results[i][3].replace('T',' ').split('+')[0];
                                 narratives.push(nar);
                             }
 
@@ -68,10 +68,10 @@ angular.module('narrative-directives')
                             for (var i in projs) {
 
                                 var project = {};
-                                project.timestamp = getTimestamp(projs[i][3]); // moddate to timestamp
+                                project.timestamp = kb.ui.getTimestamp(projs[i][3]); // moddate to timestamp
                                 if (!project.timestamp) continue; //fixme
-                                project.nealtime = formateDate(project.timestamp)
-                                                    ? formateDate(project.timestamp) :
+                                project.nealtime = kb.ui.formateDate(project.timestamp)
+                                                    ? kb.ui.formateDate(project.timestamp) :
                                                         projs[i][3].replace('T',' ').split('+')[0];
                                 project.name = parse_name(projs[i][7]);
                                 projects.push(project);
@@ -203,7 +203,7 @@ angular.module('narrative-directives')
                                              (nar_dict.owner == USER_ID ? 'Me' : nar_dict.owner)+'</span>'; 
 
 
-                            var tstamp = getTimestamp(nar[3]);
+                            var tstamp = kb.ui.getTimestamp(nar[3]);
                             nar_dict.timestamp = tstamp;
                             nar_dict.moddate = formateDate(tstamp) ? 
                                     formateDate(tstamp) : nar[3].replace('T',' ').split('+')[0];
@@ -490,7 +490,7 @@ angular.module('narrative-directives')
                                 if (new_name != nar) {
                                     var notice = $('<span>saving...</span>')
                                     input.parents('td').html(notice);
-                                    console.log('calling api')
+
                                     var p = renameNarrative(proj, nar, new_name);
                                     $.when(p).done(function(data) {
                                         //change link on page
@@ -929,7 +929,6 @@ angular.module('narrative-directives')
 
                     var prom = kb.nar.get_project_description(p_name);
                     $.when(prom).done(function(descript) {
-                        console.log('got description', descript)
                         var d = $('<div>');
                         d.append('<h5>Description</h5>');
                         d.append('<div id="ws-description">'+(descript ? descript : '(none)')+'</div><br>');
@@ -1132,75 +1131,6 @@ angular.module('narrative-directives')
         }
 
     })
-
-
-//
-// utility functions 
-//
-function getTimestamp(datetime){
-    if (!datetime) return; 
-    var ymd = datetime.split('T')[0].split('-');
-    var hms = datetime.split('T')[1].split(':');
-    hms[2] = hms[2].split('+')[0];  
-    return Date.UTC(ymd[0],ymd[1]-1,ymd[2],hms[0],hms[1],hms[2]);  
-}
-
-
-
-var msecPerMinute = 1000 * 60;
-var msecPerHour = msecPerMinute * 60;
-var msecPerDay = msecPerHour * 24;
-function formateDate(timestamp) {
-    var date = new Date()
-
-    var interval =  date.getTime() - timestamp;
-
-    var days = Math.floor(interval / msecPerDay );
-    interval = interval - (days * msecPerDay);
-
-    var hours = Math.floor(interval / msecPerHour);
-    interval = interval - (hours * msecPerHour);
-
-    var minutes = Math.floor(interval / msecPerMinute);
-    interval = interval - (minutes * msecPerMinute);
-
-    var seconds = Math.floor(interval / 1000);
-
-    // if greater than 5 months ago, show date
-    if (days > 150) {
-        return false;
-    }
-
-    if (days == 0 && hours == 0 && minutes == 0) {
-        return seconds + " secs ago.";
-    } else if (days == 0 && hours == 0) {
-        if (minutes == 1) return "1 min ago";
-        return  minutes + " mins ago";
-    } else if (days == 0) {
-        if (hours == 1) return "1 hour ago";
-        return hours + " hours ago"
-    } else if (days == 1) {
-        var d = new Date(timestamp);
-        var t = d.toLocaleTimeString().split(':');        
-        return 'yesterday at ' + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
-    } else if (days < 7) {
-        var d = new Date(timestamp);        
-        var day = dayOfWeek[d.getDay()]
-        var t = d.toLocaleTimeString().split(':');
-        return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
-    } else  {
-        var d = new Date(timestamp);        
-        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); //check
-    }
-}
-
-
-
-var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
-                     4:'Thurs', 5:'Fri', 6: 'Sat'}
-
-var months = {0: 'Jan', 1: 'Feb', 2: 'March', 3: 'April', 4: 'May',
-                5:'June', 6: 'July', 7: 'Aug', 8: 'Sept', 9: 'Oct', 10: 'Nov', 11: 'Dec'}
 
 narrativeDirectives.directive('newsfeed', function(FeedLoad, $compile) {
         return  {

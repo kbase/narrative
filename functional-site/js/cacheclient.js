@@ -95,14 +95,14 @@ function KBCacheClient(token) {
 
     this.token = token;
 
-    var utils = new KBUtils();
-    this.notify = utils.notify;
+    // make accesible methods for ui helper functions
+    this.ui = new UIUtils();
 
 }
 
 
-
-function KBUtils() {
+// Collection of simple (bootstrap based) UI helper methods
+function UIUtils() {
 
     // this method will display an absolutely position notification
     // in the app on the 'body' tag.  This is useful for api success/failure 
@@ -133,6 +133,70 @@ function KBUtils() {
                             }
                         })
     }
+
+
+    var msecPerMinute = 1000 * 60;
+    var msecPerHour = msecPerMinute * 60;
+    var msecPerDay = msecPerHour * 24;
+    var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
+                     4:'Thurs', 5:'Fri', 6: 'Sat'};
+    var months = {0: 'Jan', 1: 'Feb', 2: 'March', 3: 'April', 4: 'May',
+                  5:'June', 6: 'July', 7: 'Aug', 8: 'Sept', 9: 'Oct', 
+                  10: 'Nov', 11: 'Dec'};
+    this.formateDate = function(timestamp) {
+        var date = new Date()
+
+        var interval =  date.getTime() - timestamp;
+
+        var days = Math.floor(interval / msecPerDay );
+        interval = interval - (days * msecPerDay);
+
+        var hours = Math.floor(interval / msecPerHour);
+        interval = interval - (hours * msecPerHour);
+
+        var minutes = Math.floor(interval / msecPerMinute);
+        interval = interval - (minutes * msecPerMinute);
+
+        var seconds = Math.floor(interval / 1000);
+
+        // if greater than 5 months ago, show date
+        if (days > 150) {
+            return false;
+        }
+
+        if (days == 0 && hours == 0 && minutes == 0) {
+            return seconds + " secs ago.";
+        } else if (days == 0 && hours == 0) {
+            if (minutes == 1) return "1 min ago";
+            return  minutes + " mins ago";
+        } else if (days == 0) {
+            if (hours == 1) return "1 hour ago";
+            return hours + " hours ago"
+        } else if (days == 1) {
+            var d = new Date(timestamp);
+            var t = d.toLocaleTimeString().split(':');        
+            return 'yesterday at ' + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
+        } else if (days < 7) {
+            var d = new Date(timestamp);        
+            var day = dayOfWeek[d.getDay()]
+            var t = d.toLocaleTimeString().split(':');
+            return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
+        } else  {
+            var d = new Date(timestamp);        
+            return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); //check
+        }
+    }
+
+    // takes mod date time (2014-03-24T22:20:23)
+    // and returns unix (epoch) time
+    this.getTimestamp = function(datetime){
+        if (!datetime) return; 
+        var ymd = datetime.split('T')[0].split('-');
+        var hms = datetime.split('T')[1].split(':');
+        hms[2] = hms[2].split('+')[0];  
+        return Date.UTC(ymd[0],ymd[1]-1,ymd[2],hms[0],hms[1],hms[2]);  
+    }
+
 
 }
 

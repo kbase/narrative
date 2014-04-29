@@ -749,7 +749,7 @@ angular.module('ws-directives')
                                         $prompt.data('dialogModal').find('.modal-body').loading()
                                         $.when(prom).done(function(){                                            
                                             scope.loadWSTable();
-                                            kb.notify('Created workspace: '+ws_name, 'success');                                            
+                                            kb.ui.notify('Created workspace: '+ws_name, 'success');                                            
                                             $prompt.closePrompt(); 
 
                                             $prompt.data('dialogModal').find('.modal-footer').html(btn);                                            
@@ -1166,8 +1166,8 @@ angular.module('ws-directives')
                     var module = full_type.split('.')[0];
                     var type = full_type.slice(full_type.indexOf('.')+1);
                     var kind = type.split('-')[0];
-                    var timestamp = getTimestamp(obj[3].split('+')[0]);
-                    var date = formateDate(timestamp);
+                    var timestamp = kb.ui.getTimestamp(obj[3].split('+')[0]);
+                    var date = kb.ui.formateDate(timestamp);
                     var instance = obj[4];
                     var owner = obj[5];
                     var wsid = obj[6];
@@ -1537,7 +1537,7 @@ angular.module('ws-directives')
                                + '<td>' + ver[4] + '</td>'
                                + '<td>' + ver[2] + '</td>'
                                + '<td>' + ver[5] + '</td>'
-                               + '<td>' + ver[7] + '</td>');
+                               + '<td>' + ver[8] + '</td>');
                     return row;
                 }
             }
@@ -1707,7 +1707,7 @@ angular.module('ws-directives')
                 var prom = kb.ws.delete_objects(obj_ids);
                 $.when(prom).done(function(data) {
                     scope.loadObjTable();
-                    //kb.notify('Moved '+obj_ids.length+'objects to trashbin')
+                    //kb.ui.notify('Moved '+obj_ids.length+'objects to trashbin')
                 })
                 return prom;
             }
@@ -1874,7 +1874,7 @@ angular.module('ws-directives')
 
                                 $.when.apply($, proms).done(function() {
                                     scope.loadWSTable();
-                                    kb.notify('Copied objects to: <i>'+new_ws+'</i>');
+                                    kb.ui.notify('Copied objects to: <i>'+new_ws+'</i>');
                                     $copyprompt.closePrompt();
                                     $prompt.closePrompt();
                                     //var btn = $('<button type="button" class="btn btn-primary">Close</button>');

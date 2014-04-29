@@ -27,6 +27,7 @@ lua_shared_dict proxy_last 100k;
 lua_shared_dict proxy_last_ip 200k;
 lua_shared_dict proxy_state 100k;
 lua_shared_dict proxy_mgr 100k;
+lua_shared_dict proxy_token_cache 100k;
 
 lua_package_path "/home/vagrant/dockerstuff/narrative/docker/?;/home/vagrant/dockerstuff/narrative/docker/?.lua;;";
 init_by_lua '
@@ -36,6 +37,7 @@ init_by_lua '
                          proxy_last = ngx.shared.proxy_last,
 			 proxy_last_ip = ngx.shared.proxy_last_ip,
 			 proxy_state = ngx.shared.proxy_state,
+			 proxy_token_cache = ngx.shared.proxy_token_cache,
 			 proxy_mgr = ngx.shared.proxy_mgr }
 ';
 
@@ -49,6 +51,8 @@ server {
 	# Make site accessible from http://localhost/
 	server_name localhost localhost.kbase.us;
 
+	# Setup a DNS resolver
+	resolver 8.8.8.8;
 	# Dynamic proxy manager
 	location /proxy_map {
 	     default_type 'application/json';
@@ -56,16 +60,6 @@ server {
 
 	     set $uri_base '/proxy_map';
 	     content_by_lua 'proxymgr:set_proxy()';
-
-	}
-
-	# Dynamic proxy manager
-	location /proxy_state {
-	     default_type 'application/json';
-	     allow 127.0.0.1;
-
-	     set $uri_base '/proxy_state';
-	     content_by_lua 'proxymgr:idle_status()';
 
 	}
 
@@ -88,7 +82,6 @@ server {
       	     proxy_set_header Upgrade $http_upgrade;
       	     proxy_set_header Connection "upgrade";
       	     proxy_read_timeout 86400;
-	     tcp_nodelay = on;
         }
 
 	#location / {
@@ -105,15 +98,15 @@ server {
 # Proxy	for the nginx remote api
 server {
         listen 127.0.0.1:65000;
-	ssl on;
-	ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
-	ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+	#ssl on;
+	#ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
+	#ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
 
-	ssl_session_timeout 5m;
+	#ssl_session_timeout 5m;
 
-	ssl_protocols SSLv3 TLSv1;
-	ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv3:+EXP;
-	ssl_prefer_server_ciphers on;
+	#ssl_protocols SSLv3 TLSv1;
+	#ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv3:+EXP;
+	#ssl_prefer_server_ciphers on;
 
         server_name docker_remote;
 	# auth_basic_user_file /etc/nginx/htpasswd;
@@ -123,43 +116,14 @@ server {
         }
 }
 
+# Proxy for globus online - non-blocking lua code doesn't handle https, so
+# we build an internal proxy to the Globus Nexus API endpoint
+server {
+	listen 127.0.0.1:65001;
 
-
-# another virtual host using mix of IP-, name-, and port-based configuration
-#
-#server {
-#	listen 8000;
-#	listen somename:8080;
-#	server_name somename alias another.alias;
-#	root html;
-#	index index.html index.htm;
-#
-#	location / {
-#		try_files $uri $uri/ /index.html;
-#	}
-#}
-
-
-# HTTPS server
-#
-#server {
-#	listen 443;
-#	server_name localhost;
-#
-#	root html;
-#	index index.html index.htm;
-#
-#	ssl on;
-#	ssl_certificate cert.pem;
-#	ssl_certificate_key cert.key;
-#
-#	ssl_session_timeout 5m;
-#
-#	ssl_protocols SSLv3 TLSv1;
-#	ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv3:+EXP;
-#	ssl_prefer_server_ciphers on;
-#
-#	location / {
-#		try_files $uri $uri/ /index.html;
-#	}
-#}
+	location / {
+		proxy_pass https://nexus.api.globusonline.org/;
+		proxy_set_header	Host	nexus.api.globusonline.org;
+		proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+	}
+}

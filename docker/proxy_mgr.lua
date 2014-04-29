@@ -14,6 +14,7 @@
 -- proxy_state
 -- proxy_last
 -- proxy_mgr
+-- proxy_token_cache
 --
 -- author: Steve Chan sychan@lbl.gov
 --
@@ -33,6 +34,8 @@ local key_regex = "[%w_%-%.]+"
 local val_regex = "[%w_%-:%.]+"
 local json = require('json')
 local notemgr = require('notelauncher')
+local httplib = require("resty.http")
+local httpclient = httplib:new()
 
 -- forward declare the functions in this module
 local est_connections
@@ -65,10 +68,12 @@ local discover
 --           a true value means that the proxy is considered alive
 --           and a false value means the instance is ready to be
 --           reaped
+-- proxy_token_cache is cache of validated tokens
 local proxy_map = nil
 local proxy_last = nil
 local proxy_last_ip = nil
 local proxy_state = nil
+local proxy_token_cache = nil
 
 -- This is a dictionary for storing proxy manager internal state
 -- The following names are currentl supported
@@ -94,10 +99,20 @@ local initialized = nil
 -- pure numeric form (no DNS or service name lookups)
 local NETSTAT = 'netstat -nt'
 
+-- Lifetime of entry in the token cache, it is measured in milliseconds
+-- per http://wiki.nginx.org/HttpLuaModule#ngx.shared.DICT.set
+-- Set for 8 hours
+local token_cache_time = 8*60*60*1000
+
+-- Base URL for Globus Online Nexus API
+-- the non-clocking client library we are using, resty.http, doesn't
+-- support https, so we depend on a locally configured Nginx
+-- reverse proxy to actually perform the request
+nexus_url = 'http://127.0.0.1:65001/users/'
+
 -- How often (in seconds) does the sweeper wake up to delete dead
 -- containers?
 M.sweep_interval = 300
-
 
 -- How often (in seconds) does the marker wake up to mark containers
 -- for deletion?
@@ -274,6 +289,7 @@ initialize = function( self, conf )
 		   proxy_last = conf.proxy_last or ngx.shared.proxy_last
 		   proxy_last_ip = conf.proxy_last_ip or ngx.shared.proxy_last_ip
 		   proxy_state = conf.proxy_state or ngx.shared.proxy_state
+		   proxy_token_cache = conf.proxy_token_cache or ngx.shared.proxy_token_cache
 		   proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
 
 		   ngx.log( ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d auth_redirect %s",
@@ -462,6 +478,8 @@ get_session = function()
    local hdrs = ngx.req.get_headers()
    local cheader = hdrs['Cookie']
    local token = {}
+   local session_id = nil;
+   local error_msg = nil;
    if cheader then
       -- ngx.log( ngx.INFO, string.format("cookie = %s",cheader))
       local session = string.match( cheader,"kbase_session=([%S]+);?")
@@ -480,10 +498,39 @@ get_session = function()
      end
    end
    if token['un'] then
-      return token['un']
-   else
-      return nil, "No session id found"
+      local cached,err = proxy_token_cache:get(token['kbase_sessionid'])
+      -- we don't cache the actual value of the token, just that we have
+      -- validated it against username
+      if cached and cached == token['un'] then
+	 session_id = token['un']
+      else
+	 ngx.log( ngx.ERR, "Token cache miss : ", token['kbase_sessionid'])
+	 local req = {
+	    url = nexus_url .. token['un'],
+	    method = "GET",
+	    headers = { Authorization = "Globus-Goauthtoken " .. token['token'] }
+	 }
+	 ngx.log( ngx.ERR, "request.url = " .. req.url)
+	 local ok,code,headers,status,body = httpclient:request( req)
+	 ngx.log( ngx.ERR, "Response - code: ", code)
+	 if code >= 200 and code < 300 then
+	    local profile = json.decode(body)
+	    ngx.log( ngx.ERR, "Response - Full name: ", profile.fullname)
+	    if profile.username == token.un then
+	       ngx.log( ngx.ERR, "Response - token username matches cookie identity: ", profile.username)
+	       proxy_token_cache:set(token['kbase_sessionid'],profile.username)
+	       session_id = profile.username
+	    else
+	       error_msg = "token username DOES NOT matches cookie identity: " .. profile.username
+	       ngx.log( ngx.ERR, "Error: " .. err_msg)
+	    end
+	 else
+	    error_msg = "Error during token validation: " ..  status .. " " .. body
+	    ngx.log( ngx.ERR, error_msg)
+	 end
+      end
    end
+   return session_id, error_msg
 end
 
 --

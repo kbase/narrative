@@ -33,6 +33,7 @@ local M={}
 local key_regex = "[%w_%-%.]+"
 local val_regex = "[%w_%-:%.]+"
 local json = require('json')
+local p = require('pl.pretty')
 local notemgr = require('notelauncher')
 local httplib = require("resty.http")
 local httpclient = httplib:new()

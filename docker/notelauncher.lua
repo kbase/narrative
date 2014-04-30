@@ -36,6 +36,7 @@ M.syslog_src = '/dev/log'
 local function get_notebooks()
    local ok, res = pcall(docker.client.containers,docker.client)
    local portmap = {}
+   ngx.log( ngx.DEBUG, string.format("list containers result: %s",p.write(res.body)))
    if ok then
       for index,container in pairs(res.body) do
 	 -- we only care about containers matching repository_image and listening on the proper port
@@ -52,8 +53,9 @@ local function get_notebooks()
       end
       return portmap
    else
-      ngx.log(ngx.ERR,string.format("Failed to fetch list of containers: %s",p.write(res.body)))
-      return nil;
+      local msg = string.format("Failed to fetch list of containers: %s",p.write(res.body))
+      ngx.log(ngx.ERR,msg)
+      error(msg)
    end
 end
 
@@ -61,8 +63,9 @@ end
 --    Actually launch a new docker container.
 --
 local function launch_notebook( name )
-   local res = docker.client:containers()
-   local portmap = get_notebooks()
+   -- don't wrap this in a pcall, if it fails let it propagate to
+   -- the caller
+   portmap = get_notebooks()
    assert(portmap[name] == nil, "Notebook by this name already exists: " .. name)
    local conf = docker.config()
    local bind_syslog = nil
@@ -70,16 +73,18 @@ local function launch_notebook( name )
    conf.Cmd={name}
    conf.PortSpecs = {tostring(M.private_port)}
    ngx.log(ngx.INFO,string.format("Spinning up instance of %s on port %d",conf.Image, M.private_port))
+   -- we wrap the next call in pcall because we want to trap the case where we get a duplicate
+   -- error (status code 409) and try deleting the old container and creating a new one again
    local ok,res = pcall(docker.client.create_container, docker.client, { payload = conf, name = name})
    if not ok and res.response.status == 409 then
       -- conflict, try to delete it and then create it again
       ngx.log(ngx.ERR,string.format("conflicting notebook, removing notebook named: %s",name))   
       ok, res = pcall( docker.client.remove_container, docker.client, { id = name })
       ngx.log(ngx.ERR,string.format("response from remove_container: %s", p.write(res.response)))
+      -- ignore the response and retry the create, and if it still errors, let that propagate
       ok, res = pcall(docker.client.create_container, docker.client, { payload = conf, name = name})
    end
    if ok then
-      ngx.log(ngx.ERR,string.format("response from create_container: %s", p.write(res.response)))
       assert(res.status == 201, "Failed to create container: " .. json.encode(res.body))
       local id = res.body.Id
       if M.syslog_src then
@@ -107,7 +112,9 @@ local function launch_notebook( name )
       assert( ports[ThePort] ~= nil, string.format("Port binding for port %s not found!",ThePort))
       return(string.format("%s:%d","127.0.0.1", ports[ThePort][1].HostPort))
    else
-      ngx.log(ngx.ERR,string.format("Error: ".. p.write(res)))
+      local msg = "Failed to create container: " .. p.write(res)
+      ngx.log(ngx.ERR,msg)
+      error(msg)
    end
 end
 

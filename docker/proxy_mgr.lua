@@ -473,12 +473,16 @@ end
 -- session identifier. You can perform authentication here
 -- and only return a session id if the authentication is legit
 -- returns nil, err if a session cannot be found/created
-
+--
+-- In the current implementation we take the token (if given) and
+-- try to query Globus Online for the user profile, if it comes back
+-- then the token is good and we put an entry in the proxy_token_cache
+-- table for it
 get_session = function()
    local hdrs = ngx.req.get_headers()
    local cheader = hdrs['Cookie']
    local token = {}
-   local session_id = nil;
+   local session_id = nil; -- nil return value by default
    local error_msg = nil;
    if cheader then
       -- ngx.log( ngx.INFO, string.format("cookie = %s",cheader))
@@ -510,14 +514,14 @@ get_session = function()
 	    method = "GET",
 	    headers = { Authorization = "Globus-Goauthtoken " .. token['token'] }
 	 }
-	 ngx.log( ngx.ERR, "request.url = " .. req.url)
+	 --ngx.log( ngx.DEBUG, "request.url = " .. req.url)
 	 local ok,code,headers,status,body = httpclient:request( req)
-	 ngx.log( ngx.ERR, "Response - code: ", code)
+	 --ngx.log( ngx.DEBUG, "Response - code: ", code)
 	 if code >= 200 and code < 300 then
 	    local profile = json.decode(body)
-	    ngx.log( ngx.ERR, "Response - Full name: ", profile.fullname)
+	    ngx.log( ngx.INFO, "Token validated for " .. profile.fullname .. " (" .. profile.username .. ")")
 	    if profile.username == token.un then
-	       ngx.log( ngx.ERR, "Response - token username matches cookie identity: ", profile.username)
+	       ngx.log( ngx.INFO, "Token username matches cookie identity, inserting session_id into token cache: " .. token['kbase_sessionid'])
 	       proxy_token_cache:set(token['kbase_sessionid'],profile.username)
 	       session_id = profile.username
 	    else
@@ -563,11 +567,12 @@ discover = function()
 -- Spin up a new instance
 --
 new_container = function( session_id)
+		   local res = nil
 		   ngx.log( ngx.INFO, "Creating new notebook instance for ",session_id )
-		   local status, res = pcall(notemgr.launch_notebook,session_id)
-		   if status then
+		   local ok,res = pcall(notemgr.launch_notebook,session_id)
+		   if ok then
 		      ngx.log( ngx.INFO, "New instance at: " .. res)
-		      -- do a none blocking sleep for 2 seconds to allow the instance to spin up
+		      -- do a none blocking sleep for 5 seconds to allow the instance to spin up
 		      ngx.sleep(5)
 		      local success,err,forcible = proxy_map:set(session_id,res)
 		      if not success then
@@ -577,11 +582,12 @@ new_container = function( session_id)
 		      else
 			 success,err,forcible = proxy_state:set(session_id,true)
 			 success,err,forcible = proxy_last:set(session_id,os.time())
-			 return res
 		      end
 		   else
-		      ngx.log( ngx.ERR, "Failed to launch new instance :" .. res)
+		      ngx.log( ngx.ERR, "Failed to launch new instance : ".. p.write(res ))
+		      res = nil
 		   end
+		   return(res)
 		end
 
 --

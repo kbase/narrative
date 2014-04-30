@@ -503,9 +503,15 @@ get_session = function()
    end
    if token['un'] then
       local cached,err = proxy_token_cache:get(token['kbase_sessionid'])
-      -- we don't cache the actual value of the token, just that we have
-      -- validated it against username
-      if cached and cached == token['un'] then
+      -- we have to cache either the token itself, or a hash of the token
+      -- because this method gets called for every GET for something as
+      -- trivial as a .png or .css file, calculating and comparing an MD5
+      -- hash of the token would start to be costly given how many GETs
+      -- there are on a given page load.
+      -- So we cache the token itself. This is a security vulnerability,
+      -- however the exposure would require a hacker of fairly high end
+      -- skills (or someone who has read the source code...)
+      if cached and cached == token['token'] then
 	 session_id = token['un']
       else
 	 ngx.log( ngx.ERR, "Token cache miss : ", token['kbase_sessionid'])
@@ -522,10 +528,10 @@ get_session = function()
 	    ngx.log( ngx.INFO, "Token validated for " .. profile.fullname .. " (" .. profile.username .. ")")
 	    if profile.username == token.un then
 	       ngx.log( ngx.INFO, "Token username matches cookie identity, inserting session_id into token cache: " .. token['kbase_sessionid'])
-	       proxy_token_cache:set(token['kbase_sessionid'],profile.username)
+	       proxy_token_cache:set(token['kbase_sessionid'],token['token'])
 	       session_id = profile.username
 	    else
-	       error_msg = "token username DOES NOT matches cookie identity: " .. profile.username
+	       error_msg = "token username DOES NOT match cookie identity: " .. profile.username
 	       ngx.log( ngx.ERR, "Error: " .. err_msg)
 	    end
 	 else

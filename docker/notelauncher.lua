@@ -73,10 +73,10 @@ local function launch_notebook( name )
    conf.Cmd={name}
    conf.PortSpecs = {tostring(M.private_port)}
    ngx.log(ngx.INFO,string.format("Spinning up instance of %s on port %d",conf.Image, M.private_port))
-   -- we wrap the next call in pcall because we want to trap the case where we get a duplicate
-   -- error (status code 409) and try deleting the old container and creating a new one again
+   -- we wrap the next call in pcall because we want to trap the case where we get an
+   -- error and try deleting the old container and creating a new one again
    local ok,res = pcall(docker.client.create_container, docker.client, { payload = conf, name = name})
-   if not ok and res.response.status == 409 then
+   if not ok and res.response.status >= 409 then
       -- conflict, try to delete it and then create it again
       ngx.log(ngx.ERR,string.format("conflicting notebook, removing notebook named: %s",name))   
       ok, res = pcall( docker.client.remove_container, docker.client, { id = name })

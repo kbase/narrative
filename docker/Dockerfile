@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM ubuntu:latest
+FROM ubuntu:12.04
 MAINTAINER Steve Chan sychan@lbl.gov
 
 EXPOSE 8888

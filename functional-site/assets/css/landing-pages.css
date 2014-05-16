@@ -110,7 +110,7 @@ strong em, em strong, b i, i b{
 
 body {
     padding-top: 65px;
-    height: 100%;
+
     font-family: 'OxygenRegular', Arial, sans-serif; 
     color: #333333;     
 }
@@ -238,6 +238,11 @@ table {
 
 
 /* mv */
+
+.tab-content {
+    margin: 10px 0 0 0;
+}
+
 .search-query {
     width: 100%;
     margin: 0 0 5px 0;
@@ -265,6 +270,9 @@ table {
     overflow-x: scroll;
 }
 
+#select-box { 
+    height: 100%;
+}
 
 #select-box tr td{
     padding: 7px;
@@ -323,7 +331,23 @@ div::-webkit-scrollbar-thumb {
 
 /* ws browser */
 
+.ws-toolbar {
+    margin: 0 0 6px 0;
+}
+
+.ws-toolbar button {
+    height: 31px;
+}
+
+.ws-selector-container {
+    position: fixed;
+    height: 70%;
+
+}
+
 .ws-selector{
+    position: relative;
+    height:100%;
     margin: 10px 0 0 0;
 }
 
@@ -683,6 +707,9 @@ div::-webkit-scrollbar-thumb {
 }
 
 
+.fav-container {
+    margin: 0 10px 0 0;
+}
 
 .fav-viewer-obj:hover { 
     cursor: hand; 

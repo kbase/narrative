@@ -20,7 +20,6 @@ $.KBWidget({
         var workspaces = options.workspaces;
         var data = options.fbaData;
 
-        console.log('loading fba')
         var container = this.$elem;
 
         var tables = ['Reactions', 'Compounds'];
@@ -66,16 +65,19 @@ $.KBWidget({
             "iDisplayLength": 5,
             "aLengthMenu": [5, 10, 25,50,100],
             "oLanguage": {
-                "sSearch": "Search all:"
+                "sSearch": "Search:"
             }
         }
 
-        var fba = data[0];
+        var fba = data[0].data;
 
         // rxn flux table
-        var dataDict = formatObjs(fba.reactionFluxes, 'rxn');
-        var labels = ["id", "Flux", "lower", "upper", "min", "max", "basd","Equation"];
-        var cols = getColumnsByLabel(labels);
+        console.log('fba', fba)
+        var dataDict = formatObjs(fba.FBAReactionVariables, 'rxn');
+        var labels = ["ID", "flux", "lower", "upper", "min", "max", "Eq"]; //type
+        var keys = ["modelreaction_ref", "value", "lowerBound", "upperBound", "min", "max", "eq"]; //variableType
+        var cols = getColumnsByKey(keys, labels);
+        cols[0].sWidth = '18%'
         var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});               
         rxnTableSettings.aoColumns = cols;
         rxnTableSettings.aaData = dataDict;
@@ -83,6 +85,7 @@ $.KBWidget({
         var table = $('#reaction-table').dataTable(rxnTableSettings);
 
         // cpd flux table
+        /*
         var dataDict = formatObjs(fba.compoundFluxes, 'cpd');
         var labels = ["id", "Flux", "lower", "upper", "min", "max","Equation"];
         var cols = getColumnsByLabel(labels);
@@ -91,17 +94,19 @@ $.KBWidget({
         cpdTableSettings.aaData = dataDict;
         container.append('<table id="compound-table" class="table table-striped table-bordered"></table>');
         var table = $('#compound-table').dataTable(cpdTableSettings);
-
+        */
  
         function formatObjs(objs, type) {
             var fluxes = []
             if (type == 'rxn') {
                 for (var i in objs) {
                     var obj = $.extend({}, objs[i]);
-                    var rxn = obj[0].split('_')[0]
-                    var compart = obj[0].split('_')[1]
-                    obj[0] = '<a class="rxn-click" data-rxn="'+rxn+'">'
-                                +rxn+'</a> ('+compart+')';
+                    var rxn = obj.modelreaction_ref
+                                 .split('/')[5];
+                    var rxn_id = rxn.split('_')[0];
+                    var compart = rxn.split('_')[1];
+                    obj.modelreaction_ref = '<a class="rxn-click" data-rxn="'+rxn_id+'">'
+                                +rxn_id+'</a> ('+compart+')';
                     fluxes.push(obj);
                 }
             } else if (type == 'cpd') {
@@ -126,6 +131,15 @@ $.KBWidget({
             return cols;
         }
 
+        function getColumnsByKey(keys, labels) {
+            var cols = [];
+
+            for (var i=0; i<keys.length; i++) {
+                cols.push({sTitle: labels[i], mData: keys[i]})
+            }
+            return cols;
+        }
+
         function events() {
             $('.rxn-click').unbind('click');
             $('.rxn-click').click(function() {
@@ -142,10 +156,6 @@ $.KBWidget({
         //this._rewireIds(this.$elem, this);
         return this;
     }  //end init
-
-
-
-
 
 })
 }( jQuery ) );

@@ -67,7 +67,7 @@ $.KBWidget({
 
         var tableSettings = {
             "sPaginationType": "bootstrap",
-            "iDisplayLength": 5,
+            "iDisplayLength": 10,
             "aLengthMenu": [5, 10, 25,50,100],            
             "aaData": [],
             "oLanguage": {
@@ -76,34 +76,32 @@ $.KBWidget({
         }
 
 
-        model = data[0];
+        model = data[0].data;
 
         // compartment table
-        var dataDict = model.compartments;
-        var keys = ["id", "index", "name", "pH", "potential"];
-        var labels = ["id", "index", "name", "pH", "potential"];
+        var dataDict = model.modelcompartments;
+        var keys = ["label", "pH", "potential"];
+        var labels = ["name", "pH", "potential"];
         var cols = getColumns(keys, labels);
         tableSettings.aoColumns = cols;
         var table = $('#compartment-table').dataTable(tableSettings);
         table.fnAddData(dataDict);
 
         // reaction table
-        var dataDict = formatRxnObjs(model.reactions);
-
-        var keys = ["reaction", "definition",
-                    "features","name"];
-        var labels = ["reaction", "equation",
-                    "features","name"];
+        var dataDict = formatRxnObjs(model.modelreactions);
+        var keys = ["reaction", "name", "eq"]
+        var labels = ["reaction", "name", "eq"]// "equation", features","name"];
         var cols = getColumns(keys, labels);
         var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: rxnEvents});   
         rxnTableSettings.aoColumns = cols;
+        rxnTableSettings.aoColumns[0].sWidth = '15%';        
         var table = $('#reaction-table').dataTable(rxnTableSettings);
         table.fnAddData(dataDict);
 
         // compound table
-        var dataDict = model.compounds;
-        var keys = ["compartment", "compound", "name"];
-        var labels = ["compartment", "compound", "name"];
+        var dataDict = model.modelcompounds;
+        var keys = ["name"]//["compartment", "compound", "name"];
+        var labels = ["name"]//["compartment", "compound", "name"];
         var cols = getColumns(keys, labels);
         tableSettings.aoColumns = cols;
         var table = $('#compound-table').dataTable(tableSettings);
@@ -111,8 +109,8 @@ $.KBWidget({
 
         // biomass table
         var dataDict = model.biomasses;
-        var keys = ["definition", "id", "name"];
-        var labels = ["definition", "id", "name"];
+        var keys = ["id", "name", "eq"];
+        var labels = ["id", "name", "eq"];
         var cols = getColumns(keys, labels);
         tableSettings.aoColumns = cols;
         var table = $('#biomass-table').dataTable(tableSettings);
@@ -131,20 +129,21 @@ $.KBWidget({
         gapFillTable(data);
 
         // gapgen table
+        /*
         var model_gapgen = model.gapgen;
         var keys = ["id", "index", "name", "pH","potential"];
         var labels = ["id", "index", "name", "pH","potential"];
         var cols = getColumns(keys, labels);
         tableSettings.aoColumns = cols;
         var table = $('#gapgen-table').dataTable(tableSettings);
-
+        */
         function formatRxnObjs(rxnObjs) {
             var rxn_objs = []
             for (var i in rxnObjs) {
                 var rxn = $.extend({}, rxnObjs[i] );
-                rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.reaction+'">'
-                            +rxn.reaction+'</a> ('+rxn.compartment+')'
-                rxn.features = rxn.features.join('<br>')
+                rxn.reaction = '<a class="rxn-click" data-rxn="'+rxn.id.split('_')[0]+'">'
+                            +rxn.id.split('_')[0]+'</a> ('+rxn.id.split('_')[1] +')'
+                //rxn.features = rxn.features.join('<br>')
                 rxn_objs.push(rxn)
             }
             return rxn_objs;
@@ -276,7 +275,7 @@ $.KBWidget({
                         gapTable.fnOpen( tr, '', "info_row" );
                         $(this).closest('tr').next('tr').children('.info_row').append('<p class="muted loader-gap-sol"> \
                             <img src="assets/img/ajax-loader.gif"> loading possible solutions...</p>')                
-                        showGapfillSolutions(tr, gapRef, ws)   
+                        showGapfillSolutions(tr, gapRef, ws);
                     }
                 });
             }

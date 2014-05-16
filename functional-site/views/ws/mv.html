@@ -1,0 +1,27 @@
+
+
+<div ng-controller="MV">
+<h4>{{org_name}} <small>{{$stateParams.id}}</small></h4>
+  <!--<p>
+    <button class="btn btn-default btn-sm" ng-click="tabs[0].active = true">Select second tab</button>
+    <button class="btn btn-default btn-sm" ng-click="tabs[1].active = true">Select third tab</button>
+  </p>
+  <p>
+    <button class="btn btn-default btn-sm" ng-click="tabs[1].disabled = ! tabs[1].disabled">Enable / Disable third tab</button>
+  </p>-->
+
+<ul class="nav nav-tabs">
+    <li ng-class="{ active: $state.includes('ws.mv.model')}">
+      <a ui-sref="ws.mv.model({ws: $stateParams.ws, id:$stateParams.id})" >Model</a>
+    </li>
+    <li ng-class="{ active: $state.includes('ws.mv.data')}">
+      <a ui-sref="ws.mv.data({ws: $stateParams.ws, id:$stateParams.id})">Data</a>
+    </li>
+    <li ng-class="{ active: $state.includes('ws.mv.maps')}">
+      <a ui-sref="ws.mv.maps({ws: $stateParams.ws, id:$stateParams.id})">Maps</a>
+    </li>
+</ul>
+
+<div class="tab-content" ui-view></div>
+
+</div>

@@ -4,42 +4,41 @@ angular.module('modeling-directives', []);
 angular.module('modeling-directives')
 .directive('pathways', function($location, $compile) {
     return {
-        link: function(scope, element, attrs) {
+        link: function(scope, ele, attrs) {
             var type = scope.type;
             var map_ws = 'nconrad:paths';
             //var ids = (scope.ids ? scope.ids : [scope.id]); //fixme
 
-            var p = $(element).kbasePanel({title: 'Pathways', 
-                                           type: 'Pathway',
-                                           rightLabel: map_ws,
-                                           subText: scope.id});
-            p.loading();
-
+            //var p = $(element).kbasePanel({title: 'Pathways', 
+            //                               type: 'Pathway',
+            //                               rightLabel: map_ws,
+            //                               subText: scope.id});
+            //p.loading();
+            $(ele).loading();
 
             if (type == "Model") {
-                var prom = kb.req('ws', 'get_objects', scope.selected);
-                                   
+                var prom = kb.get_model(scope.selected[0].workspace, scope.selected[0].name);
                 $.when(prom).done(function(d) {
                     var data = [d[0].data];
-                    $(p.body()).pathways({modelData: data, 
+                    $(ele).rmLoading();
+                    $(ele).pathways({modelData: data, 
                                 ws: map_ws, defaultMap: scope.defaultMap,
                                 scope: scope});
                 }).fail(function(e){
-                    $(p.body()).append('<div class="alert alert-danger">'+
+                    $(ele).append('<div class="alert alert-danger">'+
                                 e.error.message+'</div>');
                 });
 
             } else if (type == "FBA") {
-                //var prom = get_objects(scope.ids, scope.ws);
-                var prom = kb.req('ws', 'get_objects', scope.selected);
-
+                var prom = kb.get_fba(scope.selected[0].workspace, scope.selected[0].name)
                 $.when(prom).done(function(d) {
                     var data = [d[0].data];
-                    $(p.body()).pathways({fbaData: data, 
+                    $(ele).rmLoading();                    
+                    $(ele).pathways({fbaData: data, 
                                 ws: map_ws, defaultMap: scope.defaultMap,
                                 scope: scope})   
                 }).fail(function(e){
-                    $(p.body()).append('<div class="alert alert-danger">'+
+                    $(ele).append('<div class="alert alert-danger">'+
                                 e.error.message+'</div>');
                 });
             }
@@ -63,6 +62,8 @@ angular.module('modeling-directives')
                 self.ws = options.ws;
                 self.default_map = options.defaultMap
 
+                var maps = [];
+
                 var container = $(this);
 
                 var stroke_color = '#666';
@@ -75,13 +76,11 @@ angular.module('modeling-directives')
                                 "fnDrawCallback": events,
                                 "aaSorting": [[ 1, "asc" ]],
                                 "aoColumns": [
-                                    { "sTitle": "Name"}, //"sWidth": "10%"
-                                    { "sTitle": "Map ID"},
-                                    { "sTitle": "Rxn Count", "sWidth": "10%"} , 
-                                    { "sTitle": "Cpd Count", "sWidth": "10%"} ,                                                                                            
-                                    //{ "sTitle": "Rxn Count", "sWidth": "12%"},
-                                    //{ "sTitle": "Cpd Count", "sWidth": "12%"},
-                                    //{ "sTitle": "Source","sWidth": "10%"},
+                                    { sTitle: 'Name', mData: 'name'}, 
+                                    { sTitle: 'Map ID', mData: 'id'},
+                                    { sTitle: 'Rxn Count', mData: 'rxn_count', sWidth: '10%'},
+                                    { sTitle: 'Cpd Count', mData: 'cpd_count',  sWidth: '10%'} ,                                                                                            
+                                    //{ sTitle: "Source","sWidth": "10%"},
                                 ],                         
                                 "oLanguage": {
                                     "sEmptyTable": "No objects in workspace",
@@ -89,7 +88,7 @@ angular.module('modeling-directives')
                                 }
                             }
 
-                var tab = $('<li class="tab active"><a>Maps</a></li>')
+                /*var tab = $('<li class="tab active"><a>Maps</a></li>')
                 tab.click(function(){
                     if(scope.id && scope.ws) {
                         $location.search({map: 'list'})
@@ -105,11 +104,11 @@ angular.module('modeling-directives')
                 tabs.append(tab);
 
                 container.append(tabs);
+                */
                 container.prepend('<span class="label label-danger pull-right">Beta</span>')
                 container.append('<div class="tab-content" style="margin-top:15px;">\
                                       <div class="tab-pane active" style="margin-top:15px;" id="path-list"></div>\
                                   </div>');
-
 
                 function load_map_list() {
                     // load table for maps
@@ -136,8 +135,14 @@ angular.module('modeling-directives')
 
                             var rxn_count = obj[10].reaction_ids.split(',').length;
                             var cpd_count = obj[10].compound_ids.split(',').length;
-                            aaData.push([name, obj[1], rxn_count, cpd_count])
-                            //aaData.push([name, obj[1]])
+                            var row = {name: name, id: obj[1], rxn_count: rxn_count, 
+                                       cpd_count: cpd_count};
+                            aaData.push(row)
+
+                            var map = {name: obj[10].name, id: obj[1], 
+                                       rxn_count: rxn_count, cpd_count: cpd_count};
+                            maps.push(map)
+
                         }
 
                         tableSettings.aaData = aaData; 
@@ -147,6 +152,19 @@ angular.module('modeling-directives')
                                        class="table table-bordered table-striped" style="width: 100%;"></table>');
                         var table = $('#'+table_id).dataTable(tableSettings);  
                         $compile(table)(scope);
+
+
+                        if (self.default_map && self.default_map != 'list') {
+                            for (var i in maps) {
+                                map_obj = maps[i]
+                                if (map_obj.id == self.default_map) {
+                                    new_map_tab(self.default_map, map_obj.name);
+                                    self.loadMap(self.default_map);
+                                }
+                            }
+ 
+                        } 
+
                     }).fail(function(e){
                         container.prepend('<div class="alert alert-danger">'+
                                     e.error.message+'</div>')
@@ -160,7 +178,8 @@ angular.module('modeling-directives')
                     $('.tab').removeClass('active')
                     $('#path-tab-'+map).addClass('active');
                     $('.tab-pane').removeClass('active');                             
-                    $('#path-'+map).addClass('active');                        
+                    $('#path-'+map).addClass('active');
+                    $('#path-'+map).loading();
                     var p = kb.ws.get_objects([{workspace: self.ws, name: map}])
                     $.when(p).done(function(d) {
                         var d = d[0].data
@@ -194,12 +213,14 @@ angular.module('modeling-directives')
                                 return
                             }          
                         })
-
+                        console.log('new tab 1', map, name)
                         if (!exists) new_map_tab(map, name);
                     });
 
                     // tooltip for hover on pathway name
-                    container.find('.pathway-link').tooltip({title: 'Open path tab', placement: 'right', delay: {show: 500}});
+                    container.find('.pathway-link')
+                             .tooltip({title: 'Open path tab', 
+                                       placement: 'right', delay: {show: 1000}});
 
                 } // end events
 
@@ -212,24 +233,20 @@ angular.module('modeling-directives')
                     container.find('.tab-content')
                             .append('<div class="tab-pane" id="path-'+map+'"></div>'); 
 
-                    container.find('.nav-tabs').append(tab);
+                    $('.nav-tabs').append(tab);
 
-                    container.find('.pathway-tab').unbind('click');
-                    container.find('.pathway-tab').click(function() {
+                    $('.pathway-tab').unbind('click');
+                    $('.pathway-tab').click(function() {
                         var map = $(this).data('map');
-                        $location.search({map: map});
-                        scope.$apply();
+                        //$location.search({map: map});
+                        //scope.$apply();
                         self.loadMap(map);
                     }); 
                 }
+            }
 
-                if (self.default_map) {
-                    if (self.default_map != 'list') {
-                        new_map_tab(self.default_map);
-                        self.loadMap(self.default_map);
-                    }
-                } 
-            }    
+
+
 
         }
     };
@@ -515,4 +532,400 @@ angular.module('modeling-directives')
             }            
         }
     };
+})
+
+.directive('etcviewer', function($location) {
+    return {
+        link: function(scope, ele, attrs) {
+
+
+            var p = kb.ws.get_objects([{workspace: scope.ws, name: scope.id}])
+            $.when(p).done(process);
+
+            function process(data) {
+                var data = data[0].data;
+                //var treeData = processData2(data);
+                //drawTree(treeData)
+
+                var prom = getCompoundNames(data);
+
+                $.when(prom).done(function(cpd_dict){
+                    console.log(cpd_dict)
+                    var data = group_data(data);
+                    drawMap(data, cpd_dict);
+                })
+            }
+
+
+            function drawMap(data, cpd_dict) {
+
+
+
+                var width = 800;
+                var height = 600;
+
+                $(ele).append('<div id="etc-viewer">')
+                var svg = d3.select("#etc-viewer")
+                            .append("svg")
+                             .attr("width", width)
+                            .attr("height", height);
+
+                var w = 100;
+                var h = 20;
+                var center_x = 200
+                var center_y = 200
+
+
+                for (var j in data.pathways) {
+                    var path = data.pathways[j];
+
+                    var name = path.electron_acceptor
+                    var steps = path.steps;
+
+                    for (var i = 0; i < steps.length; i++) {
+                        var rxns = steps[i].reactions;
+                        console.log(steps[i])
+
+                        svg.append('rect')
+                           .attr('class', 'etc-step-box')
+                           .attr('x', center_x + (i*w))
+                           .attr('y', center_y + (j*h))
+                           .attr('width', w)
+                           .attr('height', h)
+
+
+                        var cpd_name = cpd_dict[steps[i].substrates.compound_refs[0]].name
+
+                        svg.append('text')
+                           .attr('class', 'etc-step-text')
+                           .attr('x', center_x + (i*w)+2)
+                           .attr('y', center_y + (j*h)+h/2 +3)
+                           .text(cpd_name)
+                        
+                    }
+
+                    svg.append('text')
+                       .attr('class', 'etc-step-text')
+                       .attr('x', center_x+(steps.length*w)+2)
+                       .attr('y', center_y  + (j*h)+h/2 +3)
+                       .text(name)                        
+
+                }
+
+            }
+/*
+            function groupData(data) {
+                var paths = {}
+                for (var i in data.pathways) {
+
+                    var path = data.pathways[j];
+
+                    var name = path.electron_acceptor
+
+                    paths[name] = []
+
+                    var steps = path.steps;                    
+                    for (var j in steps) {
+                        var step = steps[j];
+
+                        sub_name = step.substrates.compound_refs;
+
+
+
+
+
+
+                    }
+                }
+            }*/
+
+            function getCompoundNames(data) {
+                cpd_ids = []
+                console.log(data)
+                for (var i in data.pathways) {
+                    var path = data.pathways[i];
+                    var steps = path.steps;
+
+                    for (var k = 0; k < steps.length; k++) {
+                        var ids = steps[k].substrates.compound_refs;
+
+                        for (var j in ids) {
+                            if (cpd_ids.indexOf(ids[j]) != -1) {
+                                continue;
+                            } else {
+                                cpd_ids.push(ids[j])
+                            }
+                        }
+
+                    }
+                }
+
+                var prom = kb.fba.get_compounds({compounds: cpd_ids})
+
+                var p = $.when(prom).then(function(cpds) {
+                    var obj = {}    
+                    for (var i in cpds) {
+                        obj[cpds[i].id] = cpds[i]
+                    }
+                    return obj
+                });
+
+                return p;
+            }
+
+            function processData(data) {
+                var paths = data.pathways;
+                console.log('paths', paths)
+
+                var treeData = [];
+
+                for (var i in paths){
+                    tree_obj = {}
+                    var path = paths[i];
+
+                    var ea = path.electron_acceptor;
+                    var steps = path.steps;
+                    for (var j in steps) {
+                        var step = steps[j];
+                        var substrates = step.substrates;
+                        var products = step.products;
+                        var prod_name = products.name
+                        var sub_name = substrates.name;
+
+                        // add to tree object
+
+                        // look to see if tree in already
+                        var presentInTree;
+                        for (var k in treeData) {
+                            if (treeData[k].name == sub_name) {
+                                presentInTree = true;
+                                break;
+                            }
+                        }
+                        if (presentInTree) continue;
+
+                        // if top level node, add, etc
+                        if (treeData.length == 0) {
+                            tree_obj.name = sub_name;
+                            tree_obj.parent = "null";
+                            tree_obj.children = [{name: prod_name, parent: sub_name}];
+                            treeData.push(tree_obj);   
+                        } else {
+                            for (var k in treeData) {
+                                for (var z in treeData[k].children[z]) {
+                                    if ( treeData[k].children[z].name == sub_name) {
+                                        treeData[k].children[z].children = [{name: prod_name, parent: sub_name}]
+                                        break;
+                                    }                                    
+                                }
+
+                            }
+                            //tree_obj.children.push({})
+                        }
+
+                        tree_obj.name = sub_name;
+                        tree_obj.parent = "null";
+                        tree_obj.children = [];
+                        treeData.push(tree_obj);
+
+                    }
+
+                    treeData.push(tree_obj);
+                }
+                return treeData
+
+            }
+
+
+            function processData2(data) { 
+                var paths = data.pathways;
+                console.log('paths', paths)
+
+
+                /*
+                var data = [
+                    { "name" : "Level 2: A", "parent":"Top Level" },
+                    { "name" : "Top Level", "parent":"null" },
+                    { "name" : "Son of A", "parent":"Level 2: A" },
+                    { "name" : "Daughter of A", "parent":"Level 2: A" },
+                    { "name" : "Level 2: B", "parent":"Top Level" }
+                    ];
+                    */
+
+                var data =[]
+
+                for (var i in paths){
+                    tree_obj = {}
+                    var path = paths[i];
+
+                    var ea = path.electron_acceptor;
+                    var steps = path.steps;
+                    for (var j in steps) {
+                        var step = steps[j];
+                        var substrates = step.substrates;
+                        var products = step.products;
+                        var prod_name = products.name
+                        var sub_name = substrates.name;
+
+
+                        if (data.length == 0) {
+                            data.push({name: sub_name, parent: null}) 
+                        } else {
+                            var presentInTree;
+                            for (var k in data) {
+                                if (data[k].name == sub_name) {
+                                    presentInTree = true
+                                    break;
+                                }                    
+                            }
+                            if (presentInTree) {
+                                console.error('skipping')
+                                continue;
+                            } else if (j >= 1) {
+                                console.error('adding:', {name: sub_name, parent: steps[j-1].substrates.name})
+                                data.push({name: sub_name, parent: steps[j-1].substrates.name})
+                            } else {
+                                console.error('else statement:', j)
+                            }
+                        }
+
+                        // if last step, add product
+                        if (j == steps.length - 1) {
+                            data.push({name: prod_name, parent: steps[j].substrates.name})
+                        }
+
+                    }                    
+                }
+
+                console.log('data', data)
+                // create a name: node map
+                var dataMap = data.reduce(function(map, node) {
+                    map[node.name] = node;
+                    return map;
+                }, {});
+
+                // create the tree array
+                var treeData = [];
+                data.forEach(function(node) {
+                    // add to parent
+                    var parent = dataMap[node.parent];
+                    if (parent) {
+                        // create child array if it doesn't exist
+                        (parent.children || (parent.children = []))
+                            // add node to child array
+                            .push(node);
+                    } else {
+                        // parent is null or missing
+                        treeData.push(node);
+                    }
+                });
+
+                return treeData;
+            }
+
+
+            function drawTree(treeData) {
+                console.log('tree data' , treeData)
+
+                /*
+
+                var treeData = [
+                  {
+                    "name": "Top Level",
+                    "parent": "null",
+                    "children": [
+                      {
+                        "name": "Level 2: A",
+                        "parent": "Top Level",
+                        "children": [
+                          {
+                            "name": "Son of A",
+                            "parent": "Level 2: A"
+                          },
+                          {
+                            "name": "Daughter of A",
+                            "parent": "Level 2: A"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "Level 2: B",
+                        "parent": "Top Level"
+                      }
+                    ]
+                  }
+                ];
+                */
+
+                // ************** Generate the tree diagram  *****************
+                var margin = {top: 20, right: 120, bottom: 20, left: 120},
+                 width = 960 - margin.right - margin.left,
+                 height = 200 - margin.top - margin.bottom;
+                 
+                var i = 0;
+
+                var tree = d3.layout.tree()
+                 .size([height, width]);
+
+                var diagonal = d3.svg.diagonal()
+                 .projection(function(d) { return [d.y, d.x]; });
+
+                $(ele).append('<div id="etc-viewer-tree">')
+                var svg = d3.select("#etc-viewer-tree").append("svg")
+                 .attr("width", width + margin.right + margin.left)
+                 .attr("height", height + margin.top + margin.bottom)
+                  .append("g")
+                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                root = treeData[0];
+                  
+                update(root);
+
+                function update(source) {
+
+                  // Compute the new tree layout.
+                  var nodes = tree.nodes(root).reverse(),
+                   links = tree.links(nodes);
+
+                  // Normalize for fixed-depth.
+                  nodes.forEach(function(d) { d.y = d.depth * 180; });
+
+                  // Declare the nodesâ€¦
+                  var node = svg.selectAll("g.node")
+                   .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+                  // Enter the nodes.
+                  var nodeEnter = node.enter().append("g")
+                   .attr("class", "node")
+                   .attr("transform", function(d) { 
+                    return "translate(" + d.y + "," + d.x + ")"; });
+
+                  nodeEnter.append("circle")
+                   .attr("r", 10)
+                   .style("fill", "#fff");
+
+                  nodeEnter.append("text")
+                   .attr("x", function(d) { 
+                    return d.children || d._children ? -13 : 13; })
+                   .attr("dy", ".35em")
+                   .attr("text-anchor", function(d) { 
+                    return d.children || d._children ? "end" : "start"; })
+                   .text(function(d) { return d.name; })
+                   .style("fill-opacity", 1);
+
+                  // Declare the linksâ€¦
+                  var link = svg.selectAll("path.link")
+                   .data(links, function(d) { return d.target.id; });
+
+                  // Enter the links.
+                  link.enter().insert("path", "g")
+                   .attr("class", "link")
+                   .attr("d", diagonal);
+
+                }
+
+            }
+
+        }
+    }
 })

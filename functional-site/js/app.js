@@ -72,16 +72,38 @@ var app = angular.module('landing-pages',
           url: "tour/",
           templateUrl: 'views/ws/objtable.html',
           controller: 'WBTour'
-        }).state('ws.models', {
-          url: "models/:ws/:id?map",
+        }).state('ws.mv', {
+          url: "mv/",
+          templateUrl: 'views/ws/mv.html',
+        }).state('ws.mv.model', {
+          url: "model/:ws/:id",
           templateUrl: 'views/ws/sortable/model.html',
-          controller: 'WBModelLanding'
+
+        }).state('ws.mv.data', {
+          url: "data/:ws/:id",
+          templateUrl: 'views/ws/sortable/data.html',
+
+        }).state('ws.mv.maps', {
+          url: "maps/:ws/:id",
+          templateUrl: 'views/ws/sortable/maps.html',
+
+        })
+
+
+        .state('ws.models', {
+          url: "models/:ws/:id?map",
+          templateUrl: 'views/ws/mv.html', //sortable/model.html',
+          controller: 'MV' //WBModelLanding',
           //reloadOnSearch: false
         }).state('ws.fbas', {
           url: "fbas/:ws/:id?map",
-          templateUrl: 'views/ws/sortable/fba.html',
+          templateUrl: 'views/ws/mv.html', //sortable/fba.html',
+          controller: 'MV' //'WBModelLanding',
+          //reloadOnSearch: false
+        }).state('ws.etc', {
+          url: "etc/:ws/:id",
+          templateUrl: 'views/ws/sortable/etc.html',
           controller: 'WBModelLanding'
-          //reloadOnSearch: false          
         }).state('ws.genomes', {
           url: "genomes/:ws/:id",
           templateUrl: 'views/ws/sortable/genome.html',
@@ -99,6 +121,12 @@ var app = angular.module('landing-pages',
           templateUrl: 'views/ws/json.html',
           controller: 'WBJSON'
         })
+
+        /* model viewer */
+
+
+
+
 
     $stateProvider
         .state('favorites', {

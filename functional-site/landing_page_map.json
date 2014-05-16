@@ -57,7 +57,8 @@
         "ReactionSensitivityAnalysis" : null,
         "FBAModel" : "models",
         "Gapgeneration" : null,
-        "ModelTemplate" : null
+        "ModelTemplate" : null,
+        "ETC" : "etc"
     },
 
     "KBaseGenomes" : {

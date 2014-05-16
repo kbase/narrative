@@ -636,7 +636,6 @@ $.KBWidget({
         }
 
         function get_heat_color(flux) {
-            console.log(flux)
             if (flux >= 100){
                 var color = heat_colors[0];
             } else if (flux >= 50) {

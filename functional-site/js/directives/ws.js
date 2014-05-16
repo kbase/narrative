@@ -15,8 +15,60 @@ angular.module('ws-directives')
     return {
         template: '<div class="ws-selector">'+
                     '<div class="ws-selector-header">'+
-                        '<a class="show-filters">Filter <span class="caret"></span></a>'+
-                        (USER_ID ? '<a class="new-ws pull-right">New+</a>' : '')+
+                        //'<a class="show-filters">Filter <span class="caret"></span></a>'+
+                        
+
+                        '<div class="btn-toolbar ws-toolbar">'+
+
+
+                            '<div class="btn-group btn-group-sm">'+
+                                '<button type="button" class="btn btn-default btn-show-ws active">'+
+                                    '<span class="glyphicon glyphicon-th-large"></span>'+
+                                '</button>'+
+                                '<button type="button" class="btn btn-default btn-show-fav">'+
+                                    '<span class="glyphicon glyphicon-star"></span> '+
+                                    '(<span class="favorite-count">0</span>)'+
+                                '</button>'+
+                            '</div>'+
+                        
+
+                            '<div class="btn-group btn-group-sm btn-filter-ws">'+
+                                '<div class="dropdown">'+
+                                    '<button type="button" class="btn btn-default btn-sm" data-toggle="dropdown">'+
+                                        'Filter <span class="caret"></span>'+
+                                    '</button>'+
+                                    '<ul class="dropdown-menu settings-dropdown perm-filters" role="menu">'+
+                                        '<div class="checkbox pull-left">'+
+                                            '<label><input id="ws-filter-owner" type="checkbox" value="">owner</label>'+
+                                        '</div>'+
+                                        '<br><hr>'+
+                                        '<div class="checkbox">'+
+                                            '<label><input id="ws-filter-admin" type="checkbox" value="" checked>admin</label>'+
+                                        '</div>'+
+                                        '<div class="checkbox">'+
+                                          '<label><input id="ws-filter-write" type="checkbox" value="" checked>write</label>'+
+                                        '</div>'+
+                                        '<div class="checkbox">'+
+                                          '<label><input id="ws-filter-read" type="checkbox" value="" checked>read</label>'+                                                                                          
+                                        '</div>'+
+
+                                    '</ul>'+
+
+                                '</div>'+
+                            '</div>'+                        
+                            
+                            (USER_ID ? 
+                            '<div class="btn-group btn-group-sm">'+
+                                '<button type="button" class="btn btn-default btn-new-ws">'+
+                                    '<span class="glyphicon glyphicon-plus"></span> New'+
+                                '</button>'+
+                            '</div>' : '')+
+
+                        '</div>'+
+
+
+
+                        //(USER_ID ? '<a class="new-ws pull-right">New+</a>' : '')+
 
                         '<div class="perm-filters" style="display:none;">'+
                             '<div class="checkbox pull-left" style="margin: 35px 25px;">'+
@@ -35,13 +87,14 @@ angular.module('ws-directives')
                              '</div>'+
                         '</div>'+
 
-                        '<input type="text" class="search-query" placeholder="Filter Workspaces">'+
+                        '<input type="text" class="search-query" placeholder="Search">'+
                     '</div>'+
 
 
                     '<div id="select-box" class="select-box scroll-pane">'+
                       '<table class="table table-bordered table-condensed table-hover"></table>'+
                     '</div>'+
+                    '<div favoritesidebar style="display: none;" id="favorite-sidebar" class="scroll-pane"></div>'+
                   '</div>'
                   ,
 
@@ -129,7 +182,7 @@ angular.module('ws-directives')
 
 
                     $('.scroll-pane').css('height', $(window).height()-
-                        $('.ws-selector-header').height() - nav_height )                     
+                        $('.ws-selector-header').height() - nav_height )
                     events();
                 });
             }
@@ -146,10 +199,55 @@ angular.module('ws-directives')
                 //var search = filterSearch.val();
 
                 // event for clicking on 'create new workspace'
-                $('.new-ws').unbind('click');
-                $('.new-ws').click(function() {
+                $('.btn-new-ws').unbind('click');
+                $('.btn-new-ws').click(function() {
                     createWorkspaceModal();
                 });
+
+                $('.btn-show-fav').unbind('click');
+                $('.btn-show-fav').click(function() {
+                    if ($(this).hasClass('active')) return;
+
+                    $('.btn-new-ws').fadeOut();
+                    $('.btn-filter-ws').fadeOut();
+
+                    $('#select-box').toggle('slide', {
+                                     direction: 'left',
+                                     duration: 'fast',
+                                         complete: function() {
+                                         $('#favorite-sidebar').toggle('slide', {
+                                             direction: 'right',
+                                             duration: 'fast'
+                                         });
+                                     }
+                                 })
+                    $(this).parent().children().removeClass('active');
+                    $(this).addClass('active');
+                })
+
+                $('.btn-show-ws').unbind('click');
+                $('.btn-show-ws').click(function() {
+                    if ($(this).hasClass('active')) return;
+
+                    $('.btn-new-ws').fadeIn();
+                    $('.btn-filter-ws').fadeIn();
+
+                    $('#favorite-sidebar').toggle('slide', {
+                                     direction: 'right',
+                                     duration: 'fast',
+                                         complete: function() {
+                                         $('#select-box').toggle('slide', {
+                                             direction: 'right',
+                                             duration: 'fast'
+                                         });
+                                     }
+                                 })
+
+                    $(this).parent().children().removeClass('active');
+                    $(this).addClass('active');                    
+
+                })                
+
 
                 // events for search box
                 $('.search-query').unbind('click');
@@ -888,7 +986,20 @@ angular.module('ws-directives')
             var ws = scope.selected_ws;
             var showObjOpts = false;
 
+
+            var table;
+
+            // stars in table
+            scope.favs;
+
             scope.checkedList = [];
+
+            scope.updateFavStars = function() {
+                $xml.find("td").each(function(index){        
+                    var row =             
+                    oTable.fnUpdate( [c1, c2, c3], index ); // Row
+                });  
+            }
 
             scope.$watch('checkedList', function() {
                 $('.obj-check-box').each(function() {
@@ -935,8 +1046,6 @@ angular.module('ws-directives')
                     }
                 }
             }
-
-
 
             scope.loadObjTable = function() {
                 showObjOpts = false;
@@ -996,10 +1105,11 @@ angular.module('ws-directives')
                 //}
         
                 var p2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1});
-                //var p3 = kb.ujs.get_state('favorites', 'queue', 0);
+                var p3 = kb.ujs.get_state('favorites', 'queue', 0);
                 var p4 = $.getJSON('landing_page_map.json');
 
-                $.when(p, p2, p4).done(function(data, deleted_objs, obj_mapping){
+                $.when(p, p2, p3, p4).done(function(data, deleted_objs, favs, obj_mapping){
+                    scope.favs = favs;
                     scope.deleted_objs = deleted_objs;
                     scope.obj_mapping = obj_mapping[0];
 
@@ -1008,54 +1118,46 @@ angular.module('ws-directives')
                     $(element).append('<table id="'+table_id+'" \
                         class="table table-bordered table-striped" style="width: 100%;"></table>')    
 
-                    var tableobjs = formatObjs(data, obj_mapping)//favs);
+                    // format and create object datatable
+                    var tableobjs = formatObjs(data, obj_mapping);
                     var wsobjs = tableobjs[0];
                     var kind_counts = tableobjs[1];
-
                     tableSettings.aaData = wsobjs;
-
-                    // load object table
-                    var table = $('#'+table_id).dataTable(tableSettings);       
+                    table = $('#'+table_id).dataTable(tableSettings);       
                     $compile(table)(scope);
 
-                    // reset filter.  
-                    // critical for ignoring cached filter
+                    // reset filter; critical for ignoring cached filter
                     table.fnFilter((scope.type ? scope.type+'-.*' : ''), getCols(table, 'Type'), true)
 
                     // add trashbin
                     var trash_btn = getTrashBtn();
                     $('.dataTables_filter').after(trash_btn);
 
+                    // add show/hide column settings button
+                    var settings_btn = getSettingsBtn(table)
+                    $('.table-options').append(settings_btn);
+                    // ignore close on click inside of *any* settings button
+                    $('.settings-dropdown').click(function(e) {
+                        e.stopPropagation();
+                    });                    
+
+
                     // show these options if logged in.
                     if (USER_ID) {
                         trash_btn.removeClass('hide');
                     }
 
-                    // add show/hide column settings button
-                    var settings_btn = getSettingsBtn(table)
-                    $('.table-options').append(settings_btn);
-
-
-                    // if there are objects, add 'select all' button, type filter,
-                    // and trash bin.
+                    // if there are objects add type filter,
                     if (data.length) {
-                        // if logged in, add select all button to table options 
-                        //datatables.bootstrap file for template
-
-                        // add type filter
                         var type_filter = getTypeFilterBtn(table, kind_counts, scope.type)
-                        $('.table-options').append(type_filter);                     
-
-                        // event for when an object checkbox is clicked
-                        checkBoxObjectClickEvent('.obj-check-box');
+                        $('.table-options').append(type_filter);
                     }
 
                     //searchColumns()
                     addOptionButtons();
 
                     // resinstantiate all events.
-                    events();    
-
+                    events();
 
                 }).fail(function(e){
                     $(element).html('<div class="alert alert-danger">'+e.error.message+'</div>');
@@ -1063,6 +1165,7 @@ angular.module('ws-directives')
 
             } // end scope.loadObjTable
 
+            // call on load
             scope.loadObjTable();
 
             function getSettingsBtn(table) {
@@ -1074,10 +1177,6 @@ angular.module('ws-directives')
 
                 var dd = $('<ul class="dropdown-menu settings-dropdown" role="menu"></ul>');
 
-                // ignore close on click inside               
-                dd.click(function(e) {
-                    e.stopPropagation();
-                });
                 dd.append('Columns:<br>');
                 settings_btn.append(dd);
 
@@ -1122,7 +1221,7 @@ angular.module('ws-directives')
                         // look for type column (init column 2) in current order
                         table.fnFilter('', curr)
                     } else {
-                        table.fnFilter( $(this).find('option:selected').data('type')+'-*', curr, true);
+                        table.fnFilter( $(this).find('option:selected').data('type')+'-.*', curr, true);
                     }    
                 });
 
@@ -1151,10 +1250,10 @@ angular.module('ws-directives')
                     }
                 }
                 table.fnSetColumnVis( i, bVis ? false : true );
-            }    
+            }
 
             // function that takes json for the object table and formats
-            function formatObjs(objs, obj_mapping, favs) {
+            function formatObjs(objs, obj_mapping) {
                 var wsobjs = []
                 var kind_counts = {}
 
@@ -1199,20 +1298,32 @@ angular.module('ws-directives')
                     if (module in scope.obj_mapping && scope.obj_mapping[module] 
                         && scope.obj_mapping[module][kind] ) {
                         var sub = scope.obj_mapping[module][kind];
+                    } else {
+                        var sub = undefined
                     }
 
                     // determine if saved to favorites
                     var isFav = false;
-                    for (var i in favs) { 
-                        if (favs[i].ws != ws) continue;
-                        if (favs[i].id == id) {
+                    for (var i in scope.favs) { 
+                        if (scope.favs[i].ws != ws) continue;
+                        if (scope.favs[i].id == id) {
                             isFav = true;
                             break;
                         } 
                     }
 
-                    var sortable = ['FBAModel', 'FBA', 'Media', 'MetabolicMap'];
-                    var route = (sortable.indexOf(kind) != -1 ? 'ws.'+sub : sub);
+                    var sortable = ['FBAModel', 'FBA', 'Media', 'MetabolicMap', 'ETC'];
+                    //var route = (sortable.indexOf(kind) != -1 ? 'ws.mv' : sub)  //+sub : sub);
+                    var route = sub;
+                    switch (kind) {
+                        case 'FBA': 
+                            route = 'ws.mv.data';
+                            break;
+                        case 'FBAModel': 
+                            route = 'ws.mv.model';
+                            break;
+                    }
+
 
                     if (route) {
                         var url = route+"({ws:'"+ws+"', id:'"+id+"'})";
@@ -1236,12 +1347,13 @@ angular.module('ws-directives')
                     wsarray[1] = new_id;
                     wsobjs.push(wsarray);
                 }
-                return [wsobjs, kind_counts]
+                return [wsobjs, kind_counts];
             }
 
             // events for object table.  
             // This is reloaded on table change/pagination
             function events() {
+                $compile(table)(scope);
 
                 // ignore other events when clicking landingpage href
                 $('.obj-id').click(function(e) {
@@ -1263,13 +1375,11 @@ angular.module('ws-directives')
                     var ws = link.data('ws');
                     var type = link.data('type');
 
-                    $('.fav-loading').loading()
-                    var p = favoriteService.remove(ws, id, type)
+                    $('.fav-loading').loading();
+                    var p = favoriteService.remove(ws, id, type);
 
                     $.when(p).done(function(){
-                        var count = $('.favorite-count').text();
-                        $('.favorite-count').text(count-1);
-                        $('.fav-loading').rmLoading()
+                        scope.updateFavs();
                     });
                     $(this).remove()
 
@@ -1280,15 +1390,6 @@ angular.module('ws-directives')
                     e.stopPropagation();
                     var id = $(this).parent('td').find('.obj-id').data('id');
                     showObjectInfo(ws, id);
-                })
-
-                // event for adding a object to, say, model viewer
-                $('.add-to-mv').unbind('click');
-                $('.add-to-mv').click(function(){
-                    var type = $(this).prev('.obj-id').data('type');
-                    var id = $(this).prev('.obj-id').data('id');
-                    scope.selectedObjs.push({ws:ws, id:id, type:type});
-                    scope.$apply();
                 })
 
                 // event for showing object history
@@ -1371,23 +1472,6 @@ angular.module('ws-directives')
                         scope.$apply();
                     }
 
-                    /*
-                    if (checkbox.hasClass('ncheck-checked')) { 
-                        checkbox.removeClass('ncheck-checked');
-                        for (var i = 0; i < scope.checkedList.length; i++) {
-                            if (scope.checkedList[i].id == id 
-                                && scope.checkedList[i].ws == ws
-                                && scope.checkedList[i].type == dataType) {
-                                scope.checkedList.splice(i,1);
-                                scope.$apply();
-                            }
-                        }
-                    } else {
-                        scope.checkedList.push({id: id, ws: dataWS, type: dataType});
-                        scope.$apply();
-                        checkbox.addClass('ncheck-checked');
-                    }*/
-
                     if (!showObjOpts) {
                         objOptClick();
                         showObjOpts = true;
@@ -1418,9 +1502,9 @@ angular.module('ws-directives')
                 var rename_btn = $('<button class="btn btn-default btn-rename-obj">\
                     <span class="glyphicon glyphicon-edit"></span></button>');
 
-                var mv_btn = $('<button class="btn btn-default btn-mv-obj">\
-                    <span class="glyphicon glyphicon-stats"></span> Add \
-                    <span class="checked-count"></span> to Viewer</button>');                                      
+                var mv_btn = $('<button class="btn btn-default">\
+                    <span class="glyphicon glyphicon-star"></span>\
+                    <span class="checked-count"></span></button>');                                      
 
                 options.append(delete_btn, copy_btn, rename_btn, mv_btn);
 
@@ -1557,7 +1641,6 @@ angular.module('ws-directives')
                 var prom = kb.ws.get_object_info(params, 1);
                 modal_body.loading();
                 $.when(prom).done(function(data) {
-                    console.log('object info', data)
                     modal_body.rmLoading();
                     var data = data[0];  // only 1 object was requested
 
@@ -1570,7 +1653,6 @@ angular.module('ws-directives')
                         var table = $('<table class="table table-striped table-bordered table-condensed">');
                         var keys = [];
                         for (var key in usermeta) {
-                            console.log(usermeta)
                             table.append('<tr><td><b>'+key+'</b></td><td>'+ usermeta[key]+'</td></tr>')
                         }
                         container.append(table)
@@ -1681,13 +1763,25 @@ angular.module('ws-directives')
                     $(element).append('<table id="'+table_id+'-trash" \
                         class="table table-bordered table-striped" style="width: 100%;"></table>');
 
-                    var tableobjs = formatObjs(scope.deleted_obj, scope.obj_mapping) //,fav);
+                    var tableobjs = formatObjs(scope.deleted_objs, scope.obj_mapping) //,fav);
                     var wsobjs = tableobjs[0];
+                    var kind_counts = tableobjs[1];
 
                     tableSettings.aaData = wsobjs;
 
                     // load object table
                     trashbin = $('#'+table_id+'-trash').dataTable(tableSettings);
+
+                    if (scope.deleted_objs.length) {
+                        var type_filter = getTypeFilterBtn(trashbin, kind_counts, scope.type)
+                        $('.table-options').append(type_filter);
+                    }
+
+                    //searchColumns()
+                    addOptionButtons();
+
+                    // resinstantiate all events.
+                    events();                     
                 } else {
                     $('#'+table_id+'-trash_wrapper').show();
                 }
@@ -1717,9 +1811,10 @@ angular.module('ws-directives')
                 var count = scope.checkedList.length
                 var p = favoriteService.addFavs(scope.checkedList);
                 $.when(p).done(function() {
+                    scope.updateFavs();
                 })
 
-
+                // add stars to table
                 for (var i in scope.checkedList) {
                     var id = scope.checkedList[i].id;
                     var ws = scope.checkedList[i].ws;
@@ -1735,7 +1830,7 @@ angular.module('ws-directives')
                     })
                 }
 
-                // uncheck everything ( this var is watched )
+                // uncheck everything that is checked in that table ( this var is watched )
                 scope.checkedList = [];
                 scope.$apply()
 
@@ -1879,7 +1974,7 @@ angular.module('ws-directives')
                                     $prompt.closePrompt();
                                     //var btn = $('<button type="button" class="btn btn-primary">Close</button>');
                                     //btn.click(function() { $prompt.closePrompt(); })
-                                    $prompt.data('dialogModal').find('.modal-footer').html(btn);
+                                    //$prompt.data('dialogModal').find('.modal-footer').html(btn);
                                 }).fail(function(e) {
                                     $prompt.addCover('Could not copy some or all of the objects. '
                                                         +e.error.message, 'danger');

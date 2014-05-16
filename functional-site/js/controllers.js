@@ -154,7 +154,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
 .controller('WB', function($scope, $stateParams) {
     $scope.selected_ws = $stateParams.ws;
-
     $scope.type = $stateParams.type;
 })
 
@@ -162,6 +161,8 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 .controller('WBLanding', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
+    console.log($scope.ws, $scope.id)
+
 
     $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
         handle: '.panel-heading',
@@ -207,6 +208,52 @@ app.controller('RxnDetail', function($scope, $stateParams) {
           $(this).find('.panel-body').removeClass('hide');
         }
     });
+
+})
+
+.controller('MV', function($scope, $rootScope, $stateParams, $location, MVService) {
+    console.log('called mv controller')
+
+    var type = $location.path().split('/')[2];
+    if ($stateParams.tab == 'FBA') {
+        $scope.tabs[1].active = true;
+    } else if ($stateParams.tab == "Model") {
+        $scope.tabs[0].active = true;        
+    }
+
+    $scope.type = type;
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+
+    //$scope.name = 'loading';
+    $rootScope.org_name = 'loading';
+
+    $scope.selected = [{workspace: $scope.ws, name: $scope.id}]
+
+    $scope.defaultMap = $stateParams.map;
+
+
+
+})
+
+.controller('MV1', function($scope, $stateParams, $location) {
+
+
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+
+}).controller('MV2', function($scope, $stateParams, $location) {
+
+
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+
+}).controller('MV3', function($scope, $stateParams, $location) {
+
+
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+
 })
 
 .controller('WBJSON', function($scope, $stateParams) {
@@ -266,13 +313,23 @@ app.controller('RxnDetail', function($scope, $stateParams) {
                         name: 'kb|g.9.fbamdl.25.fba.55'}];
     $scope.type = 'FBA';
 
-    $scope.prom = kb.ujs.get_state('favorites', 'queue', 0);
+    // model for state of favorites in application
+    $scope.fav;
+    
+    // this updates the dom with favorites from the service
+    // "favoriteService" communicates with the server
+    $scope.updateFavs = function() {
+        $scope.prom = kb.ujs.get_state('favorites', 'queue', 0);
 
-    $.when($scope.prom).done(function(data) {
-        $scope.favs = data;
-        $scope.fav_by_kind = $scope.processData();
-        $scope.$apply();
-    })
+        $.when($scope.prom).done(function(data) {
+            $scope.favs = data;
+            $scope.fav_by_kind = $scope.processData();
+            $scope.$apply();
+        })
+    }
+
+    // update on first invocation
+    $scope.updateFavs();    
 
     $scope.processData = function() {
         fav_by_kind = {}
@@ -289,6 +346,8 @@ app.controller('RxnDetail', function($scope, $stateParams) {
         return fav_by_kind;
     }
 
+
+
     $scope.rmObject = function(ws, id, type) {
         for (var i in $scope.favs) {
             if ($scope.favs[i].ws == ws
@@ -302,10 +361,8 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     }
 
     $scope.clearList = function() {
-        console.log('clearing list')
         favoriteService.clear();
-        $scope.favs = [];
-        $scope.$apply();
+        $scope.fav_by_kind = [];
     }
 
 
@@ -400,7 +457,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
                     USER_ID = $("#signin-button").kbaseLogin('session').user_id;
                     USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
 
-                    kb = new KBCacheClient(USER_TOKEN);
+                    //kb = new KBCacheClient(USER_TOKEN);
                     kb.nar.ensure_home_project(USER_ID);
 
                     $location.path('/narrative/');

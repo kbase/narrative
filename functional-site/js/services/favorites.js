@@ -55,17 +55,9 @@ app.service('favoriteService', function() {
 
             for (var i in fav_list) {
                 var fav = fav_list[i];
-                var isNew = true
-                /*for (var j in q) {
-                    if (!angular.equals(fav, q[j])) {
-                        isNew = false;
-                        break;
-                    }   
-                }*/
+                var isNew = true;
 
-                if (isNew) {
-                    q.push(fav);
-                }
+                if (isNew) q.push(fav);
             }
 
             set_ui_count(q.length);
@@ -80,8 +72,6 @@ app.service('favoriteService', function() {
         $.when(prom).then(function() {
             status_ele.rmLoading();
         })
-
-
 
         return prom;
     }   
@@ -109,7 +99,6 @@ app.service('favoriteService', function() {
             status_ele.rmLoading();
         })
 
-
         return prom;
     }
 
@@ -131,5 +120,12 @@ app.service('favoriteService', function() {
     }
 
 });
+
+
+app.service('MVService', function() {
+    this.org_name;
+
+
+})
  
 

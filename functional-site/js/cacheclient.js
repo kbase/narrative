@@ -28,11 +28,33 @@ function Cache() {
     }
 }
 
-var kb = new KBCacheClient()
 
-kb.req()
+// this is another experiment in caching but for particular objects.
+function WSCache() {
+    var c = {};
+
+    this.get = function(ws, id, type) {
+        if (ws in c && id in c[ws] && type in c[ws][id]) {
+            return c[ws][id][type];
+        } 
+        return undefined;
+    }
+
+    this.put = function(ws, id, type, prom) {
+        if (ws in c && id in c[ws] && type in c[ws][id]) {
+            return false;
+        } else {
+            c[ws] = {};
+            c[ws][id] = {};
+            c[ws][id][type] = prom;
+            return true;
+        }
+    }
+}
+
 
 function KBCacheClient(token) {
+    var self = this;
     var auth = {};
     auth.token = token;
 
@@ -58,7 +80,18 @@ function KBCacheClient(token) {
     var cache = new Cache();
 
 
-    this.req = function(service, method, params) {
+    // make publically accessible methods that 
+    self.fba = fba;
+    self.ws = kbws;
+    self.ujs = ujs
+    self.nar = new ProjectAPI(ws_url, token);
+
+    self.token = token;
+
+    // make accesible methods for ui helper functions
+    self.ui = new UIUtils();
+
+    self.req = function(service, method, params) {
         if (service == 'fba') { 
             // use whatever workspace server that was configured.
             // this makes it possible to use the production workspace server
@@ -87,16 +120,145 @@ function KBCacheClient(token) {
         return prom;
     }
 
-    // make publically accessible methods that 
-    this.fba = fba;
-    this.ws = kbws;
-    this.ujs = ujs
-    this.nar = new ProjectAPI(ws_url, token);
 
-    this.token = token;
+    // cached objects
+    var c = new WSCache();
+    self.get_fba = function(ws, name) {
+        console.log('called get fba with', ws, name)
 
-    // make accesible methods for ui helper functions
-    this.ui = new UIUtils();
+        // if prom already exists, return it
+        var prom = c.get(ws, name, 'FBAModel');
+        if (prom) return prom;
+
+
+        // if reference, get by ref
+        if (ws.indexOf('/') != -1) {
+            var p = self.ws.get_objects([{ref: ref}]);
+        } else {
+            var p = self.ws.get_objects([{workspace: ws, name: name}]);
+        }
+
+        // get fba object
+        var prom =  $.when(p).then(function(f_obj) {
+            var model_ref = f_obj[0].data.fbamodel_ref;
+
+            // get model object from ref in fba object
+            var modelAJAX = self.get_model(model_ref).then(function(m) {
+                var rxn_objs = m[0].data.modelreactions
+                var cpd_objs = m[0].data.modelcompounds
+
+                // for each reaction, get reagents and 
+                // create equation by using the model compound objects
+                var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
+
+                // and equations to fba object
+                var rxn_vars = f_obj[0].data.FBAReactionVariables;
+                for (var i in rxn_vars) {
+                    var obj = rxn_vars[i];
+                    var id = obj.modelreaction_ref.split('/')[5];
+                    obj.eq = eqs[id]
+                }
+                return f_obj;
+            })
+            return modelAJAX;
+        })
+
+        // cache data when done
+        $.when(prom).done(function(data) {
+
+        })
+
+        return prom;
+    }
+
+    self.get_model = function(ws, name){
+        console.log('calling get_model with', ws, name)
+        if (ws && ws.indexOf('/') != -1) {
+            var p = self.ws.get_objects([{ref: ws}]);
+        } else {
+            var p = self.ws.get_objects([{workspace: ws, name: name}]);
+        }
+
+        var proccessAJAX = $.when(p).then(function(m) {
+            var m_obj = m[0].data
+            var rxn_objs = m_obj.modelreactions;
+            var cpd_objs = m_obj.modelcompounds
+
+            // for each reaction, get reagents and 
+            // create equation by using the model compound objects
+            var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
+
+
+            // add equations to modelreactions object
+            var rxn_vars = m_obj.modelreactions;
+            for (var i in rxn_vars) {
+                var obj = rxn_vars[i];
+                obj.eq = eqs[obj.id];
+            }
+
+            // add equations to biomasses object
+            var biomass_objs = m_obj.biomasses;
+            var eqs = self.createEQs(cpd_objs, biomass_objs, 'biomasscompounds')
+            for (var i in biomass_objs) {
+                var obj = biomass_objs[i];
+                obj.eq = eqs[obj.id];
+            }
+
+
+
+            return m;
+        })
+
+        return proccessAJAX;
+    }
+
+
+    self.createEQs = function(cpd_objs, rxn_objs, key) {
+        // create a mapping of cpd ids to names
+        var mapping = {};
+        for (var i in cpd_objs) {
+            mapping[cpd_objs[i].id.split('_')[0]] = cpd_objs[i].name.split('_')[0];
+        }
+
+        var eqs = {}
+        for (var i in rxn_objs) {
+            var rxn_obj = rxn_objs[i];
+            var rxn_id = rxn_obj.id;
+            var rxnreagents = rxn_obj[key];
+            var direction = rxn_obj.direction;
+
+            var lhs = []
+            var rhs = []
+            for (var j in rxnreagents) {
+                var reagent = rxnreagents[j];
+                var coef = reagent.coefficient;
+                var ref = reagent.modelcompound_ref;
+                var cpd = ref.split('/')[3].split('_')[0]
+                var human_cpd = mapping[cpd];
+                var compart = ref.split('_')[1]
+
+                if (coef < 0) { 
+                    lhs.push( (coef == -1 ? human_cpd+'['+compart+']' 
+                                : '('+(-1*coef)+')'+human_cpd+'['+compart+']') );
+                } else {
+                    rhs.push( (coef == 1 ? human_cpd+'['+compart+']' 
+                                : '('+coef+')'+human_cpd+'['+compart+']')  );
+                }
+            }
+
+            var arrow;
+            switch (direction) {
+                case '=': arrow = ' <=> ';
+                case '<': arrow = ' <= ';
+                case '>': arrow = ' => ';
+            }
+
+            var eq = lhs.join(' + ')+arrow+rhs.join(' + ');
+            eqs[rxn_id] = eq
+        }
+        return eqs
+    }
+
 
 }
 
@@ -129,7 +291,10 @@ function UIUtils() {
                         function() {
                             if (!keep) {
                                 $('#notification').delay(2000)
-                                                  .animate({top: 0}, 200, 'linear');
+                                                  .animate({top: 0}, 200, 'linear', function() {
+                                                    $(this).remove();
+                                                  })
+
                             }
                         })
     }

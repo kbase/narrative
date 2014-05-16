@@ -12,6 +12,8 @@ angular.module('fav-directives', []);
 angular.module('fav-directives')
 .directive('favoritesidebar', function($location) {
     return {
+        templateUrl: 'views/ws/fav-sidebar.html',
+        controller: 'Favorites',
         link: function(scope, ele, attrs) {
 
         }

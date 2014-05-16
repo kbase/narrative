@@ -123,17 +123,20 @@ class Iface:
     """
     pass
 
-  def workspaceUpload(self, filename, kb_id, genome_id, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, auth):
+  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, working_dir, auth):
     """
     Parameters:
      - filename
-     - kb_id
      - genome_id
+     - desc
+     - title
+     - srcDate
      - onto_term_id
      - onto_term_def
      - onto_term_name
      - seq_type
      - reference
+     - working_dir
      - auth
     """
     pass
@@ -650,33 +653,39 @@ class Client(Iface):
       raise result.je
     raise TApplicationException(TApplicationException.MISSING_RESULT, "ShockWrite failed: unknown result");
 
-  def workspaceUpload(self, filename, kb_id, genome_id, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, auth):
+  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, working_dir, auth):
     """
     Parameters:
      - filename
-     - kb_id
      - genome_id
+     - desc
+     - title
+     - srcDate
      - onto_term_id
      - onto_term_def
      - onto_term_name
      - seq_type
      - reference
+     - working_dir
      - auth
     """
-    self.send_workspaceUpload(filename, kb_id, genome_id, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, auth)
+    self.send_workspaceUpload(filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, working_dir, auth)
     return self.recv_workspaceUpload()
 
-  def send_workspaceUpload(self, filename, kb_id, genome_id, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, auth):
+  def send_workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, working_dir, auth):
     self._oprot.writeMessageBegin('workspaceUpload', TMessageType.CALL, self._seqid)
     args = workspaceUpload_args()
     args.filename = filename
-    args.kb_id = kb_id
     args.genome_id = genome_id
+    args.desc = desc
+    args.title = title
+    args.srcDate = srcDate
     args.onto_term_id = onto_term_id
     args.onto_term_def = onto_term_def
     args.onto_term_name = onto_term_name
     args.seq_type = seq_type
     args.reference = reference
+    args.working_dir = working_dir
     args.auth = auth
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
@@ -1391,7 +1400,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = workspaceUpload_result()
     try:
-      result.success = self._handler.workspaceUpload(args.filename, args.kb_id, args.genome_id, args.onto_term_id, args.onto_term_def, args.onto_term_name, args.seq_type, args.reference, args.auth)
+      result.success = self._handler.workspaceUpload(args.filename, args.genome_id, args.desc, args.title, args.srcDate, args.onto_term_id, args.onto_term_def, args.onto_term_name, args.seq_type, args.reference, args.working_dir, args.auth)
     except JnomicsThriftException, je:
       result.je = je
     oprot.writeMessageBegin("workspaceUpload", TMessageType.REPLY, seqid)
@@ -3312,38 +3321,48 @@ class workspaceUpload_args:
   """
   Attributes:
    - filename
-   - kb_id
    - genome_id
+   - desc
+   - title
+   - srcDate
    - onto_term_id
    - onto_term_def
    - onto_term_name
    - seq_type
    - reference
+   - working_dir
    - auth
   """
 
   thrift_spec = (
     None, # 0
     (1, TType.STRING, 'filename', None, None, ), # 1
-    (2, TType.STRING, 'kb_id', None, None, ), # 2
+    None, # 2
     (3, TType.STRING, 'genome_id', None, None, ), # 3
-    (4, TType.STRING, 'onto_term_id', None, None, ), # 4
-    (5, TType.STRING, 'onto_term_def', None, None, ), # 5
-    (6, TType.STRING, 'onto_term_name', None, None, ), # 6
-    (7, TType.STRING, 'seq_type', None, None, ), # 7
-    (8, TType.STRING, 'reference', None, None, ), # 8
-    (9, TType.STRUCT, 'auth', (Authentication, Authentication.thrift_spec), None, ), # 9
+    (4, TType.STRING, 'desc', None, None, ), # 4
+    (5, TType.STRING, 'title', None, None, ), # 5
+    (6, TType.STRING, 'srcDate', None, None, ), # 6
+    (7, TType.STRING, 'onto_term_id', None, None, ), # 7
+    (8, TType.STRING, 'onto_term_def', None, None, ), # 8
+    (9, TType.STRING, 'onto_term_name', None, None, ), # 9
+    (10, TType.STRING, 'seq_type', None, None, ), # 10
+    (11, TType.STRING, 'reference', None, None, ), # 11
+    (12, TType.STRING, 'working_dir', None, None, ), # 12
+    (13, TType.STRUCT, 'auth', (Authentication, Authentication.thrift_spec), None, ), # 13
   )
 
-  def __init__(self, filename=None, kb_id=None, genome_id=None, onto_term_id=None, onto_term_def=None, onto_term_name=None, seq_type=None, reference=None, auth=None,):
+  def __init__(self, filename=None, genome_id=None, desc=None, title=None, srcDate=None, onto_term_id=None, onto_term_def=None, onto_term_name=None, seq_type=None, reference=None, working_dir=None, auth=None,):
     self.filename = filename
-    self.kb_id = kb_id
     self.genome_id = genome_id
+    self.desc = desc
+    self.title = title
+    self.srcDate = srcDate
     self.onto_term_id = onto_term_id
     self.onto_term_def = onto_term_def
     self.onto_term_name = onto_term_name
     self.seq_type = seq_type
     self.reference = reference
+    self.working_dir = working_dir
     self.auth = auth
 
   def read(self, iprot):
@@ -3360,11 +3379,6 @@ class workspaceUpload_args:
           self.filename = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.kb_id = iprot.readString();
-        else:
-          iprot.skip(ftype)
       elif fid == 3:
         if ftype == TType.STRING:
           self.genome_id = iprot.readString();
@@ -3372,30 +3386,50 @@ class workspaceUpload_args:
           iprot.skip(ftype)
       elif fid == 4:
         if ftype == TType.STRING:
-          self.onto_term_id = iprot.readString();
+          self.desc = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 5:
         if ftype == TType.STRING:
-          self.onto_term_def = iprot.readString();
+          self.title = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 6:
         if ftype == TType.STRING:
-          self.onto_term_name = iprot.readString();
+          self.srcDate = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 7:
         if ftype == TType.STRING:
-          self.seq_type = iprot.readString();
+          self.onto_term_id = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 8:
         if ftype == TType.STRING:
-          self.reference = iprot.readString();
+          self.onto_term_def = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 9:
+        if ftype == TType.STRING:
+          self.onto_term_name = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 10:
+        if ftype == TType.STRING:
+          self.seq_type = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 11:
+        if ftype == TType.STRING:
+          self.reference = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 12:
+        if ftype == TType.STRING:
+          self.working_dir = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 13:
         if ftype == TType.STRUCT:
           self.auth = Authentication()
           self.auth.read(iprot)
@@ -3415,36 +3449,48 @@ class workspaceUpload_args:
       oprot.writeFieldBegin('filename', TType.STRING, 1)
       oprot.writeString(self.filename)
       oprot.writeFieldEnd()
-    if self.kb_id is not None:
-      oprot.writeFieldBegin('kb_id', TType.STRING, 2)
-      oprot.writeString(self.kb_id)
-      oprot.writeFieldEnd()
     if self.genome_id is not None:
       oprot.writeFieldBegin('genome_id', TType.STRING, 3)
       oprot.writeString(self.genome_id)
       oprot.writeFieldEnd()
+    if self.desc is not None:
+      oprot.writeFieldBegin('desc', TType.STRING, 4)
+      oprot.writeString(self.desc)
+      oprot.writeFieldEnd()
+    if self.title is not None:
+      oprot.writeFieldBegin('title', TType.STRING, 5)
+      oprot.writeString(self.title)
+      oprot.writeFieldEnd()
+    if self.srcDate is not None:
+      oprot.writeFieldBegin('srcDate', TType.STRING, 6)
+      oprot.writeString(self.srcDate)
+      oprot.writeFieldEnd()
     if self.onto_term_id is not None:
-      oprot.writeFieldBegin('onto_term_id', TType.STRING, 4)
+      oprot.writeFieldBegin('onto_term_id', TType.STRING, 7)
       oprot.writeString(self.onto_term_id)
       oprot.writeFieldEnd()
     if self.onto_term_def is not None:
-      oprot.writeFieldBegin('onto_term_def', TType.STRING, 5)
+      oprot.writeFieldBegin('onto_term_def', TType.STRING, 8)
       oprot.writeString(self.onto_term_def)
       oprot.writeFieldEnd()
     if self.onto_term_name is not None:
-      oprot.writeFieldBegin('onto_term_name', TType.STRING, 6)
+      oprot.writeFieldBegin('onto_term_name', TType.STRING, 9)
       oprot.writeString(self.onto_term_name)
       oprot.writeFieldEnd()
     if self.seq_type is not None:
-      oprot.writeFieldBegin('seq_type', TType.STRING, 7)
+      oprot.writeFieldBegin('seq_type', TType.STRING, 10)
       oprot.writeString(self.seq_type)
       oprot.writeFieldEnd()
     if self.reference is not None:
-      oprot.writeFieldBegin('reference', TType.STRING, 8)
+      oprot.writeFieldBegin('reference', TType.STRING, 11)
       oprot.writeString(self.reference)
       oprot.writeFieldEnd()
+    if self.working_dir is not None:
+      oprot.writeFieldBegin('working_dir', TType.STRING, 12)
+      oprot.writeString(self.working_dir)
+      oprot.writeFieldEnd()
     if self.auth is not None:
-      oprot.writeFieldBegin('auth', TType.STRUCT, 9)
+      oprot.writeFieldBegin('auth', TType.STRUCT, 13)
       self.auth.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()

@@ -14,6 +14,7 @@ import ast
 import StringIO
 import uuid;
 
+from collections import namedtuple
 from functools import wraps
 from time import gmtime, strftime
 
@@ -57,7 +58,7 @@ class FileNotFound(Exception):
 VERSION = (0, 0, 1)
 NAME = "VariationExpression"
 
-POLL_SLEEP_INTERVAL=90
+POLL_SLEEP_INTERVAL=10
 
 URL = namedtuple("URL",["host","port"])
 
@@ -350,7 +351,7 @@ def pollGridJob(job_id, auth):
                                       -1.0,-1.0)
     return False
 
-def runStep(step, auth, poll_func=None):
+def runStep(step, auth, poll_func=None, previous_steps=None):
     '''Runs a pipeline step.
     'step' is expected to return a job id which can be polled, otherwise None
     'poll_func' function to poll the returned job id
@@ -360,20 +361,22 @@ def runStep(step, auth, poll_func=None):
     job_id = None
 
     try:
-        job_id = step()
+        job_id = step(previous_steps)
     except JnomicsThriftException as e:
         json_error=e.msg
         
     if json_error:
-        return {"output" : str(status), "error": json_error}
+        return {"output" : status, "error": json_error}
 
     if poll_func:
         status = poll_func(job_id, auth)
+    else:
+        return {"output": job_id, "error" : json_error}
     
     if status and not status.running_state == 2:
         json_error = status.failure_info
 
-    return {"output" : str(status), "error": json_error}
+    return {"output" : status, "error": json_error}
 
 
 def userFromToken(token):
@@ -405,6 +408,28 @@ def closeClientConnection(client):
     clients[client].close()
     del clients[client]
 
+def pipelineStep(client_type = None):
+    '''Decorator that wraps pipeline steps.
+    All steps must subscribe to the interface
+    step(client, previous_steps)'''
+
+    def _dec(func):
+        if not client_type:
+            return lambda previous_steps : func(None, previous_steps)
+        def _f(previous_steps):
+            if client_type =="compute":
+                client= openComputeClientConnection()
+            elif client_type == "data":
+                client = openDataClientConnection()
+            else:
+                raise Exception, "Unknown Client Type"
+            d = func(client,previous_steps)
+            closeClientConnection(client)
+            return d
+        return _f
+    return _dec
+    
+    
 def clientWrap(client_type, func):
     if client_type =="compute":
         client= openComputeClientConnection()
@@ -419,12 +444,14 @@ def clientWrap(client_type, func):
 def runPipeline(stages,meth,auth):
     '''Runs pipeline stages'''
     meth.stages = len(stages)
+    previous_steps = []
     for stage in stages:
         meth.advance(stage.name)
-        stat = runStep(stage.func,auth,stage.poll)
+        stat = runStep(stage.func,auth,stage.poll, previous_steps)
         if not stat["error"] == None:
             return json.dumps(stat)
-    return json.dumps(stat)
+        previous_steps.append(stat)
+    return previous_steps
 
 
 ##
@@ -436,7 +463,7 @@ def jnomics_calculate_variations(meth, Input_file=None,
                                  Input_organism=None):
     """Calculate variations
 
-    :param Input_file: Input to the raw sequencing data
+    :param Input_file: Input to the raw sequencing data (paired end, comma sep)
     :type Input_file: kbtypes.Unicode
     :param Input_organism: Input organism (kb_id)
     :type Input_organism: kbtypes.Unicode
@@ -448,66 +475,102 @@ def jnomics_calculate_variations(meth, Input_file=None,
     Output_file_path = "narrative_variation_"+ str(uuid.uuid4().get_hex().upper()[0:6])
     align_out_path = os.path.join(Output_file_path , "align")
 
-    @computeClient
-    def runBowtie(client):
+    input_pe_path = os.path.join(Output_file_path, "input.pe")
+    @pipelineStep("compute")
+    def fastqToPE(client, previous_steps):
+        pass
+
+    
+    @pipelineStep("compute")
+    def runBowtie(client, previous_steps):
         return client.alignBowtie(Input_file,
                                     Input_organism,
                                     align_out_path,
                                     "",auth)
-
         
     snp_out_path = os.path.join(Output_file_path, "snps")
-    #jobid  = runBowtie()
-    #pollHadoopJob(jobid,auth)
-
-    @computeClient
-    def runSNP(client):
+    
+    @pipelineStep("compute")
+    def runSNP(client, previous_steps):
         return client.snpSamtools(align_out_path,
                                   Input_organism,
                                   snp_out_path,
                                   auth)
-    #jobid = runSNP()
-    #pollHadoopJob(jobid,auth)
+    
     merge_outpath = os.path.join(Output_file_path, "output.vcf")
-    @computeClient
-    def runMerge(client):
+    @pipelineStep("compute")
+    def runMerge(client, previous_steps):
         return client.mergeVCF(snp_out_path, align_out_path, merge_outpath, auth)
     
     filename = os.path.basename(Input_file)
-    @computeClient
-    def writeShock(client):
+
+    @pipelineStep("compute")
+    def writeShock(client, previous_steps):
         return client.ShockWrite(filename,
                                  merge_outpath,
                                  auth)
-    #jobid = writeShock()
-    #ret = pollGridJob(jobid,auth)
-    #return to_JSON(ret)
+
+    @pipelineStep
+    def writeWS(client, previous_steps):
+        #previous_step = previous_steps[-1]
+        #previous_job_id = previous_step["output"].job_id
+        #pattern =  re.compile("\[id=(.*?)]")
+        #shockid = parselog(str(jobid.job_id),pattern,auth)
+        #sid = str(shockid).rstrip().split('=')[1].replace(']','')
+        #ws = workspaceService(OTHERURLS.workspace)
+        #idc = IDServerAPI(OTHERURLS.ids)
+        #name = idc.allocate_id_range("kb|variant_test",1)
+        #obj = { "name": name,
+        #        "type": "vcf",
+        #        "created":strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
+        #        "shock_ref":{ "shock_id" : sid,
+        #                      "shock_url" : OTHERURLS.shock+"/node"+sid },
+        #                      "metadata" : {
+        #                          "domain" : "adfasdf",
+        #                          "paired" : "yes",
+        #                          "sample_id" : "yeast",
+        #                          "title" : "asdf"
+        #                      },
+        #        }
+
+        obj = {"shock_ref" : {
+            "shock_id" : "shock",
+            "shock_url" : "shockid"
+            },
+            "created" : "2014-04-02 12:42:56",
+            "name" : "kb|vcf_test.0",
+            "metadata" : {
+                "source" : "test",
+                "source_id" : "test",
+                "base_count" : "50",
+                "paired" : "yes",
+                "assay" : "test",
+                "library" : "test",
+                "read_count" : "100",
+                "ref_genome" : "Ecoli",
+                "domain" : "Bacteria",
+                "ext_source_date" : "41717",
+                "sample_id" : "test11",
+                "title" : "Test upload",
+                "platform" : "Illumina"
+            },
+            "type" : "vcf"
+        }
+
+        return ws_saveobject("asdfasdf",obj, WSTYPES.var_vcftype,meth.workspace_id,meth.token)
+        
+    
     
     stages = [Stage(runBowtie,"Aligning Reads",pollHadoopJob),
               Stage(runSNP,"Calling Variations",pollHadoopJob),
-              Stage(runMerge,"Merging Output",None)]
-             #Stage(writeShock,"Uploading Output To Shock",pollGridJob)]
+              Stage(runMerge,"Merging Output",None),
+              Stage(writeShock,"Uploading Output To Shock",pollGridJob),
+              Stage(writeWS, "Uploading to Workspace", None)]
 
-    runPipeline(stages,meth,auth)
-    jobid  = writeShock()
-    status = pollGridJob(jobid,auth)
-    if status and not status.running_state == 2:
-            ##fail here
-            pass
-    pattern =  re.compile("\[id=(.*?)]")
-    shockid = parselog(str(jobid.job_id),pattern,auth)
-    sid = str(shockid).rstrip().split('=')[1].replace(']','')
-    #obj = { "name" : ,
-    #        "type" : "fastq", 
-    #        "created" :  strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
-    #        "shock_ref" : { "shock_id" : sid,
-    #                        "shock_url" : OTHERURLS.shock+"/node"+sid },
-    #       "metadata" :  }
+    t=namedtuple("ff",["job_id"])
+    return to_JSON(writeWS([{"output":t("id=1425")}]))
     
-    #wsreturn = ws_saveobject(tophatobjname,objdata,bamtype,meth.workspace_id,meth.token)
-    #return to_JSON(wsreturn)
-    return to_JSON(sid)
-  
+      
 @method(name = "Calculate Gene Expression")
 def jnomics_calculate_expression(meth, workspace = None,paired=None,
                                  Input_file_path=None,

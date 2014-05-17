@@ -510,56 +510,31 @@ def jnomics_calculate_variations(meth, Input_file=None,
                                  merge_outpath,
                                  auth)
 
-    @pipelineStep
+    @pipelineStep(None)
     def writeWS(client, previous_steps):
-        #previous_step = previous_steps[-1]
-        #previous_job_id = previous_step["output"].job_id
-        #pattern =  re.compile("\[id=(.*?)]")
-        #shockid = parselog(str(jobid.job_id),pattern,auth)
-        #sid = str(shockid).rstrip().split('=')[1].replace(']','')
-        #ws = workspaceService(OTHERURLS.workspace)
-        #idc = IDServerAPI(OTHERURLS.ids)
-        #name = idc.allocate_id_range("kb|variant_test",1)
-        #obj = { "name": name,
-        #        "type": "vcf",
-        #        "created":strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
-        #        "shock_ref":{ "shock_id" : sid,
-        #                      "shock_url" : OTHERURLS.shock+"/node"+sid },
-        #                      "metadata" : {
-        #                          "domain" : "adfasdf",
-        #                          "paired" : "yes",
-        #                          "sample_id" : "yeast",
-        #                          "title" : "asdf"
-        #                      },
-        #        }
+        previous_step = previous_steps[-1]
+        previous_job_id = previous_step["output"].job_id
+        pattern =  re.compile("\[id=(.*?)]")
+        shockid = parselog(previous_job_id,pattern,auth)
+        sid = str(shockid).rstrip().split('=')[1].replace(']','')
+        ws = workspaceService(OTHERURLS.workspace)
+        idc = IDServerAPI(OTHERURLS.ids)
+        name = idc.allocate_id_range("kb|variant_test",1)
+        obj = { "name": name,
+               "type": "vcf",
+               "created":strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
+               "shock_ref":{ "shock_id" : sid,
+                             "shock_url" : OTHERURLS.shock+"/node"+sid },
+                             "metadata" : {
+                                 "domain" : "adfasdf",
+                                 "paired" : "yes",
+                                 "sample_id" : "yeast",
+                                 "title" : "asdf"
+                             },
+               }
 
-        obj = {"shock_ref" : {
-            "shock_id" : "shock",
-            "shock_url" : "shockid"
-            },
-            "created" : "2014-04-02 12:42:56",
-            "name" : "kb|vcf_test.0",
-            "metadata" : {
-                "source" : "test",
-                "source_id" : "test",
-                "base_count" : "50",
-                "paired" : "yes",
-                "assay" : "test",
-                "library" : "test",
-                "read_count" : "100",
-                "ref_genome" : "Ecoli",
-                "domain" : "Bacteria",
-                "ext_source_date" : "41717",
-                "sample_id" : "test11",
-                "title" : "Test upload",
-                "platform" : "Illumina"
-            },
-            "type" : "vcf"
-        }
+        return ws_saveobject(name,obj, WSTYPES.var_vcftype,meth.workspace_id,meth.token)
 
-        return ws_saveobject("asdfasdf",obj, WSTYPES.var_vcftype,meth.workspace_id,meth.token)
-        
-    
     
     stages = [Stage(runBowtie,"Aligning Reads",pollHadoopJob),
               Stage(runSNP,"Calling Variations",pollHadoopJob),
@@ -568,7 +543,7 @@ def jnomics_calculate_variations(meth, Input_file=None,
               Stage(writeWS, "Uploading to Workspace", None)]
 
     t=namedtuple("ff",["job_id"])
-    return to_JSON(writeWS([{"output":t("id=1425")}]))
+    return to_JSON({"hello":writeWS([{"output":t("id=1425")}])})
     
       
 @method(name = "Calculate Gene Expression")
@@ -627,7 +602,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
                                       desc,title,srcdate,ontoid,
                                       ontodef,ontoname,paired,
                                       shock_id,"",auth)
-    @pipelineStep
+    @pipelineStep(None)
     def writeBamfile(client,previous_steps):
         tophatid  = idc.allocate_id_range("kb|alignment_test",1)
         tophatobjname = "kb|alignment_test."+str(tophatid)

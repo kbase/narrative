@@ -470,6 +470,11 @@ def jnomics_calculate_variations(meth, Input_file=None,
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
+
+    ws = workspaceService(OTHERURLS.workspace)
+    data = ws.get_object({'auth':meth.token, 'workspace':meth.workspace_id,
+                          'id': Input_file, 'type':WSTYPES.var_sampletype})
+    return to_JSON(data)
     
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     Output_file_path = "narrative_variation_"+ str(uuid.uuid4().get_hex().upper()[0:6])

@@ -8,6 +8,7 @@ __date__ = 'MM/DD/YYYY'
 
 from biokbase.narrative.common.service import init_service, method, finalize_service
 from biokbase.narrative.common import kbtypes
+import json
 
 ## Globals
 
@@ -33,13 +34,14 @@ def _my_service_function(meth, param1, param2):
     :return: Workspace object ID
     :rtype: kbtypes.Unicode
     :output_widget: kbaseOutputWidgetName
+    :input_widget: kbaseInputWidgetName
     """
     meth.stages = 1  # for reporting progress
     result = None
 
-    meth.advance("Hit it and quit")
+    meth.advance("Run and then done")
 
-    return "bogus_workspace_id"
+    return json.dumps({ "data" : "bogus_workspace_id" });
 
 # Finalization
 

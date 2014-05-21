@@ -11,8 +11,9 @@ app.service('favoriteService', function() {
         console.log('adding', ws, id, type)
 
         status_ele.loading();
-        var get_state_prom = kb.ujs.get_state(state_name, state_key, 0);
+        var get_state_prom = kb.ujs.get_has_state(state_name, state_key, 0);
         var prom = $.when(get_state_prom).then(function(q) {
+            var q = (q[0] == 1 ? q[1] : []);
             if (!q) var q = [];
 
             var fav = {ws: ws, id: id, type: type}
@@ -49,8 +50,9 @@ app.service('favoriteService', function() {
     this.addFavs = function(fav_list) {
         console.log('adding fav list', fav_list)
         status_ele.loading();
-        var get_state_prom = kb.ujs.get_state(state_name, state_key, 0);
+        var get_state_prom = kb.ujs.get_has_state(state_name, state_key, 0);
         var prom = $.when(get_state_prom).then(function(q) {
+            var q = (q[0] == 1 ? q[1] : []);
             if (!q) var q = [];
 
             for (var i in fav_list) {
@@ -79,8 +81,9 @@ app.service('favoriteService', function() {
     this.remove = function(ws, id, type, module) {
         console.log('removing', ws, id, type)
         status_ele.loading();
-        var get_state_prom = kb.ujs.get_state(state_name, state_key, 0);
+        var get_state_prom = kb.ujs.get_has_state(state_name, state_key, 0);
         var prom = $.when(get_state_prom).then(function(q) {
+            var q = (q[0] == 1 ? q[1] : []);
             if (!q) q = [];
 
             for (var i = 0; i < q.length; i++) {

@@ -117,16 +117,18 @@ $.KBWidget({
         table.fnAddData(dataDict);
 
         // gapfilling table
+        
         /*
-        var dataDict = model.integrated_gapfillings;
+        var dataDict = model.gapfillings;
         console.log(dataDict)
-        var keys = ["id", "index", "name", "pH","potential"];
-        var labels = ["id", "index", "name", "pH","potential"];
+        var keys = ["id", "integrated"];
+        var labels = ["ID", "Integrated"];
         var cols = getColumns(keys, labels);
         tableSettings.aoColumns = cols;
         var table = $('#gapfill-table').dataTable(tableSettings);
+        table.fnAddData(dataDict);
         */
-        gapFillTable(data);
+        gapFillTableWS(model.gapfillings);
 
         // gapgen table
         /*
@@ -167,6 +169,155 @@ $.KBWidget({
         }
 
 
+
+        function gapFillTableWS(gapfillings) {
+            var tableSettings = {
+                "sPaginationType": "bootstrap",
+                "iDisplayLength": 10,
+                "aLengthMenu": [5, 10, 25,50,100],            
+                "aaData": [],
+                "oLanguage": {
+                    "sSearch": "Search all:",
+                    "sEmptyTable": "No gapfill objects for this model."
+                },
+               "fnDrawCallback": events,                
+            }
+
+            var data = $.extend(model.gapfillings, {})
+            var keys = ["id", "integrated"];
+            var labels = ["ID", "Integrated"];
+            var cols = getColumns(keys, labels);
+            tableSettings.aoColumns = cols;
+            var gapTable = $('#gapfill-table').dataTable(tableSettings);
+
+
+            var refs = []
+            console.log('data', data)
+            for (var i in data) {
+                var obj = {}
+                var ref =  data[i].gapfill_ref
+                obj.wsid = ref.split('/')[0];
+                obj.objid = ref.split('/')[1];
+                obj.name = data[i].id
+                refs.push(obj)
+            }
+            console.log(refs)
+
+            for (var i in refs) {
+                var ws =  refs[i].wsid;
+                var id = refs[i].objid;
+                var name = refs[i].name
+
+                data[i].id = '<a class="show-gap" data-name="'+name+'" data-id="'+id+'" data-ws="'+ws+'">'+name+'</a>';
+                data[i].integrated = (data[i].integrated == 1 ? 'Yes' : 'No')
+            }
+
+            gapTable.fnAddData(data);
+
+
+
+            function events() {
+                $('.show-gap').unbind('click');
+                $('.show-gap').click(function() {
+                    var id = $(this).data('id');
+                    var ws = $(this).data('ws');
+                    var gap_name = $(this).data('name');
+                    console.log('gap name', gap_name)
+
+                    var tr = $(this).closest('tr')[0];
+                    if ( gapTable.fnIsOpen( tr ) ) {
+                        gapTable.fnClose( tr );
+                    } else {
+                        gapTable.fnOpen( tr, '', "info_row" );
+                        $(this).closest('tr').next('tr').children('.info_row').append('<p class="muted loader-gap-sol"> \
+                            <img src="assets/img/ajax-loader.gif"> loading possible solutions...</p>')                
+                        showGapfillSolutionsWS(tr, id, ws, gap_name);
+                    }
+
+
+                })
+            }
+
+
+            function showGapfillSolutionsWS(tr, id, ws, gap_name){
+                var p = kb.fba.get_gapfills({gapfills: [id], workspaces: [ws]})
+                $.when(p).done(function(data) {
+                    console.log('gapfill solutions ', data)
+                    var data = data[0];  // only one gap fill solution at a time is cliclsked
+                    var sols = data.solutions;
+
+                    //$(tr).next().children('td').append('<h5>Gapfill Details</h5>');
+
+                    var solList = $('<div class="gap-selection-list">');
+
+                    for (var i in sols) {
+                        var sol = sols[i];
+                        console.log('solution', sol)
+                        var solID = sol.id;
+
+                        var accepted_id = gap_name.replace(/(\.|\|)/g,'_')+solID.replace(/\./g,'_')
+
+                        if (sol.integrated == "1") {
+                            solList.append('<div> <a type="button" class="gap-sol"\
+                                data-toggle="collapse" data-target="#'+accepted_id+'" >'+
+                                solID+'</a> (Integrated)<span class="caret" style="vertical-align: middle;"></span>\
+                                 </div>');
+                            /*
+                            <div class="radio inline gapfill-radio"> \
+                                    <input type="radio" name="gapfillRadios" id="gapfillRadio'+i+'" value="integrated" checked>\
+                                </div> <span class="label integrated-label">Integrated</span>\
+                                    <button data-gapfill="'+gapRef+solID+'"\
+                                     class="hide btn btn-primary btn-mini integrate-btn">Integrate</button> \
+                            */
+                        } else {
+                            solList.append('<div> <a type="button" class="gap-sol"\
+                                data-toggle="collapse" data-target="#'+accepted_id+'" >'+
+                                solID+'</a> <span class="caret" style="vertical-align: middle;"></span>\
+                                </div>');
+
+                            /*
+                                <div class="radio inline gapfill-radio"> \
+                                    <input type="radio" name="gapfillRadios" id="gapfillRadio'+i+'" value="unitegrated">\
+                                </div>\
+                                <button data-gapfill="'+gapRef+solID+'"\
+                                 class="hide btn btn-primary btn-mini integrate-btn">Integrate</button> \
+                            */
+                        }
+
+                        var rxnAdditions = sol.reactionAdditions;
+                        if (rxnAdditions.length == 0) {
+                            var rxnInfo = $('<p>No reaction additions in this solution</p>')
+                        } else {
+                            var rxnInfo = $('<table class="gapfill-rxn-info">');
+                            var header = $('<tr><th>Reaction</th>\
+                                                <th>Equation</th></tr>');
+                            rxnInfo.append(header);
+
+                            for (var j in rxnAdditions) {
+                                var rxnArray = rxnAdditions[j];
+                                var row = $('<tr>');
+                                row.append('<td><a class="gap-rxn" data-rxn="'+rxnArray[0]+'" >'+rxnArray[0]+'</a></td>');
+                                row.append('<td>'+rxnArray[4]+'</td>');
+                                rxnInfo.append(row);
+                            }
+                        }
+
+                        var solResults = $('<div id="'+accepted_id+'" class="collapse">')
+                        solResults.append(rxnInfo);
+
+                        solList.append(solResults);
+                    }
+
+                    $(tr).next().children('td').append(solList.html());
+                    $('.loader-gap-sol').remove();   
+
+                })
+
+            }            
+
+        }
+
+        
         function gapFillTable(models) {
             var gapTable = undefined;
             var active = false;
@@ -221,8 +372,27 @@ $.KBWidget({
 
             this.load_table = function(models) {
                 var gaps = [];
+                console.log(models)
+                var ref = models.gapfillings[0].gapfill_ref
 
-                var intGapfills = models[0].integrated_gapfillings;
+                var p = kb.ws.get_object_info([{wsid: ref.split('/')[0], objid: ref.split('/')[1] }])
+                $.when(p).done(function(info) {
+                    var ws =  info[0][5];
+                    var id = info[0][1];
+
+                })
+
+                console.log('ref', ref)
+                
+                var p = kb.ws.get_objects([{ref: ref}])
+                $.when(p).done(function(d){
+                    console.log(JSON.stringify(d[0].data))
+                    console.log(d)
+                })
+
+                var intGapfills = models.gapfillings;
+
+
 
                 for (var i in intGapfills) {
                     var intGap = intGapfills[i];
@@ -232,8 +402,8 @@ $.KBWidget({
                             +intGap[2]+'</a>');
                     }
                 }
-
-                var unIntGapfills = models[0].unintegrated_gapfillings;
+                
+                var unIntGapfills = models.gapfillings;
                 for (var i in unIntGapfills) {
                     var unIntGap = unIntGapfills[i];
                     if (unIntGap.length == 6) {            
@@ -398,6 +568,7 @@ $.KBWidget({
             }
 
         }
+        
 
         //this._rewireIds(this.$elem, this);
         return this;

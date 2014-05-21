@@ -1,24 +1,21 @@
 
 
 
-<div>
+<!--<div>
   <div class="h3 pull-left">Objects</div>
   <a class="btn btn-sm btn-default pull-right" ng-click="clearList()">Clear</a>
-</div>
-<br>
-<hr>
+</div>-->
 
 <div class="fav-container">
   <div ng-repeat="(kind, favs) in fav_by_kind">
     {{kind}}
       <div ng-repeat="fav in favs">
-        <div class="list-group-item fav-viewer-obj" 
-        ng-click="displayViewer(fav.ws, fav.id, fav.type)">
+        <div class="list-group-item fav-viewer-obj">
         <a class="pull-right btn-rm-fav text-muted">
         <span class="glyphicon glyphicon-remove" 
-        ng-click="rmObject(fav.ws, fav.id, fav.type)"></span>
+        ng-click="rmObject(fav.ws, fav.id, fav.type, fav.module)"></span>
         </a>
-        {{fav.id}}<br>
+        <a ng-click="displayViewer(fav.route, fav.ws, fav.id)">{{fav.id}}</a><br>
         <a class="label label-primary btn-ws-label" ui-sref="ws.id({ws: fav.ws})">{{fav.ws}}</a>
       </div>
     </div>

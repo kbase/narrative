@@ -7,7 +7,7 @@ app.service('favoriteService', function() {
     var status_ele = $('.fav-loading');
     var fav_count_ele = $('.favorite-count');
 
-    this.add = function(ws, id, type) {
+    this.addDEPRECATED = function(ws, id, type) {
         console.log('adding', ws, id, type)
 
         status_ele.loading();
@@ -76,7 +76,7 @@ app.service('favoriteService', function() {
         return prom;
     }   
 
-    this.remove = function(ws, id, type) {
+    this.remove = function(ws, id, type, module) {
         console.log('removing', ws, id, type)
         status_ele.loading();
         var get_state_prom = kb.ujs.get_state(state_name, state_key, 0);
@@ -85,7 +85,8 @@ app.service('favoriteService', function() {
 
             for (var i = 0; i < q.length; i++) {
                 if (q[i].ws == ws && q[i].id == id 
-                    && q[i].type == type) {
+                    && q[i].type == type
+                    && q[i].module == module) {
                     q.splice(i, 1);
                 }
             }
@@ -124,8 +125,6 @@ app.service('favoriteService', function() {
 
 app.service('MVService', function() {
     this.org_name;
-
-
 })
  
 

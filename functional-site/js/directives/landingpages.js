@@ -99,7 +99,7 @@ angular.module('lp-directives')
 })
 .directive('modeltabs', function($location, $rootScope) {
     return {
-        link: function(scope, element, attrs) {
+        link: function(scope, ele, attrs) {
             var ws = scope.ws;
             var id = scope.id;
             /*var p = $(element).kbasePanel({title: 'Model Details', 
@@ -108,7 +108,7 @@ angular.module('lp-directives')
                                            type: 'FBAModel', 
                                            widget: 'modeltabs'});
                 */
-            $(element).loading();
+            $(ele).loading();
 
             //var prom = kb.req('fba', 'get_models',
             //            {models: [id], workspaces: [ws]});
@@ -116,17 +116,21 @@ angular.module('lp-directives')
             var prom = kb.get_model(scope.ws, scope.id)
             $.when(prom).done(function(data){
                 console.log('model data', data)
-                $(element).rmLoading();
+                $(ele).rmLoading();
 
                 $rootScope.org_name = data[0].data.name;
                 scope.$apply();
 
-                $(element).kbaseModelTabs({modelsData: data, api: kb.fba, ws: ws});
+                $(ele).kbaseModelTabs({modelsData: data, api: kb.fba, ws: ws});
                 $(document).on('rxnClick', function(e, data) {
                     var url = '/rxns/'+data.ids;
                     scope.$apply( $location.path(url) );
                 });  
-            })
+            }).fail(function(e){
+                $(ele).rmLoading();
+                $(ele).append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>')
+            });
         }
     };
 })
@@ -180,7 +184,7 @@ angular.module('lp-directives')
         }
     };
 })
-.directive('fbatabs', function($location) {
+.directive('fbatabs', function($location, $rootScope) {
     return {
         link: function(scope, element, attrs) {
             /*var p = $(element).kbasePanel({title: 'FBA Details', 
@@ -195,49 +199,41 @@ angular.module('lp-directives')
 
             $(element).loading();
             console.log('referenced objects', scope.selected)
-            var p = kb.ws.list_referencing_objects(scope.selected)
-            $.when(p).done(loadTabs)
-                     .fail(function() {
-                        $(element).html("<h5>There are currently no FBA \
-                                            results associated with this model.\
-                                              You may want to FBA analysis.</h5>")
-                     })
+            
+            $.when(scope.ref_obj_prom).done(function() {
+                loadTabs(scope.fba_refs)
+
+            }).fail(function() {
+                $(element).html("<h5>There are currently no FBA \
+                                    results associated with this model.\
+                                      You may want to FBA analysis.</h5>")
+            })
 
 
-            function loadTabs(data) {
-                // only care about first object
-                var data = data[0]
-                console.log('referenced objects', data)
-
-                var fba_refs = []
-                for (var i in data) {
-                    var meta = data[i];
-                    var type = meta[2].split('-')[0]
-
-                    if (type == "KBaseFBA.FBA") {
-                        fba_refs.push({ws: meta[7], 
-                                       name: meta[1], 
-                                       date: kb.ui.formateDate(meta[3]),
-                                       timestamp: kb.ui.getTimestamp(meta[3])
-                                      });
-                    }
-                }
-
-                fba_refs.sort(compare)
-                console.log('fba_refs', fba_refs)
-
-                var vers = $('<select>');
+            function loadTabs(fba_refs) {
+                var ver_selector = $('<select class="form-control">');
                 for (var i in fba_refs) {
                     var ref = fba_refs[i];
-                    vers.append('<option>'+ref.name+' ('+ref.ws+') '+'['+ref.date+'</option>')
+                    ver_selector.append('<option>'+ref.name+' | '+ref.ws+' | '+ref.date+'</option>')
                 }
-                $(element).prepend(vers)
+                var form = $('<div class="col-xs-5">');
+                form.append(ver_selector)
+                var row = $('<div class="row">');
+                row.append(form)
+
+                $(element).prepend(row)
 
                 var p1 = kb.get_fba(fba_refs[0].ws, fba_refs[0].name)
-                $.when(p1).done(function(d){
+                //var p2 = kb.ws.get_object_info([{workspace: fba_refs[0].ws, 
+                //                                 name: fba_refs[0].name}], 1);
+                $.when(p1).done(function(data){
                     $(element).rmLoading();
-                    var data = d;
                     $(element).kbaseFbaTabs({fbaData: data});
+
+                    $rootScope.org_name = data[0].org_name;
+                    scope.$apply();
+
+                    console.log('fba', data)
                     $(document).on('rxnClick', function(e, data) {
                         var url = '/rxns/'+data.ids;
                         scope.$apply( $location.path(url) );
@@ -247,14 +243,6 @@ angular.module('lp-directives')
                         scope.$apply( $location.path(url) );
                     });                            
                 })
-            }
-
-            function compare(a,b) {
-              if (a.timestamp < b.timestamp)
-                 return -1;
-              if (a.timestamp > b.timestamp)
-                return 1;
-              return 0;
             }
 
 

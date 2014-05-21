@@ -19,11 +19,12 @@ $.KBWidget({
         var fbas = options.ids;
         var workspaces = options.workspaces;
         var data = options.fbaData;
+        var meta = options.meta;
 
         var container = this.$elem;
 
-        var tables = ['Reactions', 'Compounds'];
-        var tableIds = ['reaction', 'compound'];
+        var tables = ['Overview', 'Reactions', 'Compounds'];
+        var tableIds = ['overview', 'reaction', 'compound'];
 
         // build tabs
         var tabs = $('<ul id="table-tabs" class="nav nav-tabs"> \
@@ -55,6 +56,7 @@ $.KBWidget({
         container.append(tab_pane)
 
         // event for showing tabs
+        $('#table-tabs a').unbind('click')
         $('#table-tabs a').click(function (e) {
             e.preventDefault();
             $(this).tab('show');
@@ -62,7 +64,7 @@ $.KBWidget({
 
         var tableSettings = {
             "sPaginationType": "bootstrap",
-            "iDisplayLength": 5,
+            "iDisplayLength": 10,
             "aLengthMenu": [5, 10, 25,50,100],
             "oLanguage": {
                 "sSearch": "Search:"
@@ -70,9 +72,94 @@ $.KBWidget({
         }
 
         var fba = data[0].data;
+        //var meta = meta[0]
+
+        // meta data (overview) table 
+        /*var labels = ['ID', 'Name', 'Type','Moddate','Instance',
+                      'Command','Last Modifier','Owner','Workspace','Ref']
+        kb.ui.listTable('meta-table', meta, labels)
+        container.append(table);*/
+
+
+        /*
+        media_ref
+        maximizeObjective
+        id  Rhodobacter-2.4.1.fbamdl.2.fba.20
+        drainfluxUseVariables
+        __VERSION__
+        noErrorThermodynamicConstraints
+        objectiveConstraintFraction
+        minimizeErrorThermodynamicConstraints
+        allReversible
+        objectiveValue
+        numberOfSolutions
+        fluxMinimization
+        thermodynamicConstraints
+        defaultMaxDrainFlux
+        fbamodel_ref
+        fluxUseVariables
+        findMinimalMedia
+        PROMKappa
+        simpleThermoConstraints
+        comboDeletions
+        defaultMinDrainFlux
+        fva
+        decomposeReversibleDrainFlux
+        defaultMaxFlux
+        decomposeReversibleFlux
+        */
+
+        var keys = [{key: 'id'},
+                    {key: 'maximizeObjective', type: 'bool'},        
+                    {key: 'drainfluxUseVariables', type: 'bool'},
+                    {key: 'noErrorThermodynamicConstraints', type: 'bool'},
+                    {key: 'objectiveConstraintFraction'},
+                    {key: 'minimizeErrorThermodynamicConstraints', type: 'bool'},
+                    {key: 'allReversible', type: 'bool'},
+                    {key: 'objectiveValue'},
+                    {key: 'numberOfSolutions'},
+                    {key: 'fluxMinimization', type: 'bool'},
+                    {key: 'thermodynamicConstraints', type: 'bool'},
+                    {key: 'defaultMaxDrainFlux'},
+                    {key: 'fluxUseVariables', type: 'bool'},
+                    {key: 'findMinimalMedia', type: 'bool'},
+                    {key: 'PROMKappa'},
+                    {key: 'simpleThermoConstraints', type: 'bool'},
+                    {key: 'comboDeletions', type: 'bool'},
+                    {key: 'defaultMinDrainFlux'},
+                    {key: 'fva', type: 'bool'},
+                    {key: 'decomposeReversibleDrainFlux',type: 'bool'},
+                    {key: 'defaultMaxFlux'},
+                    {key: 'decomposeReversibleFlux', type: 'bool'}];
+
+        var labels = ['Name',
+                      'Maximize Objective',                      
+                      'Drain Flux Use Variables',
+                      'No Error Thermodynamic Constraints',
+                      'Objective Constraint Fraction',
+                      'Minimize Error Thermodynamic Constraints',
+                      'All Reversible',
+                      'Objective Value',
+                      'Number Of Solutions',
+                      'Flux Minimization',
+                      'Thermodynamic Constraints',
+                      'Default Max Drain Flux',
+                      'Flux Use Variables',
+                      'Find Minimal Media',
+                      'PROM Kappa',
+                      'Simple Thermo Constraints',
+                      'Combo Deletions',
+                      'Default Min Drain Flux',
+                      'fva',
+                      'Decompose Reversible Drain Flux',
+                      'Default Max Flux',
+                      'Decompose Reversible Flux'];
+
+        var table = kb.ui.objTable('overview-table', fba, keys, labels);
+        container.find('#overview-table').append(table.find('tbody'));
+
 
         // rxn flux table
-        console.log('fba', fba)
         var dataDict = formatObjs(fba.FBAReactionVariables, 'rxn');
         var labels = ["ID", "flux", "lower", "upper", "min", "max", "Eq"]; //type
         var keys = ["modelreaction_ref", "value", "lowerBound", "upperBound", "min", "max", "eq"]; //variableType
@@ -85,16 +172,17 @@ $.KBWidget({
         var table = $('#reaction-table').dataTable(rxnTableSettings);
 
         // cpd flux table
-        /*
-        var dataDict = formatObjs(fba.compoundFluxes, 'cpd');
-        var labels = ["id", "Flux", "lower", "upper", "min", "max","Equation"];
-        var cols = getColumnsByLabel(labels);
+        console.log(fba)
+        var dataDict = formatObjs(fba.FBACompoundVariables, 'cpd');
+        var labels = ["id", "Flux", "lower", "upper", "min", "max"];
+        var keys = ["modelcompound_ref", "value", "lowerBound", "upperBound", "min", "max"]        
+        var cols = getColumnsByKey(keys, labels);
         var cpdTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});
         cpdTableSettings.aoColumns = cols;
         cpdTableSettings.aaData = dataDict;
         container.append('<table id="compound-table" class="table table-striped table-bordered"></table>');
         var table = $('#compound-table').dataTable(cpdTableSettings);
-        */
+        
  
         function formatObjs(objs, type) {
             var fluxes = []
@@ -112,9 +200,10 @@ $.KBWidget({
             } else if (type == 'cpd') {
                 for (var i in objs) {
                     var obj = $.extend({}, objs[i]);
-                    var cpd = obj[0].split('_')[0]
-                    var compart = obj[0].split('_')[1]
-                    obj[0] = '<a class="cpd-click" data-cpd="'+cpd+'">'
+                    var id = obj.modelcompound_ref.split('/')[5]
+                    var cpd = id.split('_')[0]
+                    var compart = id.split('_')[1]
+                    obj.modelcompound_ref = '<a class="cpd-click" data-cpd="'+cpd+'">'
                                 +cpd+'</a> ('+compart+')';
                     fluxes.push(obj);
                 }                

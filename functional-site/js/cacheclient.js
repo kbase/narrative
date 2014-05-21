@@ -31,23 +31,50 @@ function Cache() {
 
 // this is another experiment in caching but for particular objects.
 function WSCache() {
+    // Todo: only retrieve and store by object ids.
+
+    // cache object
     var c = {};
 
-    this.get = function(ws, id, type) {
-        if (ws in c && id in c[ws] && type in c[ws][id]) {
-            return c[ws][id][type];
-        } 
-        return undefined;
+    this.get = function(params) {
+
+        if (params.ref) {
+            return c[params.ref];
+        } else {
+            var ws = params.ws,
+                type = params.type,
+                name = params.name;
+
+            if (ws in c && type in c[ws] && name in c[ws][type]) {
+                return c[ws][type][name];
+            }
+        }
     }
 
-    this.put = function(ws, id, type, prom) {
-        if (ws in c && id in c[ws] && type in c[ws][id]) {
-            return false;
-        } else {
-            c[ws] = {};
-            c[ws][id] = {};
-            c[ws][id][type] = prom;
-            return true;
+    this.put = function(params) {
+        // if reference is provided
+        if (params.ref) {
+            if (params.ref in c) {
+                return false;
+            } else {
+                c[params.ref] = params.prom;
+                return true;
+            }
+
+        // else, use strings
+        } else { 
+            var ws = params.ws,
+                name = params.name,
+                type = params.type;
+
+            if (ws in c && type in c[ws] && name in c[ws][type]) {
+                return false;
+            } else {
+                if ( !(ws in c) ) c[ws] = {};                    
+                if ( !(type in c[ws]) ) c[ws][type] = {};
+                c[ws][type][name] = params.prom;
+                return true;
+            }
         }
     }
 }
@@ -95,7 +122,7 @@ function KBCacheClient(token) {
         if (service == 'fba') { 
             // use whatever workspace server that was configured.
             // this makes it possible to use the production workspace server
-            // with the fba server.   Fixme:  fix once production fba server is ready.
+            // with the fba server.   Fixme: fix once production fba server is ready.
             params.wsurl = ws_url;
         }
 
@@ -124,18 +151,21 @@ function KBCacheClient(token) {
     // cached objects
     var c = new WSCache();
     self.get_fba = function(ws, name) {
-        console.log('called get fba with', ws, name)
-
-        // if prom already exists, return it
-        var prom = c.get(ws, name, 'FBAModel');
-        if (prom) return prom;
-
 
         // if reference, get by ref
         if (ws.indexOf('/') != -1) {
-            var p = self.ws.get_objects([{ref: ref}]);
+            // if prom already exists, return it
+            var prom = c.get({ref: ws});
+            if (prom) return prom;
+
+            var p = self.ws.get_objects([{ref: ws}]);
+            c.put({ref: ws, prom: p});            
         } else {
+            var prom = c.get({ws: ws, name: name, type: 'FBA'});
+            if (prom) return prom;            
+
             var p = self.ws.get_objects([{workspace: ws, name: name}]);
+            c.put({ws: ws, name:name, type: 'FBA', prom: prom});            
         }
 
         // get fba object
@@ -151,35 +181,42 @@ function KBCacheClient(token) {
                 // create equation by using the model compound objects
                 var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
 
-                // and equations to fba object
+                // add equations to fba object
                 var rxn_vars = f_obj[0].data.FBAReactionVariables;
                 for (var i in rxn_vars) {
                     var obj = rxn_vars[i];
                     var id = obj.modelreaction_ref.split('/')[5];
                     obj.eq = eqs[id]
                 }
+
+                // fixme: hack to get org name, should be on backend
+                f_obj[0].org_name = m[0].data.name;
+
                 return f_obj;
             })
             return modelAJAX;
-        })
-
-        // cache data when done
-        $.when(prom).done(function(data) {
-
         })
 
         return prom;
     }
 
     self.get_model = function(ws, name){
-        console.log('calling get_model with', ws, name)
         if (ws && ws.indexOf('/') != -1) {
+            console.log('calling get models with ref')
+            var prom = c.get({ref: ws});
+            if (prom) return prom; 
+
             var p = self.ws.get_objects([{ref: ws}]);
+            c.put({ref: ws, prom: p}); 
         } else {
+            var prom = c.get({ws: ws, name: name, type: 'Model'});
+            if (prom) return prom; 
+
             var p = self.ws.get_objects([{workspace: ws, name: name}]);
+            c.put({ws: ws, name:name, type:'Model', prom:p});              
         }
 
-        var proccessAJAX = $.when(p).then(function(m) {
+        var prom = $.when(p).then(function(m) {
             var m_obj = m[0].data
             var rxn_objs = m_obj.modelreactions;
             var cpd_objs = m_obj.modelcompounds
@@ -187,7 +224,6 @@ function KBCacheClient(token) {
             // for each reaction, get reagents and 
             // create equation by using the model compound objects
             var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
-
 
             // add equations to modelreactions object
             var rxn_vars = m_obj.modelreactions;
@@ -204,12 +240,10 @@ function KBCacheClient(token) {
                 obj.eq = eqs[obj.id];
             }
 
-
-
             return m;
         })
 
-        return proccessAJAX;
+        return prom;
     }
 
 
@@ -263,7 +297,7 @@ function KBCacheClient(token) {
 }
 
 
-// Collection of simple (bootstrap based) UI helper methods
+// Collection of simple (Bootstrap/jQuery based) UI helper methods
 function UIUtils() {
 
     // this method will display an absolutely position notification
@@ -298,6 +332,7 @@ function UIUtils() {
                             }
                         })
     }
+
 
 
     var msecPerMinute = 1000 * 60;
@@ -361,6 +396,42 @@ function UIUtils() {
         hms[2] = hms[2].split('+')[0];  
         return Date.UTC(ymd[0],ymd[1]-1,ymd[2],hms[0],hms[1],hms[2]);  
     }
+
+    this.objTable = function(table_id, obj, keys, labels) {
+        var table = $('<table id="'+table_id+'" class="table table-striped table-bordered" \
+                              style="margin-left: auto; margin-right: auto;"></table>');
+        for (var i in keys) {
+            var key = keys[i];
+            var row = $('<tr>');
+
+            var label = $('<td>'+labels[i]+'</td>')
+            var value = $('<td>')
+
+            if (key.type == 'bool') {
+                value.append((obj[key.key] == 1 ? 'True' : 'False'))
+            } else {
+                value.append(obj[key.key])
+            }
+            row.append(label, value);
+
+            table.append(row);
+
+        }
+
+        return table;
+    }
+
+    this.listTable = function(table_id, array, labels) {
+        var table = $('<table id="'+table_id+'" class="table table-striped table-bordered" \
+                              style="margin-left: auto; margin-right: auto;"></table>');
+        for (var i in array) {
+            table.append('<tr><td>'+labels[i]+'</td> \
+                          <td>'+array[i]+'</td></tr>');
+        }
+
+        return table;
+    }
+
 
 
 }

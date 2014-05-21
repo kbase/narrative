@@ -79,8 +79,8 @@ var app = angular.module('landing-pages',
           url: "model/:ws/:id",
           templateUrl: 'views/ws/sortable/model.html',
 
-        }).state('ws.mv.data', {
-          url: "data/:ws/:id",
+        }).state('ws.mv.fba', {
+          url: "fba/:ws/:id",
           templateUrl: 'views/ws/sortable/data.html',
 
         }).state('ws.mv.maps', {

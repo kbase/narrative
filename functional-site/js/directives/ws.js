@@ -64,28 +64,18 @@ angular.module('ws-directives')
                                 '</button>'+
                             '</div>' : '')+
 
+                            '<div class="fav-toolbar" style="display: none;">'+
+                                '<div class="fav-toolbar-title pull-left">Objects</div>'+
+                                '<button type="button" class="btn btn-default pull-right" ng-click="clearList()">Clear</button>'+                                
+                            '</div>'+
+
+
+
                         '</div>'+
 
 
 
                         //(USER_ID ? '<a class="new-ws pull-right">New+</a>' : '')+
-
-                        '<div class="perm-filters" style="display:none;">'+
-                            '<div class="checkbox pull-left" style="margin: 35px 25px;">'+
-                              '<label><input id="ws-filter-owner" type="checkbox" value="">owner</label>'+
-                            '</div>'+
-                            '<div class="pull-left">'+
-                                '<div class="checkbox">'+
-                                  '<label><input id="ws-filter-admin" type="checkbox" value="" checked>admin</label>'+
-                                '</div>'+
-                                '<div class="checkbox">'+
-                                  '<label><input id="ws-filter-write" type="checkbox" value="" checked>write</label>'+
-                                '</div>'+
-                                '<div class="checkbox">'+
-                                  '<label><input id="ws-filter-read" type="checkbox" value="" checked>read</label>'+                                                                                          
-                                '</div>'+
-                             '</div>'+
-                        '</div>'+
 
                         '<input type="text" class="search-query" placeholder="Search">'+
                     '</div>'+
@@ -209,7 +199,10 @@ angular.module('ws-directives')
                     if ($(this).hasClass('active')) return;
 
                     $('.btn-new-ws').fadeOut();
-                    $('.btn-filter-ws').fadeOut();
+                    $('.btn-filter-ws').fadeOut(function() {
+                        $('.fav-toolbar').show();
+                    });
+
 
                     $('#select-box').toggle('slide', {
                                      direction: 'left',
@@ -229,8 +222,10 @@ angular.module('ws-directives')
                 $('.btn-show-ws').click(function() {
                     if ($(this).hasClass('active')) return;
 
+                    $('.fav-toolbar').hide()
                     $('.btn-new-ws').fadeIn();
                     $('.btn-filter-ws').fadeIn();
+
 
                     $('#favorite-sidebar').toggle('slide', {
                                      direction: 'right',
@@ -321,12 +316,13 @@ angular.module('ws-directives')
                     var read  = filterRead.prop('checked');
 
                     //$(".select-box table").children()
+                    console.log(workspaces)
                     for (var i=0; i< workspaces.length; i++) {
                         var ws = workspaces[i];
-                        var name = ws[0];
-                        var user = ws[1];
-                        var obj_count = ws[3];
-                        var perm = ws[4];
+                        var name = ws[1];
+                        var user = ws[2];
+                        var obj_count = ws[4];
+                        var perm = ws[5];
                         var global_perm = ws[5];
 
                         var j = i+1;
@@ -827,7 +823,7 @@ angular.module('ws-directives')
                                     if (s_ws.length > 1) {
                                         if (s_ws[0] == USER_ID) {
                                             var proj = USER_ID+':'+s_ws[1];
-                                        } else {
+                                        }  else {
                                             error = 'Only your username ('+USER_ID+') may be used before a colon';
                                             
                                         }
@@ -1105,11 +1101,11 @@ angular.module('ws-directives')
                 //}
         
                 var p2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1});
-                var p3 = kb.ujs.get_state('favorites', 'queue', 0);
+                var p3 = kb.ujs.get_has_state('favorites', 'queue', 0);
                 var p4 = $.getJSON('landing_page_map.json');
 
                 $.when(p, p2, p3, p4).done(function(data, deleted_objs, favs, obj_mapping){
-                    scope.favs = favs;
+                    scope.favs = (favs[0] == 1 ? favs[1] : []);
                     scope.deleted_objs = deleted_objs;
                     scope.obj_mapping = obj_mapping[0];
 
@@ -1277,6 +1273,7 @@ angular.module('ws-directives')
                     var check = '<div class="ncheck obj-check-box check-option"'
                             + ' data-ws="' + ws + '"'
                             + ' data-type="' + type + '"'
+                            + ' data-module="' + module + '"'
                             + ' data-id="' + id + '"></div>';
 
                     var wsarray = [check, 
@@ -1295,13 +1292,6 @@ angular.module('ws-directives')
                         kind_counts[kind] = 1;
                     }
 
-                    if (module in scope.obj_mapping && scope.obj_mapping[module] 
-                        && scope.obj_mapping[module][kind] ) {
-                        var sub = scope.obj_mapping[module][kind];
-                    } else {
-                        var sub = undefined
-                    }
-
                     // determine if saved to favorites
                     var isFav = false;
                     for (var i in scope.favs) { 
@@ -1312,23 +1302,42 @@ angular.module('ws-directives')
                         } 
                     }
 
-                    var sortable = ['FBAModel', 'FBA', 'Media', 'MetabolicMap', 'ETC'];
+
+
+                    if (module in scope.obj_mapping && scope.obj_mapping[module] 
+                        && scope.obj_mapping[module][kind] ) {
+                        var sub = scope.obj_mapping[module][kind];
+                    } else {
+                        var sub = undefined
+                    }                    
+
+                    //var sortable = ['FBAModel', 'FBA'];
+                    //var mv = ['Media', 'MetabolicMap', 'ETC'];
                     //var route = (sortable.indexOf(kind) != -1 ? 'ws.mv' : sub)  //+sub : sub);
                     var route = sub;
                     switch (kind) {
                         case 'FBA': 
-                            route = 'ws.mv.data';
+                            route = 'ws.mv.fba';
                             break;
                         case 'FBAModel': 
                             route = 'ws.mv.model';
                             break;
+                        case 'Media': 
+                            route = 'ws.media';
+                            break;
+                        case 'MetabolicMap': 
+                            route = 'ws.maps';
+                            break;
+                        case 'Media': 
+                            route = 'ws.media';
+                            break; 
                     }
 
 
                     if (route) {
                         var url = route+"({ws:'"+ws+"', id:'"+id+"'})";
                         var new_id = '<a class="obj-id" data-ws="'+ws+'" data-id="'+id+'"'+
-                                        'data-type="'+type+'" data-kind="'+kind+'" '+
+                                        'data-type="'+type+'" data-kind="'+kind+'" data-module="'+module+'" '+
                                         'data-sub="'+sub+'" ui-sref="'+url+'" >'+
                                     id+'</a> (<a class="show-versions">'+instance+'</a>)'+
                                     (isFav ? ' <span class="glyphicon glyphicon-star btn-fav"></span>': '')+
@@ -1337,7 +1346,7 @@ angular.module('ws-directives')
                     } else {
                         var url = "ws.json({ws:'"+ws+"', id:'"+id+"'})"
                         var new_id = '<a class="obj-id" data-ws="'+ws+'" data-id="'+id+'"'+
-                                        'data-type="'+type+'" data-kind="'+kind+'" '+
+                                        'data-type="'+type+'" data-kind="'+kind+'" data-module="'+module+'" '+
                                         'data-sub="'+sub+'" ui-sref="'+url+'" >'+
                                       id+'</a> (<a class="show-versions">'+instance+'</a>)'+
                                       (isFav ? ' <span class="glyphicon glyphicon-star btn-fav"></span>': '')+                                            
@@ -1349,6 +1358,7 @@ angular.module('ws-directives')
                 }
                 return [wsobjs, kind_counts];
             }
+
 
             // events for object table.  
             // This is reloaded on table change/pagination
@@ -1432,7 +1442,8 @@ angular.module('ws-directives')
                             var id = $(this).attr('data-id');
                             var dataWS = $(this).attr('data-ws');
                             var dataType = $(this).attr('data-type');
-                            scope.checkedList.push({id: id, ws: dataWS, type: dataType});
+                            var module = $(this).attr('data-module');                            
+                            scope.checkedList.push({id: id, ws: dataWS, type: dataType, module:module });
                             scope.$apply();
                         })
                     }
@@ -1463,12 +1474,12 @@ angular.module('ws-directives')
                     var id = checkbox.attr('data-id');
                     var dataWS = checkbox.data('ws');
                     var dataType = checkbox.data('type');
-
+                    var module = checkbox.data('module');
 
                     if (checkbox.hasClass('ncheck-checked')) {
                         removeCheck(id, dataWS, dataType)
                     } else {
-                        scope.checkedList.push({id: id, ws: dataWS, type: dataType});
+                        scope.checkedList.push({id: id, ws: dataWS, type: dataType, module: module});
                         scope.$apply();
                     }
 
@@ -1670,8 +1681,8 @@ angular.module('ws-directives')
 
                     var download = $('<a class="btn btn-default pull-left">Download\
                                 <span class="glyphicon glyphicon-download-alt"></span></a>')
-                    download.click(function() {
 
+                    download.click(function() {
                         var saveData = (function () {
                             var a = document.createElement("a");
                             document.body.appendChild(a);

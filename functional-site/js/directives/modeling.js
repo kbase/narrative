@@ -2,11 +2,12 @@
 
 angular.module('modeling-directives', []);
 angular.module('modeling-directives')
-.directive('pathways', function($location, $compile) {
+.directive('pathways', function($location, $compile, $rootScope) {
     return {
         link: function(scope, ele, attrs) {
             var type = scope.type;
             var map_ws = 'nconrad:paths';
+
             //var ids = (scope.ids ? scope.ids : [scope.id]); //fixme
 
             //var p = $(element).kbasePanel({title: 'Pathways', 
@@ -14,47 +15,7 @@ angular.module('modeling-directives')
             //                               rightLabel: map_ws,
             //                               subText: scope.id});
             //p.loading();
-            $(ele).loading();
 
-            if (type == "Model") {
-                var prom = kb.get_model(scope.selected[0].workspace, scope.selected[0].name);
-                $.when(prom).done(function(d) {
-                    var data = [d[0].data];
-                    $(ele).rmLoading();
-                    $(ele).pathways({modelData: data, 
-                                ws: map_ws, defaultMap: scope.defaultMap,
-                                scope: scope});
-                }).fail(function(e){
-                    $(ele).append('<div class="alert alert-danger">'+
-                                e.error.message+'</div>');
-                });
-
-            } else if (type == "FBA") {
-                var prom = kb.get_fba(scope.selected[0].workspace, scope.selected[0].name)
-                $.when(prom).done(function(d) {
-                    var data = [d[0].data];
-                    $(ele).rmLoading();                    
-                    $(ele).pathways({fbaData: data, 
-                                ws: map_ws, defaultMap: scope.defaultMap,
-                                scope: scope})   
-                }).fail(function(e){
-                    $(ele).append('<div class="alert alert-danger">'+
-                                e.error.message+'</div>');
-                });
-            }
-
-
-            function get_objects(ids, workspaces) {
-                var identities = []
-                for (var i=0; i< ids.length; i++) {
-                    var identity = {}
-                    identity.name = ids[i];
-                    identity.workspace = workspaces[i]
-                }
-
-                var prom = kb.req('ws', 'get_objects', identities);
-                return prom;
-            }
 
             $.fn.pathways = function(options) {
                 self.models = options.modelData;
@@ -105,7 +66,7 @@ angular.module('modeling-directives')
 
                 container.append(tabs);
                 */
-                container.prepend('<span class="label label-danger pull-right">Beta</span>')
+                //container.prepend('<span class="label label-danger pull-left">Beta</span>')
                 container.append('<div class="tab-content" style="margin-top:15px;">\
                                       <div class="tab-pane active" style="margin-top:15px;" id="path-list"></div>\
                                   </div>');
@@ -118,19 +79,22 @@ angular.module('modeling-directives')
                         for (var i in d) {
                             var obj = d[i];
 
+                            /*
                             if (type == 'Model') {
                                 var route = 'models';
                             } else {
                                 var route = 'fbas';
-                            }
+                            }*/
 
                             // if this is a usual page (and not another app)
+                            /*
                             if (scope.ws && scope.id) {
-                                var url = 'ws.'+route+"({ws:'"+scope.ws+"', id:'"+scope.id+"'})";
-                            }
+                                var url = 'ws.mv.model'+route+"({ws:'"+scope.ws+"', id:'"+scope.id+"'})";
+                            }*/
 
-                            var link = '<a '+(url ? 'ui-sref="'+url+'" ' : '')+
-                                    'class="pathway-link" data-map="'+obj[1]+'">'+obj[10].name+'</a>'
+                            //var link = '<a '+(url ? 'ui-sref="'+url+'" ' : '')+
+                            //        'class="pathway-link" data-map="'+obj[1]+'">'+obj[10].name+'</a>'
+                            var link = '<a class="pathway-link" data-map="'+obj[1]+'">'+obj[10].name+'</a>'                            
                             var name = link;
 
                             var rxn_count = obj[10].reaction_ids.split(',').length;
@@ -182,6 +146,7 @@ angular.module('modeling-directives')
                     $('#path-'+map).loading();
                     var p = kb.ws.get_objects([{workspace: self.ws, name: map}])
                     $.when(p).done(function(d) {
+                        $('#path-'+map).rmLoading();                        
                         var d = d[0].data
 
                         $('#path-'+map).kbasePathway({ws: self.ws, 
@@ -233,10 +198,11 @@ angular.module('modeling-directives')
                     container.find('.tab-content')
                             .append('<div class="tab-pane" id="path-'+map+'"></div>'); 
 
-                    $('.nav-tabs').append(tab);
+                    $('.pathway-tabs').append(tab);
 
                     $('.pathway-tab').unbind('click');
                     $('.pathway-tab').click(function() {
+                        $('.pathway-tabs li').removeClass('active')                        
                         var map = $(this).data('map');
                         //$location.search({map: map});
                         //scope.$apply();
@@ -244,6 +210,150 @@ angular.module('modeling-directives')
                     }); 
                 }
             }
+
+
+
+
+
+
+            // fba selector dropdown
+
+            $(ele).loading();            
+            $.when(scope.ref_obj_prom).done(function() {
+                var fba_selector = get_fba_selector(scope.fba_refs)
+                console.log(fba_selector)
+                $(ele).prepend(fba_selector)
+                console.log(scope.fba_refs)
+                loadMapSelector(scope.fba_refs[0].ws, scope.fba_refs[0].name)
+
+                fba_selector.find('select').change(function() { 
+                    console.log('change')
+                    // special container for loading notice since floated
+                    var spin = $('<div id="loading pull-right">')
+                    spin.loading();
+                    $('.pathway-options').append(spin);
+                    
+
+                    var selected_fba = get_selected_fba();
+                    loadMapSelector(selected_fba.ws, selected_fba.name)
+
+                })
+
+            }).fail(function() {
+                $(ele).html("<h5>There are currently no FBA \
+                                    results associated with this model.\
+                                      You may want to FBA analysis.</h5>")
+            })
+
+
+
+            function loadMapSelector(ws, fba_name) {
+                $('#path-list').remove()
+
+
+                if (fba_name) {
+                    var p2 = kb.get_fba(ws, fba_name);
+                } else { 
+                    var p2;
+                }
+
+
+                var p1 = kb.get_model(scope.selected[0].workspace, scope.selected[0].name);
+                $.when(p1, p2 ).done(function(d, fba) {
+                    console.log('reloading pathway with ',fba)
+                    var data = [d[0].data];
+                    var fba = fba ? [fba[0].data] : null;
+
+                    $rootScope.org_name = d[0].data.name;
+                    scope.$apply();
+
+                    $(ele).rmLoading();
+                    $(ele).pathways({modelData: data, fbaData: fba,
+                                ws: map_ws, defaultMap: scope.defaultMap,
+                                scope: scope});
+                    $(ele).find('.pathway-tabs')
+                          .append('<div class="label label-primary pull-right">'+map_ws+'</div>');
+                }).fail(function(e){
+                    $(ele).append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>');
+                });
+            }
+
+            function get_fba_selector(fba_refs) {
+                 var ver_selector = $('<select class="form-control fba-selector">');
+                for (var i in fba_refs) {
+                    var ref = fba_refs[i];
+                    ver_selector.append('<option value="'+ref.name+'+'+ref.ws+'" '+'>'
+                                            +ref.name+' | '+ref.ws+' | '+ref.date+'</option>')
+                }
+                var form = $('<div class="col-xs-5">');
+                form.append(ver_selector)
+                var row = $('<div class="row pathway-options">');
+                row.append(form)
+
+                return row;
+            }
+
+            function get_selected_fba() {
+                var selected_fba = $('.fba-selector').val()
+                var name = selected_fba.split('+')[0];
+                var ws = selected_fba.split('+')[1];
+                console.log('selected fba', ws, name)
+                return {ws: ws, name:name}
+            }
+
+
+            $('#pathway-selection').click(function() {
+                // highlight tab
+                $('.pathway-tab').removeClass('active');
+                $(this).addClass('active')
+
+                // change tab content panes
+                $('.tab-pane').removeClass('active')
+                $('#path-list').addClass('active');
+            })
+            /*
+            if (type == "Model") {
+
+                var prom = kb.get_model(scope.selected[0].workspace, scope.selected[0].name);
+                $.when(prom).done(function(d) {
+                    var data = [d[0].data];
+                    $(ele).rmLoading();
+                    $(ele).pathways({modelData: data, 
+                                ws: map_ws, defaultMap: scope.defaultMap,
+                                scope: scope});
+                }).fail(function(e){
+                    $(ele).append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>');
+                });
+
+            } else if (type == "FBA") {
+                var prom = kb.get_fba(scope.selected[0].workspace, scope.selected[0].name)
+                $.when(prom).done(function(d) {
+                    var data = [d[0].data];
+                    $(ele).rmLoading();                    
+                    $(ele).pathways({fbaData: data, 
+                                ws: map_ws, defaultMap: scope.defaultMap,
+                                scope: scope})   
+                }).fail(function(e){
+                    $(ele).append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>');
+                });
+            }*/
+
+
+            function get_objects(ids, workspaces) {
+                var identities = []
+                for (var i=0; i< ids.length; i++) {
+                    var identity = {}
+                    identity.name = ids[i];
+                    identity.workspace = workspaces[i]
+                }
+
+                var prom = kb.req('ws', 'get_objects', identities);
+                return prom;
+            }
+
 
 
 

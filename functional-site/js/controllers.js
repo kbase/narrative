@@ -230,9 +230,41 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
     $scope.selected = [{workspace: $scope.ws, name: $scope.id}]
 
-    $scope.defaultMap = $stateParams.map;
+    $scope.fba_refs = [];
+    $scope.ref_obj_prom = kb.ws.list_referencing_objects($scope.selected)
+    $.when($scope.ref_obj_prom).done(function(data) {
+        // only care about first object
+        var data = data[0]
+
+        for (var i in data) {
+            var meta = data[i];
+            var type = meta[2].split('-')[0]
+
+            if (type == "KBaseFBA.FBA") {
+                $scope.fba_refs.push({ws: meta[7], 
+                               name: meta[1], 
+                               date: kb.ui.formateDate(meta[3]),
+                               timestamp: kb.ui.getTimestamp(meta[3])
+                              });
+            }
+        }
+
+        $scope.fba_refs.sort(compare)
+    })
 
 
+    //$scope.defaultMap = $stateParams.map;
+
+
+
+
+    function compare(a,b) {
+      if (a.timestamp < b.timestamp)
+         return -1;
+      if (a.timestamp > b.timestamp)
+        return 1;
+      return 0;
+    }
 
 })
 
@@ -307,7 +339,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     }   
 })
 
-.controller('Favorites', function($scope, $stateParams, favoriteService) {
+.controller('Favorites', function($scope, $state, $stateParams, favoriteService, $compile) {
 
     $scope.selected = [{workspace: 'chenrydemo', 
                         name: 'kb|g.9.fbamdl.25.fba.55'}];
@@ -319,10 +351,12 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     // this updates the dom with favorites from the service
     // "favoriteService" communicates with the server
     $scope.updateFavs = function() {
-        $scope.prom = kb.ujs.get_state('favorites', 'queue', 0);
+        $scope.prom = kb.ujs.get_has_state('favorites', 'queue', 0);
+        var p = $.getJSON('landing_page_map.json');
 
-        $.when($scope.prom).done(function(data) {
-            $scope.favs = data;
+        $.when($scope.prom, p).done(function(data, obj_mapping) {
+            $scope.obj_mapping = obj_mapping[0];
+            $scope.favs = (data[0] ? data[1] : []);
             $scope.fav_by_kind = $scope.processData();
             $scope.$apply();
         })
@@ -333,8 +367,45 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
     $scope.processData = function() {
         fav_by_kind = {}
-        for (var i in $scope.favs) {
-            var kind = $scope.favs[i].type.split('-')[0];
+
+        var favs = $scope.favs;
+        console.log($scope.favs)
+        for (var i in favs) {
+            var kind = favs[i].type.split('-')[0];
+            var module = favs[i].module
+
+            if (module in $scope.obj_mapping && $scope.obj_mapping[module] 
+                && $scope.obj_mapping[module][kind] ) {
+                var sub = $scope.obj_mapping[module][kind];
+            } else {
+                var sub = undefined
+            }                   
+
+            //var sortable = ['FBAModel', 'FBA'];
+            //var mv = ['Media', 'MetabolicMap', 'ETC'];
+            //var route = (sortable.indexOf(kind) != -1 ? 'ws.mv' : sub)  //+sub : sub);
+            
+            var route = sub;
+            switch (kind) {
+                case 'FBA': 
+                    route = 'ws.mv.fba';
+                    break;
+                case 'FBAModel': 
+                    route = 'ws.mv.model';
+                    break;
+                case 'Media': 
+                    route = 'ws.media';
+                    break;
+                case 'MetabolicMap': 
+                    route = 'ws.maps';
+                    break;
+                case 'Media': 
+                    route = 'ws.media';
+                    break; 
+            }
+
+            favs[i].route = route
+
             if (kind in fav_by_kind) {
                 fav_by_kind[kind].push($scope.favs[i])
             } else {
@@ -348,7 +419,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
 
 
-    $scope.rmObject = function(ws, id, type) {
+    $scope.rmObject = function(ws, id, type, module) {
         for (var i in $scope.favs) {
             if ($scope.favs[i].ws == ws
                 && $scope.favs[i].id == id
@@ -356,7 +427,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
                 $scope.favs.splice(i, 1);
             }
         }
-        favoriteService.remove(ws, id, type);
+        favoriteService.remove(ws, id, type, module);
         $scope.fav_by_kind = $scope.processData();
     }
 
@@ -366,10 +437,16 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     }
 
 
-    $scope.displayViewer = function(ws, id, type) {
-        console.log(this)
-        console.log(ws,id,type)
+    $scope.displayViewer = function(route, ws, id) {
+        console.log(route)
+        "ws.json({ws:'"+ws+"', id:'"+id+"'})"
+        if (route) {
+            $state.transitionTo(route,  {ws:ws, id:id})
+        } else {
+            $state.transitionTo('ws.json',  {ws:ws, id:id})
+        }
 
+        $scope.$apply();
     }
 
 

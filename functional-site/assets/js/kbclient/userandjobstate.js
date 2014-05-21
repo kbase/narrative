@@ -2,9 +2,10 @@
 
 function UserAndJobState(url, auth, auth_cb) {
 
+    this.url = url;
     var _url = url;
     var deprecationWarningSent = false;
-    
+
     function deprecationWarning() {
         if (!deprecationWarningSent) {
             deprecationWarningSent = true;
@@ -17,11 +18,21 @@ function UserAndJobState(url, auth, auth_cb) {
     }
 
     if (typeof(_url) != "string" || _url.length == 0) {
-        _url = "http://kbase.us/services/userandjobstate/";
+        _url = "https://kbase.us/services/userandjobstate/";
     }
     var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
     var _auth_cb = auth_cb;
 
+
+    this.ver = function (_callback, _errorCallback) {
+    return json_call_ajax("UserAndJobState.ver",
+        [], 1, _callback, _errorCallback);
+};
+
+    this.ver_async = function (_callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("UserAndJobState.ver", [], 1, _callback, _error_callback);
+    };
 
     this.set_state = function (service, key, value, _callback, _errorCallback) {
     return json_call_ajax("UserAndJobState.set_state",
@@ -51,6 +62,26 @@ function UserAndJobState(url, auth, auth_cb) {
     this.get_state_async = function (service, key, auth, _callback, _error_callback) {
         deprecationWarning();
         return json_call_ajax("UserAndJobState.get_state", [service, key, auth], 1, _callback, _error_callback);
+    };
+
+    this.has_state = function (service, key, auth, _callback, _errorCallback) {
+    return json_call_ajax("UserAndJobState.has_state",
+        [service, key, auth], 1, _callback, _errorCallback);
+};
+
+    this.has_state_async = function (service, key, auth, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("UserAndJobState.has_state", [service, key, auth], 1, _callback, _error_callback);
+    };
+
+    this.get_has_state = function (service, key, auth, _callback, _errorCallback) {
+    return json_call_ajax("UserAndJobState.get_has_state",
+        [service, key, auth], 2, _callback, _errorCallback);
+};
+
+    this.get_has_state_async = function (service, key, auth, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("UserAndJobState.get_has_state", [service, key, auth], 2, _callback, _error_callback);
     };
 
     this.remove_state = function (service, key, _callback, _errorCallback) {
@@ -223,6 +254,46 @@ function UserAndJobState(url, auth, auth_cb) {
         return json_call_ajax("UserAndJobState.list_job_services", [], 1, _callback, _error_callback);
     };
 
+    this.share_job = function (job, users, _callback, _errorCallback) {
+    return json_call_ajax("UserAndJobState.share_job",
+        [job, users], 0, _callback, _errorCallback);
+};
+
+    this.share_job_async = function (job, users, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("UserAndJobState.share_job", [job, users], 0, _callback, _error_callback);
+    };
+
+    this.unshare_job = function (job, users, _callback, _errorCallback) {
+    return json_call_ajax("UserAndJobState.unshare_job",
+        [job, users], 0, _callback, _errorCallback);
+};
+
+    this.unshare_job_async = function (job, users, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("UserAndJobState.unshare_job", [job, users], 0, _callback, _error_callback);
+    };
+
+    this.get_job_owner = function (job, _callback, _errorCallback) {
+    return json_call_ajax("UserAndJobState.get_job_owner",
+        [job], 1, _callback, _errorCallback);
+};
+
+    this.get_job_owner_async = function (job, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("UserAndJobState.get_job_owner", [job], 1, _callback, _error_callback);
+    };
+
+    this.get_job_shared = function (job, _callback, _errorCallback) {
+    return json_call_ajax("UserAndJobState.get_job_shared",
+        [job], 1, _callback, _errorCallback);
+};
+
+    this.get_job_shared_async = function (job, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("UserAndJobState.get_job_shared", [job], 1, _callback, _error_callback);
+    };
+
     this.delete_job = function (job, _callback, _errorCallback) {
     return json_call_ajax("UserAndJobState.delete_job",
         [job], 0, _callback, _errorCallback);
@@ -264,7 +335,7 @@ function UserAndJobState(url, auth, auth_cb) {
             version: "1.1",
             id: String(Math.random()).slice(2),
         };
-        
+
         var beforeSend = null;
         var token = (_auth_cb && typeof _auth_cb === 'function') ? _auth_cb()
             : (_auth.token ? _auth.token : null);
@@ -274,7 +345,7 @@ function UserAndJobState(url, auth, auth_cb) {
             }
         }
 
-        jQuery.ajax({
+        var xhr = jQuery.ajax({
             url: _url,
             dataType: "text",
             type: 'POST',
@@ -315,7 +386,10 @@ function UserAndJobState(url, auth, auth_cb) {
                 });
             }
         });
-        return deferred.promise();
+
+        var promise = deferred.promise();
+        promise.xhr = xhr;
+        return promise;
     }
 }
 

@@ -696,6 +696,12 @@ div::-webkit-scrollbar-thumb {
 
 /* favorite stuff */
 
+.fav-toolbar-title {
+    font-weight: bold;
+    font-size: 18px;
+    margin: 5px 0 0 20px;
+}
+
 .btn-favorite, 
 .btn-rm-panel,
 .btn-min-panel {
@@ -707,6 +713,7 @@ div::-webkit-scrollbar-thumb {
 }
 
 
+
 .fav-container {
     margin: 0 10px 0 0;
 }
@@ -714,7 +721,7 @@ div::-webkit-scrollbar-thumb {
 .fav-viewer-obj:hover { 
     cursor: hand; 
     cursor: pointer;    
-    background: #f3f3f3
+    /*background: #f3f3f3*/
 }
 
 

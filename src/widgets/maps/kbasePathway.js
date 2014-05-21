@@ -1017,7 +1017,7 @@ $.KBWidget({
                         'data': new_map, 
                         'id': map_id,
                         'type': 'KBaseBiochem.MetabolicMap',
-                        'metadata': {'compound_ids': 'cpd00029,cpd00027,cpd00089,cpd00482,cpd00027,cpd00190,cpd00095,cpd00863,cpd00079,cpd00072,cpd00061,cpd00169,cpd00203,cpd00159,cpd00213,cpd00363,cpd00020,cpd03049,cpd00022,cpd00071,cpd00836,cpd00449,cpd00290,cpd03696,cpd03697,cpd03698,cpd01030,cpd00032,cpd00853,cpd00102,cpd00056', 'name': 'Glycolysis / Gluconeogenesis', 'reaction_ids': 'rxn00786,rxn00506,rxn00172,rxn00507,rxn00544,rxn00536,rxn00543,rxn00011,rxn00011,rxn02342,rxn01871,rxn00499,rxn00148,rxn00459,rxn01106,rxn00781,rxn00747,rxn00545,rxn00549,rxn06231,rxn00558,rxn00704,rxn02380,rxn01169,rxn01169,rxn01977,rxn01977,rxn01171,rxn00216,rxn00216,rxn00220,rxn00221,rxn00705,rxn01241,rxn01100,rxn06118,rxn06120,rxn06860,rxn06678,rxn03481,rxn03482,rxn00305,rxn00519,R09127,rxn00247,rxn00781,rxn00782,rxn07191,rxn00779,rxn13974,rxn01104,rxn01216,rxn00175,R09084,R09085,R09086,rxn03517,rxn01106'}
+                        'metadata': metadata
                         })
 
                 $.when(p).done(function(d) {

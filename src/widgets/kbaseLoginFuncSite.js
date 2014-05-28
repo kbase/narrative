@@ -1105,11 +1105,17 @@
                                 // If we have a useless error message, replace with
                                 // friendly, but useless error message
 
-                                if (textStatus == "error") {
-                                    textStatus = "Error connecting to KBase login server";
+                                var errmsg = textStatus;
+                                if (jqXHR.responseJSON) {
+                                    errmsg = jqXHR.responseJSON.error_msg;
                                 }
+
+                                if (errmsg == "error") {
+                                    errmsg = "Error connecting to KBase login server";
+                                }
+
                                 this.populateLoginInfo({});
-                                callback.call(this,{ status : 0, message : textStatus })
+                                callback.call(this,{ status : 0, message : errmsg })
                              },
                              this
                             ),

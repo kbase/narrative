@@ -1093,18 +1093,14 @@ angular.module('ws-directives')
                 $(element).loading('loading '+ws+'...')
 
 
-                // load workspace objects (filter by type, if that was specified)
-                //if (scope.type) {
-                //    var p = kb.ws.list_objects({workspaces: [ws], type: scope.type});   
-                //} else {
-                    var p = kb.ws.list_objects({workspaces: [ws]});
-                //}
-        
+
+                var p = kb.ws.list_objects({workspaces: [ws]});
                 var p2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1});
                 var p3 = kb.ujs.get_has_state('favorites', 'queue', 0);
                 var p4 = $.getJSON('landing_page_map.json');
 
-                $.when(p, p2, p3, p4).done(function(data, deleted_objs, favs, obj_mapping){
+                $.when(p, p2, p3, p4).done(function(objs, deleted_objs, favs, obj_mapping){
+                    console.log(objs)
                     scope.favs = (favs[0] == 1 ? favs[1] : []);
                     scope.deleted_objs = deleted_objs;
                     scope.obj_mapping = obj_mapping[0];
@@ -1115,7 +1111,7 @@ angular.module('ws-directives')
                         class="table table-bordered table-striped" style="width: 100%;"></table>')    
 
                     // format and create object datatable
-                    var tableobjs = formatObjs(data, obj_mapping);
+                    var tableobjs = formatObjs(objs, obj_mapping);
                     var wsobjs = tableobjs[0];
                     var kind_counts = tableobjs[1];
                     tableSettings.aaData = wsobjs;
@@ -1144,7 +1140,7 @@ angular.module('ws-directives')
                     }
 
                     // if there are objects add type filter,
-                    if (data.length) {
+                    if (objs.length) {
                         var type_filter = getTypeFilterBtn(table, kind_counts, scope.type)
                         $('.table-options').append(type_filter);
                     }

@@ -252,7 +252,6 @@ $.KBWidget({
 
                     for (var i in sols) {
                         var sol = sols[i];
-                        console.log('solution', sol)
                         var solID = sol.id;
 
                         var accepted_id = gap_name.replace(/(\.|\|)/g,'_')+solID.replace(/\./g,'_')

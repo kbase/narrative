@@ -427,9 +427,11 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     $rootScope.$stateParams = $stateParams;
 
     // if logged in, display favorite count in navbar
-    //var prom = kb.ujs.get_state('favorites', 'queue', 0);
-    //$.when(prom).done(function(queue) {
-    //    $('.favorite-count').text(queue.length);
+    //var prom = kb.ujs.get_has_state('favorites', 'queue', 0);
+    //$.when(prom).done(function(q) {
+    //    console.log(q)
+    //    var q_length = q[0] ? q[1].length : 0;
+    //    $('.favorite-count').text(q_length);
     //});
 });
 

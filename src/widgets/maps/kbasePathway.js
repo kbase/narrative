@@ -548,6 +548,7 @@ $.KBWidget({
             }
         
         }
+        
 
 
         function wrap(text, width) {

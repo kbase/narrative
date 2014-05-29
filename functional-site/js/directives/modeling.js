@@ -97,8 +97,14 @@ angular.module('modeling-directives')
                             var link = '<a class="pathway-link" data-map="'+obj[1]+'">'+obj[10].name+'</a>'                            
                             var name = link;
 
-                            var rxn_count = obj[10].reaction_ids.split(',').length;
-                            var cpd_count = obj[10].compound_ids.split(',').length;
+                            if ('reaction_ids' in obj[10] && 'compound_ids' in obj[10]) {
+                                var rxn_count = obj[10].reaction_ids.split(',').length;
+                                var cpd_count = obj[10].compound_ids.split(',').length;  
+                            } else {
+                                var rxn_count = 'n/a';
+                                var cpd_count = 'n/a';
+                            }
+    
                             var row = {name: name, id: obj[1], rxn_count: rxn_count, 
                                        cpd_count: cpd_count};
                             aaData.push(row)
@@ -233,9 +239,8 @@ angular.module('modeling-directives')
                     spin.loading();
                     $('.pathway-options').append(spin);
                     
-
                     var selected_fba = get_selected_fba();
-                    loadMapSelector(selected_fba.ws, selected_fba.name)
+                    loadMapSelector(selected_fba.ws, selected_fba.name);
 
                 })
 
@@ -360,6 +365,21 @@ angular.module('modeling-directives')
 
         }
     };
+})
+
+
+.directive('fvaviewer', function($location) {
+
+    return {
+        link: function(scope, ele, atttr) {
+            $(ele).loading();
+
+
+
+        }
+
+    }
+
 })
 
 .directive('cddviewer', function($location) {

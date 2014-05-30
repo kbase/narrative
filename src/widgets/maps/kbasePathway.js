@@ -53,7 +53,7 @@ $.KBWidget({
 
 
         self.drawMap = function() {
-            container.html('<div id="'+map_id+'_pathway"></div>');
+            container.html('<div id="'+map_id+'_pathway" class="pathway"></div>');
 
             svg = d3.select('#'+map_id+'_pathway').append("svg")
                                         .attr("width", 800)

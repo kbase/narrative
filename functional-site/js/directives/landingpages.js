@@ -156,7 +156,6 @@ angular.module('lp-directives')
                     var url = '/rxns/'+data.ids.join('&');
                     scope.$apply( $location.path(url) );
                 });  
-
             })
         }
     };
@@ -340,8 +339,8 @@ angular.module('lp-directives')
 
 .directive('mediadetail', function() {
     return {
-        link: function(scope, element, attrs) {
-            var p = $(element).kbasePanel({title: 'Media Details', 
+        link: function(scope, ele, attrs) {
+            var p = $(ele).kbasePanel({title: 'Media Details', 
                                            type: 'Media',
                                            rightLabel: scope.ws,
                                            subText: scope.id,
@@ -350,66 +349,85 @@ angular.module('lp-directives')
 
             var prom = kb.req('fba', 'get_media',
                     {medias: [scope.id], workspaces: [scope.ws]})
+            //var prom = kb.ws.get_objects([{workspace:scope.ws, name: scope.id}])
             $.when(prom).done(function(data) {
+                //console.log(data[0].data)
+
                 $(p.body()).kbaseMediaEditor({ids: [scope.id], 
                                               workspaces : [scope.ws],
                                               data: data});
-            })
+            }).fail(function(e){
+                $(ele).rmLoading();
+                $(ele).append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>')
+            });
         }
     };
 })
 .directive('rxndetail', function() {
     return {
-        link: function(scope, element, attrs) {
-            $(element).loading()
+        link: function(scope, ele, attrs) {
+            $(ele).loading()
             var prom = kb.req('fba', 'get_reactions',
                         {reactions: scope.ids})
             $.when(prom).done(function(data){
-                $(element).rmLoading();
-                $(element).kbaseRxn({data: data, ids: scope.ids});
-            })
+                $(ele).rmLoading();
+                $(ele).kbaseRxn({data: data, ids: scope.ids});
+            }).fail(function(e){
+                $(ele).rmLoading();
+                $(ele).append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>')
+            });
         }
     };
 })
 .directive('cpddetail', function() {
     return {
-        link: function(scope, element, attrs) {
-            $(element).loading()
+        link: function(scope, ele, attrs) {
+            $(ele).loading()
             var prom = kb.req('fba', 'get_compounds',
                         {compounds: scope.ids});
 
             $.when(prom).done(function(data){
-                $(element).rmLoading();                     
-                $(element).kbaseCpd({data: data, ids: scope.ids});
-            })
+                $(ele).rmLoading();                     
+                $(ele).kbaseCpd({data: data, ids: scope.ids});
+            }).fail(function(e){
+                $(ele).rmLoading();
+                $(ele).append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>')
+            });
         }
     };
 })
 .directive('jsonviewer', function() {
     return {
-        link: function(scope, element, attrs) {
-            $(element).append('<b>Sorry!</b>  No landing page is availble for this object. \
+        link: function(scope, ele, attrs) {
+            $(ele).append('<b>Sorry!</b>  No landing page is availble for this object. \
                             In the meantime, view the JSON below or consider contributing.')
 
-            $(element).loading()
+            $(ele).loading()
             var p = kb.req('ws', 'get_object', 
                     {workspace: scope.ws, id: scope.id})
             $.when(p).done(function(data) {
                 var data = data;
-                $(element).rmLoading();
+                $(ele).rmLoading();
                 scope.data = data;
                 displayData(data);
-            })
+            }).fail(function(e){
+                $(ele).rmLoading();
+                $(ele).append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>')
+            });
 
             function displayData(data) {
-                $(element).append('<h3>Metadata</h3><br>');
+                $(ele).append('<h3>Metadata</h3><br>');
                 var c = $('<div id="metadata">');
-                $(element).append(c);
+                $(ele).append(c);
                 c.JSONView(JSON.stringify(data.metadata));
 
-                $(element).append('<h3>Data</h3><br>');
+                $(ele).append('<h3>Data</h3><br>');
                 var c = $('<div id="data">');
-                $(element).append(c);
+                $(ele).append(c);
                 c.JSONView(JSON.stringify(data.data))
             }
         }
@@ -419,8 +437,8 @@ angular.module('lp-directives')
 
 .directive('backbutton', function() {
     return {
-        link: function(scope, element, attrs) {
-            $(element).on('click', function() {
+        link: function(scope, ele, attrs) {
+            $(ele).on('click', function() {
                 window.history.back();
             });
         }
@@ -430,8 +448,8 @@ angular.module('lp-directives')
 
 .directive('genomeoverview', function($rootScope) {
     return {
-        link: function(scope, element, attrs) {
-            var p = $(element).kbasePanel({title: 'Genome Overview', 
+        link: function(scope, ele, attrs) {
+            var p = $(ele).kbasePanel({title: 'Genome Overview', 
                                            type: 'Genome',
                                            rightLabel: scope.ws,
                                            subText: scope.id,
@@ -446,8 +464,8 @@ angular.module('lp-directives')
 })
 .directive('genomewiki', function($rootScope) {
     return {
-        link: function(scope, element, attrs) {
-            var p = $(element).kbasePanel({title: 'Genome Wiki',
+        link: function(scope, ele, attrs) {
+            var p = $(ele).kbasePanel({title: 'Genome Wiki',
                                            type: 'Genome',
                                            rightLabel: scope.ws,
                                            subText: scope.id,

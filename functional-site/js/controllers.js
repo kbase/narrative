@@ -366,25 +366,13 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
                     
                     console.log( 'Setting kbase_session cookie');
-                    $.cookie('kbase_session',
-                             'un=' + c.user_id
-                             + '|'
-                             + 'kbase_sessionid=' + c.kbase_sessionid
-                             + '|'
-                             + 'user_id=' + c.user_id
-                             + '|'
-                             + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-                             { path: '/',
-                               domain: 'kbase.us' });
-                    $.cookie('kbase_session',
-                             'un=' + c.user_id
-                             + '|'
-                             + 'kbase_sessionid=' + c.kbase_sessionid
-                             + '|'
-                             + 'user_id=' + c.user_id
-                             + '|'
-                             + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-                             { path: '/'});
+                    var cookieName = 'kbase_session';
+                    var cookieString = 'un=' + c.user_id + 
+                                       '|kbase_sessionid=' + c.kbase_sessionid +
+                                       '|user_id=' + c.user_id +
+                                       '|token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
+                    $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us' });
+                    $.cookie(cookieName, cookieString, { path: '/' });
 
                     //this.data('_session', c);
 
@@ -406,8 +394,17 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                 }
 
             }
-        )
+        );
         
+    };
+
+    $scope.logoutUser = function() {
+        kbaseLogin.logout(false);
+    };
+
+    $scope.loggedIn = function() {
+        var c = kbaseLogin.get_kbase_cookie();
+        return (c.user_id !== undefined && c.user_id !== null);
     };
 
 })

@@ -436,27 +436,21 @@ function removeCards() {
 
 
 function set_cookie() {
-   var c = $("#signin-button").kbaseLogin('get_kbase_cookie');
-   console.log( 'Setting kbase_session cookie');
-   $.cookie('kbase_session',
-    'un=' + c.user_id
-    + '|'
-    + 'kbase_sessionid=' + c.kbase_sessionid
-    + '|'
-    + 'user_id=' + c.user_id
-    + '|'
-    + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-    { path: '/'});
-   $.cookie('kbase_session',
-    'un=' + c.user_id
-    + '|'
-    + 'kbase_sessionid=' + c.kbase_sessionid
-    + '|'
-    + 'user_id=' + c.user_id
-    + '|'
-    + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-    { path: '/',
-      domain: 'kbase.us' });
+    var cookieName = 'kbase_session';
+    var c = $("#signin-button").kbaseLogin('get_kbase_cookie');
+    if (c.kbase_sessionid) {
+        console.log( 'Setting kbase_session cookie');
+        var cookieString = 'un=' + c.user_id + 
+                           '|kbase_sessionid=' + c.kbase_sessionid +
+                           '|user_id=' + c.user_id +
+                           '|token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
+        $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us' });
+        $.cookie(cookieName, cookieString, { path: '/' });
+    }
+    else {
+        console.log('Logged out - removing cookie');
+        $.cookie(cookieName, null);
+    }
 };
 
 

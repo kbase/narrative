@@ -365,6 +365,8 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     //set the cookie
                     var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
                     
+                    console.log($scope.username);
+
                     console.log( 'Setting kbase_session cookie');
                     var cookieName = 'kbase_session';
                     var cookieString = 'un=' + c.user_id + 
@@ -404,6 +406,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
     $scope.loggedIn = function() {
         var c = kbaseLogin.get_kbase_cookie();
+        $scope.username = c.name;
         return (c.user_id !== undefined && c.user_id !== null);
     };
 

@@ -380,7 +380,27 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         $('.fixedHeader').remove(); 
         $('.popover').remove(); // remove any dangling pop overs
         removeCards();
-    })
+    });
+
+    var login_change = function() {
+        var c = $('#signin-button').kbaseLogin('get_kbase_cookie');
+        set_cookie(c);
+
+        // If we're changing state from the login page, and we have a valid 
+        // session (i.e.: we're logging IN and not OUT), then forward us to
+        // the /narrative/ state.
+        //
+        // Otherwise, just login in place and reload.
+        if ($location.path() === '/login/') {
+            if (c.kbase_sessionid) {
+                $location.path('/narrative/');
+            }
+            $rootScope.$apply();
+        }
+        else {
+            window.location.reload();
+        }
+    };
 
     // sign in button
     $('#signin-button').kbaseLogin({login_callback: login_change,
@@ -417,10 +437,6 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
  */
 
 
-function login_change() {
-    window.location.reload();
-    set_cookie();
-}
 
 function get_selected_ws() {
     if (state.get('selected')) {
@@ -435,9 +451,8 @@ function removeCards() {
 }
 
 
-function set_cookie() {
+function set_cookie(c) {
     var cookieName = 'kbase_session';
-    var c = $("#signin-button").kbaseLogin('get_kbase_cookie');
     if (c.kbase_sessionid) {
         console.log( 'Setting kbase_session cookie');
         var cookieString = 'un=' + c.user_id + 

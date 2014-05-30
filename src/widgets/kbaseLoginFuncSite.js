@@ -65,16 +65,13 @@
 
         get_kbase_cookie : function (field) {
 
-            var chips = sessionStorage.getItem('kbase_session');
-//            console.log(sessionStorage);
+            var chips = localStorage.getItem('kbase_session');
             if (chips != undefined) {
-//            console.log(chips);
                 chips = JSON.parse(chips);
             }
             else {
                 chips = {};
             }
-//            console.log(chips);
 
             return field == undefined
                 ? chips
@@ -1062,11 +1059,6 @@
 
                                 if (data.kbase_sessionid) {
 
-									//$.cookie('kbase_session',
-								    //	  'un=' + data.user_id
-									//	+ '|'
-									//	+ 'kbase_sessionid=' + data.kbase_sessionid);
-
                                     var cookieArray = [];
 
                                     var args = { success : 1 };//this.get_kbase_cookie();
@@ -1078,8 +1070,8 @@
                                     }
                                     var jsonARGS = JSON.stringify(args);
 
-                                    sessionStorage.setItem('kbase_session', jsonARGS);
-                                    console.log(sessionStorage);
+                                    localStorage.setItem('kbase_session', jsonARGS);
+                                    console.log(localStorage);
 
                                     this.populateLoginInfo(args);
                                     console.log("ARGS");console.log(args);console.log(jsonARGS);
@@ -1089,7 +1081,7 @@
                                     callback.call(this,args);
                                 }
                                 else {
-                                    sessionStorage.removeItem('kbase_session');
+                                    localStorage.removeItem('kbase_session');
                                     this.populateLoginInfo({});
                                     callback.call(this, {status : 0, message : data.error_msg});
 
@@ -1143,7 +1135,7 @@
                 return;
             }
 
-            sessionStorage.removeItem('kbase_session');
+            localStorage.removeItem('kbase_session');
 
             // the rest of this is just housekeeping.
 

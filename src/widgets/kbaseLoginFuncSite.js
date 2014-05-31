@@ -86,6 +86,23 @@
             return this.get_kbase_cookie('token');
         },
 
+        /**
+         * Token validity is tested by the 'expiry' tag in the token.
+         * That tag is followed by the number of seconds in the time when it expires.
+         * So, pull that out, multiply x1000, and make a Date() out of it. If that Date is greater than
+         * the current one, it's still good.
+         * If not, or if there is no 'expiry' field, it's not a valid token.
+         */
+        is_token_valid : function (token) {
+            var expirySec = /\|expiry\=(\d+)\|/.exec(token);
+            if (expirySec) {
+                expirySec = expirySec[1];
+                var expiryDate = new Date(expirySec*1000);
+                return (expiryDate - new Date() > 0);
+            }
+            return false;
+        },
+
         init: function(options) {
 
             this._super(options);
@@ -103,15 +120,22 @@
 
             if (kbaseCookie.user_id) {
 
-                if (this.registerLogin) {
-                    this.registerLogin(kbaseCookie);
+                if (!this.is_token_valid(this.get_kbase_cookie('token'))) {
+                    localStorage.removeItem('kbase_session');
+                    // nuke the cookie, too, just in case it's still there.
+                    $.cookie('kbase_session', null);
                 }
-                if (this.options.prior_login_callback) {
-                    this.options.prior_login_callback.call(this, kbaseCookie);
-                }
+                else {
+                    if (this.registerLogin) {
+                        this.registerLogin(kbaseCookie);
+                    }
+                    if (this.options.prior_login_callback) {
+                        this.options.prior_login_callback.call(this, kbaseCookie);
+                    }
 
-                this.data('_session', kbaseCookie);
-                this.trigger('loggedIn', this.get_kbase_cookie());
+                    this.data('_session', kbaseCookie);
+                    this.trigger('loggedIn', this.get_kbase_cookie());
+                }
 
             }
 

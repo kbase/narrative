@@ -365,6 +365,7 @@ configJSON = $.parseJSON( $.ajax({url: "config.json",
 
 
 app.run(function ($rootScope, $state, $stateParams, $location) {
+    check_browser();
 
     var HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
                  <ul class="dropdown-menu"> \
@@ -429,7 +430,41 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     });
 });
 
+function check_browser() {
+    var browserCheckItem = 'kbBrowserCheck';
 
+    //Just return if we've done this already this session. Seeing the same popup more than once is obnoxious.
+    if (sessionStorage.getItem(browserCheckItem)) {
+         return;
+    }
+
+    var title = 'Unsupported browser detected!';
+    var suggestBody = '<p>For a better experience, we recommend using recent versions of ' + 
+                      '<a href="http://support.apple.com/downloads/#safari" target="_blank">Safari</a>, ' + 
+                      '<a href="http://www.mozilla.org/en-US/firefox/new/" target="_blank">Firefox</a>, ' +
+                      '<a href="https://www.google.com/intl/en-US/chrome/browser/" target="_blank">Chrome</a>, or ' +
+                      '<a href="http://windows.microsoft.com/en-us/internet-explorer/download-ie" target="_blank">Internet Explorer</a>.</p>' +
+                      '<p>Sorry for any inconvenience!</p>';
+    var errorBody = '';
+
+    if (bowser.msie && bowser.version <= 9) {
+        errorBody = 'You appear to be using Internet Explorer ' + bowser.version + '. Unfortunately, we don\'t support that web browser. Many functions will either be unavailable or will have compatibility problems.';
+    }
+
+    if (errorBody) {
+        var $browserModal = $('<div></div>').kbasePrompt(
+            {
+                title : title,
+                body : '<p>' + errorBody + '</p>' + suggestBody,
+                controls : [ 'okayButton' ]
+            }
+        );        
+
+        $browserModal.openPrompt();
+    }
+
+    sessionStorage.setItem(browserCheckItem, '1');
+}
 
 
 /*

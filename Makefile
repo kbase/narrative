@@ -14,7 +14,10 @@ FILEORDER     = ./src/file-order.txt
 SOURCES       = $(shell find ./src -name "*.js")
 SOURCES      += $(FILEORDER)
 
-all: test dist docs
+all:
+	@echo This Makefile is deprecated, please see README.deploy.
+
+#all: test dist docs
 
 init:
 	@ npm install

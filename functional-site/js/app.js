@@ -456,7 +456,8 @@ function check_browser() {
     var errorBody = '';
 
     if (bowser.msie && bowser.version <= 9) {
-        errorBody = 'You appear to be using Internet Explorer ' + bowser.version + '. Unfortunately, we don\'t support that web browser. Many functions will either be unavailable or will have compatibility problems.';
+        errorBody = 'You appear to be using Internet Explorer ' + bowser.version + 
+                    '. Unfortunately, we don\'t support that web browser. Many functions will be unavailable or have compatibility problems.';
     }
 
     if (errorBody) {

@@ -430,6 +430,14 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     });
 });
 
+/**
+ * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
+ * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
+ * (to avoid having the same thing happen on page refreshes and such).
+ *
+ * This uses Bowser to detect the browser and version:
+ * https://github.com/ded/bowser
+ */
 function check_browser() {
     var browserCheckItem = 'kbBrowserCheck';
 

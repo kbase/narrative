@@ -365,15 +365,13 @@ configJSON = $.parseJSON( $.ajax({url: "config.json",
 
 
 app.run(function ($rootScope, $state, $stateParams, $location) {
-    check_browser();
-
     var HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
                  <ul class="dropdown-menu"> \
                  <li><a href="http://kbase.us/for-users/narrative-quick-start/">Narrative Quick Start Guide</a></li> \
                  <li><a href="#/landing-pages-help">Landing Page Documentation</a></li> \
                  <li><a href="mailto:help@kbase.us">Email help@kbase.us</a></li> \
               </ul>';
-    $('.help-dropdown').html(HELP_DROPDOWN);              
+    $('.help-dropdown').html(HELP_DROPDOWN);
 
     //  Things that need to happen when a view changes.
     $rootScope.$on('$stateChangeSuccess', function() {
@@ -429,51 +427,6 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         $('.favorite-count').text(queue.length);
     });
 });
-
-/**
- * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
- * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
- * (to avoid having the same thing happen on page refreshes and such).
- *
- * This uses Bowser to detect the browser and version:
- * https://github.com/ded/bowser
- */
-function check_browser() {
-    var browserCheckItem = 'kbBrowserCheck';
-
-    //Just return if we've done this already this session. Seeing the same popup more than once is obnoxious.
-    if (sessionStorage.getItem(browserCheckItem)) {
-         return;
-    }
-
-    var title = 'Unsupported browser detected!';
-    var suggestBody = '<p>For a better experience, we recommend using recent versions of ' + 
-                      '<a href="http://support.apple.com/downloads/#safari" target="_blank">Safari</a>, ' + 
-                      '<a href="http://www.mozilla.org/en-US/firefox/new/" target="_blank">Firefox</a>, ' +
-                      '<a href="https://www.google.com/intl/en-US/chrome/browser/" target="_blank">Chrome</a>, or ' +
-                      '<a href="http://windows.microsoft.com/en-us/internet-explorer/download-ie" target="_blank">Internet Explorer</a>.</p>' +
-                      '<p>Sorry for any inconvenience!</p>';
-    var errorBody = '';
-
-    if (bowser.msie && bowser.version <= 9) {
-        errorBody = 'You appear to be using Internet Explorer ' + bowser.version + 
-                    '. Unfortunately, we don\'t support that web browser. Many functions will be unavailable or have compatibility problems.';
-    }
-
-    if (errorBody) {
-        var $browserModal = $('<div></div>').kbasePrompt(
-            {
-                title : title,
-                body : '<p>' + errorBody + '</p>' + suggestBody,
-                controls : [ 'okayButton' ]
-            }
-        );        
-
-        $browserModal.openPrompt();
-    }
-
-    sessionStorage.setItem(browserCheckItem, '1');
-}
 
 
 /*

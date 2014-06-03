@@ -26,13 +26,66 @@
         <!-- External javascript packages -->
 
 
+        <script src="../ext/bowser/bowser.min.js"></script>
+
+    	<!-- Google Analytics -->
+    	<script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-48256002-1', 'kbase.us');
+            ga('send', 'pageview');
+    	  
+
+            /**
+             * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
+             * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
+             * (to avoid having the same thing happen on page refreshes and such).
+             *
+             * This uses Bowser to detect the browser and version:
+             * https://github.com/ded/bowser
+             */
+            function checkBrowser() {
+                var browserCheckItem = 'kbBrowserCheck';
+
+                //Just return if we've done this already this session. Seeing the same popup more than once is obnoxious.
+                if (sessionStorage) {
+                    if (sessionStorage.getItem(browserCheckItem))
+                        return;
+                }
+
+                var alertPrefix = 'Unsupported browser detected!\n\n';
+                var alertSuggest = 'For a better experience, we recommend using recent versions of ' + 
+                                   'Safari, Firefox, Chrome, or Internet Explorer.\n\n' +
+                                   'Sorry for any inconvenience!';
+                var alertError = '';
+                if (bowser.msie && bowser.version <= 9) {
+                    var alertError = 'You appear to be using Internet Explorer ' + 
+                                     bowser.version + 
+                                     '. Unfortunately, we don\'t support that web browser. Many ' +
+                                     'functions will be unavailable or have compatibility problems.\n\n';
+                }
+
+                if (alertError) {
+                    alert(alertPrefix + alertError + alertSuggest);
+                }
+
+                if (sessionStorage) {
+                    sessionStorage.setItem(browserCheckItem, '1');
+                }
+            }
+
+            checkBrowser();
+    	</script>
+
         <script src="../ext/jquery/jquery-1.10.2.min.js"></script>
        <!-- <script src="../ext/jquery-migrate/jquery-migrate-1.2.1.js"></script> -->
         <script src="../ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min.js"></script>
         <script src="../ext/d3/d3.v3.min.js"></script>
         <script src="../ext/bootstrap/3.0.0/js/bootstrap.js"></script>
         <script src="../ext/dataTables/1.9.4/js/jquery.dataTables.js"></script>
-        <script src="../ext/bowser/bowser.min.js"></script>
         <script src="assets/js/dataTables.bootstrap.js"></script>
         <script src="assets/js/jquery.dataTables.rowGrouping.js"></script>
         <script src="assets/js/dataTables.colReorder.min.js"></script>
@@ -44,17 +97,6 @@
         <script src="assets/js/jquery.cookie.min.js"></script>
         <script src="assets/js/viz/raphael-min.js"></script>
 
-    	<!-- Google Analytics -->
-    	<script>
-    	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-    	  
-    	  ga('create', 'UA-48256002-1', 'kbase.us');
-    	  ga('send', 'pageview');
-    	  
-    	</script>
 
         <!-- KBase client library javascript -->
         <script src="assets/js/kbclient/kbase.js"></script>

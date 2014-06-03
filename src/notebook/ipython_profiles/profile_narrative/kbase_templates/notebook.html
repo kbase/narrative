@@ -225,7 +225,58 @@ class="notebook_app"
 
 {{super()}}
 
+
+<script>
+// require(['ui-common/src/kbpaths'], function() {
+//     console.log('yup');
+//     require(['jquery', 'bootstrap', 'all'], function($) {
+//         $(function() {
+//             console.log('got \'em all!');
+//         });
+//     });
+
+//     require(['jquery', 'vis'], function() {
+//         console.log('got vis!');
+//     });
+// });
+
+
+$(function() {
+  var original = $;
+
+
+  require(['kbvis/src/kbpaths'], function() {
+  /*console.log('got paths');
+  console.log(requirejs.s.contexts._.config);
+  console.log(require.toUrl('kbaseLinechart' + '.js'));
+  console.log(require.toUrl('vis' + '.js'));
+  console.log(require.toUrl('d3' + '.js'));
+  console.log(require.toUrl('bootstrap' + '.js'));
+  console.log(require.toUrl('jqueryui' + '.js'));*/
+    require(['jquery','vis'], function() {
+      //console.log('got vis');
+      var newJQ = $;
+      $ = original;
+      for (prop in newJQ.fn) {
+        if (prop.match(/^kbase/)) {
+          $[prop] = newJQ.fn[prop];
+          $.fn[prop] = newJQ.fn[prop];
+        }
+      }
+/*console.log($.kbaseAccordion);
+console.log($.kbasePlantsNetworkNarrative);
+console.log($.kbaseBarchart);
+console.log($.kbaseLinechart);
+console.log('plants network narrative');
+console.log($.kbasePlantsNetworkNarrative);*/
+    });
+  });
+});
+
+</script>
+
 <script src="{{ static_url("kbase/js/jquery.dataTables.js") }}" type="text/javascript" charset="utf-8"></script>
+
 
 <!-- inserted KBase Javascript below -->
 <script src="{{ static_url("kbase/js/jquery.cookie.min.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -245,6 +296,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/UserAndJobStateClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseTable.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeFunctionPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -256,8 +308,10 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseDefaultNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseBuildMediaInput.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_input/kbaseExampleNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <!-- function output JS widgets -->
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseExampleNarrativeOutput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseNarrativeError.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseAssembly.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -288,39 +342,6 @@ class="notebook_app"
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>
 
-<script>
-
-$(function() {
-  var original = $;
-  require(['kbvis/src/kbpaths'], function() {
-  /*console.log('got paths');
-  console.log(requirejs.s.contexts._.config);
-  console.log(require.toUrl('kbaseLinechart' + '.js'));
-  console.log(require.toUrl('vis' + '.js'));
-  console.log(require.toUrl('d3' + '.js'));
-  console.log(require.toUrl('bootstrap' + '.js'));
-  console.log(require.toUrl('jqueryui' + '.js'));*/
-    require(['jquery','vis'], function() {
-      //console.log('got vis');
-      var newJQ = $;
-      $ = original;
-      for (prop in newJQ.fn) {
-        if (prop.match(/^kbase/)) {
-          $[prop] = newJQ.fn[prop];
-          $.fn[prop] = newJQ.fn[prop];
-        }
-      }
-/*console.log($.kbaseAccordion);
-console.log($.kbasePlantsNetworkNarrative);
-console.log($.kbaseBarchart);
-console.log($.kbaseLinechart);
-console.log('plants network narrative');
-console.log($.kbasePlantsNetworkNarrative);*/
-    });
-  });
-});
-
-</script>
 
 <!-- Standard IPython Notebook Javascript -->
 

@@ -4,6 +4,7 @@
  */
 "use strict";
 
+
 var narrative = {};
 narrative.init = function() {
 

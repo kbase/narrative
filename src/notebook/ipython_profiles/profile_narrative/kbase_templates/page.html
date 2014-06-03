@@ -31,6 +31,52 @@
     <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/3.2.1/css/font-awesome.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
+
+    <script src="{{ static_url("components/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script>
+      /**
+       * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
+       * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
+       * (to avoid having the same thing happen on page refreshes and such).
+       *
+       * This uses Bowser to detect the browser and version:
+       * https://github.com/ded/bowser
+       */
+      function checkBrowser() {
+        var browserCheckItem = 'kbBrowserCheck';
+
+        //Just return if we've done this already this session. Seeing the same popup more than once is obnoxious.
+        if (sessionStorage) {
+            if (sessionStorage.getItem(browserCheckItem))
+                return;
+        }
+
+        var alertPrefix = 'Unsupported browser detected!\n\n';
+        var alertSuggest = 'For a better experience, we recommend using recent versions of ' + 
+                           'Safari, Firefox, Chrome, or Internet Explorer.\n\n' +
+                           'Sorry for any inconvenience!';
+        var alertError = '';
+        if (bowser.msie && bowser.version <= 9) {
+            var alertError = 'You appear to be using Internet Explorer ' + 
+                             bowser.version + 
+                             '. Unfortunately, we don\'t support that web browser. Many ' +
+                             'functions will be unavailable or have compatibility problems.\n\n';
+        }
+
+        if (alertError) {
+            alert(alertPrefix + alertError + alertSuggest);
+        }
+
+        if (sessionStorage) {
+            sessionStorage.setItem(browserCheckItem, '1');
+        }
+      }
+
+      checkBrowser();
+    </script>
+
+
+
     <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
     <script>

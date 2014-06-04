@@ -125,7 +125,11 @@ angular.module('lp-directives')
                 $(document).on('rxnClick', function(e, data) {
                     var url = '/rxns/'+data.ids;
                     scope.$apply( $location.path(url) );
-                });  
+                });
+                $(document).on('cpdClick', function(e, data) {
+                    var url = '/cpds/'+data.ids;
+                    scope.$apply( $location.path(url) );
+                });                 
             }).fail(function(e){
                 $(ele).rmLoading();
                 $(ele).append('<div class="alert alert-danger">'+

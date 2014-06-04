@@ -99,12 +99,13 @@ $.KBWidget({
         table.fnAddData(dataDict);
 
         // compound table
-        var dataDict = model.modelcompounds;
-        var keys = ["name"]//["compartment", "compound", "name"];
-        var labels = ["name"]//["compartment", "compound", "name"];
+        var dataDict = formatCpdObjs(model.modelcompounds);
+        var keys = ["id", "name", "formula"]//["compartment", "compound", "name"];
+        var labels = ["id", "name", "formula"]//["compartment", "compound", "name"];
         var cols = getColumns(keys, labels);
-        tableSettings.aoColumns = cols;
-        var table = $('#compound-table').dataTable(tableSettings);
+        var cpdTableSettings = $.extend({}, tableSettings, {fnDrawCallback: cpdEvents});           
+        cpdTableSettings.aoColumns = cols;
+        var table = $('#compound-table').dataTable(cpdTableSettings);
         table.fnAddData(dataDict);
 
         // biomass table
@@ -151,6 +152,18 @@ $.KBWidget({
             return rxn_objs;
         }
 
+        function formatCpdObjs(cpdObjs) {
+            var cpd_objs = []
+            for (var i in cpdObjs) {
+                var cpd = $.extend({}, cpdObjs[i] );
+                cpd.id = '<a class="cpd-click" data-cpd="'+cpd.id.split('_')[0]+'">'
+                            +cpd.id.split('_')[0]+'</a> ('+cpd.id.split('_')[1] +')'
+                //rxn.features = rxn.features.join('<br>')
+                cpd_objs.push(cpd)
+            }
+            return cpd_objs;
+        }
+
         function getColumns(keys, labels) {
             var cols = [];
 
@@ -167,6 +180,14 @@ $.KBWidget({
                 self.trigger('rxnClick', {ids: rxn});
             });
         }
+
+        function cpdEvents() {
+            $('.cpd-click').unbind('click');
+            $('.cpd-click').click(function() {
+                var cpd = [$(this).data('cpd')];
+                self.trigger('cpdClick', {ids: cpd});
+            });
+        }        
 
 
 

@@ -84,6 +84,7 @@ function KBCacheClient(token) {
     var self = this;
     var auth = {};
     auth.token = token;
+    console.log(auth)
 
     var setup = configJSON.setup;
     if (setup) {

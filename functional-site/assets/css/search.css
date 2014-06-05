@@ -1,0 +1,579 @@
+/*** link styling ***/
+
+a.search-category-link { color: black; }
+a.search-category-link:link { color: black; }
+a.search-category-link:hover { color: black; }
+a.search-category-link:active { color: black; }
+a.search-category-link:visited { color: black; }
+
+a.search-selected-category-link { color: green; }
+a.search-selected-category-link:link { color: green; }
+a.search-selected-category-link:hover { color: green; }
+a.search-selected-category-link:active { color: green; }
+a.search-selected-category-link:visited { color: green; }
+
+a.search-checkbox-link { color: black; }
+a.search-checkbox-link:link { color: black; }
+a.search-checkbox-link:hover { color: black; }
+a.search-checkbox-link:active { color: black; }
+a.search-checkbox-link:visited { color: black; }
+a.search-checkbox-link.disabled { color: gray; }
+
+/*** general spacing ***/
+
+.search-nowrap {
+    white-space: nowrap;
+}
+
+.search-space-right {
+    margin-right: 1em;
+}
+
+.search-space-left {
+    margin-left: 1em;
+}
+
+.search-space-top {
+    margin-top: 1em;
+}
+
+.search-space-bottom {
+    margin-top: 1em;
+}
+
+.search-btn-position {
+    min-width: 10px;
+    max-width: 10px;
+}
+
+span .badge {
+    margin: 5px;
+}
+
+.white {
+    color: #fff;
+}
+
+.btn-search {
+    background-color: #000;
+    padding-bottom: 5px;
+}
+
+.pagination {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.large-pagination {
+    width: 700px;
+}
+
+.small-pagination {
+    width: 500px;
+}
+
+/*** Login ***/
+
+.login-text {
+    margin-left: -10px;
+    padding-left: -10px;
+}
+
+.search-login {
+    width: 220px;
+    height: 60px;
+    margin-bottom: 10px;
+}
+
+.search-logout {
+    width: 220px;
+    height: 60px;
+    margin-bottom: 10px;
+}
+
+/*** Workspace ***/
+
+.workspace-title h3 {
+    font-size: 18px;
+    color: gray;
+    margin-bottom: 0px;
+    margin-top: 10px;
+}
+
+.workspace-list {
+    max-height: 300px;
+}
+
+.search-leftarea-size {
+    width: 220px;
+}
+
+
+/*** Selections ***/
+.search-selections-title h3 {
+    font-size: medium;
+    color: gray;
+}
+
+.search-selections-title {
+    font-size: xx-large;
+}
+
+
+/*** Categories ***/
+
+.search-categories-title h3 {
+    font-size: medium;
+    color: gray;
+}
+
+.search-category-title {
+    font-size: large;
+}
+
+
+/*** Filters ***/
+
+.search-filters-title h3 {
+    font-size: medium;
+    color: gray;
+}
+
+.filter-section {
+    margin-right: 0px;
+    padding-right: 0px;
+    max-width: 240px;
+}
+
+
+
+/*** Options ***/
+
+.search-view-buttons {
+    min-width: 80px;
+}
+
+
+/*** Results ***/
+
+.search-results-scrollable {
+    height: 400px;
+    overflow: auto;
+    padding-left: 15px;
+}
+
+.search-result-section {
+    left: 100px;
+}
+
+.search-result-position {
+    top: 1px;
+    width: 50px;
+    padding-right: 0px;
+    padding-left: 10px;
+}
+
+.search-result-select-all {
+    width: 70px;
+}
+
+.search-result-column {
+    top: 1px;
+    margin-left: -1px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.search-result-column-expanded {
+    margin-left: 0px;
+    padding-left: 22px;
+}
+
+.search-result-column-header {
+    margin-left: -1px;
+    margin-right: -1px;
+    padding-left: 0px;
+    padding-right: 0px;
+    display: block;
+}
+
+.search-result-column-header-row {
+    min-height: 20px;
+    margin-left: -13px;
+    padding-bottom: 20px;
+}
+
+.search-result-column-header-btn {
+    width: 100%;
+    height: 30px;
+    padding-left: 0px;
+    padding-right: 0px;
+    display: block;
+    border-width: 0px;
+    color: #ffffff;
+    background-color: #faa732;
+}
+
+.search-checkbox {
+    max-width: 14px;
+    max-height: 14px;
+}
+
+.search-typedRecord {
+    margin-left: -10px;
+    margin-bottom: 10px;
+}
+
+.search-typedRecord-expanded {
+    margin-left: 80px;
+    padding-bottom: 10px;
+}
+
+.search-typedRecord-expanded-header {
+    padding-bottom: 10px;
+}
+
+.scientific-name {
+    width: 260px;
+}
+
+
+.toggle-expanded {
+    width: 80px;
+    min-height: 48px;
+}
+
+.results-per-page {
+    width: 150px;
+}
+
+.search-sections {
+    min-width: 750px;
+}
+
+.genome_id {
+    width: 85px;
+}
+
+.feature_id {
+    width: 160px;
+}
+
+.feature_function {
+    min-width: 100px;
+}
+
+.protein_translation_length {
+    width: 60px;
+}
+
+.feature_type {
+    width: 50px;
+}
+
+.complete {
+    width: 80px;
+}
+
+.domain {
+    width: 79px;
+}
+
+.metagenome_id {
+    width: 120px;
+}
+
+.metagenome_name {
+    width: 300px;
+}
+
+.project_name {
+    width: 150px;
+}
+
+.sample_name {
+    min-width: 80px;
+}
+
+.object_id {
+    width: 140px;
+}
+
+.object_name {
+    width: 320px;
+}
+
+.object_type {
+    min-width: 280px;
+}
+
+
+.ontology_id {
+    min-width: 100px;
+}
+
+.ontology_domain {
+    min-width: 180px;
+}
+
+.ontology_type {
+    min-width: 65px;
+}
+
+.genome_dna_size{
+    width: 100px;
+}
+
+.num_contigs {
+    width: 65px;
+}
+
+
+.search-result-options {
+    margin-bottom: 20px;
+}
+
+.search-result-options-label {
+    min-width: 100px;
+    margin-right: 12px;
+}
+
+.search-result-set-header {
+    margin-bottom: 10px;
+}
+
+
+.result-set-area {
+    margin-left: 30px;
+}
+
+
+.result-set-list {
+    width: 100%;
+}
+
+.result-set-list td {
+    vertical-align: middle;
+}
+
+
+
+
+div.blockMsg {
+    width: 40%;
+    top: 40%;
+    left: 30%;
+    text-align: center;
+    background-color: #ffffff;
+    border: 1px solid #dddddd;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    /*
+        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=50);
+    -moz-opacity:.70;
+    opacity:.70;
+    */
+    padding: 15px;
+    color: #000000;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+
+ul.scroll-menu {
+    position: relative;
+    display: inherit !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    -moz-overflow-scrolling: touch;
+    -ms-overflow-scrolling: touch;
+    -o-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+    margin: 0;
+    border-left: none;
+    border-right: none;
+    -webkit-border-radius: 0 !important;
+    -moz-border-radius: 0 !important;
+    -ms-border-radius: 0 !important;
+    -o-border-radius: 0 !important;
+    border-radius: 0 !important;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    -ms-box-shadow: none;
+    -o-box-shadow: none;
+    box-shadow: none;
+}
+
+
+/*
+@media (min-width: 1200px) {
+  .container {
+    max-width: 4400px;
+    margin: 2%;
+  }
+  .col-lg-1,
+  .col-lg-2,
+  .col-lg-3,
+  .col-lg-4,
+  .col-lg-5,
+  .col-lg-6,
+  .col-lg-7,
+  .col-lg-8,
+  .col-lg-9,
+  .col-lg-10,
+  .col-lg-11 {
+    float: left;
+  }
+  .col-lg-1 {
+    width: 8.333333333333332%;
+  }
+  .col-lg-2 {
+    width: 16.666666666666664%;
+  }
+  .col-lg-3 {
+    width: 25%;
+  }
+  .col-lg-4 {
+    width: 33.33333333333333%;
+  }
+  .col-lg-5 {
+    width: 41.66666666666667%;
+  }
+  .col-lg-6 {
+    width: 50%;
+  }
+  .col-lg-7 {
+    width: 58.333333333333336%;
+  }
+  .col-lg-8 {
+    width: 66.66666666666666%;
+  }
+  .col-lg-9 {
+    width: 75%;
+  }
+  .col-lg-10 {
+    width: 83.33333333333334%;
+  }
+  .col-lg-11 {
+    width: 91.66666666666666%;
+  }
+  .col-lg-12 {
+    width: 100%;
+  }
+  .col-lg-push-0 {
+    left: auto;
+  }
+  .col-lg-push-1 {
+    left: 8.333333333333332%;
+  }
+  .col-lg-push-2 {
+    left: 16.666666666666664%;
+  }
+  .col-lg-push-3 {
+    left: 25%;
+  }
+  .col-lg-push-4 {
+    left: 33.33333333333333%;
+  }
+  .col-lg-push-5 {
+    left: 41.66666666666667%;
+  }
+  .col-lg-push-6 {
+    left: 50%;
+  }
+  .col-lg-push-7 {
+    left: 58.333333333333336%;
+  }
+  .col-lg-push-8 {
+    left: 66.66666666666666%;
+  }
+  .col-lg-push-9 {
+    left: 75%;
+  }
+  .col-lg-push-10 {
+    left: 83.33333333333334%;
+  }
+  .col-lg-push-11 {
+    left: 91.66666666666666%;
+  }
+  .col-lg-pull-0 {
+    right: auto;
+  }
+  .col-lg-pull-1 {
+    right: 8.333333333333332%;
+  }
+  .col-lg-pull-2 {
+    right: 16.666666666666664%;
+  }
+  .col-lg-pull-3 {
+    right: 25%;
+  }
+  .col-lg-pull-4 {
+    right: 33.33333333333333%;
+  }
+  .col-lg-pull-5 {
+    right: 41.66666666666667%;
+  }
+  .col-lg-pull-6 {
+    right: 50%;
+  }
+  .col-lg-pull-7 {
+    right: 58.333333333333336%;
+  }
+  .col-lg-pull-8 {
+    right: 66.66666666666666%;
+  }
+  .col-lg-pull-9 {
+    right: 75%;
+  }
+  .col-lg-pull-10 {
+    right: 83.33333333333334%;
+  }
+  .col-lg-pull-11 {
+    right: 91.66666666666666%;
+  }
+  .col-lg-offset-0 {
+    margin-left: 0;
+  }
+  .col-lg-offset-1 {
+    margin-left: 8.333333333333332%;
+  }
+  .col-lg-offset-2 {
+    margin-left: 16.666666666666664%;
+  }
+  .col-lg-offset-3 {
+    margin-left: 25%;
+  }
+  .col-lg-offset-4 {
+    margin-left: 33.33333333333333%;
+  }
+  .col-lg-offset-5 {
+    margin-left: 41.66666666666667%;
+  }
+  .col-lg-offset-6 {
+    margin-left: 50%;
+  }
+  .col-lg-offset-7 {
+    margin-left: 58.333333333333336%;
+  }
+  .col-lg-offset-8 {
+    margin-left: 66.66666666666666%;
+  }
+  .col-lg-offset-9 {
+    margin-left: 75%;
+  }
+  .col-lg-offset-10 {
+    margin-left: 83.33333333333334%;
+  }
+  .col-lg-offset-11 {
+    margin-left: 91.66666666666666%;
+  }
+}
+*/

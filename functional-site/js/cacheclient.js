@@ -34,18 +34,21 @@ function KBCacheClient(token) {
     auth.token = token;
 
     if (configJSON.setup == 'dev') {
-        fba_url = configJSON.dev.fba_url;{}
+        fba_url = configJSON.dev.fba_url;
         ws_url = configJSON.dev.workspace_url;
         ujs_url = configJSON.dev.user_job_state_url;
+        search_url = configJSON.dev.search_url;
     } else {
         fba_url = configJSON.prod.fba_url;
         ws_url = configJSON.prod.workspace_url;
         ujs_url = configJSON.prod.user_job_state_url;
+        search_url = configJSON.prod.search_url;
     }
 
     console.log('FBA URL is:', fba_url);
     console.log('Workspace URL is:', ws_url);
     console.log('User Job State URL is:', ujs_url);
+    console.log('Search Service URL is:', search_url);
 
     var fba = new fbaModelServices(fba_url, auth);
     var kbws = new Workspace(ws_url, auth);
@@ -85,7 +88,8 @@ function KBCacheClient(token) {
     // make publically accessible methods that 
     this.fba = fba;
     this.ws = kbws;
-    this.ujs = ujs
+    this.ujs = ujs;
+    this.search_url = search_url;
 
     this.nar = new ProjectAPI(ws_url, token);
 
@@ -237,7 +241,7 @@ function ProjectAPI(ws_url, token) {
                                                }
                                            ]
                                  },
-                        }
+                        };
 
 
 

@@ -1,8 +1,211 @@
+<div class="row search-sections">
+    <div class="col-sm-3 col-md-3 col-lg-3 search-leftarea-size"> <!-- left navigation columns -->
+        <div class="search-leftarea-size"> <!-- workspace selected -->                            
+            <div class="col-sm-12 col-md-12 col-lg-12 search-leftarea-size">
+                <div ng-hide="options.userState.loggedIn" class="alert alert-warning search-login">
+                    <div id="login-message" class="text-center">
+                        <a ng-click='login()'>Sign in</a> to send data to your workspaces
+                    </div>
+                </div>
+                <div ng-show="options.userState.loggedIn" class="alert alert-success search-logout">
+                    <div id="logout-message" class="text-center">                        
+                        Logged in as <strong>{{options.userState.user_id}}</strong>                                                
+                    </div>
+                    <div class="text-center">
+                        <a ng-click='logout()'>Sign out</a>
+                    </div>
+                </div>
 
+                <div class="btn-group">
+                    <button ng-class="{'disabled': !options.userState.loggedIn}" type="button" class='btn btn-primary dropdown-toggle search-leftarea-size' data-toggle="dropdown" ng-click='listWorkspaces()'>
+                        Select a workspace <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu search-workspace-menu" role="menu" aria-labelledby="workspace-choose">
+                        <div id="workspace-area" class="panel">
+                            <ul class='nav nav-pills nav-stacked scroll-menu'>
+                                <li ng-repeat="w in options.userState.workspaces">
+                                    <a ng-click='selectWorkspace(w)'>
+                                        <span class='badge'>{{w[4]}}</span>
+                                        <span>{{w[1]}}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </ul>
+                </div>
 
-<h3>I'm a search page</h3>
+                <div ng-show="options.userState.selectedWorkspace" class="text-center search-leftarea-size">
+                    <div class="workspace-title">
+                        <h3>Selected workspace</h3>
+                    </div>
+                    <strong>{{options.userState.selectedWorkspace}}</strong>
+                </div>
 
+                <div ng-show="options.userState.loggedIn">
+                    <hr class="search-leftarea-size"></hr>
 
-Here's my query string:  {{query}} <br>
-<br>
-^ notice how the query parameter (variable "query") is set in the controller "Search" in js/controllers.js
+                    <div class='text-center search-selections-title'>
+                        <h3>Selections</h3>
+                    </div>
+                    <div >
+                        <span class="glyphicon glyphicon-shopping-cart"></span>
+                    </div>
+                </div>
+                
+                <div class="btn-group" ng-show="options.userState.selectedWorkspace">
+                    <button type="button" ng-class="{'disabled': !options.userState.selections}" class='btn btn-primary search-leftarea-size' ng-click='addAllObjects()'>
+                        Send my selections <span class="glyphicon glyphicon-transfer"></span>
+                    </button>              
+                </div> <!-- end workspace send button group -->
+            </div> <!-- end all workspace button groups -->
+        </div> <!-- end workspace-selected area -->
+        
+        <div ng-show="getTotalCount() > 0 && options.selectedCategory" class="col-sm-12 col-md-12 col-lg-12 search-categories search-leftarea-size"> <!-- categories -->
+            <hr class="search-leftarea-size"></hr>
+
+            <div class='text-center search-categories-title'>
+                <h3>Categories</h3>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <a id="Public" href="" class="search-category-link btn btn-link" ng-click="selectCategory(null)">
+                        <strong>All categories</strong>
+                    </a>
+
+                    <div ng-hide="options.categoryCounts[p.category] < 1 || !isInActiveCategoryTree(p.category)" ng-repeat="p in options.categoryInfo.displayTree.unauthenticated.children">
+                        <a id="{{p.category}}" href="" ng-class="{'search-category-link': p.category != options.selectedCategory, 'search-selected-category-link': p.category == options.selectedCategory}" class="btn btn-link" ng-click="$parent.selectCategory(p.category)">
+                            <span>{{p.label}}</span><span class='search-space-left'>(</span>{{options.categoryCounts[p.category]}}<span>)</span>
+                        </a>
+                        <div ng-hide="options.categoryCounts[k.category] < 1 || !isInActiveCategoryTree(k.category)" class="search-space-left" ng-repeat="k in p.children">
+                            <a id="{{k.category}}" href="" ng-class="{'search-category-link': k.category != options.selectedCategory, 'search-selected-category-link': k.category == options.selectedCategory}" class="btn btn-link" ng-click="$parent.$parent.selectCategory(k.category)">
+                                <span>{{k.label}}</span><span class='search-space-left'>(</span>{{options.categoryCounts[k.category]}}<span>)</span>
+                            </a>
+                        </div>
+                    </div> <!-- end children of Public category -->
+                </div> <!-- end Public category -->
+            </div> <!-- end category hierarchy -->
+
+            <hr class="search-leftarea-size"></hr>
+    
+            <div>
+                <div class='text-center search-filters-title'>
+                    <h3>Filters</h3>                    
+                </div>
+                <div class="row">
+                    <div class="row search-space-top" ng-repeat="facet in options.facets">
+                        <div class="col-md-offset-1 col-md-11">
+                            <strong>{{facet.key}}</strong>
+                        </div>
+                        <div class="col-md-12" ng-repeat="facet_option in facet.value">
+                            <div ng-show="facet_option.value > 0" class="col-md-12">
+                                <a href="" ng-click="toggleFacet(facet.key, facet_option.key, options.userState.active_facets[options.selectedCategory][facet.key][facet_option.key])" class="search-checkbox-link">
+                                    <span class="glyphicon" ng-class="{'glyphicon-check': options.userState.active_facets[options.selectedCategory][facet.key][facet_option.key],'glyphicon-unchecked': !options.userState.active_facets[options.selectedCategory][facet.key][facet_option.key]}"/>                    
+                                </a>
+                                <span class="search-space-left">{{facet_option.key}}</span>
+                                <span class="search-space-left">({{facet_option.value}})</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- end categories -->
+    </div> <!-- end filter section -->
+
+    <div ng-cloak class="col-sm-9 col-md-9 col-lg-9 search-result-section"> <!-- search results section -->
+        <div> <!-- all results -->                            
+            <div ng-show="options.searchOptions.general.q && getTotalCount() < 1 && !options.selectedCategory" class="row">
+                <div class="alert alert-danger">
+                    <strong>No results found for any data type.</strong>
+                </div>
+            </div>
+
+            <div ng-show="options.searchOptions.general.q && options.selectedCategory && options.categoryCounts[options.selectedCategory] < 1" class="row search-space-left">
+                <div class="alert alert-danger">
+                    <strong>No results found in {{options.searchCategories[options.selectedCategory].label}}.</strong>
+                </div>
+            </div>
+
+            <div class="row">
+                <div ng-show="!options.selectedCategory && getTotalCount() > 0" class="row"> <!-- Show this when no category is selected -->
+                    <div class='row'>                        
+                        <table>
+                            <h3>Select a category</h3>
+                            <tr>
+                                <th><h4>Category</h4></th>
+                                <th class="search-space-left"><h4 class="search-space-left">Objects found</h4></th>
+                            </tr>
+                            <tr ng-show="options.searchCategories[p.category] && options.categoryCounts[p.category] > 0" ng-repeat="p in options.categoryInfo.displayTree['unauthenticated'].children">
+                                <td class="search-category-title" ng-click="selectCategory(p.category)">
+                                    <a><span>{{p.label}}</span></a>
+                                </td>
+                                <td class="search-category-title search-space-left"><span class='search-space-left'>(</span>{{options.categoryCounts[p.category]}}<span>)</span></td>
+                            </tr>
+                        </table>
+                    </div>                                    
+                </div>
+                <div ng-show="options.resultsAvailable && options.selectedCategory && getTotalCount() > 0" class="row"> 
+                    <div class="row search-result-set-header"> <!-- result options -->
+                        <div class="btn-toolbar row">
+                            <div class="btn-group col-sm-5 col-md-5 col-lg-5">
+                                <div><strong>Displaying results {{ 1 + ((options.resultJSON.currentPage - 1) * options.resultJSON.itemsPerPage) }}-{{ options.resultJSON.itemCount + ((options.resultJSON.currentPage - 1) * options.resultJSON.itemsPerPage) }} out of {{ options.resultJSON.totalResults }}.</strong></div>
+                            </div>
+                            <div class="btn-group col-md-offset-3 col-md-1 search-view-buttons" data-toggle="buttons">
+                                <label for="list_view" class="control-label input-group">Views</label>
+                                <label class="btn btn-xs btn-default" ng-class="{'active': options.userState.viewType == 'compact'}" ng-click="setView('compact')">
+                                    <input type="radio" name="list_view"/>
+                                    <span class="glyphicon glyphicon-list-alt"></span>
+                                </label>
+                                <label class="btn btn-xs btn-default" ng-class="{'active': options.userState.viewType == 'expanded'}" ng-click="setView('expanded')">
+                                    <input type="radio" name="list_view"/>
+                                    <span class="glyphicon glyphicon-list"></span>
+                                </label>
+                            </div>
+                            <div class="btn-group btn-group-xs col-sm-2 col-md-2 col-lg-2" data-toggle="buttons">
+                                <label for="rpp" class="control-label input-group">Results per page</label>
+                                <label class="btn btn-default" ng-class="{'active': i == options.searchOptions.general.itemsPerPage}" ng-repeat="i in [10,25,50,100]" ng-click="setResultsPerPage(i)">
+                                    <input type="radio" name="rpp" >{{i}}</input>
+                                </label>
+                            </div>
+                        </div> <!-- end btn-toolbar row -->
+                    </div> <!-- end result options -->
+                    <div class="row">
+                        <!-- our output should go here normally -->
+                        <div ng-include="options.resultsTemplatePath"></div> 
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul class="pagination" ng-class="{'small-pagination': options.resultJSON.currentPage - options.numPageLinks <= 0,'large-pagination': options.resultJSON.currentPage - options.numPageLinks > 0 }">
+                                <li ng-show="options.resultJSON.currentPage - options.numPageLinks > 0">
+                                    <a ng-click="setCurrentPage(options.resultJSON.currentPage - options.numPageLinks)">&larr; Previous {{options.numPageLinks}}</a>
+                                </li>
+                                <li ng-class="{'active': p == options.resultJSON.currentPage}" ng-repeat="p in options.pageLinksRange">
+                                    <a ng-click="setCurrentPage(p)">{{p}}</a>
+                                </li>
+                                <li ng-show="(options.pageLinksRange[0] + options.numPageLinks) * options.resultJSON.itemsPerPage < options.resultJSON.totalResults">
+                                    <a ng-click="setCurrentPage(options.pageLinksRange[0] + options.numPageLinks)">Next {{options.numPageLinks}} &rarr;</a>
+                                </li>
+                            </ul>                        
+                        </div>
+                    </div>                                    
+                </div> <!-- end specific category results row -->
+            </div> <!-- end results inner row -->
+        </div> <!-- end results outer row -->
+    </div> <!-- end results section -->
+
+    <div class="hidden">
+        <div id="loading_message">
+            <strong>KBase</strong>
+            <div id="loading_message_icon">
+                <img src="assets/img/kbase_animated_logo.gif" alt="animated_logo"/>
+            </div>
+            <div id="loading_message_text">Searching...</div>
+        </div>
+    </div>
+
+    <div id="error" class="row hidden">
+        Sorry, an error occurred. Please try again.
+        <hr></hr>
+        <div id="error_text"></div>
+    </div>
+
+</div> <!-- end search sections -->

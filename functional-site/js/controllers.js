@@ -355,14 +355,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
 })
 
-.controller('Search', function($scope, $stateParams, $state) {
-
-    $scope.query = $stateParams.q;
-
-    $scope.startSearch = function (searchquery) {
-        $state.transitionTo('search', {q: searchquery})
-    };
-})
 
 
 /*

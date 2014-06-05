@@ -146,10 +146,10 @@
                 <div ng-show="options.resultsAvailable && options.selectedCategory && getTotalCount() > 0" class="row"> 
                     <div class="row search-result-set-header"> <!-- result options -->
                         <div class="btn-toolbar row">
-                            <div class="btn-group col-sm-5 col-md-5 col-lg-5">
+                            <div class="btn-group search-results-counter col-sm-5 col-md-7 col-lg-7">
                                 <div><strong>Displaying results {{ 1 + ((options.resultJSON.currentPage - 1) * options.resultJSON.itemsPerPage) }}-{{ options.resultJSON.itemCount + ((options.resultJSON.currentPage - 1) * options.resultJSON.itemsPerPage) }} out of {{ options.resultJSON.totalResults }}.</strong></div>
                             </div>
-                            <div class="btn-group col-md-offset-3 col-md-1 search-view-buttons" data-toggle="buttons">
+                            <div class="btn-group col-md-1 search-view-buttons" data-toggle="buttons">
                                 <label for="list_view" class="control-label input-group">Views</label>
                                 <label class="btn btn-xs btn-default" ng-class="{'active': options.userState.viewType == 'compact'}" ng-click="setView('compact')">
                                     <input type="radio" name="list_view"/>

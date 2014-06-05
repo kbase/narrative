@@ -155,6 +155,12 @@ span .badge {
 }
 
 
+.search-cart {
+    font-size: 30px;
+    line-height: 1.0;
+}
+
+
 /*** Results ***/
 
 .search-results-counter {

@@ -8,10 +8,39 @@
 
     <div class="col-md-9">
         <div class="object-view" ui-view>
-            <div ng-show="!selected_ws">
+            <!--<div ng-show="!selected_ws">
                 <span class="text-danger">No Workspace Selected</span><br>
                 <small>Please select a workspace from the left.</small>
+            </div>-->
+
+            <div class="well">
+                <h1>Welcome to the New Workspace Browser <small>v1.0</small></h1> 
+                <h4 class="text-muted">Select a workspace from the left sidebar to start viewing objects</h4>
+                <a class="btn btn-primary btn-lg btn-live-tour" href="#/ws/tour/" role="button">Take the Interactive Tour!</a>
             </div>
+
+
+            <br><br><br>
+            <h5>What's new in v1.0?</h5>
+            <ul>
+                <li>Add/edit workspace descriptions</li>
+                <li>Copy, delete, and rename objects</li>
+                <li>Filter by object types</li>                
+                <li>The "View HTML" has been replaced with direct links to KBase "Landing Pages".<br> Object details and download can be found by hovering over an object and selecting "more".</li>
+                <li>View object history [rollback coming soon]</li>
+                <li>View deleted objects [undelete coming soon]</li>
+                <li>Access workspaces via url.  Ex: <a href="http://demo.kbase.us/functional-site/#/ws/objtable/chenryExample">Click Me</a></li>
+                <li>Workspaces are now stored as username<b>:</b>workspace_name by default when creating a workspace in the WB</li>
+            </ul>
+
+            <a href="assets/images/ws/slide1.png" role="button" target="_blank">Screenshot of Features</a>
+
+            <br><br>
+            <h5>Looking for the old Workspace Browser?</h5>
+            The old Workspace Browser is still temporarily available <a href="http://140.221.84.142/">here</a>, but is no longer maintained and KBase services no longer use these workspaces. All of the data from the old Workspace Service is safe and is in the process of being transferred to new WS.  The old Workspace Browser will go offline in ~2 months.  <!--Read more <a href="www.kbase.us">here</a>.-->
+
+
+
         </div>
     </div>
 </div>

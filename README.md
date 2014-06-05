@@ -12,15 +12,6 @@ Common user interface components and libraries for the KBase Project.
 TODO: Add documentation
 
 ###Testing the Widget API
-A unit-testing framework is written using Node. Node, with its included `npm` utility must be installed.
-
-To install library dependencies (once):
-
-    $ npm install
-
-To run the test suite:
-
-    $ npm test
 
 ##Widget Library
 

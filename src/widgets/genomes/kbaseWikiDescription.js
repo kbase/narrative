@@ -18,7 +18,6 @@
             loadingImage: null
         },
 
-        wikiScraperURL: "http://140.221.85.43:7077",
         cdmiURL: "https://kbase.us/services/cdmi_api",
 
         init: function(options) {
@@ -35,7 +34,6 @@
 
             this.cdmiClient = new CDMI_API(this.cdmiURL);
             this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
-            this.wikiClient = new WikiScraper(this.wikiScraperURL);
 
             if (this.options.workspaceID) {
                 this.renderWorkspace();
@@ -65,7 +63,12 @@
             this.cdmiClient.genomes_to_taxonomies([this.options.genomeID], 
                 $.proxy(function(taxonomy) {
                     taxonomy = taxonomy[this.options.genomeID];
-                    this.renderFromTaxonomy(taxonomy.reverse());
+                    if (taxonomy) {
+                        this.renderFromTaxonomy(taxonomy.reverse());
+                    }
+                    else {
+                        this.renderError("Genome '" + this.options.genomeID + "' not found in the KBase Central Store.");
+                    }
                 }, this),
 
                 this.renderError
@@ -86,9 +89,9 @@
             var searchTerms = taxonomy;
             var strainName = taxonomy[0];
 
-            // step 2: do the wiki scraping
-            this.wikiClient.scrape_first_hit(searchTerms, {endpoint: "dbpedia.org"}, 
-                $.proxy(function(desc) {
+            this.dbpediaLookup(searchTerms, $.proxy(
+                function(desc) {
+                    // If we've found something, desc.description will exist and be non-null
                     if (desc.hasOwnProperty('description') && desc.description != null) {
                         if (desc.description.length > this.options.maxNumChars) {
                             desc.description = desc.description.substr(0, this.options.maxNumChars);
@@ -96,25 +99,45 @@
                             desc.description = desc.description.substr(0, lastBlank) + "...";
                         }
 
+                        /* the viz is set up like this:
+                         * 1. Description Tab
+                         *
+                         * ['not found' header, if applicable]
+                         * Showing description for <search term>
+                         * ['redirect header', if applicable]
+                         *
+                         * Description (a fragment of the abstract from Wikipedia)
+                         *
+                         * <Wikipedia link>
+                         *
+                         * 2. Image Tab
+                         * ['not found' header, if applicable, with link to Wikipedia]
+                         * Image
+                         */
+
                         var descStr = "<p style='text-align:justify;'>" + desc.description + "</p>"
 
                         var descHtml;
-                        if (strainName === desc.redirect_from) {
-                            descHtml = this.redirectHeader(strainName, desc.redirect_from, desc.term) + descStr + this.descFooter(desc.wiki_url);
+                        if (strainName === desc.redirectFrom) {
+                            descHtml = this.redirectHeader(strainName, desc.redirectFrom, desc.searchTerm) + descStr + this.descFooter(desc.wikiUri);
                         }
-                        else if (desc.term === strainName) {
+                        else if (desc.searchTerm === strainName) {
                             descHtml = descStr + this.descFooter(desc.wiki_uri);
                         }
                         else {
-                            descHtml = this.notFoundHeader(strainName, desc.term, desc.redirect_from) + descStr + this.descFooter(desc.wiki_uri);
+                            descHtml = this.notFoundHeader(strainName, desc.searchTerm, desc.redirectFrom) + descStr + this.descFooter(desc.wikiUri);
                         }
 
-                        var imageHtml = "Unable to find an image. If you have one, you might consider <a href='" + desc.wiki_uri + "' target='_new'>adding it to Wikipedia</a>.";
-                        if (desc.image_uri != null)
-                            imageHtml = "<img src='" + desc.image_uri + "' />";
+                        var imageHtml = "Unable to find an image. If you have one, you might consider <a href='" + desc.wikiUri + "' target='_new'>adding it to Wikipedia</a>.";
+                        if (desc.imageUri != null) {
+                            imageHtml = "<img src='" + desc.imageUri + "'";
+                            if (this.options.width)
+                                imageHtml += "style='max-width: 100%'";
+                            imageHtml += "/>";
+                        }
                     }
                     else {
-                        descHtml = this.notFoundHeader(strainName, desc.term, desc.redirect_from) + descStr + this.descFooter(desc.wiki_uri);
+                        descHtml = this.notFoundHeader(strainName);
                     }
 
 
@@ -156,10 +179,9 @@
                                          );
 
                     this.hideMessage();
-                    this.$elem.append($tabSet).append($contentDiv);
-                }, this),
-
-                this.renderError
+                    this.$elem.append($tabSet).append($contentDiv);            
+                }, this), 
+                $.proxy(this.renderError, this)
             );
         },
 
@@ -271,7 +293,7 @@
             errString = "Sorry, an unknown error occurred";
             if (typeof error === "string")
                 errString = error;
-            else if (error.error && error.error.message)
+            else if (error && error.error && error.error.message)
                 errString = error.error.message;
 
             
@@ -283,5 +305,76 @@
             this.$elem.append($errorDiv);
         },
 
+        dbpediaLookup: function(termList, successCallback, errorCallback, redirectFrom) {
+            if (!termList || Object.prototype.toString.call(termList) !== '[object Array]' || termList.length === 0) {
+                if (errorCallback) {
+                    errorCallback("No search term given");
+                }
+            }
+
+            var searchTerm = termList.shift();
+            var usTerm = searchTerm.replace(/\s+/g, '_');
+
+            var resourceKey    = 'http://dbpedia.org/resource/' + usTerm;
+            var abstractKey    = 'http://dbpedia.org/ontology/abstract';
+            var languageKey    = 'en';
+            var imageKey       = 'http://xmlns.com/foaf/0.1/depiction';
+            var wikiLinkKey    = 'http://xmlns.com/foaf/0.1/isPrimaryTopicOf';
+            var wikipediaUri   = 'http://en.wikipedia.org/wiki';
+            var redirectKey    = 'http://dbpedia.org/ontology/wikiPageRedirects';
+
+            var requestUrl = 'http://dbpedia.org/data/' + usTerm + '.json';
+            $.get(requestUrl).then($.proxy(function(data, status) {
+
+                var processedHit = {
+                    'searchTerm' : searchTerm
+                };
+
+                if (data[resourceKey]) {
+                    var resource = data[resourceKey];
+                    if (!resource[wikiLinkKey] || !resource[abstractKey]) {
+                        if (resource[redirectKey]) {
+                            var tokens = resource[redirectKey][0]['value'].split('/');
+                            this.dbpediaLookup([tokens[tokens.length - 1]], successCallback, errorCallback, searchTerm);
+                        }
+                        else {
+                            if (termList.length > 0)
+                                this.dbpediaLookup(termList, successCallback, errorCallback);
+                            else
+                                successCallback(processedHit);
+                        }
+                    }
+                    else {
+                        if (resource[wikiLinkKey]) {
+                            processedHit['wikiUri'] = resource[wikiLinkKey][0]['value'];
+                        }
+                        if (resource[abstractKey]) {
+                            var abstracts = resource[abstractKey];
+                            for (var i=0; i<abstracts.length; i++) {
+                                if (abstracts[i]['lang'] === languageKey)
+                                    processedHit['description'] = abstracts[i]['value'];
+                            }
+                        }
+                        if (resource[imageKey]) {
+                            processedHit['imageUri'] = resource[imageKey][0]['value'];
+                        }
+                        if (redirectFrom) {
+                            processedHit['redirectFrom'] = redirectFrom;
+                        }
+                        successCallback(processedHit);
+                    }
+                }
+                else {
+                    if (termList.length > 0) {
+                        this.dbpediaLookup(termList, successCallback, errorCallback);
+                    }
+                }
+                return processedHit;
+            }, this),
+            function(error) {
+                if (errorCallback)
+                    errorCallback(error);
+            });
+        },
     })
 })( jQuery );

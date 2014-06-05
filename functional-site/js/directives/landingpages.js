@@ -112,7 +112,6 @@ angular.module('lp-directives')
                 var prom = kb.req('fba', 'get_models',
                             {models: [id], workspaces: [ws]});
                 $.when(prom).done(function(data){
-                    console.log('data for tabs', data )
                     $(p.body()).kbaseModelTabs({modelsData: data, api: kb.fba});
                     $(document).on('rxnClick', function(e, data) {
                         var url = '/rxns/'+data.ids;
@@ -137,7 +136,6 @@ angular.module('lp-directives')
                 var prom = kb.req('fba', 'get_models',
                             {models: [id], workspaces: [ws]})
                 $.when(prom).done(function(data) {
-                    console.log('data', data)
                     $(p.body()).kbaseModelCore({ids: [id], 
                                                 workspaces : [ws],
                                                 modelsData: data});
@@ -211,12 +209,10 @@ angular.module('lp-directives')
                 var prom1 = kb.req('fba', 'get_fbas',
                             {fbas: [scope.id], workspaces: [scope.ws]});
                 $.when(prom1).done(function(fbas_data) {
-                    console.log(fbas_data)
                     var model_ref = fbas_data[0].modelref;
                     var wsid = parseInt(model_ref.split('/')[0]);
                     var objid = parseInt(model_ref.split('/')[1]);
 
-                    console.log('fba data ', fbas_data)
                     var prom2 = kb.req('fba', 'get_models',
                             {models: [objid], workspaces: [wsid]});
                     $.when(prom2).done(function(models_data){
@@ -230,6 +226,28 @@ angular.module('lp-directives')
                         }); 
                     })
                 })
+            }
+        };
+    })
+
+    .directive('pathways', function() {
+        return {
+            link: function(scope, element, attrs) {
+                var p = $(element).kbasePanel({title: 'Pathways', 
+                                               type: 'Pathway',
+                                               rightLabel: 'N/A',
+                                               subText: scope.id});
+                p.loading();
+
+                // fixme: seperate api for models and fba, add error messages
+                var p1 = kb.req('fba', 'get_models',
+                            {models: [scope.id], workspaces: [scope.ws]});
+                //var p2 = kb.req('fba', 'get_fbas',
+                //            {fbas: [scope.id], workspaces: [scope.ws]})                
+                $.when(p1).done(function(d1, d2) {
+                    $(p.body()).kbasePathways({modelData: d1})   
+                });
+
             }
         };
     })
@@ -248,7 +266,7 @@ angular.module('lp-directives')
                         {medias: [scope.id], workspaces: [scope.ws]})
                 $.when(prom).done(function(data) {
                     $(p.body()).kbaseMediaEditor({ids: [scope.id], 
-                                                workspaces : [scope.ws],
+                                                  workspaces : [scope.ws],
                                                 data: data});
                 })
             }
@@ -257,9 +275,11 @@ angular.module('lp-directives')
     .directive('rxndetail', function() {
         return {
             link: function(scope, element, attrs) {
+                $(element).loading()
                 var prom = kb.req('fba', 'get_reactions',
                             {reactions: scope.ids})
                 $.when(prom).done(function(data){
+                    $(element).rmLoading();
                     $(element).kbaseRxn({data: data, ids: scope.ids});
                 })
             }
@@ -268,14 +288,43 @@ angular.module('lp-directives')
     .directive('cpddetail', function() {
         return {
             link: function(scope, element, attrs) {
+                $(element).loading()
                 var prom = kb.req('fba', 'get_compounds',
-                            {compounds: scope.ids})                
+                            {compounds: scope.ids});
+
                 $.when(prom).done(function(data){
+                    $(element).rmLoading();                     
                     $(element).kbaseCpd({data: data, ids: scope.ids});
                 })
             }
         };
     })
+    .directive('jsonviewer', function() {
+        return {
+            link: function(scope, element, attrs) {
+                $(element).loading()
+                var p = kb.req('ws', 'get_object', 
+                        {workspace: scope.ws, id: scope.id})
+                $.when(p).done(function(data) {
+                    $(element).rmLoading();
+                    scope.data = data;
+                    displayData(data)
+                })
+
+                function displayData(data) {
+                    for (key in data) {
+                        $(element).append('<h3>'+key+'</h3><br>');
+                        var c = $('<div id="data">')
+                        $(element).append(c)
+                        c.JSONView(JSON.stringify(data[key], {collapsed: true}))
+                    }
+                }
+
+            }
+        };
+    })
+
+
     .directive('backbutton', function() {
         return {
             link: function(scope, element, attrs) {
@@ -295,7 +344,9 @@ angular.module('lp-directives')
                                                rightLabel: scope.ws,
                                                subText: scope.id,
                                                widget: 'genomeoverview'});
-                p.loading(); // not sure why this isn't loading first.  I'm thinking data should be retrieved here.
+                p.loading(); 
+                // not sure why this isn't loading first.  
+                // I'm thinking data should be retrieved here.
 
                 $(p.body()).KBaseGenomeOverview({genomeID: scope.id, workspaceID: scope.ws, kbCache: kb})
             }
@@ -309,7 +360,7 @@ angular.module('lp-directives')
                                                rightLabel: scope.ws,
                                                subText: scope.id,
                                                widget: 'genomewiki'});
-                p.loading(); 
+                p.loading();
                 $(p.body()).KBaseWikiDescription({genomeID: scope.id, workspaceID: scope.ws, kbCache: kb})
             }
         };

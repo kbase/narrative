@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html ng-app="landing-pages" lang="en">
     <head>
-        <title>KBase Data Pages</title>
+        <title>KBase Narrative Interface (prototype)</title>
         <link rel="icon" type="image/x-icon" href="assets/img/KBase_favicon.ico">
 
         <!-- Global KBase css -->
@@ -14,14 +14,72 @@
         <link rel="stylesheet" type="text/css" href="assets/css/ng-grid.css" />
 
         <link rel="stylesheet" type="text/css" href="assets/css/landing-pages.css" />
+        <!-- should probably remove styling from feed xml? -->
         <link rel="stylesheet" type="text/css" href="assets/css/narrative.css" />
         <link rel="stylesheet" type="text/css" href="assets/css/search.css" />
+        <link rel="stylesheet" type="text/css" href="assets/css/jquery.jsonview.css" />        
+
+        <link rel="stylesheet" type="text/css" href="assets/css/nc-tour.css" />
 
         <!-- KBase widget css -->
         <link rel="stylesheet" type="text/css" href="../widgets/css/kbaseLandingPageCard.css" />
 
         <!-- External javascript packages -->
 
+
+        <script src="../ext/bowser/bowser.min.js"></script>
+
+    	<!-- Google Analytics -->
+    	<script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-48256002-1', 'kbase.us');
+            ga('send', 'pageview');
+    	  
+
+            /**
+             * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
+             * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
+             * (to avoid having the same thing happen on page refreshes and such).
+             *
+             * This uses Bowser to detect the browser and version:
+             * https://github.com/ded/bowser
+             */
+            function checkBrowser() {
+                var browserCheckItem = 'kbBrowserCheck';
+
+                //Just return if we've done this already this session. Seeing the same popup more than once is obnoxious.
+                if (sessionStorage) {
+                    if (sessionStorage.getItem(browserCheckItem))
+                        return;
+                }
+
+                var alertPrefix = 'Unsupported browser detected!\n\n';
+                var alertSuggest = 'For a better experience, we recommend using recent versions of ' + 
+                                   'Safari, Firefox, Chrome, or Internet Explorer.\n\n' +
+                                   'Sorry for any inconvenience!';
+                var alertError = '';
+                if (bowser.msie && bowser.version <= 9) {
+                    var alertError = 'You appear to be using Internet Explorer ' + 
+                                     bowser.version + 
+                                     '. Unfortunately, we don\'t support that web browser. Many ' +
+                                     'functions will be unavailable or have compatibility problems.\n\n';
+                }
+
+                if (alertError) {
+                    alert(alertPrefix + alertError + alertSuggest);
+                }
+
+                if (sessionStorage) {
+                    sessionStorage.setItem(browserCheckItem, '1');
+                }
+            }
+
+            checkBrowser();
+    	</script>
 
         <script src="../ext/jquery/jquery-1.10.2.min.js"></script>
        <!-- <script src="../ext/jquery-migrate/jquery-migrate-1.2.1.js"></script> -->
@@ -32,28 +90,14 @@
         <script src="../ext/dataTables/1.9.4/js/jquery.dataTables.js"></script>
         <script src="assets/js/dataTables.bootstrap.js"></script>
         <script src="assets/js/jquery.dataTables.rowGrouping.js"></script>
-        <script src="assets/js/FixedHeader.min.js"></script>        
+        <script src="assets/js/dataTables.colReorder.min.js"></script>
+        <script src="assets/js/FixedHeader.min.js"></script> 
+        <script src="assets/js/jquery.jsonview.js"></script>         
 
+        <script src="assets/js/nc-tour.js"></script>
 
         <script src="assets/js/jquery.cookie.min.js"></script>
         <script src="assets/js/viz/raphael-min.js"></script>
-        <!--<script src="assets/js/jquery.jscrollpane.min.js"></script>
-        <script src="assets/js/jquery.mousewheel.js"></script>-->
-        <!-- <script src="http://html5demos.com/h5utils.js"></script>-->
-
-	<!-- Google Analytics -->
-<!--	
-	<script>
-	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-	  
-	  ga('create', 'UA-48256002-1', 'kbase.us');
-	  ga('send', 'pageview');
-	  
-	</script>
--->
 
         <!-- KBase client library javascript -->
         <script src="assets/js/kbclient/kbase.js"></script>
@@ -75,7 +119,7 @@
         <!--<script src="../src/widgets/kbaseLogin.js"></script>        -->
 
 
-
+        <script src="../src/widgets/maps/kbasePathways.js"></script>
         <script src="../src/widgets/models/kbaseModelMeta.js"></script>
         <script src="../src/widgets/models/kbaseModelTabs.js"></script>
         <script src="../src/widgets/models/kbaseModelCore.js"></script>
@@ -244,12 +288,12 @@
         <script src="js/app.js"></script>        
         <script src="js/search.js"></script>
 
-        <script src="js/directives.js"></script>
-        <script src="js/card-directives.js"></script>
-        <script src="js/fav-directives.js"></script>
-        <script src="js/ws-directives.js"></script>           
-        <script src="js/trees-directives.js"></script>        
-	    <script src="js/narrative-directives.js"></script>
+        <script src="js/directives/landingpages.js"></script>
+        <script src="js/directives/cards.js"></script>
+        <script src="js/directives/fav.js"></script>
+        <script src="js/directives/ws.js"></script>           
+        <script src="js/directives/trees.js"></script>        
+	    <script src="js/directives/narrative.js"></script>
         <script src="js/controllers.js"></script>
         <script src="js/cacheclient.js"></script>
         <script src="assets/js/header.js"></script>
@@ -258,6 +302,7 @@
     <body>
         <div id="wrap">
 
+<<<<<<< HEAD
             <div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
                 <a href="http://www.kbase.us" class="pull-left">
                     <img id="logo" src="assets/img/kbase_logo.png" width="46"/>
@@ -294,12 +339,12 @@
                             </div>
                         </div>
                     </form>
-
+                    <!--
                     <ul class="nav navbar-nav"> 
                         <li ng-class="{ active: $state.includes('favorites')}"><a href="#/favorites/all/">Favorites <span class="badge  favorite-count"></span></a></li>
                         <li class="fav-loading"></li>
                     </ul>
-
+                    -->
              
                     <div id="signin-button" class="pull-right"></div>
                     <ul class="nav navbar-nav pull-right">

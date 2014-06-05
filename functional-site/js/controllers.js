@@ -245,12 +245,14 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.selected_ws = $stateParams.ws;
 })
 
+
 .controller('WorkspaceBrowserLanding', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
 
-
     $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
+        handle: '.panel-heading',
+        cancel: '.panel-title,.panel-subtitle,.label,.glyphicon',
         start: function() {
           $(this).find('.panel-body').addClass('hide');
           $(this).sortable('refreshPositions');
@@ -259,8 +261,63 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
           $(this).find('.panel-body').removeClass('hide');
         }
     });
-    $( "#sortable-landing" ).disableSelection();
 
+    //$( "#sortable-landing" ).disableSelection();
+
+})
+.controller('WorkspaceBrowserJSON', function($scope, $stateParams) {
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+
+})
+
+.controller('WorkspaceBrowserTour', function($scope, $stateParams, $location) {
+    $scope.selected_ws = 'chenryExample';  // workspace to use for tour
+
+    // if not logged in, prompt for login
+    if (!USER_ID) {
+        var signin_btn = $('#signin-button');
+        signin_btn.popover({content: "You must login before taking the tour", 
+                            trigger: 'manual', placement: 'bottom'})
+        signin_btn.popover('show');
+
+    // otherwise, do the tour
+    } else {
+        function checkSomething() {
+            $scope.checkedList.push([ 'kb|g.0.fbamdl', 'chenryExample', 'FBAModel-2.0' ]);
+            $('.ncheck').eq(2).addClass('ncheck-checked');
+            $scope.$apply();
+        }
+
+        var tour = [{element: '.new-ws', text:'Create a new workspace here', placement: 'left'},
+                    {element: '.btn-ws-settings', n: 2,
+                        text:'Manage workspsace sharing and other settings, as \
+                        well as clone and delete workspaces using the gear button.', 
+                        bVisible: true, time: 4000},
+                    {element: '.obj-id', n: 2, 
+                        text: 'View data about the object, including visualizations and KBase widgets'},
+                    {element: '.show-versions', n: 2, text: 'View the objects history.'},
+                    {element: '.btn-show-info', n: 2, 
+                        text: 'View meta data, download the objects, etc', bVisible: true},
+                    {element: '.ncheck', n: 2, text: 'Select objects by using checkboxes<br> and see options appear above', 
+                        event: checkSomething},
+                    {element: '.type-filter', text: 'Filter objects by type'},
+                    {element: '.btn-delete-obj', text: 'Delete the objects selected in the table', 
+                        bVisible: true},
+                    {element: '.btn-mv-dd', text: 'Go ahead, copy your colleague\'s objects to your own workspace', 
+                        bVisible: true},
+                    {element: '.btn-rename-obj', text: 'Rename a selected object', 
+                        bVisible: true},                        
+                    {element: '.btn-trash', text: 'View the trash bin for this workspace.<br>  \
+                                    Unreferenced objects will be deleted after 30 days.', 
+                        bVisible: true}]                        
+
+        function exit_callback() {
+            $scope.$apply( $location.path( '/ws/' ) );
+        }
+
+        new Tour({tour: tour, exit_callback: exit_callback});
+    }   
 })
 
 .controller('Favorites', function($scope, $stateParams) {
@@ -308,26 +365,16 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     //set the cookie
                     var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
                     
+                    console.log($scope.username);
+
                     console.log( 'Setting kbase_session cookie');
-                    $.cookie('kbase_session',
-                             'un=' + c.user_id
-                             + '|'
-                             + 'kbase_sessionid=' + c.kbase_sessionid
-                             + '|'
-                             + 'user_id=' + c.user_id
-                             + '|'
-                             + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-                             { path: '/',
-                               domain: 'kbase.us' });
-                    $.cookie('kbase_session',
-                             'un=' + c.user_id
-                             + '|'
-                             + 'kbase_sessionid=' + c.kbase_sessionid
-                             + '|'
-                             + 'user_id=' + c.user_id
-                             + '|'
-                             + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-                             { path: '/'});
+                    var cookieName = 'kbase_session';
+                    var cookieString = 'un=' + c.user_id + 
+                                       '|kbase_sessionid=' + c.kbase_sessionid +
+                                       '|user_id=' + c.user_id +
+                                       '|token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
+                    $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us' });
+                    $.cookie(cookieName, cookieString, { path: '/' });
 
                     //this.data('_session', c);
 
@@ -349,8 +396,18 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                 }
 
             }
-        )
+        );
         
+    };
+
+    $scope.logoutUser = function() {
+        kbaseLogin.logout(false);
+    };
+
+    $scope.loggedIn = function() {
+        var c = kbaseLogin.get_kbase_cookie();
+        $scope.username = c.name;
+        return (c.user_id !== undefined && c.user_id !== null);
     };
 
 })
@@ -420,13 +477,14 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) 
 };
 
 
-
+/*
 function Navigation($scope, $location) { 
     $scope.isActive = function (viewLocation) {
     console.log(viewLocation, $location.path()) 
         return viewLocation === $location.path();
     };
 }
+*/
 
 function LPHelp($scope, $stateParams, $location) {
     // Fixme: move out of controller
@@ -451,6 +509,4 @@ function ScrollCtrl($scope, $location, $anchorScroll) {
     $anchorScroll();
   }
 }
-
-
 

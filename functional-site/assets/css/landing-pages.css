@@ -19,7 +19,6 @@
          url('../fonts/Oxygen-Italic-webfont.svg#OxygenItalic') format('svg');
     font-weight: normal;
     font-style: normal;
-
 }
 
 @font-face {
@@ -117,7 +116,9 @@ body {
 }
 
 a:hover, 
-rect:hover {
+rect:hover,
+g:hover,
+circle:hover {
     cursor: hand;
     cursor: pointer;
 }
@@ -127,9 +128,8 @@ rect:hover {
     padding-top: 5px;
     padding-left: 8px;
 }
-
 .label {
-    line-height: 1;
+    padding: .4em .6em .3em;
 }
 
 /* KBase navigation bar */
@@ -193,7 +193,8 @@ table {
 }
 
 /* landing page */
-#core-model { 
+#core-model,
+.pathway { 
     overflow-x: auto; 
 }
 /* for adjusting height on drag */
@@ -307,7 +308,8 @@ div::-webkit-scrollbar-thumb {
     margin: 0 4px 0 0 ;
 }
 .select-ws .btn-ws-settings {
-    padding: 0px 5px;
+    padding: 3px 7px 0 7px;
+    margin: -3px;
 }
 
 .modal-alert {
@@ -364,6 +366,12 @@ div::-webkit-scrollbar-thumb {
     list-style: none;
 }
 
+.panel-title, 
+.panel-subtitle,
+.panel-heading .label {
+    cursor: default;
+}
+
 .narrative-options-container {
     border-bottom: 1px solid #ccc;
 }
@@ -386,8 +394,11 @@ div::-webkit-scrollbar-thumb {
 
 .object-options .btn {
     height: 34px; /* make all buttons equal height */
+    margin: 0 3px 0 0;
 }
-.obj-table .dataTables_length label {
+
+/* fix me */
+.dataTables_length label { 
     margin: 7px 0 0 0;
 }
 
@@ -430,7 +441,8 @@ div::-webkit-scrollbar-thumb {
     margin-left: auto;
     margin-right: auto;
 }
-.ncheck:hover {
+.ncheck:hover,
+.ncheck-hover {
     border: 1px solid #444 ;    
 }
 .ncheck-btn {
@@ -478,7 +490,7 @@ div::-webkit-scrollbar-thumb {
 
 /******************     narrative     ***************/
 
-#login-form {
+.login-form {
     margin: 70px 0 0 0;
 }
 
@@ -618,8 +630,9 @@ div::-webkit-scrollbar-thumb {
 }
 
 .btn-favorite, 
-.btn-rm-panel {
-    margin: -5px 0 0 0; /* adjust for container margin */
+.btn-rm-panel,
+.btn-min-panel {
+    margin: -5px 0 0 4px; /* adjust for container margin */
     font-size: 1.3em;
 }
 .fav-loading {
@@ -719,6 +732,7 @@ div::-webkit-scrollbar-thumb {
     width: 100%;
     z-index: 1000;
 }
+
 
 
 

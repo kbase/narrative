@@ -25,7 +25,8 @@
             }
 
             this.$messagePane = $("<div/>")
-                                .addClass("kbwidget-message-pane kbwidget-hide-message");
+                                .addClass("kbwidget-message-pane")
+                                .hide();
             this.$elem.append(this.$messagePane);
 
             this.render();
@@ -134,6 +135,11 @@
                     genome = genome[this.options.genomeID];
                     this.genome = genome; // store it for now.
 
+                    if (!genome) {
+                        this.renderError("Genome '" + this.options.genomeID + "' not found in the KBase Central Store.");
+                        return;
+                    }
+
                     this.$infoTable.empty()
                                    .append(this.addInfoRow("ID", genome.id))
                                    .append(this.addInfoRow("Name", genome.scientific_name))
@@ -228,7 +234,7 @@
                                .append(this.addInfoRow("Domain", genome.domain))
                                .append(this.addInfoRow("DNA Length", dnaLength))
                                .append(this.addInfoRow("Source ID", genome.source + ": " + genome.source_id))
-                               .append(this.addInfoRow("Number of Contigs", genome.contig_ids.length))
+                               .append(this.addInfoRow("Number of Contigs", genome.contig_ids ? genome.contig_ids.length : 0))
                                .append(this.addInfoRow("GC Content", gcContent))
                                .append(this.addInfoRow("Genetic Code", genome.genetic_code))
                                .append(this.addInfoRow("Number of features", genome.features.length));
@@ -281,11 +287,11 @@
 
             this.$messagePane.empty()
                              .append(span)
-                             .removeClass("kbwidget-hide-message");
+                             .show();
         },
 
         hideMessage: function() {
-            this.$messagePane.addClass("kbwidget-hide-message");
+            this.$messagePane.hide();
         },
 
         buildObjectIdentity: function(workspaceID, objectID) {

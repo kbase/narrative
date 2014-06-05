@@ -99,7 +99,7 @@ angular.module('narrative-directives')
             templateUrl: 'partials/narrative/project_table.html',
             link: function(scope, element, attrs) {
                 //fixme: temporary
-                var help_text = "<b>Projects</b> hold assets that can be shared by members. Project members\-the people who have permission to use the project\'s assets\—can be individuals or teams. You set permissions for all assets shared in the project, but you can set additional permissions on any individual asset."+
+                var help_text = "<b>Projects</b> hold assets that can be shared by members. Project members\-the people who have permission to use the project\'s assets\-can be individuals or teams. You set permissions for all assets shared in the project, but you can set additional permissions on any individual asset."+
                                 '<br>\
                                 <br>\
                                 <b>Narratives</b> capture your analyses and include rich annotations, visualizations widgets, reusable workflows, and custom scripts. Through projects, a special type of workspace, you can share your narratives and data with colleagues.'
@@ -510,9 +510,6 @@ angular.module('narrative-directives')
                                 }
                             });
 
-
-
-
                             $('.nar-selected .nar-link').parent().html(form);
                             input.focus();  
 
@@ -547,10 +544,11 @@ angular.module('narrative-directives')
                     // event for putting fixed header back on page
                     //    this special event uses .row since that container should be 
                     //    replaced via angular when view changes
-                    $('.row').unbind('click');
-                    $('.row').click(function() {
+                    $('body').not('#project-table tr').unbind('click')
+                    $('body').not('#project-table tr').click(function() {
+                        $('.fixedHeader').remove();
                         $('#project-table tr').removeClass('nar-selected');
-                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});                            
+                        new FixedHeader( table , {offsetTop: 50, "zTop": 1000});       
                     })
                 }
 

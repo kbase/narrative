@@ -100,6 +100,15 @@ class WSTYPES:
     rnaseq_exptype =  'KBaseExpression.ExpressionSample'
     rnaseq_expseriestype = 'KBaseExpression.ExpressionSeries'
 
+class IDServerids:
+    ### variation
+    var_vcf = 'kb|variant_test'
+    ###RNASeq 
+    rnaseq_expsample = 'kb|sample_test'
+    rnaseq_series = 'kb|series_test'
+    rnaseq_alignment = 'kb|alignment_test'
+    rnaseq_difexp = 'kb|differentialExpression_test'
+
 # Init logging.
 _log = logging.getLogger(__name__)
     
@@ -264,17 +273,17 @@ def prepareInputfiles(token,workspace=None,files=None,wstype=None):
         except FileNotFound as e:
             raise FileNotFound("File Not Found: {}".format(err))
         #return {"output" : str(status), "error": json_error}
-        node_id = obj['data']['shock_ref']['shock_id']
-        #sample_id = obj['data']['metadata']['sample_id']
-        meta = obj['data']['metadata']
-        #Output_file_path = 'narrative_RNASeq_' + sample_id +'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
+        if 'data' in obj and 'shock_ref' in obj['data'] and 'shock_id' in  obj['data']['shock_ref']:
+            node_id = obj['data']['shock_ref']['shock_id']
+        if 'data' in obj and 'metadata' in obj['data']:
+            meta.append(obj['data']['metadata'])
         shockfilename = filename.replace("|","_")
         job_ids.append(readShock(node_id,shockfilename,auth))
         
     for jid in job_ids:
-            status = pollGridJob(jid, auth)
-            if status and not status.running_state == 2:
-                json_error = status.failure_info
+        status = pollGridJob(jid, auth)
+        if status and not status.running_state == 2:
+            json_error = status.failure_info
     ret_code = "SUCCESS"
     return {"status" : ret_code ,"job_ids" : [x.job_id for x in job_ids] ,"metadata" : meta, "error": json_error}
 
@@ -292,9 +301,11 @@ def shockfileload(auth,filename=None,filepath=None):
     if status and not status.running_state == 2:
         json_error = status.failure_info
     sid =  parselog(str(jobid.job_id),pattern,auth)
+    if not sid:
+        raise Exception, "Shock Upload Unsuccessful"
     shockid  = str(sid).rstrip().split('=')[1].replace(']','')
     if not shockid:
-        raise ShockUploadException("Shock Upload Unsuccessful")
+        raise Exception, "Shock Upload Unsuccessful"
     
     return {"submitted" : filename , "shock_id" : shockid , "error": json_error}
 
@@ -585,38 +596,67 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     wtype = WSTYPES.rnaseq_sampletype 
     exptype = WSTYPES.rnaseq_exptype 
     bamtype = WSTYPES.rnaseq_bamtype 
-
+ 
     node_id = None
     stats = []
     myfile = None
+    sample_id = None
 
     @pipelineStep("compute")
     def runTophat(client,previous_steps):
         return client.alignTophat(act_ref, Input_file_path,
                                      "", tophat_out_path,
                                      "", "", auth)
+
     @pipelineStep("compute")
     def runCufflinks(client,previous_steps):
         return client.callCufflinks( cufflinks_in_path,
                                      cufflinks_out_path,
                                      "", "", "", auth)
-
+        
     @pipelineStep("compute")
     def workspaceobj(client,previous_steps):
-        return client.workspaceUpload(wsfile,ref.replace('kb|',''),
+        previous_steps = previous_steps[-1]
+        if 'output' in previous_steps and 'shock_id' in previous_steps['output']:
+            shock_id = previous_steps['output']['shock_id']
+        if not isFileFound(entityfile,auth):
+            out = getGenomefeatures(ref,auth)
+            ret = writefile(entityfile,out,auth) 
+        ontodict = ontologydata(po_id,eo_id)
+        ontoid = ",".join([ key for (key,value) in ontodict.items()])
+        ontodef =  ",".join([value for (key,value) in ontodict.items()])
+        ontoname = ontodef
+        return client.workspaceUpload(cufflinks_output,ref.replace('kb|',''),
                                       desc,title,srcdate,ontoid,
                                       ontodef,ontoname,paired,
                                       shock_id,"",auth)
     @pipelineStep(None)
     def writeBamfile(client,previous_steps):
-        tophatid  = idc.allocate_id_range("kb|alignment_test",1)
-        tophatobjname = "kb|alignment_test."+str(tophatid)
+        tophatid  = idc.allocate_id_range(IDServerids.rnaseq_alignment,1)
+        tophatobjname = IDServerids.rnaseq_alignment+"."+str(tophatid)
         filedata = shockfileload(auth,tophatobjname,cufflinks_in_path)
-        objdata = { "name" : sample_id+"_accepted_hits.bam" ,"paired" : paired , "created" :  strftime("%d %b %Y %H:%M:%S +0000", gmtime()) ,
-                "shock_ref": { "shock_id" : filedata['shock_id']  , "shock_url" : OTHERURLS.shock+'/node/'+filedata['shock_id'] },"metadata" : ret['metadata'] }
+        objdata = { "name" : str(sample_id)+"_accepted_hits.bam" ,"paired" : paired , "created" :  strftime("%d %b %Y %H:%M:%S +0000", gmtime()) ,
+                "shock_ref": { "shock_id" : filedata['shock_id']  , "shock_url" : OTHERURLS.shock+'/node/'+filedata['shock_id'] },"metadata" : ret['metadata'][0] }
         wsreturn = ws_saveobject(tophatobjname,objdata,bamtype,meth.workspace_id,meth.token)
         return wsreturn
- 
+
+    @pipelineStep(None)
+    def uploadtoShock(client,previous_steps):
+         return shockfileload(auth,cufflinksobjname,cufflinks_output)
+    
+    @pipelineStep(None)
+    def saveWorkspace_obj(client,previous_steps):
+        previous_steps = previous_steps[-1]
+        if 'output' in previous_steps:
+            job_id =  previous_steps['output'].job_id
+        pattern2 = re.compile('Writing the Expression object kb\|sample_test.[0-9]*')
+        sampleid = parselog(str(job_id),pattern2,auth)
+        realid = sampleid.split('Writing the Expression object ')[1]
+        result = cathdfsfile(realid,auth)
+        jsonobj = json.loads(str(result))
+        wsreturn = ws_saveobject(realid,jsonobj,exptype,meth.workspace_id,meth.token)
+        return {"submitted" : realid , "type" : exptype , "status" : wsreturn}
+
     def ontologydata(poid=None,eoid=None):
         exp =  expressionService(OTHERURLS.expression)
         #json_error = None
@@ -631,76 +671,37 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     
     meth.advance("Preparing Input files")
     ret  = prepareInputfiles(meth.token,workspace,Input_file_path,wtype)
-    sample_id = ret['metadata']['sample_id']
-    desc =  ret['metadata']['title']
-    title = sample_id
-    srcdate = ret['metadata']['ext_source_date']
-    po_id = ret['metadata']['po_id']
-    eo_id = ret['metadata']['eo_id']
-   
-    Output_file_path = "narrative_RNASeq_"+sample_id+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
+    #return to_JSON(ret)
+    if 'metadata' in ret:
+        if 'sample_id' in ret['metadata'][0]:
+            sample_id = ret['metadata'][0]['sample_id']
+            title = sample_id
+        if 'title' in  ret['metadata'][0]:
+            desc =  ret['metadata'][0]['title']
+        if 'ext_source_date' in  ret['metadata'][0]:
+            srcdate = ret['metadata'][0]['ext_source_date']
+        if 'po_id' in  ret['metadata'][0]:
+            po_id = ret['metadata'][0]['po_id']
+        if 'eo_id' in  ret['metadata'][0]:
+            eo_id = ret['metadata'][0]['eo_id']
+    
+    Output_file_path = "narrative_RNASeq_"+str(sample_id)+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
+    entityfile = str(act_ref) + "_fids.txt"
     tophat_out_path = os.path.join(Output_file_path, "tophat")
     cufflinks_in_path = os.path.join(tophat_out_path,"accepted_hits.bam")
     cufflinks_out_path = os.path.join(Output_file_path,"cufflinks")
-    stages = [Stage(runTophat,"Aligning Reads",pollGridJob),
-              Stage(runCufflinks,"Assembling Transcripts",pollGridJob)]
-              #Stage(writeBamfile,"Writing Alignment file",None)]
-    
-    pipe_output = runPipeline(stages,meth,auth)
-    #####
-    #create the tophat output object
-    #####
-    #if pipe_output[0].get('failure_info') == "DONE":
-    tophatid  = idc.allocate_id_range("kb|alignment_test",1)
-    tophatobjname = "kb|alignment_test."+str(tophatid)
-    filedata = shockfileload(auth,tophatobjname,cufflinks_in_path)
-    objdata = { "name" : sample_id+"_accepted_hits.bam" ,"paired" : paired , "created" :  strftime("%d %b %Y %H:%M:%S +0000", gmtime()) ,
-                "shock_ref": { "shock_id" : filedata['shock_id']  , "shock_url" : OTHERURLS.shock+'/node/'+filedata['shock_id'] },"metadata" : ret['metadata'] }
-   
-    wsreturn = ws_saveobject(tophatobjname,objdata,bamtype,meth.workspace_id,meth.token)
-    
-    #return to_JSON(wsreturn)
-
-    meth.advance("Uploading output to Shock")
-    #filename = os.path.basename(nfile)
-    cufflinks_out_path = os.path.join(Output_file_path,"cufflinks")
     cufflinks_output =  os.path.join(cufflinks_out_path,"transcripts.gtf")
-    cufflinksobjname = sample_id+'_transcripts.gtf'
-    filedata = shockfileload(auth,cufflinksobjname,cufflinks_output)
+    cufflinksobjname = str(sample_id)+'_transcripts.gtf'
+    #stages = #[Stage(getfiles,"Prepare Input files",None),
+    stages= [Stage(runTophat,"Aligning Reads",pollGridJob),
+             Stage(runCufflinks,"Assembling Transcripts",pollGridJob),
+             Stage(writeBamfile,"Writing Alignment file",None),
+             Stage(uploadtoShock,"Uploading to Shock",None),
+             Stage(workspaceobj,"Preparing Workspace obj",pollGridJob),
+             Stage(saveWorkspace_obj,"Saving Object",None)]
 
-    meth.advance("Preparing the workspace object")
-    out = getGenomefeatures(ref,auth)
-    entityfile = str(act_ref) + "_fids.txt"
-    ret = writefile(entityfile,out,auth)
-    #return to_JSON(ret)
-    wsfile = cufflinks_output
-    #desc = ret['metadata']['title']
-    #title = ret['metadata']['sample_id']
-    #srcdate = ret['metadata']['ext_source_date']
-    shock_id = filedata['shock_id']
-    #if ret['metadata'].has_key('po_id') or ret['metadata'].has_key('eo_id') :
-    ontodict = ontologydata(po_id,eo_id)
-   # return to_JSON(ontodict)
-        #ontodict =  ontologyinfo(meta['tissue'],meta['condition'])
-    ontoid = ",".join([ key for (key,value) in ontodict.items()])
-    ontodef =  ",".join([value for (key,value) in ontodict.items()])
-    ontoname = ontodef
-    wsjobid = workspaceobj()
-    pattern2 = re.compile('Writing the Expression object kb\|sample_test.[0-9]*')
-    stats = pollGridJob(wsjobid, auth)
-    if stats and not stats.running_state == 2:
-       ##fail here
-       pass
-    sampleid = parselog(str(wsjobid.job_id),pattern2,auth)
-    realid = sampleid.split('Writing the Expression object ')[1]
-    #return to_JSON(realid)
-    result = cathdfsfile(realid,auth)
-    jsonobj = json.loads(str(result))
-    wsreturn = ws_saveobject(realid,jsonobj,exptype,meth.workspace_id,meth.token)
-    json_info = wsreturn
-    return json.dumps({"submitted" : realid , "type" : exptype , "status" : json_info})
-
-
+    return to_JSON(runPipeline(stages,meth,auth))
+    
 @method(name = "Identify Differential Expression")
 def jnomics_differential_expression(meth,workspace= None,title=None, alignment_files=None,exp_files=None,
                                  ref=None):
@@ -753,6 +754,45 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
                                     "", condn_labels,merged_gtf,
                                     "", auth)
 
+    @pipelineStep("compute")
+    def savediffWorkspace_obj(client,previous_steps):
+        idsdict = {}
+        for dfile in diff_files:
+            time.sleep(10)
+            filepath =  os.path.join(cuffdiff_out_path,dfile)
+            jid = writeShock(title+"_"+dfile,filepath,auth)
+            idsdict[dfile] = jid
+        
+        for key,value in idsdict.items():
+            status = pollGridJob(value, auth)
+            if status and not status.running_state == 2:
+             ## fail here
+                pass
+
+        for key, value in idsdict.items():
+            pattern =  re.compile("\[id=(.*?)]")
+            shockid = parselog(str(value.job_id),pattern,auth)
+        #del idsdict[key]
+            idsdict[key] = str(shockid).rstrip().split('=')[1].replace(']','')
+    
+        diff_exp_files = []
+        for key, value in idsdict.items():
+            diff_exp = {}
+            diff_exp["name"] =  key
+            diff_exp["shock_ref"] = {}
+            diff_exp["shock_ref"]["shock_id"] = value
+            diff_exp["shock_ref"]["shock_url"] = OTHERURLS.shock+"/node/"+value
+            diff_exp_files.append(diff_exp)
+
+        diffid = "kb|differentialExpression."+str(idc.allocate_id_range("kb|differentialExpression_test",1))
+        diffexpobj = { "name" : diffid,
+                       "title" : title, 
+                       "created" : strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
+                       "diff_expression" :  diff_exp_files
+                     }
+        wsreturn = ws_saveobject(diffid,diffexpobj,diffexptype,meth.workspace_id,meth.token)
+        return {"submitted" : diffid , "status" : "SUCCESS" , "metadata" : wsreturn}
+
     files = alignment_files.strip('\r\n').split(',')
     expfiles =  exp_files.strip('\r\n').split(',')
     nodeids = []
@@ -771,9 +811,6 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     for nfile in expfiles:
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': nfile, 'type': exptype})
         node_id =  obj['data']['shock_url']
-        #experimentid =  obj['data']['metadata']['source_id']
-        #sampleid = obj['data']['metadata']['sample_id']
-        #idc.allocate_id_range("kb|alignment_test",1)
         filename = str(obj['data']['id']).replace(".","_")+".gtf"
         objnames.append(filename)
         job_ids.append(readShock(node_id.split("/node/")[1],filename,auth))
@@ -796,51 +833,12 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     cuffdiff_out_path = os.path.join(Output_file_path,"cuffdiff")
     merged_gtf = os.path.join(merge_out_path,"merged.gtf")
 
-    stages = [Stage(runCuffmerge,"Merging Assembled Trancripts",pollGridJob),
-              Stage(runCuffdiff,"Differential Expression",pollGridJob)]
+    stages = [Stage(runCuffmerge,"Merging Assembled Transcripts",pollGridJob),
+              Stage(runCuffdiff,"Differential Expression",pollGridJob),
+              Stage(savediffWorkspace_obj,"Saving Workspace Obj",None)]
     
-    pipe_output  = runPipeline(stages,meth,auth)
+    return  to_JSON(runPipeline(stages,meth,auth))
 
-    meth.advance("Preparing Workspace object")
-    #if pipe_output[1].get("failure_info") == "DONE":
-    idsdict = {}
-    for dfile in diff_files:
-        time.sleep(10)
-        filepath =  os.path.join(cuffdiff_out_path,dfile)
-        jid = writeShock(title+"_"+dfile,filepath,auth)
-        idsdict[dfile] = jid
-        
-    for key,value in idsdict.items():
-        status = pollGridJob(value, auth)
-        if status and not status.running_state == 2:
-             ## fail here
-            pass
-
-    for key, value in idsdict.items():
-        pattern =  re.compile("\[id=(.*?)]")
-        shockid = parselog(str(value.job_id),pattern,auth)
-        #del idsdict[key]
-        idsdict[key] = str(shockid).rstrip().split('=')[1].replace(']','')
-    
-    diff_exp_files = []
-    for key, value in idsdict.items():
-        diff_exp = {}
-        diff_exp["name"] =  key
-        diff_exp["shock_ref"] = {}
-        diff_exp["shock_ref"]["shock_id"] = value
-        diff_exp["shock_ref"]["shock_url"] = OTHERURLS.shock+"/node/"+value
-        diff_exp_files.append(diff_exp)
-
-    diffid = "kb|differentialExpression."+str(idc.allocate_id_range("kb|differentialExpression_test",1))
-    diffexpobj = { "name" : diffid,
-                   "title" : title, 
-                   "created" : strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
-                   "diff_expression" :  diff_exp_files
-                 }
-    wsreturn = ws_saveobject(diffid,diffexpobj,diffexptype,meth.workspace_id,meth.token)
-    #else:
-     #   raise Exception,"Identifying Gene Expression Failed"
-    return to_JSON({"submitted" : diffid , "status" : "SUCCESS" , "metadata" : wsreturn})
 
 @method(name = "Create Expression Series ")
 def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,design=None,summary=None):
@@ -910,51 +908,6 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,design=None,s
     wsreturn = ws_saveobject(seriesobj['id'],seriesobj,expseriestype,meth.workspace_id,meth.token)
 
     return to_JSON(wsreturn)
-
-@method(name = "Prepare Input files ")
-def prepareInputfiles1(meth,workspace=None,files=None,wstype=None):
-    """search a file
-    :param workspace: Worspace id
-    :type workspace : kbtypes.Unicode
-    :ui_name workspace : Workspace 
-    :param files: RNASeq samples
-    :type files : kbtypes.Unicode
-    :ui_name files : Samples
-    :param wstype: wstype
-    :type wstype : kbtypes.Unicode
-    :return: Workspace id
-    :rtype: kbtypes.Unicode
-    """
-
-    json_error = None
-    status = None
-    job_ids = []
-    meta = []
-
-    auth = Authentication(userFromToken(meth.token), "", meth.token)
-    ws = workspaceService(OTHERURLS.workspace)
-    token = meth.token
-    files = files.split(",")
-    for nfile in files:
-        filename = os.path.basename(nfile)
-        try: 
-            obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
-        except FileNotFound as e:
-            raise FileNotFound("File Not Found: {}".format(err))
-        #return {"output" : str(status), "error": json_error}
-        node_id = obj['data']['shock_ref']['shock_id']
-        sample_id = obj['data']['metadata']['sample_id']
-        meta.append(obj['data']['metadata'])
-        Output_file_path = 'narrative_RNASeq_' + sample_id +'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
-        job_ids.append(readShock(node_id,filename,auth))
-        
-    for jid in job_ids:
-            status = pollGridJob(jid, auth)
-            if status and not status.running_state == 2:
-                json_error = status.failure_info
-    jsonobj = {"stats" : "Input Files Loaded","job_ids" : [x.job_id for x in job_ids] ,"metadata" : meta, "error": json_error}
-    objtype = type(jsonobj)
-    return to_JSON(objtype)
 
 
 @method(name = "Check files on HDFS and throw exception")

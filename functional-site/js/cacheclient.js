@@ -379,7 +379,6 @@ function UIUtils() {
             return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
         } else  {
             var d = new Date(timestamp);
-            console.log(d)
             return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); //check
         }
     }

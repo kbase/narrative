@@ -2029,7 +2029,6 @@ angular.module('ws-directives')
             $.when(prom).done(function(data) {
                 $(ele).rmLoading()
 
-                console.log(data)
                 var rows = [];
                 var total_count = 0;
                 for (var i in data) {
@@ -2042,11 +2041,13 @@ angular.module('ws-directives')
                     var timestamp = kb.ui.getTimestamp(data[i][3].split('+')[0]);
                     var date = kb.ui.formateDate(timestamp);
 
-                    var ws = row[1]
+                    var ws = row[1];
                     var count = row[4]
                     total_count = total_count+count;
 
-                    rows.push([ws, owner, date, count, timestamp])
+                    var url = "ws.id({ws:'"+ws+"'})";
+                    var link = '<a ui-sref="'+url+'" >'+ws+'</a>';
+                    rows.push([link, owner, date, count, timestamp])
                 }
                 tableSettings.aaData = rows;
 
@@ -2055,6 +2056,8 @@ angular.module('ws-directives')
 
                 $(ele).append(container)
                 var table = $(container).dataTable(tableSettings)
+                $compile(table)(scope);
+
                 $('.table-options').append('<span class="badge badge-primary pull-right">'
                                                 +total_count+' Objects'+
                                            '</span>')

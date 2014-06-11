@@ -58,12 +58,18 @@ var app = angular.module('landing-pages',
           controller: 'NarrativeProjects'
         })
 
+    $stateProvider
+
 
     $stateProvider
         .state('ws', {
           url: "/ws/",
           templateUrl: 'views/ws/ws.html',
           controller: 'WB'
+        }).state('ws-manage', {
+          url: "/ws/manage",
+          templateUrl: 'views/ws/manage.html', 
+          controller: 'WSManage',
         }).state('ws.id', {
           url: "objtable/:ws?type",
           templateUrl: 'views/ws/objtable.html',
@@ -76,19 +82,19 @@ var app = angular.module('landing-pages',
           url: "mv/",
           templateUrl: 'views/ws/mv.html',
         }).state('ws.mv.model', {
-          url: "model/:ws/:id",
+          url: "model/:ws/:id?fba",
           templateUrl: 'views/ws/sortable/model.html',
+          reloadOnSearch: false,
 
         }).state('ws.mv.fba', {
-          url: "fba/:ws/:id",
+          url: "fba/:ws/:id?fba",
           templateUrl: 'views/ws/sortable/data.html',
-
+          reloadOnSearch: false
         }).state('ws.mv.maps', {
-          url: "maps/:ws/:id",
+          url: "maps/:ws/:id/?fba",
           templateUrl: 'views/ws/sortable/maps.html',
-
+          reloadOnSearch: false
         })
-
 
         .state('ws.models', {
           url: "models/:ws/:id?map",
@@ -97,7 +103,7 @@ var app = angular.module('landing-pages',
           //reloadOnSearch: false
         }).state('ws.fbas', {
           url: "fbas/:ws/:id?map",
-          templateUrl: 'views/ws/mv.html', //sortable/fba.html',
+          templateUrl: 'sortable/fba.html',
           controller: 'MV' //'WBModelLanding',
           //reloadOnSearch: false
         }).state('ws.etc', {
@@ -116,7 +122,14 @@ var app = angular.module('landing-pages',
           url: "maps/:ws/:id",
           templateUrl: 'views/ws/sortable/metabolic_map.html',
           controller: 'WBLanding'
-        }).state('ws.json', {
+        }).state('ws.provenance', {
+          url: "provenance/:ws/:id",
+          templateUrl: 'views/ws/provenance.html',
+          controller: 'WBLanding'
+        })
+
+
+        .state('ws.json', {
           url: "json/:ws/:id",
           templateUrl: 'views/ws/json.html',
           controller: 'WBJSON'

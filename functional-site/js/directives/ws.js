@@ -69,11 +69,7 @@ angular.module('ws-directives')
                                 '<button type="button" class="btn btn-default pull-right" ng-click="clearList()">Clear</button>'+                                
                             '</div>'+
 
-
-
                         '</div>'+
-
-
 
                         //(USER_ID ? '<a class="new-ws pull-right">New+</a>' : '')+
 
@@ -1298,8 +1294,7 @@ angular.module('ws-directives')
                         } 
                     }
 
-
-
+                    // get url path specified in landing_page_map.json
                     if (module in scope.obj_mapping && scope.obj_mapping[module] 
                         && scope.obj_mapping[module][kind] ) {
                         var sub = scope.obj_mapping[module][kind];
@@ -1366,6 +1361,8 @@ angular.module('ws-directives')
                     e.stopPropagation();
                 })
 
+
+                // events for favorite (start) button
                 $('.btn-fav').hover(function() {
                     $(this).addClass('glyphicon-star-empty');
                 }, function() {
@@ -1391,6 +1388,7 @@ angular.module('ws-directives')
 
                 })
 
+                // event for objtect 'more' button
                 $('.btn-show-info').unbind('click');
                 $('.btn-show-info').click(function(e) {
                     e.stopPropagation();
@@ -1411,7 +1409,7 @@ angular.module('ws-directives')
                 $('.show-versions').tooltip({title: 'Show history', placement: 'bottom', delay: {show: 700}});
                 $('.obj-id').tooltip({title: 'View object', placement: 'bottom', delay: {show: 700}});
                 $('.btn-show-info').tooltip({title: 'Meta data/spec, download, etc.', placement: 'bottom', delay: {show: 700}});
-            
+
                 checkBoxObjectClickEvent();
             }
 
@@ -1996,6 +1994,85 @@ angular.module('ws-directives')
 
     };
 })
+
+
+.directive('wsmanage', function($location, $compile, $state, $stateParams) {
+    return {
+        link: function(scope, ele, attrs) {
+            $(ele).append('<div class="h3 pull-left">Workspace Manager</div>')
+            var tableSettings = {
+
+                    //"sPaginationType": "full_numbers",
+                    "aaData": [],
+                    //"fnDrawCallback": events,
+                    "aaSorting": [[ 2, "desc" ]],
+                    "iDisplayLength": 1000,                    
+                    "aoColumns": [
+                      { "sTitle": "Workspace"},
+                      { "sTitle": "Owner"}, //"sWidth": "10%"
+                      { "sTitle": "Last Mod", "iDataSort": 4},
+                      { "sTitle": "Count"},
+                      { "sTitle": "Time Stamp", "bVisible": false, "sType": 'numeric'}                   
+
+                    ],     
+                    "sDom": "R<'row'<'col-xs-12 table-options'f>r>t<'row'<'col-xs-12'i>>",
+                    "oLanguage": {
+                        "sEmptyTable": "No objects in workspace",
+                        "sSearch": "Search:"
+                    }
+                }
+
+
+
+            $(ele).loading();
+            var prom = kb.ws.list_workspace_info({});
+            $.when(prom).done(function(data) {
+                $(ele).rmLoading()
+
+                console.log(data)
+                var rows = []
+                for (var i in data) {
+                    var row = data[i];
+
+                    var timestamp = kb.ui.getTimestamp(data[i][3].split('+')[0]);
+                    var date = kb.ui.formateDate(timestamp);
+
+                    var ws = row[1]
+                    var owner = row[2]
+                    var count = row[4]
+
+                    rows.push([ws, owner, date, count, timestamp])
+                }
+                tableSettings.aaData = rows;
+
+                var container = $('<table id="ws-manage" class="table table-bordered" style="width: 100%;"></table>');
+
+
+                $(ele).append(container)
+                var table = $(container).dataTable(tableSettings)
+    
+                $('#ws-manage tfoot th').each( function () {
+                    var title = $('#ws-manage thead th').eq( $(this).index() ).text();
+                    $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+                } );
+
+                table.columns().eq( 0 ).each( function ( colIdx ) {
+                    $( 'input', table.column( colIdx ).footer() ).on( 'keyup change', function () {
+                        table
+                            .column( colIdx )
+                            .search( this.value )
+                            .draw();
+                    } );
+                } );
+
+            })
+
+
+
+        }
+    }
+})
+
 
 
 function getEditableDescription(d) {

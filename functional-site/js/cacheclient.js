@@ -360,11 +360,6 @@ function UIUtils() {
 
         var seconds = Math.floor(interval / 1000);
 
-        // if greater than 5 months ago, show date
-        if (days > 150) {
-            return false;
-        }
-
         if (days == 0 && hours == 0 && minutes == 0) {
             return seconds + " secs ago.";
         } else if (days == 0 && hours == 0) {
@@ -383,7 +378,8 @@ function UIUtils() {
             var t = d.toLocaleTimeString().split(':');
             return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
         } else  {
-            var d = new Date(timestamp);        
+            var d = new Date(timestamp);
+            console.log(d)
             return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); //check
         }
     }

@@ -115,7 +115,6 @@ angular.module('lp-directives')
 
             var prom = kb.get_model(scope.ws, scope.id)
             $.when(prom).done(function(data){
-                console.log('model data', data)
                 $(ele).rmLoading();
 
                 $rootScope.org_name = data[0].data.name;
@@ -187,7 +186,7 @@ angular.module('lp-directives')
         }
     };
 })
-.directive('fbatabs', function($location, $rootScope) {
+.directive('fbatabs', function($location, $rootScope, $stateParams) {
     return {
         link: function(scope, element, attrs) {
             /*var p = $(element).kbasePanel({title: 'FBA Details', 
@@ -201,10 +200,9 @@ angular.module('lp-directives')
             //            {fbas: [scope.id], workspaces: [scope.ws]});
 
             $(element).loading();
-            console.log('referenced objects', scope.selected)
             
             $.when(scope.ref_obj_prom).done(function() {
-                loadTabs(scope.fba_refs)
+                loadPanel(scope.fba_refs)
 
             }).fail(function() {
                 $(element).html("<h5>There are currently no FBA \
@@ -212,13 +210,38 @@ angular.module('lp-directives')
                                       You may want to FBA analysis.</h5>")
             })
 
-
-            function loadTabs(fba_refs) {
+            function loadPanel(fba_refs) {
                 var ver_selector = $('<select class="form-control">');
                 for (var i in fba_refs) {
                     var ref = fba_refs[i];
-                    ver_selector.append('<option>'+ref.name+' | '+ref.ws+' | '+ref.date+'</option>')
+
+                    if ($stateParams.fba == ref.name) {
+                        ver_selector.append('<option data-name="'+ref.name+'" data-ws="'+ref.ws+'" selected>'
+                                                +ref.name+' | '+ref.ws+' | '+ref.date+'</option>')
+                    } else {
+                        ver_selector.append('<option data-name="'+ref.name+'" data-ws="'+ref.ws+'">'
+                                                +ref.name+' | '+ref.ws+' | '+ref.date+'</option>')                        
+                    }
                 }
+
+                // set url query string to first 
+                //$location.search({fba: fba_refs[0].name});
+
+                // reload table when 
+                ver_selector.change(function() {
+                    var gif_container = $('<div>');
+                    $(this).after(gif_container)
+                    gif_container.loading();
+
+                    var selected = $(this).find('option:selected')
+                    var name = selected.data('name');
+                    var ws = selected.data('ws');                    
+
+                    //scope.$apply( $location.search({fba: ws+'/'+name}) ); 
+                    loadTabs(ws, name)                                
+                })
+
+                // form for options on tabs
                 var form = $('<div class="col-xs-5">');
                 form.append(ver_selector)
                 var row = $('<div class="row">');
@@ -226,17 +249,26 @@ angular.module('lp-directives')
 
                 $(element).prepend(row)
 
-                var p1 = kb.get_fba(fba_refs[0].ws, fba_refs[0].name)
+                loadTabs(fba_refs[0].ws, fba_refs[0].name)
+            }
+
+
+            function loadTabs(fba_ws, fba_name) {
+                console.log('loading tabs for', fba_ws, fba_name)
+                var p1 = kb.get_fba(fba_ws, fba_name)
                 //var p2 = kb.ws.get_object_info([{workspace: fba_refs[0].ws, 
                 //                                 name: fba_refs[0].name}], 1);
                 $.when(p1).done(function(data){
                     $(element).rmLoading();
-                    $(element).kbaseFbaTabs({fbaData: data});
+
+                    $('.fba-container').remove();
+                    var container = $('<div class="fba-container">');
+                    $(element).append(container);
+                    container.kbaseFbaTabs({fbaData: data});
 
                     $rootScope.org_name = data[0].org_name;
                     scope.$apply();
 
-                    console.log('fba', data)
                     $(document).on('rxnClick', function(e, data) {
                         var url = '/rxns/'+data.ids;
                         scope.$apply( $location.path(url) );
@@ -323,7 +355,6 @@ angular.module('lp-directives')
                                            rightLabel: 'N/A',
                                            subText: scope.id});
             p.loading();
-            console.log('*************')
             var p1 = kb.req('ws', 'get_objects',
                         [{name: scope.id, workspace: scope.ws}]);
             $.when(p1).done(function(d) {
@@ -355,8 +386,6 @@ angular.module('lp-directives')
                     {medias: [scope.id], workspaces: [scope.ws]})
             //var prom = kb.ws.get_objects([{workspace:scope.ws, name: scope.id}])
             $.when(prom).done(function(data) {
-                //console.log(data[0].data)
-
                 $(p.body()).kbaseMediaEditor({ids: [scope.id], 
                                               workspaces : [scope.ws],
                                               data: data});

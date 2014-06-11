@@ -155,13 +155,25 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 .controller('WB', function($scope, $stateParams) {
     $scope.selected_ws = $stateParams.ws;
     $scope.type = $stateParams.type;
+
+    $scope.hideSidebar = function(route) {
+        console.log('clicked')
+        $('#ws-sidebar').toggle('slide', {
+                         direction: 'left',
+                         duration: 'fast',
+                             complete: function() {
+                                $state.transitionTo(route,  {ws:ws, id:id})
+                         }
+                     })
+    }
+
 })
 
 
 .controller('WBLanding', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
-    console.log($scope.ws, $scope.id)
+    console.log($scope.ws, $scope.id);
 
 
     $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
@@ -208,6 +220,10 @@ app.controller('RxnDetail', function($scope, $stateParams) {
           $(this).find('.panel-body').removeClass('hide');
         }
     });
+})
+
+.controller('WSManage', function($scope, $stateParams, $location) {
+
 
 })
 
@@ -215,11 +231,12 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     console.log('called mv controller')
 
     var type = $location.path().split('/')[2];
-    if ($stateParams.tab == 'FBA') {
-        $scope.tabs[1].active = true;
-    } else if ($stateParams.tab == "Model") {
-        $scope.tabs[0].active = true;        
-    }
+
+    //if ($stateParams.tab == 'FBA') {
+    //    $scope.tabs[1].active = true;
+    //} else if ($stateParams.tab == "Model") {
+    //    $scope.tabs[0].active = true;        
+    //}
 
     $scope.type = type;
     $scope.ws = $stateParams.ws;
@@ -231,6 +248,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     $scope.selected = [{workspace: $scope.ws, name: $scope.id}]
 
     $scope.fba_refs = [];
+
     $scope.ref_obj_prom = kb.ws.list_referencing_objects($scope.selected)
     $.when($scope.ref_obj_prom).done(function(data) {
         // only care about first object
@@ -252,37 +270,24 @@ app.controller('RxnDetail', function($scope, $stateParams) {
         $scope.fba_refs.sort(compare)
     })
 
-
     //$scope.defaultMap = $stateParams.map;
-
-
-
-
     function compare(a,b) {
-      if (a.timestamp < b.timestamp)
-         return -1;
-      if (a.timestamp > b.timestamp)
-        return 1;
-      return 0;
+        if (a.timestamp < b.timestamp) return -1;
+        if (a.timestamp > b.timestamp) return 1;
+        return 0;
     }
 
 })
 
 .controller('MV1', function($scope, $stateParams, $location) {
-
-
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
 
 }).controller('MV2', function($scope, $stateParams, $location) {
-
-
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
 
 }).controller('MV3', function($scope, $stateParams, $location) {
-
-
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
 

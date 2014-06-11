@@ -312,7 +312,6 @@ angular.module('ws-directives')
                     var read  = filterRead.prop('checked');
 
                     //$(".select-box table").children()
-                    console.log(workspaces)
                     for (var i=0; i< workspaces.length; i++) {
                         var ws = workspaces[i];
                         var name = ws[1];
@@ -1079,7 +1078,7 @@ angular.module('ws-directives')
                     "aoColumns": columns,
                     "oLanguage": {
                         "sEmptyTable": "No objects in workspace",
-                        "sSearch": "Search:"
+                        "sSearch": "Search: "
                     }
                 }
 
@@ -1096,7 +1095,6 @@ angular.module('ws-directives')
                 var p4 = $.getJSON('landing_page_map.json');
 
                 $.when(p, p2, p3, p4).done(function(objs, deleted_objs, favs, obj_mapping){
-                    console.log(objs)
                     scope.favs = (favs[0] == 1 ? favs[1] : []);
                     scope.deleted_objs = deleted_objs;
                     scope.obj_mapping = obj_mapping[0];
@@ -1739,7 +1737,7 @@ angular.module('ws-directives')
                   ],                         
                     "oLanguage": {
                         "sEmptyTable": "No objects in workspace",
-                        "sSearch": "Search:"
+                        "sSearch": "Search: "
                     }
                 }
 
@@ -1999,7 +1997,7 @@ angular.module('ws-directives')
 .directive('wsmanage', function($location, $compile, $state, $stateParams) {
     return {
         link: function(scope, ele, attrs) {
-            $(ele).append('<div class="h3 pull-left">Workspace Manager</div>')
+            $(ele).append('<div class="h3 pull-left" style="margin-right: 30px;">Workspace Inspector</div>')
             var tableSettings = {
 
                     //"sPaginationType": "full_numbers",
@@ -2010,15 +2008,17 @@ angular.module('ws-directives')
                     "aoColumns": [
                       { "sTitle": "Workspace"},
                       { "sTitle": "Owner"}, //"sWidth": "10%"
-                      { "sTitle": "Last Mod", "iDataSort": 4},
+                      { "sTitle": "Last Modified", "iDataSort": 4},
                       { "sTitle": "Count"},
                       { "sTitle": "Time Stamp", "bVisible": false, "sType": 'numeric'}                   
 
                     ],     
-                    "sDom": "R<'row'<'col-xs-12 table-options'f>r>t<'row'<'col-xs-12'i>>",
+                    "sDom": "R<'row'<'col-xs-12 table-options'i>r>t<'row'<'col-xs-12'>>",
                     "oLanguage": {
-                        "sEmptyTable": "No objects in workspace",
-                        "sSearch": "Search:"
+                        "sEmptyTable": "No workspaces found",
+                        "sSearch": "Search: ",
+                        "sInfo": '_TOTAL_ workspaces, excluding "kbasesearch"',
+                        "sInfoFiltered": ""
                     }
                 }
 
@@ -2030,16 +2030,21 @@ angular.module('ws-directives')
                 $(ele).rmLoading()
 
                 console.log(data)
-                var rows = []
+                var rows = [];
+                var total_count = 0;
                 for (var i in data) {
+
                     var row = data[i];
+                    var owner = row[2]      
+                    
+                    if (owner == 'kbasesearch') continue;
 
                     var timestamp = kb.ui.getTimestamp(data[i][3].split('+')[0]);
                     var date = kb.ui.formateDate(timestamp);
 
                     var ws = row[1]
-                    var owner = row[2]
                     var count = row[4]
+                    total_count = total_count+count;
 
                     rows.push([ws, owner, date, count, timestamp])
                 }
@@ -2050,26 +2055,38 @@ angular.module('ws-directives')
 
                 $(ele).append(container)
                 var table = $(container).dataTable(tableSettings)
-    
-                $('#ws-manage tfoot th').each( function () {
+                $('.table-options').append('<span class="badge badge-primary pull-right">'
+                                                +total_count+' Objects'+
+                                           '</span>')
+
+                $('#ws-manage thead th').each( function () {
                     var title = $('#ws-manage thead th').eq( $(this).index() ).text();
-                    $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+                    $(this).append(' <div><input type="text" class="select-filter" placeholder="Search '+title+'" ></input></div>' );
                 } );
+    /*
+     * Support functions to provide a little bit of 'user friendlyness' to the textboxes
+     */
+                $("thead input").click(function(e) {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    console.log('clicked')
+                    $(this).focus()
+                })
 
-                table.columns().eq( 0 ).each( function ( colIdx ) {
-                    $( 'input', table.column( colIdx ).footer() ).on( 'keyup change', function () {
-                        table
-                            .column( colIdx )
-                            .search( this.value )
-                            .draw();
-                    } );
+                $("input").keyup( function () {
+                    console.log('called')
+                    /* Filter on the column (the index) of this element */
+                    table.fnFilter( this.value, table.oApi._fnVisibleToColumnIndex( 
+                        table.fnSettings(), $("thead input").index(this) ), true );
                 } );
-
+                        
             })
+                         
+        }           
 
 
 
-        }
+
     }
 })
 

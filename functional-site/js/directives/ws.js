@@ -21,6 +21,7 @@ angular.module('ws-directives')
                         '<div class="btn-toolbar ws-toolbar">'+
 
 
+                            (USER_ID ? 
                             '<div class="btn-group btn-group-sm">'+
                                 '<button type="button" class="btn btn-default btn-show-ws active">'+
                                     '<span class="glyphicon glyphicon-th-large"></span>'+
@@ -29,7 +30,11 @@ angular.module('ws-directives')
                                     '<span class="glyphicon glyphicon-star"></span> '+
                                     '(<span class="favorite-count">0</span>)'+
                                 '</button>'+
-                            '</div>'+
+                            '</div>' : 
+                            
+                                ''
+
+                            )+
                         
 
                             '<div class="btn-group btn-group-sm btn-filter-ws">'+
@@ -1091,11 +1096,14 @@ angular.module('ws-directives')
 
                 var p = kb.ws.list_objects({workspaces: [ws]});
                 var p2 = kb.ws.list_objects({workspaces: [ws], showOnlyDeleted: 1});
-                var p3 = kb.ujs.get_has_state('favorites', 'queue', 0);
+                var p3 = (USER_ID ? kb.ujs.get_has_state('favorites', 'queue', 0) : undefined);
                 var p4 = $.getJSON('landing_page_map.json');
 
                 $.when(p, p2, p3, p4).done(function(objs, deleted_objs, favs, obj_mapping){
-                    scope.favs = (favs[0] == 1 ? favs[1] : []);
+                    if (favs) {
+                        scope.favs = (favs[0] == 1 ? favs[1] : []);                        
+                    }
+
                     scope.deleted_objs = deleted_objs;
                     scope.obj_mapping = obj_mapping[0];
 

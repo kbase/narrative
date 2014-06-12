@@ -308,6 +308,7 @@ angular.module('ws-directives')
 
                 // function that filters when a filter is selected
                 function filter() {
+                    console.log('called filter')
                     $('.select-box table tr').show();
                     $('.no-ws-alert').remove()
 
@@ -316,6 +317,9 @@ angular.module('ws-directives')
                     var write = filterWrite.prop('checked');
                     var read  = filterRead.prop('checked');
 
+
+                    console.log(owner, admin, write, read)
+                    console.log(workspaces)
                     //$(".select-box table").children()
                     for (var i=0; i< workspaces.length; i++) {
                         var ws = workspaces[i];

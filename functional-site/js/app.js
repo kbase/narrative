@@ -328,11 +328,13 @@ var app = angular.module('landing-pages',
 	    templateUrl: 'views/objects/ppid.html',
 	    controller: 'PPIDetail'})
 
+/*
     $stateProvider
         .state('landing-pages-help',
             {url: '/landing-pages-help',
              templateUrl: 'views/landing-pages-help.html',
              controller: LPHelp})
+*/
 
     $urlRouterProvider.when('', '/login/');
 
@@ -368,7 +370,7 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     var HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
                  <ul class="dropdown-menu"> \
                  <li><a href="http://kbase.us/for-users/narrative-quick-start/">Narrative Quick Start Guide</a></li> \
-                 <li><a href="#/landing-pages-help">Landing Page Documentation</a></li> \
+                 <!--<li><a href="#/landing-pages-help">Landing Page Documentation</a></li>--> \
                  <li><a href="mailto:help@kbase.us">Email help@kbase.us</a></li> \
               </ul>';
     $('.help-dropdown').html(HELP_DROPDOWN);

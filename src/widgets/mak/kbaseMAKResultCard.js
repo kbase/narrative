@@ -54,20 +54,20 @@
 					    .append($("<tr/>").append("<td>ID</td><td>" + self.collection.data.id + "</td>"))
 					    .append($("<tr/>").append("<td>Run started </td><td>" + self.collection.data.start_time + "</td>"))
 					    .append($("<tr/>").append("<td>Run finished </td><td>" + self.collection.data.finish_time + "</td>"))
-                                            .append($("<tr/>").append("<td>MAK version</td><td>" + self.collection.data.set.version + "</td>"))
-                                            .append($("<tr/>").append("<td>Number of biclusters in set</td><td>" + self.collection.data.set.number + "</td>"))
-                                            .append($("<tr/>").append("<td>Min genes for bicluster in set</td><td>" + self.collection.data.set.min_genes + "</td>"))
-                                            .append($("<tr/>").append("<td>Max genes for bicluster in set</td><td>" + self.collection.data.set.max_genes + "</td>"))
-                                            .append($("<tr/>").append("<td>Min conditions for bicluster in set</td><td>" + self.collection.data.set.min_conditions + "</td>"))
-                                            .append($("<tr/>").append("<td>Max conditions for bicluster in set</td><td>" + self.collection.data.set.max_conditions + "</td>"))
-                                            .append($("<tr/>").append("<td>NCBI taxonomy id</td><td>" + self.collection.data.set.taxon + "</td>"))
-                                            .append($("<tr/>").append("<td>Type of bicluster</td><td>" + self.collection.data.set.bicluster_type + "</td>"))
+                                            .append($("<tr/>").append("<td>MAK version</td><td>" + self.collection.data.sets[0].version + "</td>"))
+                                            .append($("<tr/>").append("<td>Number of biclusters in set</td><td>" + self.collection.data.sets[0].number + "</td>"))
+                                            .append($("<tr/>").append("<td>Min genes for bicluster in set</td><td>" + self.collection.data.sets[0].min_genes + "</td>"))
+                                            .append($("<tr/>").append("<td>Max genes for bicluster in set</td><td>" + self.collection.data.sets[0].max_genes + "</td>"))
+                                            .append($("<tr/>").append("<td>Min conditions for bicluster in set</td><td>" + self.collection.data.sets[0].min_conditions + "</td>"))
+                                            .append($("<tr/>").append("<td>Max conditions for bicluster in set</td><td>" + self.collection.data.sets[0].max_conditions + "</td>"))
+                                            .append($("<tr/>").append("<td>NCBI taxonomy id</td><td>" + self.collection.data.sets[0].taxon + "</td>"))
+                                            .append($("<tr/>").append("<td>Type of bicluster</td><td>" + self.collection.data.sets[0].bicluster_type + "</td>"))
 					));
 					self.$elem.append("<h3>View biclusters</h3>");
 
 					var $dropdown = $("<select />");
-					for (var bicluster in self.collection.data.set.biclusters) {
-						$dropdown.append("<option id='" + bicluster + "'>"+self.collection.data.set.biclusters[bicluster].id+"; Full Criterion = " + self.collection.data.set.biclusters[bicluster].full_crit.toFixed(4) + "; genes = " + self.collection.data.set.biclusters[bicluster].num_genes + "; conditions = " + self.collection.data.set.biclusters[bicluster].num_conditions + " </option>");
+					for (var bicluster in self.collection.data.sets[0].biclusters) {
+						$dropdown.append("<option id='" + bicluster + "'>"+self.collection.data.sets[0].biclusters[bicluster].bicluster_id+"; Full Criterion = " + self.collection.data.sets[0].biclusters[bicluster].full_crit.toFixed(4) + "; genes = " + self.collection.data.sets[0].biclusters[bicluster].num_genes + "; conditions = " + self.collection.data.sets[0].biclusters[bicluster].num_conditions + " </option>");
 					}
 					self.$elem.append($dropdown);
 					self.$elem.append($("<button class='btn btn-default'>Show Bicluster</button>")
@@ -75,21 +75,21 @@
                                                 function(event) {
                                                     $(self.$elem.selector + " > select option:selected").each(function() {
     //                                              console.log(event);
-                                                    self.trigger("showMAKBicluster", { bicluster: self.collection.data.set.biclusters[$(this).attr("id")], event: event });
+                                                    self.trigger("showMAKBicluster", { bicluster: [self.collection.data.sets[0].biclusters[$(this).attr("id")],self.collection.data.sets[0]], event: event });
                                                 });
                                             })
                                         );
                                 					self.$elem.append("<h3>MAK Run Parameters</h3>");
 			        self.$elem.append($("<div />").
 					append($("<table/>").addClass("kbgo-table")
-                                            .append($("<tr/>").append("<td>Minimum raw bicluster score</td><td>" + self.collection.data.mak_param.min_raw_bicluster_score + "</td>"))
-                                            .append($("<tr/>").append("<td>Maximum allowed bicluster overlap</td><td>" + self.collection.data.mak_param.max_bicluster_overlap + "</td>"))
-                                            .append($("<tr/>").append("<td>Maximum allowed enrichment p-value</td><td>" + self.collection.data.mak_param.max_enrich_pvalue + "</td>"))
-                                            .append($("<tr/>").append("<td>Number of rounds in discovery strategy</td><td>" + self.collection.data.mak_param.rounds + "</td>"))
-                                            .append($("<tr/>").append("<td>Linkage</td><td>" + self.collection.data.mak_param.linkage + "</td>"))
-                                            .append($("<tr/>").append("<td>Path to null distribution files</td><td>" + self.collection.data.mak_param.null_data_path + "</td>"))
-                                            .append($("<tr/>").append("<td>Path to R code (Miner.R)</td><td>" + self.collection.data.mak_param.Rcodepath + "</td>"))
-                                            .append($("<tr/>").append("<td>Path to Rdata object</td><td>" + self.collection.data.mak_param.Rdatapath + "</td>"))
+                                            .append($("<tr/>").append("<td>Minimum raw bicluster score</td><td>" + self.collection.data.parameters.min_raw_bicluster_score + "</td>"))
+                                            .append($("<tr/>").append("<td>Maximum allowed bicluster overlap</td><td>" + self.collection.data.parameters.max_bicluster_overlap + "</td>"))
+                                            .append($("<tr/>").append("<td>Maximum allowed enrichment p-value</td><td>" + self.collection.data.parameters.max_enrich_pvalue + "</td>"))
+                                            .append($("<tr/>").append("<td>Number of rounds in discovery strategy</td><td>" + self.collection.data.parameters.rounds + "</td>"))
+                                            .append($("<tr/>").append("<td>Linkage</td><td>" + self.collection.data.parameters.linkage + "</td>"))
+                                            .append($("<tr/>").append("<td>Path to null distribution files</td><td>" + self.collection.data.parameters.null_data_path + "</td>"))
+                                            .append($("<tr/>").append("<td>Path to R code (Miner.R)</td><td>" + self.collection.data.parameters.Rcodepath + "</td>"))
+                                            .append($("<tr/>").append("<td>Path to Rdata object</td><td>" + self.collection.data.parameters.Rdatapath + "</td>"))
 					));
                                self.$elem.append($("<div />")
                                        .append("&nbsp;"));

@@ -1,0 +1,15 @@
+#Current deploy process
+
+./deployFunctionalSite.sh
+
+# You may need to modify the nginx configuration as well.
+# Working example from narrative.kbase.us:
+
+#       location / {
+#                root /kb/deployment/ui-common;
+#                index index.html;
+#                #ssi on;
+#                ssi_silent_errors off;
+#                allow all;
+#       }
+

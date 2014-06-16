@@ -405,14 +405,13 @@ configJSON = $.parseJSON( $.ajax({url: "config.json",
 
 
 app.run(function ($rootScope, $state, $stateParams, $location) {
-
     var HELP_DROPDOWN = '<a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a> \
                  <ul class="dropdown-menu"> \
                  <li><a href="http://kbase.us/for-users/narrative-quick-start/">Narrative Quick Start Guide</a></li> \
                  <li><a href="#/landing-pages-help">Landing Page Documentation</a></li> \
                  <li><a href="mailto:help@kbase.us">Email help@kbase.us</a></li> \
               </ul>';
-    $('.help-dropdown').html(HELP_DROPDOWN);              
+    $('.help-dropdown').html(HELP_DROPDOWN);
 
     //  Things that need to happen when a view changes.
     $rootScope.$on('$stateChangeSuccess', function() {
@@ -420,7 +419,27 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         $('.fixedHeader').remove(); 
         $('.popover').remove(); // remove any dangling pop overs
         removeCards();
-    })
+    });
+
+    var login_change = function() {
+        var c = $('#signin-button').kbaseLogin('get_kbase_cookie');
+        set_cookie(c);
+
+        // If we're changing state from the login page, and we have a valid 
+        // session (i.e.: we're logging IN and not OUT), then forward us to
+        // the /narrative/ state.
+        //
+        // Otherwise, just login in place and reload.
+        if ($location.path() === '/login/') {
+            if (c.kbase_sessionid) {
+                $location.path('/narrative/');
+            }
+            $rootScope.$apply();
+        }
+        else {
+            window.location.reload();
+        }
+    };
 
     // sign in button
     $('#signin-button').kbaseLogin({login_callback: login_change,
@@ -449,17 +468,11 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
 });
 
 
-
-
 /*
  *   landing page app helper functions
  */ 
 
 
-function login_change() {
-    window.location.reload();
-    set_cookie();
-}
 
 function get_selected_ws() {
     if (state.get('selected')) {
@@ -474,28 +487,21 @@ function removeCards() {
 }
 
 
-function set_cookie() {
-   var c = $("#signin-button").kbaseLogin('get_kbase_cookie');
-   console.log( 'Setting kbase_session cookie');
-   $.cookie('kbase_session',
-    'un=' + c.user_id
-    + '|'
-    + 'kbase_sessionid=' + c.kbase_sessionid
-    + '|'
-    + 'user_id=' + c.user_id
-    + '|'
-    + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-    { path: '/'});
-   $.cookie('kbase_session',
-    'un=' + c.user_id
-    + '|'
-    + 'kbase_sessionid=' + c.kbase_sessionid
-    + '|'
-    + 'user_id=' + c.user_id
-    + '|'
-    + 'token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g,'PIPESIGN'),
-    { path: '/',
-      domain: 'kbase.us' });
+function set_cookie(c) {
+    var cookieName = 'kbase_session';
+    if (c.kbase_sessionid) {
+        console.log( 'Setting kbase_session cookie');
+        var cookieString = 'un=' + c.user_id + 
+                           '|kbase_sessionid=' + c.kbase_sessionid +
+                           '|user_id=' + c.user_id +
+                           '|token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
+        $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us' });
+        $.cookie(cookieName, cookieString, { path: '/' });
+    }
+    else {
+        console.log('Logged out - removing cookie');
+        $.cookie(cookieName, null);
+    }
 };
 
 

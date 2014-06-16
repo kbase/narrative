@@ -169,6 +169,12 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
 })
 
+.controller('FBALanding', function($scope, $stateParams) {
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;  
+
+
+})
 
 .controller('WBLanding', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;

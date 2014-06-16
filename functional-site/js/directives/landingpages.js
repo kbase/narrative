@@ -285,7 +285,41 @@ angular.module('lp-directives')
         } /* end link */
     };
 })
+.directive('associatedmodel', function() {
+    return {
+        link: function(scope, ele, attrs) {
 
+            var ref_chain = scope.ws+'/'+scope.id
+            $(ele).append(ref_chain);
+
+            $(ele).loading();
+
+
+
+            var prom = kb.get_fba(scope.ws, scope.id);
+            $.when(prom).done(function(data) {
+                console.log(data, data[0].refs)
+
+                kb.ws.get_referenced_objects({ref_chains: data[0].refs}).done(function(blah) {
+                    console.log(blah)
+
+                })
+                /*
+                var p = kb.ws.get_object_info([{ref: data[0].refs[1]}])
+                $.when(p).done(function(ref_data) {
+                    console.log(ref_data)
+                })*/
+
+            })
+
+        }
+
+
+
+    }
+
+
+})
 .directive('fbacore', function($location) {
     return {
         link: function(scope, element, attrs) {

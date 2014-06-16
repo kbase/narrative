@@ -1318,7 +1318,7 @@ angular.module('ws-directives')
                     var route = sub;
                     switch (kind) {
                         case 'FBA': 
-                            route = 'ws.mv.fba';
+                            route = 'ws.fbas';
                             break;
                         case 'FBAModel': 
                             route = 'ws.mv.model';

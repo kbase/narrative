@@ -59,9 +59,6 @@ var app = angular.module('landing-pages',
         })
 
     $stateProvider
-
-
-    $stateProvider
         .state('ws', {
           url: "/ws/",
           templateUrl: 'views/ws/ws.html',
@@ -101,10 +98,14 @@ var app = angular.module('landing-pages',
           templateUrl: 'views/ws/mv.html', //sortable/model.html',
           controller: 'MV' //WBModelLanding',
           //reloadOnSearch: false
-        }).state('ws.fbas', {
+        })
+
+
+    $stateProvider
+        .state('ws.fbas', {
           url: "fbas/:ws/:id?map",
-          templateUrl: 'sortable/fba.html',
-          controller: 'MV' //'WBModelLanding',
+          templateUrl: 'views/ws/sortable/fba.html',
+          controller: 'FBALanding' //'WBModelLanding',
           //reloadOnSearch: false
         }).state('ws.etc', {
           url: "etc/:ws/:id",

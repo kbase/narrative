@@ -47,14 +47,10 @@ class CWS:
     mg_an = 'KBaseGenomes.MetagenomeAnnotation-1.0'
 
 class URLS:
-    #shock = "http://shock1.chicago.kbase.us"
     shock = "http://shock.metagenomics.anl.gov"
     awe = "http://140.221.85.36:8000"
-    #workspace = "https://140.221.84.209:7058"
     workspace = "https://kbase.us/services/ws"
-    #invocation = "https://kbase.us/services/invocation"
-    #invocation = "http://140.221.85.110:443"
-    invocation = "http://140.221.85.185:7049"
+    invocation = "https://kbase.us/services/invocation"
 
 picrustWF = """{
    "info" : {
@@ -174,10 +170,16 @@ def _get_shock_data(nodeid, binary=False):
     shock = shockService(URLS.shock, token)
     return shock.download_to_string(nodeid, binary=binary)
 
+def _view_invo(d):
+    token = os.environ['KB_AUTH_TOKEN']
+    invo  = InvocationService(url=URLS.invocation, token=token)
+    files = invo.list_files("", '/', d)
+    return "".join(files)
+
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
     invo = InvocationService(url=URLS.invocation, token=token)
-    stdout, stderr = invo.run_pipeline("", cmd, [], 100000, '/')
+    stdout, stderr = invo.run_pipeline("", cmd, [], 0, '/')
     return "".join(stdout), "".join(stderr)
 
 def _get_invo(name, binary=False):
@@ -219,6 +221,43 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': data})
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
+
+@method(name="Execute Command")
+def _execute_command(meth, command):
+    """Execute given command on invocation server.
+
+    :param command: command to run on invocation server
+    :type command: kbtypes.Unicode
+    :ui_name command: Command
+    :return: Output
+    :rtype: kbtypes.Unicode
+    :output_widget: DisplayTextWidget
+    """
+    meth.stages = 1
+    if not command:
+        raise Exception("Command is empty.")
+    stdout, stderr = _run_invo(command)
+    if (stdout == '') and (stderr == ''):
+        stdout = 'Your command executed successfully'
+    return json.dumps({'header': '', 'text': stdout, 'error': stderr})
+
+@method(name="View Files")
+def _view_files(meth, directory):
+    """View your files on invocation server.
+
+    :param directory: directory to view files in, default is cwd
+    :type directory: kbtypes.Unicode
+    :ui_name directory: Directory
+    :return: Output
+    :rtype: kbtypes.Unicode
+    :output_widget: DisplayTextWidget
+    """
+    meth.stages = 1
+    if not directory:
+        directory = ''
+    file_list = _view_invo(directory)
+    return json.dumps({'header': '', 'text': file_list})
+
 
 @method(name="Import Metagenome List")
 def _import_metagenome_list(meth, workspace, metagenome_list_id):
@@ -1105,7 +1144,7 @@ def _view_mg(meth, mgid):
     :param in_name: id of a metagenome
     :type in_name: kbtypes.Unicode
     :ui_name in_name: Metagenome ID
-    :return: Gapfilled Metagenome Model
+    :return: Metagenome Overview
     :rtype: kbtypes.Unicode
     :output_widget: MGOverviewWidget
     """

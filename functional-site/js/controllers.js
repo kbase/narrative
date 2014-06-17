@@ -352,6 +352,13 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     // callback for ng-click 'loginUser':
     $scope.loginUser = function (user) {
         $("#loading-indicator").show();
+
+        // if (!user || !user.username || !user.password) {
+        //     $elem.find('input').trigger('input').trigger('change').trigger('keydown');
+        //     $elem.find('submit').trigger('submit');
+        //     return;
+        // }
+
         kbaseLogin.login(
             user.username,
             user.password,
@@ -397,7 +404,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
 
             }
         );
-        
     };
 
     $scope.logoutUser = function() {

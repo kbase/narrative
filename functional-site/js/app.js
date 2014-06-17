@@ -390,15 +390,16 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         // the /narrative/ state.
         //
         // Otherwise, just login in place and reload.
+        // We need to reload to make sure the USER_ID and USER_TOKEN get set properly.
         if ($location.path() === '/login/') {
             if (c.kbase_sessionid) {
+                // USER_ID = $("#signin-button").kbaseLogin('session').user_id;
+                // USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
                 $location.path('/narrative/');
             }
             $rootScope.$apply();
         }
-        else {
-            window.location.reload();
-        }
+        window.location.reload();
     };
 
     // sign in button

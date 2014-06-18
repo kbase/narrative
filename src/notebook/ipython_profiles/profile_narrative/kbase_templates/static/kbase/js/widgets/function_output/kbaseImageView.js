@@ -12,12 +12,10 @@
             legend: null,
             data: null
         },
-        
         init: function(options) {
             this._super(options);
             return this.render();
         },
-        
         render: function() {
             // creater main comtainer
             var main = $('<div>');
@@ -59,7 +57,6 @@
             // put container in cell
             this.$elem.append(main);
             return this;
-        },
-
+        }
     });
 })(jQuery);

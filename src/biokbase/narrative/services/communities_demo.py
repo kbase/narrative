@@ -173,8 +173,8 @@ def _get_shock_data(nodeid, binary=False):
 def _view_invo(d):
     token = os.environ['KB_AUTH_TOKEN']
     invo  = InvocationService(url=URLS.invocation, token=token)
-    files = invo.list_files("", '/', d)
-    return "".join(files)
+    files, error = invo.list_files("", '/', d)
+    return "".join(files), "".join(error)
 
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
@@ -222,7 +222,7 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
 
-@method(name="Execute Command")
+@method(name="Execute IRIS Command")
 def _execute_command(meth, command):
     """Execute given command on invocation server.
 
@@ -241,11 +241,11 @@ def _execute_command(meth, command):
         stdout = 'Your command executed successfully'
     return json.dumps({'header': '', 'text': stdout, 'error': stderr})
 
-@method(name="View Files")
+@method(name="View IRIS Files")
 def _view_files(meth, directory):
     """View your files on invocation server.
 
-    :param directory: directory to view files in, default is cwd
+    :param directory: directory to view files in, default is invocation home dir
     :type directory: kbtypes.Unicode
     :ui_name directory: Directory
     :return: Output
@@ -255,8 +255,8 @@ def _view_files(meth, directory):
     meth.stages = 1
     if not directory:
         directory = ''
-    file_list = _view_invo(directory)
-    return json.dumps({'header': '', 'text': file_list})
+    file_list, error = _view_invo(directory)
+    return json.dumps({'header': '', 'text': file_list, 'error': error})
 
 
 @method(name="Import Metagenome List")

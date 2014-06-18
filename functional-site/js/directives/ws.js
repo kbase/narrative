@@ -1606,6 +1606,8 @@ angular.module('ws-directives')
 
                 var prom = kb.ws.get_object_history({workspace: ws, name: id});
                 $.when(prom).done(function(data) {
+
+                    console.log('history', data)
                     modal_body.rmLoading();
                     modal_body.append('<span class="h5"><b>Name</b></span>: '+id+'<br>')                            
                     modal_body.append('<span class="h5"><b>Database ID</b></span>: '+data[0][0]+'<br>')
@@ -1614,7 +1616,7 @@ angular.module('ws-directives')
                                         <th>Vers</th>\
                                         <th>Type</th>\
                                         <th>Owner</th>\
-                                        <th>Cmd</th></tr>');
+                                        <th>Reference</th></tr>');
                     info.append(header);
                     for (var i=data.length-1; i >= 0; i--) {
                         var ver = data[i];

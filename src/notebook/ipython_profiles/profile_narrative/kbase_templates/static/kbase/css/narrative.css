@@ -133,6 +133,10 @@ span#searchspan{
     span#searchspan{width: 60%;}   
 }
 
+div#notebook {
+	border-top: none;
+}
+
 #narrative-name {
 	font-weight: bold;
 	font-size: 1.4em;
@@ -160,7 +164,7 @@ span#searchspan{
 	z-index: 499;
 	background-color: #ffffff;
 	width: 100%;
-	border-bottom: 1px solid grey; 
+	border-bottom: 1px solid #ababab; 
 	padding-bottom: 30px; 
 	padding-top: 10px; 
 	margin-top: -10px; 

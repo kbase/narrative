@@ -155,8 +155,16 @@ span#searchspan{
 	margin: 10px 0; 
 }
 
-#menubar-container {
-	width: auto;
+.narrative-menu-container {
+	position: fixed; 
+	z-index: 499;
+	background-color: #ffffff;
+	width: 100%;
+	border-bottom: 1px solid grey; 
+	padding-bottom: 30px; 
+	padding-top: 10px; 
+	margin-top: -10px; 
+	margin-left: auto
 }
 
 p.clear{

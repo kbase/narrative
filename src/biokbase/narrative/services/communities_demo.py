@@ -170,12 +170,6 @@ def _get_shock_data(nodeid, binary=False):
     shock = shockService(URLS.shock, token)
     return shock.download_to_string(nodeid, binary=binary)
 
-def _view_invo(d):
-    token = os.environ['KB_AUTH_TOKEN']
-    invo  = InvocationService(url=URLS.invocation, token=token)
-    _, files = invo.list_files("", '/', d)
-    return files
-
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
     invo = InvocationService(url=URLS.invocation, token=token)
@@ -221,46 +215,6 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': data})
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
-
-@method(name="Execute IRIS Command")
-def _execute_command(meth, command):
-    """Execute given command on invocation server.
-
-    :param command: command to run on invocation server
-    :type command: kbtypes.Unicode
-    :ui_name command: Command
-    :return: Results
-    :rtype: kbtypes.Unicode
-    :output_widget: DisplayTextWidget
-    """
-    meth.stages = 1
-    if not command:
-        raise Exception("Command is empty.")
-    stdout, stderr = _run_invo(command)
-    if (stdout == '') and (stderr == ''):
-        stdout = 'Your command executed successfully'
-    return json.dumps({'header': '', 'text': stdout, 'error': stderr})
-
-@method(name="View IRIS Files")
-def _view_files(meth, directory):
-    """View your files on invocation server.
-
-    :param directory: directory to view files in, default is invocation home dir
-    :type directory: kbtypes.Unicode
-    :ui_name directory: Directory
-    :return: File List
-    :rtype: kbtypes.Unicode
-    :output_widget: GeneTableWidget
-    """
-    meth.stages = 1
-    if not directory:
-        directory = ''
-    file_list = _view_invo(directory)
-    file_table = [['name', 'size', 'timestamp']]
-    for f in file_list:
-        file_table.append([ f['name'], f['size'], f['mod_date'] ])
-    return json.dumps({'table': file_table})
-
 
 @method(name="Import Metagenome List")
 def _import_metagenome_list(meth, workspace, metagenome_list_id):

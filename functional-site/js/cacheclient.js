@@ -417,11 +417,11 @@ function UIUtils() {
         return table;
     }
 
-    this.listTable = function(table_id, array, labels) {
+    this.listTable = function(table_id, array, labels, bold) {
         var table = $('<table id="'+table_id+'" class="table table-striped table-bordered" \
                               style="margin-left: auto; margin-right: auto;"></table>');
-        for (var i in array) {
-            table.append('<tr><td>'+labels[i]+'</td> \
+        for (var i in labels) {
+            table.append('<tr><td>'+(bold ? '<b>'+labels[i]+'</b>' : labels[i])+'</td> \
                           <td>'+array[i]+'</td></tr>');
         }
 

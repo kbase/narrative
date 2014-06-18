@@ -1616,7 +1616,7 @@ angular.module('ws-directives')
                                         <th>Vers</th>\
                                         <th>Type</th>\
                                         <th>Owner</th>\
-                                        <th>Reference</th></tr>');
+                                        <th>Checksum</th></tr>');
                     info.append(header);
                     for (var i=data.length-1; i >= 0; i--) {
                         var ver = data[i];
@@ -1706,13 +1706,13 @@ angular.module('ws-directives')
                         modal_body.append(container);
                     }
 
-                    var items = ['ID', 'Name', 'Type', 'Moddate', 'Instance','Command',
-                                    'Owner','Workspace','Reference','Checksum']
-                    modal_body.append('<h4>Properties</h4>');
-                    var table = $('<table class="table table-striped table-bordered table-condensed">');
-                    for (var i=0; i <data.length-1; i++) {
-                        table.append('<tr><td><b>'+items[i]+'</b></td><td>'+data[i]+'</td></tr>')
-                    }
+                    // add properties table
+                    var labels = ['ID', 'Name', 'Type', 'Moddate', 'Instance','Owner',
+                                    'Workspace ID', 'Workspace', 'Checksum']
+                    modal_body.append('<h4>Object Info</h4>');
+                    var table = kb.ui.listTable('#obj-info-table', data, labels, 'bold')
+                    table.append('<tr><td><b>Size</b></td><td>'+data[9]+
+                                ' Bytes ('+readableSize(data[9])+')</td></tr>');
                     modal_body.append(table);                        
 
                     var download = $('<a class="btn btn-default pull-left">Download\

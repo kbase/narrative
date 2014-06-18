@@ -63,6 +63,10 @@ var app = angular.module('landing-pages',
           url: "/ws/",
           templateUrl: 'views/ws/ws.html',
           controller: 'WB'
+        }).state('ws.recent', {
+          url: "recent",
+          templateUrl: 'views/ws/recent.html',
+          controller: 'WB'
         }).state('ws-manage', {
           url: "/ws/manage",
           templateUrl: 'views/ws/manage.html', 

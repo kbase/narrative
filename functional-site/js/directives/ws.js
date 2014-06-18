@@ -21,20 +21,18 @@ angular.module('ws-directives')
                         '<div class="btn-toolbar ws-toolbar">'+
 
 
-                            (USER_ID ? 
-                            '<div class="btn-group btn-group-sm">'+
-                                '<button type="button" class="btn btn-default btn-show-ws active">'+
-                                    '<span class="glyphicon glyphicon-th-large"></span>'+
-                                '</button>'+
-                                '<button type="button" class="btn btn-default btn-show-fav">'+
-                                    '<span class="glyphicon glyphicon-star"></span> '+
-                                    '(<span class="favorite-count">0</span>)'+
-                                '</button>'+
-                            '</div>' : 
-                            
-                                ''
-
-                            )+
+                            //(USER_ID ? 
+                            //'<div class="btn-group btn-group-sm">'+
+                            //    '<button type="button" class="btn btn-default btn-show-ws active">'+
+                            //        '<span class="glyphicon glyphicon-th-large"></span>'+
+                            //    '</button>'+                            
+                                //'<button type="button" class="btn btn-default btn-show-fav">'+
+                                //    '<span class="glyphicon glyphicon-star"></span> '+
+                                //    '(<span class="favorite-count">0</span>)'+
+                                //'</button>'+
+                            //'</div>' : 
+                            //    ''
+                            //)+
                         
 
                             '<div class="btn-group btn-group-sm btn-filter-ws">'+
@@ -43,18 +41,22 @@ angular.module('ws-directives')
                                         'Filter <span class="caret"></span>'+
                                     '</button>'+
                                     '<ul class="dropdown-menu settings-dropdown perm-filters" role="menu">'+
+                                        //'<div class="checkbox pull-left">'+
+                                        //    '<label><input id="ws-filter-projects" type="checkbox" value="">Narrative Projects</label>'+
+                                        //'</div>'+
+                                        //'<br><hr class="hr">'+
                                         '<div class="checkbox pull-left">'+
-                                            '<label><input id="ws-filter-owner" type="checkbox" value="">owner</label>'+
+                                            '<label><input id="ws-filter-owner" type="checkbox" value="">You Own</label>'+
                                         '</div>'+
-                                        '<br><hr>'+
+                                        '<br><br><hr class="hr">'+
                                         '<div class="checkbox">'+
-                                            '<label><input id="ws-filter-admin" type="checkbox" value="" checked>admin</label>'+
-                                        '</div>'+
-                                        '<div class="checkbox">'+
-                                          '<label><input id="ws-filter-write" type="checkbox" value="" checked>write</label>'+
+                                            '<label><input id="ws-filter-admin" type="checkbox" value="" checked>Admin</label>'+
                                         '</div>'+
                                         '<div class="checkbox">'+
-                                          '<label><input id="ws-filter-read" type="checkbox" value="" checked>read</label>'+                                                                                          
+                                          '<label><input id="ws-filter-write" type="checkbox" value="" checked>Can edit</label>'+
+                                        '</div>'+
+                                        '<div class="checkbox">'+
+                                          '<label><input id="ws-filter-read" type="checkbox" value="" checked>Can see</label>'+                                                                                          
                                         '</div>'+
 
                                     '</ul>'+
@@ -65,7 +67,7 @@ angular.module('ws-directives')
                             (USER_ID ? 
                             '<div class="btn-group btn-group-sm">'+
                                 '<button type="button" class="btn btn-default btn-new-ws">'+
-                                    '<span class="glyphicon glyphicon-plus"></span> New'+
+                                    '+ New'+
                                 '</button>'+
                             '</div>' : '')+
 
@@ -78,12 +80,13 @@ angular.module('ws-directives')
 
                         //(USER_ID ? '<a class="new-ws pull-right">New+</a>' : '')+
 
-                        '<input type="text" class="search-query" placeholder="Search">'+
+                        '<input type="text" class="search-query" placeholder="Search Workspaces">'+
                     '</div>'+
 
 
                     '<div id="select-box" class="select-box scroll-pane">'+
-                      '<table class="table table-bordered table-condensed table-hover"></table>'+
+                      '<table class="table table-bordered table-condensed table-hover">'+
+                      '</table>'+
                     '</div>'+
                     '<div favoritesidebar style="display: none;" id="favorite-sidebar" class="scroll-pane"></div>'+
                   '</div>'
@@ -107,13 +110,26 @@ angular.module('ws-directives')
             // Note: this is only called after instantiation when sidebar needs to be refreshed
             scope.loadWSTable = function() {
                 $('#select-box .table').remove();
-                $('#select-box').append('<table class="table table-bordered table-condensed table-hover"></table>');
+                var table = $('<table class="table table-bordered table-condensed table-hover">')
+                //var recent = $('<tr class=""><td><a ui-sref="ws.recent">Recent Narratives</a></td></tr>')
+                //$compile(recent)(scope);
+                //table.append(recent);
+                $('#select-box').append(table)
+
                 workspaces = []
                 scope.workspace_dict = {}
-
+                
+                var p = kb.nar.get_projects()
                 var prom = kb.ws.list_workspace_info({});
                 $('.select-box').loading();
-                $.when(prom).done(function(data) {
+                $.when(prom, p).done(function(data, projects) {
+                    var nar_projs = {}
+                    for (var i in projects) {
+                        var ws = projects[i][7];
+                        nar_projs[ws] = projects[i]
+                    }
+                    console.log(nar_projs)
+
                     $('.select-box').rmLoading();
 
                     var sorted_ws = [];
@@ -145,7 +161,8 @@ angular.module('ws-directives')
 
                         //var url = "ws.id({ws:'"+name+"'})"
                         var selector = $('<tr><td class="select-ws '
-                                                +($stateParams.ws == name ? 'selected-ws' : '' )+
+                                                +($stateParams.ws == name ? 'selected-ws ' : '' )+
+                                                (name in nar_projs ? 'narrative-project' : '' )+
                                             '" data-ws="'+name+'">'+
                                             '<div class="badge pull-left">'+obj_count+'</div>'+
                                             ' &nbsp;<div class="pull-left ellipsis"> '+
@@ -163,10 +180,11 @@ angular.module('ws-directives')
                             $(this).find('.btn-ws-settings').addClass('hide');
                         })
                         var blah = $(".select-box table").append(selector);
-                        //$compile(blah)
-
 
                         scope.workspace_dict[name] = ws; //store in dictionary for optimization
+
+                        // mark as narrative project if it is (used in filtering)
+                        ws.push(name in nar_projs ? true : false );
                     }
 
                     workspaces = data;
@@ -187,6 +205,7 @@ angular.module('ws-directives')
                 var filterAdmin = filterCollapse.find('#ws-filter-admin').change(filter);
                 var filterWrite = filterCollapse.find('#ws-filter-write').change(filter);
                 var filterRead  = filterCollapse.find('#ws-filter-read').change(filter);
+                var filterRead  = filterCollapse.find('#ws-filter-projects').change(filter);                
                 //var search = filterSearch.val();
 
                 // event for clicking on 'create new workspace'
@@ -312,31 +331,42 @@ angular.module('ws-directives')
                     $('.select-box table tr').show();
                     $('.no-ws-alert').remove()
 
-                    var owner = filterOwner.prop('checked');
-                    var admin = filterAdmin.prop('checked');
-                    var write = filterWrite.prop('checked');
-                    var read  = filterRead.prop('checked');
+                    var projects_cb  = filterRead.prop('checked');
+                    var owner_cb = filterOwner.prop('checked');
+                    var admin_cb = filterAdmin.prop('checked');
+                    var write_cb = filterWrite.prop('checked');
+                    var read_cb  = filterRead.prop('checked');
 
+                    if (projects_cb) {
+                        $('.select-box table tr').hide()
+                        $('.narrative-project').parent('tr').show();
+                        $('.search-query').attr('placeholder', "Search Projects")
+                    } else {
+                        $('.search-query').attr('placeholder', "Search Workspaces")
+                    }
 
-                    console.log(owner, admin, write, read)
                     console.log(workspaces)
-                    //$(".select-box table").children()
                     for (var i=0; i< workspaces.length; i++) {
                         var ws = workspaces[i];
                         var name = ws[1];
                         var user = ws[2];
                         var obj_count = ws[4];
                         var perm = ws[5];
-                        var global_perm = ws[5];
+                        var global_perm = ws[6];
+                        var is_project = ws[10]
 
                         var j = i+1;
 
                         var show = false;
-                        if (admin && perm === 'a') show = true;
-                        if (write && perm === 'w') show = true;
-                        if (read && perm === 'r') show = true;
-                        if (!show && read && global_perm === 'r') show = true;
-                        if (show && owner && user != USER_ID) show = false;
+                                             
+                        if (admin_cb && perm === 'a') show = true;
+                        if (write_cb && perm === 'w') show = true;
+                        if (read_cb && perm === 'r') show = true;
+
+                        // these filters can be combined with the above 
+                        if (!show && read_cb && global_perm === 'r') show = true;
+                        if (show && owner_cb && user != USER_ID) show = false;
+                        //if (show && projects_cb && is_project == false) show = false;   
 
                         if (!show) {
                             $('.select-box table tr:nth-child('+j+')').hide();
@@ -350,7 +380,7 @@ angular.module('ws-directives')
 
 
                 // help tooltips
-                $('.btn-ws-settings').tooltip({title: 'Workspace Settings', placement: 'bottom', delay: {show: 800}})                     
+                $('.btn-ws-settings').tooltip({title: 'Workspace Settings', placement: 'right', delay: {show: 800}})                     
 
             } /* end events */
 
@@ -1521,7 +1551,7 @@ angular.module('ws-directives')
                     <span class="glyphicon glyphicon-star"></span>\
                     <span class="checked-count"></span></button>');                                      
 
-                options.append(delete_btn, copy_btn, rename_btn, mv_btn);
+                options.append(delete_btn, copy_btn, rename_btn)//, mv_btn);
 
 
                 // if user has narrative home workspace, add option to copy there

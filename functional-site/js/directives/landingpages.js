@@ -285,30 +285,105 @@ angular.module('lp-directives')
         } /* end link */
     };
 })
-.directive('associatedmodel', function() {
+.directive('associatedmodel', function($compile) {
     return {
         link: function(scope, ele, attrs) {
+            var fba_id = scope.id;
 
-            var ref_chain = scope.ws+'/'+scope.id
-            $(ele).append(ref_chain);
+
+
+
+
 
             $(ele).loading();
-
-
-
             var prom = kb.get_fba(scope.ws, scope.id);
             $.when(prom).done(function(data) {
-                console.log(data, data[0].refs)
 
-                kb.ws.get_referenced_objects({ref_chains: data[0].refs}).done(function(blah) {
-                    console.log(blah)
+                var refs = data[0].refs
+
+                var obj_refs = []
+                for (var i in refs) {
+                    obj_refs.push({ref: refs[i]})
+                }
+                var p = kb.ws.get_object_info(obj_refs)
+
+                $.when(p).done(function() {
+                    var reference_list = arguments[0]
+
+                    for (var i in reference_list) {
+                        var info = reference_list[i];
+                        var full_type = info[2];
+                        var type = full_type.slice(full_type.indexOf('.')+1);
+                        var kind = type.split('-')[0];
+
+                        if (kind == "FBAModel") {
+                            var ws = info[7];
+                            var id = info[1];
+                            break;
+                        }
+                    }
+
+                    var url = 'ws.mv.fba'+"({ws:'"+ws+"', id:'"+id+"', fba:'"+fba_id+"'})";
+                    var link = $('<a ui-sref="'+url+'">'+fba_id+'</a>');
+                    $compile(link)(scope);
+                    $(ele).append(link)
+
+
+                    $(ele).append('<br><br>')
+                    $(ele).append('<h5>Referenced Objects</h5>')
+
+                    var data = [];
+                    var labels = []
+                    $(ele).rmLoading();
+                    console.log(reference_list)
+                    for (var i in reference_list) {
+                        var info = reference_list[i]
+                        var full_type = info[2];
+
+                        var ws = info[7]
+                        var id = info[1]
+                        var module = full_type.split('.')[0];
+                        var type = full_type.slice(full_type.indexOf('.')+1);
+                        var kind = type.split('-')[0];
+
+                        switch (kind) {
+                            case 'FBA': 
+                                route = 'ws.fbas';
+                                break;
+                            case 'FBAModel': 
+                                route = 'ws.mv.model';
+                                break;
+                            case 'Media': 
+                                route = 'ws.media';
+                                break;
+                            case 'MetabolicMap': 
+                                route = 'ws.maps';
+                                break;
+                            case 'Media': 
+                                route = 'ws.media';
+                                break; 
+                        }
+
+
+                        var url = route+"({ws:'"+ws+"', id:'"+id+"'})";
+                        var link = '<a ui-sref="'+url+'">'+id+'</a>'
+                        data.push(link)
+                        labels.push(kind)
+                    }
+
+                    var table = kb.ui.listTable('referenced-objects', data, labels)
+                    $compile(table)(scope);
+                    $(ele).append(table)
+                    //scope.$apply();
+                        //$compile(link)(scope);
+                        //var row = $('<div>')
+                        //row.append('<b>'+kind+'</b>: ')
+                        //row.append(link)
+//
+                        //$(ele).append(row);
+
 
                 })
-                /*
-                var p = kb.ws.get_object_info([{ref: data[0].refs[1]}])
-                $.when(p).done(function(ref_data) {
-                    console.log(ref_data)
-                })*/
 
             })
 

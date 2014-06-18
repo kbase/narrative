@@ -173,8 +173,8 @@ def _get_shock_data(nodeid, binary=False):
 def _view_invo(d):
     token = os.environ['KB_AUTH_TOKEN']
     invo  = InvocationService(url=URLS.invocation, token=token)
-    files, error = invo.list_files("", '/', d)
-    return "".join(files), "".join(error)
+    _, files = invo.list_files("", '/', d)
+    return files
 
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
@@ -229,7 +229,7 @@ def _execute_command(meth, command):
     :param command: command to run on invocation server
     :type command: kbtypes.Unicode
     :ui_name command: Command
-    :return: Output
+    :return: Results
     :rtype: kbtypes.Unicode
     :output_widget: DisplayTextWidget
     """
@@ -248,15 +248,18 @@ def _view_files(meth, directory):
     :param directory: directory to view files in, default is invocation home dir
     :type directory: kbtypes.Unicode
     :ui_name directory: Directory
-    :return: Output
+    :return: File List
     :rtype: kbtypes.Unicode
-    :output_widget: DisplayTextWidget
+    :output_widget: GeneTableWidget
     """
     meth.stages = 1
     if not directory:
         directory = ''
-    file_list, error = _view_invo(directory)
-    return json.dumps({'header': '', 'text': file_list, 'error': error})
+    file_list = _view_invo(directory)
+    file_table = [['name', 'size', 'timestamp']]
+    for f in file_list:
+        file_table.append([ f['name'], f['size'], f['mod_date'] ])
+    return json.dumps({'table': file_table})
 
 
 @method(name="Import Metagenome List")

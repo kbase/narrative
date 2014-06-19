@@ -29,35 +29,37 @@
             </div>-->
 
             <div class="well">
-                <h1>Welcome to the Narrative/Data Browser <small>v1.1</small></h1> 
+                <h1>Welcome to the Narrative/Data Browser <small>v1.05</small></h1> 
                 <h4 class="text-muted">Select a workspace from the left sidebar to start viewing objects</h4>
                 <a class="btn btn-primary btn-lg btn-live-tour" href="#/ws/tour/" role="button">Take the Tour!</a>
             </div>
 
-            <h5>What's new in v1.1?</h5>
+            <h5>What's new in v1.05?</h5>
             <ul>
                 <li>Revert objects</li>
-                <li>Remove objects from trash</li>
                 <li>Organize columns via dragging</li>
                 <li>Display columns via settings dropdown</li>
-                <li>Automatically save complete settings of table</li>
+                <li>Save settings state of tables</li>
                 <li>Access filtered table via URL. (<a href="#/ws/objtable/chenryExample?type=FBA">Click Me</a>)</li>
-                <li>KEGG Maps and Organism page. (<a href="#/ws/mv/maps/chenryExample/kb%7Cg.0.fbamdl/">Click Me</a>)</li>
-                <li>Many UX/Styling improvements</li>
-                <li>Many bug fixes</li>
+                <li>Rough prototype of Organism page and KEGG Maps. (<a href="#/ws/mv/model/chenryExample/kb%7Cg.0.fbamdl">Click Me</a>)</li>
+                <li>UX/Styling improvements</li>
+                <li>Bug fixes</li>
             </ul>
 
-            <h5>Version 1.0:</h5>
-            <ul>
-                <li>Add/edit workspace descriptions</li>
-                <li>Copy, delete, and rename objects</li>
-                <li>Filter by object types</li>                
-                <li>The "View HTML" has been replaced with direct links to KBase "Landing Pages".<br> Object details and download can be found by hovering over an object and selecting "more".</li>
-                <li>View object history</li>
-                <li>View deleted objects</li>
-                <li>Access workspaces via url.  (<a href="/#/ws/objtable/chenryExample">Click Me</a>)</li>
-                <li>Workspaces are now stored as username<b>:</b>workspace_name by default when creating a workspace in the WB</li>
-            </ul>
+            <a ng-click="showPreviousChanges()">Previous Changes<span class="caret"></span></a>
+            <div id="previous-changes" style="display: none;">
+                <h5>Version 1.0:</h5>
+                <ul>
+                    <li>Add/edit workspace descriptions</li>
+                    <li>Copy, delete, and rename objects</li>
+                    <li>Filter by object types</li>                
+                    <li>The "View HTML" has been replaced with direct links to KBase "Landing Pages".<br> Object details and download can be found by hovering over an object and selecting "more".</li>
+                    <li>View object history</li>
+                    <li>View deleted objects</li>
+                    <li>Access workspaces via url.  (<a href="#/ws/objtable/chenryExample">Click Me</a>)</li>
+                    <li>Workspaces are now stored as username<b>:</b>workspace_name by default when creating a workspace in the WB</li>
+                </ul>
+            </div>
 
             <!--<a href="assets/images/ws/slide1.png" role="button" target="_blank">Screenshot of Features</a>-->
 

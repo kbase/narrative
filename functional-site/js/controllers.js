@@ -155,6 +155,10 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     $scope.selected_ws = $stateParams.ws;
     $scope.type = $stateParams.type;
 
+    $scope.showPreviousChanges = function() {
+        $('#previous-changes').slideToggle();
+    }
+
     $scope.hideSidebar = function(route) {
         $('#ws-sidebar').toggle('slide', {
                          direction: 'left',

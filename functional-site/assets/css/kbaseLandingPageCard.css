@@ -1,0 +1,200 @@
+/**
+ * Stylesheet for all landing page cards.
+ * 
+ * This is broken into different sections - the first is the card dialog box,
+ * followed by styles for each of the various cards used in the landing pages.
+ *
+ * Style Class prefixes used:
+ * kblpc- kbaseLandingPageCard.js
+ *        landing page card dialog container
+ *        (.ui-dialog-* extend the jquery-ui dialogs that make up the container)
+ * kbwidget- multiple widgets
+ *           cross-cutting classes across multiple widgets
+ * kbcb- kbaseContigBrowser.js, kbaseContigBrowserButtons.js
+ *       Contig Browser and its control panel widget.
+ * kbgo- kbaseGenomeOverview.js
+ *       Genome Overview widget
+ */
+
+/*---------- Landing page card dialog rules ----------*/
+.kblpc {
+	overflow: auto;
+	-webkit-box-sizing: content-box;
+	   -moz-box-sizing: content-box;
+            box-sizing: content-box;
+}
+
+.ui-dialog {
+	position: absolute;
+	-webkit-box-sizing: content-box;
+	   -moz-box-sizing: content-box;
+            box-sizing: content-box;	
+}
+
+.ui-dialog .ui-dialog-titlebar-close {
+	background-image: url("../../ext/jquery-ui/1.10.3/css/ui-lightness/images/ui-icons_222222_256x240.png");
+	background-position: -80px -128px;
+}
+
+.ui-widget-content a {
+	color: #428bca;
+}
+
+.kblpc-subtitle {
+	font-size: 14px;
+	font-weight: normal;
+}
+
+.kblpc-control-box {
+	position: fixed;
+	right: 0px;
+	top: 61px;
+	width: 300px;
+}
+
+.kblpc-manager-dataset {
+	padding-left: 8px;
+	padding-top: 15px;
+}
+
+.kblpc-manager-dataset > div > div > input {
+	margin-right: 5px;
+	margin-left: 10px;
+}
+
+.kblpc-manager {
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.kblpc-manager-dataset > .row > a:hover {
+	text-decoration: none;
+}
+
+
+
+/*------------ Styles applied to multiple cards ------------*/
+
+/* Styles a single element into a message pane that
+ * covers the entire card, with a centered span or img.
+ */
+.kbwidget-message-pane {
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	background-color: #fff;
+	text-align: center;
+}
+
+.kbwidget-message-pane span {
+	position: relative;
+	top: 50%;
+}
+
+.kbwidget-message-pane img {
+	margin-top: -24px;
+}
+
+.kbwidget-hide-message {
+	display: none;
+}
+
+
+
+/*------------ Contig browser rules --------------*/
+/*
+ * Styling for the tooltip that pops up when a feature is highlighted.
+ */
+.kbcb-tooltip {
+	position: absolute;
+	z-index: 9999999;
+	visibility: hidden;
+	opacity: 0.8;
+	background-color: #222;
+	color: #fff;
+	padding: 0.5em;
+}
+
+/**
+ * Adjusts the font size and stroke width of the base-position axis.
+ */
+.kbcb-widget .kbcb-axis path,
+.kbcb-widget .kbcb-axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.kbcb-widget .kbcb-axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+/**
+ * The classes below control the styling for each of the feature arrows.
+ *
+ * This order matters!
+ * Regular features are all one color
+ * Features in an operon shared with the central feature are colored next.
+ * The 'center' feature is colored after that.
+ * And highlighted features should be colored last (not currently used).
+ */
+.kbcb-feature {
+	stroke: #000;
+	fill: #f00;
+}
+
+.kbcb-operon {
+	fill: #0f0;
+}
+
+.kbcb-center {
+	fill: #00f;
+}
+
+.kbcb-highlight {
+	fill: #fff;
+}
+
+/**
+ * The below controls styling for the (optional) button panel
+ */
+.kbcb-buttons {
+	margin-left: auto;
+	margin-right: auto;
+	width: 70%;
+}
+
+
+
+/*------------ Genome Overview rules -------------*/
+.kbgo-table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.kbgo-table > tbody > tr:nth-child(odd) > td {
+	background-color: #f9f9f9;
+}
+
+.kbgo-table td {
+	padding: 5px;
+	border: 1px solid #aaa !important;
+}
+
+/*------------ MEME card styling -------------*/
+
+#motif-logo {
+        font: 8px sans-serif;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+}
+
+.memelogo-axis path, .memelogo-axis line {
+	fill: none;
+	stroke: #000;
+	shape-rendering: crispEdges;
+}

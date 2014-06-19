@@ -1145,6 +1145,7 @@ angular.module('ws-directives')
                     $compile(table)(scope);
 
                     // reset filter; critical for ignoring cached filter
+                    console.log(scope.type)
                     table.fnFilter((scope.type ? scope.type+'-.*' : ''), getCols(table, 'Type'), true)
 
                     // add trashbin
@@ -1187,7 +1188,7 @@ angular.module('ws-directives')
             scope.loadObjTable();
 
             function getSettingsBtn(table) {
-                var settings_btn = $('<div class="dropdown pull-left">'+
+                var settings_btn = $('<div class="btn-table-settings dropdown pull-left">'+
                           '<a class="btn btn-default" data-toggle="dropdown">'+
                             '<span class="glyphicon glyphicon-cog"></span> <span class="caret"></span>'+
                           '</a>'+

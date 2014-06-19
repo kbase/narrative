@@ -156,17 +156,17 @@ function KBCacheClient(token) {
         // if reference, get by ref
         if (ws.indexOf('/') != -1) {
             // if prom already exists, return it
-            var prom = c.get({ref: ws});
-            if (prom) return prom;
+            //var prom = c.get({ref: ws});
+            //if (prom) return prom;
 
             var p = self.ws.get_objects([{ref: ws}]);
-            c.put({ref: ws, prom: p});            
+            //c.put({ref: ws, prom: p});            
         } else {
-            var prom = c.get({ws: ws, name: name, type: 'FBA'});
-            if (prom) return prom;            
+            //var prom = c.get({ws: ws, name: name, type: 'FBA'});
+            //if (prom) return prom;            
 
             var p = self.ws.get_objects([{workspace: ws, name: name}]);
-            c.put({ws: ws, name:name, type: 'FBA', prom: prom});            
+            //c.put({ws: ws, name:name, type: 'FBA', prom: prom});            
         }
 
         // get fba object
@@ -203,18 +203,17 @@ function KBCacheClient(token) {
 
     self.get_model = function(ws, name){
         if (ws && ws.indexOf('/') != -1) {
-            console.log('calling get models with ref')
-            var prom = c.get({ref: ws});
-            if (prom) return prom; 
+            //var prom = c.get({ref: ws});
+            //if (prom) return prom; 
 
             var p = self.ws.get_objects([{ref: ws}]);
-            c.put({ref: ws, prom: p}); 
+            //c.put({ref: ws, prom: p}); 
         } else {
-            var prom = c.get({ws: ws, name: name, type: 'Model'});
-            if (prom) return prom; 
+            //var prom = c.get({ws: ws, name: name, type: 'Model'});
+            //if (prom) return prom; 
 
             var p = self.ws.get_objects([{workspace: ws, name: name}]);
-            c.put({ws: ws, name:name, type:'Model', prom:p});              
+            //c.put({ws: ws, name:name, type:'Model', prom:p});              
         }
 
         var prom = $.when(p).then(function(m) {

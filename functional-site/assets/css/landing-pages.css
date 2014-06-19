@@ -239,6 +239,10 @@ table {
 
 /* mv */
 
+.fba-selector {
+    margin: 0 0 5px 0;
+}
+
 .tab-content {
     margin: 10px 0 0 0;
 }

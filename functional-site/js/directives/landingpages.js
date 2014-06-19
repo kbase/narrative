@@ -189,16 +189,6 @@ angular.module('lp-directives')
 .directive('fbatabs', function($location, $rootScope, $stateParams) {
     return {
         link: function(scope, element, attrs) {
-            /*var p = $(element).kbasePanel({title: 'FBA Details', 
-                                           rightLabel: scope.ws,
-                                           subText: scope.id,
-                                           widget: 'fbatabs'});
-            */
-            //p.loading();
-
-            //var prom = kb.req('fba', 'get_fbas',
-            //            {fbas: [scope.id], workspaces: [scope.ws]});
-
             $(element).loading();
             
             $.when(scope.ref_obj_prom).done(function() {
@@ -207,11 +197,11 @@ angular.module('lp-directives')
             }).fail(function() {
                 $(element).html("<h5>There are currently no FBA \
                                     results associated with this model.\
-                                      You may want to FBA analysis.</h5>")
+                                      You may want to run FBA analysis.</h5>")
             })
 
             function loadPanel(fba_refs) {
-                var ver_selector = $('<select class="form-control">');
+                var ver_selector = $('<select class="form-control fba-selector">');
                 for (var i in fba_refs) {
                     var ref = fba_refs[i];
 
@@ -288,12 +278,8 @@ angular.module('lp-directives')
 .directive('associatedmodel', function($compile) {
     return {
         link: function(scope, ele, attrs) {
+            // fixme: this just needs to be rewritten
             var fba_id = scope.id;
-
-
-
-
-
 
             $(ele).loading();
             var prom = kb.get_fba(scope.ws, scope.id);
@@ -324,10 +310,9 @@ angular.module('lp-directives')
                     }
 
                     var url = 'ws.mv.fba'+"({ws:'"+ws+"', id:'"+id+"', fba:'"+fba_id+"'})";
-                    var link = $('<a ui-sref="'+url+'">'+fba_id+'</a>');
+                    var link = $('<h5><a ui-sref="'+url+'">'+fba_id+'</a></h5>');
                     $compile(link)(scope);
                     $(ele).append(link)
-
 
                     $(ele).append('<br><br>')
                     $(ele).append('<h5>Referenced Objects</h5>')
@@ -335,7 +320,6 @@ angular.module('lp-directives')
                     var data = [];
                     var labels = []
                     $(ele).rmLoading();
-                    console.log(reference_list)
                     for (var i in reference_list) {
                         var info = reference_list[i]
                         var full_type = info[2];

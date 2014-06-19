@@ -58,6 +58,7 @@ var app = angular.module('landing-pages',
           controller: 'NarrativeProjects'
         })
 
+    // workspace browser routting
     $stateProvider
         .state('ws', {
           url: "/ws/",
@@ -79,30 +80,27 @@ var app = angular.module('landing-pages',
           url: "tour/",
           templateUrl: 'views/ws/objtable.html',
           controller: 'WBTour'
-        }).state('ws.mv', {
+        })
+
+    // model viewer routing
+    $stateProvider
+        .state('ws.mv', {
           url: "mv/",
           templateUrl: 'views/ws/mv.html',
         }).state('ws.mv.model', {
           url: "model/:ws/:id?fba",
-          templateUrl: 'views/ws/sortable/model.html',
+          templateUrl: 'views/ws/model.html',
           reloadOnSearch: false,
-
         }).state('ws.mv.fba', {
           url: "fba/:ws/:id?fba",
-          templateUrl: 'views/ws/sortable/data.html',
+          templateUrl: 'views/ws/data.html',
           reloadOnSearch: false
         }).state('ws.mv.maps', {
           url: "maps/:ws/:id/?fba",
-          templateUrl: 'views/ws/sortable/maps.html',
+          templateUrl: 'views/ws/maps.html',
           reloadOnSearch: false
         })
 
-        .state('ws.models', {
-          url: "models/:ws/:id?map",
-          templateUrl: 'views/ws/mv.html', //sortable/model.html',
-          controller: 'MV' //WBModelLanding',
-          //reloadOnSearch: false
-        })
 
 
     $stateProvider
@@ -131,16 +129,11 @@ var app = angular.module('landing-pages',
           url: "provenance/:ws/:id",
           templateUrl: 'views/ws/provenance.html',
           controller: 'WBLanding'
-        })
-
-
-        .state('ws.json', {
+        }).state('ws.json', {
           url: "json/:ws/:id",
           templateUrl: 'views/ws/json.html',
           controller: 'WBJSON'
-        })
-
-        /* model viewer */
+        }) /* model viewer */
 
 
 

@@ -5,7 +5,6 @@
  *  These are the 'glue' between models and views.
  *  See: http://docs.angularjs.org/guide/dev_guide.mvc.understanding_controller
  *  
- *  Controllers are responsible for state, setting navigation, substate, etc.
 */
 
 
@@ -157,7 +156,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     $scope.type = $stateParams.type;
 
     $scope.hideSidebar = function(route) {
-        console.log('clicked')
         $('#ws-sidebar').toggle('slide', {
                          direction: 'left',
                          duration: 'fast',
@@ -179,8 +177,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 .controller('WBLanding', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
-    console.log($scope.ws, $scope.id);
-
 
     $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
         handle: '.panel-heading',
@@ -228,14 +224,12 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     });
 })
 
-.controller('WSManage', function($scope, $stateParams, $location) {
+.controller('WSManage', function($scope, $stateParams) {
 
 
 })
 
 .controller('MV', function($scope, $rootScope, $stateParams, $location, MVService) {
-    console.log('called mv controller')
-
     var type = $location.path().split('/')[2];
 
     //if ($stateParams.tab == 'FBA') {
@@ -285,19 +279,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
 })
 
-.controller('MV1', function($scope, $stateParams, $location) {
-    $scope.ws = $stateParams.ws;
-    $scope.id = $stateParams.id;
-
-}).controller('MV2', function($scope, $stateParams, $location) {
-    $scope.ws = $stateParams.ws;
-    $scope.id = $stateParams.id;
-
-}).controller('MV3', function($scope, $stateParams, $location) {
-    $scope.ws = $stateParams.ws;
-    $scope.id = $stateParams.id;
-
-})
 
 .controller('WBJSON', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
@@ -380,7 +361,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
         fav_by_kind = {}
 
         var favs = $scope.favs;
-        console.log($scope.favs)
         for (var i in favs) {
             var kind = favs[i].type.split('-')[0];
             var module = favs[i].module
@@ -449,7 +429,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
 
     $scope.displayViewer = function(route, ws, id) {
-        console.log(route)
         "ws.json({ws:'"+ws+"', id:'"+id+"'})"
         if (route) {
             $state.transitionTo(route,  {ws:ws, id:id})
@@ -510,7 +489,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
             user.username,
             user.password,
             function(args) {
-                console.log(args);
                 if (args.success === 1) {
                         
                     this.registerLogin(args);
@@ -519,9 +497,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
                     //set the cookie
                     var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
                     
-                    console.log($scope.username);
-
-                    console.log( 'Setting kbase_session cookie');
                     var cookieName = 'kbase_session';
                     var cookieString = 'un=' + c.user_id + 
                                        '|kbase_sessionid=' + c.kbase_sessionid +

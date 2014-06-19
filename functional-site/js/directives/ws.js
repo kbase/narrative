@@ -33,30 +33,30 @@ angular.module('ws-directives')
                             //'</div>' : 
                             //    ''
                             //)+
-                        
 
                             '<div class="btn-group btn-group-sm btn-filter-ws">'+
                                 '<div class="dropdown">'+
-                                    '<button type="button" class="btn btn-default btn-sm" data-toggle="dropdown">'+
+                                    '<a type="button" class="" data-toggle="dropdown">'+
                                         'Filter <span class="caret"></span>'+
-                                    '</button>'+
+                                    '</a>'+
                                     '<ul class="dropdown-menu settings-dropdown perm-filters" role="menu">'+
                                         //'<div class="checkbox pull-left">'+
                                         //    '<label><input id="ws-filter-projects" type="checkbox" value="">Narrative Projects</label>'+
                                         //'</div>'+
                                         //'<br><hr class="hr">'+
                                         '<div class="checkbox pull-left">'+
-                                            '<label><input id="ws-filter-owner" type="checkbox" value="">You Own</label>'+
+                                            '<label><input id="ws-filter-owner" type="checkbox" value="">Owner</label>'+
                                         '</div>'+
                                         '<br><br><hr class="hr">'+
+                                        'Your permission:<br>'+
                                         '<div class="checkbox">'+
                                             '<label><input id="ws-filter-admin" type="checkbox" value="" checked>Admin</label>'+
                                         '</div>'+
                                         '<div class="checkbox">'+
-                                          '<label><input id="ws-filter-write" type="checkbox" value="" checked>Can edit</label>'+
+                                          '<label><input id="ws-filter-write" type="checkbox" value="" checked>Write</label>'+
                                         '</div>'+
                                         '<div class="checkbox">'+
-                                          '<label><input id="ws-filter-read" type="checkbox" value="" checked>Can see</label>'+                                                                                          
+                                          '<label><input id="ws-filter-read" type="checkbox" value="" checked>Read</label>'+                                                                                          
                                         '</div>'+
 
                                     '</ul>'+
@@ -65,10 +65,10 @@ angular.module('ws-directives')
                             '</div>'+                        
                             
                             (USER_ID ? 
-                            '<div class="btn-group btn-group-sm">'+
-                                '<button type="button" class="btn btn-default btn-new-ws">'+
-                                    '+ New'+
-                                '</button>'+
+                            '<div class="btn-group btn-group-sm pull-right">'+
+                                '<a type="button" class="btn-new-ws">'+
+                                    'New +'+
+                                '</a>'+
                             '</div>' : '')+
 
                             '<div class="fav-toolbar" style="display: none;">'+
@@ -128,7 +128,6 @@ angular.module('ws-directives')
                         var ws = projects[i][7];
                         nar_projs[ws] = projects[i]
                     }
-                    console.log(nar_projs)
 
                     $('.select-box').rmLoading();
 
@@ -160,7 +159,9 @@ angular.module('ws-directives')
 
 
                         //var url = "ws.id({ws:'"+name+"'})"
-                        var selector = $('<tr><td class="select-ws '
+                        var selector = $('<tr data-perm="'+perm+
+                                            '" data-global="'+global_perm+
+                                            '" data-owner="'+user+'"><td class="select-ws '
                                                 +($stateParams.ws == name ? 'selected-ws ' : '' )+
                                                 (name in nar_projs ? 'narrative-project' : '' )+
                                             '" data-ws="'+name+'">'+
@@ -205,7 +206,7 @@ angular.module('ws-directives')
                 var filterAdmin = filterCollapse.find('#ws-filter-admin').change(filter);
                 var filterWrite = filterCollapse.find('#ws-filter-write').change(filter);
                 var filterRead  = filterCollapse.find('#ws-filter-read').change(filter);
-                var filterRead  = filterCollapse.find('#ws-filter-projects').change(filter);                
+                var filterProjects  = filterCollapse.find('#ws-filter-projects').change(filter);                
                 //var search = filterSearch.val();
 
                 // event for clicking on 'create new workspace'
@@ -327,7 +328,6 @@ angular.module('ws-directives')
 
                 // function that filters when a filter is selected
                 function filter() {
-                    console.log('called filter')
                     $('.select-box table tr').show();
                     $('.no-ws-alert').remove()
 
@@ -337,15 +337,7 @@ angular.module('ws-directives')
                     var write_cb = filterWrite.prop('checked');
                     var read_cb  = filterRead.prop('checked');
 
-                    if (projects_cb) {
-                        $('.select-box table tr').hide()
-                        $('.narrative-project').parent('tr').show();
-                        $('.search-query').attr('placeholder', "Search Projects")
-                    } else {
-                        $('.search-query').attr('placeholder', "Search Workspaces")
-                    }
 
-                    console.log(workspaces)
                     for (var i=0; i< workspaces.length; i++) {
                         var ws = workspaces[i];
                         var name = ws[1];
@@ -358,7 +350,6 @@ angular.module('ws-directives')
                         var j = i+1;
 
                         var show = false;
-                                             
                         if (admin_cb && perm === 'a') show = true;
                         if (write_cb && perm === 'w') show = true;
                         if (read_cb && perm === 'r') show = true;
@@ -1606,8 +1597,6 @@ angular.module('ws-directives')
 
                 var prom = kb.ws.get_object_history({workspace: ws, name: id});
                 $.when(prom).done(function(data) {
-
-                    console.log('history', data)
                     modal_body.rmLoading();
                     modal_body.append('<span class="h5"><b>Name</b></span>: '+id+'<br>')                            
                     modal_body.append('<span class="h5"><b>Database ID</b></span>: '+data[0][0]+'<br>')
@@ -2116,12 +2105,10 @@ angular.module('ws-directives')
                 $("thead input").click(function(e) {
                     e.stopPropagation()
                     e.preventDefault()
-                    console.log('clicked')
                     $(this).focus()
                 })
 
                 $("input").keyup( function () {
-                    console.log('called')
                     /* Filter on the column (the index) of this element */
                     table.fnFilter( this.value, table.oApi._fnVisibleToColumnIndex( 
                         table.fnSettings(), $("thead input").index(this) ), true );

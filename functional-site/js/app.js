@@ -23,7 +23,10 @@ var cardManager = undefined;
 var app = angular.module('landing-pages', 
     ['lp-directives', 'card-directives',
      'trees-directives', 'fav-directives',
-     'ws-directives', 'narrative-directives', 'ui.router', 'kbaseLogin', 'FeedLoad', 'ui.bootstrap'])
+     'ws-directives', 'modeling-directives',
+     'narrative-directives', 
+     'ui.router', 'kbaseLogin', 
+     'FeedLoad', 'ui.bootstrap'])
     .config(['$routeProvider', '$locationProvider', '$stateProvider', '$urlRouterProvider', 
     function($routeProvider, $locationProvider, $stateProvider, $urlRouterProvider) {
 
@@ -55,50 +58,91 @@ var app = angular.module('landing-pages',
           controller: 'NarrativeProjects'
         })
 
-
+    // workspace browser routting
     $stateProvider
         .state('ws', {
           url: "/ws/",
           templateUrl: 'views/ws/ws.html',
-          controller: 'WorkspaceBrowser'
+          controller: 'WB'
+        }).state('ws.recent', {
+          url: "recent",
+          templateUrl: 'views/ws/recent.html',
+          controller: 'WB'
+        }).state('ws-manage', {
+          url: "/ws/manage",
+          templateUrl: 'views/ws/manage.html', 
+          controller: 'WSManage',
+        }).state('ws.id', {
+          url: "objtable/:ws?type",
+          templateUrl: 'views/ws/objtable.html',
+          controller: 'WB'
         }).state('ws.tour', {
           url: "tour/",
           templateUrl: 'views/ws/objtable.html',
-          controller: 'WorkspaceBrowserTour'
-        }).state('ws.id', {
-          url: "objtable/:ws",
-          templateUrl: 'views/ws/objtable.html',
-          controller: 'WorkspaceBrowser'
-        }).state('ws.models', {
-          url: "models/:ws/:id",
-          templateUrl: 'views/ws/sortable/model.html',
-          controller: 'WorkspaceBrowserLanding'
-        }).state('ws.fbas', {
-          url: "fbas/:ws/:id",
+          controller: 'WBTour'
+        })
+
+    // model viewer routing
+    $stateProvider
+        .state('ws.mv', {
+          url: "mv/",
+          templateUrl: 'views/ws/mv.html',
+        }).state('ws.mv.model', {
+          url: "model/:ws/:id?fba",
+          templateUrl: 'views/ws/model.html',
+          reloadOnSearch: false,
+        }).state('ws.mv.fba', {
+          url: "fba/:ws/:id?fba",
+          templateUrl: 'views/ws/data.html',
+          reloadOnSearch: false
+        }).state('ws.mv.maps', {
+          url: "maps/:ws/:id/?fba",
+          templateUrl: 'views/ws/maps.html',
+          reloadOnSearch: false
+        })
+
+
+
+    $stateProvider
+        .state('ws.fbas', {
+          url: "fbas/:ws/:id?map",
           templateUrl: 'views/ws/sortable/fba.html',
-          controller: 'WorkspaceBrowserLanding'
+          controller: 'FBALanding' //'WBModelLanding',
+          //reloadOnSearch: false
+        }).state('ws.etc', {
+          url: "etc/:ws/:id",
+          templateUrl: 'views/ws/sortable/etc.html',
+          controller: 'WBModelLanding'
         }).state('ws.genomes', {
           url: "genomes/:ws/:id",
           templateUrl: 'views/ws/sortable/genome.html',
-          controller: 'WorkspaceBrowserLanding'
+          controller: 'WBLanding'
         }).state('ws.media', {
           url: "media/:ws/:id",
           templateUrl: 'views/ws/sortable/media.html',
-          controller: 'WorkspaceBrowserLanding'
+          controller: 'WBLanding'
+        }).state('ws.maps', {
+          url: "maps/:ws/:id",
+          templateUrl: 'views/ws/sortable/metabolic_map.html',
+          controller: 'WBLanding'
+        }).state('ws.provenance', {
+          url: "provenance/:ws/:id",
+          templateUrl: 'views/ws/provenance.html',
+          controller: 'WBLanding'
         }).state('ws.json', {
           url: "json/:ws/:id",
           templateUrl: 'views/ws/json.html',
-          controller: 'WorkspaceBrowserJSON'
-        })
+          controller: 'WBJSON'
+        }) /* model viewer */
+
+
+
+
 
     $stateProvider
         .state('favorites', {
           url: "/favorites/",
           templateUrl: 'views/ws/favorites.html',
-          controller: 'Favorites'
-        }).state('favorites.all', {
-          url: "all/",
-          templateUrl: 'views/ws/favorites.all.html',
           controller: 'Favorites'
         })
 
@@ -203,12 +247,6 @@ var app = angular.module('landing-pages',
             {url:'/media/:ws/:id',
              templateUrl: 'views/objects/media.html',
              controller: 'MediaDetail'})
-
-    $stateProvider
-        .state('mvhelp',
-            {url: '/mv-help',
-             templateUrl: 'views/mv/mv-help.html',
-             controller: 'MVHelp'})
 
 
     $stateProvider
@@ -414,7 +452,6 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     kb = new KBCacheClient(USER_TOKEN);
     kb.nar.ensure_home_project(USER_ID);
 
-
     // global state object to store state
     state = new State();
 
@@ -423,18 +460,18 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     $rootScope.$stateParams = $stateParams;
 
     // if logged in, display favorite count in navbar
-    // create global favorites list (should be overwritten)
-    var prom = kb.ujs.get_state('favorites', 'queue', 0);
-    $.when(prom).done(function(queue) {
-        favorites = queue;
-        $('.favorite-count').text(queue.length);
-    });
+    //var prom = kb.ujs.get_has_state('favorites', 'queue', 0);
+    //$.when(prom).done(function(q) {
+    //    console.log(q)
+    //    var q_length = q[0] ? q[1].length : 0;
+    //    $('.favorite-count').text(q_length);
+    //});
 });
 
 
 /*
  *   landing page app helper functions
- */
+ */ 
 
 
 

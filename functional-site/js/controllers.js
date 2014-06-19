@@ -5,101 +5,12 @@
  *  These are the 'glue' between models and views.
  *  See: http://docs.angularjs.org/guide/dev_guide.mvc.understanding_controller
  *  
- *  Controllers are responsible for state, setting navigation, substate, etc.
 */
 
 
-app.controller('ModelViewer', function($scope, $stateParams, $location) {
-    // style active tab
-    var tab = $location.path().split('/')[2];
-    $('.mv-tabs li').removeClass('active');
-    $('.'+tab+'-tab').addClass('active');
-
-
-    var q_string = $location.search();
-
-    // set selected workspace.
-    // this is only used for the objtable tab right now
-    //$scope.selected_ws = q_string.selected_ws;
-    //$scope.selected_ws = q_string.selected_ws ? q_string.selected_ws :
-    //                    $stateParams.selected_ws;
-    $scope.selected_ws = q_string.selected_ws ? q_string.selected_ws : false;
-
-
-    // set workspaces and ids.
-    $scope.ws_param = q_string.ws;
-    $scope.ids_param = q_string.ids;
-    $scope.ws = q_string.ws ? q_string.ws.split('+') : '';
-    $scope.ids = q_string.ids ? q_string.ids.split('+') : '';
-
-    // show tabs if there are objects selected
-    if ($scope.ids.length > 0) {
-        $('.core-tab').removeClass('hide');
-        $('.heatmap-tab').removeClass('hide');
-    } else {
-        $('.core-tab').addClass('hide');
-        $('.heatmap-tab').addClass('hide');
-    }
-
-    // events for workspace and selected object sidebar
-    $('.show-ws').unbind('click');
-    $('.show-ws').click(function(){
-        $(this).siblings('button').removeClass('active');
-        $(this).addClass('active');
-        $scope.showWSSelector();
-    });
-
-    $('.show-objs').unbind('click');    
-    $('.show-objs').click(function(){
-        $(this).siblings('button').removeClass('active');
-        $(this).addClass('active');
-        $scope.showSelectedObjs();
-
-    });
-
-    // define some functions for the navigation of the left sidebar
-    $scope.showSelectedObjs = function() {
-        $('.wsselector').toggle('slide', {
-                                direction: 'left',
-                                duration: 'fast',
-                                    complete: function() {
-                                    $('.selectedobjs').toggle('slide', {
-                                        direction: 'left',
-                                        duration: 'fast'});
-                                }
-        });
-    }
-
-    $scope.showWSSelector = function() {
-        $('.selectedobjs').toggle('slide', {
-                                    direction: 'left',
-                                    duration: 'fast',
-                                    complete: function() {
-                                        $('.wsselector').toggle('slide', {
-                                            direction: 'left',
-                                            duration: 'fast'});
-                                    }
-        });
-    }
-
-
-
-    // removes items from the selected objects view
-    $scope.removeItem = function(index){
-        $scope.selectedObjs.splice(index, 1);
-    }
-
-})
-
-
-.controller('Selector', function($scope, $location) {
-
-})
-
-.controller('RxnDetail', function($scope, $stateParams) {
+app.controller('RxnDetail', function($scope, $stateParams) {
     $scope.ids = $stateParams.ids.split('&');
 })
-
 
 .controller('CpdDetail', function($scope, $stateParams) {
     $scope.ids = $stateParams.ids.split('&');
@@ -117,7 +28,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
         $scope.$apply( $location.path( url ) );
     });
 })
-
 
 .controller('GenomeDetail', function($scope, $stateParams) {
     $scope.params = {'genomeID' : $stateParams.id,
@@ -241,12 +151,30 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     $scope.id = $stateParams.id;
 })
 
-.controller('WorkspaceBrowser', function($scope, $stateParams) {
+.controller('WB', function($scope, $stateParams) {
     $scope.selected_ws = $stateParams.ws;
+    $scope.type = $stateParams.type;
+
+    $scope.hideSidebar = function(route) {
+        $('#ws-sidebar').toggle('slide', {
+                         direction: 'left',
+                         duration: 'fast',
+                             complete: function() {
+                                $state.transitionTo(route,  {ws:ws, id:id})
+                         }
+                     })
+    }
+
 })
 
+.controller('FBALanding', function($scope, $stateParams) {
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;  
 
-.controller('WorkspaceBrowserLanding', function($scope, $stateParams) {
+
+})
+
+.controller('WBLanding', function($scope, $stateParams) {
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
 
@@ -263,15 +191,101 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     });
 
     //$( "#sortable-landing" ).disableSelection();
+})
+
+
+.controller('WBModelLanding', function($scope, $stateParams, $location) {
+
+    var type = $location.path().split('/')[2];
+    if (type == 'fbas') {
+        type = "FBA";
+    } else if (type == "models") {
+        type = "Model";
+    }
+
+    $scope.type = type;  
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+    $scope.selected = [{workspace: $scope.ws, name: $scope.id}]
+
+    $scope.defaultMap = $stateParams.map;
+
+
+    $( "#sortable-landing" ).sortable({placeholder: "drag-placeholder", 
+        handle: '.panel-heading',
+        cancel: '.panel-title,.panel-subtitle,.label,.glyphicon',
+        start: function() {
+          $(this).find('.panel-body').addClass('hide');
+          $(this).sortable('refreshPositions');
+        },
+        stop: function() {
+          $(this).find('.panel-body').removeClass('hide');
+        }
+    });
+})
+
+.controller('WSManage', function($scope, $stateParams) {
+
 
 })
-.controller('WorkspaceBrowserJSON', function($scope, $stateParams) {
+
+.controller('MV', function($scope, $rootScope, $stateParams, $location, MVService) {
+    var type = $location.path().split('/')[2];
+
+    //if ($stateParams.tab == 'FBA') {
+    //    $scope.tabs[1].active = true;
+    //} else if ($stateParams.tab == "Model") {
+    //    $scope.tabs[0].active = true;        
+    //}
+
+    $scope.type = type;
     $scope.ws = $stateParams.ws;
     $scope.id = $stateParams.id;
 
+    //$scope.name = 'loading';
+    $rootScope.org_name = 'loading';
+
+    $scope.selected = [{workspace: $scope.ws, name: $scope.id}]
+
+    $scope.fba_refs = [];
+
+    $scope.ref_obj_prom = kb.ws.list_referencing_objects($scope.selected)
+    $.when($scope.ref_obj_prom).done(function(data) {
+        // only care about first object
+        var data = data[0]
+
+        for (var i in data) {
+            var meta = data[i];
+            var type = meta[2].split('-')[0]
+
+            if (type == "KBaseFBA.FBA") {
+                $scope.fba_refs.push({ws: meta[7], 
+                               name: meta[1], 
+                               date: kb.ui.formateDate(meta[3]),
+                               timestamp: kb.ui.getTimestamp(meta[3])
+                              });
+            }
+        }
+
+        $scope.fba_refs.sort(compare)
+    })
+
+    //$scope.defaultMap = $stateParams.map;
+    function compare(a,b) {
+        if (a.timestamp < b.timestamp) return -1;
+        if (a.timestamp > b.timestamp) return 1;
+        return 0;
+    }
+
 })
 
-.controller('WorkspaceBrowserTour', function($scope, $stateParams, $location) {
+
+.controller('WBJSON', function($scope, $stateParams) {
+    $scope.ws = $stateParams.ws;
+    $scope.id = $stateParams.id;
+})
+
+.controller('WBTour', function($scope, $stateParams, $location) {
     $scope.selected_ws = 'chenryExample';  // workspace to use for tour
 
     // if not logged in, prompt for login
@@ -302,15 +316,12 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     {element: '.ncheck', n: 2, text: 'Select objects by using checkboxes<br> and see options appear above', 
                         event: checkSomething},
                     {element: '.type-filter', text: 'Filter objects by type'},
-                    {element: '.btn-delete-obj', text: 'Delete the objects selected in the table', 
-                        bVisible: true},
-                    {element: '.btn-mv-dd', text: 'Go ahead, copy your colleague\'s objects to your own workspace', 
-                        bVisible: true},
-                    {element: '.btn-rename-obj', text: 'Rename a selected object', 
-                        bVisible: true},                        
+                    {element: '.btn-obj-table-settings', text: 'Show and hide columns and set other object table settings'},   
+                    {element: '.btn-delete-obj', text: 'Delete the objects selected in the table'},
+                    {element: '.btn-mv-dd', text: 'Go ahead, copy your colleague\'s objects to your own workspace'},
+                    {element: '.btn-rename-obj', text: 'Rename a selected object'},                        
                     {element: '.btn-trash', text: 'View the trash bin for this workspace.<br>  \
-                                    Unreferenced objects will be deleted after 30 days.', 
-                        bVisible: true}]                        
+                                    Unreferenced objects will be deleted after 30 days.'}]                        
 
         function exit_callback() {
             $scope.$apply( $location.path( '/ws/' ) );
@@ -320,12 +331,134 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
     }   
 })
 
-.controller('Favorites', function($scope, $stateParams) {
+.controller('Favorites', function($scope, $state, $stateParams, favoriteService, $compile) {
+
+    $scope.selected = [{workspace: 'chenrydemo', 
+                        name: 'kb|g.9.fbamdl.25.fba.55'}];
+    $scope.type = 'FBA';
+
+    // model for state of favorites in application
+    $scope.fav;
+    
+    // this updates the dom with favorites from the service
+    // "favoriteService" communicates with the server
+    $scope.updateFavs = function() {
+        $scope.prom = kb.ujs.get_has_state('favorites', 'queue', 0);
+        var p = $.getJSON('landing_page_map.json');
+
+        $.when($scope.prom, p).done(function(data, obj_mapping) {
+            $scope.obj_mapping = obj_mapping[0];
+            $scope.favs = (data[0] ? data[1] : []);
+            $scope.fav_by_kind = $scope.processData();
+            $scope.$apply();
+        })
+    }
+
+    // update on first invocation
+    $scope.updateFavs();    
+
+    $scope.processData = function() {
+        fav_by_kind = {}
+
+        var favs = $scope.favs;
+        for (var i in favs) {
+            var kind = favs[i].type.split('-')[0];
+            var module = favs[i].module
+
+            if (module in $scope.obj_mapping && $scope.obj_mapping[module] 
+                && $scope.obj_mapping[module][kind] ) {
+                var sub = $scope.obj_mapping[module][kind];
+            } else {
+                var sub = undefined
+            }                   
+
+            //var sortable = ['FBAModel', 'FBA'];
+            //var mv = ['Media', 'MetabolicMap', 'ETC'];
+            //var route = (sortable.indexOf(kind) != -1 ? 'ws.mv' : sub)  //+sub : sub);
+            
+            var route = sub;
+            switch (kind) {
+                case 'FBA': 
+                    route = 'ws.mv.fba';
+                    break;
+                case 'FBAModel': 
+                    route = 'ws.mv.model';
+                    break;
+                case 'Media': 
+                    route = 'ws.media';
+                    break;
+                case 'MetabolicMap': 
+                    route = 'ws.maps';
+                    break;
+                case 'Media': 
+                    route = 'ws.media';
+                    break; 
+            }
+
+            favs[i].route = route
+
+            if (kind in fav_by_kind) {
+                fav_by_kind[kind].push($scope.favs[i])
+            } else {
+                fav_by_kind[kind] = []
+                fav_by_kind[kind].push($scope.favs[i])
+            }
+        }
+
+        return fav_by_kind;
+    }
+
+
+
+    $scope.rmObject = function(ws, id, type, module) {
+        for (var i in $scope.favs) {
+            if ($scope.favs[i].ws == ws
+                && $scope.favs[i].id == id
+                && $scope.favs[i].type == type) {
+                $scope.favs.splice(i, 1);
+            }
+        }
+        favoriteService.remove(ws, id, type, module);
+        $scope.fav_by_kind = $scope.processData();
+    }
+
+    $scope.clearList = function() {
+        favoriteService.clear();
+        $scope.fav_by_kind = [];
+    }
+
+
+    $scope.displayViewer = function(route, ws, id) {
+        "ws.json({ws:'"+ws+"', id:'"+id+"'})"
+        if (route) {
+            $state.transitionTo(route,  {ws:ws, id:id})
+        } else {
+            $state.transitionTo('ws.json',  {ws:ws, id:id})
+        }
+
+        $scope.$apply();
+    }
+
+
+    //$scope.displayViewer('chenrydemo', 'kb|g.9.fbamdl.25.fba.55', 'FBA')
+
+
+    $scope.AccordionCtrl = function($scope) {
+      $scope.oneAtATime = true;
+
+
+
+      $scope.items = ['Item 1', 'Item 2', 'Item 3'];
+
+      $scope.addItem = function() {
+        var newItemNo = $scope.items.length + 1;
+        $scope.items.push('Item ' + newItemNo);
+      };
+    }
+
 
 
 })
-
-
 
 
 .controller('Narrative', function($scope, $stateParams, $location, kbaseLogin, $modal, FeedLoad) {
@@ -363,7 +496,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
             user.username,
             user.password,
             function(args) {
-                console.log(args);
                 if (args.success === 1) {
                         
                     this.registerLogin(args);
@@ -372,9 +504,6 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     //set the cookie
                     var c = $("#login-widget").kbaseLogin('get_kbase_cookie');
                     
-                    console.log($scope.username);
-
-                    console.log( 'Setting kbase_session cookie');
                     var cookieName = 'kbase_session';
                     var cookieString = 'un=' + c.user_id + 
                                        '|kbase_sessionid=' + c.kbase_sessionid +
@@ -388,7 +517,7 @@ app.controller('ModelViewer', function($scope, $stateParams, $location) {
                     USER_ID = $("#signin-button").kbaseLogin('session').user_id;
                     USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
 
-                    kb = new KBCacheClient(USER_TOKEN);
+                    //kb = new KBCacheClient(USER_TOKEN);
                     kb.nar.ensure_home_project(USER_ID);
 
                     $location.path('/narrative/');
@@ -490,15 +619,6 @@ var CopyNarrativeModalCtrl = function ($scope, $modalInstance, $location, narr) 
 
 };
 
-
-/*
-function Navigation($scope, $location) { 
-    $scope.isActive = function (viewLocation) {
-    console.log(viewLocation, $location.path()) 
-        return viewLocation === $location.path();
-    };
-}
-*/
 
 function LPHelp($scope, $stateParams, $location) {
     // Fixme: move out of controller

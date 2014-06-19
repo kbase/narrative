@@ -1,19 +1,78 @@
 
 <div class="row">
-    <div class="col-md-3">
-        <div class="narrative-sidebar">
+  <div class="col-md-3">
+    <div class="narrative-sidebar">
             
-            <div favoritesidebar></div>
+      <div favoritesidebar>
+        <div>
+          <div class="h3 pull-left">Objects</div>
+          <a class="btn btn-sm btn-default pull-right" ng-click="clearList()">Clear</a>
         </div>
-    </div>
+        <br>
+        <hr>
 
-    <div class="col-md-9">
-        <div class="favorites-view" ui-view>
-            <div ng-show="!favorites">
-                <span class="text-danger">You don't have any favorites selected yet.</span><br>
-                <small>Look to the stars to save favorites.</small>
+        <div ng-repeat="(kind, favs) in fav_by_kind">
+          {{kind}}
+            <div ng-repeat="fav in favs">
+              <div class="list-group-item fav-viewer-obj" 
+                ng-click="displayViewer(fav.ws, fav.id, fav.type)">
+                <a class="pull-right btn-rm-fav text-muted">
+                <span class="glyphicon glyphicon-remove" 
+                ng-click="rmObject(fav.ws, fav.id, fav.type)"></span>
+                </a>
+                {{fav.id}}<br>
+                <a class="label label-primary btn-ws-label" ui-sref="ws.id({ws: fav.ws})">{{fav.ws}}</a>
+              </div>
             </div>
         </div>
+        <!--
+        <div ng-controller="AccordionCtrl">
+
+          <label class="checkbox">
+            <input type="checkbox" ng-model="oneAtATime">
+            Open only one at a time
+          </label>
+
+          <div ng-repeat="(kind, favs) in fav_by_kind">
+
+            <accordion close-others="oneAtATime">
+                <accordion-group is-open="isopen">
+                  <accordion-heading>
+                        {{kind}} <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isopen, 'glyphicon-chevron-right': !isopen}"></i>
+                  </accordion-heading>
+                  <div ng-repeat="fav in favs">
+                    <div class="list-group-item fav-viewer-obj">
+                      <a class="pull-right btn-rm-fav text-muted">
+                      <span class="glyphicon glyphicon-remove" 
+                      ng-click="rmObject(fav.ws, fav.id, fav.type)"></span>
+                      </a>
+                      {{fav.id}}<br>
+                      <a class="label label-primary btn-ws-label" ui-sref="ws.id({ws: fav.ws})">{{fav.ws}}</a>
+                    </div>
+                  </div>
+                </accordion-group>
+              </accordion>
+
+          </div>
+        </div>-->
+      </div>
     </div>
+  </div>
+
+  <div class="col-md-9">
+    <div class="favorites-view" ui-view>
+        <!--<div ng-show="!favs">
+            <span class="text-danger">You don't have any favorites selected yet.</span><br>
+            <small>Look to the stars to save favorites.</small>
+        </div>-->
+          <!--<div cddviewer></div>-->
+        <div ng-if="fav_by_kind.Masdf.length">
+          blah blah
+          <div pathways></div>
+        </div>
+      <!--<div cddviewer></div>-->
+
+    </div>
+  </div>
 </div>
 

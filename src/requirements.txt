@@ -11,4 +11,4 @@ requests>=2.0
 pyyaml>=3.10
 jinja2>=2.7.1
 python-dateutil>=2.2
-paramiko>=1.12.1
+paramiko==1.12.1

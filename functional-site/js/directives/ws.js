@@ -940,8 +940,9 @@ angular.module('ws-directives')
                                     $prompt.addCover()
                                     $prompt.getCover().loading()
                                     $.when(prom).done(function(){
-                                        $prompt.addCover('Cloned workspace: '+new_ws_id);
                                         scope.loadWSTable();
+                                        kb.ui.notify('Cloned workspace: <i>'+new_ws_id+'</i>');
+                                        $prompt.closePrompt();
                                     }).fail(function() {
                                         $prompt.addCover('This workspace name already exists.', 'danger');
                                     })
@@ -980,11 +981,9 @@ angular.module('ws-directives')
                                 $prompt.addCover()
                                 $prompt.getCover().loading()
                                 $.when(prom).done(function(){
-                                    $prompt.addCover('Deleted workspace: '+ws_name);
                                     scope.loadWSTable();
-                                    var btn = $('<button type="button" class="btn btn-primary">Close</button>');
-                                    btn.click(function() { $prompt.closePrompt(); })
-                                    $prompt.data('dialogModal').find('.modal-footer').html(btn);
+                                    kb.ui.notify('Deleted workspace: <i>'+ws_name+'</i>');
+                                    $prompt.closePrompt();
                                 }).fail(function() {
                                     $prompt.addCover('Could not delete workspace.', 'danger');
                                 })

@@ -32,7 +32,7 @@
                 // add text
                 if (this.options.text !== '') {
                     main.append($('<p>')
-                        .css({'padding': '10px 20px'})
+                        .css({'font-size': 'small'})
                         .append($('<pre>').text(this.options.text)));
                 }
             }

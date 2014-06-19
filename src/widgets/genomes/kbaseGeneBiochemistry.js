@@ -15,7 +15,7 @@
             featureID: null,
             embedInCard: false,
             auth: null,
-            loadingImage: "../../widgets/images/ajax-loader.gif",
+            loadingImage: "assets/img/loading.gif",
             genomeID: null,
             workspaceID: null,
             kbCache: null,

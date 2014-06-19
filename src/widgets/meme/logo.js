@@ -91,16 +91,16 @@ function Logo(totalHeight, totalWidth, sites) {
             .append("svg:image")
             .attr("xlink:href", function(e) {
                 if (e.letter === "A") {
-                    return "../widgets/images/a.gif";
+                    return "assets/img/a.gif";
                 }
                 if (e.letter === "C") {
-                    return "../widgets/images/c.gif";
+                    return "assets/img/c.gif";
                 }
                 if (e.letter === "G") {
-                    return "../widgets/images/g.gif";
+                    return "assets/img/g.gif";
                 }
                 if (e.letter === "T") {
-                    return "../widgets/images/t.gif";
+                    return "assets/img/t.gif";
                 }
                 ;
             })

@@ -110,7 +110,7 @@ def _view_cmds(meth):
     for cat in cmd_sort:
         data = {'title': cat['title'], 'items': []}
         for c in cat['items']:
-            data.append(c['cmd'])
+            data['items'].append(c['cmd'])
         cmd_data.append(data)
     return json.dumps({'data': cmd_data})
 

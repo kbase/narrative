@@ -21,6 +21,7 @@ from collections import defaultdict
 from biokbase.narrative.common.service import init_service, method, finalize_service
 from biokbase.narrative.common import kbtypes
 from biokbase.InvocationService.Client import InvocationService
+from biokbase.shock import Client as shockService
 
 ## Globals
 VERSION = (0, 0, 1)
@@ -63,6 +64,18 @@ def _rm_file(f):
     invo.remove_files("", '/', f)
     return
 
+def _get_invo(name, binary=False):
+    # upload from invo server
+    stdout, stderr = _run_invo("mg-upload2shock %s %s"%(URLS.shock, name))
+    node = json.loads(stdout)
+    # get file content from shock
+    return _get_shock_data(node['id'], binary=binary)
+
+def _get_shock_data(nodeid, binary=False):
+    token = os.environ['KB_AUTH_TOKEN']
+    shock = shockService(URLS.shock, token)
+    return shock.download_to_string(nodeid, binary=binary)
+
 @method(name="Execute KBase Command")
 def _execute_command(meth, command):
     """Execute given KBase command.
@@ -80,7 +93,7 @@ def _execute_command(meth, command):
     stdout, stderr = _run_invo(command)
     if (stdout == '') and (stderr == ''):
         stdout = 'Your command executed successfully'
-    return json.dumps({'header': '', 'text': stdout, 'error': stderr})
+    return json.dumps({'text': stdout, 'error': stderr})
 
 @method(name="View KBase Commands")
 def _view_cmds(meth):
@@ -115,6 +128,26 @@ def _view_files(meth):
         file_table.append([ f['name'], f['size'], f['mod_date'] ])
     return json.dumps({'table': file_table})
 
+@method(name="View PNG File")
+def _view_files(meth, afile):
+    """View a .png image file
+    
+    :param afile: file to display
+    :type afile: kbtypes.Unicode
+    :ui_name afile: File
+    :return: File List
+    :rtype: kbtypes.Unicode
+    :output_widget: ImageViewWidget
+    """
+    meth.stages = 1
+    if not afile:
+        raise Exception("Missing file name.")
+    if not afile.endswith('.png'):
+        raise Exception("Invalid file type.")
+    rawpng = _get_invo(afile, binary=True)
+    b64png = base64.b64encode(rawpng)
+    return json.dumps({'type': 'png', 'width': '600', 'data': b64png})
+
 @method(name="Rename File")
 def _rename_file(meth, old, new):
     """Rename a file.
@@ -126,13 +159,14 @@ def _rename_file(meth, old, new):
     :type new: kbtypes.Unicode
     :ui_name new: New
     :return: Status
-    :rtype: None
+    :rtype: kbtypes.Unicode
+    :output_widget: DisplayTextWidget
     """
     meth.stages = 1
     if not (old and new):
-        raise Exception("Missing filenames.")
+        raise Exception("Missing file names.")
     _mv_file(old, new)
-    return
+    return json.dumps({'text': '%s changed to %s'%(old,new)})
 
 @method(name="Delete File")
 def _delete_file(meth, afile):
@@ -142,13 +176,14 @@ def _delete_file(meth, afile):
     :type afile: kbtypes.Unicode
     :ui_name afile: File
     :return: Status
-    :rtype: None
+    :rtype: kbtypes.Unicode
+    :output_widget: DisplayTextWidget
     """
     meth.stages = 1
     if not afile:
-        raise Exception("Missing filename.")
+        raise Exception("Missing file name.")
     _rm_file(afile)
-    return
+    return json.dumps({'text': 'removed '+afile})
 
 # Finalization
 finalize_service()

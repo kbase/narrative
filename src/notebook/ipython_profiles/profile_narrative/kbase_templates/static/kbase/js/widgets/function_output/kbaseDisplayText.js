@@ -31,7 +31,7 @@
                 }
                 // add text
                 if (this.options.text !== '') {
-                    main.append($('<p>')
+                    main.append($('<div>')
                         .css({'font-size': 'small'})
                         .append($('<pre>').text(this.options.text)));
                 }

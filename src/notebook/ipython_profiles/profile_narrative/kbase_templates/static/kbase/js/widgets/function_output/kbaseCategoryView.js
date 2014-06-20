@@ -23,25 +23,27 @@
                 for (i = 0; i < this.options.data.length; i++) {
                     var catid = index+'_'+i;
                     var cnum  = this.options.data[i]['items'].length
-                    var clist = $('<ul>').addClass('list-group');
+                    var clist = $('<ul>').addClass('list-group').css({'margin':'2','padding':'2'});
                     for (j = 0; j < cnum; j++) {
                         clist.append(
-                            $('<li>').addClass('list-group-item').html(this.options.data[i]['items'][j])
+                            $('<li>').addClass('list-group-item')
+                                .css({'margin':'2','padding':'2'})
+                                .html(this.options.data[i]['items'][j])
                         );
                     }
                     main.append(
-                        $('<div>').addClass('panel panel-default')
+                        $('<div>').addClass('panel panel-default').css({'margin':'2','padding':'2'})
                         .append(
-                            $('<div>').addClass('panel-heading').css({'margin':'0','padding':'0'}).append(
-                                $('<h4>').addClass('panel-title').append(
+                            $('<div>').addClass('panel-heading').css({'margin':'2','padding':'2'}).append(
+                                $('<h4>').addClass('panel-title').css({'margin':'2','padding':'2'}).append(
                                     $('<a>').attr({'data-toggle':'collapse', 'data-parent':'#'+index, 'href':'#'+catid})
                                         .append($('span').addClass('badge').html(cnum))
                                         .html(this.options.data[i]['title'])
                                 )
                             )
                         ).append(
-                           $('<div>').attr('id', catid).css({'margin':'0','padding':'0'}).addClass('panel-collapse collapse').append(
-                               $('<div>').addClass('panel-body').append(clist)
+                           $('<div>').attr('id', catid).css({'margin':'2','padding':'2'}).addClass('panel-collapse collapse').append(
+                               $('<div>').addClass('panel-body').css({'margin':'2','padding':'2'}).append(clist)
                             )
                         )
                     );

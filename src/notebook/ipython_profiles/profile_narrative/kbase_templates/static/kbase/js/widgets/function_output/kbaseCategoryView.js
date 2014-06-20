@@ -19,7 +19,6 @@
             // Create accordian
             if (this.options.data !== null) {
                 main.addClass('panel-group').css({'margin':'0','padding':'0'});
-                var lists = $('<div>').addClass('list-group').css({'margin':'0','padding':'0'});
                 var i, j;
                 for (i = 0; i < this.options.data.length; i++) {
                     var catid = index+'_'+i;
@@ -32,15 +31,14 @@
                                 .html(this.options.data[i]['items'][j])
                         );
                     }
-                    lists.append(
+                    main.append(
                         $('<div>').addClass('panel panel-default').css({'margin':'0','padding':'0'})
                         .append(
                             $('<div>').addClass('panel-heading').css({'margin':'0','padding':'0'}).append(
                                 $('<h4>').addClass('panel-title').css({'margin':'0','padding':'0'}).append(
-                                    $('<a>').addClass('list-group-item')
+                                    $('<a>')
                                         .attr({'data-toggle':'collapse', 'data-parent':'#'+index, 'href':'#'+catid})
                                         .html(this.options.data[i]['title'])
-                                        .append($('span').addClass('badge').html(cnum))
                                 )
                             )
                         ).append(
@@ -50,7 +48,6 @@
                         )
                     );
                 }
-                main.append(lists);
             }
             // put container in cell
             this.$elem.append(main);

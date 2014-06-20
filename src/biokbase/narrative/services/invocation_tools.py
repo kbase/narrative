@@ -36,30 +36,30 @@ init_service(name=NAME, desc="Functions for executing KBase commands and manipul
 
 def _list_cmds():
     token = os.environ['KB_AUTH_TOKEN']
-    invo = InvocationService(url=URL.invocation, token=token)
+    invo = InvocationService(url=URLS.invocation, token=token)
     return invo.valid_commands()
 
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
-    invo = InvocationService(url=URL.invocation, token=token)
+    invo = InvocationService(url=URLS.invocation, token=token)
     stdout, stderr = invo.run_pipeline("", cmd, [], 0, '/')
     return "".join(stdout), "".join(stderr)
 
 def _list_files(d):
     token = os.environ['KB_AUTH_TOKEN']
-    invo = InvocationService(url=URL.invocation, token=token)
+    invo = InvocationService(url=URLS.invocation, token=token)
     _, files = invo.list_files("", '/', d)
     return files
 
 def _mv_file(old, new):
     token = os.environ['KB_AUTH_TOKEN']
-    invo = InvocationService(url=URL.invocation, token=token)
+    invo = InvocationService(url=URLS.invocation, token=token)
     invo.rename_file("", '/', old, new)
     return
 
 def _rm_file(f):
     token = os.environ['KB_AUTH_TOKEN']
-    invo = InvocationService(url=URL.invocation, token=token)
+    invo = InvocationService(url=URLS.invocation, token=token)
     invo.remove_files("", '/', f)
     return
 

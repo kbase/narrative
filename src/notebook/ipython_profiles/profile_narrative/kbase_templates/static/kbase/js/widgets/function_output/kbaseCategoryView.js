@@ -32,7 +32,7 @@
                     main.append(
                         $('<div>').addClass('panel panel-default')
                         .append(
-                            $('<div>').addClass('panel-heading').append(
+                            $('<div>').addClass('panel-heading').css({'margin':'0','padding':'0'}).append(
                                 $('<h4>').addClass('panel-title').append(
                                     $('<a>').attr({'data-toggle':'collapse', 'data-parent':'#'+index, 'href':'#'+catid})
                                         .append($('span').addClass('badge').html(cnum))
@@ -40,7 +40,7 @@
                                 )
                             )
                         ).append(
-                           $('<div>').attr('id', catid).addClass('panel-collapse collapse in').append(
+                           $('<div>').attr('id', catid).css({'margin':'0','padding':'0'}).addClass('panel-collapse collapse').append(
                                $('<div>').addClass('panel-body').append(clist)
                             )
                         )

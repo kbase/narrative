@@ -39,7 +39,6 @@
                                 $('<h4>').addClass('panel-title').css({'margin':'0','padding':'0'}).append(
                                     $('<a>').addClass('list-group-item')
                                         .attr({'data-toggle':'collapse', 'data-parent':'#'+index, 'href':'#'+catid})
-                                        .css({'margin':'0','padding':'0'})
                                         .html(this.options.data[i]['title'])
                                         .append($('span').addClass('badge').html(cnum))
                                 )

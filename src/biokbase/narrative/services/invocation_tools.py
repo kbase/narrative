@@ -126,11 +126,11 @@ def _rename_file(meth, old, new):
     :type new: kbtypes.Unicode
     :ui_name new: New
     :return: Status
-    :rtype: kbtypes.Unicode
+    :rtype: None
     """
     meth.stages = 1
-    if not afile:
-        raise Exception("File is empty.")
+    if not (old and new):
+        raise Exception("Missing filenames.")
     _mv_file(old, new)
     return
 
@@ -142,11 +142,11 @@ def _delete_file(meth, afile):
     :type afile: kbtypes.Unicode
     :ui_name afile: File
     :return: Status
-    :rtype: kbtypes.Unicode
+    :rtype: None
     """
     meth.stages = 1
     if not afile:
-        raise Exception("File is empty.")
+        raise Exception("Missing filename.")
     _rm_file(afile)
     return
 

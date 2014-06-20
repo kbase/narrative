@@ -101,16 +101,18 @@ def _view_cmds(meth):
     
     :return: Command List
     :rtype: kbtypes.Unicode
-    :output_widget: GeneTableWidget
+    :output_widget: CategoryViewWidget
     """
     meth.stages = 1
     cmd_list = _list_cmds()
     cmd_sort = sorted(cmd_list, key=lambda k: k['title'])
-    cmd_table = [['category', 'command']]
+    cmd_data = []
     for cat in cmd_sort:
+        data = {'title': cat['title'], 'items': []}
         for c in cat['items']:
-            cmd_table.append([ cat['title'], c['cmd'] ])
-    return json.dumps({'table': cmd_table})
+            data.append(c['cmd'])
+        cmd_data.append(data)
+    return json.dumps({'data': cmd_data})
 
 @method(name="View Files")
 def _view_files(meth):

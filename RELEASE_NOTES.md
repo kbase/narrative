@@ -3,7 +3,7 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
-### VERSION 0.0.1 (Release 6/20/2014)
+### Release 6/20/2014
 __Changes__
 
 - %%inv\_run cell magic should now work properly
@@ -15,7 +15,7 @@ __Changes__
     - %inv\_run cd == %inv\_cd
     - %inv\_run rm == %inv\_remove\_files
     - %inv\_run mv == %inv\_rename\_files
-- The menu bar should remain at the top of the page now, instead of being positioned inline with the rest of the document.
+- The menu bar should remain at the top of the page now, instead of being positioned inline with the rest of the narrative document.
 
 __Known Issues__
 - %inv\_ls to a directory that doesn't exist will create a generic, not-very-informative error.

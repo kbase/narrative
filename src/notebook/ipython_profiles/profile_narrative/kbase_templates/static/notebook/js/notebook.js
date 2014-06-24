@@ -1703,6 +1703,11 @@ var IPython = (function (IPython) {
      * @param {String} error_msg HTTP error message
      */
     Notebook.prototype.save_notebook_error = function (xhr, status, error_msg) {
+        console.log('Save notebook error!');
+        console.log(xhr);
+        console.log(status);
+        console.log(error_msg);
+        
         $([IPython.events]).trigger('notebook_save_failed.Notebook');
     };
     

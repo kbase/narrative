@@ -48,7 +48,7 @@ class CWS:
 
 class URLS:
     shock = "http://shock.metagenomics.anl.gov"
-    awe = "http://140.221.85.36:8000"
+    awe = "http://140.221.84.112:8000"
     workspace = "https://kbase.us/services/ws"
     invocation = "https://kbase.us/services/invocation"
 

@@ -10,12 +10,10 @@
             text: '',
             error: ''
         },
-        
         init: function(options) {
             this._super(options);
             return this.render();
         },
-        
         render: function() {
             // creater main comtainer
             var main = $('<div>');
@@ -33,15 +31,14 @@
                 }
                 // add text
                 if (this.options.text !== '') {
-                    main.append($('<p>')
-                        .css({'padding': '10px 20px'})
+                    main.append($('<div>')
+                        .css({'font-size': 'small'})
                         .append($('<pre>').text(this.options.text)));
                 }
             }
             // put container in cell
             this.$elem.append(main);
             return this;
-        },
-
+        }
     });
 })(jQuery);

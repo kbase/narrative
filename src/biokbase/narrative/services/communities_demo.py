@@ -48,7 +48,7 @@ class CWS:
 
 class URLS:
     shock = "http://shock.metagenomics.anl.gov"
-    awe = "http://140.221.85.36:8000"
+    awe = "http://140.221.84.112:8000"
     workspace = "https://kbase.us/services/ws"
     invocation = "https://kbase.us/services/invocation"
 
@@ -77,8 +77,7 @@ picrustWF = """{
          "taskid" : "0",
          "inputs" : {
             "input.fas" : {
-               "node" : "$seq",
-               "host" : "$shock"
+               "url" : "$seq_url"
             },
             "otu_picking_params.txt" : {
                "node" : "$param",
@@ -170,12 +169,6 @@ def _get_shock_data(nodeid, binary=False):
     shock = shockService(URLS.shock, token)
     return shock.download_to_string(nodeid, binary=binary)
 
-def _view_invo(d):
-    token = os.environ['KB_AUTH_TOKEN']
-    invo  = InvocationService(url=URLS.invocation, token=token)
-    files = invo.list_files("", '/', d)
-    return "".join(files)
-
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
     invo = InvocationService(url=URLS.invocation, token=token)
@@ -221,43 +214,6 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': data})
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
-
-@method(name="Execute Command")
-def _execute_command(meth, command):
-    """Execute given command on invocation server.
-
-    :param command: command to run on invocation server
-    :type command: kbtypes.Unicode
-    :ui_name command: Command
-    :return: Output
-    :rtype: kbtypes.Unicode
-    :output_widget: DisplayTextWidget
-    """
-    meth.stages = 1
-    if not command:
-        raise Exception("Command is empty.")
-    stdout, stderr = _run_invo(command)
-    if (stdout == '') and (stderr == ''):
-        stdout = 'Your command executed successfully'
-    return json.dumps({'header': '', 'text': stdout, 'error': stderr})
-
-@method(name="View Files")
-def _view_files(meth, directory):
-    """View your files on invocation server.
-
-    :param directory: directory to view files in, default is cwd
-    :type directory: kbtypes.Unicode
-    :ui_name directory: Directory
-    :return: Output
-    :rtype: kbtypes.Unicode
-    :output_widget: DisplayTextWidget
-    """
-    meth.stages = 1
-    if not directory:
-        directory = ''
-    file_list = _view_invo(directory)
-    return json.dumps({'header': '', 'text': file_list})
-
 
 @method(name="Import Metagenome List")
 def _import_metagenome_list(meth, workspace, metagenome_list_id):
@@ -425,7 +381,8 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
-    seq_nid = _get_ws(workspace, in_seq, CWS.seq)['ID']
+    seq_obj = _get_ws(workspace, in_seq, CWS.seq)
+    seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
     _run_invo("echo 'pick_otus:enable_rev_strand_match True' > picrust.params")
     _run_invo("echo 'pick_otus:similarity 0.97' >> picrust.params")
     stdout, stderr = _run_invo("mg-upload2shock %s picrust.params"%(URLS.shock))
@@ -433,7 +390,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     param_nid = json.loads(stdout)['id']
     wf_tmp = Template(picrustWF)
-    wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_nid, param=param_nid)
+    wf_str = wf_tmp.substitute(shock=URLS.shock, seq_url=seq_url, param=param_nid)
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     ajob = _submit_awe(wf_str)

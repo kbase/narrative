@@ -1353,6 +1353,9 @@ angular.module('ws-directives')
                         case 'Media': 
                             route = 'ws.media';
                             break; 
+                        case 'Genome': 
+                            route = 'genomesbyid';
+                            break;                             
                     }
 
 

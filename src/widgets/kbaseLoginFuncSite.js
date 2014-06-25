@@ -961,14 +961,15 @@
 
                                 if (data.kbase_sessionid) {
 
-									if ($.cookie) {
-                                        $.cookie('kbase_session',
-                                              'unEQUALSSIGN' + data.user_id
-                                            + 'PIPESIGN'
-                                            + 'kbase_sessionidEQUALSSIGN' + data.kbase_sessionid
-                                            + 'PIPESIGN'
-                                            + 'token_idEQUALSSIGN' + data.kbase_sessionid);
-                                    }
+									// if ($.cookie) {
+         //                                $.cookie('kbase_session',
+         //                                      'unEQUALSSIGN' + data.user_id
+         //                                    + 'PIPESIGN'
+         //                                    + 'kbase_sessionidEQUALSSIGN' + data.kbase_sessionid
+         //                                    + 'PIPESIGN'
+         //                                    + 'token_idEQUALSSIGN' + data.kbase_sessionid,
+         //                                    { expires: 60 });
+         //                            }
 
                                     var cookieArray = [];
 
@@ -1046,6 +1047,7 @@
             }
 
             localStorage.removeItem('kbase_session');
+            $.removeCookie('kbase_session', { path: '/' });
 
             // the rest of this is just housekeeping.
 

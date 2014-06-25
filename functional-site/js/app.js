@@ -446,7 +446,6 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
     };
 
     var finish_logout = function() {
-        set_cookie({});
         $location.path('/login/');
         $rootScope.$apply();
     };
@@ -500,17 +499,16 @@ function removeCards() {
 function set_cookie(c) {
     var cookieName = 'kbase_session';
     if (c.kbase_sessionid) {
-        console.log( 'Setting kbase_session cookie');
         var cookieString = 'un=' + c.user_id + 
                            '|kbase_sessionid=' + c.kbase_sessionid +
                            '|user_id=' + c.user_id +
                            '|token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
-        $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us' });
-        $.cookie(cookieName, cookieString, { path: '/' });
+        $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us', expires: 60 });
+        $.cookie(cookieName, cookieString, { path: '/', expires: 60 });
     }
     else {
-        console.log('Logged out - removing cookie');
-        $.cookie(cookieName, null);
+        $.removeCookie(cookieName, { path: '/', domain: 'kbase.us' });
+        $.removeCookie(cookieName, { path: '/' });
     }
 };
 

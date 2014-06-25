@@ -513,8 +513,8 @@ app.controller('RxnDetail', function($scope, $stateParams) {
                                        '|kbase_sessionid=' + c.kbase_sessionid +
                                        '|user_id=' + c.user_id +
                                        '|token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
-                    $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us' });
-                    $.cookie(cookieName, cookieString, { path: '/' });
+                    $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us', expires: 60 });
+                    $.cookie(cookieName, cookieString, { path: '/', expires: 60 });
 
                     //this.data('_session', c);
 

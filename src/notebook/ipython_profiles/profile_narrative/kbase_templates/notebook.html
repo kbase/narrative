@@ -183,23 +183,24 @@ class="notebook_app"
      </div>
 
      <div id="content-column">
-        <div id="menubar-container">
-            <div id="maintoolbar" class="navbar" style="z-index:100">
-              <div class="toolbar-inner navbar-nobg">
+        <div id="menubar-container" class="narrative-menu-container pull-left">
+            <div id="maintoolbar" class="navbar" style="z-index:100;">
+              <div class="toolbar-inner navbar-nobg pull-left">
                 <div id="maintoolbar-container" class="container"></div>
               </div>
+            </div>
+            <div></div>
+            <div id="narrative-title">
+                <span id="save_widget" class="nav pull-left">
+                    <span id="notebook_name"></span>
+                    <span id="checkpoint_status"></span>
+                    <span id="autosave_status"></span>
+                </span>
+                <span> &nbsp;</span>
             </div>
         </div>
 
 
-        <div id="narrative-title">
-            <span id="save_widget" class="nav pull-left">
-                <span id="notebook_name"></span>
-                <span id="checkpoint_status"></span>
-                <span id="autosave_status"></span>
-            </span>
-            <span> &nbsp;</span>
-        </div>
 
         <div id="ipython-main-app">
             <div id="notebook_panel">
@@ -331,6 +332,8 @@ console.log($.kbasePlantsNetworkNarrative);*/
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseImageView.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseKeggMap.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseMGOverview.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseDisplayText.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseCategoryView.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaModelComparison.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseContigSetUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script>

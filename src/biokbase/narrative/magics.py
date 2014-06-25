@@ -184,21 +184,82 @@ class kbasemagics(Magics):
         return inv_session
                 
     @line_cell_magic
-    def inv_run(self,line, cell=None):
+    def inv_run(self, line, cell=None):
         """
         If we are logged in, make sure we have an invocation session and then use the invocation run_pipeline()
         method to executing the rest of the line
         """
         global user_id, token, user_profile, inv_client, inv_session
         sess = self.inv_session()
+        cwd = self.inv_cwd('')
+
+        # if there's just a single line
+        if len(line) > 0 and cell is None:
+            return self.inv_run_line(sess, cwd, line)
+        if cell is not None:
+            all_results = []
+            lines = cell.splitlines()
+            for command in lines:
+                all_results.append(self.inv_run_line(sess, cwd, command))
+            return all_results
+
+        # try:
+        #     res = inv_client.run_pipeline( sess, line, [], 200, '/')
+        #     if res[1]:
+        #         print("\n".join(res[1]),file=sys.stderr)
+        # except Exception, e:
+        #     print("Error: %s" % str(e),file=sys.stderr)
+        #     return None
+        # return res[0]
+
+    def inv_run_line(self, session, cwd, line):
+        """
+        This is the workhorse for running an Invocation service command.
+        In the case where there's a cell full of these, they should be passed here one at a time.
+        Note that this does NOT set up an Invocation session - that should be set up externally and
+        passed to this function.
+        """
         try:
-            res = inv_client.run_pipeline( sess, line, [], 200, '/')
-            if res[1]:
-                print("\n".join(res[1]),file=sys.stderr)
+            line = line.strip()
+
+            # get the first token as lower case
+            first_token = line.split()[0].lower()
+
+            # keep the rest of the line parameters, incase we need to pass them along to the other magics
+            line_params = line[len(first_token):].strip()
+
+            # Now, test the first token for convenience commands, and pass them along as necessary:
+            # ls 
+            # cwd or pwd
+            # mkdir
+            # rmdir
+            # copy or cp
+            # rm
+            # mv
+            if (first_token == 'ls'):
+                return self.inv_ls(line_params)
+            elif (first_token == 'cwd' or first_token == 'pwd'):
+                return self.inv_cwd(line_params)
+            elif (first_token == 'mkdir'):
+                return self.inv_make_directory(line_params)
+            elif (first_token == 'copy' or first_token == 'cp'):
+                return self.inv_copy(line_params)
+            elif (first_token == 'rmdir'):
+                return self.inv_remove_directory(line_params)
+            elif (first_token == 'rm'):
+                return self.inv_remove_files(line_params)
+            elif (first_token == 'mv'):
+                return self.inv_rename_files(line_params)
+            elif (first_token == 'cd'):
+                return self.inv_cd(line_params)
+            else:
+                res = inv_client.run_pipeline(sess, line, [], 200, cwd)
+                if res[1]:
+                    print("\n".join(res[1]), file=sys.stderr)
         except Exception, e:
-            print("Error: %s" % str(e),file=sys.stderr)
+            print("Error: %s" % str(e), file=sys.stderr)
             return None
-        return res[0]
+        # return res[0]
 
     @line_magic
     def inv_ls(self,line):

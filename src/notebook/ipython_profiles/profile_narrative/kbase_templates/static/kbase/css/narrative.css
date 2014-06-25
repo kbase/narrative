@@ -133,6 +133,10 @@ span#searchspan{
     span#searchspan{width: 60%;}   
 }
 
+div#notebook {
+	border-top: none;
+}
+
 #narrative-name {
 	font-weight: bold;
 	font-size: 1.4em;
@@ -150,13 +154,21 @@ span#searchspan{
 #narrative-title {
 	position: relative;
 	top: 15px;
-	padding-left: 24px;
+	padding-left: 3px;
 	padding-bottom: 10px;
 	margin: 10px 0; 
 }
 
-#menubar-container {
-	width: auto;
+.narrative-menu-container {
+	position: fixed; 
+	z-index: 499;
+	background-color: #ffffff;
+	width: 100%;
+	border-bottom: 1px solid #ababab; 
+	padding-bottom: 30px; 
+	padding-top: 10px; 
+	margin-top: -10px; 
+	margin-left: auto
 }
 
 p.clear{
@@ -681,8 +693,7 @@ p span.notification{
 }
 
 .btn-default {
-	background-image: none;
-	background-color: #f8f8f8;
+	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);	
 }
 
 .btn-group {

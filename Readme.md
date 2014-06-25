@@ -6,14 +6,14 @@ Introduction
 This is the new IPython based Narrative Interface repo.
 The previous version has been branched into the pre-sprint branch for archival purposes.
 All relevant code has been migrated under the src/ directory. A virtualenv based installer
-and standard KBase makefile targets are in the works.
+and standard KBase makefile targets are in the works (still!).
 
 Running
 -------
 
 The ipython narrative is a "profile" of the ipython notebook. The setup and instructions are run using the Python [virtualenv](https://pypi.python.org/pypi/virtualenv) module. If you haven't ever used this module, you should take some time to go familiarize yourself with it now.
 
-An important caveat for your python environment is that you have Python 2.7 installed and that the version of pip that is run is matched to that python 2.7 installation. Because pip is not installed by default, it is possible to upgrade python, while still having a version of pip that only updates the libraries for a previous version of python. If you do not have a 2.7 version of pip, you an usually use something like easy_install-2.7 to update pip.
+An important caveat for your python environment is that you have Python 2.7 installed and that the version of pip that is run is matched to that python 2.7 installation. Because pip is not installed by default, it is possible to upgrade python, while still having a version of pip that only updates the libraries for a previous version of python. If you do not have a 2.7 version of pip, you can usually use something like easy_install-2.7 to update pip.
 
 Most of the python dependencies for the notebook are in the bootstrap module under bootstrap/kb_python_runtime/python-pip-list-narrative.
 There are some dependencies that are better installed as packages, scipy and numpy. They can either be installed using dpkg, or for MacOS
@@ -25,6 +25,11 @@ Download those files and then checkout the bootstrap repo and run this command:
 pip install -r bootstrap/kb_python_runtime/python-pip-list-narrative
 
 it should install all the necessary python module dependencies to run the notebook.
+
+It's been reported that additional dependencies don't always get installed with this script, especially on Ubuntu. Namely, zmq and tornado. You can install these manually by running:
+
+> pip install pyzmq
+> pip install tornado
 
 Install and Run
 ---------------

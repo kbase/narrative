@@ -47,14 +47,10 @@ class CWS:
     mg_an = 'KBaseGenomes.MetagenomeAnnotation-1.0'
 
 class URLS:
-    #shock = "http://shock1.chicago.kbase.us"
     shock = "http://shock.metagenomics.anl.gov"
-    awe = "http://140.221.85.36:8000"
-    #workspace = "https://140.221.84.209:7058"
+    awe = "http://140.221.84.112:8000"
     workspace = "https://kbase.us/services/ws"
-    #invocation = "https://kbase.us/services/invocation"
-    #invocation = "http://140.221.85.110:443"
-    invocation = "http://140.221.85.185:7049"
+    invocation = "https://kbase.us/services/invocation"
 
 picrustWF = """{
    "info" : {
@@ -81,8 +77,7 @@ picrustWF = """{
          "taskid" : "0",
          "inputs" : {
             "input.fas" : {
-               "node" : "$seq",
-               "host" : "$shock"
+               "url" : "$seq_url"
             },
             "otu_picking_params.txt" : {
                "node" : "$param",
@@ -177,7 +172,7 @@ def _get_shock_data(nodeid, binary=False):
 def _run_invo(cmd):
     token = os.environ['KB_AUTH_TOKEN']
     invo = InvocationService(url=URLS.invocation, token=token)
-    stdout, stderr = invo.run_pipeline("", cmd, [], 100000, '/')
+    stdout, stderr = invo.run_pipeline("", cmd, [], 0, '/')
     return "".join(stdout), "".join(stderr)
 
 def _get_invo(name, binary=False):
@@ -386,7 +381,8 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
-    seq_nid = _get_ws(workspace, in_seq, CWS.seq)['ID']
+    seq_obj = _get_ws(workspace, in_seq, CWS.seq)
+    seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
     _run_invo("echo 'pick_otus:enable_rev_strand_match True' > picrust.params")
     _run_invo("echo 'pick_otus:similarity 0.97' >> picrust.params")
     stdout, stderr = _run_invo("mg-upload2shock %s picrust.params"%(URLS.shock))
@@ -394,7 +390,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     param_nid = json.loads(stdout)['id']
     wf_tmp = Template(picrustWF)
-    wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_nid, param=param_nid)
+    wf_str = wf_tmp.substitute(shock=URLS.shock, seq_url=seq_url, param=param_nid)
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     ajob = _submit_awe(wf_str)
@@ -1105,7 +1101,7 @@ def _view_mg(meth, mgid):
     :param in_name: id of a metagenome
     :type in_name: kbtypes.Unicode
     :ui_name in_name: Metagenome ID
-    :return: Gapfilled Metagenome Model
+    :return: Metagenome Overview
     :rtype: kbtypes.Unicode
     :output_widget: MGOverviewWidget
     """

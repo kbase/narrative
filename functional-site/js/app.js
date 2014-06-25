@@ -421,7 +421,10 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         removeCards();
     });
 
-    var login_change = function() {
+    var finish_login = function(result) {
+        if (!result.success)
+            return;
+
         var c = $('#signin-button').kbaseLogin('get_kbase_cookie');
         set_cookie(c);
 
@@ -442,9 +445,15 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         window.location.reload();
     };
 
+    var finish_logout = function() {
+        set_cookie({});
+        $location.path('/login/');
+        $rootScope.$apply();
+    };
+
     // sign in button
-    $('#signin-button').kbaseLogin({login_callback: login_change,
-                                    logout_callback: login_change});
+    $('#signin-button').kbaseLogin({login_callback: finish_login,
+                                    logout_callback: finish_logout});
     $('#signin-button').css('padding', '0');  // Jim!
 
     USER_ID = $("#signin-button").kbaseLogin('session').user_id;

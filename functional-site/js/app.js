@@ -435,7 +435,10 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         removeCards();
     });
 
-    var login_change = function() {
+    var finish_login = function(result) {
+        if (!result.success)
+            return;
+
         var c = $('#signin-button').kbaseLogin('get_kbase_cookie');
         set_cookie(c);
 
@@ -456,9 +459,14 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         window.location.reload();
     };
 
+    var finish_logout = function() {
+        $location.path('/login/');
+        $rootScope.$apply();
+    };
+
     // sign in button
-    $('#signin-button').kbaseLogin({login_callback: login_change,
-                                    logout_callback: login_change});
+    $('#signin-button').kbaseLogin({login_callback: finish_login,
+                                    logout_callback: finish_logout});
     $('#signin-button').css('padding', '0');  // Jim!
 
     USER_ID = $("#signin-button").kbaseLogin('session').user_id;
@@ -508,17 +516,16 @@ function removeCards() {
 function set_cookie(c) {
     var cookieName = 'kbase_session';
     if (c.kbase_sessionid) {
-        console.log( 'Setting kbase_session cookie');
         var cookieString = 'un=' + c.user_id + 
                            '|kbase_sessionid=' + c.kbase_sessionid +
                            '|user_id=' + c.user_id +
                            '|token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
-        $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us' });
-        $.cookie(cookieName, cookieString, { path: '/' });
+        $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us', expires: 60 });
+        $.cookie(cookieName, cookieString, { path: '/', expires: 60 });
     }
     else {
-        console.log('Logged out - removing cookie');
-        $.cookie(cookieName, null);
+        $.removeCookie(cookieName, { path: '/', domain: 'kbase.us' });
+        $.removeCookie(cookieName, { path: '/' });
     }
 };
 

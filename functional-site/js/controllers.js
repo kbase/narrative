@@ -490,12 +490,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     $scope.loginUser = function (user) {
         $("#loading-indicator").show();
 
-        // if (!user || !user.username || !user.password) {
-        //     $elem.find('input').trigger('input').trigger('change').trigger('keydown');
-        //     $elem.find('submit').trigger('submit');
-        //     return;
-        // }
-
         kbaseLogin.login(
             user.username,
             user.password,
@@ -526,6 +520,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
                     $location.path('/narrative/');
                     $scope.$apply();
+                    window.location.reload();
                     
                 } else {
                     console.log("error logging in");

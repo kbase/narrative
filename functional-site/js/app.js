@@ -447,7 +447,8 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
 
     var finish_logout = function() {
         $location.path('/login/');
-        $rootScope.$apply();
+//        $rootScope.$apply();
+        window.location.reload();
     };
 
     // sign in button

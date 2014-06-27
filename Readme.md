@@ -15,7 +15,7 @@ four parts:
 1. Preparing your system
 2. Installing the Narrative virtual environment
 3. Starting your Narrative
-4. Managing your Narrative during development.
+4. Managing your Narrative during development
 
 Preparing your system
 ---------------------
@@ -104,11 +104,11 @@ This section covers how and when to reset your Narrative during development.
 
     Much of the Narrative involves writing service wrappers that invoke KBase services. If any of these (or any other part of the Python code in src/biokbase) is modified, you'll need to do the following steps to update your virtual environment.
 
-    A.  Exit the Narrative (Ctrl-c a couple times on your running narrative console)
-    B.  (Option 1, the clean but slow way) Remove and reinstall the virtual environment
-    C.  (Option 2, the slightly-less-clean but much faster way) Run the part of the installer that compiles the src/biokbase directory.
+    A.  Exit the Narrative (Ctrl-c a couple times on your running narrative console)  
+    B.  (Option 1, the clean but slow way) Remove and reinstall the virtual environment  
+    C.  (Option 2, the slightly-less-clean but much faster way) Run the part of the installer that compiles the src/biokbase directory  
         With your virtual environment still active:  
-        `> python src/setup.py install || abort`
+        `> python src/setup.py install || abort`  
     D.  Restart your Narrative as above.
 
 2.  **Modifying KBase widget code (or any other front-end Javascript/HTML code)**

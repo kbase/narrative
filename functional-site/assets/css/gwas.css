@@ -11,19 +11,19 @@
 	font-weight:bold;
 }
 .cluster-1{
-  background-image:url(/functional-site/assets/images/m1.png);
+  background-image:url(../images/m1.png);
   line-height:53px;
 	width: 53px;
 	height: 52px;
 }
 .cluster-2{
-  background-image:url(/functional-site/assets/images/m2.png);
+  background-image:url(../images/m2.png);
   line-height:53px;
 	width: 56px;
 	height: 55px;
 }
 .cluster-3{
-  background-image:url(/functional-site/assets/images/m3.png);
+  background-image:url(../images/m3.png);
   line-height:66px;
 	width: 66px;
 	height: 65px;

@@ -1,0 +1,196 @@
+<div class="row search-result-column-header-row">
+    <div class="btn-group search-result-column-header col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <div class="btn-group search-result-column-header search-result-select-all col-xs-1 col-sm-1 col-md-1 col-lg-1">
+            <button type="button" class="btn btn-default search-result-column-header-toggle" ng-class="{'disabled': !options.userState.loggedIn}" ng-click="toggleAll(options.resultJSON.items)">
+                <span class="glyphicon" ng-class="{'glyphicon-check': options.userState.selectAll[options.selectedCategory][options.searchOptions.perCategory[options.selectedCategory].page],'glyphicon-unchecked': !options.userState.selectAll[options.selectedCategory][options.searchOptions.perCategory[options.selectedCategory].page]}"></span>
+            </button>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-2 col-sm-2 col-md-1 col-lg-1 genome_id">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Genome Id</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'genome_id', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'genome_id', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="removeSort(options.selectedCategory, 'genome_id', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-2 col-sm-2 col-md-4 col-lg-4 scientific-name">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Scientific Name</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'scientific_name', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-alphabet"/>
+                        <span>Sort alphabetical</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'scientific_name', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-alphabet-alt"/>
+                        <span>Sort reverse alphabetical</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="removeSort(options.selectedCategory, 'scientific_name', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-2 col-sm-2 col-md-1 col-lg-1 domain">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Domain</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'domain', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-alphabet"/>
+                        <span>Sort alphabetical</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'domain', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-alphabet-alt"/>
+                        <span>Sort reverse alphabetical</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="removeSort(options.selectedCategory, 'domain', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1 gc_content">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>%GC</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'gc_content', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-attributes"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'gc_content', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-attributes-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="removeSort(options.selectedCategory, 'gc_content', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1 num_contigs">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Contigs</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'num_contigs', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'num_contigs', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="removeSort(options.selectedCategory, 'num_contigs', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1 genome_dna_size">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>DNA Size bp</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'genome_dna_size', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="addSort(options.selectedCategory, 'genome_dna_size', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a ng-click="removeSort(options.selectedCategory, 'genome_dna_size', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<section>
+    <div class="row" ng-repeat="item in options.resultJSON.items">
+        <div class="search-typedRecord row">
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-checkbox">
+                <a ng-click="toggleCheckbox(item.row_id, item)" class="search-checkbox-link" ng-class="{'disabled': !options.userState.loggedIn}">
+                    <span class="glyphicon" ng-class="{'glyphicon-unchecked': !options.userState.selections[item.row_id], 'glyphicon-check': options.userState.selections[item.row_id]}"/>
+                </a>
+            </div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-position">{{item.position}}.</div>
+            <div class="col-xs-2 col-sm-2 col-md-1 col-lg-1 search-result-column genome_id">{{item.genome_id}}</div>
+            <div class="col-xs-2 col-sm-2 col-md-4 col-lg-4 search-result-column scientific-name">
+                <span>
+                    <a target='_blank' class='scientific-name' href='#{{options.landingPages.genome}}{{item.genome_id}}'>
+                        <strong><em>{{item.scientific_name}}</em></strong>
+                    </a>
+                </span>
+            </div>
+            <div class="col-xs-2 col-sm-2 col-md-1 col-lg-1 search-result-column domain">{{item.domain}}</div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-column gc_content">{{item.gc_content}}</div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-column num_contigs">{{item.num_contigs}}</div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-column genome_dna_size">{{item.genome_dna_size}}</div>
+        </div>
+        <div ng-class="{'collapse': options.userState.viewType != 'expanded'}" class="search-typedRecord-expanded row">
+            <div class="well search-result-column-expanded row">
+                <table class="search-result-expanded-entry">
+                    <tr><td class="search-result-column-expanded-entry-cell genome_expanded_header"><strong>Taxonomy:</strong></td><td class="search-result-column-expanded-entry-cell">{{item.taxonomy}}</td></tr>                    
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

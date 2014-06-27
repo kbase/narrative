@@ -1,0 +1,146 @@
+<div class="row search-result-column-header-row">
+    <div class="btn-group search-result-column-header col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <div class="btn-group search-result-column-header search-result-select-all col-xs-1 col-sm-1 col-md-1 col-lg-1">
+            <button type="button" class="btn btn-default search-result-column-header-btn" ng-class="{'disabled': !options.userState.loggedIn}" ng-click="toggleAll(options.resultJSON.items)">
+                <span class="glyphicon" ng-class="{'glyphicon-check': options.userState.selectAll,'glyphicon-unchecked': !options.userState.selectAll}"></span>
+            </button>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1 ontology_id">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Ontology Id</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(selectedCategory, 'ontology_id', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(selectedCategory, 'ontology_id', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(selectedCategory, 'ontology_id', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-md-4 ontology_description">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Ontology Description</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(selectedCategory, 'ontology_description', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(selectedCategory, 'ontology_description', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(selectedCategory, 'ontology_description', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-md-3" id="ontology_domain">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Ontology Domain</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(selectedCategory, 'ontology_domain', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(selectedCategory, 'ontology_domain', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(selectedCategory, 'ontology_domain', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1 ontology_type">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Type</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(selectedCategory, 'ontology_type, 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(selectedCategory, 'ontology_type', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(selectedCategory, 'ontology_type', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<section>
+    <div class="row" ng-repeat="item in options.resultJSON.items">
+        <div class="search-typedRecord row">
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-checkbox">
+                <a ng-click="toggleCheckbox(item.row_id, item)" class="search-checkbox-link" ng-class="{'disabled': !options.userState.loggedIn}">
+                    <span class="glyphicon" ng-class="{'glyphicon-unchecked': !options.userState.selections[item.row_id], 'glyphicon-check': options.userState.selections[item.row_id]}"/>
+                </a>
+            </div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-position">{{item.position}}.</div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-column ontology_id">{{item.ontology_id}}</div>
+            <div class="col-xs-3 col-sm-3 col-md-4 col-lg-4 search-result-column ontology_description">
+                <span>
+                    <a target='_blank' class="ontology-description" href="{{landingPages.ontology_landing_page}}{{ontology_id}}">
+                        <strong><em>{{item.ontology_description}}</em></strong>
+                    </a>
+                </span>
+            </div>
+            <div class="col-xs-2 col-sm-2 col-md-3 col-lg-3 search-result-column ontology_domain">{{item.ontology_domain}}</div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-column ontology_type">{{item.ontology_type}}</div>
+        </div>
+        <div class="typedRecord-expanded row collapse">
+            <div class="row search-typedRecord-expanded-header">
+                <div class="col-md-4"><span class="text-left"><strong>Additional Information:</strong></span></div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 search-result-column-expanded" id="gene_list"><strong>Gene List: </strong>{{gene_list}}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 search-result-column-expanded" id="evidence_codes"><strong>Evidence Codes: </strong>{{evidence_codes}}</div>
+            </div>
+        </div>
+    </div>
+</section>

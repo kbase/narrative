@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html ng-app="landing-pages" lang="en">
     <head>
         <title>KBase Narrative Interface (prototype)</title>
@@ -16,6 +16,7 @@
         <link rel="stylesheet" type="text/css" href="assets/css/landing-pages.css" />
         <!-- should probably remove styling from feed xml? -->
         <link rel="stylesheet" type="text/css" href="assets/css/narrative.css" />
+        <link rel="stylesheet" type="text/css" href="assets/css/search.css" />
         <link rel="stylesheet" type="text/css" href="assets/css/jquery.jsonview.css" />        
 
         <link rel="stylesheet" type="text/css" href="assets/css/nc-tour.css" />
@@ -83,8 +84,9 @@
         <script src="../ext/jquery/jquery-1.10.2.min.js"></script>
        <!-- <script src="../ext/jquery-migrate/jquery-migrate-1.2.1.js"></script> -->
         <script src="../ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min.js"></script>
-        <script src="../ext/d3/d3.v3.min.js"></script>
+        <script src="../ext/blockUI/jquery.blockUI.js"></script>
         <script src="../ext/bootstrap/3.0.0/js/bootstrap.js"></script>
+        <script src="../ext/d3/d3.v3.min.js"></script>
         <script src="../ext/dataTables/1.9.4/js/jquery.dataTables.js"></script>
         <script src="assets/js/dataTables.bootstrap.js"></script>
         <script src="assets/js/jquery.dataTables.rowGrouping.js"></script>
@@ -98,7 +100,6 @@
 
         <script src="assets/js/jquery.cookie.min.js"></script>
         <script src="assets/js/viz/raphael-min.js"></script>
-
 
         <!-- KBase client library javascript -->
         <script src="assets/js/kbclient/kbase.js"></script>
@@ -212,7 +213,8 @@
         <link rel="stylesheet" type="text/css" href="assets/css/gwas.css" />
         <script src='../src/widgets/kbaseAuthenticatedWidget.js'></script>
         <!-- please don't load external scripts in index.html -->
-        <!--<script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>-->
+        <!-- This is the only way currently to load google maps for the GWAS landing pages, if you have another solution, talk to Matt H. -->
+        <script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>
         <script src='../ext/gmaps/gmap3.js'></script>
         <script src="../src/widgets/gwas/kbaseGWASPop.js"></script>
         <script src="../src/widgets/gwas/kbaseGWASPopTable.js"></script>
@@ -270,7 +272,7 @@
         <script src="lib/trees/knhx.js"></script>
 
 
-	<!-- Network widgets and dependencies -->
+	    <!-- Network widgets and dependencies -->
         <link rel="stylesheet" href="../ext/cytoscape.js/2.0.4-jmc/jquery.cytoscape-panzoom.css" />
         <script src="../ext/cytoscape.js/2.0.4-jmc/arbor.js"></script>
         <script src="../ext/cytoscape.js/2.0.4-jmc/cytoscape.js"></script>
@@ -287,7 +289,8 @@
         <script src="js/angular-resource.js"></script> 
         <script src="js/ui-bootstrap-tpls-0.10.0.js"></script>
 
-        <script src="js/app.js"></script>
+        <script src="js/app.js"></script>        
+        <script src="js/search.js"></script>
 
         <script src="js/directives/landingpages.js"></script>
         <script src="js/directives/cards.js"></script>
@@ -305,54 +308,44 @@
 
     <body>
         <div id="wrap">
+            <div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
+                <a href="http://www.kbase.us" class="pull-left">
+                    <img id="logo" src="assets/img/kbase_logo.png" width="46"/>
+                </a>
 
-        <div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
-            <a href="http://www.kbase.us" class="pull-left">
-                <img id="logo" src="assets/img/kbase_logo.png" width="46">
-            </a>
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav"> 
+                        <li class="dropdown" ng-class="{ active: $state.includes('narrative')}">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#/narrative/">Newsfeed</a></li>                
+                                <li><a href="#/narrative/projects/">Projects</a></li>
+                                <!--<li class="divider"></li>     
+                                <li><a href="#">Profile</a></li>-->
+                            </ul>
+                        </li>
+                        <li ng-class="{ active: $state.includes('search')}">
+                            <a ng-click="newSearch()" ng-controller="searchBarController">Search Data</a>
+                        </li>
+                        <li ng-class="{ active: $state.includes('ws')}"><a href="#/ws/" >Workspaces</a></li>
+                        <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>          
+                    </ul>
 
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-              <ul class="nav navbar-nav"> 
-                <li class="dropdown" ng-class="{ active: $state.includes('narrative')}">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="#/narrative/">Newsfeed</a></li>                
-                    <li><a href="#/narrative/projects/">Projects</a></li>
-                    <!--<li class="divider"></li>     
-                    <li><a href="#">Profile</a></li>-->
-                  </ul>
-                </li>
-                <li ng-class="{ active: $state.includes('ws')}"><a href="#/ws/" >Workspaces</a></li>
-                <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>          
-              </ul>
-
-              <form ng-controller="Search" ng-submit="startSearch(searchquery)" class="navbar-form navbar-left" role="search" style="width: 40%">
-                <div class="input-group">
-                    <input class="form-control" ng-model="searchquery" name="search" placeholder="Search KBase Data" autocomplete="off" type="text"> 
-                    <div class="input-group-btn">
-                        <button class="btn" type="submit" style="background-color: #ebebeb; border-color: #adadad; border-left:none">
-                            <span class="glyphicon glyphicon-search" style="line-height: .9"></span>
-                        </button>
-                    </div>
-                </div>
-              </form>
-              
-              <ul class="nav navbar-nav"> 
-                <!--<li ng-class="{ active: $state.includes('favorites')}">
-                    <a href="#/favorites/">Viewer <span class="badge favorite-count"></span></a>
-                </li>
-                <li class="fav-loading"></li>-->
-              </ul>
-
+                    <!--
+                    <ul class="nav navbar-nav"> 
+                        <li ng-class="{ active: $state.includes('favorites')}"><a href="#/favorites/all/">Favorites <span class="badge  favorite-count"></span></a></li>
+                        <li class="fav-loading"></li>
+                    </ul>
+                    -->
              
-              <div id="signin-button" class="pull-right"></div>
-              <ul class="nav navbar-nav pull-right">
-                  <li class="dropdown help-dropdown"></li>
-              </ul>
-            </div> 
-        </div>
+                    <div id="signin-button" class="pull-right"></div>
+                    <ul class="nav navbar-nav pull-right">
+                        <li class="dropdown help-dropdown"></li>
+                    </ul>
+                </div> 
+            </div>
 
-        <div id="app" class="wrapper" ui-view></div>
+            <div id="app" class="wrapper" ui-view></div>
 
         </div> <!-- end wrap, this pushes the footer down -->
         <div id="footer">

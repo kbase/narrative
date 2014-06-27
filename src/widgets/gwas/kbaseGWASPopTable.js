@@ -6,6 +6,7 @@
         //width: 600,
         options: {
             width: 780,
+            height: 390,
             type: "KBaseGwasData.GwasPopulation"
         },
         workspaceURL: "https://kbase.us/services/ws",
@@ -23,29 +24,31 @@
                 function(data){
                     self.collection = data[0];
 
-                    var $contTable = $("<dir/>").css('height', 'auto').css('overflow-y', 'scroll');
-
-                    $contTable.attr('id', 'popTable');
-
-                    var $domainTable = $("<table/>").addClass("table table-bordered table-striped");                        
+                    var domainTable = $("<table/>").addClass("table table-bordered table-striped").attr("id", "popTable");                        
                     var ecotypeDetails = self.collection.data.ecotype_details;
-                    $domainTable.append('<thead><tr><th>Country</th><th>Ecotype Id</th><th>Native Name</th><th>Region</th><th>Site</th><th>Stock Parent</th></tr></thead>');
 
-                    for (var i=0; i<ecotypeDetails.length /*&& i < 100*/; i++) {
-                        $domainTable.append($("<tr>")
-                            .append($("<td>").append(ecotypeDetails[i].country))
-                            .append($("<td>").append(ecotypeDetails[i].ecotype_id))
-                            .append($("<td>").append(ecotypeDetails[i].nativename))
-                            .append($("<td>").append(ecotypeDetails[i].region))
-                            .append($("<td>").append(ecotypeDetails[i].site))
-                            .append($("<td>").append(ecotypeDetails[i].stockparent)));
+                    var innerHTML = "<thead><tr><th>Country</th><th>Ecotype Id</th><th>Native Name</th><th>Region</th><th>Site</th><th>Stock Parent</th></tr></thead><tbody>";
+
+                    for (var i = 0; i < ecotypeDetails.length; i++) {
+                        innerHTML = innerHTML +
+                            "<tr>" +
+                            "<td>" + ecotypeDetails[i].country + "</td>" +
+                            "<td>" + ecotypeDetails[i].ecotype_id + "</td>" +
+                            "<td>" + ecotypeDetails[i].nativename + "</td>" +
+                            "<td>" + ecotypeDetails[i].region + "</td>" +
+                            "<td>" + ecotypeDetails[i].site + "</td>" +
+                            "<td>" + ecotypeDetails[i].stockparent + "</td>" +
+                            "</tr>";
                     }
+                    innerHTML += "</tbody>";
 
-                    $contTable.append($domainTable);
+                    //make the table contents what we just created as a string
+                    domainTable.html(innerHTML);
 
-                    $domainTable.dataTable();
+                    self.$elem.append(domainTable);
 
-                    self.$elem.append($contTable);
+                    $("#popTable").dataTable({"iDisplayLength": 4, "bLengthChange": false})
+                    $("#popTable_wrapper").css("overflow-x","hidden");
                 },
 
                 self.rpcError

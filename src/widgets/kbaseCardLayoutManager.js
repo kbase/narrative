@@ -808,20 +808,20 @@
          * Template for showing gwas model cards.
          */
         showGWASPopCards: function() {
-            this.addNewCard("KBaseGWASPop",
+            var populationMapCard = this.addNewCard("KBaseGWASPopMaps",
                 { id: this.options.data.id, ws: this.options.data.ws},
                 { my: "left top",
-                  at: "left bottom",
+                  at: "left-30 top",
                   of: "#app"});
-            this.addNewCard("KBaseGWASPopTable",
+            var populationCard = this.addNewCard("KBaseGWASPop",
                 { id: this.options.data.id, ws: this.options.data.ws},
                 { my: "left top",
-                  at: "left+410 bottom",
+                  at: "left-30 top+550",
                   of: "#app"});
-            this.addNewCard("KBaseGWASPopMaps",
+            var populationTableCard = this.addNewCard("KBaseGWASPopTable",
                 { id: this.options.data.id, ws: this.options.data.ws},
-                { my: "left top",
-                  at: "left bottom+500",
+                { my: "right top",
+                  at: "right-20 top+550",
                   of: "#app"});
         },
 

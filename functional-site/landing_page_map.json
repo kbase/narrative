@@ -33,7 +33,7 @@
     },
 
     "KBaseCommunities" : {
-        "Metagenome" : null
+        "Metagenome" : "metagenome"
     },
 
     "KBaseExpression" : {

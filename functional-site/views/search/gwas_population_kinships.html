@@ -1,0 +1,108 @@
+<div class="row search-result-column-header-row">
+    <div class="btn-group search-result-column-header col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <div class="btn-group search-result-column-header search-result-select-all col-xs-1 col-sm-1 col-md-1 col-lg-1">
+            <button type="button" class="btn btn-default search-result-column-header-toggle" ng-class="{'disabled': !options.userState.loggedIn}" ng-click="toggleAll(options.resultJSON.items)">
+                <span class="glyphicon" ng-class="{'glyphicon-check': options.userState.selectAll[options.selectedCategory][options.searchOptions.perCategory[options.selectedCategory].page],'glyphicon-unchecked': !options.userState.selectAll[options.selectedCategory][options.searchOptions.perCategory[options.selectedCategory].page]}"></span>
+            </button>
+        </div>
+        <div class="btn-group result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1" id="object_type">
+            <button type="button" class="btn btn-default dropdown-toggle result-column-header-btn" data-toggle="dropdown">
+                <strong>Object Type</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(selectedCategory, 'object_type', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(selectedCategory, 'object_type', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(selectedCategory, 'object_type', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1" id="object_id">
+            <button type="button" class="btn btn-default dropdown-toggle result-column-header-btn" data-toggle="dropdown">
+                <strong>Object Id</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(selectedCategory, 'object_id', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(selectedCategory, 'object_id', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(selectedCategory, 'object_id', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1" id="object_name">
+            <button type="button" class="btn btn-default dropdown-toggle result-column-header-btn" data-toggle="dropdown">
+                <strong>Object Name</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(selectedCategory, 'object_name', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(selectedCategory, 'object_name', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(selectedCategory, 'object_name', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<section>
+    <div class="row" ng-repeat="item in options.resultJSON.items">
+        <div class="search-typedRecord row">
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-checkbox">
+                <a ng-click="toggleCheckbox(item.row_id, item)" class="search-checkbox-link" ng-class="{'disabled': !options.userState.loggedIn}">
+                    <span class="glyphicon" ng-class="{'glyphicon-unchecked': !options.userState.selections[item.row_id], 'glyphicon-check': options.userState.selections[item.row_id]}"/>
+                </a>
+            </div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-position">{{item.position}}.</div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-column object_id">{{item.object_id}}</div>
+            <div class="col-xs-3 col-sm-3 col-md-4 col-lg-4 search-result-column object_name">
+                <span>
+                    <a target='_blank' data-trigger="hover" class="object-name" href="{{landingPages.gwas_landing_page}}{{object_name}}">
+                        <strong><em>{{item.object_name}}</em></strong>
+                    </a>
+                </span>
+            </div>
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2 search-result-column object_type">{{item.object_type}}</div>
+        </div>
+    </div>
+</section>

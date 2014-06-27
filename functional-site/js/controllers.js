@@ -490,12 +490,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
     $scope.loginUser = function (user) {
         $("#loading-indicator").show();
 
-        // if (!user || !user.username || !user.password) {
-        //     $elem.find('input').trigger('input').trigger('change').trigger('keydown');
-        //     $elem.find('submit').trigger('submit');
-        //     return;
-        // }
-
         kbaseLogin.login(
             user.username,
             user.password,
@@ -513,8 +507,8 @@ app.controller('RxnDetail', function($scope, $stateParams) {
                                        '|kbase_sessionid=' + c.kbase_sessionid +
                                        '|user_id=' + c.user_id +
                                        '|token=' + c.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
-                    $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us' });
-                    $.cookie(cookieName, cookieString, { path: '/' });
+                    $.cookie(cookieName, cookieString, { path: '/', domain: 'kbase.us', expires: 60 });
+                    $.cookie(cookieName, cookieString, { path: '/', expires: 60 });
 
                     //this.data('_session', c);
 
@@ -526,6 +520,7 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
                     $location.path('/narrative/');
                     $scope.$apply();
+                    window.location.reload();
                     
                 } else {
                     console.log("error logging in");
@@ -551,14 +546,6 @@ app.controller('RxnDetail', function($scope, $stateParams) {
 
 })
 
-.controller('Search', function($scope, $stateParams, $state) {
-
-    $scope.query = $stateParams.q;
-
-    $scope.startSearch = function (searchquery) {
-        $state.transitionTo('search', {q: searchquery})
-    };
-})
 
 
 /*

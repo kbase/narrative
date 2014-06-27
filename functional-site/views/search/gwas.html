@@ -1,0 +1,17 @@
+<section>
+    <div class='row'>                        
+        <table>
+            <h3>Genotype-Phenotype Categories</h3>
+            <tr>
+                <th><h4>Category</h4></th>
+                <th class="search-space-left"><h4 class="search-space-left">Objects found</h4></th>
+            </tr>
+            <tr ng-show="options.searchCategories[p] && options.categoryCounts[p] > 0" ng-repeat="p in options.categoryRelationships.gwas.children">
+                <td class="search-category-title" ng-click="selectCategory(p)">
+                    <a><span>{{options.searchCategories[p].label}}</span></a>
+                </td>
+                <td class="search-category-title search-space-left"><span class='search-space-left'>(</span>{{options.categoryCounts[p]}}<span>)</span></td>
+            </tr>
+        </table>
+    </div>                                    
+</section>

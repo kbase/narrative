@@ -17,7 +17,7 @@
             genomeID: null,
             kbCache: null,
             auth: null,
-            loadingImage: "../../widgets/images/ajax-loader.gif",
+            loadingImage: "assets/img/loading.gif",
         },
 
         cdmiURL: "https://kbase.us/services/cdmi_api",

@@ -29,9 +29,62 @@ function Cache() {
 }
 
 
+// this is another experiment in caching but for particular objects.
+function WSCache() {
+    // Todo: only retrieve and store by object ids.
+
+    // cache object
+    var c = {};
+
+    this.get = function(params) {
+
+        if (params.ref) {
+            return c[params.ref];
+        } else {
+            var ws = params.ws,
+                type = params.type,
+                name = params.name;
+
+            if (ws in c && type in c[ws] && name in c[ws][type]) {
+                return c[ws][type][name];
+            }
+        }
+    }
+
+    this.put = function(params) {
+        // if reference is provided
+        if (params.ref) {
+            if (params.ref in c) {
+                return false;
+            } else {
+                c[params.ref] = params.prom;
+                return true;
+            }
+
+        // else, use strings
+        } else { 
+            var ws = params.ws,
+                name = params.name,
+                type = params.type;
+
+            if (ws in c && type in c[ws] && name in c[ws][type]) {
+                return false;
+            } else {
+                if ( !(ws in c) ) c[ws] = {};                    
+                if ( !(type in c[ws]) ) c[ws][type] = {};
+                c[ws][type][name] = params.prom;
+                return true;
+            }
+        }
+    }
+}
+
+
 function KBCacheClient(token) {
+    var self = this;
     var auth = {};
     auth.token = token;
+    console.log(auth)
 
     var setup = configJSON.setup;
     if (setup) {
@@ -57,11 +110,23 @@ function KBCacheClient(token) {
 
     var cache = new Cache();
 
-    this.req = function(service, method, params) {
+
+    // make publically accessible methods that 
+    self.fba = fba;
+    self.ws = kbws;
+    self.ujs = ujs
+    self.nar = new ProjectAPI(ws_url, token);
+
+    self.token = token;
+
+    // make accesible methods for ui helper functions
+    self.ui = new UIUtils();
+
+    self.req = function(service, method, params) {
         if (service == 'fba') { 
             // use whatever workspace server that was configured.
             // this makes it possible to use the production workspace server
-            // with the fba server.   Fixme:  fix once production fba server is ready.
+            // with the fba server.   Fixme: fix once production fba server is ready.
             params.wsurl = ws_url;
         }
 
@@ -86,17 +151,287 @@ function KBCacheClient(token) {
         return prom;
     }
 
-    // make publically accessible methods that 
-    this.fba = fba;
-    this.ws = kbws;
-    this.ujs = ujs;
-    this.search_url = search_url;
+    // cached objects
+    var c = new WSCache();
+    self.get_fba = function(ws, name) {
 
-    this.nar = new ProjectAPI(ws_url, token);
+        // if reference, get by ref
+        if (ws.indexOf('/') != -1) {
+            // if prom already exists, return it
+            //var prom = c.get({ref: ws});
+            //if (prom) return prom;
 
-    this.token = token;
+            var p = self.ws.get_objects([{ref: ws}]);
+            //c.put({ref: ws, prom: p});            
+        } else {
+            //var prom = c.get({ws: ws, name: name, type: 'FBA'});
+            //if (prom) return prom;            
+
+            var p = self.ws.get_objects([{workspace: ws, name: name}]);
+            //c.put({ws: ws, name:name, type: 'FBA', prom: prom});            
+        }
+
+        // get fba object
+        var prom =  $.when(p).then(function(f_obj) {
+            var model_ref = f_obj[0].data.fbamodel_ref;
+
+            // get model object from ref in fba object
+            var modelAJAX = self.get_model(model_ref).then(function(m) {
+                var rxn_objs = m[0].data.modelreactions
+                var cpd_objs = m[0].data.modelcompounds
+
+                // for each reaction, get reagents and 
+                // create equation by using the model compound objects
+                var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
+
+                // add equations to fba object
+                var rxn_vars = f_obj[0].data.FBAReactionVariables;
+                for (var i in rxn_vars) {
+                    var obj = rxn_vars[i];
+                    var id = obj.modelreaction_ref.split('/')[5];
+                    obj.eq = eqs[id]
+                }
+
+                // fixme: hack to get org name, should be on backend
+                f_obj[0].org_name = m[0].data.name;
+
+                return f_obj;
+            })
+            return modelAJAX;
+        })
+
+        return prom;
+    }
+
+    self.get_model = function(ws, name){
+        if (ws && ws.indexOf('/') != -1) {
+            //var prom = c.get({ref: ws});
+            //if (prom) return prom; 
+
+            var p = self.ws.get_objects([{ref: ws}]);
+            //c.put({ref: ws, prom: p}); 
+        } else {
+            //var prom = c.get({ws: ws, name: name, type: 'Model'});
+            //if (prom) return prom; 
+
+            var p = self.ws.get_objects([{workspace: ws, name: name}]);
+            //c.put({ws: ws, name:name, type:'Model', prom:p});              
+        }
+
+        var prom = $.when(p).then(function(m) {
+            var m_obj = m[0].data
+            var rxn_objs = m_obj.modelreactions;
+            var cpd_objs = m_obj.modelcompounds
+
+            // for each reaction, get reagents and 
+            // create equation by using the model compound objects
+            var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
+
+            // add equations to modelreactions object
+            var rxn_vars = m_obj.modelreactions;
+            for (var i in rxn_vars) {
+                var obj = rxn_vars[i];
+                obj.eq = eqs[obj.id];
+            }
+
+            // add equations to biomasses object
+            var biomass_objs = m_obj.biomasses;
+            var eqs = self.createEQs(cpd_objs, biomass_objs, 'biomasscompounds')
+            for (var i in biomass_objs) {
+                var obj = biomass_objs[i];
+                obj.eq = eqs[obj.id];
+            }
+
+            return m;
+        })
+
+        return prom;
+    }
+
+
+    self.createEQs = function(cpd_objs, rxn_objs, key) {
+        // create a mapping of cpd ids to names
+        var mapping = {};
+        for (var i in cpd_objs) {
+            mapping[cpd_objs[i].id.split('_')[0]] = cpd_objs[i].name.split('_')[0];
+        }
+
+        var eqs = {}
+        for (var i in rxn_objs) {
+            var rxn_obj = rxn_objs[i];
+            var rxn_id = rxn_obj.id;
+            var rxnreagents = rxn_obj[key];
+            var direction = rxn_obj.direction;
+
+            var lhs = []
+            var rhs = []
+            for (var j in rxnreagents) {
+                var reagent = rxnreagents[j];
+                var coef = reagent.coefficient;
+                var ref = reagent.modelcompound_ref;
+                var cpd = ref.split('/')[3].split('_')[0]
+                var human_cpd = mapping[cpd];
+                var compart = ref.split('_')[1]
+
+                if (coef < 0) { 
+                    lhs.push( (coef == -1 ? human_cpd+'['+compart+']' 
+                                : '('+(-1*coef)+')'+human_cpd+'['+compart+']') );
+                } else {
+                    rhs.push( (coef == 1 ? human_cpd+'['+compart+']' 
+                                : '('+coef+')'+human_cpd+'['+compart+']')  );
+                }
+            }
+
+            var arrow;
+            switch (direction) {
+                case '=': arrow = ' <=> ';
+                case '<': arrow = ' <= ';
+                case '>': arrow = ' => ';
+            }
+
+            var eq = lhs.join(' + ')+arrow+rhs.join(' + ');
+            eqs[rxn_id] = eq
+        }
+        return eqs
+    }
+
+
 }
 
+
+// Collection of simple (Bootstrap/jQuery based) UI helper methods
+function UIUtils() {
+
+    // this method will display an absolutely position notification
+    // in the app on the 'body' tag.  This is useful for api success/failure 
+    // notifications
+    this.notify = function(text, type, keep) {
+        var ele = $('<div id="notification-container">'+
+                        '<div id="notification" class="'+type+'">'+
+                            (keep ? ' <small><div class="close">'+
+                                        '<span class="glyphicon glyphicon-remove pull-right">'+
+                                        '</span>'+
+                                    '</div></small>' : '')+
+                            text+
+                        '</div>'+
+                    '</div>');
+
+        $(ele).find('.close').click(function() {
+             $('#notification').animate({top: 0}, 200, 'linear');
+        })
+
+        $('body').append(ele)
+        $('#notification')
+              .delay(200)
+              .animate({top: 50}, 400, 'linear',
+                        function() {
+                            if (!keep) {
+                                $('#notification').delay(2000)
+                                                  .animate({top: 0}, 200, 'linear', function() {
+                                                    $(this).remove();
+                                                  })
+
+                            }
+                        })
+    }
+
+
+
+    var msecPerMinute = 1000 * 60;
+    var msecPerHour = msecPerMinute * 60;
+    var msecPerDay = msecPerHour * 24;
+    var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
+                     4:'Thurs', 5:'Fri', 6: 'Sat'};
+    var months = {0: 'Jan', 1: 'Feb', 2: 'March', 3: 'April', 4: 'May',
+                  5:'June', 6: 'July', 7: 'Aug', 8: 'Sept', 9: 'Oct', 
+                  10: 'Nov', 11: 'Dec'};
+    this.formateDate = function(timestamp) {
+        var date = new Date()
+
+        var interval =  date.getTime() - timestamp;
+
+        var days = Math.floor(interval / msecPerDay );
+        interval = interval - (days * msecPerDay);
+
+        var hours = Math.floor(interval / msecPerHour);
+        interval = interval - (hours * msecPerHour);
+
+        var minutes = Math.floor(interval / msecPerMinute);
+        interval = interval - (minutes * msecPerMinute);
+
+        var seconds = Math.floor(interval / 1000);
+
+        if (days == 0 && hours == 0 && minutes == 0) {
+            return seconds + " secs ago.";
+        } else if (days == 0 && hours == 0) {
+            if (minutes == 1) return "1 min ago";
+            return  minutes + " mins ago";
+        } else if (days == 0) {
+            if (hours == 1) return "1 hour ago";
+            return hours + " hours ago"
+        } else if (days == 1) {
+            var d = new Date(timestamp);
+            var t = d.toLocaleTimeString().split(':');        
+            return 'yesterday at ' + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
+        } else if (days < 7) {
+            var d = new Date(timestamp);        
+            var day = dayOfWeek[d.getDay()]
+            var t = d.toLocaleTimeString().split(':');
+            return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
+        } else  {
+            var d = new Date(timestamp);
+            return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); //check
+        }
+    }
+
+    // takes mod date time (2014-03-24T22:20:23)
+    // and returns unix (epoch) time
+    this.getTimestamp = function(datetime){
+        if (!datetime) return; 
+        var ymd = datetime.split('T')[0].split('-');
+        var hms = datetime.split('T')[1].split(':');
+        hms[2] = hms[2].split('+')[0];  
+        return Date.UTC(ymd[0],ymd[1]-1,ymd[2],hms[0],hms[1],hms[2]);  
+    }
+
+    this.objTable = function(table_id, obj, keys, labels) {
+        var table = $('<table id="'+table_id+'" class="table table-striped table-bordered" \
+                              style="margin-left: auto; margin-right: auto;"></table>');
+        for (var i in keys) {
+            var key = keys[i];
+            var row = $('<tr>');
+
+            var label = $('<td>'+labels[i]+'</td>')
+            var value = $('<td>')
+
+            if (key.type == 'bool') {
+                value.append((obj[key.key] == 1 ? 'True' : 'False'))
+            } else {
+                value.append(obj[key.key])
+            }
+            row.append(label, value);
+
+            table.append(row);
+
+        }
+
+        return table;
+    }
+
+    this.listTable = function(table_id, array, labels, bold) {
+        var table = $('<table id="'+table_id+'" class="table table-striped table-bordered" \
+                              style="margin-left: auto; margin-right: auto;"></table>');
+        for (var i in labels) {
+            table.append('<tr><td>'+(bold ? '<b>'+labels[i]+'</b>' : labels[i])+'</td> \
+                          <td>'+array[i]+'</td></tr>');
+        }
+
+        return table;
+    }
+
+
+
+}
 
 
 

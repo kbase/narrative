@@ -1,13 +1,13 @@
 <div class="row search-result-column-header-row">
     <div class="btn-group search-result-column-header col-xs-12 col-sm-12 col-md-12 col-lg-12">
         <div class="btn-group search-result-column-header search-result-select-all col-xs-1 col-sm-1 col-md-1 col-lg-1">
-            <button type="button" class="btn btn-default search-result-column-header-btn" ng-class="{'disabled': !options.userState.loggedIn}" ng-click="toggleAll(options.resultJSON.items)">
-                <span class="glyphicon" ng-class="{'glyphicon-check': options.userState.selectAll,'glyphicon-unchecked': !options.userState.selectAll}"></span>
+            <button type="button" class="btn btn-default search-result-column-header-toggle" ng-class="{'disabled': !options.userState.loggedIn}" ng-click="toggleAll(options.resultJSON.items)">
+                <span class="glyphicon" ng-class="{'glyphicon-check': options.userState.selectAll[options.selectedCategory][options.searchOptions.perCategory[options.selectedCategory].page],'glyphicon-unchecked': !options.userState.selectAll[options.selectedCategory][options.searchOptions.perCategory[options.selectedCategory].page]}"></span>
             </button>
         </div>
         <div class="btn-group search-result-column-header col-xs-2 col-sm-2 col-md-2 col-lg-2 metagenome_id">
             <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
-                <strong>Metagenome Id</strong>
+                <strong>MG-RAST Id</strong>
                 <span class="caret"></span>
             </button>
             <ul class="dropdown-menu" role="menu">
@@ -120,29 +120,26 @@
                 </a>
             </div>
             <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-position">{{item.position}}.</div>
-            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2 search-result-column metagenome_id">{{item.metagenome_id}}</div>
-            <div class="col-xs-3 col-sm-3 col-md-4 col-lg-4 search-result-column metagenome_name">
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2 search-result-column metagenome_id_cell">{{item.metagenome_id.split("mgm")[1]}}</div>
+            <div class="col-xs-3 col-sm-3 col-md-4 col-lg-4 search-result-column metagenome_name_cell">
                 <span>
-                    <a target='_blank' class="metagenome-name" href="{{landingPages.metagenome_landing_page}}{{item.metagenome_id}}">
+                    <a target='_blank' href="{{options.landingPages.metagenome}}{{item.metagenome_id.split('mgm')[1]}}">
                         <strong><em>{{item.metagenome_name}}</em></strong>
                     </a>
                 </span>
             </div>
-            <div class="col-xs-1 col-sm-1 col-md-2 col-lg-2 search-result-column project_name">{{item.project_name}}</div>
-            <div class="col-xs-1 col-sm-1 col-md-2 col-lg-2 search-result-column sample_name">{{item.sample_name}}</div>
+            <div class="col-xs-1 col-sm-1 col-md-2 col-lg-2 search-result-column project_name_cell">{{item.project_name}}</div>
+            <div class="col-xs-1 col-sm-1 col-md-2 col-lg-2 search-result-column sample_name_cell">{{item.sample_name}}</div>
         </div>
         <div ng-class="{'collapse': options.userState.viewType != 'expanded'}" class="search-typedRecord-expanded row">
-            <div class="row search-typedRecord-expanded-header">
-                <div class="col-md-3"><span class="text-left"><strong>Additional Information:</strong></span></div>
-            </div>
-            <div class="row">
-                <div class="col-md-2 search-result-column-expanded sequence_type"><strong>Sequence Type: </strong>{{item.sequence_type}}</div> 
-                <div class="col-md-2 search-result-column-expanded location"><strong>Location: </strong>{{item.location}}</div>
-                <div class="col-md-2 search-result-column-expanded feature"><strong>Feature: </strong>{{item.feature}}</div>
-                <div class="col-md-2 search-result-column-expanded material"><strong>Material: </strong>{{item.material}}</div>
-            </div>
-            <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 search-result-column-expanded pi_info"><strong>PI:</strong> {{item.PI_info}}</div>
+            <div class="row well search-result-column-expanded">
+                <table class="search-result-expanded-entry">
+                    <tr><td class="search-result-column-expanded-entry-cell metagenome_expanded_header"><strong>Sequence Type: </strong></td><td class="search-result-column-expanded-entry-cell">{{item.sequence_type}}</td></tr> 
+                    <tr><td class="search-result-column-expanded-entry-cell metagenome_expanded_header"><strong>Location: </strong></td><td class="search-result-column-expanded-entry-cell">{{item.location}}</td></tr>
+                    <tr><td class="search-result-column-expanded-entry-cell metagenome_expanded_header"><strong>Feature: </strong></td><td class="search-result-column-expanded-entry-cell">{{item.feature}}</td></tr>
+                    <tr><td class="search-result-column-expanded-entry-cell metagenome_expanded_header"><strong>Material: </strong></td><td class="search-result-column-expanded-entry-cell">{{item.material}}</td></tr>
+                    <tr><td class="search-result-column-expanded-entry-cell metagenome_expanded_header"><strong>PI:</strong></td><td class="search-result-column-expanded-entry-cell">{{item.PI_info}}</td></tr>
+                </table>
             </div>
         </div>
     </div>

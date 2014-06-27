@@ -12,12 +12,12 @@ a.search-selected-category-link:hover { color: green; }
 a.search-selected-category-link:active { color: green; }
 a.search-selected-category-link:visited { color: green; }
 
-a.search-checkbox-link { color: black; }
-a.search-checkbox-link:link { color: black; }
-a.search-checkbox-link:hover { color: black; }
-a.search-checkbox-link:active { color: black; }
-a.search-checkbox-link:visited { color: black; }
-a.search-checkbox-link.disabled { color: gray; }
+a.search-checkbox-link { color: #555; }
+a.search-checkbox-link:link { color: #555; }
+a.search-checkbox-link:hover { color: #555; }
+a.search-checkbox-link:active { color: #555; }
+a.search-checkbox-link:visited { color: #555; }
+a.search-checkbox-link.disabled { color: #eee; }
 
 /*** general spacing ***/
 
@@ -65,12 +65,16 @@ span .badge {
     margin-right: auto;
 }
 
+.fixed-pagination {
+    padding-left: 30%;
+}
+
 .large-pagination {
-    width: 700px;
+    padding-left: 100px;
 }
 
 .small-pagination {
-    width: 500px;
+    padding-left: 160px;
 }
 
 /*** Login ***/
@@ -92,6 +96,33 @@ span .badge {
     margin-bottom: 10px;
 }
 
+.searchbar-menu {
+    width: 600px;
+    background-color: transparent;
+    background-size: 0px 0px;
+    border-color: transparent;
+    border-width: 0px;
+    padding: 0px;
+    top: 50px;
+}
+
+.searchbar-menu-content {
+    width: 600px;
+    height: 20px;
+    background-color: white;
+    border-color: white;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.search-bar {
+    width: 600px;
+    margin-bottom: 10px;
+}
+
+
 /*** Workspace ***/
 
 .workspace-title h3 {
@@ -102,7 +133,11 @@ span .badge {
 }
 
 .workspace-list {
-    max-height: 300px;
+    max-height: 200px;
+}
+
+#workspace-area {
+    height: 300px;
 }
 
 .search-leftarea-size {
@@ -111,6 +146,7 @@ span .badge {
 
 
 /*** Selections ***/
+      
 .search-selections-title h3 {
     font-size: medium;
     color: gray;
@@ -149,6 +185,37 @@ span .badge {
 
 
 /*** Options ***/
+      
+.search-transfer-options-panel-anchor {
+/*
+    position: absolute;
+    left: 80px;
+    top: 310px;
+*/
+    width: 0;
+    height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-bottom: 16px solid white;  
+}
+
+
+.search-transfer-options-panel {
+/*
+    z-index: 1001!important;
+    position: absolute;
+    left: 80px;
+    top: 320px;
+*/
+    min-width: 400px;
+    max-width: 600px;
+    height: 400px;
+    padding: 10px;    
+}
+
+.progress-bar {
+    width: 0%;
+}
 
 .search-view-buttons {
     min-width: 80px;
@@ -156,7 +223,7 @@ span .badge {
 
 
 .search-cart {
-    font-size: 30px;
+    font-size: 40px;
     line-height: 1.0;
 }
 
@@ -193,11 +260,31 @@ span .badge {
     margin-left: -1px;
     padding-left: 0px;
     padding-right: 0px;
+    word-wrap: break-word;
 }
 
 .search-result-column-expanded {
-    margin-left: 0px;
-    padding-left: 22px;
+    color: #3a87ad;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+    border-radius: 4px;
+    width: 80%;
+}
+
+.search-result-column-expanded-entry table{
+    color: #3a87ad;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+    border-radius: 4px;
+    width: 80%;
+    padding-bottom: 10px;
+}
+
+.search-result-column-expanded-entry-cell{
+    color: #3a87ad;
+    background-color: #d9edf7;
+    padding-bottom: 10px;
+    vertical-align:top;
 }
 
 .search-result-column-header {
@@ -214,6 +301,31 @@ span .badge {
     padding-bottom: 20px;
 }
 
+.search-result-column-header-toggle {
+    width: 100%;
+    height: 30px;
+    padding-left: 6px;
+    padding-right: 0px;
+    display: block;
+    border-width: 0px;
+    color: #c09853;
+    background-color: #fcf8e3;
+    text-align: left;
+}
+
+.search-result-column-header-toggle.disabled {
+    width: 100%;
+    height: 30px;
+    padding-left: 6px;
+    padding-right: 0px;
+    display: block;
+    border-width: 0px;
+    color: #c09853;
+    background-color: #fcf8e3;
+    text-align: left;
+}
+
+
 .search-result-column-header-btn {
     width: 100%;
     height: 30px;
@@ -223,6 +335,7 @@ span .badge {
     border-width: 0px;
     color: #c09853;
     background-color: #fcf8e3;
+    text-align: left;
 }
 
 .search-result-column-header-btn.disabled {
@@ -234,6 +347,7 @@ span .badge {
     border-width: 0px;
     color: #c09853;
     background-color: #fcf8e3;
+    text-align: left;
 }
 
 .search-checkbox {
@@ -256,7 +370,7 @@ span .badge {
 }
 
 .scientific-name {
-    width: 260px;
+    width: 300px;
 }
 
 
@@ -273,25 +387,68 @@ span .badge {
     min-width: 750px;
 }
 
+.genome_expanded_header {
+    width: 100px;
+}
+
+.feature_expanded_header {
+    width: 140px;
+}
+
+.metagenome_expanded_header {
+    width: 120px;
+}
+
+.gwas_expanded_header {
+    width: 120px;
+}
+
 .genome_id {
     width: 85px;
+}
+
+.genome_id_cell {
+    width: 80px;
+    margin-right: 5px;
 }
 
 .feature_id {
     width: 160px;
 }
 
+.feature_id_cell {
+    width: 155px;
+    margin-right: 5px;
+}
+
 .feature_function {
     min-width: 100px;
 }
+
+.feature_function_cell {
+    min-width: 95px;
+    margin-right: 5px;
+}
+
 
 .protein_translation_length {
     width: 60px;
 }
 
+.protein_translation_length_cell {
+    width: 55px;
+    margin-right: 5px;
+}
+
 .feature_type {
     width: 50px;
 }
+
+.feature_type_cell {
+    width: 45px;
+    margin-right: 5px;
+}
+
 
 .complete {
     width: 80px;
@@ -301,32 +458,75 @@ span .badge {
     width: 79px;
 }
 
+.domain_cell {
+    width: 74px;
+    margin-right: 5px;
+}
+
+
 .metagenome_id {
     width: 120px;
+}
+
+.metagenome_id_cell {
+    width: 115px;
+    margin-right: 5px;
 }
 
 .metagenome_name {
     width: 300px;
 }
 
+.metagenome_name_cell {
+    width: 295px;
+    margin-right: 5px;
+}
+
 .project_name {
     width: 150px;
+}
+
+.project_name_cell {
+    width: 145px;
+    margin-right: 5px;
 }
 
 .sample_name {
     min-width: 80px;
 }
 
+.sample_name_cell {
+    min-width: 75px;
+    margin-right: 5px;
+}
+
+
 .object_id {
     width: 140px;
 }
+
+.object_id_cell {
+    width: 135px;
+    margin-right: 5px;
+}
+
 
 .object_name {
     width: 320px;
 }
 
+.object_name_cell {
+    width: 315px;
+    margin-right: 5px;
+}
+
 .object_type {
     min-width: 280px;
+}
+
+.object_type_cell {
+    min-width: 275px;
+    margin-right: 5px;
 }
 
 
@@ -334,20 +534,45 @@ span .badge {
     min-width: 100px;
 }
 
+.ontology_id_cell {
+    min-width: 95px;
+    margin-right: 5px;
+}
+
 .ontology_domain {
     min-width: 180px;
+}
+
+.ontology_domain_cell {
+    min-width: 175px;
+    margin-right: 5px;
 }
 
 .ontology_type {
     min-width: 65px;
 }
 
-.genome_dna_size{
+.ontology_type_cell {
+    min-width: 60px;
+    margin-right: 5px;
+}
+
+.genome_dna_size {
     width: 100px;
+}
+
+.genome_dna_size_cell {
+    width: 95px;
+    margin-right: 5px;
 }
 
 .num_contigs {
     width: 65px;
+}
+
+.num_contigs_cell {
+    width: 60px;
+    margin-right: 5px;
 }
 
 
@@ -416,7 +641,7 @@ ul.scroll-menu {
     left: 0 !important;
     width: 100%;
     height: auto;
-    max-height: 500px;
+    max-height: 300px;
     margin: 0;
     border-left: none;
     border-right: none;

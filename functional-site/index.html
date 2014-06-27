@@ -85,8 +85,8 @@
        <!-- <script src="../ext/jquery-migrate/jquery-migrate-1.2.1.js"></script> -->
         <script src="../ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min.js"></script>
         <script src="../ext/blockUI/jquery.blockUI.js"></script>
-        <script src="../ext/d3/d3.v3.min.js"></script>
         <script src="../ext/bootstrap/3.0.0/js/bootstrap.js"></script>
+        <script src="../ext/d3/d3.v3.min.js"></script>
         <script src="../ext/dataTables/1.9.4/js/jquery.dataTables.js"></script>
         <script src="assets/js/dataTables.bootstrap.js"></script>
         <script src="assets/js/jquery.dataTables.rowGrouping.js"></script>
@@ -210,7 +210,8 @@
         <link rel="stylesheet" type="text/css" href="assets/css/gwas.css" />
         <script src='../src/widgets/kbaseAuthenticatedWidget.js'></script>
         <!-- please don't load external scripts in index.html -->
-        <!--<script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>-->
+        <!-- This is the only way currently to load google maps for the GWAS landing pages, if you have another solution, talk to Matt H. -->
+        <script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>
         <script src='../ext/gmaps/gmap3.js'></script>
         <script src="../src/widgets/gwas/kbaseGWASPop.js"></script>
         <script src="../src/widgets/gwas/kbaseGWASPopTable.js"></script>
@@ -317,26 +318,13 @@
                                 <li><a href="#">Profile</a></li>-->
                             </ul>
                         </li>
+                        <li ng-class="{ active: $state.includes('search')}">
+                            <a ng-click="newSearch()" ng-controller="searchBarController">Search Data</a>
+                        </li>
                         <li ng-class="{ active: $state.includes('ws')}"><a href="#/ws/" >Workspaces</a></li>
                         <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>          
-                        <li class="dropdown" ng-class="{ active: $state.includes('search')}">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Search <b class="caret"></b></a>
-                            <ul class="dropdown-menu">
-                                <li><a ui-sref="search({q: '*'})">Browse Data</a></li>
-                            </ul>
-                        </li>
                     </ul>
 
-                    <form ng-controller="searchBarController" ng-submit="newSearch()" class="navbar-form navbar-left" role="search" style="width: 40%">
-                        <div class="input-group">
-                            <input class="form-control" ng-model="query" name="search" placeholder="Search KBase Data" autocomplete="off" type="text"/> 
-                            <div class="input-group-btn">
-                                <button class="btn" type="submit" style="background-color: #ebebeb; border-color: #adadad; border-left:none">
-                                    <span class="glyphicon glyphicon-search" style="line-height: .9"></span>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
                     <!--
                     <ul class="nav navbar-nav"> 
                         <li ng-class="{ active: $state.includes('favorites')}"><a href="#/favorites/all/">Favorites <span class="badge  favorite-count"></span></a></li>

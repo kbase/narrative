@@ -32,7 +32,8 @@ angular.module('card-directives')
                     auth: $rootScope.USER_TOKEN,
                     userId: $rootScope.USER_ID
                 });
-            }
+            },
+            replace: true
         };
     })
     .directive('gttype', function($rootScope) {
@@ -45,7 +46,7 @@ angular.module('card-directives')
                     auth: $rootScope.USER_TOKEN,
                     userId: $rootScope.USER_ID
                 });
-            }
+            },
         };
     })    
     .directive('gvtype', function($rootScope) {
@@ -337,5 +338,5 @@ angular.module('card-directives')
                 });
             }
         };
-    })
+    });
 

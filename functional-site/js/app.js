@@ -446,7 +446,8 @@ app.run(function ($rootScope, $state, $stateParams, $location) {
         $('.favorite-count').text(queue.length);
     });
 
-    $rootScope.kb = kb;    
+    $rootScope.kb = kb;     
+    $rootScope.Object = Object;       
 });
 
 

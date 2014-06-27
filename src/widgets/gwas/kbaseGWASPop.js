@@ -20,7 +20,7 @@
             this.workspaceClient.get_objects([{name : this.options.id, workspace: this.options.ws}], 
                 function(data){
                     self.collection = data[0];
-                    self.$elem.append($("<div />").
+                    self.$elem.append($("<div/>").
                     append($("<table/>").addClass("kbgo-table")
                         .append($("<tr/>").append("<td>ID</td><td>" + self.collection.data.genome.kbase_genome_id + "</td>"))
                         .append($("<tr/>").append("<td>Name</td><td>" + self.collection.data.genome.kbase_genome_name + "</td>"))

@@ -4,8 +4,8 @@
 (function( $, undefined ) {
     $.KBWidget({
         name: "KBasePPICard",
-        parent: "kbaseWidget",
-        version: "1.0.0",
+        parent: "kbaseAuthenticatedWidget",
+        version: "1.0.1",
         options: {
 	    id: null,
 	    ws: null,
@@ -244,7 +244,7 @@
             });
 */
 
-            this.wsClient = new Workspace(this.wsServiceUrl, { token: this.options.auth,
+            this.wsClient = new Workspace(this.wsServiceUrl, { token: this.authToken(),
 							       user_id: this.options.userId});
 
 	    var container = $('<div id="container" />');

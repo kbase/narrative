@@ -95,17 +95,14 @@
                     </div>
                     
                     <div class="text-center">
-                            <label for="transferButton" data-toggle="tooltip" data-placement="bottom" tooltip="Transfer my selections to workspaces." tooltip-placement="bottom"/>
-                            <label for="selectionEditButton" data-toggle="tooltip" data-placement="bottom" tooltip="Edit my current selections." tooltip-placement="bottom"/>              
-                            <label for="trashButton" data-toggle="tooltip" data-placement="bottom" tooltip="Discard all my current selections." tooltip-placement="bottom"/>
                         <div class="btn-group" style="margin-bottom: 5px;">
-                            <button name="transferButton" data-toggle="modal" data-target="#transferPanel" type="button" ng-class="{'disabled': options.userState.selectionsLength < 1}" class='btn btn-primary'>
+                            <button rel="tooltip" tooltip="Transfer my selections to workspaces." tooltip-placement="bottom" data-placement="bottom" data-toggle="modal" data-target="#transferPanel" type="button" ng-class="{'disabled': options.userState.selectionsLength < 1}" class='btn btn-primary'>
                                 <span class="glyphicon glyphicon-transfer"></span>
                             </button>
-                            <button name="selectionEditButton" data-toggle="collapse" data-target="#" type="button" class='btn btn-primary disabled' ng-click='showSelectionEditPanel()'>
+                            <button data-toggle="tooltip" data-placement="bottom" tooltip="Edit my current selections." tooltip-placement="bottom" data-toggle="collapse" data-target="#" type="button" class='btn btn-primary disabled' ng-click='showSelectionEditPanel()'>
                                 <span class="glyphicon glyphicon-cog"></span>
                             </button>              
-                            <button name="trashButton" type="button" ng-class="{'disabled': options.userState.selectionsLength < 1}" class='btn btn-primary' ng-click='removeAllSelections()'>
+                            <button data-toggle="tooltip" data-placement="bottom" tooltip="Discard all my current selections." tooltip-placement="bottom" type="button" ng-class="{'disabled': options.userState.selectionsLength < 1}" class='btn btn-primary' ng-click='removeAllSelections()'>
                                 <span class="glyphicon glyphicon-trash"></span>
                             </button>              
                         </div> <!-- end workspace send button group -->

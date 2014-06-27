@@ -94,7 +94,7 @@ var app = angular.module('landing-pages',
           url: "tour/",
           templateUrl: 'views/ws/objtable.html',
           controller: 'WBTour'
-        })
+        });
 
     // model viewer routing
     $stateProvider
@@ -113,7 +113,7 @@ var app = angular.module('landing-pages',
           url: "maps/:ws/:id/?fba",
           templateUrl: 'views/ws/maps.html',
           reloadOnSearch: false
-        })
+        });
 
 
 

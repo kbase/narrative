@@ -84,7 +84,7 @@ function KBCacheClient(token) {
     var self = this;
     var auth = {};
     auth.token = token;
-    console.log(auth)
+    console.log(auth);
 
     var setup = configJSON.setup;
     if (setup) {
@@ -114,8 +114,11 @@ function KBCacheClient(token) {
     // make publically accessible methods that 
     self.fba = fba;
     self.ws = kbws;
-    self.ujs = ujs
+    self.ujs = ujs;
     self.nar = new ProjectAPI(ws_url, token);
+    
+    self.ws_url = ws_url;
+    self.search_url = search_url;
 
     self.token = token;
 

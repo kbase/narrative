@@ -136,15 +136,15 @@ searchApp.controller('searchBarController', function searchBarCtrl($rootScope, $
 searchApp.controller('searchController', function searchCtrl($rootScope, $scope, $q, $http, $state, $stateParams, searchCategoryLoadService, searchOptionsService) {
     $scope.options = searchOptionsService;
 
-    $(document).on('loggedIn.kbase', function () {
+    $(document).on('loggedIn', function () {
         $scope.options.userState.loggedIn = true;
         $scope.options.userState.token = $('#signin-button').kbaseLogin('session', 'token');
         $scope.options.userState.user_id = $('#signin-button').kbaseLogin('session', 'user_id');
-        $scope.workspace_service = new Workspace($rootScope.kb.workspace_url, {"token": $scope.options.userState.token});
+        $scope.workspace_service = new Workspace($rootScope.kb.ws_url, {"token": $scope.options.userState.token});
     });
 
 
-    $(document).on('loggedOut.kbase', function () {
+    $(document).on('loggedOut', function () {
         $scope.options.userState.loggedIn = false;
         $scope.options.userState.token = null;
         $scope.options.userState.user_id = null;
@@ -273,7 +273,7 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
 
         $scope.options.userState.ajax_requests.push(
             $http({method: 'GET', 
-                   url: kb.search_url + "getResults",
+                   url: $rootScope.kb.search_url + "getResults",
                    params: queryOptions,      
                    responseType: 'json'
                   }).then(function (jsonResult) {
@@ -364,7 +364,7 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
 
 
         $http({method: 'GET', 
-               url: kb.search_url + "getResults",
+               url: $rootScope.kb.search_url + "getResults",
                params: queryOptions,      
                responseType: 'json'
               }).then(function (jsonResult) {
@@ -756,7 +756,7 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
     $scope.listWorkspaces = function() {
         try {
             if (!$scope.workspace_service) {
-                $scope.workspace_service = new Workspace($rootScope.kb.workspace_url, {"token": $scope.options.userState.token});
+                $scope.workspace_service = new Workspace($rootScope.kb.ws_url, {"token": $scope.options.userState.token});
             }
 
             $scope.options.userState.workspaces = [];
@@ -813,7 +813,7 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
         }
 
         if (!$scope.workspace_service) {
-            $scope.workspace_service = new Workspace($rootScope.kb.workspace_url, {"token": $scope.options.userState.token});
+            $scope.workspace_service = new Workspace($rootScope.kb.ws_url, {"token": $scope.options.userState.token});
         }
 
         var ws_objects = {};
@@ -995,7 +995,7 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
     // grab a public object and make a copy to a user's workspace
     $scope.copyTypedObject = function(object_name, object_ref, from_workspace_name, to_workspace_name) {
         if (!$scope.workspace_service) {
-            $scope.workspace_service = new Workspace($rootScope.kb.workspace_url, {"token": $scope.options.userState.token});
+            $scope.workspace_service = new Workspace($rootScope.kb.ws_url, {"token": $scope.options.userState.token});
         }
 
         function success(result) {

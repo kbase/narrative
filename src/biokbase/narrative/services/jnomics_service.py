@@ -75,8 +75,10 @@ class OTHERURLS:
     _host = '140.221.84.248'
     shock = "http://shock1.chicago.kbase.us"
     #shock = "http://shock.metagenomics.anl.gov"
-    awe = "http://140.221.85.36:8000"
-    workspace = "http://140.221.84.209:7058"
+    #awe = "http://140.221.85.36:8000"
+    awe = "http://localhost:8001"
+    #workspace = "http://140.221.84.209:7058"
+    workspace = "http://kbase.us/services/ws"
     ids = "http://kbase.us/services/idserver"
     ontology = "http://140.221.85.171:7062"
     #cdmi  = "http://140.221.85.181:7032"
@@ -116,7 +118,43 @@ init_service(name = NAME, desc="Variation and Expression service", version = VER
 
 clients = {}
 
-    
+### AWE JOB Template
+AWE_JOB_NC = """
+{
+    "info": {
+        "pipeline": "test_awe_job",
+        "name": "testawejob",
+        "project": "default",
+        "user": "default",
+        "clientgroups":"",
+         "sessionId":"xyz1234"
+    }, 
+    "tasks": [
+        {
+            "cmd": {
+                "args": "-i @data_filtered_csv -o returnobj.json", 
+                "description": "test awe job", 
+                "name": "testjob.py"
+            }, 
+            "inputs": {
+               "data_filtered_csv": {
+                    "host": "$shock_url",
+                    "node": "$expression"
+                }
+            }, 
+            "outputs": {
+                "net_edge_csv": {
+                    "host": "$shock_uri"
+                }
+            },
+            "taskid": "0",
+            "skip": 0, 
+            "totalwork": 1
+        }
+      ]
+}
+"""    
+
 ##
 ##Decorators for control logic
 ##
@@ -938,6 +976,35 @@ def Checkfiles(meth,filepath=None):
 
 @method(name = "Check dict has key")
 def haskey(meth,filepath=None):
+    """search a file 
+    :param filepath: filepath
+    :type filepath : kbtypes.Unicode
+    :ui_name filepath : filepath
+    :return: Workspace id
+    :rtype: kbtypes.Unicode
+    """
+    
+    json_error = None
+    status = None
+    auth = Authentication(userFromToken(meth.token), "", meth.token)
+
+    #def haskey(keyname, auth):
+    #    client = openDataClientConnection()
+   #     status = client.listStatus(filepath,auth)
+   #     if not status:
+   #         return to_JSON(False)
+   #     closeClientConnection(client)
+   #     return to_JSON(True)
+    
+    #ret  = isFileFound(filepath,auth)
+    obj = {"shock_ref":{"shock_id":"1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a","shock_url":"https://kbase.us/services/shock-api//1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a"},"created":"2014-04-22 20:48:41","name":"SRX031076_1.fastq","metadata":{"source":"NCBI","paired":"yes","source_id":"SRA026096","tissue":["xylem"],"ref_genome":"Populus trichocarpa","domain":"Plants","sample_id":"SRX031076","ext_source_date":"Apr 20 2014","title":"Test sample from poplar RNAseq data","platform":"Illumina","condition":["stem,field study"],"po_id": ["PO:0009047,PO:0005352,PO:0025425"],"eo_id" : ["EO:0007256"]},"type":"fastq"}
+    ret = False
+    if "shock_ref" in obj and "shock" in obj["shock_ref"]:
+        ret = True
+    return to_JSON(ret)
+
+@method(name = "Submit a awe job")
+def submitawejob(meth,filepath=None):
     """search a file 
     :param filepath: filepath
     :type filepath : kbtypes.Unicode

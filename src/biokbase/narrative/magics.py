@@ -195,13 +195,18 @@ class kbasemagics(Magics):
 
         # if there's just a single line
         if len(line) > 0 and cell is None:
-            return self.inv_run_line(sess, cwd, line)
+            res = self.inv_run_line(sess, cwd, line)
+            if res is not None:
+                print("".join(res))
+                return res
         if cell is not None:
             all_results = []
             lines = cell.splitlines()
             for command in lines:
-                all_results.append(self.inv_run_line(sess, cwd, command))
-            return all_results
+                res = self.inv_run_line(sess, cwd, command)
+                if res is not None:
+                    all_results.append(res)
+            print("\n".join(all_results))
 
         # try:
         #     res = inv_client.run_pipeline( sess, line, [], 200, '/')
@@ -237,7 +242,7 @@ class kbasemagics(Magics):
             # rm
             # mv
             if (first_token == 'ls'):
-                return self.inv_ls(line_params)
+                return self.inv_ls(line_params, print_output=False)
             elif (first_token == 'cwd' or first_token == 'pwd'):
                 return self.inv_cwd(line_params)
             elif (first_token == 'mkdir'):
@@ -253,16 +258,18 @@ class kbasemagics(Magics):
             elif (first_token == 'cd'):
                 return self.inv_cd(line_params)
             else:
-                res = inv_client.run_pipeline(sess, line, [], 200, cwd)
+                res = inv_client.run_pipeline(session, line, [], 200, cwd)
                 if res[1]:
                     print("\n".join(res[1]), file=sys.stderr)
+                else:
+                    return "".join(res[0])
         except Exception, e:
             print("Error: %s" % str(e), file=sys.stderr)
             return None
         # return res[0]
 
     @line_magic
-    def inv_ls(self,line):
+    def inv_ls(self,line,print_output=True):
         """
         List files on the invocation service for this session
         """
@@ -280,9 +287,12 @@ class kbasemagics(Magics):
         try:
             res = inv_client.list_files( sess, cwd,d)
             dirs = [ "%12s   %s   %s" % ('directory', d['mod_date'],d['name']) for d in res[0]]
-            print( "\n".join(dirs))
             files = [ "%12d   %s   %s" % (f['size'], f['mod_date'],f['name']) for f in res[1]]
-            print( "\n".join(files))
+            print_dir = "\n".join(dirs)
+            print_file = "\n".join(files)
+            if print_output is True:
+                print(print_dir + "\n" + print_file)
+            res = print_dir + "\n" + print_file
         except Exception, e:
             print("Error: %s" % str(e),file=sys.stderr)
             res = None

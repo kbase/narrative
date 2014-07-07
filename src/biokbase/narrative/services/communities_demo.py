@@ -52,85 +52,59 @@ class URLS:
     workspace = "https://kbase.us/services/ws"
     invocation = "https://kbase.us/services/invocation"
 
+#old: -i @input.fas -o ucr -p @otu_picking_params.txt -r /home/ubuntu/data/gg_13_5_otus/rep_set/97_otus.fasta
 picrustWF = """{
    "info" : {
-      "clientgroups" : "qiime-wolfgang",
+      "clientgroups" : "docker",
       "noretry" : true,
       "project" : "project",
-      "name" : "qiime-job",
-      "user" : "wgerlach",
-      "pipeline" : "qiime-wolfgang"
+      "name" : "picrust",
+      "user" : "narrative",
+      "pipeline" : "picrust"
    },
    "tasks" : [
       {
-         "cmd" : {
-            "args" : "-i @input.fas -o ucr -p @otu_picking_params.txt -r /home/ubuntu/data/gg_13_5_otus/rep_set/97_otus.fasta",
-            "name" : "pick_closed_reference_otus.py",
-            "description" : "0_pick_closed_reference_otus"
+	  "cmd" : {
+		"name" : "app:QIIME.pick_closed_reference_otus.default",
+		"app_args" : [
+			{"resource":"shock",
+				"host" : "$shock",
+				"node" : "$seq",
+				"filename" : "input.fas"},
+			{"resource" : "shock",
+				"host" : "$shock",
+				"node" : "$param",
+				"filename" : "otu_picking_params_97.txt"},
+			{"resource" : "string",
+				"key" : "IDENTITY",
+				"value" : "97"}
+			]
          },
-         "outputs" : {
-            "otu_table.biom" : {
-               "directory" : "ucr",
-               "host" : "$shock"
-            }
-         },
-         "taskid" : "0",
-         "inputs" : {
-            "input.fas" : {
-               "node" : "$seq",
-               "host" : "$shock"
-            },
-            "otu_picking_params.txt" : {
-               "node" : "$param",
-               "host" : "$shock"
-            }
-         }
+		"taskid" : "0",
       },
-      {
-         "cmd" : {
-            "args" : "-i @otu_table.biom -o normalized.biom",
-            "name" : "normalize_by_copy_number.py",
-            "description" : "1_normalize_by_copy_number"
-         },
-         "outputs" : {
-            "normalized.biom" : {
-               "host" : "$shock"
-            }
-         },
-         "dependsOn" : [
-            "0"
-         ],
-         "taskid" : "1",
-         "inputs" : {
-            "otu_table.biom" : {
-               "origin" : "0",
-               "host" : "$shock"
-            }
-         }
-      },
-      {
-         "cmd" : {
-            "args" : "-i @normalized.biom -o prediction.biom",
-            "name" : "predict_metagenomes.py",
-            "description" : "2_predict_metagenomes"
-         },
-         "outputs" : {
-            "prediction.biom" : {
-               "host" : "$shock"
-            }
-         },
-         "dependsOn" : [
-            "1"
-         ],
-         "taskid" : "2",
-         "inputs" : {
-            "normalized.biom" : {
-               "origin" : "1",
-               "host" : "$shock"
-            }
-         }
-      }
-   ]
+	  {
+	  	"taskid" : "1",
+	  	"cmd" : {
+	  		"name" : "app:PIRCUSt.normalize_by_copy_number.default",
+	  		"app_args" : [
+	 			 {"resource":"task",
+	  				"task" : "0",
+	 				 "position" : 0}
+	  		]
+		}
+	  },
+	  {
+	  	"taskid" : "2",
+	 	"cmd" : {
+	  		"name" : "app:PIRCUSt.predict_metagenomes.default",
+	  		"app_args" : [
+	  			{"resource":"task",
+				"task" : "1",
+	  			"position" : 0}
+	  			]
+	  		}
+	  }
+	]
 }"""
 
 # Initialize

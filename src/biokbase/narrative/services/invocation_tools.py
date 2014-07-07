@@ -90,6 +90,7 @@ def _execute_command(meth, command):
     meth.stages = 1
     if not command:
         raise Exception("Command is empty.")
+    command.replace('$this', os.environ['KB_WORKSPACE_ID'])
     stdout, stderr = _run_invo(command)
     if (stdout == '') and (stderr == ''):
         stdout = 'Your command executed successfully'

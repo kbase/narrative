@@ -64,6 +64,7 @@ picrustWF = """{
    },
    "tasks" : [
       {
+	  "taskid" : "0",
 	  "cmd" : {
 		"name" : "app:QIIME.pick_closed_reference_otus.default",
 		"app_args" : [
@@ -79,8 +80,7 @@ picrustWF = """{
 				"key" : "IDENTITY",
 				"value" : "97"}
 			]
-         },
-		"taskid" : "0",
+         }
       },
 	  {
 	  	"taskid" : "1",

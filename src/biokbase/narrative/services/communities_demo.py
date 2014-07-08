@@ -62,6 +62,7 @@ picrustWF = """{
       "user" : "narrative",
       "pipeline" : "picrust"
    },
+   "shockhost" : "$shock",
    "tasks" : [
       {
 	  "taskid" : "0",

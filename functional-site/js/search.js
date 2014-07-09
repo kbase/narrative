@@ -115,6 +115,7 @@ searchApp.service('searchOptionsService', function searchOptionsService() {
 
 
 
+
 searchApp.controller('searchBarController', function searchBarCtrl($rootScope, $scope, $state) {
     $scope.$on('queryChange', function(event, query) {
         $scope.query = query;
@@ -131,6 +132,7 @@ searchApp.controller('searchBarController', function searchBarCtrl($rootScope, $
         }
     };    
 });
+
 
 
 searchApp.controller('searchController', function searchCtrl($rootScope, $scope, $q, $http, $state, $stateParams, searchCategoryLoadService, searchOptionsService) {
@@ -332,6 +334,7 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
             $q.all($scope.options.userState.ajax_requests).then(function() {
                 $.unblockUI();
                 $scope.options.userState.ajax_requests = [];
+                console.log($scope.options.categoryCounts);
             });
             
             return;
@@ -438,9 +441,14 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
 
     $scope.newSearch = function () {
         if ($scope.options.searchOptions.general.q && $scope.options.searchOptions.general.q.length > 0) {
-            //$rootScope.$state.go('search', {q: $scope.options.searchOptions.general.q});
-            $scope.$emit('queryChange', $scope.options.searchOptions.general.q);
-            $state.go('search', {q: $scope.options.searchOptions.general.q});
+            // if we are in the category view, update the individual count
+            if ($scope.options.selectedCategory) {
+                $scope.getCount({q: $scope.options.searchOptions.general.q}, $scope.options.selectedCategory);
+                $state.go('search', {q: $scope.options.searchOptions.general.q, page: 1});
+            }
+            else {
+                $state.go('search', {q: $scope.options.searchOptions.general.q});            
+            }
         }
     };    
 
@@ -763,15 +771,14 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
                 
             $scope.workspace_service.list_workspace_info({"perm": "w"}, 
                 function (ws_list) { 
-                    $scope.options.userState.workspaces = ws_list.sort(function (a,b) {
-                        if (a[1].toLowerCase() < b[1].toLowerCase()) return -1;
-                        if (a[1].toLowerCase() > b[1].toLowerCase()) return 1;
-                        return 0;
+                    $scope.$apply(function () {
+                        $scope.options.userState.workspaces = ws_list.sort(function (a,b) {
+                            if (a[1].toLowerCase() < b[1].toLowerCase()) return -1;
+                            if (a[1].toLowerCase() > b[1].toLowerCase()) return 1;
+                            return 0;
+                        });
                     });
-                    
-                    // make sure the above makes it into angular scope
-                    $scope.$apply();
-                    
+                                        
                     //console.log($scope.options.userState.workspaces);
                 }, 
                 function (error) {
@@ -1018,7 +1025,7 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
             console.log("had object ref " + object_ref);
             $scope.workspace_service.copy_object({"from": {"ref": object_ref}, "to": {"workspace": to_workspace_name, "name": object_name}}, success, error);
         }
-    }
+    };
 
     $scope.toggleCheckbox = function(id, item) {
         if ($scope.options.userState.selections === null) {
@@ -1027,14 +1034,28 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
         }
     
         if (!$scope.options.userState.selections.hasOwnProperty(id)) {
+            $scope.selectCheckbox(id, item);
+        }
+        else {
+            $scope.deselectCheckbox(id, item);
+        }
+    };
+
+    $scope.selectCheckbox = function(id, item) {
+        if (!$scope.options.userState.selections.hasOwnProperty(id)) {
             $scope.options.userState.selections[id] = item;
             $scope.options.userState.selectionsLength += 1;
         }
-        else {
+    };
+        
+    $scope.deselectCheckbox = function(id, item) {
+        if ($scope.options.userState.selections.hasOwnProperty(id)) {
             delete $scope.options.userState.selections[id];           
             $scope.options.userState.selectionsLength -= 1;
         }
     };
+
+
 
     $scope.toggleAll = function(items) {
         //console.log(items);
@@ -1042,23 +1063,33 @@ searchApp.controller('searchController', function searchCtrl($rootScope, $scope,
         if ($scope.options.userState.selections === null) {
             $scope.options.userState.selections = {};            
         }
-        
-        for(var i = items.length - 1; i > -1; i--) {
-            $scope.toggleCheckbox(items[i].row_id,items[i]);
-        }            
-        
+                
         if ($scope.options.userState.selectAll.hasOwnProperty($scope.options.selectedCategory)) {
-            if ($scope.options.userState.selectAll[$scope.options.selectedCategory].hasOwnProperty($scope.options.searchOptions.perCategory[$scope.options.selectedCategory].page)) {
-                $scope.options.userState.selectAll[$scope.options.selectedCategory][$scope.options.searchOptions.perCategory[$scope.options.selectedCategory].page] = !$scope.options.userState.selectAll[$scope.options.selectedCategory][$scope.options.searchOptions.perCategory[$scope.options.selectedCategory].page];
+            if ($scope.options.userState.selectAll[$scope.options.selectedCategory].hasOwnProperty($scope.options.searchOptions.perCategory[$scope.options.selectedCategory].page) && $scope.options.userState.selectAll[$scope.options.selectedCategory][$scope.options.searchOptions.perCategory[$scope.options.selectedCategory].page]) {
+                $scope.options.userState.selectAll[$scope.options.selectedCategory][$scope.options.searchOptions.perCategory[$scope.options.selectedCategory].page] = false;
+
+                for(var i = items.length - 1; i > -1; i--) {
+                    $scope.deselectCheckbox(items[i].row_id,items[i]);
+                }            
+
             }
             else {
                 $scope.options.userState.selectAll[$scope.options.selectedCategory][$scope.options.searchOptions.perCategory[$scope.options.selectedCategory].page] = true;
+
+                for(var i = items.length - 1; i > -1; i--) {
+                    $scope.selectCheckbox(items[i].row_id,items[i]);
+                }            
             }
         }
         else {
             $scope.options.userState.selectAll[$scope.options.selectedCategory] = {};
             $scope.options.userState.selectAll[$scope.options.selectedCategory][$scope.options.searchOptions.perCategory[$scope.options.selectedCategory].page] = true;
+
+            for(var i = items.length - 1; i > -1; i--) {
+                $scope.selectCheckbox(items[i].row_id,items[i]);
+            }            
         }
+
     };
 
 });

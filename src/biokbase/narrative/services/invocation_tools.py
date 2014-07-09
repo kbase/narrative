@@ -116,16 +116,23 @@ def _view_cmds(meth):
     return json.dumps({'data': cmd_data})
 
 @method(name="View Files")
-def _view_files(meth):
+def _view_files(meth, sortby):
     """View your files.
     
+    :param sortby: sort files by name or date, default is name
+    :type sortby: kbtypes.Unicode
+    :ui_name sortby: Sort By
+    :default sortby: name
     :return: File List
     :rtype: kbtypes.Unicode
     :output_widget: GeneTableWidget
     """
     meth.stages = 1
     file_list  = _list_files("")
-    file_sort  = sorted(file_list, key=lambda k: k['name'])
+    if sortby == 'date':
+        file_sort = sorted(file_list, key=lambda k: k['mod_date'])
+    else:
+        file_sort = sorted(file_list, key=lambda k: k['name'])
     file_table = [['name', 'size', 'timestamp']]
     for f in file_sort:
         file_table.append([ f['name'], f['size'], f['mod_date'] ])

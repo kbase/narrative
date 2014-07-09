@@ -16,10 +16,10 @@
         },
         render: function() {
             // creater main comtainer
-            var main = $('<div>');
+            var main = $('<div>').css({'max-height': '600px', 'overflow-y': 'scroll'});
             // add header
             if (this.options.header !== '') {
-                main.append($('<p>')
+                main.append($('<div>')
                     .css({'padding': '10px 20px'})
                     .append($('<h3>').text(this.options.header)));
             }
@@ -32,7 +32,7 @@
             // add error
             if (this.options.error !== '') {
                 main.append($('<div>')
-                    .css({'padding': '10px 20px', 'background-color': 'rgba(255,0,0,0.25)'})
+                    .css({'font-size': 'small', 'padding': '10px 20px', 'background-color': 'rgba(255,0,0,0.25)'})
                     .append($('<pre>').text('ERROR:\n'+this.options.error)));
             }
             // put container in cell

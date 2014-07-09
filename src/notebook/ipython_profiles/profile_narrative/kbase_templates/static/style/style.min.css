@@ -347,7 +347,7 @@ span#login_widget{float:right;}
 .toolbar_info{float:left;}
 .toolbar_buttons{float:right;}
 .list_header{font-weight:bold;}
-.list_container{margin-top:16px;margin-bottom:16px;border:1px solid #ababab;border-radius:4px;}
+.list_container{margin-top:16px;margin-bottom:16px;border:1px solid #ababab;border-radius:4px; max-height: 500px; overflow: auto; }
 .list_container>div{border-bottom:1px solid #ababab;}.list_container>div:hover .list-item{background-color:red;}
 .list_container>div:last-child{border:none;}
 .list_item:hover .list_item{background-color:#ddd;}

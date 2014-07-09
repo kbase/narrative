@@ -65,16 +65,14 @@
 
         get_kbase_cookie : function (field) {
 
-            var chips = sessionStorage.getItem('kbase_session');
-//            console.log(sessionStorage);
+            var chips = localStorage.getItem('kbase_session');
+
             if (chips != undefined) {
-//            console.log(chips);
                 chips = JSON.parse(chips);
             }
             else {
                 chips = {};
             }
-//            console.log(chips);
 
             return field == undefined
                 ? chips
@@ -87,6 +85,23 @@
 
         token : function () {
             return this.get_kbase_cookie('token');
+        },
+
+        /**
+         * Token validity is tested by the 'expiry' tag in the token.
+         * That tag is followed by the number of seconds in the time when it expires.
+         * So, pull that out, multiply x1000, and make a Date() out of it. If that Date is greater than
+         * the current one, it's still good.
+         * If not, or if there is no 'expiry' field, it's not a valid token.
+         */
+        is_token_valid : function (token) {
+            var expirySec = /\|expiry\=(\d+)\|/.exec(token);
+            if (expirySec) {
+                expirySec = expirySec[1];
+                var expiryDate = new Date(expirySec*1000);
+                return (expiryDate - new Date() > 0);
+            }
+            return false;
         },
 
         init: function(options) {
@@ -106,11 +121,18 @@
 
             if (kbaseCookie.user_id) {
 
-                if (this.registerLogin) {
-                    this.registerLogin(kbaseCookie);
+                if (!this.is_token_valid(this.get_kbase_cookie('token'))) {
+                    localStorage.removeItem('kbase_session');
+                    // nuke the cookie, too, just in case it's still there.
+                    $.cookie('kbase_session', null);
                 }
-                if (this.options.prior_login_callback) {
-                    this.options.prior_login_callback.call(this, kbaseCookie);
+                else {
+                    if (this.registerLogin) {
+                        this.registerLogin(kbaseCookie);
+                    }
+                    if (this.options.prior_login_callback) {
+                        this.options.prior_login_callback.call(this, kbaseCookie);
+                    }
                 }
 
                 this.data('_session', kbaseCookie);
@@ -264,19 +286,18 @@
                                         .css('border-bottom', '1px solid lightgray')
                                         .css('white-space', 'nowrap')
                                         .append(
-                                            $('<span></span>')
-                                        .css('white-space', 'nowrap')
-                                            .append('Signed in as ')
-
-                                        .append(
-                                            $('<a></a>')
-                                                .attr('id', 'loggedinuser_id')
-                                                .css('font-weight', 'bold')
-                                                .attr('href', 'https://gologin.kbase.us/account/UpdateProfile')
-                                                .attr('target', '_blank')
-                                                .css('padding-right', '0px')
-                                                .css('padding-left', '0px')
-                                        ))
+                                            $.jqElem('div')  //so as to style the link in blue.
+                                            .css('text-align', 'right')
+                                            .append(
+                                                $('<a></a>')
+                                                    .attr('id', 'loggedinuser_id')
+                                                    .css('font-weight', 'bold')
+                                                    .attr('href', 'https://gologin.kbase.us/account/UpdateProfile')
+                                                    .attr('target', '_blank')
+                                                    .css('padding-right', '0px')
+                                                    .css('padding-left', '0px')
+                                            )
+                                        )
                                 )
                                 .append(
                                     $('<li></li>')
@@ -368,7 +389,7 @@
                                             )
                                     )
                                     .append(
-                                        $('<input/>')
+                                        $('<input>')
                                             .attr('type', 'text')
                                             .attr('name', 'user_id')
                                             .attr('id', 'user_id')
@@ -386,7 +407,7 @@
                                             )
                                     )
                                     .append(
-                                        $('<input/>')
+                                        $('<input>')
                                             .attr('type', 'password')
                                             .attr('name', 'password')
                                             .attr('id', 'password')
@@ -540,137 +561,6 @@
 
         },
 
-        _narrativeStyle: function() {
-             this._createLoginDialog();
- 
-             var $prompt = $('<span></span>')
-                 .append(
-                     $('<a></a>')
-                         .attr('id', 'loginlink')
-                         .attr('href', '#')
-                         .text('Sign In')
-                         .bind('click',
-                             $.proxy( function(e) {
-                                 e.preventDefault();
-                                 e.stopPropagation();
-                                 this.openDialog();
-                             }, this)
-                         )
-                 )
-                .append(
-                    $('<div></div>')
-                        .addClass('btn-group')
-                        .attr('id', 'userdisplay')
-                        .css('display', 'none')
-                        .append(
-                            $('<button></button>')
-                                .addClass('btn btn-default')
-                                .addClass('dropdown-toggle')
-                                .append(
-                                    $('<span></span>')
-                                        .attr('id', 'loggedinuser_id')
-                                        .attr('style', 'font-weight : bold')
-                                        .append('user_id')
-                                )
-                                .append(
-                                    $('<span></span>')
-				                    .addClass('caret')
-                                    .css('margin-left', '3px')
-                                )
-                                //.append($('<i></i>').addClass('icon-user'))
-                                //.append($('<i></i>').addClass('icon-caret-down'))
-                                .bind('click',
-                                //$.proxy(
-                                function(e) {
-                                    e.preventDefault(); e.stopPropagation();
-                                    $(this).next().toggle();//slideToggle('fast');
-                                }
-                                //, this)
-                                )
-                        )
-                        .append(
-                            $('<ul></ul>')
-                                .addClass('dropdown-menu')
-                                .addClass('pull-right')
-                                .attr('role','menu')
-                                //.css('padding', '3px')
-                                .attr('id', 'login-dropdown-menu')
-                                .append(
-                                    $('<li></li>')
-                                        .css('border-bottom', '1px solid lightgray')
-                                        .css('white-space', 'nowrap')
-                                        .css('padding', '0')
-                                        .append(
-                                            $('<span></span>')
-                                        .append(
-                                            $('<a></a>')
-                                                .css('font-weight', 'bold')
-                                                .css('display', 'block')
-                                                .attr('href', '/manage_projects.shtml')
-						                          .text('Manage projects')
-                                                .attr('target', '_blank')
-                                                .css('padding', '6px 20px')
-                                        ))
-                                )
-                                .append(
-                                    $('<li></li>')
-                                        .css('padding', '0')
-                                        .append(
-                                            $('<span></span>')
-                                            .append(
-                                                $('<a></a>')
-                                                    .css('padding', '6px 20px')
-                                                    .css('display', 'block')
-                                                    .css('cursor', 'pointer')
-                                                    .append('Sign out')
-                                            )
-                                            .bind('click',
-                                                $.proxy( function(e) {
-                                                    e.stopPropagation();e.preventDefault();
-                                                    this.data('login-dropdown-menu').hide();//slideUp('fast');
-                                                    this.logout(false);
-                                                }, this)
-                                            )
-                                        )
-                                )
-                        )
-                );
-
-             this._rewireIds($prompt, this);
- 
-             this.registerLogin =
-                 function(args) {
- 
-                     if ( args.success ) {
-                         this.data("loginlink").hide();
-                         this.data('loggedinuser_id').text(args.name);
-                         this.data("userdisplay").show();
-                         this.data('loginDialog').closePrompt();
-                     }
-                     else {
-                         this.data('loginDialog').dialogModal().trigger('error', args.message);
-                     }
-                 };
- 
-             this.specificLogout = function(args) {
-                 this.data("userdisplay").hide();
-                 this.data("loginlink").show();
-             };
- 
-	    /*
-             this.data('logoutbutton').bind('click',
-                 $.proxy(
-                     function(e) {
-                         this.logout(false); //TODO fix this to not hardcode false
-                         this.data('user_id').focus();
-                     },
-                     this
-                 )
-             );
-	     */
-             return $prompt;
-         },
-
         _microStyle : function() {
             var $prompt = $('<span></span>')
                 .append(
@@ -741,7 +631,7 @@
 
         _buttonStyle : function () {
             var $prompt = $('<div></div>')
-                .attr('style', 'width :px; border : 1px solid gray')
+                .attr('style', 'width : 250px; border : 1px solid gray')
                 .append(
                     $('<h4></h4>')
                         .attr('style', 'padding : 5px; margin-top : 0px; background-color : lightgray ')
@@ -926,39 +816,49 @@
                                             .append(
                                                 $('<div></div>')
                                                     .attr('class', 'form-group')
-                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
+                                                            .addClass('col-lg-2')
                                                             .attr('for', 'user_id')
                                                             .css('margin-right', '10px')
                                                             .append('Username:\n')
                                                     )
                                                     .append(
-                                                        $('<input/>')
-                                                            .attr('type', 'text')
-                                                            .attr('name', 'user_id')
-                                                            .attr('id', 'user_id')
-                                                            .attr('size', '20')
+                                                        $.jqElem('div')
+                                                        .addClass('col-lg-9')
+                                                        .append(
+                                                            $('<input>')
+                                                                .addClass('form-control')
+                                                                .attr('type', 'text')
+                                                                .attr('name', 'user_id')
+                                                                .attr('id', 'user_id')
+                                                                .attr('size', '20')
+                                                        )
                                                     )
                                             )
                                             .append(
                                                 $('<div></div>')
                                                     .attr('class', 'form-group')
-                                                    .css('margin-left', '50px')
                                                     .append(
                                                         $('<label></label>')
                                                             .addClass('control-label')
+                                                            .addClass('col-lg-2')
                                                             .attr('for', 'password')
                                                             .css('margin-right', '10px')
                                                             .append('Password:\n')
                                                     )
                                                     .append(
-                                                        $('<input/>')
-                                                            .attr('type', 'password')
-                                                            .attr('name', 'password')
-                                                            .attr('id', 'password')
-                                                            .attr('size', '20')
+                                                        $.jqElem('div')
+                                                        .addClass('col-lg-9')
+                                                        .append(
+                                                            $('<input>')
+                                                                .addClass('form-control')
+                                                                .attr('type', 'password')
+                                                                .attr('name', 'password')
+                                                                .attr('id', 'password')
+                                                                .attr('size', '20')
+                                                        )
                                                     )
                                             )
                                     )
@@ -1011,8 +911,7 @@
 
             $ld.dialogModal().on('shown.bs.modal',
                 function (e) {
-                console.log("IS SHOWNz!");
-                console.log(                        $(this).data('user_id'));
+
                     if ($(this).data('user_id').val().length == 0) {
                         $(this).data('user_id').focus();
                     }
@@ -1062,10 +961,15 @@
 
                                 if (data.kbase_sessionid) {
 
-									//$.cookie('kbase_session',
-								    //	  'un=' + data.user_id
-									//	+ '|'
-									//	+ 'kbase_sessionid=' + data.kbase_sessionid);
+									// if ($.cookie) {
+         //                                $.cookie('kbase_session',
+         //                                      'unEQUALSSIGN' + data.user_id
+         //                                    + 'PIPESIGN'
+         //                                    + 'kbase_sessionidEQUALSSIGN' + data.kbase_sessionid
+         //                                    + 'PIPESIGN'
+         //                                    + 'token_idEQUALSSIGN' + data.kbase_sessionid,
+         //                                    { expires: 60 });
+         //                            }
 
                                     var cookieArray = [];
 
@@ -1078,18 +982,16 @@
                                     }
                                     var jsonARGS = JSON.stringify(args);
 
-                                    sessionStorage.setItem('kbase_session', jsonARGS);
-                                    console.log(sessionStorage);
+                                    localStorage.setItem('kbase_session', jsonARGS);
 
                                     this.populateLoginInfo(args);
-                                    console.log("ARGS");console.log(args);console.log(jsonARGS);
 
                                     this.trigger('loggedIn', this.get_kbase_cookie());
 
                                     callback.call(this,args);
                                 }
                                 else {
-                                    sessionStorage.removeItem('kbase_session');
+                                    localStorage.removeItem('kbase_session');
                                     this.populateLoginInfo({});
                                     callback.call(this, {status : 0, message : data.error_msg});
 
@@ -1105,11 +1007,17 @@
                                 // If we have a useless error message, replace with
                                 // friendly, but useless error message
 
-                                if (textStatus == "error") {
-                                    textStatus = "Error connecting to KBase login server";
+                                var errmsg = textStatus;
+                                if (jqXHR.responseJSON) {
+                                    errmsg = jqXHR.responseJSON.error_msg;
                                 }
+
+                                if (errmsg == "error") {
+                                    errmsg = "Error connecting to KBase login server";
+                                }
+
                                 this.populateLoginInfo({});
-                                callback.call(this,{ status : 0, message : textStatus })
+                                callback.call(this,{ status : 0, message : errmsg })
                              },
                              this
                             ),
@@ -1127,6 +1035,7 @@
 
         logout : function(rePrompt) {
 
+            rePrompt = false;
             if (rePrompt == undefined) {
                 rePrompt = true;
             }
@@ -1137,7 +1046,8 @@
                 return;
             }
 
-            sessionStorage.removeItem('kbase_session');
+            localStorage.removeItem('kbase_session');
+            $.removeCookie('kbase_session', { path: '/' });
 
             // the rest of this is just housekeeping.
 

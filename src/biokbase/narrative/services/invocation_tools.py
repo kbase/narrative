@@ -135,13 +135,13 @@ def _view_files(meth, sortby):
         f['mod_date'] = datetime.datetime.strptime(f['mod_date'], "%b %d %Y %H:%M:%S")
     # sort
     if sortby == 'date':
-        file_sort = sorted(file_list, key=lambda k: k['mod_date'])
+        file_sort = sorted(file_list, key=lambda k: k['mod_date'], reverse=True)
     else:
         file_sort = sorted(file_list, key=lambda k: k['name'])
     # output
     file_table = [['name', 'size', 'timestamp']]
     for f in file_sort:
-        file_table.append([ f['name'], f['size'], f['mod_date'].ctime() ])
+        file_table.append([ f['name'], f['size'], f['mod_date'].__str__() ])
     return json.dumps({'table': file_table})
 
 @method(name="View PNG File")

@@ -15,6 +15,7 @@ import urllib
 import urllib2
 import cStringIO
 import requests
+import datetime
 from string import Template
 from collections import defaultdict
 # Local
@@ -128,14 +129,19 @@ def _view_files(meth, sortby):
     :output_widget: GeneTableWidget
     """
     meth.stages = 1
-    file_list  = _list_files("")
+    file_list = _list_files("")
+    # get datetime objects
+    for f in file_list:
+        f['mod_date'] = datetime.datetime.strptime(f['mod_date'], "%b %d %Y %H:%M:%S")
+    # sort
     if sortby == 'date':
         file_sort = sorted(file_list, key=lambda k: k['mod_date'])
     else:
         file_sort = sorted(file_list, key=lambda k: k['name'])
+    # output
     file_table = [['name', 'size', 'timestamp']]
     for f in file_sort:
-        file_table.append([ f['name'], f['size'], f['mod_date'] ])
+        file_table.append([ f['name'], f['size'], f['mod_date'].ctime() ])
     return json.dumps({'table': file_table})
 
 @method(name="View PNG File")

@@ -182,6 +182,14 @@ def _download_file(meth, afile):
     meth.stages = 1
     if not afile:
         raise Exception("Missing file name.")
+    file_list = _list_files("")
+    has_file  = False
+    for f in file_list:
+        if f['name'] == afile:
+            has_file = True
+            break
+    if not has_file:
+        raise Exception("The file '"+afile+"' does not exist")
     content, err = _get_invo(afile, binary=False)
     if err:
         raise Exception(content)

@@ -461,7 +461,7 @@ def runPipeline(stages,meth,auth):
         meth.advance(stage.name)
         stat = runStep(stage.func,auth,stage.poll, previous_steps)
         if not stat["error"] == None:
-            return json.dumps(stat)
+            return to_JSON(stat)
         previous_steps.append(stat)
     return previous_steps
 
@@ -788,7 +788,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
             diff_exp["shock_ref"]["shock_url"] = OTHERURLS.shock+"/node/"+value
             diff_exp_files.append(diff_exp)
 
-        diffid = "kb|differentialExpression."+str(idc.allocate_id_range("kb|differentialExpression_test",1))
+        diffid = "kb|differentialExpression."+str(idc.allocate_id_range(diffexptype,1))
         diffexpobj = { "name" : diffid,
                        "title" : title, 
                        "created" : strftime("%d %b %Y %H:%M:%S +0000", gmtime()),

@@ -190,6 +190,7 @@ def _download_file(meth, afile):
             break
     if not has_file:
         raise Exception("The file '"+afile+"' does not exist")
+    meth.stages = 2
     content, err = _get_invo(afile, binary=False)
     if err:
         raise Exception(content)

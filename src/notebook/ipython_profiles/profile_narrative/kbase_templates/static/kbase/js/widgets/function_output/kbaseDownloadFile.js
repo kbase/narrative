@@ -18,10 +18,9 @@
             var main = $('<div>');
             // add download button
             if ((this.options.data !== null) && (this.options.name !== null)) {
-                var data = this.options.data;
                 main.append($('<button>')
                     .text("Save "+name)
-                    .on('click', function () {
+                    .on('click', function (data, filename) {
                         try {
                             data = window.btoa(data);
                         } catch (err) {
@@ -43,12 +42,12 @@
                         }
                         data = 'data:application/octet-stream;base64,'+data;
                         var anchor = document.createElement('a');
-                        anchor.setAttribute('download', this.options.name);
+                        anchor.setAttribute('download', filename);
                         anchor.setAttribute('href', data);
                         document.body.appendChild(anchor);
                         anchor.click();
                         document.body.removeChild(anchor);
-                    })
+                    }(this.options.data, this.options.name))
                 );
             } else {
                 main.append($('<p>').text("Error: file content is empty."));

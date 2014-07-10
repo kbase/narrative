@@ -79,7 +79,7 @@ class Iface:
     """
     pass
 
-  def callCuffdiff(self, inPath, outpath, ref_genome, alignOpts, condn_labels, merged_gtf, workingdir, auth):
+  def callCuffdiff(self, inPath, outpath, ref_genome, alignOpts, condn_labels, merged_gtf, withReplicates, workingdir, auth):
     """
     Parameters:
      - inPath
@@ -88,6 +88,7 @@ class Iface:
      - alignOpts
      - condn_labels
      - merged_gtf
+     - withReplicates
      - workingdir
      - auth
     """
@@ -123,7 +124,7 @@ class Iface:
     """
     pass
 
-  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, working_dir, auth):
+  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, ext_src_id, working_dir, auth):
     """
     Parameters:
      - filename
@@ -136,6 +137,7 @@ class Iface:
      - onto_term_name
      - seq_type
      - reference
+     - ext_src_id
      - working_dir
      - auth
     """
@@ -493,7 +495,7 @@ class Client(Iface):
       raise result.je
     raise TApplicationException(TApplicationException.MISSING_RESULT, "callCuffmerge failed: unknown result");
 
-  def callCuffdiff(self, inPath, outpath, ref_genome, alignOpts, condn_labels, merged_gtf, workingdir, auth):
+  def callCuffdiff(self, inPath, outpath, ref_genome, alignOpts, condn_labels, merged_gtf, withReplicates, workingdir, auth):
     """
     Parameters:
      - inPath
@@ -502,13 +504,14 @@ class Client(Iface):
      - alignOpts
      - condn_labels
      - merged_gtf
+     - withReplicates
      - workingdir
      - auth
     """
-    self.send_callCuffdiff(inPath, outpath, ref_genome, alignOpts, condn_labels, merged_gtf, workingdir, auth)
+    self.send_callCuffdiff(inPath, outpath, ref_genome, alignOpts, condn_labels, merged_gtf, withReplicates, workingdir, auth)
     return self.recv_callCuffdiff()
 
-  def send_callCuffdiff(self, inPath, outpath, ref_genome, alignOpts, condn_labels, merged_gtf, workingdir, auth):
+  def send_callCuffdiff(self, inPath, outpath, ref_genome, alignOpts, condn_labels, merged_gtf, withReplicates, workingdir, auth):
     self._oprot.writeMessageBegin('callCuffdiff', TMessageType.CALL, self._seqid)
     args = callCuffdiff_args()
     args.inPath = inPath
@@ -517,6 +520,7 @@ class Client(Iface):
     args.alignOpts = alignOpts
     args.condn_labels = condn_labels
     args.merged_gtf = merged_gtf
+    args.withReplicates = withReplicates
     args.workingdir = workingdir
     args.auth = auth
     args.write(self._oprot)
@@ -653,7 +657,7 @@ class Client(Iface):
       raise result.je
     raise TApplicationException(TApplicationException.MISSING_RESULT, "ShockWrite failed: unknown result");
 
-  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, working_dir, auth):
+  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, ext_src_id, working_dir, auth):
     """
     Parameters:
      - filename
@@ -666,13 +670,14 @@ class Client(Iface):
      - onto_term_name
      - seq_type
      - reference
+     - ext_src_id
      - working_dir
      - auth
     """
-    self.send_workspaceUpload(filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, working_dir, auth)
+    self.send_workspaceUpload(filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, ext_src_id, working_dir, auth)
     return self.recv_workspaceUpload()
 
-  def send_workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, working_dir, auth):
+  def send_workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, ext_src_id, working_dir, auth):
     self._oprot.writeMessageBegin('workspaceUpload', TMessageType.CALL, self._seqid)
     args = workspaceUpload_args()
     args.filename = filename
@@ -685,6 +690,7 @@ class Client(Iface):
     args.onto_term_name = onto_term_name
     args.seq_type = seq_type
     args.reference = reference
+    args.ext_src_id = ext_src_id
     args.working_dir = working_dir
     args.auth = auth
     args.write(self._oprot)
@@ -1344,7 +1350,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = callCuffdiff_result()
     try:
-      result.success = self._handler.callCuffdiff(args.inPath, args.outpath, args.ref_genome, args.alignOpts, args.condn_labels, args.merged_gtf, args.workingdir, args.auth)
+      result.success = self._handler.callCuffdiff(args.inPath, args.outpath, args.ref_genome, args.alignOpts, args.condn_labels, args.merged_gtf, args.withReplicates, args.workingdir, args.auth)
     except JnomicsThriftException, je:
       result.je = je
     oprot.writeMessageBegin("callCuffdiff", TMessageType.REPLY, seqid)
@@ -1400,7 +1406,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = workspaceUpload_result()
     try:
-      result.success = self._handler.workspaceUpload(args.filename, args.genome_id, args.desc, args.title, args.srcDate, args.onto_term_id, args.onto_term_def, args.onto_term_name, args.seq_type, args.reference, args.working_dir, args.auth)
+      result.success = self._handler.workspaceUpload(args.filename, args.genome_id, args.desc, args.title, args.srcDate, args.onto_term_id, args.onto_term_def, args.onto_term_name, args.seq_type, args.reference, args.ext_src_id, args.working_dir, args.auth)
     except JnomicsThriftException, je:
       result.je = je
     oprot.writeMessageBegin("workspaceUpload", TMessageType.REPLY, seqid)
@@ -2598,6 +2604,7 @@ class callCuffdiff_args:
    - alignOpts
    - condn_labels
    - merged_gtf
+   - withReplicates
    - workingdir
    - auth
   """
@@ -2610,17 +2617,19 @@ class callCuffdiff_args:
     (4, TType.STRING, 'alignOpts', None, None, ), # 4
     (5, TType.STRING, 'condn_labels', None, None, ), # 5
     (6, TType.STRING, 'merged_gtf', None, None, ), # 6
-    (7, TType.STRING, 'workingdir', None, None, ), # 7
-    (8, TType.STRUCT, 'auth', (Authentication, Authentication.thrift_spec), None, ), # 8
+    (7, TType.STRING, 'withReplicates', None, None, ), # 7
+    (8, TType.STRING, 'workingdir', None, None, ), # 8
+    (9, TType.STRUCT, 'auth', (Authentication, Authentication.thrift_spec), None, ), # 9
   )
 
-  def __init__(self, inPath=None, outpath=None, ref_genome=None, alignOpts=None, condn_labels=None, merged_gtf=None, workingdir=None, auth=None,):
+  def __init__(self, inPath=None, outpath=None, ref_genome=None, alignOpts=None, condn_labels=None, merged_gtf=None, withReplicates=None, workingdir=None, auth=None,):
     self.inPath = inPath
     self.outpath = outpath
     self.ref_genome = ref_genome
     self.alignOpts = alignOpts
     self.condn_labels = condn_labels
     self.merged_gtf = merged_gtf
+    self.withReplicates = withReplicates
     self.workingdir = workingdir
     self.auth = auth
 
@@ -2665,10 +2674,15 @@ class callCuffdiff_args:
           iprot.skip(ftype)
       elif fid == 7:
         if ftype == TType.STRING:
-          self.workingdir = iprot.readString();
+          self.withReplicates = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 8:
+        if ftype == TType.STRING:
+          self.workingdir = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 9:
         if ftype == TType.STRUCT:
           self.auth = Authentication()
           self.auth.read(iprot)
@@ -2708,12 +2722,16 @@ class callCuffdiff_args:
       oprot.writeFieldBegin('merged_gtf', TType.STRING, 6)
       oprot.writeString(self.merged_gtf)
       oprot.writeFieldEnd()
+    if self.withReplicates is not None:
+      oprot.writeFieldBegin('withReplicates', TType.STRING, 7)
+      oprot.writeString(self.withReplicates)
+      oprot.writeFieldEnd()
     if self.workingdir is not None:
-      oprot.writeFieldBegin('workingdir', TType.STRING, 7)
+      oprot.writeFieldBegin('workingdir', TType.STRING, 8)
       oprot.writeString(self.workingdir)
       oprot.writeFieldEnd()
     if self.auth is not None:
-      oprot.writeFieldBegin('auth', TType.STRUCT, 8)
+      oprot.writeFieldBegin('auth', TType.STRUCT, 9)
       self.auth.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -3330,6 +3348,7 @@ class workspaceUpload_args:
    - onto_term_name
    - seq_type
    - reference
+   - ext_src_id
    - working_dir
    - auth
   """
@@ -3347,11 +3366,12 @@ class workspaceUpload_args:
     (9, TType.STRING, 'onto_term_name', None, None, ), # 9
     (10, TType.STRING, 'seq_type', None, None, ), # 10
     (11, TType.STRING, 'reference', None, None, ), # 11
-    (12, TType.STRING, 'working_dir', None, None, ), # 12
-    (13, TType.STRUCT, 'auth', (Authentication, Authentication.thrift_spec), None, ), # 13
+    (12, TType.STRING, 'ext_src_id', None, None, ), # 12
+    (13, TType.STRING, 'working_dir', None, None, ), # 13
+    (14, TType.STRUCT, 'auth', (Authentication, Authentication.thrift_spec), None, ), # 14
   )
 
-  def __init__(self, filename=None, genome_id=None, desc=None, title=None, srcDate=None, onto_term_id=None, onto_term_def=None, onto_term_name=None, seq_type=None, reference=None, working_dir=None, auth=None,):
+  def __init__(self, filename=None, genome_id=None, desc=None, title=None, srcDate=None, onto_term_id=None, onto_term_def=None, onto_term_name=None, seq_type=None, reference=None, ext_src_id=None, working_dir=None, auth=None,):
     self.filename = filename
     self.genome_id = genome_id
     self.desc = desc
@@ -3362,6 +3382,7 @@ class workspaceUpload_args:
     self.onto_term_name = onto_term_name
     self.seq_type = seq_type
     self.reference = reference
+    self.ext_src_id = ext_src_id
     self.working_dir = working_dir
     self.auth = auth
 
@@ -3426,10 +3447,15 @@ class workspaceUpload_args:
           iprot.skip(ftype)
       elif fid == 12:
         if ftype == TType.STRING:
-          self.working_dir = iprot.readString();
+          self.ext_src_id = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 13:
+        if ftype == TType.STRING:
+          self.working_dir = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 14:
         if ftype == TType.STRUCT:
           self.auth = Authentication()
           self.auth.read(iprot)
@@ -3485,12 +3511,16 @@ class workspaceUpload_args:
       oprot.writeFieldBegin('reference', TType.STRING, 11)
       oprot.writeString(self.reference)
       oprot.writeFieldEnd()
+    if self.ext_src_id is not None:
+      oprot.writeFieldBegin('ext_src_id', TType.STRING, 12)
+      oprot.writeString(self.ext_src_id)
+      oprot.writeFieldEnd()
     if self.working_dir is not None:
-      oprot.writeFieldBegin('working_dir', TType.STRING, 12)
+      oprot.writeFieldBegin('working_dir', TType.STRING, 13)
       oprot.writeString(self.working_dir)
       oprot.writeFieldEnd()
     if self.auth is not None:
-      oprot.writeFieldBegin('auth', TType.STRUCT, 13)
+      oprot.writeFieldBegin('auth', TType.STRUCT, 14)
       self.auth.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()

@@ -18,6 +18,8 @@
             var main = $('<div>');
             // add download button
             if ((this.options.data !== null) && (this.options.name !== null)) {
+                var filedata = this.options.data;
+                var filename = this.options.name;
                 var downloadFn = function (data, filename) {
                     try {
                         data = window.btoa(data);
@@ -49,7 +51,7 @@
                 main.append($('<button>')
                     .text("Save "+name)
                     .on('click', function () {
-                        downloadFn(this.options.data, this.options.name);
+                        downloadFn(filedata, filename);
                     })
                 );
             } else {

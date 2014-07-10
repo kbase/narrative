@@ -68,9 +68,11 @@ def _rm_file(f):
 def _get_invo(name, binary=False):
     # upload from invo server
     stdout, stderr = _run_invo("mg-upload2shock %s %s"%(URLS.shock, name))
+    if stderr:
+        return stderr, True
     node = json.loads(stdout)
     # get file content from shock
-    return _get_shock_data(node['id'], binary=binary)
+    return _get_shock_data(node['id'], binary=binary), False
 
 def _get_shock_data(nodeid, binary=False):
     token = os.environ['KB_AUTH_TOKEN']
@@ -141,7 +143,7 @@ def _view_files(meth, sortby):
     # output
     file_table = [['name', 'size', 'timestamp']]
     for f in file_sort:
-        file_table.append([ f['name'], f['size'], f['mod_date'].__str__() ])
+        file_table.append([ f['name'], f['size'], f['mod_date'].ctime() ])
     return json.dumps({'table': file_table})
 
 @method(name="View PNG File")
@@ -160,9 +162,46 @@ def _view_files(meth, afile):
         raise Exception("Missing file name.")
     if not afile.endswith('.png'):
         raise Exception("Invalid file type.")
-    rawpng = _get_invo(afile, binary=True)
-    b64png = base64.b64encode(rawpng)
+    content, err = _get_invo(afile, binary=True)
+    if err:
+        raise Exception(content)
+    b64png = base64.b64encode(content)
     return json.dumps({'type': 'png', 'width': '600', 'data': b64png})
+
+@method(name="Download File")
+def _download_file(meth, afile):
+    """Download a file.
+    
+    :param afile: file to download
+    :type afile: kbtypes.Unicode
+    :ui_name afile: File
+    :return: Status
+    :rtype: kbtypes.Unicode
+    :output_widget: DownloadFileWidget
+    """
+    meth.stages = 1
+    if not afile:
+        raise Exception("Missing file name.")
+    content, err = _get_invo(afile, binary=False)
+    if err:
+        raise Exception(content)
+    return json.dumps({'data': content, 'name': afile})
+
+@method(name="Upload File")
+def _upload_file(meth, name):
+    """Upload a file.
+    
+    :param afile: name for uploaded file
+    :type afile: kbtypes.Unicode
+    :ui_name afile: Name
+    :return: Status
+    :rtype: kbtypes.Unicode
+    :output_widget: UploadFileWidget
+    """
+    meth.stages = 1
+    if not name:
+        raise Exception("Missing a name.")
+    return json.dumps({'url': URLS.invocation, 'name': name, 'auth': os.environ['KB_AUTH_TOKEN']})
 
 @method(name="Rename File")
 def _rename_file(meth, old, new):

@@ -28,11 +28,11 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '  JnomicsThriftJobID alignTophat(string ref_genome, string inPath, string gtffile, string outPath, string alignOpts, string workingdir, Authentication auth)'
   print '  JnomicsThriftJobID callCufflinks(string inPath, string outpath, string ref_gtf, string alignOpts, string workingdir, Authentication auth)'
   print '  JnomicsThriftJobID callCuffmerge(string inPath, string ref_genome, string outpath, string alignOpts, string gtffile, string workingdir, Authentication auth)'
-  print '  JnomicsThriftJobID callCuffdiff(string inPath, string outpath, string ref_genome, string alignOpts, string condn_labels, string merged_gtf, string workingdir, Authentication auth)'
+  print '  JnomicsThriftJobID callCuffdiff(string inPath, string outpath, string ref_genome, string alignOpts, string condn_labels, string merged_gtf, string withReplicates, string workingdir, Authentication auth)'
   print '  JnomicsThriftJobID callCuffcompare(string inPath, string outpath, string alignOpts, string gtffile, string workingdir, Authentication auth)'
   print '  JnomicsThriftJobID ShockRead(string nodeId, string inPath, Authentication auth)'
   print '  JnomicsThriftJobID ShockWrite(string filename, string hdfsPath, Authentication auth)'
-  print '  JnomicsThriftJobID workspaceUpload(string filename, string genome_id, string desc, string title, string srcDate, string onto_term_id, string onto_term_def, string onto_term_name, string seq_type, string reference, string working_dir, Authentication auth)'
+  print '  JnomicsThriftJobID workspaceUpload(string filename, string genome_id, string desc, string title, string srcDate, string onto_term_id, string onto_term_def, string onto_term_name, string seq_type, string reference, string ext_src_id, string working_dir, Authentication auth)'
   print '  JnomicsThriftJobID ShockBatchWrite( inPath, string outPath, Authentication auth)'
   print '  JnomicsThriftJobID snpSamtools(string inPath, string organism, string outPath, Authentication auth)'
   print '  JnomicsThriftJobStatus getJobStatus(JnomicsThriftJobID jobID, Authentication auth)'
@@ -129,10 +129,10 @@ elif cmd == 'callCuffmerge':
   pp.pprint(client.callCuffmerge(args[0],args[1],args[2],args[3],args[4],args[5],eval(args[6]),))
 
 elif cmd == 'callCuffdiff':
-  if len(args) != 8:
-    print 'callCuffdiff requires 8 args'
+  if len(args) != 9:
+    print 'callCuffdiff requires 9 args'
     sys.exit(1)
-  pp.pprint(client.callCuffdiff(args[0],args[1],args[2],args[3],args[4],args[5],args[6],eval(args[7]),))
+  pp.pprint(client.callCuffdiff(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],eval(args[8]),))
 
 elif cmd == 'callCuffcompare':
   if len(args) != 6:
@@ -153,10 +153,10 @@ elif cmd == 'ShockWrite':
   pp.pprint(client.ShockWrite(args[0],args[1],eval(args[2]),))
 
 elif cmd == 'workspaceUpload':
-  if len(args) != 12:
-    print 'workspaceUpload requires 12 args'
+  if len(args) != 13:
+    print 'workspaceUpload requires 13 args'
     sys.exit(1)
-  pp.pprint(client.workspaceUpload(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],eval(args[11]),))
+  pp.pprint(client.workspaceUpload(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],eval(args[12]),))
 
 elif cmd == 'ShockBatchWrite':
   if len(args) != 3:

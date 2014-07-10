@@ -75,10 +75,9 @@ class OTHERURLS:
     _host = '140.221.84.248'
     shock = "http://shock1.chicago.kbase.us"
     #shock = "http://shock.metagenomics.anl.gov"
-    #awe = "http://140.221.85.36:8000"
-    awe = "http://localhost:8001"
-    #workspace = "http://140.221.84.209:7058"
+    awe = "http://140.221.85.36:8000"
     workspace = "http://kbase.us/services/ws"
+    #workspace = "http://140.221.84.209:7058"
     ids = "http://kbase.us/services/idserver"
     ontology = "http://140.221.85.171:7062"
     #cdmi  = "http://140.221.85.181:7032"
@@ -92,24 +91,24 @@ class OTHERURLS:
 
 class WSTYPES:
     ### Variation workspace types
-    var_sampletype = 'KBaseVariationData.VariationSample'
-    var_vcftype = 'KBaseVariationData.VariantCall'
+    var_sampletype = 'KBaseGwasData.VariationSample'
+    var_vcftype = 'KBaseGwasData.VariantCall'
 
     ### RNASeq workspace types
-    rnaseq_sampletype = 'KBaseRNASeqData.RNASeqSample'
-    rnaseq_bamtype = 'KBaseRNASeqData.RNASeqSampleAlignment'
-    rnaseq_diffexptype = 'KBaseRNASeqData.RNASeqDifferentialExpression'
+    rnaseq_sampletype = 'KBaseExpression.RNASeqSample'
+    rnaseq_bamtype = 'KBaseExpression.RNASeqSampleAlignment'
+    rnaseq_diffexptype = 'KBaseExpression.RNASeqDifferentialExpression'
     rnaseq_exptype =  'KBaseExpression.ExpressionSample'
     rnaseq_expseriestype = 'KBaseExpression.ExpressionSeries'
 
 class IDServerids:
     ### variation
-    var_vcf = 'kb|variant_test'
+    var_vcf = 'kb|variant'
     ###RNASeq 
-    rnaseq_expsample = 'kb|sample_test'
-    rnaseq_series = 'kb|series_test'
-    rnaseq_alignment = 'kb|alignment_test'
-    rnaseq_difexp = 'kb|differentialExpression_test'
+    rnaseq_expsample = 'kb|sample'
+    rnaseq_series = 'kb|series'
+    rnaseq_alignment = 'kb|alignment'
+    rnaseq_difexp = 'kb|differentialExpression'
 
 # Init logging.
 _log = logging.getLogger(__name__)
@@ -118,43 +117,7 @@ init_service(name = NAME, desc="Variation and Expression service", version = VER
 
 clients = {}
 
-### AWE JOB Template
-AWE_JOB_NC = """
-{
-    "info": {
-        "pipeline": "test_awe_job",
-        "name": "testawejob",
-        "project": "default",
-        "user": "default",
-        "clientgroups":"",
-         "sessionId":"xyz1234"
-    }, 
-    "tasks": [
-        {
-            "cmd": {
-                "args": "-i @data_filtered_csv -o returnobj.json", 
-                "description": "test awe job", 
-                "name": "testjob.py"
-            }, 
-            "inputs": {
-               "data_filtered_csv": {
-                    "host": "$shock_url",
-                    "node": "$expression"
-                }
-            }, 
-            "outputs": {
-                "net_edge_csv": {
-                    "host": "$shock_uri"
-                }
-            },
-            "taskid": "0",
-            "skip": 0, 
-            "totalwork": 1
-        }
-      ]
-}
-"""    
-
+    
 ##
 ##Decorators for control logic
 ##
@@ -603,7 +566,7 @@ def jnomics_calculate_variations(meth, Input_file=None,
 @method(name = "Calculate Gene Expression")
 def jnomics_calculate_expression(meth, workspace = None,paired=None,
                                  Input_file_path=None,
-                                 ref=None):
+                                 ref=None,src_id=None):
     """Calculate Expression
 
     :param workspace : name of workspace; default is current
@@ -619,6 +582,9 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     :param ref: Reference Genome (kb_id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
+    :param src_id: Source and Source Id
+    :type src_id : kbtypes.Unicode
+    :ui_name src_id : Source/Source Id
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -667,7 +633,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
         return client.workspaceUpload(cufflinks_output,ref.replace('kb|',''),
                                       desc,title,srcdate,ontoid,
                                       ontodef,ontoname,paired,
-                                      shock_id,"",auth)
+                                      shock_id,src_id.replace("/"," "),"",auth)
     @pipelineStep(None)
     def writeBamfile(client,previous_steps):
         tophatid  = idc.allocate_id_range(IDServerids.rnaseq_alignment,1)
@@ -790,7 +756,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
                                     cuffdiff_out_path,
                                     act_ref,
                                     "", condn_labels,merged_gtf,
-                                    "", auth)
+                                    "","", auth)
 
     @pipelineStep("compute")
     def savediffWorkspace_obj(client,previous_steps):
@@ -877,9 +843,8 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     
     return  to_JSON(runPipeline(stages,meth,auth))
 
-
 @method(name = "Create Expression Series ")
-def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,design=None,summary=None):
+def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,design=None,summary=None,source_Id=None,src_date=None):
     """search a file
 
     :param workspace: Worspace id
@@ -891,12 +856,21 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,design=None,s
     :param ref: Reference genome
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
+    :param title: title
+    :type title : kbtypes.Unicode
+    :ui_name title : Experiment Title
     :param design: Design of the Experiment
     :type design : kbtypes.Unicode
     :ui_name  design : Experiment Design
     :param summary : Summary of the Experiment 
     :type summary : kbtypes.Unicode
     :ui_name summary : Experiment Summary
+    :param source_Id: source_Id
+    :type source_Id : kbtypes.Unicode
+    :ui_name source_Id : Source Id 
+    :param src_date: External Source Date
+    :type src_date : kbtypes.Unicode
+    :ui_name src_date : Publication Date 
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -914,123 +888,42 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,design=None,s
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': expfile, 'type': exptype})
         return obj
     
-    source_id = ""
-    title = ""
-    ext_src_date = ""
+    #source_id = ""
+    #title = ""
+    #ext_src_date = ""
     files = exp_samples.strip('\r\n').split(",")
-    exp_sampleids = []
-    for expfile in files:
-        myobj = ws_getObject(workspace, expfile, exptype, token)
-        source_id = myobj['data']['source_id']
-        title = myobj['data']['description']
-        ext_src_date = myobj['data']['external_source_date']
-        exp_sampleids.append(source_id)
+    source_Id = source_Id + "___" + "RNA-Seq"
+    #exp_sampleids = []
+    #for expfile in files:
+    #    myobj = ws_getObject(workspace, expfile, exptype, token)
+        #source_id = myobj['data']['source_id']
+        #sample_id = myobj['data']['id']
+        #title = myobj['data']['description']
+        #ext_src_date = myobj['data']['external_source_date']
+        #exp_sampleids.append(sample_id)
 
-    genome_map = [workspace+"/"+x for x in files]
+    genome_map = [workspace+"/"+x for x in files]    
+    #return to_JSON(meth.workspace_id)
 
     ### get id from ID server
-    objid = idc.allocate_id_range("kb|series_test",1)
-
+    #register_ids("kb|series","KB",["GSE30249___RNA-Seq"])
+    id_dict = idc.register_ids(IDServerids.rnaseq_series,"KB",[source_Id])
+    objid = id_dict.values()[0]     
     meth.advance("Preparing the Series Object")
 
-    seriesobj = { 'id' : "kb|series_test." + str(objid) ,
-                  'source_id' : source_id ,
+    seriesobj = { 'id' : str(objid) ,
+                  'source_id' : source_Id ,
                   'genome_expression_sample_ids_map' : { ref : genome_map },
                   #'genome_expression_sample_ids_map' : {workspace+"/"+x+"/" for x in files 'kb|g.3907': [workspace+"/"+kb|sample_test.13397.json/1' , '863/kb|sample_test.13398.json/1'] } ,
                   'title' : title ,
                   'summary' : summary ,
                   'design' : design ,
-                  'publication_id' : source_id ,
-                  'external_source_date' : ext_src_date }
+                  #'publication_id' : source_id ,
+                  'external_source_date' : src_date }
     
     wsreturn = ws_saveobject(seriesobj['id'],seriesobj,expseriestype,meth.workspace_id,meth.token)
 
     return to_JSON(wsreturn)
-
-
-@method(name = "Check files on HDFS and throw exception")
-def Checkfiles(meth,filepath=None):
-    """search a file 
-    :param filepath: filepath
-    :type filepath : kbtypes.Unicode
-    :ui_name filepath : filepath
-    :return: Workspace id
-    :rtype: kbtypes.Unicode
-    """
-    #exp =  expressionService(OTHERURLS.expression)
-    
-    json_error = None
-    status = None
-    auth = Authentication(userFromToken(meth.token), "", meth.token)
-
-    def isFileFound(filepath, auth):
-        client = openDataClientConnection()
-        status = client.listStatus(filepath,auth)
-        if not status:
-            return to_JSON(False)
-        closeClientConnection(client)
-        return to_JSON(True)
-    
-    ret  = isFileFound(filepath,auth)
-    return to_JSON(ret)
-
-@method(name = "Check dict has key")
-def haskey(meth,filepath=None):
-    """search a file 
-    :param filepath: filepath
-    :type filepath : kbtypes.Unicode
-    :ui_name filepath : filepath
-    :return: Workspace id
-    :rtype: kbtypes.Unicode
-    """
-    
-    json_error = None
-    status = None
-    auth = Authentication(userFromToken(meth.token), "", meth.token)
-
-    #def haskey(keyname, auth):
-    #    client = openDataClientConnection()
-   #     status = client.listStatus(filepath,auth)
-   #     if not status:
-   #         return to_JSON(False)
-   #     closeClientConnection(client)
-   #     return to_JSON(True)
-    
-    #ret  = isFileFound(filepath,auth)
-    obj = {"shock_ref":{"shock_id":"1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a","shock_url":"https://kbase.us/services/shock-api//1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a"},"created":"2014-04-22 20:48:41","name":"SRX031076_1.fastq","metadata":{"source":"NCBI","paired":"yes","source_id":"SRA026096","tissue":["xylem"],"ref_genome":"Populus trichocarpa","domain":"Plants","sample_id":"SRX031076","ext_source_date":"Apr 20 2014","title":"Test sample from poplar RNAseq data","platform":"Illumina","condition":["stem,field study"],"po_id": ["PO:0009047,PO:0005352,PO:0025425"],"eo_id" : ["EO:0007256"]},"type":"fastq"}
-    ret = False
-    if "shock_ref" in obj and "shock" in obj["shock_ref"]:
-        ret = True
-    return to_JSON(ret)
-
-@method(name = "Submit a awe job")
-def submitawejob(meth,filepath=None):
-    """search a file 
-    :param filepath: filepath
-    :type filepath : kbtypes.Unicode
-    :ui_name filepath : filepath
-    :return: Workspace id
-    :rtype: kbtypes.Unicode
-    """
-    
-    json_error = None
-    status = None
-    auth = Authentication(userFromToken(meth.token), "", meth.token)
-
-    #def haskey(keyname, auth):
-    #    client = openDataClientConnection()
-   #     status = client.listStatus(filepath,auth)
-   #     if not status:
-   #         return to_JSON(False)
-   #     closeClientConnection(client)
-   #     return to_JSON(True)
-    
-    #ret  = isFileFound(filepath,auth)
-    obj = {"shock_ref":{"shock_id":"1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a","shock_url":"https://kbase.us/services/shock-api//1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a"},"created":"2014-04-22 20:48:41","name":"SRX031076_1.fastq","metadata":{"source":"NCBI","paired":"yes","source_id":"SRA026096","tissue":["xylem"],"ref_genome":"Populus trichocarpa","domain":"Plants","sample_id":"SRX031076","ext_source_date":"Apr 20 2014","title":"Test sample from poplar RNAseq data","platform":"Illumina","condition":["stem,field study"],"po_id": ["PO:0009047,PO:0005352,PO:0025425"],"eo_id" : ["EO:0007256"]},"type":"fastq"}
-    ret = False
-    if "shock_ref" in obj and "shock" in obj["shock_ref"]:
-        ret = True
-    return to_JSON(ret)
 
 finalize_service()
 

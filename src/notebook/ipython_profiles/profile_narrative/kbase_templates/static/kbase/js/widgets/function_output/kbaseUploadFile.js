@@ -22,7 +22,7 @@
         render: function() {
             // creater main comtainer
             var params = this.options;
-            params.div = $('<div>');
+            params.div = document.createElement('div');
             
             // create a file upload button and hide it and store it
             var realButton = document.createElement('input');

@@ -17,11 +17,13 @@
         },
         init: function(options) {
             this._super(options);
+            this.params = {};
+            jQuery.extend(true, params, this.options, options);
             return this.render();
         },
         render: function() {
             // creater main comtainer
-            var params = this.options;
+            var params = this.params;
             params.div = document.createElement('div');
             
             // create a file upload button and hide it and store it

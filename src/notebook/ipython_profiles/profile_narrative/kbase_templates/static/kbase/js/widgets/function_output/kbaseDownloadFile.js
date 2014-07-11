@@ -49,7 +49,8 @@
                     document.body.removeChild(anchor);
                 };
                 main.append($('<button>')
-                    .text("Save "+name)
+                    .addClass('btn btn-info')
+                    .text("Save "+filename)
                     .on('click', function () {
                         downloadFn(filedata, filename);
                     })

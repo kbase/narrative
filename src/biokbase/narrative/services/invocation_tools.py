@@ -205,7 +205,7 @@ def _upload_file(meth):
     :output_widget: UploadFileWidget
     """
     meth.stages = 1
-    return json.dumps({'url': URLS.invocation, 'auth': os.environ['KB_AUTH_TOKEN']})
+    return json.dumps({'url': URLS.invocation, 'auth': {'token': os.environ['KB_AUTH_TOKEN']}})
 
 @method(name="Rename File")
 def _rename_file(meth, old, new):

@@ -46,7 +46,7 @@ function EasyTree(canvasId, treeString, nodeIdToNameMap, leafClickListener, node
     conf.box_width = 6.0;
     conf.old_nh = null;
     conf.is_real = true;
-    conf.is_circular = true;
+    conf.is_circular = false;
     conf.show_dup = true;
     conf.runtime = 0;
 

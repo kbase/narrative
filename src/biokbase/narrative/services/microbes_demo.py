@@ -21,6 +21,7 @@ from biokbase.InvocationService.Client import InvocationService
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.GenomeComparison.Client import GenomeComparison
 from biokbase.assembly.client import Client as ArastClient
+from biokbase.KBaseTrees.Client import KBaseTrees
 
 ## Globals
 
@@ -1187,20 +1188,37 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     return json.dumps({'ws_name': workspace, 'fba_model1_id': fba_model1, 'fba_model2_id': fba_model2, 'proteome_cmp': proteome_cmp})
 
 @method(name="Insert Genome into Species Tree")
-def _insert_genome_into_species_tree(meth, genome, neighbor_count):
+def _insert_genome_into_species_tree(meth, genome, neighbor_count, out_tree):
     """ Insert a Genome into a global genome tree composed of 50 conserved COGs from 1400 genomes [20]
 
     :param genome: a Genome to insert into the tree [20.1]
     :type genome: kbtypes.KBaseGenomes.Genome
     :ui_name genome: Genome ID
+    :param neighbor_count: number of closest public genomes the tree will contain. (optional, default value is 100) [20.2]
+    :type neighbor_count: kbtypes.Unicode
+    :ui_name neighbor_count: Neighbor public genome count
+    :param out_tree: Output species tree ID. If empty, an ID will be chosen randomly. [20.3]
+    :type out_tree: kbtypes.Unicode
+    :ui_name out_tree: Output species tree ID
     :return: Species Tree Result
     :rtype: kbtypes.Unicode
-    :output_widget: kbaseTreeNarrative
+    :output_widget: kbaseTree
     """
     meth.stages = 1
     token, workspace = meth.token, meth.workspace_id
-    
-    return json.dumps({'blah': 'blah'})
+    if not out_tree:
+        out_tree = "sptree_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    treeClient = KBaseTrees(url = service.URLS.treeDev, token = token)
+    construct_species_tree_params = {
+        'new_genomes': [workspace + '/' + genome], 
+        'use_ribosomal_s9_only': 0, 
+        'out_workspace': workspace, 
+        'out_tree_id': out_tree, 
+    }
+    if neighbor_count:
+        construct_species_tree_params['nearest_genome_count'] = int(neighbor_count)
+    job_id = treeClient.construct_species_tree(construct_species_tree_params)
+    return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
 
 @method(name="View Species Tree")
 def _view_species_tree(meth, tree_id):

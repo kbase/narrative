@@ -31,7 +31,7 @@
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
-            workspaceURL: "https://kbase.us/services/ws", // "http://kbase.us/services/ws",
+            workspaceURL: "http://dev04.berkeley.kbase.us:7058", // "https://kbase.us/services/ws", // "http://kbase.us/services/ws",
             wsBrowserURL: "/functional-site/#/ws/",
             landingPageURL: "/functional-site/#/",
             uploaderURL: "http://kbase.us/services/docs/uploader/uploader.html",

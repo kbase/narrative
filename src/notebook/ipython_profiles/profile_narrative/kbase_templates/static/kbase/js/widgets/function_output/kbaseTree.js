@@ -8,7 +8,7 @@
             workspaceID: null,
             kbCache: null,
             treeServiceURL: "http://140.221.85.58:8284/",
-            workspaceURL: "http://140.221.84.209:7058/",
+            workspaceURL: "http://dev04.berkeley.kbase.us:7058",
             loadingImage: "static/kbase/images/ajax-loader.gif",
             height: null,
         },
@@ -46,7 +46,7 @@
                 }
                 this.$elem.append(this.$canvas);
 
-                knhx_init(this.canvasId, null);
+                //knhx_init(this.canvasId, null);
                 this.render();
             }
 
@@ -63,24 +63,32 @@
             else
                 prom = this.wsClient.get_objects([objId]);
 
+            var self = this;
+            
             $.when(prom).done($.proxy(function(objArr) {
                 var tree = objArr[0].data;
-                var idMap = {};
-                $.each(tree.id_map, function(key, value) {
-                    idMap[key] = value[1].replace(/[\(\)]/g, '_');
+                //alert(tree.tree);
+                //kn_actions.plot(tree.tree);
+                new EasyTree(self.canvasId, tree.tree, tree.default_node_labels, function(node) {
+                	alert("Node id: " + node.id);
+                }, function(node) {
+                	if (node.id && node.id.indexOf("user") == 0)
+                		return "#0000ff";
+            		return null;
                 });
-
-                this.treeClient.replace_node_names(tree.species_tree.trim(), idMap, 
+                self.loading(true);
+                
+                /*this.treeClient.replace_node_names(tree.tree.trim(), idMap, 
                     $.proxy(function(relabeledTree) {
                         kn_actions.plot(relabeledTree);
                         this.loading(true);
                     }, this),
                     $.proxy(function(error) {
-                        kn_actions.plot(tree.species_tree);
+                        kn_actions.plot(tree.tree);
                         this.loading(true);
                         this.dbg("error while relabeling tree");
                     }, this)
-                );
+                );*/
             }, this));
             $.when(prom).fail($.proxy(function(error) { this.renderError(error); }, this));
         },

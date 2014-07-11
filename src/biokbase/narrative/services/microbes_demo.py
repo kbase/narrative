@@ -1187,7 +1187,7 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     return json.dumps({'ws_name': workspace, 'fba_model1_id': fba_model1, 'fba_model2_id': fba_model2, 'proteome_cmp': proteome_cmp})
 
 @method(name="Insert Genome into Species Tree")
-def _insert_genome_into_species_tree(meth, genome):
+def _insert_genome_into_species_tree(meth, genome, neighbor_count):
     """ Insert a Genome into a global genome tree composed of 50 conserved COGs from 1400 genomes [20]
 
     :param genome: a Genome to insert into the tree [20.1]
@@ -1199,6 +1199,7 @@ def _insert_genome_into_species_tree(meth, genome):
     """
     meth.stages = 1
     token, workspace = meth.token, meth.workspace_id
+    
     return json.dumps({'blah': 'blah'})
 
 @method(name="View Species Tree")

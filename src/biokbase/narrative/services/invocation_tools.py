@@ -120,7 +120,7 @@ def _view_cmds(meth):
 
 @method(name="View Files")
 def _view_files(meth, sortby):
-    """View your files.
+    """View your files in temp invocation file space.
     
     :param sortby: sort files by name or date, default is name
     :type sortby: kbtypes.Unicode
@@ -148,7 +148,7 @@ def _view_files(meth, sortby):
 
 @method(name="View PNG File")
 def _view_files(meth, afile):
-    """View a .png image file
+    """View a .png image file from temp invocation file space.
     
     :param afile: file to display
     :type afile: kbtypes.Unicode
@@ -170,7 +170,7 @@ def _view_files(meth, afile):
 
 @method(name="Download File")
 def _download_file(meth, afile):
-    """Download a file.
+    """Download a file from temp invocation file space.
     
     :param afile: file to download
     :type afile: kbtypes.Unicode
@@ -197,24 +197,19 @@ def _download_file(meth, afile):
     return json.dumps({'data': content, 'name': afile})
 
 @method(name="Upload File")
-def _upload_file(meth, name):
-    """Upload a file.
+def _upload_file(meth):
+    """Upload a file to temp invocation file space.
     
-    :param afile: name for uploaded file
-    :type afile: kbtypes.Unicode
-    :ui_name afile: Name
     :return: Status
     :rtype: kbtypes.Unicode
     :output_widget: UploadFileWidget
     """
     meth.stages = 1
-    if not name:
-        raise Exception("Missing a name.")
-    return json.dumps({'url': URLS.invocation, 'name': name, 'auth': os.environ['KB_AUTH_TOKEN']})
+    return json.dumps({'url': URLS.invocation, 'auth': os.environ['KB_AUTH_TOKEN']})
 
 @method(name="Rename File")
 def _rename_file(meth, old, new):
-    """Rename a file.
+    """Rename a file in temp invocation file space.
     
     :param old: old filename
     :type old: kbtypes.Unicode
@@ -234,7 +229,7 @@ def _rename_file(meth, old, new):
 
 @method(name="Delete File")
 def _delete_file(meth, afile):
-    """Delete a file.
+    """Delete a file from temp invocation file space.
     
     :param afile: file to delete
     :type afile: kbtypes.Unicode

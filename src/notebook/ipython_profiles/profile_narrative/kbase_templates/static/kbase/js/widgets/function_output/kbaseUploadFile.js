@@ -13,7 +13,6 @@
             'showProgress': true,
             'externalProgressTarget': null,
             'auth': null,
-            'name': null,
             'div': null
         },
         init: function(options) {
@@ -21,11 +20,8 @@
             return this.render();
         },
         render: function() {
-            // initialize the parameters with the defaults, then extend
-            var params = this.params = {};
-            jQuery.extend(true, params, this.options, args);
-            
             // creater main comtainer
+            var params = this.options;
             params.div = $('<div>');
             
             // create a file upload button and hide it and store it

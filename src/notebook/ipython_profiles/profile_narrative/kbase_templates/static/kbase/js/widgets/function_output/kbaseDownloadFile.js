@@ -49,7 +49,7 @@
                     document.body.removeChild(anchor);
                 };
                 main.append($('<button>')
-                    .addClass('btn btn-info')
+                    .addClass('btn btn-primary')
                     .text("Save "+filename)
                     .on('click', function () {
                         downloadFn(filedata, filename);

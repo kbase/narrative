@@ -37,8 +37,7 @@
             
             // create the visible upload button
             var fakeButton = document.createElement('button');
-            fakeButton.setAttribute('class', 'btn');
-            fakeButton.setAttribute('class', 'btn-info');
+            fakeButton.setAttribute('class', 'btn btn-primary');
             fakeButton.innerHTML = params.buttonTitle;
             fakeButton.fb = realButton;
             fakeButton.addEventListener('click', function () {

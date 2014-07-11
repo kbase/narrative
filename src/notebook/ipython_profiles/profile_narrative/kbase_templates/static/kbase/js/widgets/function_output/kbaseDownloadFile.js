@@ -49,8 +49,8 @@
                     document.body.removeChild(anchor);
                 };
                 main.append($('<button>')
-                    .addClass('btn btn-primary')
-                    .text("Save "+filename)
+                    .addClass('btn btn-link')
+                    .text(filename)
                     .on('click', function () {
                         downloadFn(filedata, filename);
                     })

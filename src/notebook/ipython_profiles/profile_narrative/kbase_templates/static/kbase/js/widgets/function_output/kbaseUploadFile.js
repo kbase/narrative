@@ -18,7 +18,7 @@
         init: function(options) {
             this._super(options);
             this.params = {};
-            jQuery.extend(true, params, this.options, options);
+            jQuery.extend(true, this.params, this.options, options);
             return this.render();
         },
         render: function() {

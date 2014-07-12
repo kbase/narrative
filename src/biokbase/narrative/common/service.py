@@ -23,19 +23,28 @@ from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes, kblogging
 
-
 # Init logging.
 _log = logging.getLogger(__name__)
 
 ## Globals
 
+nar_path = os.environ["NARRATIVEDIR"]
+config_json = open(os.path.join(nar_path, "config.json")).read()
+config = json.loads(config_json)
+url_config = config[config['config']]  #fun, right?
 
-class URLS:
-    workspace = "https://kbase.us/services/ws/"
-    invocation = "https://kbase.us/services/invocation"
-    #fba = "http://140.221.84.183:7036"
-    fba = "https://kbase.us/services/KBaseFBAModeling"
-    genomeCmp = "http://140.221.85.57:8283/jsonrpc"
+class Struct:
+    def __init__(self, **args):
+        self.__dict__.update(args)
+
+URLS = Struct(**url_config)
+
+# class URLS:
+#     workspace = "https://kbase.us/services/ws/"
+#     invocation = "https://kbase.us/services/invocation"
+#     #fba = "http://140.221.84.183:7036"
+#     fba = "https://kbase.us/services/KBaseFBAModeling"
+#     genomeCmp = "http://140.221.85.57:8283/jsonrpc"
 
 ## Exceptions
 

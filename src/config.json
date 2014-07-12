@@ -15,7 +15,8 @@
         "workspace" : "http://dev04.berkeley.kbase.us:7058",
         "ws_browser" : "http://narrative.kbase.us/functional-site/#/ws",
         "landing_pages" : "http://narrative.kbase.us/functional-site/#/",
-        "login" : "https://kbase.us/services/authorization/Sessions/Login"
+        "login" : "https://kbase.us/services/authorization/Sessions/Login",
+        "genomeCmp" : "http://140.221.85.57:8283/jsonrpc"
     },
 
     "prod": {
@@ -31,6 +32,7 @@
         "workspace" : "https://kbase.us/services/ws",
         "ws_browser" : "https://demo.kbase.us/functional-site/#/ws",
         "landing_pages" : "http://demo.kbase.us/functional-site/#/",
-        "login" : "https://kbase.us/services/authorization/Sessions/Login"
+        "login" : "https://kbase.us/services/authorization/Sessions/Login",
+        "genomeCmp" : "http://140.221.85.57:8283/jsonrpc"
     }
 }

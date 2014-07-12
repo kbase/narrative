@@ -1,15 +1,13 @@
 /**
- * Create narrative's workspace widget
- * 
+ * This is the entry point for the Narrative's front-end. It initializes
+ * the login session, fires up the data and function widgets, and creates
+ * the kbaseNarrativeWorkspace wrapper around the IPython notebook that 
+ * does fun things like manage widgets and cells and kernel events to talk to them.
  */
 "use strict";
 
 var narrative = {};
 narrative.init = function() {
-
-    /**
-     * main function.
-     */
     var token = null;
 
     $(document).on('loggedIn.kbase', function(event, token) {
@@ -36,6 +34,7 @@ narrative.init = function() {
      */
     var initEnvironment = function(token, workspaceId) {
         try {
+            // Send the token and workspace id to the kernel
             var cmd = "import os\n" +
                       "os.environ['KB_AUTH_TOKEN'] = '" + token + "'\n" +
                       "os.environ['KB_WORKSPACE_ID'] = '" + workspaceId + "'\n";
@@ -45,6 +44,8 @@ narrative.init = function() {
             functionWidget.refresh();
         }
         catch (error) {
+            // If there's a kernel error, it's probably not set up yet, or not available.
+            // Wait a second and try again.
             setTimeout(function() {
                 initEnvironment(token, workspaceId);
             }, 1000);
@@ -68,7 +69,7 @@ narrative.init = function() {
             dataWidget.setWorkspace(workspaceId);
         }
 
-        // XXX: Should be renamed.... eventually?
+        // Should be renamed.... eventually?
         var narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
             loadingImage: "/static/kbase/images/ajax-loader.gif",
             ws_id: IPython.notebook.metadata.ws_name

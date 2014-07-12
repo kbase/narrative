@@ -31,8 +31,9 @@
     <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/3.2.1/css/font-awesome.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
-    <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
+
+    <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
       require.config({
           baseUrl: '{{static_url() }}',
@@ -56,9 +57,9 @@
 <body {% block params %}{% endblock %}>
 
 <noscript>
-    <div id='noscript'>
-      The KBase Narrative requires JavaScript.<br>
-      Please enable it to proceed.
+  <div id='noscript'>
+    The KBase Narrative requires JavaScript.<br>
+    Please enable it to proceed.
   </div>
 </noscript>
 
@@ -134,6 +135,17 @@
 
 <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<script>
+  var configJSON = $.parseJSON(
+                      $.ajax({ 
+                               url: "{{ static_url('kbase/config.json') }}", 
+                               async: false, 
+                               dataType: 'json'
+                             }).responseText );
+  window.kb = { urls : configJSON[configJSON['config']] };
+</script>
+
 <!-- <script src="{{ static_url("components/bootstrap/bootstrap/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script> -->
 <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("base/js/namespace.js") }}" type="text/javascript" charset="utf-8"></script>

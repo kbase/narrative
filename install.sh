@@ -113,6 +113,7 @@ printf 'source %s/bin/activate
 export NARRATIVEDIR=%s
 export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
 
+cp $NARRATIVEDIR/config.json $IPYTHONDIR/profile_narrative/kbase_templates/static/kbase/
 ipython $* --NotebookManager.notebook_dir=~/.narrative --profile=%s
 ' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" "$profile_name" &> $installPath/$venv/bin/run_notebook.sh
 

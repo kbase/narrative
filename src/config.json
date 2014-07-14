@@ -1,5 +1,5 @@
 {
-    "config" : "dev",
+    "config" : "prod",
 
     "dev": {
         "cdmi" : "http://kbase.us/services/cdmi_api/",

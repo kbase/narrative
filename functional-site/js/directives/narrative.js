@@ -184,8 +184,23 @@ angular.module('narrative-directives')
 
                         var narratives = []
                         var nar_projs = [];
+
+			if (nars.length == 0){
+				var empty_projects = [];
+                        	for (var i in proj_ids) {
+                                //empty_projects.push(proj_ids[i])
+                                narratives.push({project: '<span class="proj-link" data-owner="'+USER_ID+'" data-proj="'+proj_ids[i]+'">\
+                                                            <span class="caret"></span> Project <b>'+parse_name(proj_ids[i])+'</b>\
+                                                           </span> - '+(proj_dict[proj_ids[i]][5] == USER_ID ? 'Me' : proj_dict[proj_ids[i]][5]),
+                                                id: '<span class="text-muted">Empty Project</span>', 
+                                                owner: proj_dict[proj_ids[i]], moddate: '', //deleteButton: '',
+                                                timestamp: '', sharedwith: (isSharedWith(proj_ids[i], USER_ID) ? 'Yes' : 'No' )   })
+	                        }
+
+                        	buildTable(narratives);         
+                        }
                         for (var i in nars) {
-                            var nar_dict = {}   
+                            var nar_dict = {};
 
                             var nar = nars[i];
                             var nar_id = nar[1];

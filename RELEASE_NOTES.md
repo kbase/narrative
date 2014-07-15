@@ -3,7 +3,7 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
-### Release 7/14/2014
+### Release 7/15/2014
 __Changes__
 - Created a service endpoint config file to toggle between dev and prod versions of various services
 - Added Jnomics functions and widgets
@@ -11,13 +11,14 @@ __Changes__
 - Added KBase-command functions and widgets
 - Authentication should work more logically with the rest of the functional site
 - Updated Narrative typespec to support workspace version 0.2.1
-- [NAR-169] We now have a verified SSL Certificate - Safari should work over HTTPS now.
+- Updated Narrative to properly access search
+- Addressed a race condition where saving a Narrative before it completely loads might wipe exiting parameter info out of input fields
+- We now have a verified SSL Certificate - Safari should work over HTTPS now.
 
 __Known Issues__
 - As in previous release
-- [NAR-182], [NAR-183], [NAR-184] R support is occasionally problematic.
-- [NAR-200], [NAR-201] Saved widget states occasionally disappear.
-- [KBASE-834] Changing Narrative name doesn't properly update Narrative object name in Workspace Browser.
+- R support is occasionally problematic.
+- Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
 
 
 ### Release 6/20/2014

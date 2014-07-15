@@ -17,7 +17,7 @@
         useSelect2: true,
         IGNORE_VERSION: true,
         pref: null,
-        wsUrl: "http://dev04.berkeley.kbase.us:7058",
+        wsUrl: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
         genomeList: null,
         	
         init: function(options) {

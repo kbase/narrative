@@ -31,7 +31,7 @@ _log = logging.getLogger(__name__)
 
 
 class URLS:
-    workspace = "http://dev04.berkeley.kbase.us:7058" #"https://kbase.us/services/ws/"
+    workspace = "https://kbase.us/services/ws/" #"http://dev04.berkeley.kbase.us:7058"
     invocation = "https://kbase.us/services/invocation"
     #fba = "http://140.221.84.183:7036"
     fba = "https://kbase.us/services/KBaseFBAModeling"

@@ -13,10 +13,11 @@ __Changes__
 - Updated Narrative typespec to support workspace version 0.2.1
 - Updated Narrative to properly access search
 - Addressed a race condition where saving a Narrative before it completely loads might wipe exiting parameter info out of input fields
+- Added directions on how to deploy the entire Narrative/Nginx provisioning stack.
 - We now have a verified SSL Certificate - Safari should work over HTTPS now.
 
 __Known Issues__
-- As in previous release
+- Unaddressed issues remain from previous release
 - R support is occasionally problematic.
 - Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
 

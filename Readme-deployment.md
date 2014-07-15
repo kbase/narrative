@@ -6,7 +6,7 @@ Bill Riehl <wjriehl@lbl.gov>
 Keith Keller <kkeller@lbl.gov>  
 (based on a document written by Steve Chan, emeritus)
 
-The narrative has 3 main components:  
+**The Narrative Interface has 3 main components:**  
 
 1.  A front end with Nginx 1.3.13+ and some supporting Lua libraries. These implement a dynamic proxy and the provisioning logic that spins up/down docker containers.
 2.  A server running Docker to host the containers

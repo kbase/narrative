@@ -1235,6 +1235,23 @@ def _view_species_tree(meth, tree_id):
     workspace = meth.workspace_id
     return json.dumps({'treeID': tree_id, 'workspaceID': workspace, 'height':'500px'})
 
+@method(name="Build Genome Set Object")
+def _build_genome_set(meth, out_genome_set):
+    """ Insert a Genome into a global genome tree composed of 50 conserved COGs from 1400 genomes [20]
+
+    :param out_genome_set: Output genome set ID. If empty, an ID will be chosen randomly. [20.3]
+    :type out_genome_set: kbtypes.Unicode
+    :ui_name out_genome_set: Output genome set ID
+    :return: Genome set Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseGenomeSetBuilder
+    """
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    if not out_genome_set:
+        out_genome_set = "genome_set_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    return json.dumps({'genomeSetName': out_genome_set, 'wsName': workspace})
+
 #
 #@method(name="Edit Data")
 #def _edit_data(meth, obj_name, type):

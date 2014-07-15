@@ -195,18 +195,27 @@
     vertical-align: middle;
 }
 
-.kb-cell-params input {
-    margin-left: 5px;
-    margin-top: 5px;
+.kb-cell-params thead>tr>th, .kb-cell-params  tbody>tr>th, .kb-cell-params  tfoot>tr>th, .kb-cell-params  thead>tr>td, .kb-cell-params  tbody>tr>td, .kb-cell-params  tfoot>tr>td {
+    padding: 2px 4px;
 }
-.kb-cell-params tr:nth-child(odd) {
+
+.kb-cell-params input {
+   /* margin-left: 5px;
+    margin-top: 5px; */
+}
+/*.kb-cell-params tr:nth-child(odd) {
     background-color: #eee;
     border-bottom: 1px solid #ddd;    
 }
 .kb-cell-params tr:nth-child(even) {
     background-color: #fff;
     border-bottom: 1px solid #ddd;    
+}*/
+
+.kb-cell-params tr:hover td, .kb-cell-params tr:hover th {
+    background:#eee;
 }
+
 /* grey out the form while running */
 .kb-cell-run.running form {
     opacity: 0.6;
@@ -269,6 +278,12 @@
   color: #31708f;
   background-color: #d9edf7;
   border-color: #bce8f1;
+  padding: 5px 10px;
+}
+
+.kb-func-panel .panel-body {
+    padding: 0px 10px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 
 .kb-func-panel > .panel-heading + .panel-collapse .panel-body {
@@ -278,3 +293,25 @@
 .kb-func-panel > .panel-footer + .panel-collapse .panel-body {
   border-bottom-color: #bce8f1;
 }
+
+.kb-func-panel .panel-footer {
+    /*background-color: #fff;
+    border-top: none; */
+    padding: 2px 15px;
+}
+
+/** output cell styling */
+.kb-cell-output .panel .panel-heading {
+    padding: 5px 10px;
+}
+
+.rendered_html .kb-cell-output ul {
+    margin: 0 0 10px 0;
+}
+
+.kb-cell-output .nav>li>a {
+    padding: 5px 10px;
+}
+
+
+

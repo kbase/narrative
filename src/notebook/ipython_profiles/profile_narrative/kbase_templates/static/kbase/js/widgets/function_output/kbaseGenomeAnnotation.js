@@ -20,6 +20,7 @@
 
         init: function(options) {
             this._super(options);
+
             this.ws_name = options.ws_name;
             this.ws_id = options.ws_id;
             if (options.job_id)

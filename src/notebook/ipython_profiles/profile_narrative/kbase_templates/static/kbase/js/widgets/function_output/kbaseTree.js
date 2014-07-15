@@ -1,3 +1,8 @@
+/**
+ * @author Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>
+ * @public
+ */
+
 (function($, undefined) {
     $.KBWidget({
         name: 'kbaseTree',
@@ -24,19 +29,14 @@
         init: function(options) {
             this._super(options);
             this.pref = this.uuid();
-//            this.options.kbCache = null;
 
             if (!this.options.treeID) {
                 this.renderError("No tree to render!");
-            }
-            else if (!this.options.workspaceID) {
+            } else if (!this.options.workspaceID) {
                 this.renderError("No workspace given!");
-            }
-            else if (!this.options.kbCache && !this.authToken()) {
+            } else if (!this.options.kbCache && !this.authToken()) {
                 this.renderError("No cache given, and not logged in!");
-            }
-
-            else {
+            } else {
                 if (!this.options.kbCache)
                     this.wsClient = new Workspace(this.options.workspaceURL, {token: this.authToken()});
 
@@ -75,17 +75,17 @@
             			var complete = data[5];
             			var wasError = data[6];
         				var tdElem = $('#'+self.pref+'job');
-        				tdElem.html(status);
-    				if (status === 'running') {
-    					tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
-                                    }
+        				if (status === 'running') {
+        					tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
+                        } else {
+            				tdElem.html(status);
+                        }
             			if (complete === 1) {
             				clearInterval(self.timer);
             				if (this.treeWsRef) {
             					// Just skip all this cause data was already showed through setState()
             				} else {
             					if (wasError === 0) {
-            						console.log("kbaseTree: job [" + self.options.jobID + "] is done");
             						self.loadTree();
             					}
             				}
@@ -108,7 +108,6 @@
         loadTree: function() {
             var prom;
             var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.treeID, this.options.treeObjVer, this.treeWsRef);
-            console.log("kbaseTree.loadTree: objId=" + objId);
             if (this.options.kbCache)
                 prom = this.options.kbCache.req('ws', 'get_objects', [objId]);
             else
@@ -130,7 +129,6 @@
             	if (!self.treeWsRef) {
             		var info = objArr[0].info;
             		self.treeWsRef = info[6] + "/" + info[0] + "/" + info[4];
-                    console.log("kbaseTree.loadTree: stored treeWsRef=" + self.treeWsRef);
             	}
                 var tree = objArr[0].data;
                 new EasyTree(self.canvasId, tree.tree, tree.default_node_labels, function(node) {
@@ -146,13 +144,11 @@
         },
 
         renderError: function(error) {
-        	console.log(error);
             errString = "Sorry, an unknown error occurred";
             if (typeof error === "string")
                 errString = error;
             else if (error.error && error.error.message)
                 errString = error.error.message;
-
             
             var $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
@@ -225,16 +221,12 @@
             var state = {
             	treeWsRef: self.treeWsRef
             };
-            console.log("kbaseTree.getState:")
-            console.log(state);
             return state;
         },
 
         loadState: function(state) {
             var self = this;
-            console.log("kbaseTree.loadState:")
-            console.log(state);
-            if (state && state.treeWsRef && ((!self.treeWsRef) || (self.treeWsRef != state.treeWsRef))) {
+            if (state && state.treeWsRef) {
                 self.treeWsRef = state.treeWsRef;
                 self.render();
             }

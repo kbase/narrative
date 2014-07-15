@@ -65,7 +65,12 @@
             			this.addParam(state[key]);
             }
             if (state.hasOwnProperty("descr")) {
-				$('#descr'+this.pref).val(state["descr"]);
+                $(this.$elem).find("[name^=descr]").filter(":input").each(function(key, field) {
+                    var $field = $(field);
+                    if ($field.is("input") && $field.attr("type") === "text") {
+                        $field.val(state["descr"]);
+                    }
+                });
             }
             this.refresh();
         },
@@ -75,7 +80,7 @@
             var elems = {};
             var state = this.getState();
         	for (var key in state)
-        		if (state.hasOwnProperty(key) && key.indexOf("param") == 0)
+        		if (state.hasOwnProperty(key) && key.indexOf("param") == 0 && state[key].length > 0)
         			elems[key] = {ref: this.options.wsName + "/" + state[key]};
 			var gset = {
 					description: state['descr'],
@@ -160,9 +165,6 @@
             } else {
             	this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
             			function(objects) {
-            				// we know from each parameter what each input type is.
-            				// we also know how many of each type there is.
-            				// so, iterate over all parameters and fulfill cases as below.
             				var objList = [];
             				/*
             				 * New sorting - by date, then alphabetically within dates.

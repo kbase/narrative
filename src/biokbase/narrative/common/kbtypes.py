@@ -682,6 +682,12 @@ class KBaseSearch(object):
         class v1_0(tls.Unicode, TypeMeta):
             """Structure for a single feature of a Genome"""
             info_text = "KBaseSearch.Feature-1.0"
+    class GenomeSet(tls.Unicode, TypeMeta):
+        """GenomeSet type"""
+        info_text = "KBaseSearch.GenomeSet"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Type spec for the "GenomeSet" object"""
+            info_text = "KBaseSearch.GenomeSet-1.0"
 
 class BAMBI(object):
     """BAMBI module"""
@@ -833,6 +839,12 @@ class GenomeComparison(object):
     class ProteomeComparison(tls.Unicode, TypeMeta):
         """ProteomeComparison type"""
         info_text = "GenomeComparison.ProteomeComparison"
+
+class KBaseTrees(object):
+    """KBaseTrees module"""
+    class Tree(tls.Unicode, TypeMeta):
+        """Tree type"""
+        info_text = "KBaseTrees.Tree"
 
 class Regenerator(object):
     """Regenerate self with AUTO section filled in.

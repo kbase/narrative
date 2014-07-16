@@ -55,8 +55,6 @@
             set_cookie();
             var tok = $("#signin-button").kbaseLogin('session','token');
 
-            console.log( "kbase/narrativeLogin: Logging in on back-end with token ",tok);
-
             // set the token in the ipython kernel using special handler
             var cmd = "biokbase.narrative.magics.set_token( '" + tok + "')";
 
@@ -72,9 +70,6 @@
         };
 
         var loginWidget = $("#signin-button").kbaseLogin({ 
-//            style: "narrative",
-//            rePrompt: false,
-
             login_callback: function(args) {
                 set_cookie();
                 // If the notebook kernel's initialized, tell it to set the token.

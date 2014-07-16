@@ -1160,7 +1160,8 @@
          * @returns this
          */
         loggedOut: function(token) {
-            this.dataTableWidget.loggedOut(token);
+            if (this.dataTableWidget)
+                this.dataTableWidget.loggedOut(token);
             this.ws_client = null, this.ws_auth = null;
         },
 

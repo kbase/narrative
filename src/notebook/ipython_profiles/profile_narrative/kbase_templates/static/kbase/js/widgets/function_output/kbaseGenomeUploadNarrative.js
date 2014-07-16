@@ -14,7 +14,7 @@ $.KBWidget({
     	type: null
     },
 
-    uploadUrl: "http://140.221.85.57:8283/uploader",
+    uploadUrl: "http://dev06.berkeley.kbase.us:8283/uploader",
     wsUrl: "https://kbase.us/services/ws",
 
     init: function(options) {

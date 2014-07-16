@@ -428,6 +428,43 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     #meth.advance("Displaying your new FBA model details")
     return json.dumps({'id': model_name, 'ws': workspaceName})
 
+@method(name="Translate Model to New Genome")
+def _translate_model_to_new_genome(meth, fba_model_id, proteome_cmp, output_id):
+    """ Functionality to assign a new genome to an imported model. 
+    A proteome comparison is done between the orginal model genome 
+    and the new desired genome. Metoblic reactions from original model 
+    get mapped to genes in the new genome'.  [19]
+     
+    :param fba_model_id: an FBA model id from first genome [19.1]
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name fba_model_id: FBA Model ID
+
+    :param proteome_cmp: Proteome comparison ID [19.3]
+    :type proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
+    :ui_name proteome_cmp: Proteome Comparison ID
+
+    :param output_id: ID to which translated model should be saved
+    :type output_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name output_id: Translated Model ID
+    
+    :return: Output Translated Model
+    :rtype: kbtypes.KBaseFBA.FBAModel
+    :output_widget: kbaseModelTabs
+    """
+    meth.stages = 1  # for reporting progress
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    fbaClient = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+    translate_params = {
+                         'protcomp' : proteome_cmp,
+                         'model' : fba_model_id,
+                         'workspace' : workspace,
+                         'output_id' : output_id
+                         }
+    modeldata = fbaClient.translate_fbamodel(translate_params)
+    
+    return json.dumps({'ws': workspace, 'id': output_id})
+
 
 @method(name="View PhenotypeSet")
 def view_phenotype(meth, phenotype_set_id):

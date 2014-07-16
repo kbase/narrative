@@ -431,9 +431,9 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
 
 @method(name="View PhenotypeSet")
 def view_phenotype(meth, phenotype_set_id):
-    """Bring up a detailed view of your metabolic model within the narrative. [7]
+    """Bring up a detailed view of your phenotypeset within the narrative. 
     
-    :param phenotype_set_id: the phenotype set to view [7.1]
+    :param phenotype_set_id: the phenotype set to view
     :type phenotype_set_id: kbtypes.KBasePhenotypes.PhenotypeSet
     :ui_name phenotype_set_id: Phenotype Set
     
@@ -453,7 +453,6 @@ def view_phenotype(meth, phenotype_set_id):
     ar_user = token.split('=')[1].split('|')[0]
     ws = workspaceService(service.URLS.workspace, token=token)
 
-
     params = [{
         'workspace' : meth.workspace_id, 'name':phenotype_set_id
     }]
@@ -463,6 +462,48 @@ def view_phenotype(meth, phenotype_set_id):
 
 
     return json.dumps({'data': data})
+
+@method(name="Import RAST Genomes")
+def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):
+    """Bring up a detailed view of your phenotypeset within the narrative. 
+    
+    :param genome_ids: list of genome ids (comma seperated)
+    :type genome_ids: kbtypes.Unicode
+    :ui_name genome_ids: RAST Genome IDs
+    
+    :param rast_username: Your RAST Username
+    :type rast_username: kbtypes.Unicode
+    :ui_name rast_username: RAST Username
+
+    :param rast_password: Your RAST Password
+    :type rast_password: kbtypes.Unicode
+    :ui_name rast_password: RAST Password
+
+    :return: Uploaded RAST Genome
+    :rtype: kbtypes.Unicode
+    :output_widget: GenomeAnnotation
+    """
+    #315750.3
+    gids = genome_ids.split(',')
+
+    meth.stages = len(gids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+
+    fba = fbaModelServices(url = service.URLS.fba, token = token)
+
+    for gid in gids:
+        meth.advance("Loading genome: "+gid);
+        fba.genome_to_workspace({'genome': gid, 
+                                 'workspace': ws, 
+                                 'sourceLogin': rast_username,
+                                 'sourcePassword': rast_password,
+                                 'source': 'rast'})
+
+
+    return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
 
 @method(name="View Metabolic Model Details")
 def _view_model_details(meth, fba_model_id):

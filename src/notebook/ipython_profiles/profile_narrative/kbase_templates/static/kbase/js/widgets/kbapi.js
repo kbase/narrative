@@ -85,6 +85,8 @@ function KBCacheClient(token) {
     var auth = {};
     auth.token = token;
 
+    console.log('configjson', typeof configJSON )
+    /*
     if (typeof configJSON != 'undefined') {
         if (configJSON.setup == 'dev') {
             fba_url = configJSON.dev.fba_url;
@@ -96,10 +98,14 @@ function KBCacheClient(token) {
             ujs_url = configJSON.prod.user_job_state_url;
         }
     } else {
-        fba_url = "http://140.221.85.73:4043/"
+        fba_url = "http://kbase.us/services/KBaseFBAModeling/"
         ws_url = "https://kbase.us/services/ws/"
         ujs_url = "http://140.221.84.180:7083"
-    }
+    }*/
+
+    fba_url = "http://kbase.us/services/KBaseFBAModeling/"
+    ws_url = "https://kbase.us/services/ws/"
+    ujs_url = "http://140.221.84.180:7083"    
 
     console.log('FBA URL is:', fba_url);
     console.log('Workspace URL is:', ws_url);

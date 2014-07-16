@@ -33,7 +33,6 @@ class kbjob_manager:
 
         return ujs
 
-
     def register_job(self, job_id):
         """This really just shares an existing job with narrativejoblistener.
         Propagates its exception if unsuccessful

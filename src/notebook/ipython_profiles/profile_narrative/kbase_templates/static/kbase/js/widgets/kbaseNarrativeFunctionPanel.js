@@ -34,8 +34,6 @@
         init: function(options) {
             this._super(options);
 
-            console.debug("kbaseNarrativeFunctionPanel.init start");
-
             // DOM structure setup here.
             // After this, just need to update the function list
 
@@ -98,7 +96,6 @@
                 this.refresh();
             }
 
-            console.debug("kbaseNarrativeFunctionPanel.init done");
             return this;
         },
         
@@ -137,7 +134,6 @@
                 }, this),
             };
 
-            console.debug("kbaseNarrativeFunctionPanel.refresh running kernel command");
             var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
         },
 

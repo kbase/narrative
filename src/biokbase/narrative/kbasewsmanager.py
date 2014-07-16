@@ -31,6 +31,7 @@ import re
 import importlib
 import biokbase.narrative.ws_util as ws_util
 from biokbase.workspaceServiceDeluxe.Client import Workspace
+import biokbase.narrative.common.service as service
 
 from unicodedata import normalize
 
@@ -73,7 +74,7 @@ class KBaseWSNotebookManager(NotebookManager):
     Notebooks are identified with workspace identifiers of the format
     {workspace_name}.{object_name}
     """
-    kbasews_uri = Unicode('https://kbase.us/services/ws/', config=True, help='Workspace service endpoint URI')
+    kbasews_uri = Unicode(service.URLS.workspace, config=True, help='Workspace service endpoint URI')
 
     ipynb_type = Unicode(u'ipynb')
     allowed_formats = List([u'json'])

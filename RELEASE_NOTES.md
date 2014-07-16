@@ -15,6 +15,7 @@ __Changes__
 - Addressed a race condition where saving a Narrative before it completely loads might wipe exiting parameter info out of input fields
 - Added directions on how to deploy the entire Narrative/Nginx provisioning stack.
 - We now have a verified SSL Certificate - Safari should work over HTTPS now.
+- Did some CSS adjustment to GUI cells.
 
 __Known Issues__
 - Unaddressed issues remain from previous release

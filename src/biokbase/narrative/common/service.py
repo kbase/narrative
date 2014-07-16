@@ -22,9 +22,13 @@ import IPython.utils.traitlets as trt
 from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes, kblogging
+from biokbase.narrative.common.kbjob_manager import kbjob_manager
 
 # Init logging.
 _log = logging.getLogger(__name__)
+
+# Init job manager
+job_manager = kbjob_manager()
 
 ## Globals
 
@@ -246,25 +250,25 @@ def get_func_info(fn):
 
 _services = {}
 
-def register_job(job_id):
-    """Register a long-running job by id.
+# def register_job(job_id):
+#     """Register a long-running job by id.
 
-    This takes a job id from the User and Job Service, and registers it in
-    the Narrative interface. This registration process does two things:
-    1. Shares that job with NarrativeJobViewer account on behalf of the current user.
-    2. Sends that job id forward to the Narrative front-end to be stored in the
-    Narrative object and made visible to any querying front-end widget.
+#     This takes a job id from the User and Job Service, and registers it in
+#     the Narrative interface. This registration process does two things:
+#     1. Shares that job with NarrativeJobViewer account on behalf of the current user.
+#     2. Sends that job id forward to the Narrative front-end to be stored in the
+#     Narrative object and made visible to any querying front-end widget.
 
-    :param str job_id: Unique identifier for the long-running job.
-    """
-    pass
+#     :param str job_id: Unique identifier for the long-running job.
+#     """
+#     pass
 
-def poll_job(job_id):
-    """Fetch a job from the User and Job Service.
+# def poll_job(job_id):
+#     """Fetch a job from the User and Job Service.
 
-    :param str job_id: Unique identifier for the job.
-    """
-    pass
+#     :param str job_id: Unique identifier for the job.
+#     """
+#     pass
 
 def register_service(svc, name=None):
     """Register a service.
@@ -485,6 +489,14 @@ class LifecycleSubject(object):
         """
         self._event('debug', msg)
 
+    def register_job(self, job_id):
+        """Register a new long-running job.
+        """
+        if job_id is not None:
+            self._event('debug', job_id)
+            job_manager.register_job(job_id)
+            self._event('register_job', job_id)
+
     # get/set 'stage' property
     
     @property
@@ -545,6 +557,10 @@ class LifecycleObserver(object):
 
     def debug(self, msg):
         """Debugging message"""
+        pass
+
+    def register_job(self, job_id):
+        """Register a long-running job"""
         pass
 
 
@@ -652,6 +668,9 @@ class LifecyclePrinter(LifecycleObserver):
     def debug(self, msg):
         self._write('G' + msg)
 
+    def register_job(self, job_id):
+        self._write('J' + job_id)
+
 
 class LifecycleLogger(LifecycleObserver):
     """Log lifecycle messages in a simple but structured format,
@@ -696,6 +715,9 @@ class LifecycleLogger(LifecycleObserver):
     def debug(self, msg):
         if self._is_debug:
             self._write(logging.DEBUG, "dbg", "msg={}".format(msg))
+
+    def register_job(self, job_id):
+        self._write(logging.INFO, "start job", "id={}".format(job_id))
 
 
 class ServiceMethod(trt.HasTraits, LifecycleSubject):

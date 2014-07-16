@@ -801,7 +801,7 @@
                         }
                         else {
                             // look for @@S, @@P, @@D, @@G, or @@E
-                            var matches = line.match(/^@@([SPDGE])(.*)/);
+                            var matches = line.match(/^@@([SPDGEJ])(.*)/);
                             if (matches) { // if we got one
                                 switch(matches[1]) {
                                     case 'S':
@@ -834,6 +834,11 @@
                                     case 'G':
                                         var debug = matches[2];
                                         self.dbg("[KERNEL] " + debug);
+                                        break;
+
+                                    case 'J':
+                                        var jobId = matches[2];
+                                        self.dbg("[JOB ID] " + jobId);
                                         break;
 
                                     default:

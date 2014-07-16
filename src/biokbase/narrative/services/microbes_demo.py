@@ -429,6 +429,41 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     return json.dumps({'id': model_name, 'ws': workspaceName})
 
 
+@method(name="View PhenotypeSet")
+def view_phenotype(meth, phenotype_set_id):
+    """Bring up a detailed view of your metabolic model within the narrative. [7]
+    
+    :param phenotype_set_id: the phenotype set to view [7.1]
+    :type phenotype_set_id: kbtypes.KBasePhenotypes.PhenotypeSet
+    :ui_name phenotype_set_id: Phenotype Set
+    
+    :return: Phenotype Set Data
+    :rtype: kbtypes.KBasePhenotypes.PhenotypeSet
+    :output_widget: kbasePhenotypeSet
+    """
+    meth.stages = 2  # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    meth.advance("Loading the phenotype set")
+    
+    ws = os.environ['KB_WORKSPACE_ID']
+    token = os.environ['KB_AUTH_TOKEN']
+    ar_user = token.split('=')[1].split('|')[0]
+    ws = workspaceService(service.URLS.workspace, token=token)
+
+
+    params = [{
+        'workspace' : meth.workspace_id, 'name':phenotype_set_id
+    }]
+
+    data = ws.get_objects(params )
+    #print meth.debug(json.dumps(data))
+
+
+    return json.dumps({'data': data})
+
 @method(name="View Metabolic Model Details")
 def _view_model_details(meth, fba_model_id):
     """Bring up a detailed view of your metabolic model within the narrative. [7]

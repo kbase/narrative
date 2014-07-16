@@ -246,6 +246,25 @@ def get_func_info(fn):
 
 _services = {}
 
+def register_job(job_id):
+    """Register a long-running job by id.
+
+    This takes a job id from the User and Job Service, and registers it in
+    the Narrative interface. This registration process does two things:
+    1. Shares that job with NarrativeJobViewer account on behalf of the current user.
+    2. Sends that job id forward to the Narrative front-end to be stored in the
+    Narrative object and made visible to any querying front-end widget.
+
+    :param str job_id: Unique identifier for the long-running job.
+    """
+    pass
+
+def poll_job(job_id):
+    """Fetch a job from the User and Job Service.
+
+    :param str job_id: Unique identifier for the job.
+    """
+    pass
 
 def register_service(svc, name=None):
     """Register a service.

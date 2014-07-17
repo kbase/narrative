@@ -297,20 +297,26 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def write_notebook_object(self, nb, notebook_id=None):
         """Save an existing notebook object by notebook_id."""
+
         self.log.debug("writing notebook %s." % notebook_id)
+
         wsclient = self.wsclient()
         user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
+
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine user_id from session')
         try:
             new_name = normalize('NFC', nb.metadata.name)
         except AttributeError:
             raise web.HTTPError(400, u'Missing notebook name')
-        new_name = self._clean_id( new_name)
+
+        new_name = self._clean_id(new_name)
+
         # Verify that our own home workspace exists, note that we aren't doing this
         # as a general thing for other workspaces
         wsclient = self.wsclient()
-        (homews,homews_id) = ws_util.check_homews( wsclient, user_id)
+        (homews,homews_id) = ws_util.check_homews(wsclient, user_id)
+
         # Carry over some of the metadata stuff from ShockNBManager
         try:
             if not hasattr(nb.metadata, 'ws_name'):
@@ -323,9 +329,16 @@ class KBaseWSNotebookManager(NotebookManager):
                 nb.metadata.description = ''
             nb.metadata.data_dependencies = self.extract_data_dependencies(nb)
             nb.metadata.format = self.node_format
+
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
+
         try:
+            # 'wsobj' = the ObjectSaveData type from the workspace client
+            # requires type, data (the Narrative typed object), provenance,
+            # optionally, user metadata
+            #
+            # requires ONE AND ONLY ONE of objid (existing object id, number) or name (string)
             wsobj = { 'type' : self.ws_type,
                       'data' : nb,
                       'provenance' : [],
@@ -334,25 +347,38 @@ class KBaseWSNotebookManager(NotebookManager):
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
             wsobj['meta']['data_dependencies'] = json.dumps( wsobj['meta']['data_dependencies'])
+
             # If we're given a notebook id, try to parse it for the save parameters
             if notebook_id:
                 m = self.ws_regex.match(notebook_id)
             else:
                 m = None
+
             if m:
+                # wsid, objid = ws.XXX.obj.YYY
                 wsid = m.group('wsid')
                 wsobj['objid'] = m.group('objid')
             elif nb.metadata.ws_name == homews:
                 wsid = homews_id
                 wsobj['name'] = new_name
             else:
-                wsid = ws_util.get_wsid( nb.metadata.ws_name)
+                wsid = ws_util.get_wsid(nb.metadata.ws_name)
                 wsobj['name'] = new_name
+
             self.log.debug("calling ws_util.put_wsobj")
-            res = ws_util.put_wsobj( wsclient, wsid, wsobj)
+            res = ws_util.put_wsobj(wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
+
+            # Now that we've saved the object, if its Narrative name (new_name) has changed,
+            # update that in the Workspace
+
+            if (res['name'] != new_name):
+                identity = { 'wsid' : res['wsid'], 'objid' : res['objid'] }
+                res = ws_util.rename_wsobj(wsclient, identity, new_name)
+
         except Exception as e:
             raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
+
         # use "ws.ws_id.obj.object_id" as the identifier
         id = "ws.%s.obj.%s" % ( res['wsid'], res['objid'])
         self.mapping[id] = "%s/%s" % (res['workspace'],new_name)

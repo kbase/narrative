@@ -140,6 +140,18 @@ def delete_wsobj(wsclient, wsid, objid):
 #                  boolean hidden;
 # } ObjectSaveData;
 
+def rename_wsobj( wsclient, identity, new_name):
+    """
+    Given an object's identity, change that object's name.
+    """
+    try:
+        obj_info = wsclient.rename_object({ 'obj' : identity,
+                                            'new_name' : new_name })
+    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
+        raise e
+
+    return dict(zip(list_objects_fields, obj_info))
+
 def put_wsobj( wsclient, ws_id, obj):
     try:
         ws_meta = wsclient.save_objects( { 'id' : ws_id,

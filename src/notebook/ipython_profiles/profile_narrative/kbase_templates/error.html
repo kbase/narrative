@@ -1,0 +1,25 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+    {{ super() }}
+    <style>
+        body {
+            overflow-y: scroll;
+        }
+        #site {
+            display: block;
+            padding: 0 50px;
+            overflow-y: scroll;
+        }
+    </style>
+{% endblock %}
+
+{% block site %}
+        <h1>Sorry! An error occurred while loading your Narrative.</h1>
+        <h2>Error</h2>
+        <p>{{ error_status }}</p>
+        <h2>Traceback</h2>
+        <p>{{ traceback }}</p>
+        <h2>Request Info</h2>
+        <p>{{ request_info }}</p>
+{% endblock %}

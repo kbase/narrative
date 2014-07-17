@@ -64,7 +64,7 @@ function EasyTree(canvasId, treeString, nodeIdToNameMap, leafClickListener, node
         ctx.fillStyle = "rgb(180, 245, 220)";
         var w = ctx.measureText(kn_g_conf.font, kn_g_conf.fontsize, text);
         var x = kn_g_conf.width - 80;
-        var y = 20;
+        var y = 1;
         var h = kn_g_conf.fontsize * 1.5 + 1;
         ctx.fillRect(x, y, w, h);
         ctx.drawText(kn_g_conf.font, kn_g_conf.fontsize, x, y + kn_g_conf.fontsize * .8 + kn_g_conf.fontsize / 3, text);

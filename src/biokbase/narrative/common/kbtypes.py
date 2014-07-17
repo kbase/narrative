@@ -284,6 +284,240 @@ class CommunitiesDataHandle(tls.Unicode, TypeMeta):
 
 #@AUTO_BEGIN
 
+class MEME(object):
+    """MEME module"""
+    class MemePSPMCollection(tls.Unicode, TypeMeta):
+        """MemePSPMCollection type"""
+        info_text = "MEME.MemePSPMCollection"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Represents collection of MemePSPMs"""
+            info_text = "MEME.MemePSPMCollection-1.0"
+    class MemePSPM(tls.Unicode, TypeMeta):
+        """MemePSPM type"""
+        info_text = "MEME.MemePSPM"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Represents a position-specific probability matrix fot MEME motif"""
+            info_text = "MEME.MemePSPM-1.0"
+    class MastRunResult(tls.Unicode, TypeMeta):
+        """MastRunResult type"""
+        info_text = "MEME.MastRunResult"
+        class v1_1(tls.Unicode, TypeMeta):
+            """Represents result of a single MAST run"""
+            info_text = "MEME.MastRunResult-1.1"
+    class MemeSite(tls.Unicode, TypeMeta):
+        """MemeSite type"""
+        info_text = "MEME.MemeSite"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Represents a particular site from MEME motif description"""
+            info_text = "MEME.MemeSite-1.0"
+    class MastHit(tls.Unicode, TypeMeta):
+        """MastHit type"""
+        info_text = "MEME.MastHit"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Represents a particluar MAST hit"""
+            info_text = "MEME.MastHit-1.0"
+    class TomtomRunResult(tls.Unicode, TypeMeta):
+        """TomtomRunResult type"""
+        info_text = "MEME.TomtomRunResult"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Represents result of a single TOMTOM run"""
+            info_text = "MEME.TomtomRunResult-1.0"
+    class MemeRunResult(tls.Unicode, TypeMeta):
+        """MemeRunResult type"""
+        info_text = "MEME.MemeRunResult"
+        class v1_1(tls.Unicode, TypeMeta):
+            """Represents results of a single MEME run"""
+            info_text = "MEME.MemeRunResult-1.1"
+
+class Cmonkey(object):
+    """Cmonkey module"""
+    class CmonkeyRunResult(tls.Unicode, TypeMeta):
+        """CmonkeyRunResult type"""
+        info_text = "Cmonkey.CmonkeyRunResult"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Represents data from a single run of cMonkey"""
+            info_text = "Cmonkey.CmonkeyRunResult-1.0"
+
+class KBaseExpression(object):
+    """KBaseExpression module"""
+    class ExpressionPlatform(tls.Unicode, TypeMeta):
+        """ExpressionPlatform type"""
+        info_text = "KBaseExpression.ExpressionPlatform"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Data structure for the workspace expression platform.  The ExpressionPlatform typed object."""
+            info_text = "KBaseExpression.ExpressionPlatform-1.0"
+    class RNASeqDifferentialExpression(tls.Unicode, TypeMeta):
+        """RNASeqDifferentialExpression type"""
+        info_text = "KBaseExpression.RNASeqDifferentialExpression"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Object for the RNASeq Differential Expression"""
+            info_text = "KBaseExpression.RNASeqDifferentialExpression-1.0"
+    class ExpressionSeries(tls.Unicode, TypeMeta):
+        """ExpressionSeries type"""
+        info_text = "KBaseExpression.ExpressionSeries"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Data structure for the workspace expression series.  The ExpressionSeries typed object."""
+            info_text = "KBaseExpression.ExpressionSeries-1.0"
+    class RNASeqSample(tls.Unicode, TypeMeta):
+        """RNASeqSample type"""
+        info_text = "KBaseExpression.RNASeqSample"
+        class v1_0(tls.Unicode, TypeMeta):
+            """RNASeq fastq  object"""
+            info_text = "KBaseExpression.RNASeqSample-1.0"
+    class ExpressionSample(tls.Unicode, TypeMeta):
+        """ExpressionSample type"""
+        info_text = "KBaseExpression.ExpressionSample"
+        class v1_2(tls.Unicode, TypeMeta):
+            """Data structure for the workspace expression sample.  The Expression Sample typed object."""
+            info_text = "KBaseExpression.ExpressionSample-1.2"
+    class RNASeqSampleAlignment(tls.Unicode, TypeMeta):
+        """RNASeqSampleAlignment type"""
+        info_text = "KBaseExpression.RNASeqSampleAlignment"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Object for the RNASeq Alignment bam file"""
+            info_text = "KBaseExpression.RNASeqSampleAlignment-1.0"
+    class ExpressionReplicateGroup(tls.Unicode, TypeMeta):
+        """ExpressionReplicateGroup type"""
+        info_text = "KBaseExpression.ExpressionReplicateGroup"
+        class v1_1(tls.Unicode, TypeMeta):
+            """Simple Grouping of Samples that belong to the same replicate group.  ExpressionReplicateGroup typed object."""
+            info_text = "KBaseExpression.ExpressionReplicateGroup-1.1"
+
+class KBaseGenomes(object):
+    """KBaseGenomes module"""
+    class ProbabilisticAnnotation(tls.Unicode, TypeMeta):
+        """ProbabilisticAnnotation type"""
+        info_text = "KBaseGenomes.ProbabilisticAnnotation"
+        class v2_0(tls.Unicode, TypeMeta):
+            """Object to carry alternative functions and probabilities for genes in a genome"""
+            info_text = "KBaseGenomes.ProbabilisticAnnotation-2.0"
+    class Pangenome(tls.Unicode, TypeMeta):
+        """Pangenome type"""
+        info_text = "KBaseGenomes.Pangenome"
+        class v3_0(tls.Unicode, TypeMeta):
+            """Pangenome object: this object holds all data regarding a pangenome"""
+            info_text = "KBaseGenomes.Pangenome-3.0"
+    class Feature(tls.Unicode, TypeMeta):
+        """Feature type"""
+        info_text = "KBaseGenomes.Feature"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Structure for a single feature of a genome"""
+            info_text = "KBaseGenomes.Feature-1.0"
+    class MetagenomeAnnotation(tls.Unicode, TypeMeta):
+        """MetagenomeAnnotation type"""
+        info_text = "KBaseGenomes.MetagenomeAnnotation"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Structure for the "MetagenomeAnnotation" object"""
+            info_text = "KBaseGenomes.MetagenomeAnnotation-1.0"
+    class Genome(tls.Unicode, TypeMeta):
+        """Genome type"""
+        info_text = "KBaseGenomes.Genome"
+        class v6_0(tls.Unicode, TypeMeta):
+            """Genome object holds much of the data relevant for a genome in KBase"""
+            info_text = "KBaseGenomes.Genome-6.0"
+    class GenomeDomainData(tls.Unicode, TypeMeta):
+        """GenomeDomainData type"""
+        info_text = "KBaseGenomes.GenomeDomainData"
+        class v3_0(tls.Unicode, TypeMeta):
+            """GenomeDomainData object: this object holds all data regarding protein domains in a genome in KBase"""
+            info_text = "KBaseGenomes.GenomeDomainData-3.0"
+    class ContigSet(tls.Unicode, TypeMeta):
+        """ContigSet type"""
+        info_text = "KBaseGenomes.ContigSet"
+        class v2_0(tls.Unicode, TypeMeta):
+            """Type spec for the "ContigSet" object"""
+            info_text = "KBaseGenomes.ContigSet-2.0"
+
+class KBaseTrees(object):
+    """KBaseTrees module"""
+    class MSASet(tls.Unicode, TypeMeta):
+        """MSASet type"""
+        info_text = "KBaseTrees.MSASet"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Type for collection of MSA objects."""
+            info_text = "KBaseTrees.MSASet-1.0"
+    class Tree(tls.Unicode, TypeMeta):
+        """Tree type"""
+        info_text = "KBaseTrees.Tree"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Data type for phylogenetic trees."""
+            info_text = "KBaseTrees.Tree-1.0"
+    class MSA(tls.Unicode, TypeMeta):
+        """MSA type"""
+        info_text = "KBaseTrees.MSA"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Type for multiple sequence alignment."""
+            info_text = "KBaseTrees.MSA-1.0"
+
+class KBasePhenotypes(object):
+    """KBasePhenotypes module"""
+    class PhenotypeSet(tls.Unicode, TypeMeta):
+        """PhenotypeSet type"""
+        info_text = "KBasePhenotypes.PhenotypeSet"
+        class v2_2(tls.Unicode, TypeMeta):
+            """PhenotypeSet object contains a set of phenotype objects"""
+            info_text = "KBasePhenotypes.PhenotypeSet-2.2"
+    class PhenotypeSimulationSet(tls.Unicode, TypeMeta):
+        """PhenotypeSimulationSet type"""
+        info_text = "KBasePhenotypes.PhenotypeSimulationSet"
+        class v1_1(tls.Unicode, TypeMeta):
+            """PhenotypeSimulationSet object holds data on simulations of many phenotypes"""
+            info_text = "KBasePhenotypes.PhenotypeSimulationSet-1.1"
+
+class Empty(object):
+    """Empty module"""
+    class AType(tls.Unicode, TypeMeta):
+        """AType type"""
+        info_text = "Empty.AType"
+        class v0_1(tls.Unicode, TypeMeta):
+            """@optional foo"""
+            info_text = "Empty.AType-0.1"
+
+class KBaseCommunities(object):
+    """KBaseCommunities module"""
+    class Metagenome(tls.Unicode, TypeMeta):
+        """Metagenome type"""
+        info_text = "KBaseCommunities.Metagenome"
+        class v1_0(tls.Unicode, TypeMeta):
+            """metagenome_id, metagenome_name,project,sample,sequence_type are required, everything else optional"""
+            info_text = "KBaseCommunities.Metagenome-1.0"
+
+class KBasePPI(object):
+    """KBasePPI module"""
+    class InteractionDataset(tls.Unicode, TypeMeta):
+        """InteractionDataset type"""
+        info_text = "KBasePPI.InteractionDataset"
+        class v1_0(tls.Unicode, TypeMeta):
+            """This is a denormalized version of an entire PPI dataset,"""
+            info_text = "KBasePPI.InteractionDataset-1.0"
+    class Interaction(tls.Unicode, TypeMeta):
+        """Interaction type"""
+        info_text = "KBasePPI.Interaction"
+        class v1_0(tls.Unicode, TypeMeta):
+            """searchable kb_id;"""
+            info_text = "KBasePPI.Interaction-1.0"
+
+class KBaseOntology(object):
+    """KBaseOntology module"""
+    class gene_enrichment_annotations(tls.Unicode, TypeMeta):
+        """gene_enrichment_annotations type"""
+        info_text = "KBaseOntology.gene_enrichment_annotations"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Structure for GeneAnnotations"""
+            info_text = "KBaseOntology.gene_enrichment_annotations-1.0"
+    class Ontology(tls.Unicode, TypeMeta):
+        """Ontology type"""
+        info_text = "KBaseOntology.Ontology"
+        class v2_0(tls.Unicode, TypeMeta):
+            """Structure for Ontology object"""
+            info_text = "KBaseOntology.Ontology-2.0"
+    class Mapping(tls.Unicode, TypeMeta):
+        """Mapping type"""
+        info_text = "KBaseOntology.Mapping"
+        class v2_0(tls.Unicode, TypeMeta):
+            """Mapping object holds data on subsystems and complexes"""
+            info_text = "KBaseOntology.Mapping-2.0"
+
 class Communities(object):
     """Communities module"""
     class Profile(tls.Unicode, TypeMeta):
@@ -347,183 +581,6 @@ class Communities(object):
             """Data object"""
             info_text = "Communities.Data-1.0"
 
-class MEME(object):
-    """MEME module"""
-    class MemePSPMCollection(tls.Unicode, TypeMeta):
-        """MemePSPMCollection type"""
-        info_text = "MEME.MemePSPMCollection"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Represents collection of MemePSPMs"""
-            info_text = "MEME.MemePSPMCollection-1.0"
-    class MemePSPM(tls.Unicode, TypeMeta):
-        """MemePSPM type"""
-        info_text = "MEME.MemePSPM"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Represents a position-specific probability matrix fot MEME motif"""
-            info_text = "MEME.MemePSPM-1.0"
-    class MastRunResult(tls.Unicode, TypeMeta):
-        """MastRunResult type"""
-        info_text = "MEME.MastRunResult"
-        class v1_1(tls.Unicode, TypeMeta):
-            """Represents result of a single MAST run"""
-            info_text = "MEME.MastRunResult-1.1"
-    class MemeSite(tls.Unicode, TypeMeta):
-        """MemeSite type"""
-        info_text = "MEME.MemeSite"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Represents a particular site from MEME motif description"""
-            info_text = "MEME.MemeSite-1.0"
-    class MastHit(tls.Unicode, TypeMeta):
-        """MastHit type"""
-        info_text = "MEME.MastHit"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Represents a particluar MAST hit"""
-            info_text = "MEME.MastHit-1.0"
-    class TomtomRunResult(tls.Unicode, TypeMeta):
-        """TomtomRunResult type"""
-        info_text = "MEME.TomtomRunResult"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Represents result of a single TOMTOM run"""
-            info_text = "MEME.TomtomRunResult-1.0"
-    class MemeRunResult(tls.Unicode, TypeMeta):
-        """MemeRunResult type"""
-        info_text = "MEME.MemeRunResult"
-        class v1_1(tls.Unicode, TypeMeta):
-            """Represents results of a single MEME run"""
-            info_text = "MEME.MemeRunResult-1.1"
-
-class Cmonkey(object):
-    """Cmonkey module"""
-    class CmonkeyRunResult(tls.Unicode, TypeMeta):
-        """CmonkeyRunResult type"""
-        info_text = "Cmonkey.CmonkeyRunResult"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Represents data from a single run of cMonkey"""
-            info_text = "Cmonkey.CmonkeyRunResult-1.0"
-
-class KBaseExpression(object):
-    """KBaseExpression module"""
-    class ExpressionSample(tls.Unicode, TypeMeta):
-        """ExpressionSample type"""
-        info_text = "KBaseExpression.ExpressionSample"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Data structure for the workspace expression sample.  The Expression Sample typed object."""
-            info_text = "KBaseExpression.ExpressionSample-1.0"
-    class ExpressionSeries(tls.Unicode, TypeMeta):
-        """ExpressionSeries type"""
-        info_text = "KBaseExpression.ExpressionSeries"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Data structure for the workspace expression series.  The ExpressionSeries typed object."""
-            info_text = "KBaseExpression.ExpressionSeries-1.0"
-    class ExpressionReplicateGroup(tls.Unicode, TypeMeta):
-        """ExpressionReplicateGroup type"""
-        info_text = "KBaseExpression.ExpressionReplicateGroup"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Simple Grouping of Samples that belong to the same replicate group.  ExpressionReplicateGroup typed object."""
-            info_text = "KBaseExpression.ExpressionReplicateGroup-1.0"
-    class ExpressionPlatform(tls.Unicode, TypeMeta):
-        """ExpressionPlatform type"""
-        info_text = "KBaseExpression.ExpressionPlatform"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Data structure for the workspace expression platform.  The ExpressionPlatform typed object."""
-            info_text = "KBaseExpression.ExpressionPlatform-1.0"
-
-class KBaseGenomes(object):
-    """KBaseGenomes module"""
-    class ProbabilisticAnnotation(tls.Unicode, TypeMeta):
-        """ProbabilisticAnnotation type"""
-        info_text = "KBaseGenomes.ProbabilisticAnnotation"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Object to carry alternative functions and probabilities for genes in a genome"""
-            info_text = "KBaseGenomes.ProbabilisticAnnotation-1.0"
-    class ContigSet(tls.Unicode, TypeMeta):
-        """ContigSet type"""
-        info_text = "KBaseGenomes.ContigSet"
-        class v1_1(tls.Unicode, TypeMeta):
-            """Type spec for the "ContigSet" object"""
-            info_text = "KBaseGenomes.ContigSet-1.1"
-    class Genome(tls.Unicode, TypeMeta):
-        """Genome type"""
-        info_text = "KBaseGenomes.Genome"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Genome object holds much of the data relevant for a genome in KBase"""
-            info_text = "KBaseGenomes.Genome-1.0"
-    class MetagenomeAnnotation(tls.Unicode, TypeMeta):
-        """MetagenomeAnnotation type"""
-        info_text = "KBaseGenomes.MetagenomeAnnotation"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Structure for the "MetagenomeAnnotation" object"""
-            info_text = "KBaseGenomes.MetagenomeAnnotation-1.0"
-
-class KBasePhenotypes(object):
-    """KBasePhenotypes module"""
-    class PhenotypeSet(tls.Unicode, TypeMeta):
-        """PhenotypeSet type"""
-        info_text = "KBasePhenotypes.PhenotypeSet"
-        class v2_0(tls.Unicode, TypeMeta):
-            """PhenotypeSet object contains a set of phenotype objects"""
-            info_text = "KBasePhenotypes.PhenotypeSet-2.0"
-    class PhenotypeSimulationSet(tls.Unicode, TypeMeta):
-        """PhenotypeSimulationSet type"""
-        info_text = "KBasePhenotypes.PhenotypeSimulationSet"
-        class v1_0(tls.Unicode, TypeMeta):
-            """PhenotypeSimulationSet object holds data on simulations of many phenotypes"""
-            info_text = "KBasePhenotypes.PhenotypeSimulationSet-1.0"
-
-class Empty(object):
-    """Empty module"""
-    class AType(tls.Unicode, TypeMeta):
-        """AType type"""
-        info_text = "Empty.AType"
-        class v0_1(tls.Unicode, TypeMeta):
-            """@optional foo"""
-            info_text = "Empty.AType-0.1"
-
-class KBaseCommunities(object):
-    """KBaseCommunities module"""
-    class Metagenome(tls.Unicode, TypeMeta):
-        """Metagenome type"""
-        info_text = "KBaseCommunities.Metagenome"
-        class v1_0(tls.Unicode, TypeMeta):
-            """metagenome_id, metagenome_name,project,sample,sequence_type are required, everything else optional"""
-            info_text = "KBaseCommunities.Metagenome-1.0"
-
-class KBasePPI(object):
-    """KBasePPI module"""
-    class InteractionDataset(tls.Unicode, TypeMeta):
-        """InteractionDataset type"""
-        info_text = "KBasePPI.InteractionDataset"
-        class v1_0(tls.Unicode, TypeMeta):
-            """This is a denormalized version of an entire PPI dataset,"""
-            info_text = "KBasePPI.InteractionDataset-1.0"
-    class Interaction(tls.Unicode, TypeMeta):
-        """Interaction type"""
-        info_text = "KBasePPI.Interaction"
-        class v1_0(tls.Unicode, TypeMeta):
-            """searchable kb_id;"""
-            info_text = "KBasePPI.Interaction-1.0"
-
-class KBaseOntology(object):
-    """KBaseOntology module"""
-    class Ontology(tls.Unicode, TypeMeta):
-        """Ontology type"""
-        info_text = "KBaseOntology.Ontology"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Structure for Ontology object"""
-            info_text = "KBaseOntology.Ontology-1.0"
-    class GeneAnnotations(tls.Unicode, TypeMeta):
-        """GeneAnnotations type"""
-        info_text = "KBaseOntology.GeneAnnotations"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Structure for GeneAnnotations"""
-            info_text = "KBaseOntology.GeneAnnotations-1.0"
-    class Mapping(tls.Unicode, TypeMeta):
-        """Mapping type"""
-        info_text = "KBaseOntology.Mapping"
-        class v2_0(tls.Unicode, TypeMeta):
-            """Mapping object holds data on subsystems and complexes"""
-            info_text = "KBaseOntology.Mapping-2.0"
-
 class KBaseNetworks(object):
     """KBaseNetworks module"""
     class Network(tls.Unicode, TypeMeta):
@@ -541,30 +598,42 @@ class KBaseNetworks(object):
 
 class KBaseFBA(object):
     """KBaseFBA module"""
+    class PromConstraint(tls.Unicode, TypeMeta):
+        """PromConstraint type"""
+        info_text = "KBaseFBA.PromConstraint"
+        class v2_1(tls.Unicode, TypeMeta):
+            """An object that encapsulates the information necessary to apply PROM-based constraints to an FBA model. This"""
+            info_text = "KBaseFBA.PromConstraint-2.1"
     class Gapfilling(tls.Unicode, TypeMeta):
         """Gapfilling type"""
         info_text = "KBaseFBA.Gapfilling"
-        class v2_0(tls.Unicode, TypeMeta):
+        class v4_0(tls.Unicode, TypeMeta):
             """GapFilling object holds data on the formulations and solutions of a gapfilling analysis"""
-            info_text = "KBaseFBA.Gapfilling-2.0"
+            info_text = "KBaseFBA.Gapfilling-4.0"
+    class ETC(tls.Unicode, TypeMeta):
+        """ETC type"""
+        info_text = "KBaseFBA.ETC"
+        class v6_0(tls.Unicode, TypeMeta):
+            """ElectronTransportChains (ETC) object"""
+            info_text = "KBaseFBA.ETC-6.0"
     class FBA(tls.Unicode, TypeMeta):
         """FBA type"""
         info_text = "KBaseFBA.FBA"
-        class v2_0(tls.Unicode, TypeMeta):
+        class v7_0(tls.Unicode, TypeMeta):
             """FBA object holds the formulation and results of a flux balance analysis study"""
-            info_text = "KBaseFBA.FBA-2.0"
+            info_text = "KBaseFBA.FBA-7.0"
     class ReactionSensitivityAnalysis(tls.Unicode, TypeMeta):
         """ReactionSensitivityAnalysis type"""
         info_text = "KBaseFBA.ReactionSensitivityAnalysis"
-        class v1_0(tls.Unicode, TypeMeta):
+        class v3_0(tls.Unicode, TypeMeta):
             """Object for holding reaction knockout sensitivity results"""
-            info_text = "KBaseFBA.ReactionSensitivityAnalysis-1.0"
+            info_text = "KBaseFBA.ReactionSensitivityAnalysis-3.0"
     class FBAModel(tls.Unicode, TypeMeta):
         """FBAModel type"""
         info_text = "KBaseFBA.FBAModel"
-        class v2_0(tls.Unicode, TypeMeta):
+        class v4_1(tls.Unicode, TypeMeta):
             """FBAModel object"""
-            info_text = "KBaseFBA.FBAModel-2.0"
+            info_text = "KBaseFBA.FBAModel-4.1"
     class Gapgeneration(tls.Unicode, TypeMeta):
         """Gapgeneration type"""
         info_text = "KBaseFBA.Gapgeneration"
@@ -574,9 +643,9 @@ class KBaseFBA(object):
     class ModelTemplate(tls.Unicode, TypeMeta):
         """ModelTemplate type"""
         info_text = "KBaseFBA.ModelTemplate"
-        class v2_0(tls.Unicode, TypeMeta):
+        class v2_1(tls.Unicode, TypeMeta):
             """ModelTemplate object holds data on how a model is constructed from an annotation"""
-            info_text = "KBaseFBA.ModelTemplate-2.0"
+            info_text = "KBaseFBA.ModelTemplate-2.1"
 
 class Inferelator(object):
     """Inferelator module"""
@@ -613,9 +682,9 @@ class KBaseRegulation(object):
     class Regulome(tls.Unicode, TypeMeta):
         """Regulome type"""
         info_text = "KBaseRegulation.Regulome"
-        class v1_0(tls.Unicode, TypeMeta):
+        class v2_0(tls.Unicode, TypeMeta):
             """Represents regulome - collection of regulons for a given genome"""
-            info_text = "KBaseRegulation.Regulome-1.0"
+            info_text = "KBaseRegulation.Regulome-2.0"
 
 class KBaseAssembly(object):
     """KBaseAssembly module"""
@@ -652,18 +721,18 @@ class KBaseAssembly(object):
 
 class KBaseSearch(object):
     """KBaseSearch module"""
-    class FeatureSet(tls.Unicode, TypeMeta):
-        """FeatureSet type"""
-        info_text = "KBaseSearch.FeatureSet"
-        class v1_3(tls.Unicode, TypeMeta):
-            """Type spec for the "FeatureSet" object"""
-            info_text = "KBaseSearch.FeatureSet-1.3"
-    class Contig(tls.Unicode, TypeMeta):
-        """Contig type"""
-        info_text = "KBaseSearch.Contig"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Type spec for a "Contig" subobject in the "ContigSet" object"""
-            info_text = "KBaseSearch.Contig-1.0"
+    class IndividualFeature(tls.Unicode, TypeMeta):
+        """IndividualFeature type"""
+        info_text = "KBaseSearch.IndividualFeature"
+        class v2_0(tls.Unicode, TypeMeta):
+            """Type definition for an IndividualFeature"""
+            info_text = "KBaseSearch.IndividualFeature-2.0"
+    class Feature(tls.Unicode, TypeMeta):
+        """Feature type"""
+        info_text = "KBaseSearch.Feature"
+        class v2_0(tls.Unicode, TypeMeta):
+            """Structure for a single feature of a Genome"""
+            info_text = "KBaseSearch.Feature-2.0"
     class ContigSet(tls.Unicode, TypeMeta):
         """ContigSet type"""
         info_text = "KBaseSearch.ContigSet"
@@ -676,12 +745,18 @@ class KBaseSearch(object):
         class v1_3(tls.Unicode, TypeMeta):
             """Genome object holds much of the data relevant for a genome in KBase"""
             info_text = "KBaseSearch.Genome-1.3"
-    class Feature(tls.Unicode, TypeMeta):
-        """Feature type"""
-        info_text = "KBaseSearch.Feature"
+    class FeatureSet(tls.Unicode, TypeMeta):
+        """FeatureSet type"""
+        info_text = "KBaseSearch.FeatureSet"
+        class v3_0(tls.Unicode, TypeMeta):
+            """Type spec for the "FeatureSet" object"""
+            info_text = "KBaseSearch.FeatureSet-3.0"
+    class Contig(tls.Unicode, TypeMeta):
+        """Contig type"""
+        info_text = "KBaseSearch.Contig"
         class v1_0(tls.Unicode, TypeMeta):
-            """Structure for a single feature of a Genome"""
-            info_text = "KBaseSearch.Feature-1.0"
+            """Type spec for a "Contig" subobject in the "ContigSet" object"""
+            info_text = "KBaseSearch.Contig-1.0"
 
 class BAMBI(object):
     """BAMBI module"""
@@ -703,42 +778,69 @@ class KBaseGwasData(object):
     class GwasPopulationVariation(tls.Unicode, TypeMeta):
         """GwasPopulationVariation type"""
         info_text = "KBaseGwasData.GwasPopulationVariation"
-        class v1_0(tls.Unicode, TypeMeta):
+        class v4_1(tls.Unicode, TypeMeta):
             """Details of nucleotide variation in the population"""
-            info_text = "KBaseGwasData.GwasPopulationVariation-1.0"
+            info_text = "KBaseGwasData.GwasPopulationVariation-4.1"
+    class VariantCall(tls.Unicode, TypeMeta):
+        """VariantCall type"""
+        info_text = "KBaseGwasData.VariantCall"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Variation vcf  object"""
+            info_text = "KBaseGwasData.VariantCall-1.0"
+    class VariationSample(tls.Unicode, TypeMeta):
+        """VariationSample type"""
+        info_text = "KBaseGwasData.VariationSample"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Variation fastq  object"""
+            info_text = "KBaseGwasData.VariationSample-1.0"
     class GwasPopulation(tls.Unicode, TypeMeta):
         """GwasPopulation type"""
         info_text = "KBaseGwasData.GwasPopulation"
-        class v1_0(tls.Unicode, TypeMeta):
+        class v2_0(tls.Unicode, TypeMeta):
             """GwasPopulation object stores metadata for each ecotype/germplasm in the population"""
-            info_text = "KBaseGwasData.GwasPopulation-1.0"
+            info_text = "KBaseGwasData.GwasPopulation-2.0"
     class GwasPopulationTrait(tls.Unicode, TypeMeta):
         """GwasPopulationTrait type"""
         info_text = "KBaseGwasData.GwasPopulationTrait"
-        class v1_0(tls.Unicode, TypeMeta):
+        class v4_0(tls.Unicode, TypeMeta):
             """GwasPopulationTrait object contains trait details for one trait in a population"""
-            info_text = "KBaseGwasData.GwasPopulationTrait-1.0"
+            info_text = "KBaseGwasData.GwasPopulationTrait-4.0"
+    class GwasExperimentSummary(tls.Unicode, TypeMeta):
+        """GwasExperimentSummary type"""
+        info_text = "KBaseGwasData.GwasExperimentSummary"
+        class v2_0(tls.Unicode, TypeMeta):
+            """GwasExperimentSummary object"""
+            info_text = "KBaseGwasData.GwasExperimentSummary-2.0"
     class GwasPopulationKinship(tls.Unicode, TypeMeta):
         """GwasPopulationKinship type"""
         info_text = "KBaseGwasData.GwasPopulationKinship"
-        class v1_0(tls.Unicode, TypeMeta):
+        class v2_0(tls.Unicode, TypeMeta):
             """GwasPopulationKinship has population kinship matrix"""
-            info_text = "KBaseGwasData.GwasPopulationKinship-1.0"
+            info_text = "KBaseGwasData.GwasPopulationKinship-2.0"
     class GwasTopVariations(tls.Unicode, TypeMeta):
         """GwasTopVariations type"""
         info_text = "KBaseGwasData.GwasTopVariations"
-        class v1_0(tls.Unicode, TypeMeta):
+        class v5_0(tls.Unicode, TypeMeta):
             """List of significant snps and pvalues obtained after gwas analysis"""
-            info_text = "KBaseGwasData.GwasTopVariations-1.0"
+            info_text = "KBaseGwasData.GwasTopVariations-5.0"
+
+class GenomeComparison(object):
+    """GenomeComparison module"""
+    class ProteomeComparison(tls.Unicode, TypeMeta):
+        """ProteomeComparison type"""
+        info_text = "GenomeComparison.ProteomeComparison"
+        class v2_0(tls.Unicode, TypeMeta):
+            """string genome1ws - workspace of genome1 (depricated, use genome1ref instead)"""
+            info_text = "GenomeComparison.ProteomeComparison-2.0"
 
 class KBaseBiochem(object):
     """KBaseBiochem module"""
     class Biochemistry(tls.Unicode, TypeMeta):
         """Biochemistry type"""
         info_text = "KBaseBiochem.Biochemistry"
-        class v2_0(tls.Unicode, TypeMeta):
+        class v3_1(tls.Unicode, TypeMeta):
             """Biochemistry object"""
-            info_text = "KBaseBiochem.Biochemistry-2.0"
+            info_text = "KBaseBiochem.Biochemistry-3.1"
     class Media(tls.Unicode, TypeMeta):
         """Media type"""
         info_text = "KBaseBiochem.Media"
@@ -751,72 +853,96 @@ class KBaseBiochem(object):
         class v1_0(tls.Unicode, TypeMeta):
             """BiochemistryStructures object"""
             info_text = "KBaseBiochem.BiochemistryStructures-1.0"
+    class MetabolicMap(tls.Unicode, TypeMeta):
+        """MetabolicMap type"""
+        info_text = "KBaseBiochem.MetabolicMap"
+        class v5_0(tls.Unicode, TypeMeta):
+            """MetabolicMap object"""
+            info_text = "KBaseBiochem.MetabolicMap-5.0"
 
 class KBaseNarrative(object):
     """KBaseNarrative module"""
     class Cell(tls.Unicode, TypeMeta):
         """Cell type"""
         info_text = "KBaseNarrative.Cell"
-        class v2_0(tls.Unicode, TypeMeta):
+        class v3_0(tls.Unicode, TypeMeta):
             """Cell object"""
-            info_text = "KBaseNarrative.Cell-2.0"
+            info_text = "KBaseNarrative.Cell-3.0"
     class Worksheet(tls.Unicode, TypeMeta):
         """Worksheet type"""
         info_text = "KBaseNarrative.Worksheet"
-        class v2_0(tls.Unicode, TypeMeta):
+        class v3_0(tls.Unicode, TypeMeta):
             """Worksheet object"""
-            info_text = "KBaseNarrative.Worksheet-2.0"
+            info_text = "KBaseNarrative.Worksheet-3.0"
+    class Metadata(tls.Unicode, TypeMeta):
+        """Metadata type"""
+        info_text = "KBaseNarrative.Metadata"
+        class v2_0(tls.Unicode, TypeMeta):
+            """Metadata object"""
+            info_text = "KBaseNarrative.Metadata-2.0"
     class Narrative(tls.Unicode, TypeMeta):
         """Narrative type"""
         info_text = "KBaseNarrative.Narrative"
-        class v2_0(tls.Unicode, TypeMeta):
+        class v3_0(tls.Unicode, TypeMeta):
             """Narrative object"""
-            info_text = "KBaseNarrative.Narrative-2.0"
+            info_text = "KBaseNarrative.Narrative-3.0"
 
 class MAK(object):
     """MAK module"""
+    class StringDataTableContainer(tls.Unicode, TypeMeta):
+        """StringDataTableContainer type"""
+        info_text = "MAK.StringDataTableContainer"
+        class v3_0(tls.Unicode, TypeMeta):
+            """Represents a list of data tables in a container"""
+            info_text = "MAK.StringDataTableContainer-3.0"
+    class FloatDataTable(tls.Unicode, TypeMeta):
+        """FloatDataTable type"""
+        info_text = "MAK.FloatDataTable"
+        class v2_1(tls.Unicode, TypeMeta):
+            """Represents data for a single data table, convention is biological features on y-axis and samples etc. on x"""
+            info_text = "MAK.FloatDataTable-2.1"
     class MAKParameters(tls.Unicode, TypeMeta):
         """MAKParameters type"""
         info_text = "MAK.MAKParameters"
-        class v1_1(tls.Unicode, TypeMeta):
+        class v2_0(tls.Unicode, TypeMeta):
             """MAK algorithm and discovery strategy parameters"""
-            info_text = "MAK.MAKParameters-1.1"
-    class ExpressionDataSample(tls.Unicode, TypeMeta):
-        """ExpressionDataSample type"""
-        info_text = "MAK.ExpressionDataSample"
+            info_text = "MAK.MAKParameters-2.0"
+    class MAKInputData(tls.Unicode, TypeMeta):
+        """MAKInputData type"""
+        info_text = "MAK.MAKInputData"
         class v1_0(tls.Unicode, TypeMeta):
-            """ExpressionDataSample represents set of expression data"""
-            info_text = "MAK.ExpressionDataSample-1.0"
-    class ExpressionDataPoint(tls.Unicode, TypeMeta):
-        """ExpressionDataPoint type"""
-        info_text = "MAK.ExpressionDataPoint"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Represents a particular data point from gene expression data set"""
-            info_text = "MAK.ExpressionDataPoint-1.0"
-    class MAKResult(tls.Unicode, TypeMeta):
-        """MAKResult type"""
-        info_text = "MAK.MAKResult"
+            """MAK dataset source"""
+            info_text = "MAK.MAKInputData-1.0"
+    class FloatDataTableContainer(tls.Unicode, TypeMeta):
+        """FloatDataTableContainer type"""
+        info_text = "MAK.FloatDataTableContainer"
         class v2_1(tls.Unicode, TypeMeta):
-            """Represents data from a single run of MAK"""
-            info_text = "MAK.MAKResult-2.1"
+            """Represents a list of data tables"""
+            info_text = "MAK.FloatDataTableContainer-2.1"
+    class MAKBiclusterSet(tls.Unicode, TypeMeta):
+        """MAKBiclusterSet type"""
+        info_text = "MAK.MAKBiclusterSet"
+        class v2_0(tls.Unicode, TypeMeta):
+            """Bicluster set"""
+            info_text = "MAK.MAKBiclusterSet-2.0"
     class MAKBicluster(tls.Unicode, TypeMeta):
         """MAKBicluster type"""
         info_text = "MAK.MAKBicluster"
         class v1_0(tls.Unicode, TypeMeta):
             """Bicluster"""
             info_text = "MAK.MAKBicluster-1.0"
-    class ExpressionDataSeries(tls.Unicode, TypeMeta):
-        """ExpressionDataSeries type"""
-        info_text = "MAK.ExpressionDataSeries"
-        class v1_0(tls.Unicode, TypeMeta):
-            """ExpressionDataSeries represents collection of expression data samples"""
-            info_text = "MAK.ExpressionDataSeries-1.0"
-    class MAKBiclusterSet(tls.Unicode, TypeMeta):
-        """MAKBiclusterSet type"""
-        info_text = "MAK.MAKBiclusterSet"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Bicluster set"""
-            info_text = "MAK.MAKBiclusterSet-1.0"
+    class StringDataTable(tls.Unicode, TypeMeta):
+        """StringDataTable type"""
+        info_text = "MAK.StringDataTable"
+        class v3_0(tls.Unicode, TypeMeta):
+            """Represents data for a single data table, convention is biological features on y-axis and samples etc. on x"""
+            info_text = "MAK.StringDataTable-3.0"
+    class MAKResult(tls.Unicode, TypeMeta):
+        """MAKResult type"""
+        info_text = "MAK.MAKResult"
+        class v3_0(tls.Unicode, TypeMeta):
+            """Represents data from a single run of MAK"""
+            info_text = "MAK.MAKResult-3.0"
 
 class KBaseSequences(object):
     """KBaseSequences module"""

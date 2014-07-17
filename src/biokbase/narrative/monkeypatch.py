@@ -103,3 +103,29 @@ def do_patching( c ):
             if 'kbase_session' in self.cookies:
                 cookie_pusher( self.cookies['kbase_session'].value,getattr(self,'notebook_manager'))
             return old_get1(self)
+
+
+    @monkeypatch_method(IPython.html.base.handlers.RequestHandler)
+    def write_error(self, status_code, **kwargs):
+        import traceback
+        if self.settings.get("debug") and "exc_info" in kwargs:
+            exc_info = kwargs["exc_info"]
+            trace_info = ''.join(["%s<br/>" % line for line in traceback.format_exception(*exc_info)])
+            request_info = ''.join(["<strong>%s</strong>: %s<br/>" % (k, self.request.__dict__[k] ) for k in self.request.__dict__.keys()])
+            error = exc_info[1]
+            self.set_header('Content-Type', 'text/html')
+            self.write(self.render_template("error.html", error_status=error, traceback=trace_info, request_info=request_info))
+            # self.set_header('Content-Type', 'text/html')
+            # self.finish("""<html>
+            #                     <body>
+            #                         <h2>Error</h2>
+            #                         <p>%s</p>
+            #                         <h2>Traceback</h2>
+            #                         <p>%s</p>
+            #                         <h2>Request Info</h2>
+            #                         <p>%s</p>
+            #                     </body>
+            #                 </html>""" % (error, trace_info, request_info))
+        else:
+            self.set_header('Content-Type', 'text/html')
+            self.finish("<html><body><h1>OMG ERROR</h1></body></html>")

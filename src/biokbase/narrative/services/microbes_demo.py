@@ -505,6 +505,81 @@ def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):
 
     return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
 
+@method(name="Import SEED Genomes")
+def _import_seed_genomes(meth, genome_ids):
+    """Bring up a detailed view of your phenotypeset within the narrative. 
+    
+    :param genome_ids: list of genome ids (comma seperated)
+    :type genome_ids: kbtypes.Unicode
+    :ui_name genome_ids: SEED Genome IDs
+
+    :return: Uploaded SEED Genome
+    :rtype: kbtypes.Unicode
+    :output_widget: GenomeAnnotation
+    """
+    #315750.3
+    gids = genome_ids.split(',')
+
+    meth.stages = len(gids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+
+    fba = fbaModelServices(url = service.URLS.fba, token = token)
+
+    for gid in gids:
+        meth.advance("Loading genome: "+gid);
+        fba.genome_to_workspace({'genome': gid, 
+                                 'workspace': ws, 
+                                 'source': 'seed'})
+
+
+    return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
+
+
+@method(name="Compute Pan_Genome")
+def _compare_pan_genome(meth, genome_ids):
+    """Bring up a detailed view of your phenotypeset within the narrative. 
+    
+    :param genome_ids: list of genome ids (comma seperated)
+    :type genome_ids: kbtypes.KBaseGenomes.Genome
+    :ui_name genome_ids: Genome IDs
+
+    :return: Generated Compare Genome
+    :rtype: kbtypes.KBaseGenomes.Pangenome
+    :output_widget: kbasepangenome
+    """
+    #315750.3
+    gids = genome_ids.split(',')
+    
+    meth.stages = len(gids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+
+    fba = fbaModelServices(url = service.URLS.fba, token = token)
+    wss = []
+    for gid in gids:
+        meth.advance("genomes: "+gid);
+        wss.append(ws)
+
+    meta = fba.build_pangenome({'genomes': gids, 
+                                'genome_workspaces': wss, 
+                                'workspace': ws})
+   
+    meth.advance("Fetching pan genome")
+    params = [{
+        'workspace' : ws, 'name':meta[1]
+    }]
+
+    data = ws.get_objects(params )
+    #print meth.debug(json.dumps(data))
+
+    return json.dumps({'data': data})
+
+
 @method(name="View Metabolic Model Details")
 def _view_model_details(meth, fba_model_id):
     """Bring up a detailed view of your metabolic model within the narrative. [7]

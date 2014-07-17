@@ -559,7 +559,8 @@ def _compare_pan_genome(meth, genome_ids):
     #grab token and workspace info, setup the client
     token, ws = meth.token, meth.workspace_id;
 
-    fba = fbaModelServices(url = service.URLS.fba, token = token)
+    #fba = fbaModelServices(url = service.URLS.fba, token = token)
+    fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
     wss = []
     for gid in gids:
         meth.advance("genomes: "+gid);
@@ -568,17 +569,18 @@ def _compare_pan_genome(meth, genome_ids):
     meta = fba.build_pangenome({'genomes': gids, 
                                 'genome_workspaces': wss, 
                                 'workspace': ws})
-   
+
+    ws = workspaceService(service.URLS.workspace, token=token)
     meth.advance("Fetching pan genome")
     params = [{
-        'workspace' : ws, 'name':meta[1]
+        'workspace' : meth.workspace_id, 'name':meta[1]
     }]
 
-    data = ws.get_objects(params )
+    #data = ws.get_objects(params)
     #print meth.debug(json.dumps(data))
 
-    return json.dumps({'data': data})
-
+    #return json.dumps({'data': data})
+    return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
 
 @method(name="View Metabolic Model Details")
 def _view_model_details(meth, fba_model_id):

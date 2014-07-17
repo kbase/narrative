@@ -85,7 +85,6 @@ function KBCacheClient(token) {
     var auth = {};
     auth.token = token;
 
-    console.log('configjson', typeof configJSON )
     /*
     if (typeof configJSON != 'undefined') {
         if (configJSON.setup == 'dev') {

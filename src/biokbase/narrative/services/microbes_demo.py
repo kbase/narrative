@@ -448,20 +448,8 @@ def view_phenotype(meth, phenotype_set_id):
     userToken, workspaceName = meth.token, meth.workspace_id;
     meth.advance("Loading the phenotype set")
     
-    ws = os.environ['KB_WORKSPACE_ID']
-    token = os.environ['KB_AUTH_TOKEN']
-    ar_user = token.split('=')[1].split('|')[0]
-    ws = workspaceService(service.URLS.workspace, token=token)
 
-    params = [{
-        'workspace' : meth.workspace_id, 'name':phenotype_set_id
-    }]
-
-    data = ws.get_objects(params )
-    #print meth.debug(json.dumps(data))
-
-
-    return json.dumps({'data': data})
+    return json.dumps({'ws': meth.workspace_id, 'name': phenotype_set_id})
 
 @method(name="Import RAST Genomes")
 def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):

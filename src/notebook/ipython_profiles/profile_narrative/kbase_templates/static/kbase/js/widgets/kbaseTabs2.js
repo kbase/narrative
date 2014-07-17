@@ -41,7 +41,7 @@
 (function( $, undefined ) {
 
     $.KBWidget({
-        name: "tabs",
+        name: "kbTabs",
         version: "1.0.0",
         init: function(options) {
             this._super(options);
@@ -60,11 +60,11 @@
                 }
 
                 // tab
-                var tab = $('<li class="'+(p.active ? 'active' :'')+'">')
-                var tab_link = $('<a data-toggle="tab" data-id="'+p.name+'">'+p.name+'</a>')
-                tab.append(tab_link).hide()
-                tabs.append(tab)
-                tab.toggle('slide', {direction: 'down', duration: 'fast'})
+                var tab = $('<li class="'+(p.active ? 'active' :'')+'">');
+                var tab_link = $('<a data-toggle="tab" data-id="'+p.name+'">'+p.name+'</a>');
+                tab.append(tab_link).hide();
+                tabs.append(tab);
+                tab.toggle('slide', {direction: 'down', duration: 'fast'});
 
                 // add close button if needed
                 if (p.removable || options.removable) {

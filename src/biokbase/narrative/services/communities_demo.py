@@ -218,10 +218,10 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param mgid: Communities.Metagenome object ID
+    :param mgid: Communities.Metagenome object name
     :type mgid: kbtypes.Communities.Metagenome
     :ui_name mgid: Metagenome ID
-    :param out_name: object ID of annotation set table
+    :param out_name: object name of annotation set table
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :param top: produce annotations for top N abundant taxa
@@ -257,7 +257,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     meth.advance("Processing inputs")
     # validate
     if not (mgid and out_name):
-        return json.dumps({'header': 'ERROR:\nmissing input or output object IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if top == '':
@@ -298,13 +298,13 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_seq1: object ID of input sequence, fastq mate pair 1
+    :param in_seq1: object name of input sequence, fastq mate pair 1
     :type in_seq1: kbtypes.Communities.SequenceFile
     :ui_name in_seq1: Input FASTQ Pair 1
-    :param in_seq2:  object ID of input sequence, fastq mate pair 2
+    :param in_seq2:  object name of input sequence, fastq mate pair 2
     :type in_seq2: kbtypes.Communities.SequenceFile
     :ui_name in_seq2: Input FASTQ Pair 2
-    :param out_name: object ID of resulting 16S sequences
+    :param out_name: object name of resulting 16S sequences
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output 16S Sequences
     :return: EMIRGE Results
@@ -316,7 +316,7 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     meth.advance("Processing inputs")
     # validate
     if not (in_seq1 and in_seq2 and out_seq):
-        return json.dumps({'header': 'ERROR:\nmissing input or output object IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     time.sleep(2)
     
@@ -338,10 +338,10 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_seq: object ID of input sequence file
+    :param in_seq: object name of input sequence file
     :type in_seq: kbtypes.Communities.SequenceFile
     :ui_name in_seq: Input Sequence
-    :param out_name: object ID of resulting BIOM profile
+    :param out_name: object name of resulting BIOM profile
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :return: PICRUSt Prediction Info
@@ -353,7 +353,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     meth.advance("Processing inputs")
     # validate
     if not (in_seq and out_name):
-        return json.dumps({'header': 'ERROR:\nmissing input or output object IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
@@ -392,10 +392,10 @@ def _map_annot(meth, workspace, in_name, out_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object ID of abundance profile BIOM
+    :param in_name: object name of abundance profile BIOM
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
-    :param out_name: object ID of annotation set table
+    :param out_name: object name of annotation set table
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :return: Metagenome Annotation Set Info
@@ -407,7 +407,7 @@ def _map_annot(meth, workspace, in_name, out_name):
     meth.advance("Processing inputs")
     # validate
     if not (in_name and out_name):
-        return json.dumps({'header': 'ERROR:\nmissing input or output object IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
@@ -441,10 +441,10 @@ def _make_model(meth, workspace, in_name, out_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object ID of annotation set table
+    :param in_name: object name of annotation set table
     :type in_name: kbtypes.Communities.ProfileTable
     :ui_name in_name: Input Name
-    :param out_name: object ID of model
+    :param out_name: object name of model
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :return: Metagenome Model
@@ -456,7 +456,7 @@ def _make_model(meth, workspace, in_name, out_name):
     meth.advance("Processing inputs")
     # validate
     if not (in_name and out_name):
-        return json.dumps({'header': 'ERROR:\nmissing input or output object IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
@@ -491,7 +491,7 @@ def _gapfill_model(meth, workspace, in_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object ID of model
+    :param in_name: object name of model
     :type in_name: kbtypes.KBaseFBA.FBAModel
     :ui_name in_name: Model Name
     :return: Gapfilled Metagenome Model
@@ -503,7 +503,7 @@ def _gapfill_model(meth, workspace, in_name):
     meth.advance("Processing inputs")
     # validate
     if not in_name:
-        return json.dumps({'header': 'ERROR:\nmissing input or output object IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Gapfill Model Starting")
@@ -521,10 +521,10 @@ def _compare_model(meth, workspace, model1, model2):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param model1: object ID of model 1
+    :param model1: object name of model 1
     :type model1: kbtypes.KBaseFBA.FBAModel
     :ui_name model1: Model 1 Name
-    :param model2: object ID of model 2
+    :param model2: object name of model 2
     :type model2: kbtypes.KBaseFBA.FBAModel
     :ui_name model2: Model 2 Name
     :return: Metagenome Model Comparison
@@ -553,10 +553,10 @@ def _kegg_map(meth, workspace, input1, input2):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param input1: object ID of model 1
+    :param input1: object name of model 1
     :type input1: kbtypes.KBaseFBA.FBAModel
     :ui_name input1: Model 1 Name
-    :param input2: object ID of model 2
+    :param input2: object name of model 2
     :type input2: kbtypes.KBaseFBA.FBAModel
     :ui_name input2: Model 2 Name
     :return: KEGG Map
@@ -598,10 +598,10 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param ids: object ID of metagenome list
+    :param ids: object name of metagenome list
     :type ids: kbtypes.Communities.Collection
     :ui_name ids: Metagenome List
-    :param out_name: object ID of abundance profile table
+    :param out_name: object name of abundance profile table
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :param annot: annotation of abundance profile, one of 'taxa' or 'functions'
@@ -616,7 +616,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :type source: kbtypes.Unicode
     :ui_name source: Source Name
     :default source: SEED
-    :param int_name: object ID of list of names to filter results by
+    :param int_name: object name of list of names to filter results by
     :type int_name: kbtypes.Communities.Data
     :ui_name int_name: Filter List
     :param int_level: hierarchical level of filter names list
@@ -650,7 +650,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     meth.advance("Processing inputs")
     # validate
     if not (ids and out_name):
-        return json.dumps({'header': 'ERROR:\nmissing input or output object IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if annot == '':
@@ -696,10 +696,10 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object ID of abundance profile table
+    :param in_name: object name of abundance profile table
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
-    :param out_name: object ID of abundance profile table with significance
+    :param out_name: object name of abundance profile table with significance
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :param metadata: metadata field to group metagenomes by
@@ -725,7 +725,7 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     meth.advance("Processing inputs")
     # validate
     if not (in_name and metadata and out_name):
-        return json.dumps({'header': 'ERROR:\nmissing input or output object IDs'})
+        return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     # set defaults since unfilled options are empty strings
     if stat_test == '':
@@ -758,10 +758,10 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object ID of abundance profile table
+    :param in_name: object name of abundance profile table
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
-    :param out_name: object ID of altered profile
+    :param out_name: object name of altered profile
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
     :param order: column number to sort output by, (0 for last column), default is no sorting
@@ -836,7 +836,7 @@ def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_en
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object ID of abundance profile table
+    :param in_name: object name of abundance profile table
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param row_start: row position to start table with, default is first
@@ -895,7 +895,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object ID of abundance profile table
+    :param in_name: object name of abundance profile table
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param use_name: label by metagenome name and not ID
@@ -941,7 +941,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object ID of abundance profile table
+    :param in_name: object name of abundance profile table
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param use_name: label by metagenome name and not ID
@@ -1015,7 +1015,7 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object ID of abundance profile table
+    :param in_name: object name of abundance profile table
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param metadata: metadata field to group metagenomes by

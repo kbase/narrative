@@ -4,7 +4,6 @@ $.KBWidget({
     name: "GenomeComparisonWidget",
     parent: "kbaseAuthenticatedWidget",
     version: "1.0.0",
-    token: null,
 	ws_name: null,
 	job_id: null,
 	ws_id: null,
@@ -14,7 +13,7 @@ $.KBWidget({
     	ws_id: null
     },
 
-    wsUrl: "http://dev04.berkeley.kbase.us:7058",
+    wsUrl: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
     jobSrvUrl: "https://kbase.us/services/userandjobstate/",
     cmpImgUrl: "http://dev06.berkeley.kbase.us:8283/image",
     loadingImage: "static/kbase/images/ajax-loader.gif",
@@ -46,13 +45,13 @@ $.KBWidget({
         var self = this;
         var container = this.$elem;
     	container.empty();
-        if (self.token == null) {
+        if (!self.authToken()) {
         	container.append("<div>[Error] You're not logged in</div>");
         	return;
         }
 
-        var kbws = new Workspace(this.wsUrl, {'token': self.token});
-        var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.token});
+        var kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
+        var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.authToken()});
 
         var dataIsReady = function() {
         	var cmp_ref = self.cmp_ref;
@@ -348,7 +347,7 @@ $.KBWidget({
 		self.imgI = Math.round(self.imgI);
 		self.imgJ = Math.round(self.imgJ);
 		var img = self.cmpImgUrl + "?ws=" + self.ws_name + "&id=" + self.ws_id + "&x=" + self.imgI + 
-				"&y=" + self.imgJ + "&w=" + self.size + "&sp=" + self.scale + "&token=" + encodeURIComponent(self.token);
+				"&y=" + self.imgJ + "&w=" + self.size + "&sp=" + self.scale + "&token=" + encodeURIComponent(self.authToken());
 		$('#'+self.pref+'img').attr('src', img);
 		self.refreshDetailedRect();
 	},
@@ -462,13 +461,13 @@ $.KBWidget({
 	},
 
     loggedInCallback: function(event, auth) {
-        this.token = auth.token;
+        //this.token = auth.token;
         this.render();
         return this;
     },
 
     loggedOutCallback: function(event, auth) {
-        this.token = null;
+        //this.token = null;
         this.render();
         return this;
     },

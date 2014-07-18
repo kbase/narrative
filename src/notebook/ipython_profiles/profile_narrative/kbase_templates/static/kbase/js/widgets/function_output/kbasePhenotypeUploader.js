@@ -1,12 +1,11 @@
 (function( $, undefined ) {
     $.KBWidget({
         name: "PhenotypeUploader",
-        parent: "kbaseWidget",
+        parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         phenotype_id: null,
         genome_id: null,
         ws_name: null,
-        token: null,
         width: 1150,
         options: {
             phenotype_id: null,
@@ -24,13 +23,13 @@
 
             var container = this.$elem;
         	container.empty();
-            if (self.token == null) {
+            if (!self.authToken()) {
             	container.append("<div>[Error] You're not logged in</div>");
             	return;
             }
         	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading media data...</div>");
 
-            var kbws = new Workspace(this.wsUrl, {'token': options.token});
+            var kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
             //var kbws = new workspaceService(wsUrl);
             
             var request = {workspaces: [options.ws_name], type: 'KBaseBiochem.Media'};
@@ -101,9 +100,9 @@
             			phenotypes.push(phenotype);
             		}
             		if (good) {
-            			/*var kbfm = new fbaModelServices(fmUrl, {'token': options.token});
+            			/*var kbfm = new fbaModelServices(fmUrl, {'token': self.authToken()});
             			var import_phenotypes_params = {
-            					auth: options.token, 
+            					auth: self.authToken(), 
             					workspace: options.ws_name, 
             					phenotypeSet: options.phenotype_id, 
             					genome: options.genome_id, 

@@ -570,6 +570,59 @@ def _view_model_details(meth, fba_model_id):
     #modeldata = fbaClient.get_models(get_models_params)
     return json.dumps({'id': fba_model_id, 'ws': workspaceName})
 
+@method(name="Delete Reaction")
+def _delete_reaction(meth, fba_model_id, reaction_id, output_id):
+    """Delete reactions from selected Metabolic Model 
+    
+    :param fba_model_id: the metabolic model to edit
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name fba_model_id: Metabolic Model
+
+    :param reaction_id: Reactions to be deleted. Add multiple reactions seperated by ; 
+    :type reaction_id: kbtypes.Unicode
+    :ui_name reaction_id: Reaction(s) ID(s)
+
+    :param output_id: ID of model with deleted reactions
+    :type output_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name output_id: Edited Model
+
+    :return: Metabolic Model Data
+    :rtype: kbtypes.Model
+    :output_widget: kbaseModelTabs    
+    """
+    meth.debug('delete reaction call')
+
+    meth.stages = 2  # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+    #meth.advance("Loading the phenotype set")
+    #
+    fba = fbaModelServices(service.URLS.fba, token=token)
+
+    meth.debug(output_id)
+    if output_id:
+        params = {'model': fba_model_id, 
+                   'workspace': ws,
+                   'reaction' : reaction_id.split(';'), 
+                   'removeReaction': 1,
+                   'outputid': output_id }
+    else:
+        params = {'model': fba_model_id, 
+                   'workspace': ws,
+                   'reaction' : reaction_id.split(';'), 
+                   'removeReaction': 1}
+
+
+    data = fba.adjust_model_reaction(params)
+
+    if output_id:
+        data = json.dumps({'id': output_id, 'ws': ws})
+    else:
+        data = json.dumps({'id': fba_model_id, 'ws': ws})        
+
+    return data
 
 @method(name="Build Media")
 def _build_media(meth, media):

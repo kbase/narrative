@@ -117,7 +117,7 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def wsclient(self):
         """Return a workspace client object for the workspace endpoint in kbasews_uri"""
-        return Workspace( self.kbasews_uri)
+        return Workspace(self.kbasews_uri)
 
     def _clean_id( self,id):
         return self.wsid_regex.sub( '', id.replace(' ','_'))

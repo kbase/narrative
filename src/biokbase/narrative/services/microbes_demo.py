@@ -1028,7 +1028,7 @@ def _upload_phenotype(meth, genome_id, phenotype_id):
         phenotype_id = "phenotype_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    return json.dumps({'token': token, 'ws_name': workspace, 'genome_id': genome_id, 'phenotype_id': phenotype_id})
+    return json.dumps({'ws_name': workspace, 'genome_id': genome_id, 'phenotype_id': phenotype_id})
 
 #@method(name="Simulate Phenotype Data")
 def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
@@ -1063,7 +1063,7 @@ def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
         'phenotypeSet': phenotype_id,
     }
     fbaClient.simulate_phenotypes(simulate_phenotypes_params)
-    return json.dumps({'token': token, 'ws_name': workspace, 'simulation_id': simulation_id})
+    return json.dumps({'ws_name': workspace, 'simulation_id': simulation_id})
 
 #@method(name="Reconcile Phenotype Data")
 def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
@@ -1098,7 +1098,7 @@ def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
         'out_model': out_model_id,
     }
     job_id = fbaClient.queue_wildtype_phenotype_reconciliation(wildtype_phenotype_reconciliation_params)['id']
-    return json.dumps({'token': token, 'ws_name': workspace, 'model_id': out_model_id, 'job_id': job_id})
+    return json.dumps({'ws_name': workspace, 'model_id': out_model_id, 'job_id': job_id})
 
 @method(name="Compare Two Proteomes")
 def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):

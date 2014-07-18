@@ -14,7 +14,7 @@
             treeObjVer: null,
             jobID: null,
             kbCache: null,
-            treeServiceURL: "http://140.221.67.152:7047",
+            treeServiceURL: "http://dev19.berkeley.kbase.us:7047",
             workspaceURL: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
             loadingImage: "static/kbase/images/ajax-loader.gif",
             ujsServiceURL: "https://kbase.us/services/userandjobstate/",

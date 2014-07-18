@@ -64,8 +64,7 @@ var IPython = (function (IPython) {
 
                 var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(errorText);
                 if (res) {
-                    errorText = "User " + res[1] + " does not have permission to save to workspace " + res[2] + "." +
-                                "<br>You must first copy this to a workspace that you own before saving any modifications.";
+                    errorText = "User " + res[1] + " does not have permission to save to workspace " + res[2] + ".";
                 }
 
             }

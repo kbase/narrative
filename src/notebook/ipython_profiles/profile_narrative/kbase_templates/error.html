@@ -2,24 +2,24 @@
 
 {% block stylesheet %}
     {{ super() }}
+{% endblock %}
+
+{% block site %}
     <style>
         body {
-            overflow-y: scroll;
+            overflow: auto;
         }
         #site {
             display: block;
             padding: 0 50px;
-            overflow-y: scroll;
         }
     </style>
-{% endblock %}
 
-{% block site %}
-        <h1>Sorry! An error occurred while loading your Narrative.</h1>
-        <h2>Error</h2>
-        <p>{{ error_status }}</p>
-        <h2>Traceback</h2>
-        <p>{{ traceback }}</p>
-        <h2>Request Info</h2>
-        <p>{{ request_info }}</p>
+    <h1>Sorry! An error occurred while loading your Narrative.</h1>
+    <p><b>If this error persists, please notify <a href="mailto:help@kbase.us" target="_blank">help@kbase.us</a> with the below information:</b></p>
+
+    <h2>Error</h2>
+    <p>{{ error_status }}</p>
+    <h2>Traceback</h2>
+    <p>{{ traceback }}</p>
 {% endblock %}

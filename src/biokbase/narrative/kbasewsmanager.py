@@ -5,6 +5,7 @@ Based on Travis Harrison's shocknbmanager and the azurenbmanager
 Authors:
 
 * Steve Chan <sychan@lbl.gov>
+* Bill Riehl <wjriehl@lbl.gov>
 
 Copyright (C) 2013 The Regents of the University of California
 Department of  Energy contract-operators of the Lawrence Berkeley National Laboratory

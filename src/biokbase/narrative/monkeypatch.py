@@ -19,6 +19,7 @@ import IPython.html.notebook.handlers
 import IPython.html.services.notebooks.handlers
 import IPython
 import biokbase.auth
+import tornado
 
 def monkeypatch_method(cls):
     """

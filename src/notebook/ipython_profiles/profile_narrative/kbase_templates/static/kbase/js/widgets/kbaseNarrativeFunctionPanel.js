@@ -34,8 +34,6 @@
         init: function(options) {
             this._super(options);
 
-            console.debug("kbaseNarrativeFunctionPanel.init start");
-
             // DOM structure setup here.
             // After this, just need to update the function list
 
@@ -98,7 +96,6 @@
                 this.refresh();
             }
 
-            console.debug("kbaseNarrativeFunctionPanel.init done");
             return this;
         },
         
@@ -137,7 +134,6 @@
                 }, this),
             };
 
-            console.debug("kbaseNarrativeFunctionPanel.refresh running kernel command");
             var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
         },
 
@@ -182,12 +178,18 @@
          * @private
          */
         populateFunctionList: function(serviceSet) {
+            var totalFunctions = 0;
+            var totalServices = 0;
+
             var serviceAccordion = [];
 
             for (var serviceName in serviceSet) {
+                totalServices++;
+
                 var $methodList = $('<ul>');
                 var service = serviceSet[serviceName];
                 for (var i=0; i<service.methods.length; i++) {
+                    totalFunctions++;
                     var method = service.methods[i];
                     method['service'] = serviceName;
                     $methodList.append(this.buildFunction(method));
@@ -198,6 +200,9 @@
                     'body' : $methodList
                 });
             }
+
+            // console.log("Total Services: " + totalServices);
+            // console.log("Total Functions: " + totalFunctions);
 
             this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
         },

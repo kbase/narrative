@@ -15,6 +15,7 @@ import urllib
 import urllib2
 import cStringIO
 import requests
+import datetime
 from string import Template
 from collections import defaultdict
 # Local
@@ -67,9 +68,11 @@ def _rm_file(f):
 def _get_invo(name, binary=False):
     # upload from invo server
     stdout, stderr = _run_invo("mg-upload2shock %s %s"%(URLS.shock, name))
+    if stderr:
+        return stderr, True
     node = json.loads(stdout)
     # get file content from shock
-    return _get_shock_data(node['id'], binary=binary)
+    return _get_shock_data(node['id'], binary=binary), False
 
 def _get_shock_data(nodeid, binary=False):
     token = os.environ['KB_AUTH_TOKEN']
@@ -87,12 +90,15 @@ def _execute_command(meth, command):
     :rtype: kbtypes.Unicode
     :output_widget: DisplayTextWidget
     """
-    meth.stages = 1
+    meth.stages = 2
     if not command:
         raise Exception("Command is empty.")
+    command.replace('$workspace', os.environ['KB_WORKSPACE_ID'])
+    meth.advance("Running Command")
     stdout, stderr = _run_invo(command)
     if (stdout == '') and (stderr == ''):
         stdout = 'Your command executed successfully'
+    meth.advance("Displaying Output")
     return json.dumps({'text': stdout, 'error': stderr})
 
 @method(name="View KBase Commands")
@@ -103,8 +109,10 @@ def _view_cmds(meth):
     :rtype: kbtypes.Unicode
     :output_widget: CategoryViewWidget
     """
-    meth.stages = 1
+    meth.stages = 2
+    meth.advance("Retrieving Commands")
     cmd_list = _list_cmds()
+    meth.advance("Displaying Output")
     cmd_sort = sorted(cmd_list, key=lambda k: k['title'])
     cmd_data = []
     for cat in cmd_sort:
@@ -115,24 +123,38 @@ def _view_cmds(meth):
     return json.dumps({'data': cmd_data})
 
 @method(name="View Files")
-def _view_files(meth):
-    """View your files.
+def _view_files(meth, sortby):
+    """View your files in temp invocation file space.
     
+    :param sortby: sort files by name or date, default is name
+    :type sortby: kbtypes.Unicode
+    :ui_name sortby: Sort By
+    :default sortby: name
     :return: File List
     :rtype: kbtypes.Unicode
     :output_widget: GeneTableWidget
     """
-    meth.stages = 1
-    file_list  = _list_files("")
-    file_sort  = sorted(file_list, key=lambda k: k['name'])
+    meth.stages = 2
+    meth.advance("Retrieving File List")
+    file_list = _list_files("")
+    meth.advance("Displaying Output")
+    # get datetime objects
+    for f in file_list:
+        f['mod_date'] = datetime.datetime.strptime(f['mod_date'], "%b %d %Y %H:%M:%S")
+    # sort
+    if sortby == 'date':
+        file_sort = sorted(file_list, key=lambda k: k['mod_date'], reverse=True)
+    else:
+        file_sort = sorted(file_list, key=lambda k: k['name'])
+    # output
     file_table = [['name', 'size', 'timestamp']]
     for f in file_sort:
-        file_table.append([ f['name'], f['size'], f['mod_date'] ])
+        file_table.append([ f['name'], f['size'], f['mod_date'].ctime() ])
     return json.dumps({'table': file_table})
 
 @method(name="View PNG File")
 def _view_files(meth, afile):
-    """View a .png image file
+    """View a .png image file from temp invocation file space.
     
     :param afile: file to display
     :type afile: kbtypes.Unicode
@@ -141,18 +163,64 @@ def _view_files(meth, afile):
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
     """
-    meth.stages = 1
+    meth.stages = 2
     if not afile:
         raise Exception("Missing file name.")
     if not afile.endswith('.png'):
         raise Exception("Invalid file type.")
-    rawpng = _get_invo(afile, binary=True)
-    b64png = base64.b64encode(rawpng)
+    meth.advance("Retrieving Content")
+    content, err = _get_invo(afile, binary=True)
+    meth.advance("Displaying Image")
+    if err:
+        raise Exception(content)
+    b64png = base64.b64encode(content)
     return json.dumps({'type': 'png', 'width': '600', 'data': b64png})
+
+@method(name="Download File")
+def _download_file(meth, afile):
+    """Download a file from temp invocation file space.
+    
+    :param afile: file to download
+    :type afile: kbtypes.Unicode
+    :ui_name afile: File
+    :return: Status
+    :rtype: kbtypes.Unicode
+    :output_widget: DownloadFileWidget
+    """
+    meth.stages = 3
+    if not afile:
+        raise Exception("Missing file name.")
+    meth.advance("Validating Filename")
+    file_list = _list_files("")
+    has_file  = False
+    for f in file_list:
+        if f['name'] == afile:
+            has_file = True
+            break
+    if not has_file:
+        raise Exception("The file '"+afile+"' does not exist")
+    meth.advance("Retrieving Content")
+    content, err = _get_invo(afile, binary=False)
+    if err:
+        raise Exception(content)
+    meth.advance("Creating Download")
+    return json.dumps({'data': content, 'name': afile})
+
+@method(name="Upload File")
+def _upload_file(meth):
+    """Upload a file to temp invocation file space.
+    
+    :return: Status
+    :rtype: kbtypes.Unicode
+    :output_widget: UploadFileWidget
+    """
+    meth.stages = 1
+    meth.advance("Creating Upload")
+    return json.dumps({'url': URLS.invocation, 'auth': {'token': os.environ['KB_AUTH_TOKEN']}})
 
 @method(name="Rename File")
 def _rename_file(meth, old, new):
-    """Rename a file.
+    """Rename a file in temp invocation file space.
     
     :param old: old filename
     :type old: kbtypes.Unicode
@@ -167,12 +235,13 @@ def _rename_file(meth, old, new):
     meth.stages = 1
     if not (old and new):
         raise Exception("Missing file names.")
+    meth.advance("Renaming File")
     _mv_file(old, new)
     return json.dumps({'text': '%s changed to %s'%(old,new)})
 
 @method(name="Delete File")
 def _delete_file(meth, afile):
-    """Delete a file.
+    """Delete a file from temp invocation file space.
     
     :param afile: file to delete
     :type afile: kbtypes.Unicode
@@ -184,6 +253,7 @@ def _delete_file(meth, afile):
     meth.stages = 1
     if not afile:
         raise Exception("Missing file name.")
+    meth.advance("Deleting File")
     _rm_file(afile)
     return json.dumps({'text': 'removed '+afile})
 

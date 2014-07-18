@@ -31,8 +31,52 @@
     <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/3.2.1/css/font-awesome.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
-    <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
+    <script src="{{ static_url("components/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    
+    <script>
+      /**
+       * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
+       * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
+       * (to avoid having the same thing happen on page refreshes and such).
+       *
+       * This uses Bowser to detect the browser and version:
+       * https://github.com/ded/bowser
+       */
+      function checkBrowser() {
+        var browserCheckItem = 'kbBrowserCheck';
+
+        //Just return if we've done this already this session. Seeing the same popup more than once is obnoxious.
+        if (sessionStorage) {
+            if (sessionStorage.getItem(browserCheckItem))
+                return;
+        }
+
+        var alertPrefix = 'Unsupported browser detected!\n\n';
+        var alertSuggest = 'For a better experience, we recommend using recent versions of ' + 
+                           'Safari, Firefox, Chrome, or Internet Explorer.\n\n' +
+                           'Sorry for any inconvenience!';
+        var alertError = '';
+        if (bowser.msie && bowser.version <= 9) {
+            var alertError = 'You appear to be using Internet Explorer ' + 
+                             bowser.version + 
+                             '. Unfortunately, we don\'t support that web browser. Many ' +
+                             'functions will be unavailable or have compatibility problems.\n\n';
+        }
+
+        if (alertError) {
+            alert(alertPrefix + alertError + alertSuggest);
+        }
+
+        if (sessionStorage) {
+            sessionStorage.setItem(browserCheckItem, '1');
+        }
+      }
+
+      checkBrowser();
+    </script>
+
+    <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
       require.config({
           baseUrl: '{{static_url() }}',
@@ -56,9 +100,9 @@
 <body {% block params %}{% endblock %}>
 
 <noscript>
-    <div id='noscript'>
-      The KBase Narrative requires JavaScript.<br>
-      Please enable it to proceed.
+  <div id='noscript'>
+    The KBase Narrative requires JavaScript.<br>
+    Please enable it to proceed.
   </div>
 </noscript>
 
@@ -77,24 +121,16 @@
             <li><a href="/functional-site/#/narrative/projects/">Projects</a></li>
           </ul>
         </li>
+        <li><a href="/functional-site/#/search/?q=*">Search Data</a></li>
         <li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li>
         <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>
       </ul>
 
-              <form ng-controller="SearchController" ng-submit="startSearch(searchquery)" class="navbar-form navbar-left" role="search" style="width: 40%">
-                <div class="input-group">
-                    <input class="form-control" ng-model="searchquery" name="search" placeholder=" Search KBase Data" autocomplete="off" type="text"> 
-                    <div class="input-group-btn">
-                        <button class="btn" type="submit" style="background-color: #ebebeb; border-color: #adadad; border-left:none"><span class="glyphicon glyphicon-search" style="line-height: .9"></span></button>
-                    </div>
-                </div>
-              </form>
       <div id="signin-button" class="pull-right"></div>
       <ul class="nav navbar-nav pull-right">
           <li class="dropdown help-dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a>
                  <ul class="dropdown-menu">
                  <li><a href="http://kbase.us/for-users/narrative-quick-start/" target="_new">Narrative Quick Start Guide</a></li>
-                 <li><a href="/functional-site/#/landing-pages-help">Landing Page Documentation</a></li>
                  <li><a href="mailto:help@kbase.us">Email help@kbase.us</a></li>
               </ul></li>
       </ul>
@@ -134,6 +170,17 @@
 
 <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<script>
+  var configJSON = $.parseJSON(
+                      $.ajax({ 
+                               url: "{{ static_url('kbase/config.json') }}", 
+                               async: false, 
+                               dataType: 'json'
+                             }).responseText );
+  window.kb = { urls : configJSON[configJSON['config']] };
+</script>
+
 <!-- <script src="{{ static_url("components/bootstrap/bootstrap/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script> -->
 <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("base/js/namespace.js") }}" type="text/javascript" charset="utf-8"></script>

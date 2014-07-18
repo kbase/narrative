@@ -55,10 +55,18 @@ var IPython = (function (IPython) {
                 var $error = $($.parseHTML(data.xhr.responseText));
                 errorText = $error.find('#error-message > h3').text();
 
-
-                /* gonna throw in a special case for workspace permissions issues.
+                /* gonna throw in a special case for workspace permissions issues for now.
                  * if it has this pattern:
+                 * 
+                 * User \w+ may not write to workspace \d+
+                 * change the text to something more sensible.
                  */
+
+                var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(errorText);
+                if (res) {
+                    errorText = "User " + res[1] + " does not have permission to save to workspace " + res[2] + "." +
+                                "<br>You must first copy this to a workspace that you own before saving any modifications.";
+                }
 
             }
             else {
@@ -69,7 +77,7 @@ var IPython = (function (IPython) {
                 title: "Narrative save failed!",
                 body: $('<div>').append(errorText),
                 buttons : {
-                    "D'oh!": {
+                    "OK": {
                         class: "btn-primary",
                         click: function () {
                         }

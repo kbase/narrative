@@ -108,6 +108,10 @@ picrustWF = """{
 	]
 }"""
 
+emirgeWF = """{
+	
+}"""
+
 # Initialize
 init_service(name=NAME, desc="Demo workflow communities service", version=VERSION)
 
@@ -318,11 +322,14 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     if not (in_seq1 and in_seq2 and out_seq):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
-    time.sleep(2)
+    #time.sleep(2)
     
     meth.advance("Retrieve Data from Workspace")
-    time.sleep(3)
-    
+    in_seq1_id = _get_ws(workspace, in_seq1, CWS.seq)['ID']
+    in_seq2_id = _get_ws(workspace, in_seq2, CWS.seq)['ID']
+
+	wf_tmp = Template(emirgeWF)
+    wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_nid, param=param_nid)
     meth.advance("Submiting EMIRGE to AWE")
     time.sleep(4)
     

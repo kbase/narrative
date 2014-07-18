@@ -16,10 +16,12 @@
     </style>
 
     <h1>An error occurred while accessing your Narrative.</h1>
-    <p><b>If this error happens repeatedly, please notify <a href="mailto:help@kbase.us" target="_blank">help@kbase.us</a> with the below information:</b></p>
+    <p>
+        <b>If this error happens repeatedly, please notify <a href="mailto:help@kbase.us" target="_blank">help@kbase.us</a> with the below information:</b>
+    </p>
 
     <h2>Error</h2>
-    <p>{{ error_status }}</p>
+    <div id='error-message'>{{ error_status }}</div>
     <h2>Traceback</h2>
-    <p>{{ traceback }}</p>
+    <div>{{ traceback }}</div>
 {% endblock %}

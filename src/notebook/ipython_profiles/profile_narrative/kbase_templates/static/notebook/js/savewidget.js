@@ -45,8 +45,52 @@ var IPython = (function (IPython) {
             that.update_notebook_name();
             that.update_document_title();
         });
-        $([IPython.events]).on('notebook_save_failed.Notebook', function () {
-            that.set_save_status('Autosave Failed!');
+        $([IPython.events]).on('notebook_save_failed.Notebook', function (event, data) {
+            that.set_save_status('Narrative save failed!');
+            console.log(event);
+            console.log(data);
+
+            var errorText;
+            if (data.xhr.responseText) {
+                var $error = $($.parseHTML(data.xhr.responseText));
+                errorText = $error.find('#error-message > h3').text();
+
+
+                /* gonna throw in a special case for workspace permissions issues.
+                 * if it has this pattern:
+                 */
+
+            }
+            else {
+                errorText = 'An unknown error occurred!';
+            }
+
+            IPython.dialog.modal({
+                title: "Narrative save failed!",
+                body: $('<div>').append(errorText),
+                buttons : {
+                    "D'oh!": {
+                        class: "btn-primary",
+                        click: function () {
+                        }
+                    }
+                },
+                open : function (event, ui) {
+
+
+                    var that = $(this);
+                    // Upon ENTER, click the OK button.
+                    that.find('input[type="text"]').keydown(function (event, ui) {
+                        if (event.which === utils.keycodes.ENTER) {
+                            that.find('.btn-primary').first().click();
+                        }
+                    });
+                    that.find('input[type="text"]').focus();
+                }
+            });
+
+
+
         });
         $([IPython.events]).on('checkpoints_listed.Notebook', function (event, data) {
             that.set_last_checkpoint(data[0]);

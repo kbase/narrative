@@ -105,6 +105,7 @@ def do_patching( c ):
                 cookie_pusher( self.cookies['kbase_session'].value,getattr(self,'notebook_manager'))
             return old_get1(self)
 
+    IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.base.handlers.RequestHandler.write_error() in process {}".format(os.getpid()))
     # Patch RequestHandler to deal with errors and render them in a half-decent
     # error page, templated to look (more or less) like the rest of the site.
     @monkeypatch_method(IPython.html.base.handlers.RequestHandler)
@@ -124,7 +125,7 @@ def do_patching( c ):
             error_list = exc_info[1]
             if error_list is not None:
                 error_list = error_list.__str__().split('\n')
-                error = '<b>%s</b><br>' % error_list[0]
+                error = '<h3>%s</h3>' % error_list[0]
                 error += '<br>'.join(error_list[1:])
             self.set_header('Content-Type', 'text/html')
 

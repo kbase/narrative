@@ -1129,6 +1129,7 @@
             for (var i=0; i<cells.length; i++) {
                 this.checkCellMetadata(cells[i]);
             }
+            this.loadAllRecentCellStates();
             this.trigger('updateData.Narrative');
             return this;
         },
@@ -1165,7 +1166,8 @@
          * @returns this
          */
         loggedOut: function(token) {
-            this.dataTableWidget.loggedOut(token);
+            if (this.dataTableWidget)
+                this.dataTableWidget.loggedOut(token);
             this.ws_client = null, this.ws_auth = null;
         },
 

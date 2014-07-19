@@ -9,13 +9,16 @@
 var narrative = {};
 narrative.init = function() {
     var token = null;
-
+    var narr_ws = null;
+    
     $(document).on('loggedIn.kbase', function(event, token) {
         token = $('#signin-button').kbaseLogin('session', 'token');
     });
 
     $(document).on('loggedOut.kbase', function(event, token) {
-        narr_ws.loggedOut(token);
+        if (narr_ws)
+          narr_ws.loggedOut(token);
+        window.location.href = '/';
     });
 
     var dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
@@ -70,7 +73,7 @@ narrative.init = function() {
         }
 
         // Should be renamed.... eventually?
-        var narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
+        narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
             loadingImage: "/static/kbase/images/ajax-loader.gif",
             ws_id: IPython.notebook.metadata.ws_name
         });

@@ -15,12 +15,12 @@ $.KBWidget({
 
     wsUrl: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
     jobSrvUrl: "https://kbase.us/services/userandjobstate/",
-    cmpImgUrl: "http://dev06.berkeley.kbase.us:8283/image",
+    cmpImgUrl: "https://kbase.us/services/genome_comparison/image",  //"http://dev06.berkeley.kbase.us:8283/image",
     loadingImage: "static/kbase/images/ajax-loader.gif",
     timer: null,
     geneRows: 21,
     geneRowH: 21,
-	pref: (new Date()).getTime(),
+	pref: null,
     size: 500,
     imgI: 0,
     imgJ: 0,
@@ -38,6 +38,7 @@ $.KBWidget({
         this.ws_name = options.ws_name;
         this.job_id = options.job_id;
         this.ws_id = options.ws_id;
+    	this.pref = this.uuid();
         return this;
     },
     
@@ -486,14 +487,10 @@ $.KBWidget({
         	    dirJ: self.dirJ,
         	    cmp_ref: self.cmp_ref
         };
-        console.log("getState:")
-        console.log(state);
         return state;
     },
 
     loadState: function(state) {
-        console.log("loadState:")
-        console.log(state);
         if (!state)
             return;
         var self = this;
@@ -513,6 +510,14 @@ $.KBWidget({
     		self.refreshImage();
     		self.refreshGenes();
     	}
+    },
+    
+    uuid: function() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+            function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);
+            });
     }
 })
 }( jQuery ) );

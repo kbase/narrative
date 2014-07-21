@@ -35,7 +35,7 @@ class URLS:
     invocation = "https://kbase.us/services/invocation"
     #fba = "http://140.221.84.183:7036"
     fba = "https://kbase.us/services/KBaseFBAModeling"
-    genomeCmp = "http://dev06.berkeley.kbase.us:8283/jsonrpc"
+    genomeCmp = "https://kbase.us/services/genome_comparison/jsonrpc" #"http://dev06.berkeley.kbase.us:8283/jsonrpc"
     treeDev = "http://dev19.berkeley.kbase.us:7047"
 
 ## Exceptions

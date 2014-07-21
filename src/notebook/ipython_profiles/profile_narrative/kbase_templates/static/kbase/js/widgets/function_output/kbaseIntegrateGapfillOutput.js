@@ -38,7 +38,6 @@
 
         render: function(options) {
             var self = this;
-            var pref = (new Date()).getTime();
             var container = this.$elem;
             
             var n_rxns_added = parseInt(options.endingNumRxns) - parseInt(options.startingNumRxns);

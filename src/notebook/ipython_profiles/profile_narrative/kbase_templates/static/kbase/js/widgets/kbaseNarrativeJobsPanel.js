@@ -215,7 +215,38 @@
             $row.append($('<td>').append(job[1]));
             $row.append($('<td>').append(job[12]));
             $row.append($('<td>').append(this.makeStatusElement(job)));
+            $row.append($('<td>').append(this.makeJobDetailButton(job)));
             return $row;
+        },
+
+        makeJobDetailButton: function(job) {
+            var showDetailModal = function(job) {
+                var $modalBody = $('<div>');
+                $('<div>').kbasePrompt(
+                    {
+                        title: 'Job Details',
+                        body: $modalBody, //$('<div>').kbaseJobWatcher({ jobInfo: job }),
+                        controls : [
+                            {
+                                name: 'Close',
+                                type : 'primary',
+                                callback : function(e, $prompt) {
+                                    $prompt.closePrompt();
+                                },
+                            }
+                        ]
+                    }
+                ).openPrompt();
+                $modalBody.kbaseJobWatcher({ jobInfo : job });
+            };
+
+            var $btn = $('<span>')
+                       .addClass('glyphicon glyphicon-search kb-function-help')
+                       .click(function(e) {
+                           showDetailModal(job);
+                       });
+
+            return $btn;
         },
 
         /**

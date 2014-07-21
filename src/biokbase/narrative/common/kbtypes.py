@@ -401,8 +401,14 @@ class KBaseGenomes(object):
         """Feature type"""
         info_text = "KBaseGenomes.Feature"
         class v1_0(tls.Unicode, TypeMeta):
-            """Structure for a single feature of a genome"""
-            info_text = "KBaseGenomes.Feature-1.0"
+            """Genome object holds much of the data relevant for a genome in KBase"""
+            info_text = "KBaseGenomes.Genome-1.0"
+    class Pangenome(tls.Unicode, TypeMeta):
+        """Pangenome type"""
+        info_text = "KBaseGenomes.Pangenome"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Pangenome object holds computed protein families for given set of genomes"""
+            info_text = "KBaseGenomes.Pangenome-1.0"        
     class MetagenomeAnnotation(tls.Unicode, TypeMeta):
         """MetagenomeAnnotation type"""
         info_text = "KBaseGenomes.MetagenomeAnnotation"

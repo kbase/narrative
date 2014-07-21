@@ -69,8 +69,8 @@ Stage = namedtuple("Stage", ["func","name","poll"])
 URLS = {"compute":URL("variation.services.kbase.us", 10000),
         "data":URL("variation.services.kbase.us", 10001)}
 
-URLS = {"compute":URL("mshadoop1.cshl.edu", 10000),
-        "data":URL("mshadoop1.cshl.edu", 10001)}
+#URLS = {"compute":URL("mshadoop1.cshl.edu", 10000),
+#        "data":URL("mshadoop1.cshl.edu", 10001)}
 
 CLIENT_CLASSES = {"compute": JnomicsCompute.Client,
                   "data" : JnomicsData.Client}

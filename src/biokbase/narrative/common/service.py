@@ -907,6 +907,14 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         """
         return os.environ['KB_WORKSPACE_ID']
 
+    def poll_job(self, job_id):
+        global job_manager
+        if job_manager is None:
+            job_manager = KBjobManager()
+
+        return job_manager.poll_job(job_id)
+
+
     ## JSON serialization
 
     def as_json(self, formatted=False, **kw):

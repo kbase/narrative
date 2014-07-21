@@ -878,12 +878,20 @@
          * XXX: Should this trigger a save?
          */
         registerJobId: function(jobId) {
-            var metadata = IPython.notebook.metadata;
-            metadata.job_ids.push({
-                'id' : jobId,       // the job id itself, from the ujs (or wherever)
-                'source' : '',      // the function that triggered this job
-                'target' : '',      // the id of the output cell that this id is linked with
-            });
+            var narJobInfo = {
+                id : jobId,
+                source : '',
+                target : '',
+            };
+
+            this.trigger('registerJob.Narrative', narJobInfo);
+            // var metadata = IPython.notebook.metadata;
+            // this.trigger('')
+            // metadata.job_ids.push({
+            //     'id' : jobId,       // the job id itself, from the ujs (or wherever)
+            //     'source' : '',      // the function that triggered this job
+            //     'target' : '',      // the id of the output cell that this id is linked with
+            // });
         },
 
         /**

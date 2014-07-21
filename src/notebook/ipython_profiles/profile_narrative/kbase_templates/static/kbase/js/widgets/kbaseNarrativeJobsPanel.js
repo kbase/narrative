@@ -18,7 +18,7 @@
                 }, this)
             );
 
-            $(document).on('updateJobs.Narrative', $.proxy(
+            $(document).on('refreshJobs.Narrative', $.proxy(
                 function(e) {
                     this.refresh();
                 }, this)
@@ -118,10 +118,20 @@
             this.$jobsPanel.show();
         },
 
+        registerJob: function(jobInfo) {
+            if (!IPython || !IPython.notebook || !IPython.notebook.kernel || !IPython.notebook.metadata)
+                return;
+            if (!IPython.notebook.metadata.job_ids)
+                IPython.notebook.metadata.job_ids = [];
+
+            IPython.notebook.metadata.job_ids.push(jobInfo);
+            this.refresh();
+        },
+
         /**
          * @method
          */
-        refresh: function(currentJobInfo) {
+        refresh: function() {
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || 
                 !IPython.notebook.metadata || !IPython.notebook.metadata.job_ids)
                 return;
@@ -129,12 +139,14 @@
             this.showLoadingMessage("Loading running jobs...");
 
             var narrJobs = IPython.notebook.metadata.job_ids;
+            var uniqueJobs = {};
             var jobList = [];
             for (var i=0; i<narrJobs.length; i++) {
+                if (uniqueJobs.hasOwnProperty(narrJobs[i]))
+                    continue;
+                uniqueJobs[narrJobs[i]] = 1;
                 jobList.push("'" + narrJobs[i].id + "'");
             }
-
-            jobList.push("'53cc70d9e4b01ed3c1e89e0a'");
 
             if (jobList.length === 0) {
                 // no jobs! skip the kernel noise and cut to the rendering!
@@ -225,7 +237,7 @@
                 $('<div>').kbasePrompt(
                     {
                         title: 'Job Details',
-                        body: $modalBody, //$('<div>').kbaseJobWatcher({ jobInfo: job }),
+                        body: $modalBody,
                         controls : [
                             {
                                 name: 'Close',

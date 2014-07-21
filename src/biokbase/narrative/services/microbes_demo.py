@@ -465,7 +465,7 @@ def view_phenotype(meth, phenotype_set_id):
 
 @method(name="Import RAST Genomes")
 def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):
-    """Bring up a detailed view of your phenotypeset within the narrative. 
+    """Import genomes from the RAST annotation pipeline. 
     
     :param genome_ids: list of genome ids (comma seperated)
     :type genome_ids: kbtypes.Unicode
@@ -507,7 +507,7 @@ def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):
 
 @method(name="Import SEED Genomes")
 def _import_seed_genomes(meth, genome_ids):
-    """Bring up a detailed view of your phenotypeset within the narrative. 
+    """Import genomes from the pubSEED database. 
     
     :param genome_ids: list of genome ids (comma seperated)
     :type genome_ids: kbtypes.Unicode
@@ -539,7 +539,7 @@ def _import_seed_genomes(meth, genome_ids):
 
 @method(name="Compute Pan_Genome")
 def _compare_pan_genome(meth, genome_ids):
-    """Bring up a detailed view of your phenotypeset within the narrative. 
+    """Compute a Pangenome from a given set of genomes. 
     
     :param genome_ids: list of genome ids (comma seperated)
     :type genome_ids: kbtypes.KBaseGenomes.Genome
@@ -583,7 +583,7 @@ def _compare_pan_genome(meth, genome_ids):
 
 @method(name="Compare Models")
 def _compare_models(meth, model_ids):
-    """Compare two or models and compute core, noncore unique reactions, roles with subsystem information. 
+    """Compare two or models and compute core, noncore unique reactions, functional roles with their subsystem information. 
     
     :param model_ids: list of model ids (comma seperated)
     :type model_ids: kbtypes.KBaseFBA.FBAModel
@@ -620,7 +620,7 @@ def _compare_models(meth, model_ids):
 
 @method(name="Compare Genomes")
 def _compare_genomes(meth, genome_ids):
-    """Compare two or genomes and compute core, noncore unique reactions, roles with subsystem information. 
+    """Compare two or more genomes and compute core, noncore unique genes, functional roles with their subsystem information. 
     
     :param model_ids: list of genome ids (comma seperated)
     :type model_ids: kbtypes.KBaseGenomes.Genome

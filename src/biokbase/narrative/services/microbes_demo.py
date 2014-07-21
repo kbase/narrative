@@ -428,6 +428,107 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     #meth.advance("Displaying your new FBA model details")
     return json.dumps({'id': model_name, 'ws': workspaceName})
 
+@method(name="Translate Model to New Genome")
+def _translate_model_to_new_genome(meth, fba_model_id, proteome_cmp, output_id):
+    """ Functionality to assign a new genome to an imported model. 
+    A proteome comparison is done between the orginal model genome 
+    and the new desired genome. Metoblic reactions from original model 
+    get mapped to genes in the new genome'.  [19]
+     
+    :param fba_model_id: an FBA model id from first genome [19.1]
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name fba_model_id: FBA Model ID
+
+    :param proteome_cmp: Proteome comparison ID [19.3]
+    :type proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
+    :ui_name proteome_cmp: Proteome Comparison ID
+
+    :param output_id: ID to which translated model should be saved
+    :type output_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name output_id: Translated Model ID
+    
+    :return: Output Translated Model
+    :rtype: kbtypes.KBaseFBA.FBAModel
+    :output_widget: kbaseModelTabs
+    """
+    meth.stages = 1  # for reporting progress
+    token = os.environ['KB_AUTH_TOKEN']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    fbaClient = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+    translate_params = {
+                         'protcomp' : proteome_cmp,
+                         'model' : fba_model_id,
+                         'workspace' : workspace,
+                         'output_id' : output_id
+                         }
+    modeldata = fbaClient.translate_fbamodel(translate_params)
+    
+    return json.dumps({'ws': workspace, 'id': output_id})
+
+
+@method(name="View PhenotypeSet")
+def view_phenotype(meth, phenotype_set_id):
+    """Bring up a detailed view of your phenotypeset within the narrative. 
+    
+    :param phenotype_set_id: the phenotype set to view
+    :type phenotype_set_id: kbtypes.KBasePhenotypes.PhenotypeSet
+    :ui_name phenotype_set_id: Phenotype Set
+    
+    :return: Phenotype Set Data
+    :rtype: kbtypes.KBasePhenotypes.PhenotypeSet
+    :output_widget: kbasePhenotypeSet
+    """
+    meth.stages = 2  # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    meth.advance("Loading the phenotype set")
+    
+
+    return json.dumps({'ws': meth.workspace_id, 'name': phenotype_set_id})
+
+@method(name="Import RAST Genomes")
+def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):
+    """Bring up a detailed view of your phenotypeset within the narrative. 
+    
+    :param genome_ids: list of genome ids (comma seperated)
+    :type genome_ids: kbtypes.Unicode
+    :ui_name genome_ids: RAST Genome IDs
+    
+    :param rast_username: Your RAST Username
+    :type rast_username: kbtypes.Unicode
+    :ui_name rast_username: RAST Username
+
+    :param rast_password: Your RAST Password
+    :type rast_password: kbtypes.Unicode
+    :ui_name rast_password: RAST Password
+
+    :return: Uploaded RAST Genome
+    :rtype: kbtypes.Unicode
+    :output_widget: GenomeAnnotation
+    """
+    #315750.3
+    gids = genome_ids.split(',')
+
+    meth.stages = len(gids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+
+    fba = fbaModelServices(url = service.URLS.fba, token = token)
+
+    for gid in gids:
+        meth.advance("Loading genome: "+gid);
+        fba.genome_to_workspace({'genome': gid, 
+                                 'workspace': ws, 
+                                 'sourceLogin': rast_username,
+                                 'sourcePassword': rast_password,
+                                 'source': 'rast'})
+
+
+    return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
 
 @method(name="View Metabolic Model Details")
 def _view_model_details(meth, fba_model_id):
@@ -457,6 +558,59 @@ def _view_model_details(meth, fba_model_id):
     #modeldata = fbaClient.get_models(get_models_params)
     return json.dumps({'id': fba_model_id, 'ws': workspaceName})
 
+@method(name="Delete Reaction")
+def _delete_reaction(meth, fba_model_id, reaction_id, output_id):
+    """Delete reactions from selected Metabolic Model 
+    
+    :param fba_model_id: the metabolic model to edit
+    :type fba_model_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name fba_model_id: Metabolic Model
+
+    :param reaction_id: Reactions to be deleted. Add multiple reactions seperated by ; 
+    :type reaction_id: kbtypes.Unicode
+    :ui_name reaction_id: Reaction(s) ID(s)
+
+    :param output_id: ID of model with deleted reactions
+    :type output_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name output_id: Edited Model
+
+    :return: Metabolic Model Data
+    :rtype: kbtypes.Model
+    :output_widget: kbaseModelTabs    
+    """
+    meth.debug('delete reaction call')
+
+    meth.stages = 2  # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+    #meth.advance("Loading the phenotype set")
+    #
+    fba = fbaModelServices(service.URLS.fba, token=token)
+
+    meth.debug(output_id)
+    if output_id:
+        params = {'model': fba_model_id, 
+                   'workspace': ws,
+                   'reaction' : reaction_id.split(';'), 
+                   'removeReaction': 1,
+                   'outputid': output_id }
+    else:
+        params = {'model': fba_model_id, 
+                   'workspace': ws,
+                   'reaction' : reaction_id.split(';'), 
+                   'removeReaction': 1}
+
+
+    data = fba.adjust_model_reaction(params)
+
+    if output_id:
+        data = json.dumps({'id': output_id, 'ws': ws})
+    else:
+        data = json.dumps({'id': fba_model_id, 'ws': ws})        
+
+    return data
 
 @method(name="Build Media")
 def _build_media(meth, media):

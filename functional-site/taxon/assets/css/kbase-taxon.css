@@ -1,0 +1,41 @@
+.taxon-header {
+	background-color: #bebebe;
+	color: #000;
+	padding: 9px;
+}
+
+.taxon-header h2 {
+	color: #000;
+}
+
+.tbox {
+	margin-top: 9px;
+	border: 1px solid #a5a5a5;
+	margin-left: -1px;
+	-webkit-border-radius: 4px;
+	   -moz-border-radius: 4px;
+	        border-radius: 4px;
+}
+
+.box-header {
+	padding: 4px 15px;
+	border-bottom: 1px solid #a5a5a5;
+	background-color: #eee;
+	text-align: center;
+	font-weight: bold;
+	-webkit-border-radius: 4px 4px 0 0;
+	   -moz-border-radius: 4px 4px 0 0;
+	        border-radius: 4px 4px 0 0;
+}
+
+.box-body {
+	padding: 9px 15px;
+}
+
+.map-container {
+	height: 300px;
+}
+
+.map-container img {
+	max-width: none;
+}

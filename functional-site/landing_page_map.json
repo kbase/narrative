@@ -1,0 +1,153 @@
+{
+    "BAMBI" : {
+        "BambiRunResult" : "bambi"
+    },
+
+    "Cmonkey" : {
+        "CmonkeyRunResult" : "cmonkey"
+    },
+
+    "Communities" : {
+        "Profile" : null,
+        "DataHandle" : null,
+        "Metagenome" : null,
+        "ProfileTable" : null,
+        "List" : null,
+        "Collection" : null,
+        "Project" : null,
+        "SequenceFile" : null,
+        "ProfileStats" : null,
+        "Data" : null
+    },
+
+    "Inferelator" : {
+        "InferelatorRunResult" : "inferelator",
+        "GeneList" : null
+    },
+
+    "KBaseBiochem" : {
+        "Biochemistry" : null,
+        "Media" : "media",
+        "BiochemistryStructures" : null,
+        "MetabolicMap": "maps"
+    },
+
+    "KBaseCommunities" : {
+        "Metagenome" : "metagenome"
+    },
+
+    "KBaseExpression" : {
+        "ExpressionSample" : null,
+        "ExpressionSeries" : null,
+        "ExpressionReplicateGroup" : null,
+        "ExpressionPlatform" : null
+    },
+
+    "KBaseAssembly" : {
+        "SingleEndLibrary" : null,
+        "Handle" : null,
+        "AssemblyInput" : null,
+        "ReferenceAssembly" : null,
+        "PairedEndLibrary" : null
+    },
+
+    "KBaseFBA" : {
+        "Gapfilling" : null,
+        "FBA" : "fbas",
+        "ReactionSensitivityAnalysis" : null,
+        "FBAModel" : "models",
+        "Gapgeneration" : null,
+        "ModelTemplate" : null,
+        "ETC" : "etc"
+    },
+
+    "KBaseGenomes" : {
+        "ProbabilisticAnnotation" : null,
+        "ContigSet" : null,
+        "Genome" : "genomes",
+        "MetagenomeAnnotation" : null
+    },
+
+    "KBaseGwasData" : {
+        "GwasGeneList" : null,
+        "GwasPopulationVariation" : null,
+        "GwasPopulationVariation" : null,
+        "GwasPopulationTrait" : null,
+        "GwasPopulationKinship" : null,
+        "GwasTopVariations" : null
+    },
+
+    "KBaseNarrative" : {
+        "Cell" : null,
+        "Worksheet" : null,
+        "Narrative" : null
+    },
+
+    "KBaseNetworks" : {
+        "Network" : null,
+        "InteractionSet" : null
+    },
+
+    "KBaseOntology" : {
+        "Ontology" : null,
+        "GeneAnnotations" : null,
+        "Mapping" : null
+    },
+
+    "KBasePhenotypes" : {
+        "PhenotypeSet" : null,
+        "PhenotypeSimulationSet" : null
+    },
+
+    "KBasePPI" : {
+        "InteractionDataset" : "ppid",
+        "Interaction" : null
+    },
+
+    "KBaseRegulation" : {
+        "Regulome" : "regprecise"
+    },
+
+    "KBaseSearch" : {
+        "FeatureSet" : null,
+        "Contig" : null,
+        "ContigSet" : null,
+        "Genome" : "genomes",
+        "Feature" : "genes"
+    },
+
+    "KBaseSequences" : {
+        "SequenceSet": null
+    },
+
+    "MAK" : {
+        "MAKParameters" : null,
+        "ExpressionDataSample" : null,
+        "ExpressionDataPoint" : null,
+        "MAKResult" : "mak",
+        "MAKBicluster" : null,
+        "ExpressionDataSeries" : null,
+        "MAKBiclusterSet" : null
+    },
+
+    "MEME" : {
+        "MemePSPMCollection" : null,
+        "MemePSPM" : null,
+        "MastRunResult" : "meme",
+        "MemeSite" : null,
+        "MastHit" : null,
+        "TomtomRunResult" : "meme",
+        "MemeRunResult" : "meme"
+    },
+
+    "ProbabilisticAnnotation" : {
+        "RxnProbs" : null,
+        "ProbAnno" : null
+    },
+
+    "Meta" : {
+        "RxnProbs" : null,
+        "ProbAnno" : null
+    }    
+
+}

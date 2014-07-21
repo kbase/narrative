@@ -1,0 +1,83 @@
+#!/bin/bash
+
+BANNER="
+/**
+ * The KBase API
+ * http://kbase.us
+ *
+ * API documentation: http://kbase.us/developer-zone/api-documentation/
+ * @license Copyright (c) 2013, The DOE Systems Biology Knowledgebase Project
+ */
+"
+
+function usage {
+    [ -n "$1" ] && echo "$1"
+    cat <<EOF
+Usage: $0 [options] outfile
+
+    -m mode    The mode for fetching JavaScript libraries
+                 deploy:
+                   Libraries deployed locally on a given host (Default)
+                 live:
+                   Libraries hosted on live services
+                   
+    -h host    An SSH host string
+    
+    outfile    The output file (Default: ./kbase.js)
+EOF
+    exit 0;
+}
+
+
+# Fetch libraries from live services
+function live_libs {
+    jslist=./javascripts.$$.list; touch $jslist
+    cat <<Banner > $outfile
+$BANNER
+Banner
+    for svc in `cat hostlist | cut -f2 -d: | grep .`; do
+    	ssh "$svc" 'find /kb/deployment/lib -name "Client.js"' 2>/dev/null | \
+    	while read client; do
+    		if [ $(grep -c "$client" $jslist) -eq 0 ]; then
+    			ssh "$svc" cat $client 2>/dev/null >> $outfile
+    			printf "%-20s %s\n" $svc $client;
+    			echo $client >> $jslist
+    		fi
+    	done
+    done
+    rm -f $jslist
+}
+
+# Fetch all libraries deployed on a given host
+function deploy_libs {
+    tmpfile=.javascript.$$
+    if [ -z "$host" ]; then
+        usage "Host is required for deployed libs."
+    fi
+    ssh $host 'find /kb/deployment/lib -name "*.js" | xargs cat' > $tmpfile 2> /dev/null
+    cat <<Banner > $outfile
+$BANNER
+Banner
+    cat $tmpfile >> $outfile
+    rm $tmpfile
+}
+
+mode=deploy
+while getopts "h:m:" opt; do
+    case $opt in
+        h) host=$OPTARG; shift;;
+        m) mode=$OPTARG; shift;;
+        *) usage "$0 does not support the -$opt option!";;
+    esac
+    shift
+done
+
+outfile=${1:-./kbase.js}
+echo "Writing to $outfile"
+
+case "$mode" in
+    live)   live_libs;;
+    deploy) deploy_libs;;
+    *)      usage "No such mode '$mode'";;
+esac
+exit 0

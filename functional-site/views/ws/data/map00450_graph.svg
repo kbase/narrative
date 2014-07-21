@@ -1,0 +1,90 @@
+<svg>
+<g>
+    <rect rxns="rxn11571" x="534" y="451" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="537" y="464" font-size="9" stroke="grey" fill="black" >1.8.1.9</text>
+</g>
+<g>
+    <rect rxns="rxn02569" x="292" y="451" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="295" y="464" font-size="9" stroke="grey" fill="black" >2.7.9.3</text>
+</g>
+<g>
+    <rect rxns="rxn03265" x="176" y="134" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="179" y="147" font-size="9" stroke="grey" fill="black" >2.1.1.12</text>
+</g>
+<g>
+    <rect rxns="rxn03263" x="218" y="176" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="221" y="189" font-size="9" stroke="grey" fill="black" >4.4.1.11</text>
+</g>
+<g>
+    <rect rxns="rxn06781" x="95" y="167" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="98" y="180" font-size="9" stroke="grey" fill="black" >6.1.1.10</text>
+</g>
+<g>
+    <rect rxns="rxn07210" x="723" y="383" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="726" y="396" font-size="9" stroke="grey" fill="black" >1.97.1.9</text>
+</g>
+<g>
+    <rect rxns="R09373" x="292" y="322" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="295" y="335" font-size="9" stroke="grey" fill="black" >2.6.1.-</text>
+</g>
+<g>
+    <rect rxns="rxn11751" x="147" y="516" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="150" y="529" font-size="9" stroke="grey" fill="black" >2.7.1.164</text>
+</g>
+<g>
+    <rect rxns="rxn11752" x="95" y="460" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="98" y="473" font-size="9" stroke="grey" fill="black" >2.9.1.2</text>
+</g>
+<g>
+    <rect rxns="rxn03263" x="218" y="155" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="221" y="168" font-size="9" stroke="grey" fill="black" >4.4.1.1</text>
+</g>
+<g>
+    <rect rxns="rxn06820,rxn03383" x="176" y="355" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="179" y="368" font-size="9" stroke="grey" fill="black" >2.5.1.48</text>
+</g>
+<g>
+    <rect rxns="rxn06421" x="292" y="386" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="295" y="399" font-size="9" stroke="grey" fill="black" >4.4.1.16</text>
+</g>
+<g>
+    <rect rxns="rxn03373" x="764" y="356" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="767" y="369" font-size="9" stroke="grey" fill="black" >2.7.7.4</text>
+</g>
+<g>
+    <rect rxns="R09366" x="247" y="210" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="250" y="223" font-size="9" stroke="grey" fill="black" >4.4.1.16</text>
+</g>
+<g>
+    <rect rxns="rxn09244" x="95" y="441" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="98" y="454" font-size="9" stroke="grey" fill="black" >2.9.1.1</text>
+</g>
+<g>
+    <rect rxns="rxn03379" x="176" y="290" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="179" y="303" font-size="9" stroke="grey" fill="black" >4.4.1.8</text>
+</g>
+<g>
+    <rect rxns="R09365" x="176" y="210" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="179" y="223" font-size="9" stroke="grey" fill="black" >2.1.1.13...</text>
+</g>
+<g>
+    <rect rxns="rxn11633" x="251" y="355" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="254" y="368" font-size="9" stroke="grey" fill="black" >2.1.1.-</text>
+</g>
+<g>
+    <rect rxns="R09369" x="436" y="223" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="439" y="236" font-size="9" stroke="grey" fill="black" >2.1.1.-</text>
+</g>
+<g>
+    <rect rxns="R09371" x="386" y="290" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="389" y="303" font-size="9" stroke="grey" fill="black" >2.1.1.-</text>
+</g>
+<g>
+    <rect rxns="R09372" x="436" y="167" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="439" y="180" font-size="9" stroke="grey" fill="black" >1.8.1.9</text>
+</g>
+<g>
+    <rect rxns="R09370" x="534" y="223" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="537" y="236" font-size="9" stroke="grey" fill="black" >2.1.1.96</text>
+</g>
+</svg>

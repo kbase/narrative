@@ -1,0 +1,118 @@
+body {
+/*	padding-top: 50px; */
+}
+
+/* featured section of the user home page */
+.narr-featured-help {
+	color: #0088CC; 
+	font-size: 16px; 
+	padding-left: 5px
+}
+
+.narr-featured-narrative {
+	padding-top: 5px; 
+	padding-bottom: 10px; 
+	margin-bottom: 20px; 
+	border-bottom: 1px solid #ccc;
+}
+
+.narr-featured-narrative div {
+	margin-bottom: 10px;
+}
+
+div.narr-featured-narrative:last-child {
+	border: none;
+}
+
+#narr-newsfeed-column h2 {
+	color: #4a4a4a;
+	margin-top: 10px;
+}
+
+.narr-featured-narrative h2 {
+	font-size: 16px; 
+	margin-top: 10px;
+	margin-bottom: 0px;
+}
+
+.narr-featured-narrative h3 {
+	font-size: 14px; 
+	margin-top: 10px;
+	font-family: 'OxygenRegular', Arial, sans-serif;
+}
+
+.narr-copy {
+	margin-top: 5px;
+}
+
+#feed_section h2 {
+	margin-top: 0;
+	/*margin-bottom: 15px;*/
+	color: black;
+}
+
+/* persistent side navigation */
+#narr-narrative-column {
+	height: 100%;
+}
+
+ul#narr-sidenav-items {
+	margin: 0;
+	padding: 0;
+	padding-bottom: 20px;
+}
+
+ul#narr-sidenav-items li {
+	list-style: none;
+	margin-bottom: 10px;
+	text-align: left;
+	font-family: 'RobotoBlack', Arial, sans-serif;
+	font-size: 12px;
+}
+
+
+#narr-newsfeed-column {
+	border-left: 1px solid #ddd;
+	padding-left: 50px;
+	padding-bottom: 100px;
+}
+
+.narr-narrative-section {
+	border-top: 1px solid #ddd;
+	padding-bottom: 40px;
+}
+
+
+.narr-narrative-section h3 {
+	font-size: 14px;
+	color: #898989;
+}
+
+/* buttons */
+#narr-narrative-column .narr-btn-default {
+	background-color: #f2f2f2;
+	text-align: left;
+	padding-left: 20px;
+	padding-right: 20px;
+	border: 1px solid #DBDBDB;
+	color: #6DA8CF;
+}
+
+
+
+#narr-narrative-column .narr-btn-primary {
+	background-color: #BBE8F9;
+	text-align: left;
+	padding-left: 20px;
+	padding-right: 20px;
+	border: 1px solid #A5D4E1;
+}
+#narr-narrative-column .narr-btn-default span {
+	/*color: #7FB3D8; */
+	color: #ccc;
+}
+#narr-narrative-column .narr-btn-default:hover, #narr-narrative-column .narr-btn-default:hover span,
+#narr-narrative-column .narr-btn-primary:hover, #narr-narrative-column .narr-btn-primary:hover span {
+	color: #555;
+}
+

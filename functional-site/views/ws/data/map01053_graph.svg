@@ -1,0 +1,18 @@
+<svg>
+<g>
+    <rect rxns="rxn01094" x="939" y="250" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="942" y="263" font-size="9" stroke="grey" fill="black" >1.3.1.28</text>
+</g>
+<g>
+    <rect rxns="rxn04454" x="456" y="211" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="459" y="224" font-size="9" stroke="grey" fill="black" >4.2.99.21</text>
+</g>
+<g>
+    <rect rxns="rxn01258" x="649" y="171" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="652" y="184" font-size="9" stroke="grey" fill="black" >5.4.4.2</text>
+</g>
+<g>
+    <rect rxns="rxn02177" x="790" y="210" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="793" y="223" font-size="9" stroke="grey" fill="black" >3.3.2.1</text>
+</g>
+</svg>

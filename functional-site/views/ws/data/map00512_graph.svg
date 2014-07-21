@@ -1,0 +1,46 @@
+<svg>
+<g>
+    <rect rxns="R05910" x="244" y="371" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="247" y="384" font-size="9" stroke="grey" fill="black" >2.4.1.148</text>
+</g>
+<g>
+    <rect rxns="R05915" x="379" y="231" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="382" y="244" font-size="9" stroke="grey" fill="black" >2.4.1.148</text>
+</g>
+<g>
+    <rect rxns="R05910" x="244" y="350" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="247" y="363" font-size="9" stroke="grey" fill="black" >2.4.1.102</text>
+</g>
+<g>
+    <rect rxns="R07628" x="379" y="362" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="382" y="375" font-size="9" stroke="grey" fill="black" >2.4.1.-</text>
+</g>
+<g>
+    <rect rxns="R05914" x="512" y="106" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="515" y="119" font-size="9" stroke="grey" fill="black" >2.4.99.3</text>
+</g>
+<g>
+    <rect rxns="R05911" x="181" y="144" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="184" y="157" font-size="9" stroke="grey" fill="black" >2.4.99.3</text>
+</g>
+<g>
+    <rect rxns="R05913" x="379" y="107" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="382" y="120" font-size="9" stroke="grey" fill="black" >2.4.99.4</text>
+</g>
+<g>
+    <rect rxns="R05909" x="244" y="231" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="247" y="244" font-size="9" stroke="grey" fill="black" >2.4.1.147</text>
+</g>
+<g>
+    <rect rxns="R05907" x="126" y="234" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="129" y="247" font-size="9" stroke="grey" fill="black" >2.4.1.41</text>
+</g>
+<g>
+    <rect rxns="R05908" x="244" y="171" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="247" y="184" font-size="9" stroke="grey" fill="black" >2.4.1.122</text>
+</g>
+<g>
+    <rect rxns="R05912" x="379" y="171" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="382" y="184" font-size="9" stroke="grey" fill="black" >2.4.1.102</text>
+</g>
+</svg>

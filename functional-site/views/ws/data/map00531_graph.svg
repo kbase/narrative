@@ -1,0 +1,86 @@
+<svg>
+<g>
+    <rect rxns="R07814" x="308" y="403" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="311" y="416" font-size="9" stroke="grey" fill="black" >3.10.1.1</text>
+</g>
+<g>
+    <rect rxns="R07811" x="332" y="226" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="335" y="239" font-size="9" stroke="grey" fill="black" >3.2.1.-</text>
+</g>
+<g>
+    <rect rxns="R07811" x="282" y="226" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="285" y="239" font-size="9" stroke="grey" fill="black" >3.2.1.166</text>
+</g>
+<g>
+    <rect rxns="R07808" x="444" y="403" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="447" y="416" font-size="9" stroke="grey" fill="black" >3.1.6.14</text>
+</g>
+<g>
+    <rect rxns="R07805" x="444" y="226" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="447" y="239" font-size="9" stroke="grey" fill="black" >3.2.1.103</text>
+</g>
+<g>
+    <rect rxns="R07821" x="91" y="282" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="94" y="295" font-size="9" stroke="grey" fill="black" >3.1.6.13</text>
+</g>
+<g>
+    <rect rxns="R07812" x="308" y="282" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="311" y="295" font-size="9" stroke="grey" fill="black" >3.1.6.13</text>
+</g>
+<g>
+    <rect rxns="R07806" x="444" y="282" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="447" y="295" font-size="9" stroke="grey" fill="black" >3.1.6.4</text>
+</g>
+<g>
+    <rect rxns="R07822" x="91" y="344" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="94" y="357" font-size="9" stroke="grey" fill="black" >3.2.1.76</text>
+</g>
+<g>
+    <rect rxns="R07813" x="308" y="344" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="311" y="357" font-size="9" stroke="grey" fill="black" >3.2.1.76</text>
+</g>
+<g>
+    <rect rxns="R07823" x="91" y="403" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="94" y="416" font-size="9" stroke="grey" fill="black" >3.1.6.12</text>
+</g>
+<g>
+    <rect rxns="R07807" x="444" y="344" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="447" y="357" font-size="9" stroke="grey" fill="black" >3.2.1.23</text>
+</g>
+<g>
+    <rect rxns="R07824" x="91" y="466" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="94" y="479" font-size="9" stroke="grey" fill="black" >3.2.1.35</text>
+</g>
+<g>
+    <rect rxns="R07815" x="308" y="466" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="311" y="479" font-size="9" stroke="grey" fill="black" >2.3.1.78</text>
+</g>
+<g>
+    <rect rxns="R07810" x="511" y="466" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="514" y="479" font-size="9" stroke="grey" fill="black" >3.2.1.52</text>
+</g>
+<g>
+    <rect rxns="R07825" x="21" y="466" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="24" y="479" font-size="9" stroke="grey" fill="black" >3.2.1.35</text>
+</g>
+<g>
+    <rect rxns="R07816" x="308" y="527" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="311" y="540" font-size="9" stroke="grey" fill="black" >3.2.1.50</text>
+</g>
+<g>
+    <rect rxns="R07817" x="308" y="587" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="311" y="600" font-size="9" stroke="grey" fill="black" >3.1.6.18</text>
+</g>
+<g>
+    <rect rxns="R07809" x="444" y="466" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="447" y="479" font-size="9" stroke="grey" fill="black" >3.2.1.52</text>
+</g>
+<g>
+    <rect rxns="R07818" x="308" y="648" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="311" y="661" font-size="9" stroke="grey" fill="black" >3.2.1.31</text>
+</g>
+<g>
+    <rect rxns="R07819" x="308" y="710" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="311" y="723" font-size="9" stroke="grey" fill="black" >3.1.6.14</text>
+</g>
+</svg>

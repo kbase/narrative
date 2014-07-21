@@ -534,7 +534,6 @@ def _import_seed_genomes(meth, genome_ids):
                                  'workspace': ws, 
                                  'source': 'seed'})
 
-
     return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
 
 

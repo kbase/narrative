@@ -448,6 +448,12 @@ class KBaseGenomes(object):
         class v1_0(tls.Unicode, TypeMeta):
             """Genome object holds much of the data relevant for a genome in KBase"""
             info_text = "KBaseGenomes.Genome-1.0"
+    class Pangenome(tls.Unicode, TypeMeta):
+        """Pangenome type"""
+        info_text = "KBaseGenomes.Pangenome"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Pangenome object holds computed protein families for given set of genomes"""
+            info_text = "KBaseGenomes.Pangenome-1.0"        
     class MetagenomeAnnotation(tls.Unicode, TypeMeta):
         """MetagenomeAnnotation type"""
         info_text = "KBaseGenomes.MetagenomeAnnotation"

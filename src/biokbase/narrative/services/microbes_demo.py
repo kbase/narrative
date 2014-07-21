@@ -530,13 +530,163 @@ def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):
 
     return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
 
+@method(name="Import SEED Genomes")
+def _import_seed_genomes(meth, genome_ids):
+    """Bring up a detailed view of your phenotypeset within the narrative. 
+    
+    :param genome_ids: list of genome ids (comma seperated)
+    :type genome_ids: kbtypes.Unicode
+    :ui_name genome_ids: SEED Genome IDs
+
+    :return: Uploaded SEED Genome
+    :rtype: kbtypes.Unicode
+    :output_widget: GenomeAnnotation
+    """
+    #315750.3
+    gids = genome_ids.split(',')
+
+    meth.stages = len(gids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+
+    fba = fbaModelServices(url = service.URLS.fba, token = token)
+
+    for gid in gids:
+        meth.advance("Loading genome: "+gid);
+        fba.genome_to_workspace({'genome': gid, 
+                                 'workspace': ws, 
+                                 'source': 'seed'})
+
+    return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
+
+
+@method(name="Compute Pan_Genome")
+def _compare_pan_genome(meth, genome_ids):
+    """Bring up a detailed view of your phenotypeset within the narrative. 
+    
+    :param genome_ids: list of genome ids (comma seperated)
+    :type genome_ids: kbtypes.KBaseGenomes.Genome
+    :ui_name genome_ids: Genome IDs
+
+    :return: Generated Compare Genome
+    :rtype: kbtypes.KBaseGenomes.Pangenome
+    :output_widget: kbasepangenome
+    """
+    #315750.3
+    gids = genome_ids.split(',')
+    
+    meth.stages = len(gids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+
+    #fba = fbaModelServices(url = service.URLS.fba, token = token)
+    fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+    wss = []
+    for gid in gids:
+        meth.advance("genomes: "+gid);
+        wss.append(ws)
+
+    meta = fba.build_pangenome({'genomes': gids, 
+                                'genome_workspaces': wss, 
+                                'workspace': ws})
+
+    ws = workspaceService(service.URLS.workspace, token=token)
+    meth.advance("Fetching pan genome")
+    params = [{
+        'workspace' : meth.workspace_id, 'name':meta[1]
+    }]
+
+    #data = ws.get_objects(params)
+    #print meth.debug(json.dumps(data))
+
+    #return json.dumps({'data': data})
+    return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
+
+@method(name="Compare Models")
+def _compare_models(meth, model_ids):
+    """Compare two or models and compute core, noncore unique reactions, roles with subsystem information. 
+    
+    :param model_ids: list of model ids (comma seperated)
+    :type model_ids: kbtypes.KBaseFBA.FBAModel
+    :ui_name model_ids: Model IDs
+
+    :return: Uploaded Model Comparison Data
+    :rtype: kbtypes.Unicode
+    :output_widget: compmodels
+    """
+    #315750.3
+    mids = model_ids.split(',')
+
+    meth.stages = len(mids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+    wss =[]
+    fba = fbaModelServices(url = service.URLS.fba, token = token)
+
+    for mid in mids:
+        meth.advance("Loading models: "+mid);
+        wss.append(ws)
+
+    modelout =fba.compare_models({'models': mids, 
+                                     'workspaces': wss })
+
+    comparemod = modelout['model_comparisons']                               
+    reactioncomp = modelout['reaction_comparisons']
+    #print meth.debug(json.dumps(comparemod))
+    #print meth.debug(json.dumps(reactioncomp))
+    return json.dumps({'data': comparemod})
+
+
+@method(name="Compare Genomes")
+def _compare_genomes(meth, genome_ids):
+    """Compare two or genomes and compute core, noncore unique reactions, roles with subsystem information. 
+    
+    :param model_ids: list of genome ids (comma seperated)
+    :type model_ids: kbtypes.KBaseGenomes.Genome
+    :ui_name model_ids: Genome IDs
+
+    :return: Uploaded Genome Comparison Data
+    :rtype: kbtypes.Unicode
+    :output_widget: compgenomes
+    """
+    #315750.3
+    gids = genome_ids.split(',')
+
+    meth.stages = len(gids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+    wss =[]
+    fba = fbaModelServices(url = service.URLS.fba, token = token)
+
+    for gid in gids:
+        meth.advance("Loading genomes: "+gid);
+        wss.append(ws)
+
+    genomeout =fba.compare_genomes({'genomes': gids, 
+                                     'workspaces': wss })
+
+    comparegenome = genomeout['genome_comparisons']                               
+    funccomp = genomeout['function_comparisons']
+    #print meth.debug(json.dumps(comparegenome))
+    #print meth.debug(json.dumps(funccomp))
+    return json.dumps({'data_genome': comparegenome, 'data_func':funccomp})
+
+
 @method(name="View Metabolic Model Details")
 def _view_model_details(meth, fba_model_id):
     """Bring up a detailed view of your metabolic model within the narrative. [7]
     
     :param fba_model_id: the metabolic model to view [7.1]
     :type fba_model_id: kbtypes.KBaseFBA.FBAModel
-    :ui_name fba_model_id: Metabolic Model
+    :ui_name fba_model_id: Metabolic Model 
     
     :return: Metabolic Model Data
     :rtype: kbtypes.Model

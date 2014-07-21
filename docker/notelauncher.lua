@@ -18,7 +18,7 @@ local p = require('pl.pretty')
 local lfs = require('lfs')
 
 -- This is the repository name, can be set by whoever instantiates a notelauncher
-M.repository_image = 'sychan/narrative'
+M.repository_image = 'kbase/narrative'
 -- This is the tag to use, defaults to latest
 M.repository_version = 'latest'
 -- This is the port that should be exposed from the container, the service in the container

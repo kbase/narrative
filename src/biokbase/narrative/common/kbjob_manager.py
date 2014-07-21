@@ -62,7 +62,6 @@ class KBjobManager():
         """
         if ujs is None:
             t = self.get_njl_token()
-            print t
             if t is None:
                 return 'No Token!' # should probably throw exception
 

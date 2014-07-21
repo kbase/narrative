@@ -59,7 +59,7 @@
             $([IPython.events]).on('notebook_loaded.Notebook', $.proxy(function() {
                 this.rebindActionButtons();
                 this.hideGeneratedCodeCells();
-            }), this);
+            }, this));
 
             $(document).on('workspaceUpdated.Narrative', 
                 $.proxy(function(e, ws_id) {

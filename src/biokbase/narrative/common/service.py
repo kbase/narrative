@@ -22,35 +22,18 @@ import IPython.utils.traitlets as trt
 from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes, kblogging
-from biokbase.narrative.common.kbjob_manager import kbjob_manager
+from biokbase.narrative.common.kbjob_manager import KBjobManager
+
+from biokbase.narrative.common.url_config import URLS
 
 # Init logging.
 _log = logging.getLogger(__name__)
 
 # Init job manager
-job_manager = kbjob_manager()
+job_manager = KBjobManager()
 
 ## Globals
 
-class Struct:
-    def __init__(self, **args):
-        self.__dict__.update(args)
-
-try:
-    nar_path = os.environ["NARRATIVEDIR"]
-    config_json = open(os.path.join(nar_path, "config.json")).read()
-    config = json.loads(config_json)
-    url_config = config[config['config']]  #fun, right?
-
-    URLS = Struct(**url_config)
-except:
-    url_dict = {
-        "workspace" : "https://kbase.us/services/ws/",
-        "invocation" : "https://kbase.us/services/invocation",
-        "fba" : "https://kbase.us/services/KBaseFBAModeling",
-        "genomeCmp" : "http://140.221.85.57:8283/jsonrpc"
-    }
-    URLS = Struct(**url_dict)
 
 # class URLS:
 #     workspace = "https://kbase.us/services/ws/"
@@ -492,7 +475,11 @@ class LifecycleSubject(object):
     def register_job(self, job_id):
         """Register a new long-running job.
         """
+        global job_manager
         if job_id is not None:
+            if job_manager is None:
+                job_manager = KBjobManager()
+
             self._event('debug', job_id)
             job_manager.register_job(job_id)
             self._event('register_job', job_id)

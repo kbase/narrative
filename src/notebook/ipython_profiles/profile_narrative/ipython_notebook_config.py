@@ -163,7 +163,7 @@ c.NotebookApp.kbase_auth = True
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics']
+c.IPKernelApp.exec_lines = ['import biokbase.narrative.magics']
 
 # The importstring for the OutStream factory
 # c.IPKernelApp.outstream_class = 'IPython.zmq.iostream.OutStream'
@@ -507,6 +507,7 @@ c.IPKernelApp.pylab = 'inline'
 # checking for config directives that control what to patch. For example if
 # NotebookApp.kbase_auth = True then the monkeypatch code should patch all the notebook app
 # handlers to enforce and pass along kbase auth tokens
+
 monkeypatch.do_patching(c)
 
 # The default aliases for IPython have dysfunction entries for mv, rm and cp that include the "-i"

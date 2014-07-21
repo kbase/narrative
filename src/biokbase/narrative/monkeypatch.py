@@ -12,6 +12,7 @@ sychan@lbl.gov
 """
 
 import os
+import sys
 import urllib
 import re
 import pprint
@@ -130,3 +131,12 @@ def do_patching( c ):
             self.set_header('Content-Type', 'text/html')
 
         self.write(self.render_template('error.html', error_status=error, traceback=trace_info, request_info=request_info))
+
+
+nuke_me = list()
+for i in range(0, len(sys.argv)):
+    if re.search("KBjobManager", sys.argv[i]):
+        nuke_me.append(i)
+nuke_me.sort()
+for i in range(len(nuke_me)-1,-1,-1):
+    del(sys.argv[nuke_me[i]])

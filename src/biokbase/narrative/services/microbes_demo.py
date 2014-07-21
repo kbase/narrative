@@ -30,25 +30,6 @@ NAME = "Microbes Services"
 # Initialize
 init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
-@method(name="Bill Test")
-def _bill_test(meth, test):
-    """Test test, tiggidy test.
-
-    :param test: Test test? Test.
-    :type test: kbtypes.Unicode
-    :ui_name test: Test test.
-    :return: Test. And a job id.
-    :rtype: kbtypes.Unicode
-    """
-    meth.stages = 2
-    meth.advance("Testing.")
-
-    job_id = "12345"
-    meth.register_job(job_id)
-
-    meth.advance("Done testing!")
-    return json.dumps({"test" : test,"job_id" : job_id})
-
 @method(name="Assemble Contigs from Reads")
 def _assemble_contigs(meth, asm_input):
     """Use a KBase pipeline to assemble a set of contigs from generated reads files.

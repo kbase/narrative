@@ -27,6 +27,9 @@ narrative.init = function() {
     var functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
     functionWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
+    var jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
+    jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+
     /**
      * Initializes the environment, once we know the kernel has started.
      * There's an issue with the kernel starting asynchronously, without an event
@@ -44,6 +47,7 @@ narrative.init = function() {
             IPython.notebook.kernel.execute(cmd, {}, {'silent' : true});
             IPython.notebook.set_autosave_interval(0);
 
+            jobsWidget.refresh();
             functionWidget.refresh();
         }
         catch (error) {

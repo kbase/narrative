@@ -37,6 +37,7 @@
 
         inputsRendered: false,
         maxSavedStates: 2,      // limit the states saved to 2 for now.
+        nextOutputCellId: '',
 
         // constant strings.
         KB_CELL: 'kb-cell',
@@ -800,7 +801,7 @@
                             offs += 1; // blank line, move offset
                         }
                         else {
-                            // look for @@S, @@P, @@D, @@G, or @@E
+                            // look for @@S, @@P, @@D, @@G, @@J, or @@E
                             var matches = line.match(/^@@([SPDGEJ])(.*)/);
                             if (matches) { // if we got one
                                 switch(matches[1]) {
@@ -839,6 +840,7 @@
                                     case 'J':
                                         var jobId = matches[2];
                                         self.dbg("[JOB ID] " + jobId);
+                                        self.registerJobId(jobId);
                                         break;
 
                                     default:
@@ -867,6 +869,21 @@
                     this.createOutputCell(cell, result);
                 }
             }
+        },
+
+        /**
+         * @method
+         * Registers the given job id with the Narrative.
+         * This stores the job id in the Narrative's metadata.
+         * XXX: Should this trigger a save?
+         */
+        registerJobId: function(jobId) {
+            var metadata = IPython.notebook.metadata;
+            metadata.job_ids.push({
+                'id' : jobId,       // the job id itself, from the ujs (or wherever)
+                'source' : '',      // the function that triggered this job
+                'target' : '',      // the id of the output cell that this id is linked with
+            });
         },
 
         /**

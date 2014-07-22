@@ -35,6 +35,13 @@ class KBjobManager():
 
         return self.ujs
 
+    def __proxy_client(self, token=None):
+        if self.ujs_proxy is None:
+            token = os.environ['KB_AUTH_TOKEN']
+            self.ujs_proxy = NarrativeJobProxy(url=URLS.narrative_job_proxy, token=token)
+
+        return self.ujs_proxy
+
     def register_job(self, job_id):
         """This really just shares an existing job with narrativejoblistener.
         Propagates its exception if unsuccessful
@@ -55,40 +62,52 @@ class KBjobManager():
         res = ujs.get_results(job_id)
         return res
 
-    def poll_job(self, job_id):
+    def poll_job(self, job_id, ujs_proxy=None):
         """
         Polls a single job id on behalf of the narrativejoblistener account
         Will raise biokbase.user_and_job_state.ServerError if a job doesn't exist.
         """
-        if self.ujs is None:
-            t = self.get_njl_token()
-            if t is None:
-                return 'No Token!' # should probably throw exception
+        # if self.ujs is None:
+        #     t = self.get_njl_token()
+        #     if t is None:
+        #         return 'No Token!' # should probably throw exception
 
-            self.ujs = UserAndJobState(url=URLS.user_and_job_state, token=t.token)
+        #     self.ujs = UserAndJobState(url=URLS.user_and_job_state, token=t.token)
 
-        return self.ujs.get_job_info(job_id)
+        # return self.ujs.get_job_info(job_id)
+        if ujs_proxy is None:
+            ujs_proxy = self.__proxy_client()
+
+        return ujs_proxy.get_job_info(job_id)
 
     def poll_jobs(self, job_ids, as_json=False):
         """
         Polls a list of job ids on behalf of the narrativejoblistener
         account and returns the results
         """
-        t = self.get_njl_token()
-        if t is None:
-            return None # should probably throw exception
-
-        self.ujs = UserAndJobState(url=URLS.user_and_job_state, token=t.token)
-
         info_list = list()
-        for i in range(0, len(job_ids)):
-            info_list.append(self.poll_job(job_ids[i]))
+        ujs_proxy = self.__proxy_client()
 
-        if as_json:
-            import json
-            info_list = json.dumps(info_list)
+        for job_id in job_ids:
+            info_list.append(self.poll_job(job_id, ujs_proxy))
 
         return info_list
+
+        # t = self.get_njl_token()
+        # if t is None:
+        #     return None # should probably throw exception
+
+        # self.ujs = UserAndJobState(url=URLS.user_and_job_state, token=t.token)
+
+        # info_list = list()
+        # for i in range(0, len(job_ids)):
+        #     info_list.append(self.poll_job(job_ids[i]))
+
+        # if as_json:
+        #     import json
+        #     info_list = json.dumps(info_list)
+
+        # return info_list
 
     # def get_njl_token(self):
     #     """

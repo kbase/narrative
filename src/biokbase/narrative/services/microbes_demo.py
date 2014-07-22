@@ -21,6 +21,7 @@ from biokbase.InvocationService.Client import InvocationService
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.GenomeComparison.Client import GenomeComparison
 from biokbase.assembly.client import Client as ArastClient
+from biokbase.KBaseTrees.Client import KBaseTrees
 
 ## Globals
 
@@ -1069,9 +1070,6 @@ def _view_fba_result_details(meth, fba_id):
     
     return json.dumps({ "ids":[fba_id],"workspaces":[workspaceName] })
 
-
-
-
 @method(name="Gapfill a Metabolic Model")
 def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit):
     """Run Gapfilling on an metabolic model.  Gapfill attempts to identify the minimal number of reactions
@@ -1334,7 +1332,7 @@ def _upload_phenotype(meth, genome_id, phenotype_id):
         phenotype_id = "phenotype_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    return json.dumps({'token': token, 'ws_name': workspace, 'genome_id': genome_id, 'phenotype_id': phenotype_id})
+    return json.dumps({'ws_name': workspace, 'genome_id': genome_id, 'phenotype_id': phenotype_id})
 
 #@method(name="Simulate Phenotype Data")
 def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
@@ -1369,7 +1367,7 @@ def _simulate_phenotype(meth, fba_model_id, phenotype_id, simulation_id):
         'phenotypeSet': phenotype_id,
     }
     fbaClient.simulate_phenotypes(simulate_phenotypes_params)
-    return json.dumps({'token': token, 'ws_name': workspace, 'simulation_id': simulation_id})
+    return json.dumps({'ws_name': workspace, 'simulation_id': simulation_id})
 
 #@method(name="Reconcile Phenotype Data")
 def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
@@ -1404,7 +1402,7 @@ def _reconcile_phenotype(meth, fba_model_id, phenotype_id, out_model_id):
         'out_model': out_model_id,
     }
     job_id = fbaClient.queue_wildtype_phenotype_reconciliation(wildtype_phenotype_reconciliation_params)['id']
-    return json.dumps({'token': token, 'ws_name': workspace, 'model_id': out_model_id, 'job_id': job_id})
+    return json.dumps({'ws_name': workspace, 'model_id': out_model_id, 'job_id': job_id})
 
 @method(name="Compare Two Proteomes")
 def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):
@@ -1489,6 +1487,111 @@ def _compare_fba_models(meth, fba_model1, fba_model2, proteome_cmp):
     #model1 = modeldata[0]
     #model2 = modeldata[1]
     return json.dumps({'ws_name': workspace, 'fba_model1_id': fba_model1, 'fba_model2_id': fba_model2, 'proteome_cmp': proteome_cmp})
+
+@method(name="Insert Genome into Species Tree")
+def _insert_genome_into_species_tree(meth, genome, neighbor_count, out_tree):
+    """ Insert a Genome into a global genome tree composed of 49 conserved COGs [20]
+
+    :param genome: a Genome to insert into the tree [20.1]
+    :type genome: kbtypes.KBaseGenomes.Genome
+    :ui_name genome: Genome ID
+    :param neighbor_count: number of closest public genomes the tree will contain. (optional, default value is 100) [20.2]
+    :type neighbor_count: kbtypes.Unicode
+    :ui_name neighbor_count: Neighbor public genome count
+    :param out_tree: Output species tree ID. If empty, an ID will be chosen randomly. [20.3]
+    :type out_tree: kbtypes.KBaseTrees.Tree
+    :ui_name out_tree: Output species tree ID
+    :return: Species Tree Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseTree
+    """
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    if not out_tree:
+        out_tree = "sptree_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    treeClient = KBaseTrees(url = service.URLS.trees, token = token)
+    construct_species_tree_params = {
+        'new_genomes': [workspace + '/' + genome], 
+        'use_ribosomal_s9_only': 0, 
+        'out_workspace': workspace, 
+        'out_tree_id': out_tree, 
+    }
+    if neighbor_count:
+        construct_species_tree_params['nearest_genome_count'] = int(neighbor_count)
+    job_id = treeClient.construct_species_tree(construct_species_tree_params)
+    return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
+
+@method(name="View Species Tree")
+def _view_species_tree(meth, tree_id):
+    """ View a Species Tree from your workspace [21]
+
+    :param tree_id: a Species Tree id [21.1]
+    :type tree_id: kbtypes.KBaseTrees.Tree
+    :ui_name tree_id: Tree ID
+    :return: Species Tree Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseTree
+    """
+    meth.stages = 1
+    workspace = meth.workspace_id
+    return json.dumps({'treeID': tree_id, 'workspaceID': workspace, 'height':'500px'})
+
+@method(name="Build Genome Set Object")
+def _build_genome_set(meth, out_genome_set):
+    """ Construct a Genome Set object [22]
+
+    :param out_genome_set: Output genome set ID. If empty, an ID will be chosen randomly. [22.1]
+    :type out_genome_set: kbtypes.KBaseSearch.GenomeSet
+    :ui_name out_genome_set: Output genome set ID
+    :return: Genome set Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseGenomeSetBuilder
+    """
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    if not out_genome_set:
+        out_genome_set = "genome_set_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    return json.dumps({'genomeSetName': out_genome_set, 'wsName': workspace})
+
+@method(name="Insert Set of Genomes into Species Tree")
+def _insert_genome_set_into_species_tree(meth, genome_set, neighbor_count, out_tree):
+    """ Insert a Genome Set into a global genome tree composed of 50 conserved COGs [23]
+
+    :param genome_set: a Genome Set to insert into the tree [23.1]
+    :type genome_set: kbtypes.KBaseSearch.GenomeSet
+    :ui_name genome_set: Genome Set ID
+    :param neighbor_count: number of closest public genomes the tree will contain. (optional, default value is 100) [23.2]
+    :type neighbor_count: kbtypes.Unicode
+    :ui_name neighbor_count: Neighbor public genome count
+    :param out_tree: Output species tree ID. If empty, an ID will be chosen randomly. [23.3]
+    :type out_tree: kbtypes.KBaseTrees.Tree
+    :ui_name out_tree: Output species tree ID
+    :return: Species Tree Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseTree
+    """
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    if not out_tree:
+        out_tree = "sptree_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    
+    ws = workspaceService(service.URLS.workspace, token=token)
+    data = ws.get_objects([{'ref': workspace+'/'+genome_set}])[0]
+    genome_set_elements = data['data']['elements']
+    genome_refs = []
+    for key in genome_set_elements:
+        genome_refs.append(genome_set_elements[key]['ref'])
+    treeClient = KBaseTrees(url = service.URLS.trees, token = token)
+    construct_species_tree_params = {
+        'new_genomes': genome_refs, 
+        'use_ribosomal_s9_only': 0, 
+        'out_workspace': workspace, 
+        'out_tree_id': out_tree, 
+    }
+    if neighbor_count:
+        construct_species_tree_params['nearest_genome_count'] = int(neighbor_count)
+    job_id = treeClient.construct_species_tree(construct_species_tree_params)
+    return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
 
 
 #

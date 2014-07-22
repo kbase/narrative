@@ -25,10 +25,6 @@ class KBjobManager():
         self.ujs = None
         self.ujs_proxy = None
         self.nar_user = 'narrativejoblistener'
-        pass
-
-    # def __creds(self):
-    #     return [__name, __pw]
 
     def __ujs_client(self, token=None):
         if self.ujs is None:
@@ -112,35 +108,3 @@ class KBjobManager():
             import json
             info_list = json.dumps(info_list)
         return info_list
-
-        # t = self.get_njl_token()
-        # if t is None:
-        #     return None # should probably throw exception
-
-        # self.ujs = UserAndJobState(url=URLS.user_and_job_state, token=t.token)
-
-        # info_list = list()
-        # for i in range(0, len(job_ids)):
-        #     info_list.append(self.poll_job(job_ids[i]))
-
-        # if as_json:
-        #     import json
-        #     info_list = json.dumps(info_list)
-
-        # return info_list
-
-    # def get_njl_token(self):
-    #     """
-    #     Get the auth token for the narrativejoblistener.
-    #     """
-    #     return None
-
-        # if self.njl_token is None:
-        #     try:
-        #         creds = self.creds()
-        #         njl_token = biokbase.auth.Token(user_id=creds[0], password=creds[1])
-        #         self.njl_token = njl_token
-        #     except biokbase.auth.AuthFail, a:
-        #         raise biokbase.auth.AuthFail("uid/pw invalid")
-
-        # return self.njl_token

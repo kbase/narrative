@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 7/22/2014
+__Changes__
+- Added widgets and functions for viewing phylogenies
+
+
 ### Release 7/21/2014
 __Changes__
 - Updates to Jnomics functions and widgets

@@ -66,8 +66,10 @@ URL = namedtuple("URL",["host","port"])
 Stage = namedtuple("Stage", ["func","name","poll"])
 
 
-URLS = {"compute":URL("variation.services.kbase.us", 10000),
-        "data":URL("variation.services.kbase.us", 10001)}
+#URLS = {"compute":URL("variation.services.kbase.us", 10000),
+#        "data":URL("variation.services.kbase.us", 10001)}
+URLS = {"compute":URL("140.221.67.178", 10000),
+        "data":URL("140.221.67.178", 10001)}
 
 #URLS = {"compute":URL("mshadoop1.cshl.edu", 10000),
 #        "data":URL("mshadoop1.cshl.edu", 10001)}
@@ -454,7 +456,8 @@ def userFromToken(token):
     return user
 
 def openClientConnection(client_class, url):
-    transport = TSSLSocket.TSSLSocket(url.host, url.port,validate=False)
+    #transport = TSSLSocket.TSSLSocket(url.host, url.port,validate=False)
+    transport = TSocket.TSocket(url.host, url.port)
     transport = TTransport.TBufferedTransport(transport)
 
     protocol = TBinaryProtocol.TBinaryProtocol(transport)
@@ -537,6 +540,7 @@ def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
     :type Input_file: kbtypes.Unicode
     :param Input_organism: Input organism (kb_id)
     :type Input_organism: kbtypes.Unicode
+    :ui_name Input_organism : Reference
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -646,7 +650,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
                                  ref=None,src_id=None):
     """Calculate Expression
 
-    :param workspace : name of workspace; default is current
+    :param workspace : Name of workspace; default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
     :param paired : Paired-End say 'yes'; else 'no'; default is 'no'
@@ -655,7 +659,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     :default paired : no
     :param Input_file_path: Input the raw sequencing data
     :type Input_file_path: kbtypes.Unicode
-    :ui_name Input_file_path : Input files 
+    :ui_name Input_file_path : Input file
     :param ref: Reference Genome (kb_id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
@@ -953,7 +957,7 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
 def jnomics_differential_expression(meth,workspace= None,title=None, alignment_files=None,exp_files=None,
                                  ref=None):
     """Identify differential Expression
-    :param workspace: name of workspace, default is current
+    :param workspace: Name of workspace, default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
     :param title : Experiment title
@@ -1093,13 +1097,13 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
     :param workspace: Worspace id
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace 
-    :param exp_samples: Expression sample ids
+    :param exp_samples: Expression Sample ids (kb|sample.xxxx)
     :type exp_samples : kbtypes.Unicode
     :ui_name exp_samples : Expression Samples
     :param ref: Reference genome
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
-    :param title: title
+    :param title: Title
     :type title : kbtypes.Unicode
     :ui_name title : Experiment Title
     :param design: Design of the Experiment
@@ -1310,87 +1314,6 @@ def filterDataTable(meth,workspace= None,dtname=None):
     sorted_dt["name"] = result["name"]
     #return to_JSON(sorted_dt)
     return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
-
-@method(name = "Test Workspace obj ")
-def Workspaceobject(meth,workspace= None,dtname=None):
-    """search a file
-
-    :param workspace: Worspace id
-    :type workspace : kbtypes.Unicode
-    :ui_name workspace : Workspace
-    :return: Workspace id
-    :rtype: kbtypes.Unicode
-    """
-
-    token = meth.token
-    auth = Authentication(userFromToken(meth.token), "", meth.token)
-    ws = workspaceService(OTHERURLS.workspace)
-    idc = IDServerAPI(OTHERURLS.ids)
-    ref = 'kb|g.3907' 
-    act_ref = ref.replace('|','_')
-
-    wtype = WSTYPES.rnaseq_sampletype 
-    exptype = WSTYPES.rnaseq_exptype 
-    bamtype = WSTYPES.rnaseq_bamtype 
-    
-    @pipelineStep(None)
-    def uploadtoShock(client,previous_steps):
-         return shockfileload(auth,cufflinksobjname,cufflinks_output)
-
-    @pipelineStep("compute")
-    def workspaceobj(client,previous_steps):
-        previous_steps = previous_steps[-1]
-        if 'output' in previous_steps and 'shock_id' in previous_steps['output']:
-            shock_id = previous_steps['output']['shock_id']
-        if not isFileFound(entityfile,auth):
-            out = getGenomefeatures(ref,auth)
-            ret = writefile(entityfile,out,auth) 
-        #ontodict = ontologydata(po_id,eo_id)
-        #return to_JSON(ontodict)
-        #ontoid = ",".join([ key.strip() for (key,value) in ontodict.items()])
-        #ontodef =  ",".join([value.strip() for (key,value) in ontodict.items()])
-        #ontoname = ontodef
-        #return to_JSON({"ontoid" : ontoid,"ontodef" : ontodef , "ontoname" : ontoname})
-        #return to_JSON({ "out" : cufflinks_output , "ref" : ref.replace('kb|',''),
-        #                "desc" : desc , "title" : title , "srcdate" : srcdate , "ontoid" : ontoid,
-        #                "ontodef" : ontodef , "ontoname" : ontoname , "paired" : paired , "shock_id" : shock_id,
-        #                "src_id": "SRA SRX031076_1" })
-        ontodef = 's,s,s'
-        ontoname = 's,s,s'
-        ontoid = 's,s,s'
-        return client.workspaceUpload(cufflinks_output,ref.replace('kb|',''),
-                                      desc,title,srcdate,ontoid,
-                                      ontodef,ontoname,paired,
-                                      shock_id,"SRA:SRX031076","",auth)
-    
-    def ontologydata(poid=None,eoid=None):
-        exp =  expressionService(OTHERURLS.expression)
-        #json_error = None
-        #status = None
-        poids = poid[0].split(",") 
-        eoids = eoid[0].split(",")
-        podesc = exp.get_po_descriptions(poids)
-        eodesc = exp.get_eo_descriptions(eoids)
-        ontoids = ",".join(poids + eoids)
-        ontodef = ",".join([ value for (key,value) in podesc.items() ] + [value for (key1,value1) in eodesc.items()])
-        return dict(podesc.items() + eodesc.items())
-    
-    cufflinks_output =  "transcripts_pop2.gtf"
-    cufflinksobjname = "transcripts_pop2.gtf"
-    shock_id  = "sadkjdiewrjwerkwelkjwsdfdf"
-    po_id = ["PO:0009047,PO:0005352"]
-    eo_id = ["EO:0007256"]
-    paired = "yes"
-    src_id = "SRA/SRX031076"
-    title = "SRA21313"
-    desc = "this is a description"
-    srcdate = "May 12 2014"
-    entityfile = str(act_ref) + "_fids.txt"
-
-    stages= [Stage(uploadtoShock,"Uploading to Shock",None),
-             Stage(workspaceobj,"Preparing Workspace obj",None)]
-
-    return to_JSON(runPipeline(stages,meth,auth))
 
 finalize_service()
 

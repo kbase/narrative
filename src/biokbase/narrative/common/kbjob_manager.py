@@ -15,6 +15,7 @@ __version__ = "0.0.1"
 
 import os
 from biokbase.userandjobstate.client import UserAndJobState
+from biokbase.narrativejobproxy.client import NarrativeJobProxy
 from biokbase.narrative.common.url_config import URLS
 import biokbase.auth
 
@@ -22,6 +23,7 @@ class KBjobManager():
 
     def __init__(self):
         self.ujs = None
+        self.ujs_proxy = None
         self.nar_user = 'narrativejoblistener'
         pass
 
@@ -89,8 +91,26 @@ class KBjobManager():
         ujs_proxy = self.__proxy_client()
 
         for job_id in job_ids:
-            info_list.append(self.poll_job(job_id, ujs_proxy))
-
+            try:
+                info_list.append(self.poll_job(job_id, ujs_proxy))
+            except Exception:
+                info_list.append([job_id, 
+                                  u'error', 
+                                  u'error', 
+                                  u'0000-00-00T00:00:00+0000', 
+                                  u'error', 
+                                  u'0000-00-00T00:00:00+0000', 
+                                  None, 
+                                  None, 
+                                  u'error',
+                                  u'0000-00-00T00:00:00+0000',
+                                  0,
+                                  0,
+                                  u'error',
+                                  None])
+        if as_json:
+            import json
+            info_list = json.dumps(info_list)
         return info_list
 
         # t = self.get_njl_token()

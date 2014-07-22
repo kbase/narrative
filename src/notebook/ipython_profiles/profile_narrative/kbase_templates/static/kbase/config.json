@@ -16,7 +16,8 @@
         "ws_browser" : "http://narrative.kbase.us/functional-site/#/ws",
         "landing_pages" : "http://narrative.kbase.us/functional-site/#/",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
-        "genomeCmp" : "http://140.221.85.57:8283/jsonrpc"
+        "genomeCmp" : "http://140.221.85.57:8283/jsonrpc",
+        "narrative_job_proxy" : "http://140.221.67.185:7068"
     },
 
     "prod": {

@@ -38,6 +38,15 @@
              * panel-body, make sure the right one is being shown at the start,
              * and off we go.
              */
+            var $headerDiv = $('<div>')
+                              .append('Jobs')
+                              .append($('<button>')
+                                      .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
+                                      .css({'margin-top': '-4px',
+                                            'margin-right': '4px'})
+                                      .click($.proxy(function(event) { this.refresh(); }, this))
+                                      .append($('<span>')
+                                              .addClass('glyphicon glyphicon-refresh')));
 
             // Make a function panel for everything to sit inside.
             this.$jobsPanel = $('<div>')
@@ -57,13 +66,13 @@
                                .hide();
 
             this.$elem.append($('<div>')
-                              .addClass('panel panel-primary')
+                              .addClass('panel panel-primary kb-data-main-panel')
                               .append($('<div>')
                                       .addClass('panel-heading')
                                       .append($('<div>')
                                               .addClass('panel-title')
                                               .css({'text-align': 'center'})
-                                              .append('Jobs')))
+                                              .append($headerDiv)))
                               .append($('<div>')
                                       .addClass('panel-body kb-narr-panel-body')
                                       .append(this.$jobsPanel)

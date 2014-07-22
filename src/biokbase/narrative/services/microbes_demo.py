@@ -654,6 +654,79 @@ def _compare_genomes(meth, genome_ids):
     #print meth.debug(json.dumps(funccomp))
     return json.dumps({'data_genome': comparegenome, 'data_func':funccomp})
 
+@method(name="Compare Genomes:input PanGenome")
+def _compare_genomes(meth, genome_ids):
+    """Genome Comparison analysis based on the PanGenome input. 
+    
+    :param model_ids: PanGenome id 
+    :type model_ids: kbtypes.KBaseGenomes.Pangenome
+    :ui_name model_ids: Genome IDs
+
+    :return: Uploaded Genome Comparison Data
+    :rtype: kbtypes.KBaseGenomes.GenomeComparisonData
+    :output_widget: compgenomePa
+    """
+    #315750.3
+    gids = genome_ids.split(',')
+
+    meth.stages = len(gids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+    wss =[]
+    fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+
+    for gid in gids:
+        meth.advance("Loading genomes: "+gid);
+        wss.append(ws)
+
+
+    meta =fba.compare_genomes({'pangenome_id': genome_ids, 
+                                    'pangeome_ws': ws })
+   
+    #comparegenome = genomeout['genome_comparisons']                               
+    #funccomp = genomeout['function_comparisons']
+    #print meth.debug(json.dumps(comparegenome))
+    #print meth.debug(json.dumps(funccomp))
+    return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
+
+@method(name="Compare Genomes:input ProteomeComparison")
+def _compare_genomes(meth, genome_ids):
+    """Genome Comparison analysis based on the Proteome Comparison input. 
+    
+    :param model_ids: ProteomeComparison id
+    :type model_ids: kbtypes.KBaseGenomes.ProteomeComparison
+    :ui_name model_ids: Genome IDs
+
+    :return: Uploaded Genome Comparison Data
+    :rtype: kbtypes.KBaseGenomes.GenomeComparisonData
+    :output_widget: compgenomePr
+    """
+    #315750.3
+    gids = genome_ids.split(',')
+
+    meth.stages = len(gids)+1 # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    token, ws = meth.token, meth.workspace_id;
+    wss =[]
+    fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+
+    for gid in gids:
+        meth.advance("Loading genomes: "+gid);
+        wss.append(ws)
+
+
+    meta =fba.compare_genomes({'genomes': genome_ids, 
+                                    'workspaces': ws })
+   
+    #comparegenome = genomeout['genome_comparisons']                               
+    #funccomp = genomeout['function_comparisons']
+    #print meth.debug(json.dumps(comparegenome))
+    #print meth.debug(json.dumps(funccomp))
+    return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
 
 @method(name="View Metabolic Model Details")
 def _view_model_details(meth, fba_model_id):

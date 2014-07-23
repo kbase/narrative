@@ -45,7 +45,17 @@ class="notebook_app"
 
 {% block site %}
 <div id="main-container">
-    <div id="menubar" class="hidden">
+
+    <div id="left-column">
+        <div id="kb-ws"></div>
+        <div id="kb-function-panel" class="left-pane"></div>
+        <div id="kb-function-help"></div>
+
+     </div>
+
+     <div id="content-column">
+        <div id="menubar-container" class="narrative-menu-container pull-left">
+            <div id="menubar">
                 <div class="navbar">
                     <div>
                         <div >
@@ -173,35 +183,22 @@ class="notebook_app"
                         </div>
                     </div>
                 </div>
-            </div>
-<!--     <div id="kb-ws-guard">Connecting to KBase..</div>
- -->
-    <div id="left-column">
-        <div id="kb-ws"></div>
-        <div id="kb-function-panel" class="left-pane"></div>
-        <div id="kb-function-help"></div>
-
-     </div>
-
-     <div id="content-column">
-        <div id="menubar-container" class="narrative-menu-container pull-left">
-            <div id="maintoolbar" class="navbar" style="z-index:100;">
-              <div class="toolbar-inner navbar-nobg pull-left">
-                <div id="maintoolbar-container" class="container"></div>
-              </div>
-            </div>
-            <div></div>
-            <div id="narrative-title">
-                <span id="save_widget" class="nav pull-left">
-                    <span id="notebook_name"></span>
-                    <span id="checkpoint_status"></span>
-                    <span id="autosave_status"></span>
-                </span>
-                <span> &nbsp;</span>
+                <div id="maintoolbar" class="navbar" style="z-index:100;">
+                    <div class="toolbar-inner navbar-nobg pull-left">
+                        <div id="maintoolbar-container" class="container"></div>
+                    </div>
+                    <div class="version-stamp pull-right">KBase Narrative<br>v. alpha, 7/23/2014</div>
+                </div>
+                <div id="narrative-title">
+                    <span id="save_widget" class="nav pull-left">
+                        <span id="notebook_name"></span>
+                        <span id="checkpoint_status"></span>
+                        <span id="autosave_status"></span>
+                    </span>
+                    <span> &nbsp;</span>
+                </div>
             </div>
         </div>
-
-
 
         <div id="ipython-main-app">
             <div id="notebook_panel">

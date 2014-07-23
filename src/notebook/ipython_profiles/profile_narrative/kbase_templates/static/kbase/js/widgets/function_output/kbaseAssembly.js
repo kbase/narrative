@@ -11,7 +11,7 @@
             color: "black",
         },
 //	fbaURL: "https://kbase.us/services/KBaseFBAModeling",
-	fbaURL: 'http://140.221.85.73:4043',
+//	fbaURL: 'http://140.221.85.73:4043',
 
         init: function(options) {
             this._super(options);
@@ -27,6 +27,7 @@
             var arURL = options.ar_url
 	    var ws_url = options.ws_url
 	    var ws_name = options.ws_name
+	    var fba_url = 'http://140.221.85.73:4043'
             var arRequest = {
                 "data_id": null,
 		"kbase_assembly_input": options.kbase_assembly_input,
@@ -173,10 +174,14 @@
 					    import_btn_sel.append('<li><a href="#">Automatic</a></li>')
 					    import_btn_sel.append('<li class="divider"></li>')
 					    for (i=0; i<assemblies.length;i++){
-						var contig_import = $('<li></li>');
+						var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
 						ws_contig_name = job_id + '_' + assemblies[i].name;
-						
-						import_btn_sel.append('<li><a href="#">' + assemblies[i].name + '</a></li>')
+						shock_url = assemblies[i].file_infos[0].shock_url;
+						shock_id = assemblies[i].file_infos[0].shock_id;
+						contig_import.one("click", function() {
+						    import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, ws_contig_name)
+						});
+						import_btn_sel.append(contig_import);
 					    }
 					    
 					    import_btn_group.append(import_btn);
@@ -257,18 +262,18 @@
                 return prom;
             }
 
-	    var import_contigs_to_ws = function(token, ws_url, ws_name, shock_id, shock_url, contig_name){
-		var fba = new fbaModelServices(this.fbaURL, {'token': token});
+	    var import_contigs_to_ws = function(token, fba_url, ws_url, ws_name, shock_id, shock_url, contig_name){
+		var fba = new fbaModelServices(fba_url, {'token': token});
 		fba.fasta_to_ContigSet({'fasta': shock_id, 
-					'workspace': [ws_name], 
+					'workspace': ws_name, 
 					'uid': contig_name, 
 					'name': contig_name, 
 					'shockurl': shock_url
 				       }).done(function(data){
-					   console.log('fba done');
 					   console.log(data);
 				       });
 	    }
+
             return this;	    
         }
 

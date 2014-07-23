@@ -679,6 +679,10 @@ p span.notification{
 	box-shadow: none;
 }
 
+#maintoolbar-container {
+	margin-left: 10px;
+}
+
 #menubar {
 	position: absolute;
 	width: 100%;

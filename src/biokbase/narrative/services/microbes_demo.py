@@ -1600,6 +1600,47 @@ def _insert_genome_set_into_species_tree(meth, genome_set, neighbor_count, out_t
     job_id = treeClient.construct_species_tree(construct_species_tree_params)
     return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
 
+@method(name="Build a PROM constraint")
+def _build_promconstraint(meth, genome_id, series_id, regulome_id):
+    """Given a gene expression series and a regulome, build a PROM constraint for FBA. [24]
+
+    :param genome_id: Genome ID [24.1]
+    :type genome_id: kbtypes.KBaseGenomes.Genome
+    :ui_name genome_id: Genome Name
+    
+    :param series_id: Gene Expression Series ID [24.2]
+    :type series_id: kbtypes.KBaseExpression.ExpressionSeries
+    :ui_name series_id: Gene Expression Series Name
+    
+    :param regulome_id: Regulome ID [24.3]
+    :type regulome_id: kbtypes.KBaseRegulation.Regulome
+    :ui_name regulome_id: Regulome Name
+    
+    :return: Generated PROM constraint ID
+    :rtype: kbtypes.KBaseFBA.PromConstraint
+    :output_widget: kbasePromConstraint
+    """
+    meth.stages = 2  # for reporting progress
+    meth.advance("Starting")
+    meth.advance("Building your new PROM constraint")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id
+    fbaClient = fbaModelServices(service.URLS.fba,token=userToken)
+    
+    # create the model object
+    build_pc_params = {
+        'genome_id': genome_id,
+        'series_id': series_id,
+        'regulome_id': regulome_id,
+        'workspace': workspaceName
+    }
+
+    fba_meta_data = fbaClient.create_promconstraint(build_pc_params)
+    wsobj_id = fba_meta_data[0]
+    name = fba_meta_data[1]
+    
+    return json.dumps({'name': name, 'ws': workspaceName})
 
 #
 #@method(name="Edit Data")

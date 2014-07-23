@@ -44,7 +44,8 @@ except:
         "workspace" : "https://kbase.us/services/ws/",
         "invocation" : "https://kbase.us/services/invocation",
         "fba" : "https://kbase.us/services/KBaseFBAModeling",
-        "genomeCmp" : "http://140.221.85.57:8283/jsonrpc"
+        "genomeCmp" : "https://kbase.us/services/genome_comparison/jsonrpc",
+        "trees" : "http://dev19.berkeley.kbase.us:7047"
     }
     URLS = Struct(**url_dict)
 

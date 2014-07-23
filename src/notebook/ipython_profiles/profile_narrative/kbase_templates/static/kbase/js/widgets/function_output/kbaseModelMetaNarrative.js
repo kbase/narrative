@@ -2,6 +2,7 @@
 
 $.KBWidget({
     name: "kbaseModelMetaNarrative",     
+    parent: "kbaseAuthenticatedWidget",
     version: "1.0.0",
     options: {
     	data: null,			// if it's not null it's the main data to show
@@ -18,9 +19,19 @@ $.KBWidget({
     timer: null,
 
     init: function(options) {
-        var self = this;
         this._super(options);
+        render(options);
+    },
+    
+    render: function() {
+        var self = this;
         var container = this.$elem;
+    	container.empty();
+
+        if (!self.authToken()) {
+        	container.append("<div>[Error] You're not logged in</div>");
+        	return;
+        }
 
         var dataIsReady = function(data) {
         	var table = $('<table/>')
@@ -49,7 +60,7 @@ $.KBWidget({
         	//container.append(" " + glammLink);
         };
         
-    	var data = options.data;
+    	var data = self.options.data;
     	if (data) {
     		dataIsReady(data);
     	} else {
@@ -59,17 +70,17 @@ $.KBWidget({
         	var table = $('<table class="table table-striped table-bordered" \
         			style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
         	panel.append(table);
-        	table.append('<tr><td>Job was created with id</td><td>'+options.job_id+'</td></tr>');
-        	table.append('<tr><td>Output model will have the id</td><td>'+options.model_id+'</td></tr>');
+        	table.append('<tr><td>Job was created with id</td><td>'+self.options.job_id+'</td></tr>');
+        	table.append('<tr><td>Output model will have the id</td><td>'+self.options.model_id+'</td></tr>');
         	table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
         	var timeLst = function(event) {
-        		kbws.get_jobs({auth: options.token, jobids: [options.job_id]}, function(data) {
+        		kbws.get_jobs({auth: self.authToken(), jobids: [self.options.job_id]}, function(data) {
         			var status = data[0]['status'];
     				var tdElem = $('#'+pref+'job');
     				tdElem.html(status);
         			if (status === 'done') {
         				clearInterval(self.timer);
-        	            kbws.get_object({auth: options.token, workspace: options.ws_name, id: options.model_id, type: 'Model'}, function(ret) {
+        	            kbws.get_object({auth: self.authToken(), workspace: self.options.ws_name, id: self.options.model_id, type: 'Model'}, function(ret) {
         	            	$('.loader-table').remove();
         	            	dataIsReady(ret.data);
         	            }, function(data) {
@@ -90,7 +101,17 @@ $.KBWidget({
         
         return this;
 
-    }  //end init
+    },
+    
+    loggedInCallback: function(event, auth) {
+        this.render();
+        return this;
+    },
+
+    loggedOutCallback: function(event, auth) {
+        this.render();
+        return this;
+    }
 
 })
 }( jQuery ) );

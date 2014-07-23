@@ -3,6 +3,24 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 7/22/2014
+__Changes__
+- Added widgets and functions for viewing phylogenies
+
+
+### Release 7/21/2014
+__Changes__
+- Updates to Jnomics functions and widgets
+- Updates to Microbes functions and widgets
+- Most errors that were dumped to the browser as ugly stacktraces are now KBase-styled stacktraces that should be slightly more legible.
+- Errors that occur when Narrative saving fails now creates an error modal that communicates the error, instead of just "Autosave Failed!"
+- Deployment of Narrative Docker containers has changed. A base container is built containing most static dependencies (all the apt-get directives, Python and R packages). This container is then updated with the Narrative itself. After building the base container, deployment of subsequent releases should take ~2 minutes.
+- Updated workspace type registry (the kbtypes class) to be up-to-date with the current state of the Workspace.
+- The Narrative should now report unsupported browsers
+
+__Known Issues__
+- Unaddressed issues from previous release
+
 ### Release 7/15/2014
 __Changes__
 - Created a service endpoint config file to toggle between dev and prod versions of various services

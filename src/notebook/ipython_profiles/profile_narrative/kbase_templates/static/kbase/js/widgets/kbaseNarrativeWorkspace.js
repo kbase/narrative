@@ -1124,6 +1124,7 @@
             for (var i=0; i<cells.length; i++) {
                 this.checkCellMetadata(cells[i]);
             }
+            this.loadAllRecentCellStates();
             this.trigger('updateData.Narrative');
             return this;
         },

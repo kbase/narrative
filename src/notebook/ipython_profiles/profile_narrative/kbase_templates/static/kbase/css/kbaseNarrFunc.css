@@ -313,5 +313,41 @@
     padding: 5px 10px;
 }
 
+/*** styling for the jobs manager */
+.kb-jobs-title {
+    font-family: "OxygenBold", Arial, sans-serif; 
+    color: #185A85;
+    font-size: 1.2em;
+}
+
+.kb-jobs-title .glyphicon-info-sign {
+    font-size: 0.9em;
+}
+
+.kb-jobs-info-table {
+    margin-top: 5px;
+    width: 95%;
+}
+
+.kb-jobs-info-table th {
+    font-family: "OxygenBold", Arial, sans-serif; 
+    color: #777;
+    vertical-align:top;
+    padding-right: 5px;
+
+}
+
+.kb-jobs-item {
+    border-bottom: 2px solid #dddddd;
+    margin-bottom: 5px;
+    padding-bottom: 3px;
+}
+
+.kb-jobs-item:last-child {
+    border-bottom: none;
+}
+
+
+
 
 

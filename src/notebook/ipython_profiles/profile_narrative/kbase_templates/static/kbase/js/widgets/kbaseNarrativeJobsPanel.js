@@ -220,7 +220,7 @@
                 this.showMessage('No running jobs!');
                 return;
             }
-            var $jobTable = $('<table>');
+            var $jobTable = $('<div class="kb-jobs-items">');
             for (var i=0; i<jobs.length; i++) {
                 $jobTable.append(this.renderJob(jobs[i]));
             }
@@ -229,14 +229,32 @@
         },
 
         renderJob: function(job) {
-            var $row = $('<tr>');
+            var $row = $('<div class="kb-jobs-item">');
             if (!job || job.length < 12) {
                 return $row;
             }
-            $row.append($('<td>').append(job[1]));
+            $row.append($("<div class='kb-jobs-title'>").append(job[1]).append(this.makeJobDetailButton(job)));
+            $row.append($("<div class='kb-jobs-descr'>").append(job[12]));
+
+            var $itemTable = $('<table class="kb-jobs-info-table">');
+            var $statusRow = $('<tr>').append($('<th>').append('Status:'));
+            $statusRow.append($('<td>').append(this.makeStatusElement(job)));
+            $itemTable.append($statusRow);
+            if (job[9] != null) {
+              var $startedRow = $('<tr>').append($('<th>').append('Started:'));
+              var $startedCell = $("<td>");
+              $startedCell.append(this.makePrettyTimestamp(job[9], " remaining"));
+              $startedRow.append($startedCell);
+              $itemTable.append($startedRow);
+            }
+            
+
+            $row.append($itemTable);
+
+        /*    $row.append($('<td>').append(job[1]));
             $row.append($('<td>').append(job[12]));
             $row.append($('<td>').append(this.makeStatusElement(job)));
-            $row.append($('<td>').append(this.makeJobDetailButton(job)));
+            $row.append($('<td>').append(this.makeJobDetailButton(job))); */
             return $row;
         },
 
@@ -262,7 +280,7 @@
             };
 
             var $btn = $('<span>')
-                       .addClass('glyphicon glyphicon-search kb-function-help')
+                       .addClass('glyphicon glyphicon-info-sign kb-function-help')
                        .click(function(e) {
                            showDetailModal(job);
                        });
@@ -310,12 +328,10 @@
                     status += " (" + progress + " / " + max + ")</div>";
                 }
                 if (progressType !== "none") {
-                    status += "</div>" + this.makeProgressBarElement(job, false);
+                    status +=  "<div class='pull-right' style='width: 75%'>" + this.makeProgressBarElement(job, false) + "</div></div>";
                 }
 
-                if (job[9] != null) {
-                    status += this.makePrettyTimestamp(job[9], " remaining");
-                }
+                
             }
             return status + "</div>";
         },
@@ -431,7 +447,7 @@
                 if (showNumber)
                     bar += progress + "%";
 
-                return bar + "<div class='progress' style='margin-bottom: 0;'>" + 
+                return bar + "<div class='progress' style='margin-bottom: 0; pull-right;'>" + 
                            "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
                                progress + "' aria-valuemin='0' aria-valuemax='100' style='width: " + 
                                progress + "%;'>" +
@@ -443,7 +459,7 @@
                 var bar = "";
                 if (showNumber)
                     bar += progress + " / " + max;
-                return bar + "<div class='progress' style='margin-bottom: 0;'>" + 
+                return bar + "<div class='progress' style='margin-bottom: 0'>" + 
                            "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
                            progress + "' aria-valuemin='0' aria-valuemax='" + max + "' style='width: " + 
                            (progress / max * 100) + "%;'>" +

@@ -49,6 +49,12 @@ body{
 
 /* header styling */
 
+.notebook_app .navbar-kbase {
+	webkit-box-shadow: none;
+	box-shadow: none;
+	moz-box-shadow: none;
+}
+
 header[role="banner"] {
 /*	overflow: auto;
 	padding: 7px 0 2px 0;
@@ -153,10 +159,9 @@ div#notebook {
 
 #narrative-title {
 	position: relative;
-	top: 15px;
 	padding-left: 3px;
 	padding-bottom: 10px;
-	margin: 10px 0; 
+	margin: 0 0 10px 0; 
 }
 
 .narrative-menu-container {
@@ -330,7 +335,7 @@ nav ul li.selected {
 	position: fixed;
 	left: 10px;
 	bottom: 0;
-	top: 65px;
+	top: 53px;
 	overflow-y: auto;
 }
 
@@ -665,7 +670,7 @@ p span.notification{
 /* Fixes to bring toolbars up to Bootstrap 3 */
 #maintoolbar {
 	position: relative;
-	top: 15px;
+	top: 5px;
 	min-height: 0;
 	border: none !important;
 	background-image: none !important;
@@ -678,6 +683,13 @@ p span.notification{
 	position: absolute;
 	width: 100%;
 	top: 3px;
+	background-color: #fff;
+	border-bottom: 2px solid #ddd;
+	padding-bottom: 5px;
+}
+
+#menubar .navbar {
+	margin-bottom: 5px;
 }
 
 #menubar .navbar .container {
@@ -690,6 +702,19 @@ p span.notification{
 	min-height: 0;
 	background-image: none;
 	background-color: #f8f8f8;
+}
+
+#menubar .navbar-nav>li>a {
+	padding-top: 10px;
+	padding-bottom: 7px;
+}
+
+.btn-default, .btn-primary, .btn-success, .btn-info, .btn-warning, .btn-danger {
+	background-image: none;
+}
+
+.panel-default>.panel-heading {
+	background-image: none;
 }
 
 .btn-default {
@@ -707,7 +732,7 @@ p span.notification{
 #ipython-main-app {
 	position: absolute;
 	bottom: 5;
-	top: 100px;
+	top: 120px;
 	right: 10px;
 	left: 310px;
 	overflow: auto;
@@ -730,3 +755,8 @@ border-left: 1px solid #f2f2f2;
 	color: #666;
 	font-size: 90%;
 }
+
+.panel {
+	margin-bottom: 0px;
+}
+

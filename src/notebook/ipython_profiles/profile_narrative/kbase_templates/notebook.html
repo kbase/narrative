@@ -227,53 +227,60 @@ class="notebook_app"
 
 {{super()}}
 
+<script src="/ext/handlebars/handlebars-v1.3.0.js"></script>
 
 <script>
-// require(['ui-common/src/kbpaths'], function() {
-//     console.log('yup');
-//     require(['jquery', 'bootstrap', 'all'], function($) {
-//         $(function() {
-//             console.log('got \'em all!');
+
+
+
+// $(function() {
+//   var original = $;
+
+//     require(['narrative_paths'], function() {
+//         console.log('yup');
+//         require(['CDMI_API'], function(cdmi) {
+//             console.log('got cdmi?');
+//         });
+
+//         require(['jquery', 'bootstrap'], function($) {
+//             $(function() {
+//                 console.log('got \'em all!');
+//             });
+//         });
+
+//         require(['jquery', 'vis'], function() {
+//             console.log('got vis!');
 //         });
 //     });
 
-//     require(['jquery', 'vis'], function() {
-//         console.log('got vis!');
-//     });
+
+//   // require(['kbvis/src/kbpaths'], function() {
+//   // // console.log('got paths');
+//   // // console.log(requirejs.s.contexts._.config);
+//   // // console.log(require.toUrl('kbaseLinechart' + '.js'));
+//   // // console.log(require.toUrl('vis' + '.js'));
+//   // // console.log(require.toUrl('d3' + '.js'));
+//   // // console.log(require.toUrl('bootstrap' + '.js'));
+//   // // console.log(require.toUrl('jqueryui' + '.js'));
+//   //   require(['jquery','vis'], function() {
+//   //     //console.log('got vis');
+//   //     var newJQ = $;
+//   //     $ = original;
+//   //     for (prop in newJQ.fn) {
+//   //       if (prop.match(/^kbase/)) {
+//   //         $[prop] = newJQ.fn[prop];
+//   //         $.fn[prop] = newJQ.fn[prop];
+//   //       }
+//   //     }
+//   //   /*console.log($.kbaseAccordion);
+//   //   console.log($.kbasePlantsNetworkNarrative);
+//   //   console.log($.kbaseBarchart);
+//   //   console.log($.kbaseLinechart);
+//   //   console.log('plants network narrative');
+//   //   console.log($.kbasePlantsNetworkNarrative);*/
+//   //   });
+//   // });
 // });
-
-
-$(function() {
-  var original = $;
-
-
-  require(['kbvis/src/kbpaths'], function() {
-  /*console.log('got paths');
-  console.log(requirejs.s.contexts._.config);
-  console.log(require.toUrl('kbaseLinechart' + '.js'));
-  console.log(require.toUrl('vis' + '.js'));
-  console.log(require.toUrl('d3' + '.js'));
-  console.log(require.toUrl('bootstrap' + '.js'));
-  console.log(require.toUrl('jqueryui' + '.js'));*/
-    require(['jquery','vis'], function() {
-      //console.log('got vis');
-      var newJQ = $;
-      $ = original;
-      for (prop in newJQ.fn) {
-        if (prop.match(/^kbase/)) {
-          $[prop] = newJQ.fn[prop];
-          $.fn[prop] = newJQ.fn[prop];
-        }
-      }
-/*console.log($.kbaseAccordion);
-console.log($.kbasePlantsNetworkNarrative);
-console.log($.kbaseBarchart);
-console.log($.kbaseLinechart);
-console.log('plants network narrative');
-console.log($.kbasePlantsNetworkNarrative);*/
-    });
-  });
-});
 
 </script>
 
@@ -364,36 +371,36 @@ console.log($.kbasePlantsNetworkNarrative);*/
 
 <script>
 
-$(function() {
+// $(function() {
 
-  var original = $;
-  require(['kbvis/src/kbpaths'], function() {
-  /*console.log('got paths');
-  console.log(requirejs.s.contexts._.config);
-  console.log(require.toUrl('kbaseLinechart' + '.js'));
-  console.log(require.toUrl('vis' + '.js'));
-  console.log(require.toUrl('d3' + '.js'));
-  console.log(require.toUrl('bootstrap' + '.js'));
-  console.log(require.toUrl('jqueryui' + '.js'));*/
-    require(['jquery','vis'], function() {
-      //console.log('got vis');
-      var newJQ = $;
-      $ = original;
-      for (prop in newJQ.fn) {
-        if (prop.match(/^kbase/)) {
-          $[prop] = newJQ.fn[prop];
-          $.fn[prop] = newJQ.fn[prop];
-        }
-      }
-/*console.log($.kbaseAccordion);
-console.log($.kbasePlantsNetworkNarrative);
-console.log($.kbaseBarchart);
-console.log($.kbaseLinechart);
-console.log('plants network narrative');
-console.log($.kbasePlantsNetworkNarrative);*/
-    });
-  });
-});
+//   var original = $;
+//   require(['kbvis/src/kbpaths'], function() {
+//   /*console.log('got paths');
+//   console.log(requirejs.s.contexts._.config);
+//   console.log(require.toUrl('kbaseLinechart' + '.js'));
+//   console.log(require.toUrl('vis' + '.js'));
+//   console.log(require.toUrl('d3' + '.js'));
+//   console.log(require.toUrl('bootstrap' + '.js'));
+//   console.log(require.toUrl('jqueryui' + '.js'));*/
+//     require(['jquery','vis'], function() {
+//       //console.log('got vis');
+//       var newJQ = $;
+//       $ = original;
+//       for (prop in newJQ.fn) {
+//         if (prop.match(/^kbase/)) {
+//           $[prop] = newJQ.fn[prop];
+//           $.fn[prop] = newJQ.fn[prop];
+//         }
+//       }
+// /*console.log($.kbaseAccordion);
+// console.log($.kbasePlantsNetworkNarrative);
+// console.log($.kbaseBarchart);
+// console.log($.kbaseLinechart);
+// console.log('plants network narrative');
+// console.log($.kbasePlantsNetworkNarrative);*/
+//     });
+//   });
+// });
 
 </script>
 
@@ -460,9 +467,7 @@ console.log($.kbasePlantsNetworkNarrative);*/
 $(function() {
   $("#signin-button").kbaseLogin('session').user_id;
   USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-  console.log('here is the token blah', USER_TOKEN)
   kb = new KBCacheClient(USER_TOKEN)
-  console.log('here is kb', kb)
 })
 </script>
 

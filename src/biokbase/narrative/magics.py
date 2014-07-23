@@ -19,6 +19,7 @@ import sys
 import types
 import re
 import biokbase.narrative.upload_handler
+from biokbase.narrative.common.url_config import URLS
 
 from IPython.core.display import display, Javascript
 from ast import literal_eval

@@ -463,6 +463,40 @@ def view_phenotype(meth, phenotype_set_id):
 
     return json.dumps({'data': data})
 
+@method(name="View PhenotypeSimulationSet")
+def view_phenotype(meth, phenotype_set_id):
+    """Bring up a detailed view of your PhenotypeSimulationSet within the narrative. 
+    
+    :param phenotype_set_id: the phenotype set to view
+    :type phenotype_set_id: kbtypes.KBasePhenotypes.PhenotypeSimulationSet
+    :ui_name phenotype_set_id: Phenotype Set
+    
+    :return: Phenotype Set Data
+    :rtype: kbtypes.KBasePhenotypes.PhenotypeSimulationSet
+    :output_widget: kbasePhenoSimutypeSet
+    """
+    meth.stages = 2  # for reporting progress
+    meth.advance("Starting...")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    meth.advance("Loading the phenotypeSimultationSet")
+    
+    #ws = os.environ['KB_WORKSPACE_ID']
+    #token = os.environ['KB_AUTH_TOKEN']
+    #ar_user = token.split('=')[1].split('|')[0]
+    ws = workspaceService(service.URLS.workspace, token=userToken)
+
+    params = [{
+        'workspace' : meth.workspace_id, 'name':phenotype_set_id
+    }]
+
+    #data = ws.get_objects(params )
+    #print meth.debug(json.dumps(data))
+
+
+    return json.dumps({'workspace': meth.workspace_id, 'name' : phenotype_set_id})    
+
 @method(name="Import RAST Genomes")
 def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):
     """Import genomes from the RAST annotation pipeline. 
@@ -549,7 +583,7 @@ def _compare_pan_genome(meth, genome_ids):
     :rtype: kbtypes.KBaseGenomes.Pangenome
     :output_widget: kbasepangenome
     """
-    #315750.3
+    
     gids = genome_ids.split(',')
     
     meth.stages = len(gids)+1 # for reporting progress
@@ -593,7 +627,6 @@ def _compare_models(meth, model_ids):
     :rtype: kbtypes.Unicode
     :output_widget: compmodels
     """
-    #315750.3
     mids = model_ids.split(',')
 
     meth.stages = len(mids)+1 # for reporting progress
@@ -618,43 +651,7 @@ def _compare_models(meth, model_ids):
     return json.dumps({'data': comparemod})
 
 
-@method(name="Compare Genomes")
-def _compare_genomes(meth, genome_ids):
-    """Compare two or more genomes and compute core, noncore unique genes, functional roles with their subsystem information. 
-    
-    :param model_ids: list of genome ids (comma seperated)
-    :type model_ids: kbtypes.KBaseGenomes.Genome
-    :ui_name model_ids: Genome IDs
-
-    :return: Uploaded Genome Comparison Data
-    :rtype: kbtypes.Unicode
-    :output_widget: compgenomes
-    """
-    #315750.3
-    gids = genome_ids.split(',')
-
-    meth.stages = len(gids)+1 # for reporting progress
-    meth.advance("Starting...")
-    
-    #grab token and workspace info, setup the client
-    token, ws = meth.token, meth.workspace_id;
-    wss =[]
-    fba = fbaModelServices(url = service.URLS.fba, token = token)
-
-    for gid in gids:
-        meth.advance("Loading genomes: "+gid);
-        wss.append(ws)
-
-    genomeout =fba.compare_genomes({'genomes': gids, 
-                                     'workspaces': wss })
-
-    comparegenome = genomeout['genome_comparisons']                               
-    funccomp = genomeout['function_comparisons']
-    #print meth.debug(json.dumps(comparegenome))
-    #print meth.debug(json.dumps(funccomp))
-    return json.dumps({'data_genome': comparegenome, 'data_func':funccomp})
-
-@method(name="Compare Genomes:input PanGenome")
+@method(name="Genome Comparison from PanGenome")
 def _compare_genomes(meth, genome_ids):
     """Genome Comparison analysis based on the PanGenome input. 
     
@@ -666,7 +663,7 @@ def _compare_genomes(meth, genome_ids):
     :rtype: kbtypes.KBaseGenomes.GenomeComparisonData
     :output_widget: compgenomePa
     """
-    #315750.3
+    
     gids = genome_ids.split(',')
 
     meth.stages = len(gids)+1 # for reporting progress
@@ -691,7 +688,7 @@ def _compare_genomes(meth, genome_ids):
     #print meth.debug(json.dumps(funccomp))
     return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
 
-@method(name="Compare Genomes:input ProteomeComparison")
+@method(name="Genome Comparison from Proteome")
 def _compare_genomes(meth, genome_ids):
     """Genome Comparison analysis based on the Proteome Comparison input. 
     
@@ -703,7 +700,7 @@ def _compare_genomes(meth, genome_ids):
     :rtype: kbtypes.KBaseGenomes.GenomeComparisonData
     :output_widget: compgenomePr
     """
-    #315750.3
+    
     gids = genome_ids.split(',')
 
     meth.stages = len(gids)+1 # for reporting progress
@@ -719,8 +716,8 @@ def _compare_genomes(meth, genome_ids):
         wss.append(ws)
 
 
-    meta =fba.compare_genomes({'genomes': genome_ids, 
-                                    'workspaces': ws })
+    meta=fba.compare_genomes({'protcomp_id': genome_ids, 
+                                    'protcomp_ws': ws })
    
     #comparegenome = genomeout['genome_comparisons']                               
     #funccomp = genomeout['function_comparisons']

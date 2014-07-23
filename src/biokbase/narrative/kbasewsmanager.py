@@ -5,6 +5,7 @@ Based on Travis Harrison's shocknbmanager and the azurenbmanager
 Authors:
 
 * Steve Chan <sychan@lbl.gov>
+* Bill Riehl <wjriehl@lbl.gov>
 
 Copyright (C) 2013 The Regents of the University of California
 Department of  Energy contract-operators of the Lawrence Berkeley National Laboratory
@@ -116,7 +117,7 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def wsclient(self):
         """Return a workspace client object for the workspace endpoint in kbasews_uri"""
-        return Workspace( self.kbasews_uri)
+        return Workspace(self.kbasews_uri)
 
     def _clean_id( self,id):
         return self.wsid_regex.sub( '', id.replace(' ','_'))
@@ -126,7 +127,7 @@ class KBaseWSNotebookManager(NotebookManager):
         For the ID field, we use "{ws_id}.{obj_id}"
         The obj_id field is sanitized version of document.ipynb.metadata.name
         """
-        self.log.debug("listing notebooks.")
+        self.log.debug("listing Narratives.")
         self.log.debug("kbase_session = %s" % str(self.kbase_session))
         wsclient = self.wsclient()
         all = ws_util.get_wsobj_meta( wsclient)
@@ -179,7 +180,7 @@ class KBaseWSNotebookManager(NotebookManager):
             res = ws_util.put_wsobj( wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
         except Exception as e:
-            raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
+            raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
         # use "ws.ws_id.obj.object_id" as the identifier
         id = "ws.%s.obj.%s" % ( res['wsid'], res['objid'])
         return id
@@ -191,7 +192,7 @@ class KBaseWSNotebookManager(NotebookManager):
         wsclient = self.wsclient()
         user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
         if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine valid user_id')
+            raise web.HTTPError(400, u'Cannot determine valid user identity!')
         name = self.mapping[notebook_id]
         super(KBaseWSNotebookManager, self).delete_notebook_id(notebook_id)
 
@@ -200,7 +201,7 @@ class KBaseWSNotebookManager(NotebookManager):
         wsclient = self.wsclient()
         user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
         if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine valid user_id')
+            raise web.HTTPError(400, u'Cannot determine valid user identity!')
         exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
         self.log.debug("notebook_exists(%s) = %s"%(notebook_id,exists))
         if not exists:
@@ -225,28 +226,28 @@ class KBaseWSNotebookManager(NotebookManager):
         try:
             name = self.mapping[notebook_id]
         except KeyError:
-            raise web.HTTPError(404, u'Notebook does not exist: %s' % notebook_id)
+            raise web.HTTPError(404, u'Narrative does not exist: %s' % notebook_id)
         self.log.debug("get_name(%s) = %s"%(notebook_id,name))
         return name
 
     def read_notebook_object(self, notebook_id):
         """Get the Notebook representation of a notebook by notebook_id."""
-        self.log.debug("reading notebook %s." % notebook_id)
+        self.log.debug("reading Narrative %s." % notebook_id)
         wsclient = self.wsclient()
         user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
         if user_id is None:
-            raise web.HTTPError(400, u'Missing user_id from kbase_session object')
+            raise web.HTTPError(400, u'Missing user identity from kbase_session object')
         try:
             wsobj = ws_util.get_wsobj( self.wsclient(), notebook_id, self.ws_type)
         except ws_util.BadWorkspaceID, e:
-            raise web.HTTPError(500, u'Notebook %s not found: %s' % (notebook_id, e))
+            raise web.HTTPError(500, u'Narrative %s not found: %s' % (notebook_id, e))
         jsonnb = json.dumps(wsobj['data'])
         #self.log.debug("jsonnb = %s" % jsonnb)
         nb = current.reads(jsonnb,u'json')
         # Set the notebook metadata workspace to the workspace this came from
         nb.metadata.ws_name = wsobj['metadata']['workspace']
         last_modified = dateutil.parser.parse(wsobj['metadata']['save_date'])
-        self.log.debug("Notebook successfully read" )
+        self.log.debug("Narrative successfully read" )
         return last_modified, nb
 
     def extract_data_dependencies(self, nb):
@@ -297,15 +298,15 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def write_notebook_object(self, nb, notebook_id=None):
         """Save an existing notebook object by notebook_id."""
-        self.log.debug("writing notebook %s." % notebook_id)
+        self.log.debug("writing Narrative %s." % notebook_id)
         wsclient = self.wsclient()
         user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
         if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine user_id from session')
+            raise web.HTTPError(400, u'Cannot determine user identity from session information')
         try:
             new_name = normalize('NFC', nb.metadata.name)
         except AttributeError:
-            raise web.HTTPError(400, u'Missing notebook name')
+            raise web.HTTPError(400, u'Missing Narrative name')
         new_name = self._clean_id( new_name)
         # Verify that our own home workspace exists, note that we aren't doing this
         # as a general thing for other workspaces
@@ -324,7 +325,7 @@ class KBaseWSNotebookManager(NotebookManager):
             nb.metadata.data_dependencies = self.extract_data_dependencies(nb)
             nb.metadata.format = self.node_format
         except Exception as e:
-            raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
+            raise web.HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
         try:
             wsobj = { 'type' : self.ws_type,
                       'data' : nb,
@@ -352,7 +353,7 @@ class KBaseWSNotebookManager(NotebookManager):
             res = ws_util.put_wsobj( wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
         except Exception as e:
-            raise web.HTTPError(500, u'%s saving notebook: %s' % (type(e),e))
+            raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
         # use "ws.ws_id.obj.object_id" as the identifier
         id = "ws.%s.obj.%s" % ( res['wsid'], res['objid'])
         self.mapping[id] = "%s/%s" % (res['workspace'],new_name)
@@ -360,14 +361,14 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def delete_notebook(self, notebook_id):
         """Delete notebook by notebook_id."""
-        self.log.debug("deleting notebook %s" % notebook_id)
+        self.log.debug("deleting Narrative %s" % notebook_id)
         wsclient = self.wsclient()
         user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
         if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine user_id from session')
+            raise web.HTTPError(400, u'Cannot determine user identity from session information')
         if notebook_id is None:
-            raise web.HTTPError(400, u'Missing notebookd_id')
-        self.log.debug("deleting notebook %s", notebook_id)
+            raise web.HTTPError(400, u'Missing Narrative id')
+        self.log.debug("deleting Narrative %s", notebook_id)
         m = self.ws_regex.match(notebook_id)
         if m:
             res = ws_util.delete_wsobj(wsclient, m.group('wsid'),m.group('objid'))

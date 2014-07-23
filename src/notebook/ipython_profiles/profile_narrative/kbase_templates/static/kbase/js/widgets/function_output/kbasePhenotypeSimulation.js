@@ -25,15 +25,15 @@
 
             var container = this.$elem;
         	container.empty();
-            if (self.token == null) {
+            if (!self.authToken()) {
             	container.append("<div>[Error] You're not logged in</div>");
             	return;
             }
         	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading phenotype simulation data...</div>");
 
-            var kbws = new Workspace(self.wsUrl, {'token': self.token});
+            var kbws = new Workspace(self.wsUrl, {'token': self.authToken()});
             
-            //var request = {auth: self.token, workspace: self.ws_name, id: self.simulation_id, type: 'KBasePhenotypes.PhenotypeSimulationSet'};
+            //var request = {auth: self.authToken(), workspace: self.ws_name, id: self.simulation_id, type: 'KBasePhenotypes.PhenotypeSimulationSet'};
             kbws.get_objects([{ref: self.ws_name +"/"+ self.simulation_id}], function(data) {
             	container.empty();
             	var simList = data[0].data.phenotypeSimulations;
@@ -82,13 +82,13 @@
         },
 
         loggedInCallback: function(event, auth) {
-            this.token = auth.token;
+            //this.token = auth.token;
             this.render();
             return this;
         },
 
         loggedOutCallback: function(event, auth) {
-            this.token = null;
+            //this.token = null;
             this.render();
             return this;
         }

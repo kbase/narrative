@@ -41,6 +41,17 @@ class Iface:
     """
     pass
 
+  def fastqtoPe(self, file1, file2, outpath, workingdir, auth):
+    """
+    Parameters:
+     - file1
+     - file2
+     - outpath
+     - workingdir
+     - auth
+    """
+    pass
+
   def alignTophat(self, ref_genome, inPath, gtffile, outPath, alignOpts, workingdir, auth):
     """
     Parameters:
@@ -124,7 +135,7 @@ class Iface:
     """
     pass
 
-  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, ext_src_id, working_dir, auth):
+  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, shock_id, src_id, working_dir, auth):
     """
     Parameters:
      - filename
@@ -136,8 +147,8 @@ class Iface:
      - onto_term_def
      - onto_term_name
      - seq_type
-     - reference
-     - ext_src_id
+     - shock_id
+     - src_id
      - working_dir
      - auth
     """
@@ -364,6 +375,46 @@ class Client(Iface):
     if result.je is not None:
       raise result.je
     raise TApplicationException(TApplicationException.MISSING_RESULT, "alignBWA failed: unknown result");
+
+  def fastqtoPe(self, file1, file2, outpath, workingdir, auth):
+    """
+    Parameters:
+     - file1
+     - file2
+     - outpath
+     - workingdir
+     - auth
+    """
+    self.send_fastqtoPe(file1, file2, outpath, workingdir, auth)
+    return self.recv_fastqtoPe()
+
+  def send_fastqtoPe(self, file1, file2, outpath, workingdir, auth):
+    self._oprot.writeMessageBegin('fastqtoPe', TMessageType.CALL, self._seqid)
+    args = fastqtoPe_args()
+    args.file1 = file1
+    args.file2 = file2
+    args.outpath = outpath
+    args.workingdir = workingdir
+    args.auth = auth
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_fastqtoPe(self):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = fastqtoPe_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.je is not None:
+      raise result.je
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "fastqtoPe failed: unknown result");
 
   def alignTophat(self, ref_genome, inPath, gtffile, outPath, alignOpts, workingdir, auth):
     """
@@ -657,7 +708,7 @@ class Client(Iface):
       raise result.je
     raise TApplicationException(TApplicationException.MISSING_RESULT, "ShockWrite failed: unknown result");
 
-  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, ext_src_id, working_dir, auth):
+  def workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, shock_id, src_id, working_dir, auth):
     """
     Parameters:
      - filename
@@ -669,15 +720,15 @@ class Client(Iface):
      - onto_term_def
      - onto_term_name
      - seq_type
-     - reference
-     - ext_src_id
+     - shock_id
+     - src_id
      - working_dir
      - auth
     """
-    self.send_workspaceUpload(filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, ext_src_id, working_dir, auth)
+    self.send_workspaceUpload(filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, shock_id, src_id, working_dir, auth)
     return self.recv_workspaceUpload()
 
-  def send_workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, reference, ext_src_id, working_dir, auth):
+  def send_workspaceUpload(self, filename, genome_id, desc, title, srcDate, onto_term_id, onto_term_def, onto_term_name, seq_type, shock_id, src_id, working_dir, auth):
     self._oprot.writeMessageBegin('workspaceUpload', TMessageType.CALL, self._seqid)
     args = workspaceUpload_args()
     args.filename = filename
@@ -689,8 +740,8 @@ class Client(Iface):
     args.onto_term_def = onto_term_def
     args.onto_term_name = onto_term_name
     args.seq_type = seq_type
-    args.reference = reference
-    args.ext_src_id = ext_src_id
+    args.shock_id = shock_id
+    args.src_id = src_id
     args.working_dir = working_dir
     args.auth = auth
     args.write(self._oprot)
@@ -1236,6 +1287,7 @@ class Processor(Iface, TProcessor):
     self._processMap = {}
     self._processMap["alignBowtie"] = Processor.process_alignBowtie
     self._processMap["alignBWA"] = Processor.process_alignBWA
+    self._processMap["fastqtoPe"] = Processor.process_fastqtoPe
     self._processMap["alignTophat"] = Processor.process_alignTophat
     self._processMap["callCufflinks"] = Processor.process_callCufflinks
     self._processMap["callCuffmerge"] = Processor.process_callCuffmerge
@@ -1298,6 +1350,20 @@ class Processor(Iface, TProcessor):
     except JnomicsThriftException, je:
       result.je = je
     oprot.writeMessageBegin("alignBWA", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_fastqtoPe(self, seqid, iprot, oprot):
+    args = fastqtoPe_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = fastqtoPe_result()
+    try:
+      result.success = self._handler.fastqtoPe(args.file1, args.file2, args.outpath, args.workingdir, args.auth)
+    except JnomicsThriftException, je:
+      result.je = je
+    oprot.writeMessageBegin("fastqtoPe", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -1406,7 +1472,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = workspaceUpload_result()
     try:
-      result.success = self._handler.workspaceUpload(args.filename, args.genome_id, args.desc, args.title, args.srcDate, args.onto_term_id, args.onto_term_def, args.onto_term_name, args.seq_type, args.reference, args.ext_src_id, args.working_dir, args.auth)
+      result.success = self._handler.workspaceUpload(args.filename, args.genome_id, args.desc, args.title, args.srcDate, args.onto_term_id, args.onto_term_def, args.onto_term_name, args.seq_type, args.shock_id, args.src_id, args.working_dir, args.auth)
     except JnomicsThriftException, je:
       result.je = je
     oprot.writeMessageBegin("workspaceUpload", TMessageType.REPLY, seqid)
@@ -1963,6 +2029,188 @@ class alignBWA_result:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('alignBWA_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.STRUCT, 0)
+      self.success.write(oprot)
+      oprot.writeFieldEnd()
+    if self.je is not None:
+      oprot.writeFieldBegin('je', TType.STRUCT, 1)
+      self.je.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class fastqtoPe_args:
+  """
+  Attributes:
+   - file1
+   - file2
+   - outpath
+   - workingdir
+   - auth
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'file1', None, None, ), # 1
+    (2, TType.STRING, 'file2', None, None, ), # 2
+    (3, TType.STRING, 'outpath', None, None, ), # 3
+    (4, TType.STRING, 'workingdir', None, None, ), # 4
+    (5, TType.STRUCT, 'auth', (Authentication, Authentication.thrift_spec), None, ), # 5
+  )
+
+  def __init__(self, file1=None, file2=None, outpath=None, workingdir=None, auth=None,):
+    self.file1 = file1
+    self.file2 = file2
+    self.outpath = outpath
+    self.workingdir = workingdir
+    self.auth = auth
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.file1 = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.file2 = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.outpath = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.workingdir = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRUCT:
+          self.auth = Authentication()
+          self.auth.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('fastqtoPe_args')
+    if self.file1 is not None:
+      oprot.writeFieldBegin('file1', TType.STRING, 1)
+      oprot.writeString(self.file1)
+      oprot.writeFieldEnd()
+    if self.file2 is not None:
+      oprot.writeFieldBegin('file2', TType.STRING, 2)
+      oprot.writeString(self.file2)
+      oprot.writeFieldEnd()
+    if self.outpath is not None:
+      oprot.writeFieldBegin('outpath', TType.STRING, 3)
+      oprot.writeString(self.outpath)
+      oprot.writeFieldEnd()
+    if self.workingdir is not None:
+      oprot.writeFieldBegin('workingdir', TType.STRING, 4)
+      oprot.writeString(self.workingdir)
+      oprot.writeFieldEnd()
+    if self.auth is not None:
+      oprot.writeFieldBegin('auth', TType.STRUCT, 5)
+      self.auth.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class fastqtoPe_result:
+  """
+  Attributes:
+   - success
+   - je
+  """
+
+  thrift_spec = (
+    (0, TType.STRUCT, 'success', (JnomicsThriftJobID, JnomicsThriftJobID.thrift_spec), None, ), # 0
+    (1, TType.STRUCT, 'je', (JnomicsThriftException, JnomicsThriftException.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, success=None, je=None,):
+    self.success = success
+    self.je = je
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.STRUCT:
+          self.success = JnomicsThriftJobID()
+          self.success.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.je = JnomicsThriftException()
+          self.je.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('fastqtoPe_result')
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.STRUCT, 0)
       self.success.write(oprot)
@@ -3347,8 +3595,8 @@ class workspaceUpload_args:
    - onto_term_def
    - onto_term_name
    - seq_type
-   - reference
-   - ext_src_id
+   - shock_id
+   - src_id
    - working_dir
    - auth
   """
@@ -3356,22 +3604,21 @@ class workspaceUpload_args:
   thrift_spec = (
     None, # 0
     (1, TType.STRING, 'filename', None, None, ), # 1
-    None, # 2
-    (3, TType.STRING, 'genome_id', None, None, ), # 3
-    (4, TType.STRING, 'desc', None, None, ), # 4
-    (5, TType.STRING, 'title', None, None, ), # 5
-    (6, TType.STRING, 'srcDate', None, None, ), # 6
-    (7, TType.STRING, 'onto_term_id', None, None, ), # 7
-    (8, TType.STRING, 'onto_term_def', None, None, ), # 8
-    (9, TType.STRING, 'onto_term_name', None, None, ), # 9
-    (10, TType.STRING, 'seq_type', None, None, ), # 10
-    (11, TType.STRING, 'reference', None, None, ), # 11
-    (12, TType.STRING, 'ext_src_id', None, None, ), # 12
-    (13, TType.STRING, 'working_dir', None, None, ), # 13
-    (14, TType.STRUCT, 'auth', (Authentication, Authentication.thrift_spec), None, ), # 14
+    (2, TType.STRING, 'genome_id', None, None, ), # 2
+    (3, TType.STRING, 'desc', None, None, ), # 3
+    (4, TType.STRING, 'title', None, None, ), # 4
+    (5, TType.STRING, 'srcDate', None, None, ), # 5
+    (6, TType.STRING, 'onto_term_id', None, None, ), # 6
+    (7, TType.STRING, 'onto_term_def', None, None, ), # 7
+    (8, TType.STRING, 'onto_term_name', None, None, ), # 8
+    (9, TType.STRING, 'seq_type', None, None, ), # 9
+    (10, TType.STRING, 'shock_id', None, None, ), # 10
+    (11, TType.STRING, 'src_id', None, None, ), # 11
+    (12, TType.STRING, 'working_dir', None, None, ), # 12
+    (13, TType.STRUCT, 'auth', (Authentication, Authentication.thrift_spec), None, ), # 13
   )
 
-  def __init__(self, filename=None, genome_id=None, desc=None, title=None, srcDate=None, onto_term_id=None, onto_term_def=None, onto_term_name=None, seq_type=None, reference=None, ext_src_id=None, working_dir=None, auth=None,):
+  def __init__(self, filename=None, genome_id=None, desc=None, title=None, srcDate=None, onto_term_id=None, onto_term_def=None, onto_term_name=None, seq_type=None, shock_id=None, src_id=None, working_dir=None, auth=None,):
     self.filename = filename
     self.genome_id = genome_id
     self.desc = desc
@@ -3381,8 +3628,8 @@ class workspaceUpload_args:
     self.onto_term_def = onto_term_def
     self.onto_term_name = onto_term_name
     self.seq_type = seq_type
-    self.reference = reference
-    self.ext_src_id = ext_src_id
+    self.shock_id = shock_id
+    self.src_id = src_id
     self.working_dir = working_dir
     self.auth = auth
 
@@ -3400,62 +3647,62 @@ class workspaceUpload_args:
           self.filename = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 3:
+      elif fid == 2:
         if ftype == TType.STRING:
           self.genome_id = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 4:
+      elif fid == 3:
         if ftype == TType.STRING:
           self.desc = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 5:
+      elif fid == 4:
         if ftype == TType.STRING:
           self.title = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 6:
+      elif fid == 5:
         if ftype == TType.STRING:
           self.srcDate = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 7:
+      elif fid == 6:
         if ftype == TType.STRING:
           self.onto_term_id = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 8:
+      elif fid == 7:
         if ftype == TType.STRING:
           self.onto_term_def = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 9:
+      elif fid == 8:
         if ftype == TType.STRING:
           self.onto_term_name = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 10:
+      elif fid == 9:
         if ftype == TType.STRING:
           self.seq_type = iprot.readString();
         else:
           iprot.skip(ftype)
+      elif fid == 10:
+        if ftype == TType.STRING:
+          self.shock_id = iprot.readString();
+        else:
+          iprot.skip(ftype)
       elif fid == 11:
         if ftype == TType.STRING:
-          self.reference = iprot.readString();
+          self.src_id = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 12:
         if ftype == TType.STRING:
-          self.ext_src_id = iprot.readString();
-        else:
-          iprot.skip(ftype)
-      elif fid == 13:
-        if ftype == TType.STRING:
           self.working_dir = iprot.readString();
         else:
           iprot.skip(ftype)
-      elif fid == 14:
+      elif fid == 13:
         if ftype == TType.STRUCT:
           self.auth = Authentication()
           self.auth.read(iprot)
@@ -3476,51 +3723,51 @@ class workspaceUpload_args:
       oprot.writeString(self.filename)
       oprot.writeFieldEnd()
     if self.genome_id is not None:
-      oprot.writeFieldBegin('genome_id', TType.STRING, 3)
+      oprot.writeFieldBegin('genome_id', TType.STRING, 2)
       oprot.writeString(self.genome_id)
       oprot.writeFieldEnd()
     if self.desc is not None:
-      oprot.writeFieldBegin('desc', TType.STRING, 4)
+      oprot.writeFieldBegin('desc', TType.STRING, 3)
       oprot.writeString(self.desc)
       oprot.writeFieldEnd()
     if self.title is not None:
-      oprot.writeFieldBegin('title', TType.STRING, 5)
+      oprot.writeFieldBegin('title', TType.STRING, 4)
       oprot.writeString(self.title)
       oprot.writeFieldEnd()
     if self.srcDate is not None:
-      oprot.writeFieldBegin('srcDate', TType.STRING, 6)
+      oprot.writeFieldBegin('srcDate', TType.STRING, 5)
       oprot.writeString(self.srcDate)
       oprot.writeFieldEnd()
     if self.onto_term_id is not None:
-      oprot.writeFieldBegin('onto_term_id', TType.STRING, 7)
+      oprot.writeFieldBegin('onto_term_id', TType.STRING, 6)
       oprot.writeString(self.onto_term_id)
       oprot.writeFieldEnd()
     if self.onto_term_def is not None:
-      oprot.writeFieldBegin('onto_term_def', TType.STRING, 8)
+      oprot.writeFieldBegin('onto_term_def', TType.STRING, 7)
       oprot.writeString(self.onto_term_def)
       oprot.writeFieldEnd()
     if self.onto_term_name is not None:
-      oprot.writeFieldBegin('onto_term_name', TType.STRING, 9)
+      oprot.writeFieldBegin('onto_term_name', TType.STRING, 8)
       oprot.writeString(self.onto_term_name)
       oprot.writeFieldEnd()
     if self.seq_type is not None:
-      oprot.writeFieldBegin('seq_type', TType.STRING, 10)
+      oprot.writeFieldBegin('seq_type', TType.STRING, 9)
       oprot.writeString(self.seq_type)
       oprot.writeFieldEnd()
-    if self.reference is not None:
-      oprot.writeFieldBegin('reference', TType.STRING, 11)
-      oprot.writeString(self.reference)
+    if self.shock_id is not None:
+      oprot.writeFieldBegin('shock_id', TType.STRING, 10)
+      oprot.writeString(self.shock_id)
       oprot.writeFieldEnd()
-    if self.ext_src_id is not None:
-      oprot.writeFieldBegin('ext_src_id', TType.STRING, 12)
-      oprot.writeString(self.ext_src_id)
+    if self.src_id is not None:
+      oprot.writeFieldBegin('src_id', TType.STRING, 11)
+      oprot.writeString(self.src_id)
       oprot.writeFieldEnd()
     if self.working_dir is not None:
-      oprot.writeFieldBegin('working_dir', TType.STRING, 13)
+      oprot.writeFieldBegin('working_dir', TType.STRING, 12)
       oprot.writeString(self.working_dir)
       oprot.writeFieldEnd()
     if self.auth is not None:
-      oprot.writeFieldBegin('auth', TType.STRUCT, 14)
+      oprot.writeFieldBegin('auth', TType.STRUCT, 13)
       self.auth.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()

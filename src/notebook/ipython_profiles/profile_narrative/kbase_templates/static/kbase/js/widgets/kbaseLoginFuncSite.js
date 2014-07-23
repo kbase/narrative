@@ -52,7 +52,7 @@
 
     $.KBWidget({
 
-		  name: "kbaseLogin",
+	    name: "kbaseLogin",
 
         version: "1.0.0",
         options: {
@@ -62,6 +62,8 @@
             possibleFields : ['verified','name','opt_in','kbase_sessionid','token','groups','user_id','email','system_admin'],
             fields : ['name', 'kbase_sessionid', 'user_id', 'token'],
         },
+
+        cookieName : 'kbase_session',
 
         get_kbase_cookie : function (field) {
 
@@ -124,7 +126,11 @@
                 if (!this.is_token_valid(this.get_kbase_cookie('token'))) {
                     localStorage.removeItem('kbase_session');
                     // nuke the cookie, too, just in case it's still there.
-                    $.cookie('kbase_session', null);
+                    $.removeCookie(this.cookieName, { path: '/', domain: '.kbase.us' });
+                    $.removeCookie(this.cookieName, { path: '/' });
+                    // $.cookie('kbase_session', null, { path: '/' });
+                    // $.cookie('kbase_session', null, { path: '/', domain: 'kbase.us' });
+//                    $.cookie('kbase_session', null);
                 }
                 else {
                     if (this.registerLogin) {
@@ -1048,6 +1054,7 @@
 
             localStorage.removeItem('kbase_session');
             $.removeCookie('kbase_session', { path: '/' });
+            $.removeCookie(this.cookieName, { path: '/', domain: '.kbase.us' });
 
             // the rest of this is just housekeeping.
 

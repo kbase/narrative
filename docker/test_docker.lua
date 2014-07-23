@@ -11,7 +11,7 @@ d = require('docker')
 p=require('pl.pretty')
 
 c=d.config()
-c.image='sychan/narrative:latest'
+c.image='kbase/narrative:latest'
 c.Cmd={'test_narrative'}
 c.PortSpecs= { "8888" }
 c.name="test_narrative"

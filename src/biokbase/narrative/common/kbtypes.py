@@ -401,8 +401,14 @@ class KBaseGenomes(object):
         """Feature type"""
         info_text = "KBaseGenomes.Feature"
         class v1_0(tls.Unicode, TypeMeta):
-            """Structure for a single feature of a genome"""
-            info_text = "KBaseGenomes.Feature-1.0"
+            """Genome object holds much of the data relevant for a genome in KBase"""
+            info_text = "KBaseGenomes.Genome-1.0"
+    class Pangenome(tls.Unicode, TypeMeta):
+        """Pangenome type"""
+        info_text = "KBaseGenomes.Pangenome"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Pangenome object holds computed protein families for given set of genomes"""
+            info_text = "KBaseGenomes.Pangenome-1.0"        
     class MetagenomeAnnotation(tls.Unicode, TypeMeta):
         """MetagenomeAnnotation type"""
         info_text = "KBaseGenomes.MetagenomeAnnotation"
@@ -757,6 +763,12 @@ class KBaseSearch(object):
         class v1_0(tls.Unicode, TypeMeta):
             """Type spec for a "Contig" subobject in the "ContigSet" object"""
             info_text = "KBaseSearch.Contig-1.0"
+    class GenomeSet(tls.Unicode, TypeMeta):
+        """GenomeSet type"""
+        info_text = "KBaseSearch.GenomeSet"
+        class v1_0(tls.Unicode, TypeMeta):
+            """Type spec for the "GenomeSet" object"""
+            info_text = "KBaseSearch.GenomeSet-1.0"
 
 class BAMBI(object):
     """BAMBI module"""
@@ -959,6 +971,12 @@ class GenomeComparison(object):
     class ProteomeComparison(tls.Unicode, TypeMeta):
         """ProteomeComparison type"""
         info_text = "GenomeComparison.ProteomeComparison"
+
+class KBaseTrees(object):
+    """KBaseTrees module"""
+    class Tree(tls.Unicode, TypeMeta):
+        """Tree type"""
+        info_text = "KBaseTrees.Tree"
 
 class Regenerator(object):
     """Regenerate self with AUTO section filled in.

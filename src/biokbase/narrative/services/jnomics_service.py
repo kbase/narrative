@@ -659,7 +659,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     :default paired : no
     :param Input_file_path: Input the raw sequencing data
     :type Input_file_path: kbtypes.Unicode
-    :ui_name Input_file_path : Input file
+    :ui_name Input_file_path : Input files
     :param ref: Reference Genome (kb_id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference

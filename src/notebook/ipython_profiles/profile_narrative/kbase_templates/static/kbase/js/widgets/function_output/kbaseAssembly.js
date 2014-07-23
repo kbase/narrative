@@ -10,9 +10,12 @@
         options: {
             color: "black",
         },
+//	fbaURL: "https://kbase.us/services/KBaseFBAModeling",
+	fbaURL: 'http://140.221.85.73:4043',
 
         init: function(options) {
             this._super(options);
+
             var kb_info = options.kbase_assembly_input;
 
 	    console.log(kb_info)
@@ -23,6 +26,7 @@
             var token = options.ar_token
             var arURL = options.ar_url
 	    var ws_url = options.ws_url
+	    var ws_name = options.ws_name
             var arRequest = {
                 "data_id": null,
 		"kbase_assembly_input": options.kbase_assembly_input,
@@ -143,8 +147,12 @@
                         self.$elem.append(kill_div);
 
 			
+			/////////////////////////////////////////
+			///     Wait for job to complete  ///////
+			/////////////////////////////////////////
                         var update_status = function() {
                             var prom = check_status(job_id);
+			    var result_btn_row = $('<div class="row pull-right">')
                             $.when(prom).done(function(stat){
                                 status_box.html(make_status_table(job_id, desc, stat));
 				status_box.css("border", "none")
@@ -153,38 +161,45 @@
 				    kill_div.html("");
                                     if (stat.search('Complete') != -1) {
                                         var report_txt = null;
-					// get_assemblies(job_id).done(function(asm)){
-					//     var assemblies = asm
-					// }
-					// console.log(assemblies)
-					// var import_btn_group = $('<span class="btn-group"></span>');
-					// var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Import Contigs <span class="caret"></span> </button>');
-					// var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-					// for (i=0; i<assemblies.length;i++){
-					//     import_btn_sel.append('<li><a href="#">' + i + '</a></li>')
-					// }
-					
-					// // Get list of assemblies
-					
+					var assemblies;
+					get_assemblies(job_id).done(function(asm){
+					    console.log(asm);
+					    assemblies = JSON.parse(asm);
+					    console.log(assemblies);
 
-                                        request_job_report(job_id).done(function(route){
+					    var import_btn_group = $('<span class="btn-group"></span>');
+					    var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Import Contigs <span class="caret"></span> </button>');
+					    var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
+					    import_btn_sel.append('<li><a href="#">Automatic</a></li>')
+					    import_btn_sel.append('<li class="divider"></li>')
+					    for (i=0; i<assemblies.length;i++){
+						var contig_import = $('<li></li>');
+						ws_contig_name = job_id + '_' + assemblies[i].name;
+						
+						import_btn_sel.append('<li><a href="#">' + assemblies[i].name + '</a></li>')
+					    }
 					    
-                                            var report_div = '<div class="">'
-					    var result_btn_row = $('<div class="row pull-right">')
-                                            get_job_report_txt(job_id)
-						.done(function(quast_txt){
-						    var formatted = quast_txt.replace(/\n/g, '<br>')
-						    var formatted2 = formatted.replace(/\s/g, '&nbsp')
-                                                    var full_link = arURL + route;
-						    report_div += '<code style="font-size:4px>' + formatted2 +'</code><br>'
-						    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
-						}).always(function(){
-//						    result_btn_row.append('<span class=""><a href='+ full_link_log +' class="btn btn-primary" target="_blank">Assembly Log</a></span></div>')
-						    result_btn_row.append('<span class=""><a href='+ full_link_log +' class="btn btn-primary" target="_blank">Import Contigs</a></span></div>')
+					    import_btn_group.append(import_btn);
+					    import_btn_group.append(import_btn_sel);
+					    result_btn_row.append(import_btn_group);
+					
+                                            request_job_report(job_id).done(function(route){
+						var report_div = '<div class="">'
+						
+						get_job_report_txt(job_id)
+						    .done(function(quast_txt){
+							var formatted = quast_txt.replace(/\n/g, '<br>')
+							var formatted2 = formatted.replace(/\s/g, '&nbsp')
+							var full_link = arURL + route;
+							report_div += '<code style="font-size:4px>' + formatted2 +'</code><br>'
+							result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
+						    }).always(function(){
+										    
                                                     self.$elem.append(report_div);
-						    self.$elem.append(result_btn_row);
-					    })
-                                        })
+							self.$elem.append(result_btn_row);
+						    })
+                                            })
+					});
                                     }
                                 }
                             })
@@ -230,6 +245,7 @@
 
 	    var get_assemblies = function(job_id){
 		var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/results?type=contigs,scaffolds');
+		return prom
 	    }
 
             var kill_job = function(job_id, token) {
@@ -241,19 +257,18 @@
                 return prom;
             }
 
-	    // var create_ws_contig = function(raw_contig_str){
-	    // 	var kbws = new Workspace(ws_url, {"token": token});
-		
-	    // 	var obj_params = {'type': 'KBaseAssembly.AssemblyInput',
-	    // 			  'data': {'hello': 'hello data'},
-	    // 			  'name': String(job_id) + '-assembly'}
-		
-		
-	    // var save_params = {'workspace': 'cbun:home',
-	    // 		       'objects': [obj_params]}
-	    // kbws.save_objects(save_params)
-
-	    // };
+	    var import_contigs_to_ws = function(token, ws_url, ws_name, shock_id, shock_url, contig_name){
+		var fba = new fbaModelServices(this.fbaURL, {'token': token});
+		fba.fasta_to_ContigSet({'fasta': shock_id, 
+					'workspace': [ws_name], 
+					'uid': contig_name, 
+					'name': contig_name, 
+					'shockurl': shock_url
+				       }).done(function(data){
+					   console.log('fba done');
+					   console.log(data);
+				       });
+	    }
             return this;	    
         }
 

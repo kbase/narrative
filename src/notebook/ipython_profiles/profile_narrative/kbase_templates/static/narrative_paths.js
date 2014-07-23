@@ -1,5 +1,8 @@
+console.log("WAT?");
+
     define('kbpaths', [], function(paths) {
         requirejs.config({
+        	baseUrl: 'static/foo/bar/',
             urlArgs: "bust=" + (new Date()).getTime(),
             paths : {
                 'jquery'      : 'kbase/js/ui-common/ext/jquery/jquery-1.10.2.min',
@@ -8,7 +11,7 @@
                 'd3'          : "kbase/js/ui-common/ext/d3/d3.v3.min",
                 'colorbrewer' : "kbase/js/ui-common/ext/colorbrewer/colorbrewer",
                 'handlebars'  : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
-				'CDMI_API'                          : '/kbase/js/ui-common/src/widgets/../js/CDMI_API',
+				'CDMI_API'                          : 'kbase/js/ui-common/src/widgets/../js/CDMI_API',
 				'IdMapClient'                       : 'kbase/js/ui-common/src/widgets/../js/IdMapClient',
 				'KbaseNetworkServiceClient'         : 'kbase/js/ui-common/src/widgets/../js/KbaseNetworkServiceClient',
 				'MetaTool'                          : 'kbase/js/ui-common/src/widgets/../js/MetaTool',

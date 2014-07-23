@@ -16,6 +16,8 @@
             var kb_info = options.kbase_assembly_input;
 
 	    console.log(kb_info)
+	    console.log('hello')
+
 	    //Get this from options
             var user = options.ar_user
             var token = options.ar_token
@@ -151,21 +153,36 @@
 				    kill_div.html("");
                                     if (stat.search('Complete') != -1) {
                                         var report_txt = null;
-                                        request_job_report(job_id).done(function(){
+					// get_assemblies(job_id).done(function(asm)){
+					//     var assemblies = asm
+					// }
+					// console.log(assemblies)
+					// var import_btn_group = $('<span class="btn-group"></span>');
+					// var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Import Contigs <span class="caret"></span> </button>');
+					// var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
+					// for (i=0; i<assemblies.length;i++){
+					//     import_btn_sel.append('<li><a href="#">' + i + '</a></li>')
+					// }
+					
+					// // Get list of assemblies
+					
+
+                                        request_job_report(job_id).done(function(route){
+					    
                                             var report_div = '<div class="">'
 					    var result_btn_row = $('<div class="row pull-right">')
                                             get_job_report_txt(job_id)
 						.done(function(quast_txt){
-                                                var full_link = arURL + '/static/' + user + '/job/' + job_id + '/quast/contig/report.html';
-                                                var formatted = quast_txt.replace(/\n/g, '<br>')
-                                                var formatted2 = formatted.replace(/\s/g, '&nbsp')
+						    var formatted = quast_txt.replace(/\n/g, '<br>')
+						    var formatted2 = formatted.replace(/\s/g, '&nbsp')
+                                                    var full_link = arURL + route;
 						    report_div += '<code style="font-size:4px>' + formatted2 +'</code><br>'
 						    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
-                                            }).always(function(){
-						var full_link_log = arURL + '/static/' + user + '/job/' + job_id + '/' + job_id + '_report.txt';
-						result_btn_row.append('<span class=""><a href='+ full_link_log +' class="btn btn-primary" target="_blank">Assembly Log</a></span></div>')
-                                                self.$elem.append(report_div);
-						self.$elem.append(result_btn_row);
+						}).always(function(){
+//						    result_btn_row.append('<span class=""><a href='+ full_link_log +' class="btn btn-primary" target="_blank">Assembly Log</a></span></div>')
+						    result_btn_row.append('<span class=""><a href='+ full_link_log +' class="btn btn-primary" target="_blank">Import Contigs</a></span></div>')
+                                                    self.$elem.append(report_div);
+						    self.$elem.append(result_btn_row);
 					    })
                                         })
                                     }
@@ -196,14 +213,24 @@
             }
 	    
             var request_job_report = function(job_id) {
-                var prom = $.get(arURL + '/static/serve/' + user + '/job/' + job_id + '/?quast')
+		console.log('report')
+                var prom = $.get(arURL + '/static/serve/' + user + '/job/' + job_id)
                 return prom;
             }
 	    
             var get_job_report_txt = function(job_id) {
-                var prom = $.get(arURL + '/static/' + user + '/job/' + job_id + '/quast/contig/report.txt');
+                var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/report');
                 return prom
             }
+
+            var get_job_report_log = function(job_id) {
+                var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/log');
+                return prom
+            }
+
+	    var get_assemblies = function(job_id){
+		var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/results?type=contigs,scaffolds');
+	    }
 
             var kill_job = function(job_id, token) {
                 var prom = $.ajax({

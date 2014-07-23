@@ -835,7 +835,7 @@ def _view_media(meth, media_id):
     return json.dumps(result)
 
 @method(name="Run Flux Balance Analysis")
-def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, defaultmaxflux, defaultminuptake, defaultmaxuptake, minimizeFlux, maximizeObjective, allreversible):
+def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, defaultmaxflux, defaultminuptake, defaultmaxuptake, minimizeFlux, maximizeObjective, allreversible, prom):
     """Run Flux Balance Analysis on a metabolic model. [10]
 
     :param fba_model_id: the metabolic model you wish to run [10.1]
@@ -888,6 +888,10 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     :ui_name allreversible: All rxns reversible?
     :default allreversible: no
     
+    :param prom: specify the PROM constraint to apply for regulation of the metabolic model  (optional) [10.12]
+    :type prom: kbtypes.KBaseFBA.PromConstraint
+    :ui_name prom: PROM constraint
+    
     :return: something 
     :rtype: kbtypes.Unicode
     :output_widget: kbaseFbaTabsNarrative
@@ -926,8 +930,8 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     typedef structure {
         media_id media;
         list<compound_id> additionalcpds;
-        prommodel_id prommodel;
-        workspace_id prommodel_workspace;
+	promconstraint_id promconstraint;
+	workspace_id promconstraint_workspace;
         workspace_id media_workspace;
         float objfraction;
         bool allreversible;
@@ -971,10 +975,10 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     if fba_result_id:
         fba_params['fba'] = fba_result_id
     if geneko:
-        fba_params['simulateko'] = 1
+        fba_params['simulateko'] = 0
         fba_params['formulation']['geneko']=geneko.split(";")
     if rxnko:
-        fba_params['simulateko'] = 1
+        fba_params['simulateko'] = 0
         fba_params['formulation']['rxnko']=rxnko.split(";")
     if maximizeObjective=='0' or maximizeObjective=='false' or maximizeObjective=='no':
         fba_params['formulation']['maximizeObjective'] = 0
@@ -991,6 +995,9 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     else:  
         fba_params['formulation']['allreversible'] = 0
         
+    if prom:
+        fba_params['formulation']['promconstraint'] = prom
+        fba_params['formulation']['promconstraint_workspace'] = workspaceName
 
     if defaultmaxflux:
         try:

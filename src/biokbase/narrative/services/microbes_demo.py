@@ -361,6 +361,22 @@ def _show_genome(meth, genome):
     token, workspaceName = meth.token, meth.workspace_id
     return json.dumps({'ws_name': workspaceName, 'ws_id': genome})
 
+@method(name="View SEED Functions")
+def _show_SEED_functional_categories(meth, genome):
+    """View and explore the SEED Functional categories associated with genes in your genome.
+
+    :param genome: select the genome you want to view
+    :type genome: kbtypes.KBaseGenomes.Genome
+    :ui_name genome: Genome
+    :return: Same genome ID
+    :rtype: kbtypes.KBaseGenomes.Genome
+    :output_widget: KBaseSEEDFunctions
+    """
+    meth.stages = 1
+    meth.advance("Loading the genome")
+    token, workspaceName = meth.token, meth.workspace_id
+    return json.dumps({ 'wsNameOrId': workspaceName, 'objNameOrId': genome})
+
 @method(name="Build a Metabolic Model")
 def _genome_to_fba_model(meth, genome_id, fba_model_id):
     """Given an annotated Genome, build a draft metabolic model which can be analyzed with FBA. [6]

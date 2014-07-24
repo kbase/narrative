@@ -642,7 +642,8 @@ def _compare_models(meth, model_ids):
         wss.append(ws)
 
     modelout =fba.compare_models({'models': mids, 
-                                     'workspaces': wss })
+                                  'workspaces': wss,
+                                  'workspace': ws})
 
     comparemod = modelout['model_comparisons']                               
     reactioncomp = modelout['reaction_comparisons']
@@ -663,7 +664,7 @@ def _compare_genomes(meth, genome_ids):
     :rtype: kbtypes.KBaseGenomes.GenomeComparisonData
     :output_widget: compgenomePa
     """
-    
+    pid =genome_ids;
     gids = genome_ids.split(',')
 
     meth.stages = len(gids)+1 # for reporting progress
@@ -680,12 +681,14 @@ def _compare_genomes(meth, genome_ids):
 
 
     meta =fba.compare_genomes({'pangenome_id': genome_ids, 
-                                    'pangeome_ws': ws })
+                               'pangenome_ws': ws,
+                               'workspace': ws })
    
     #comparegenome = genomeout['genome_comparisons']                               
     #funccomp = genomeout['function_comparisons']
     #print meth.debug(json.dumps(comparegenome))
-    #print meth.debug(json.dumps(funccomp))
+    print meth.debug('Here is  Pan genome')
+    print meth.debug(json.dumps(ws, genome_ids))
     return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
 
 @method(name="Genome Comparison from Proteome")
@@ -717,7 +720,8 @@ def _compare_genomes(meth, genome_ids):
 
 
     meta=fba.compare_genomes({'protcomp_id': genome_ids, 
-                                    'protcomp_ws': ws })
+                              'protcomp_ws': ws,
+                              'workspace': ws })
    
     #comparegenome = genomeout['genome_comparisons']                               
     #funccomp = genomeout['function_comparisons']

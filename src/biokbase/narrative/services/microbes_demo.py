@@ -1159,6 +1159,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     meth.debug(json.dumps(fba_params))
 
     meth.advance("Running FBA")
+    fbaClient = fbaModelServices("http://140.221.85.73:4043",token=userToken)
     result_meta = fbaClient.runfba(fba_params)
     generated_fba_id = result_meta[0]
     
@@ -1726,7 +1727,7 @@ def _build_promconstraint(meth, genome_id, series_id, regulome_id):
     
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id
-    fbaClient = fbaModelServices(service.URLS.fba,token=userToken)
+    fbaClient = fbaModelServices("http://140.221.85.73:4043",token=userToken)
     
     # create the model object
     build_pc_params = {

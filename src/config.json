@@ -22,7 +22,6 @@
 
     "prod": {
         "fba" : "http://kbase.us/services/fba_model_services/",
-        "glamm" : "https://140.221.84.217:7040/glamm/#",
         "invocation" : "https://kbase.us/services/invocation",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
         "protein_info" : "https://kbase.us/services/protein_info_service",

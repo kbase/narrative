@@ -287,44 +287,20 @@ def gene_network2ws(meth, obj_id=None, out_id=None):
     """
     # :param workspace_id: Workspace name (if empty, defaults to current workspace)
     # :type workspace_id: kbtypes.Unicode
-    meth.stages = 2
-    meth.advance("Retrieve genes from workspace")
-    # if not workspace_id:
-    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
-    #     workspace_id = meth.workspace_id
-    ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
-    nc = KBaseNetworks(URLS.networks)
+    meth.stages = 3
+    meth.advance("init GWAS service")
+    gc = GWAS(URLS.gwas, token=meth.token)
 
-    raw_data = ws.get(obj_id)
-    
-    meth.advance("Construct networks")
-    ds = set()
-    #tx = set()
+    meth.advance("Running GeneList to Networks")
+    argsx = {"ws_id" : meth.workspace_id, "inobj_id" : obj_id,  "outobj_id": out_id}
+    try:
+        gl_oid = gc.genelist_to_networks(argsx)
+    except Exception as err:
+        raise GWASException("submit job failed: {}".format(err))
+    #if not gl_oid: # it may return empty string based on current script
+    #    raise GWASException(2, "submit job failed, no job id")
 
-    gl = [ gr[2] for gr in raw_data['genes']]
-    for gene in gl:
-    #    rst= re.search('\A(kb\|g\.\d+)', gene)
-    #    tx.add(rst.group(1))
-        lds = nc.entity2datasets(gene)
-        llds = [ i['id'] for i in lds]
-        ds.update((llds))
-    #for t in tx:
-    #    lds = nc.taxon2datasets(t)
-    #    llds = [ i['id'] for i in lds]
-    #    ds.update((llds))
-        
-    # TODO: include cluster node later 
-    #cnet = nc.build_first_neighbor_network(list(ds),gl,['GENE_CLUSTER'])
-    #agl = [i['entity_id'] for i in cnet['nodes']]
-    #gl = gl.union(agl)
-    #net = nc.build_internal_network(list(ds),list(gl),['GENE_GENE','GENE_CLUSTER'])
-    net = nc.build_internal_network(list(ds),gl,['GENE_GENE'])
-    ws.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net, 'name' : out_id, 'meta' : {'source' : obj_id}}]})
-
-    #sys.stderr.write('@ ' + list(gl)[0] + '-----\n')
-    #sys.stderr.write('@ ' + list(ds)[0] + '+++++\n')
-    #sys.stderr.flush()
-    
+    meth.advance("Returning object")
     return _workspace_output(out_id)
 
 

@@ -407,8 +407,20 @@ class KBaseGenomes(object):
         """Pangenome type"""
         info_text = "KBaseGenomes.Pangenome"
         class v1_0(tls.Unicode, TypeMeta):
-            """Pangenome object holds computed protein families for given set of genomes"""
-            info_text = "KBaseGenomes.Pangenome-1.0"        
+            """Pangenome object holds computed protein families,functions and genes for given set of genomes"""
+            info_text = "KBaseGenomes.Pangenome-1.0"  
+    class GenomeComparisonData(tls.Unicode, TypeMeta):
+        """GenomeComparsison type"""
+        info_text = "KBaseGenomes.GenomeComparisonData"
+        class v1_0(tls.Unicode, TypeMeta):
+            """GenomeComparisonData object holds computed protein families, functions for given set of genomes"""
+            info_text = "KBaseGenomes.GenomeComparisonData-1.0"  
+    class ProteomeComparison(tls.Unicode, TypeMeta):
+        """ProteomeComparison type"""
+        info_text = "KBaseGenomes.ProteomeComparison"
+        class v1_0(tls.Unicode, TypeMeta):
+            """ProteomeComparison object holds computed protein families"""
+            info_text = "KBaseGenomes.ProteomeComparison-1.0"                       
     class MetagenomeAnnotation(tls.Unicode, TypeMeta):
         """MetagenomeAnnotation type"""
         info_text = "KBaseGenomes.MetagenomeAnnotation"

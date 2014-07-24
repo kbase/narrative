@@ -747,7 +747,7 @@ def _compare_genomes(meth, genome_ids):
     :ui_name model_ids: Genome IDs
 
     :return: Uploaded Genome Comparison Data
-    :rtype: kbtypes.KBaseGenomes.GenomeComparisonData
+    :rtype: kbtypes.KBaseGenomes.GenomeComparison
     :output_widget: compgenomePa
     """
     
@@ -780,11 +780,11 @@ def _compare_genomes(meth, genome_ids):
     """Genome Comparison analysis based on the Proteome Comparison input. 
     
     :param model_ids: ProteomeComparison id
-    :type model_ids: kbtypes.KBaseGenomes.ProteomeComparison
+    :type model_ids: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name model_ids: Genome IDs
 
     :return: Uploaded Genome Comparison Data
-    :rtype: kbtypes.KBaseGenomes.GenomeComparisonData
+    :rtype: kbtypes.KBaseGenomes.GenomeComparison
     :output_widget: compgenomePr
     """
     

@@ -1,0 +1,3 @@
+[submodule "modules/ui-common"]
+	path = modules/ui-common
+	url = ssh://github/kbase/ui-common

@@ -28,8 +28,9 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/narrative.css") }}" type="text/css" />
     <!--<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">-->
-    <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/3.2.1/css/font-awesome.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/js/ui-common/ext/font-awesome/4.1.0/css/font-awesome.min.css") }}" type="text/css" />
+
+    <!--<link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />-->
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
 
@@ -53,13 +54,13 @@
         }
 
         var alertPrefix = 'Unsupported browser detected!\n\n';
-        var alertSuggest = 'For a better experience, we recommend using recent versions of ' + 
+        var alertSuggest = 'For a better experience, we recommend using recent versions of ' +
                            'Safari, Firefox, Chrome, or Internet Explorer.\n\n' +
                            'Sorry for any inconvenience!';
         var alertError = '';
         if (bowser.msie && bowser.version <= 9) {
-            var alertError = 'You appear to be using Internet Explorer ' + 
-                             bowser.version + 
+            var alertError = 'You appear to be using Internet Explorer ' +
+                             bowser.version +
                              '. Unfortunately, we don\'t support that web browser. Many ' +
                              'functions will be unavailable or have compatibility problems.\n\n';
         }
@@ -84,6 +85,7 @@
     <script>
       require.config({
           baseUrl: '{{ static_url() }}',
+            urlArgs: "bust=" + (new Date()).getTime(),
             paths : {
                 'jquery'      : 'kbase/js/ui-common/ext/jquery/jquery-1.10.2.min',
                 'jqueryui'    : 'kbase/js/ui-common/ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min',
@@ -271,10 +273,10 @@
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-48256002-1', 'kbase.us');
       ga('send', 'pageview');
-      
+
     </script>
     {% block meta %}
     {% endblock %}
@@ -357,9 +359,9 @@
 
 <script>
   var configJSON = $.parseJSON(
-                      $.ajax({ 
-                               url: "{{ static_url('kbase/config.json') }}", 
-                               async: false, 
+                      $.ajax({
+                               url: "{{ static_url('kbase/config.json') }}",
+                               async: false,
                                dataType: 'json'
                              }).responseText );
   window.kb = { urls : configJSON[configJSON['config']] };

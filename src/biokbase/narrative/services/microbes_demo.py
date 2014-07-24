@@ -667,7 +667,7 @@ def _compare_pan_genome(meth, genome_ids):
 
     :return: Generated Compare Genome
     :rtype: kbtypes.KBaseGenomes.Pangenome
-    :output_widget: kbasepangenome
+    :output_widget: kbasePanGenome
     """
     
     gids = genome_ids.split(',')
@@ -699,7 +699,7 @@ def _compare_pan_genome(meth, genome_ids):
     #print meth.debug(json.dumps(data))
 
     #return json.dumps({'data': data})
-    return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
+    return json.dumps({'ws': meth.workspace_id, 'name':meta[1]})
 
 @method(name="Compare Models")
 def _compare_models(meth, model_ids):

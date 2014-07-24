@@ -298,7 +298,7 @@
                                              'class' : 'btn btn-default',
                                              'id' : 'obj-details-btn',
                                          })
-                                         .append('View Object'))
+                                         .append('View Landing Page'))
                                          .tooltip()
                                  .append($('<button>')
                                          .attr({
@@ -628,7 +628,7 @@
                 detailsBtn.html("View Object");
             }
             else {
-                detailsBtn.html("Object Page Unavailable");
+                detailsBtn.html("Landing Page Unavailable");
             }
 
         },

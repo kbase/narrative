@@ -748,7 +748,7 @@ def _compare_genomes(meth, genome_ids):
     :ui_name model_ids: Genome IDs
 
     :return: Uploaded Genome Comparison Data
-    :rtype: kbtypes.KBaseGenomes.GenomeComparisonData
+    :rtype: kbtypes.KBaseGenomes.GenomeComparison
     :output_widget: compgenomePa
     """
     pid =genome_ids;
@@ -783,11 +783,11 @@ def _compare_genomes(meth, genome_ids):
     """Genome Comparison analysis based on the Proteome Comparison input. 
     
     :param model_ids: ProteomeComparison id
-    :type model_ids: kbtypes.KBaseGenomes.ProteomeComparison
+    :type model_ids: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name model_ids: Genome IDs
 
     :return: Uploaded Genome Comparison Data
-    :rtype: kbtypes.KBaseGenomes.GenomeComparisonData
+    :rtype: kbtypes.KBaseGenomes.GenomeComparison
     :output_widget: compgenomePr
     """
     
@@ -1212,6 +1212,28 @@ def _view_fba_result_details(meth, fba_id):
     
     
     return json.dumps({ "ids":[fba_id],"workspaces":[workspaceName] })
+
+@method(name="Compare FBA Results")
+def _compare_fbas(meth, fba_id1, fba_id2):
+    """Compare two FBA results, showing differences in fluxes for reactions.
+    
+    :param fba_id1: First FBA result
+    :type fba_id1: kbtypes.KBaseFBA.FBA
+    :ui_name fba_id1: First FBA result
+
+    :param fba_id2: Second FBA result
+    :type fba_id2: kbtypes.KBaseFBA.FBA
+    :ui_name fba_id2: Second FBA result
+
+    :return: FBA Result Comparison Data
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseCompareFBAs
+    """
+
+    meth.stages = 2 # for reporting progress
+    meth.advance("Starting...")
+    
+    return json.dumps({'ids': [fba_id1, fba_id2],"ws": meth.workspace_id})
 
 @method(name="Gapfill a Metabolic Model")
 def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit):

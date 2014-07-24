@@ -15,12 +15,8 @@
 
         init: function(options) {
             this._super(options);
-
             var kb_info = options.kbase_assembly_input;
-
 	    console.log(kb_info)
-	    console.log('hello')
-
 	    //Get this from options
             var user = options.ar_user
             var token = options.ar_token
@@ -112,6 +108,13 @@
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
 	    asm_btn.one("click", function() {
+
+
+
+
+
+
+
                 var assembler = asm_choose.find('select option:selected').val();
                 var desc = asm_desc.find('input').val();
 		
@@ -179,7 +182,32 @@
 						shock_url = assemblies[i].file_infos[0].shock_url;
 						shock_id = assemblies[i].file_infos[0].shock_id;
 						contig_import.one("click", function() {
-						    import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, ws_contig_name)
+						    var contig_name = $('<div class="input-group"> <span class="input-group-addon">ContigSet Name</span> <input type="text" class="form-control cname-input" value="'+ ws_contig_name +'"> </div>');
+						    var $importModal = $('<div></div>').kbasePrompt(
+							{
+							    title : 'Import Contigs',
+							    body : contig_name,
+							    modalClass : 'fade', //Not required. jquery animation class to show/hide. Defaults to 'fade'
+							    controls : [
+								'cancelButton',
+								{
+								    name : 'Import',
+								    type : 'primary',
+								    callback : function(e, $prompt) {
+									$prompt.closePrompt();
+									cname = contig_name.find('input').val()
+									console.log(contig_name.find('input'));
+									console.log(cname);
+									import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, cname)
+								    }
+								}
+							    ],
+							    footer : '',
+							}
+						    );
+						    
+						    $importModal.openPrompt();
+						    //import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, ws_contig_name)
 						});
 						import_btn_sel.append(contig_import);
 					    }

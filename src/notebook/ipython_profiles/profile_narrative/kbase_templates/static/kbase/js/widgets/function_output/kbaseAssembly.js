@@ -43,7 +43,6 @@
 	    var data_report = $('<div class="panel panel-info" style="padding:10px">')
 		    .append('<div class="panel-heading panel-title">Assembly Service Data Set </div>');
 
-
 	    var make_data_table = function(info) {
 		var tables = $('<div>')
 		if (info.paired_end_libs != undefined) {
@@ -182,32 +181,7 @@
 						shock_url = assemblies[i].file_infos[0].shock_url;
 						shock_id = assemblies[i].file_infos[0].shock_id;
 						contig_import.one("click", function() {
-						    var contig_name = $('<div class="input-group"> <span class="input-group-addon">ContigSet Name</span> <input type="text" class="form-control cname-input" value="'+ ws_contig_name +'"> </div>');
-						    var $importModal = $('<div></div>').kbasePrompt(
-							{
-							    title : 'Import Contigs',
-							    body : contig_name,
-							    modalClass : 'fade', //Not required. jquery animation class to show/hide. Defaults to 'fade'
-							    controls : [
-								'cancelButton',
-								{
-								    name : 'Import',
-								    type : 'primary',
-								    callback : function(e, $prompt) {
-									$prompt.closePrompt();
-									cname = contig_name.find('input').val()
-									console.log(contig_name.find('input'));
-									console.log(cname);
-									import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, cname)
-								    }
-								}
-							    ],
-							    footer : '',
-							}
-						    );
-						    
-						    $importModal.openPrompt();
-						    //import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, ws_contig_name)
+						    import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, ws_contig_name);
 						});
 						import_btn_sel.append(contig_import);
 					    }
@@ -291,15 +265,42 @@
             }
 
 	    var import_contigs_to_ws = function(token, fba_url, ws_url, ws_name, shock_id, shock_url, contig_name){
-		var fba = new fbaModelServices(fba_url, {'token': token});
-		fba.fasta_to_ContigSet({'fasta': shock_id, 
-					'workspace': ws_name, 
-					'uid': contig_name, 
-					'name': contig_name, 
-					'shockurl': shock_url
-				       }).done(function(data){
-					   console.log(data);
-				       });
+		var contig_name = $('<div class="input-group"> <span class="input-group-addon">ContigSet Name</span> <input type="text" class="form-control cname-input" value="'+ contig_name +'"> </div>');
+		var $importModal = $('<div></div>').kbasePrompt(
+		    {
+			title : 'Import Contigs',
+			body : contig_name,
+			modalClass : 'fade', //Not required. jquery animation class to show/hide. Defaults to 'fade'
+			controls : [
+			    'cancelButton',
+			    {
+				name : 'Import',
+				type : 'primary',
+				callback : function(e, $prompt) {
+				    $prompt.closePrompt();
+				    cname = contig_name.find('input').val()
+				    console.log(contig_name.find('input'));
+
+				    console.log(cname);
+
+				    var fba = new fbaModelServices(fba_url, {'token': token});
+				    fba.fasta_to_ContigSet({'fasta': shock_id, 
+							    'workspace': ws_name, 
+							    'uid': cname, 
+							    'name': cname, 
+							    'shockurl': shock_url
+							   }).done(function(data){
+							       console.log(data);
+							   });
+//				    import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, cname)
+				}
+			    }
+			],
+			footer : '',
+		    }
+		);
+		
+		$importModal.openPrompt();
 	    }
 
             return this;	    

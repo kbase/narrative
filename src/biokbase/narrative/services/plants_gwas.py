@@ -16,6 +16,8 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 from biokbase.GWAS.Client import GWAS
 from biokbase.narrative.common.util import AweJob, Workspace2
 from biokbase.KBaseNetworksService2.Client import KBaseNetworks
+from biokbase.cdmi.client import CDMI_API,CDMI_EntityAPI
+from biokbase.IdMap.Client import IdMap
 import sys
 
 ## Exceptions
@@ -39,13 +41,16 @@ class URLS:
     awe = "http://140.221.85.182:7080"
     #workspace = "https://kbase.us/services/ws/"
     ids = "http://kbase.us/services/idserver"
-    cdmi = "http://kbase.us/services/cdmi_api"
+    #cdmi = "http://kbase.us/services/cdmi_api"
+    cdmi = "http://140.221.85.181:7032"
     ontology = "http://kbase.us/services/ontology_service"
     gwas = "http://140.221.85.182:7086"
     gwas1 = "http://140.221.85.95:7086"
     ujs = "http://140.221.85.171:7083"
     #networks = "http://kbase.us/services/networks"
     networks = "http://140.221.85.172:7064/KBaseNetworksRPC/networks"
+    #idmap = "http://kbase.us/services/id_map"
+    idmap = "http://140.221.85.181:7111"
 
 AweJob.URL = URLS.awe
 
@@ -291,8 +296,91 @@ def gene_network2ws(meth, obj_id=None, out_id=None):
     meth.advance("init GWAS service")
     gc = GWAS(URLS.gwas, token=meth.token)
 
+    meth.advance("Retrieve genes from workspace")
+    # if not workspace_id:
+    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
+    #     workspace_id = meth.workspace_id
+    ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
+
+    raw_data = ws.get(obj_id)
+    
+
+    gl = [ gr[2] for gr in raw_data['genes']]
+    gl_str = ",".join(gl);
+
     meth.advance("Running GeneList to Networks")
-    argsx = {"ws_id" : meth.workspace_id, "inobj_id" : obj_id,  "outobj_id": out_id}
+    argsx = {"ws_id" : meth.workspace_id, "inobj_id" : gl_str,  "outobj_id": out_id}
+    try:
+        gl_oid = gc.genelist_to_networks(argsx)
+    except Exception as err:
+        raise GWASException("submit job failed: {}".format(err))
+    #if not gl_oid: # it may return empty string based on current script
+    #    raise GWASException(2, "submit job failed, no job id")
+
+    meth.advance("Returning object")
+    return _workspace_output(out_id)
+
+@method(name="User genelist to Networks")
+def genelist_network2ws(meth, gene_ids=None, out_id=None):
+    """This method displays a gene list
+    along with functional annotation in a table.
+
+    :param gene_ids: List of genes (comma separated)
+    :type gene_ids: kbtypes.Unicode
+    :param out_id: Output Networks object identifier
+    :type out_id: kbtypes.KBaseNetworks.Network
+    :return: New workspace object
+    :rtype: kbtypes.Unicode
+    :output_widget: ValueListWidget
+    """
+    # :param workspace_id: Workspace name (if empty, defaults to current workspace)
+    # :type workspace_id: kbtypes.Unicode
+    meth.stages = 3
+    meth.advance("init GWAS service")
+    gc = GWAS(URLS.gwas, token=meth.token)
+
+    meth.advance("Converting external ids to internal ids")
+    # if not workspace_id:
+    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
+    #     workspace_id = meth.workspace_id
+    
+    cdmic = CDMI_API(URLS.cdmi)
+    idm = IdMap(URLS.idmap)
+
+    gl = set()
+    eids = []
+    for gid in gene_ids.split(','):
+      if 'kb|g.' in gid:
+        gl.add(gid)
+      else:
+        eids.append(gid)
+    sid2fids = cdmic.source_ids_to_fids(eids)
+    lids = set()
+    mids = set()
+    for sid in sid2fids:
+      for fid in sid2fids[sid]:
+        if 'locus' in fid:
+          lids.add(fid)
+        elif 'CDS' in fid:
+          gl.add(fid)
+        elif 'mRNA' in fid:
+          mids.add(fid)
+        elif len(fid) > 1:
+          # no idea ... just add to gl
+          gl.add(fid)
+    lidmap = idm.longest_cds_from_locus(list(lids))
+    for lid in lidmap:
+      for k in lid:
+        gl.add(k)
+    lidmap = idm.longest_cds_from_mrna(list(mids))
+    for lid in lidmap:
+      for k in lid:
+        gl.add(k)
+
+    gl_str = ",".join(gl);
+
+    meth.advance("Running GeneList to Networks")
+    argsx = {"ws_id" : meth.workspace_id, "inobj_id" : gl_str,  "outobj_id": out_id}
     try:
         gl_oid = gc.genelist_to_networks(argsx)
     except Exception as err:

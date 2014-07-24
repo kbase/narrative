@@ -40,14 +40,14 @@
 
                 var input_default = (p.default !== "" && p.default !== undefined) ?
                                     " placeholder='" + p.default + "'" : "";
-                input = "<input class='form-control' style='width: 85%' name='" + pid + "'" + input_default +
+                input = "<input class='form-control' style='width: 95%' name='" + pid + "'" + input_default +
                         " value='' type='text'></input>";
 
                 var cellStyle = "border:none; vertical-align:middle;";
                 inputDiv += "<tr style='" + cellStyle + "'>" + 
-                                "<td style='" + cellStyle + "'>" + p.ui_name + "</td>" +
-                                "<td style='" + cellStyle + " width: 50%;'>" + input + "</td>" +
-                                "<td style='" + cellStyle + "'>" + p.description + "</td>" +
+                                "<th style='" + cellStyle + " font-family: 'OxygenBold', sans-serif; font-weight: bold;>" + p.ui_name + "</th>" +
+                                "<td style='" + cellStyle + " width: 40%;'>" + input + "</td>" +
+                                "<td style='" + cellStyle + " color: #777;'>" + p.description + "</td>" +
                             "</tr>";
             }
             inputDiv += "</table></div>";

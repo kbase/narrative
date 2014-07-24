@@ -36,7 +36,7 @@ $.KBWidget({
             var container = this.$elem;
             container.append("<div id=\"modeltabs-loading\"><img src=\""+self.loadingImage+"\">&nbsp&nbsploading model...</div>");
             
-            var fba = new fbaModelServices(this.fbaURL);
+            var fba = new fbaModelServices(this.fbaURL, {auth: self.authToken()});
             fba.get_models({auth: self.authToken(), workspaces:[options.ws], models:[options.id] }, function(data) {
                     self.$elem.find("#modeltabs-loading").remove();
                     options.modelsData = data;

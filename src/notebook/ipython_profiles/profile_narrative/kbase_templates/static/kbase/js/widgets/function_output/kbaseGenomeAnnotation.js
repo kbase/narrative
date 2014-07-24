@@ -20,6 +20,7 @@
 
         init: function(options) {
             this._super(options);
+
             this.ws_name = options.ws_name;
             this.ws_id = options.ws_id;
             if (options.job_id)
@@ -29,7 +30,7 @@
         
         render: function() {
             var self = this;
-        	var pref = (new Date()).getTime();
+        	var pref = this.uuid();
 
 
             var wsUrl = 'https://kbase.us/services/ws/';
@@ -369,6 +370,14 @@
             this.token = null;
             this.render();
             return this;
+        },
+        
+        uuid: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+                function(c) {
+                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                    return v.toString(16);
+                });
         }
     });
 })( jQuery );

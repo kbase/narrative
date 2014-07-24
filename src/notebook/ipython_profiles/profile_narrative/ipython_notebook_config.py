@@ -104,8 +104,6 @@ c.NotebookApp.port = 8888
 
 # Supply overrides for the tornado.web.Application that the IPython notebook
 # uses.
-#c.NotebookApp.webapp_settings = { 'template_path': '/Users/wjriehl/Projects/kbase/narrative/src/ipythondir/profile_narrative/kbase_templates',
-#                                  'static_path': '/Users/wjriehl/Projects/kbase/narrative/src/ipythondir/profile_narrative/kbase_templates/static' }
 try:
 	myfile = __file__
 except NameError:

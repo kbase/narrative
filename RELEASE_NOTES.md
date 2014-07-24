@@ -3,6 +3,44 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 7/22/2014
+__Changes__
+- Added widgets and functions for viewing phylogenies
+
+
+### Release 7/21/2014
+__Changes__
+- Updates to Jnomics functions and widgets
+- Updates to Microbes functions and widgets
+- Most errors that were dumped to the browser as ugly stacktraces are now KBase-styled stacktraces that should be slightly more legible.
+- Errors that occur when Narrative saving fails now creates an error modal that communicates the error, instead of just "Autosave Failed!"
+- Deployment of Narrative Docker containers has changed. A base container is built containing most static dependencies (all the apt-get directives, Python and R packages). This container is then updated with the Narrative itself. After building the base container, deployment of subsequent releases should take ~2 minutes.
+- Updated workspace type registry (the kbtypes class) to be up-to-date with the current state of the Workspace.
+- The Narrative should now report unsupported browsers
+
+__Known Issues__
+- Unaddressed issues from previous release
+
+### Release 7/15/2014
+__Changes__
+- Created a service endpoint config file to toggle between dev and prod versions of various services
+- Added Jnomics functions and widgets
+- Added more communities functions and widgets
+- Added KBase-command functions and widgets
+- Authentication should work more logically with the rest of the functional site
+- Updated Narrative typespec to support workspace version 0.2.1
+- Updated Narrative to properly access search
+- Addressed a race condition where saving a Narrative before it completely loads might wipe exiting parameter info out of input fields
+- Added directions on how to deploy the entire Narrative/Nginx provisioning stack.
+- We now have a verified SSL Certificate - Safari should work over HTTPS now.
+- Did some CSS adjustment to GUI cells.
+
+__Known Issues__
+- Unaddressed issues remain from previous release
+- R support is occasionally problematic.
+- Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
+
+
 ### Release 6/20/2014
 __Changes__
 

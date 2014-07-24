@@ -13,11 +13,12 @@ import logging
 import ast
 import StringIO
 import uuid;
-
+import math
 from collections import namedtuple
 from functools import wraps
 from time import gmtime, strftime
-
+from collections import OrderedDict
+from operator import itemgetter
 from thrift import Thrift
 from thrift.transport import TSocket, TSSLSocket
 from thrift.transport import TTransport
@@ -65,20 +66,25 @@ URL = namedtuple("URL",["host","port"])
 Stage = namedtuple("Stage", ["func","name","poll"])
 
 
-URLS = {"compute":URL("variation.services.kbase.us", 10000),
-        "data":URL("variation.services.kbase.us", 10001)}
+#URLS = {"compute":URL("variation.services.kbase.us", 10000),
+#        "data":URL("variation.services.kbase.us", 10001)}
+URLS = {"compute":URL("140.221.67.178", 10000),
+        "data":URL("140.221.67.178", 10001)}
+
+#URLS = {"compute":URL("mshadoop1.cshl.edu", 10000),
+#        "data":URL("mshadoop1.cshl.edu", 10001)}
 
 CLIENT_CLASSES = {"compute": JnomicsCompute.Client,
                   "data" : JnomicsData.Client}
 
 class OTHERURLS:
     _host = '140.221.84.248'
-    shock = "http://shock1.chicago.kbase.us"
+    #shock = "http://shock1.chicago.kbase.us"
+    shock = "https://kbase.us/services/shock-api"
     #shock = "http://shock.metagenomics.anl.gov"
-    #awe = "http://140.221.85.36:8000"
-    awe = "http://localhost:8001"
-    #workspace = "http://140.221.84.209:7058"
+    awe = "http://140.221.85.36:8000"
     workspace = "http://kbase.us/services/ws"
+    #workspace = "http://140.221.84.209:7058"
     ids = "http://kbase.us/services/idserver"
     ontology = "http://140.221.85.171:7062"
     #cdmi  = "http://140.221.85.181:7032"
@@ -92,24 +98,26 @@ class OTHERURLS:
 
 class WSTYPES:
     ### Variation workspace types
-    var_sampletype = 'KBaseVariationData.VariationSample'
-    var_vcftype = 'KBaseVariationData.VariantCall'
+    var_sampletype = 'KBaseGwasData.VariationSample'
+    var_vcftype = 'KBaseGwasData.VariantCall'
 
     ### RNASeq workspace types
-    rnaseq_sampletype = 'KBaseRNASeqData.RNASeqSample'
-    rnaseq_bamtype = 'KBaseRNASeqData.RNASeqSampleAlignment'
-    rnaseq_diffexptype = 'KBaseRNASeqData.RNASeqDifferentialExpression'
+    rnaseq_sampletype = 'KBaseExpression.RNASeqSample'
+    rnaseq_bamtype = 'KBaseExpression.RNASeqSampleAlignment'
+    rnaseq_diffexptype = 'KBaseExpression.RNASeqDifferentialExpression'
     rnaseq_exptype =  'KBaseExpression.ExpressionSample'
     rnaseq_expseriestype = 'KBaseExpression.ExpressionSeries'
+    datatabletype = 'MAK.FloatDataTable'
 
 class IDServerids:
     ### variation
-    var_vcf = 'kb|variant_test'
+    var_vcf = 'kb|variant'
     ###RNASeq 
-    rnaseq_expsample = 'kb|sample_test'
-    rnaseq_series = 'kb|series_test'
-    rnaseq_alignment = 'kb|alignment_test'
-    rnaseq_difexp = 'kb|differentialExpression_test'
+    rnaseq_expsample = 'kb|sample'
+    rnaseq_series = 'kb|series'
+    rnaseq_alignment = 'kb|alignment'
+    rnaseq_difexp = 'kb|differentialExpression'
+    dt_type = 'kb|dataTable'
 
 # Init logging.
 _log = logging.getLogger(__name__)
@@ -118,43 +126,7 @@ init_service(name = NAME, desc="Variation and Expression service", version = VER
 
 clients = {}
 
-### AWE JOB Template
-AWE_JOB_NC = """
-{
-    "info": {
-        "pipeline": "test_awe_job",
-        "name": "testawejob",
-        "project": "default",
-        "user": "default",
-        "clientgroups":"",
-         "sessionId":"xyz1234"
-    }, 
-    "tasks": [
-        {
-            "cmd": {
-                "args": "-i @data_filtered_csv -o returnobj.json", 
-                "description": "test awe job", 
-                "name": "testjob.py"
-            }, 
-            "inputs": {
-               "data_filtered_csv": {
-                    "host": "$shock_url",
-                    "node": "$expression"
-                }
-            }, 
-            "outputs": {
-                "net_edge_csv": {
-                    "host": "$shock_uri"
-                }
-            },
-            "taskid": "0",
-            "skip": 0, 
-            "totalwork": 1
-        }
-      ]
-}
-"""    
-
+    
 ##
 ##Decorators for control logic
 ##
@@ -340,10 +312,10 @@ def shockfileload(auth,filename=None,filepath=None):
         json_error = status.failure_info
     sid =  parselog(str(jobid.job_id),pattern,auth)
     if not sid:
-        raise Exception, "Shock Upload Unsuccessful"
+        json_error =  "Shock Upload Unsuccessful"
     shockid  = str(sid).rstrip().split('=')[1].replace(']','')
     if not shockid:
-        raise Exception, "Shock Upload Unsuccessful"
+        json_error =  "Shock Upload Unsuccessful"
     
     return {"submitted" : filename , "shock_id" : shockid , "error": json_error}
 
@@ -400,6 +372,56 @@ def pollGridJob(job_id, auth):
                                       -1.0,-1.0)
     return False
 
+@poller
+def pollGridJobs(job_ids, auth):
+    '''Returns status of grid job'''
+    status = []
+    ret = [] 
+    running_state = [] 
+    client = openComputeClientConnection()
+    for jid in job_ids:
+         status.append(client.getGridJobStatus(jid,auth))
+    closeClientConnection(client)
+    for i in len(status):
+        if status[i] in ["DONE","FAILED"]:
+            running_state[i] = 1 if status[i] =="FAILED" else 2
+            ret.append(JnomicsThriftJobStatus(job_id.job_id,
+                                      auth.username,
+                                      status[i],
+                                      True,running_state[i], -1, "-1",
+                                      -1.0,-1.0))
+    return ret
+
+    #return False
+
+def runSteps(step, auth, poll_func=None, previous_steps=None):
+    '''Runs multiple pipeline step.
+    'step' is expected to return a job id which can be polled, otherwise None
+    'poll_func' function to poll the returned job id
+    '''
+    json_error = None
+    status = []
+    job_id = []
+
+    try:
+        job_ids = step(previous_steps)
+    except JnomicsThriftException as e:
+        json_error=e.msg
+        
+    if json_error:
+        return {"output" : status, "error": json_error}
+
+    if poll_func:
+        status = poll_func(job_ids, auth)
+    else:
+        return {"output": job_ids, "error" : json_error}
+    
+    for k in status:
+        if status[k] and not status[k].running_state == 2:
+            json_error = status[k].failure_info
+
+    return {"output" : status, "error": json_error}
+
 def runStep(step, auth, poll_func=None, previous_steps=None):
     '''Runs a pipeline step.
     'step' is expected to return a job id which can be polled, otherwise None
@@ -427,7 +449,6 @@ def runStep(step, auth, poll_func=None, previous_steps=None):
 
     return {"output" : status, "error": json_error}
 
-
 def userFromToken(token):
     un,user = token.strip().split('|')[0].split('=')
     if not un == "un" or user == "":
@@ -435,7 +456,8 @@ def userFromToken(token):
     return user
 
 def openClientConnection(client_class, url):
-    transport = TSSLSocket.TSSLSocket(url.host, url.port,validate=False)
+    #transport = TSSLSocket.TSSLSocket(url.host, url.port,validate=False)
+    transport = TSocket.TSocket(url.host, url.port)
     transport = TTransport.TBufferedTransport(transport)
 
     protocol = TBinaryProtocol.TBinaryProtocol(transport)
@@ -498,7 +520,7 @@ def runPipeline(stages,meth,auth):
         meth.advance(stage.name)
         stat = runStep(stage.func,auth,stage.poll, previous_steps)
         if not stat["error"] == None:
-            return json.dumps(stat)
+    		return to_JSON(stat)
         previous_steps.append(stat)
     return previous_steps
 
@@ -508,39 +530,46 @@ def runPipeline(stages,meth,auth):
 ##
 
 @method(name = "Calculate Variatons")
-def jnomics_calculate_variations(meth, Input_file=None,
+def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
                                  Input_organism=None):
     """Calculate variations
-
+    :param workspace: name of workspace; default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
     :param Input_file: Input to the raw sequencing data (paired end, comma sep)
     :type Input_file: kbtypes.Unicode
     :param Input_organism: Input organism (kb_id)
     :type Input_organism: kbtypes.Unicode
+    :ui_name Input_organism : Reference
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
 
-    ws = workspaceService(OTHERURLS.workspace)
-    data = ws.get_object({'auth':meth.token, 'workspace':meth.workspace_id,
-                          'id': Input_file, 'type':WSTYPES.var_sampletype})
-    return to_JSON(data)
+    #ws = workspaceService(OTHERURLS.workspace)
+    #data = ws.get_object({'auth':meth.token, 'workspace':meth.workspace_id,
+    #                      'id': Input_file, 'type':WSTYPES.var_sampletype})
+    #return to_JSON(data)
     
     auth = Authentication(userFromToken(meth.token), "", meth.token)
+    wtype = WSTYPES.var_sampletype
+
     Output_file_path = "narrative_variation_"+ str(uuid.uuid4().get_hex().upper()[0:6])
     align_out_path = os.path.join(Output_file_path , "align")
-
     input_pe_path = os.path.join(Output_file_path, "input.pe")
     @pipelineStep("compute")
     def fastqToPE(client, previous_steps):
-        pass
+        return client.fastqtoPe(file1,
+                                file2,
+                                input_pe_path,
+                                "",auth)
 
     
     @pipelineStep("compute")
     def runBowtie(client, previous_steps):
-        return client.alignBowtie(Input_file,
-                                    Input_organism,
-                                    align_out_path,
-                                    "",auth)
+        return client.alignBowtie(input_pe_path,
+                                  Input_organism,
+                                  align_out_path,
+                                  "",auth)
         
     snp_out_path = os.path.join(Output_file_path, "snps")
     
@@ -556,57 +585,72 @@ def jnomics_calculate_variations(meth, Input_file=None,
     def runMerge(client, previous_steps):
         return client.mergeVCF(snp_out_path, align_out_path, merge_outpath, auth)
     
-    filename = os.path.basename(Input_file)
+    filename = Input_file.replace(',','_')+".vcf"
 
-    @pipelineStep("compute")
+    @pipelineStep(None)
     def writeShock(client, previous_steps):
-        return client.ShockWrite(filename,
-                                 merge_outpath,
-                                 auth)
+        return shockfileload(auth,filename,
+                                 merge_outpath)
 
     @pipelineStep(None)
     def writeWS(client, previous_steps):
-        previous_step = previous_steps[-1]
-        previous_job_id = previous_step["output"].job_id
-        pattern =  re.compile("\[id=(.*?)]")
-        shockid = parselog(previous_job_id,pattern,auth)
-        sid = str(shockid).rstrip().split('=')[1].replace(']','')
-        ws = workspaceService(OTHERURLS.workspace)
+        previous_steps = previous_steps[-1]
+        #previous_job_id = previous_step["output"].job_id
+        #pattern =  re.compile("\[id=(.*?)]")
+        #shockid = parselog(previous_job_id,pattern,auth)
+        #sid = str(shockid).rstrip().split('=')[1].replace(']','')
+        if 'output' in previous_steps and 'shock_id' in previous_steps['output']:
+            shock_id = previous_steps['output']['shock_id']
         idc = IDServerAPI(OTHERURLS.ids)
-        name = idc.allocate_id_range("kb|variant_test",1)
+        name = 'kb|variant.'+str(idc.allocate_id_range(WSTYPES.var_vcftype,1))
         obj = { "name": name,
                "type": "vcf",
                "created":strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
-               "shock_ref":{ "shock_id" : sid,
-                             "shock_url" : OTHERURLS.shock+"/node"+sid },
-                             "metadata" : {
-                                 "domain" : "adfasdf",
-                                 "paired" : "yes",
-                                 "sample_id" : "yeast",
-                                 "title" : "asdf"
+               "shock_ref":{ "shock_id" : shock_id,
+                             "shock_url" : OTHERURLS.shock+"/"+shock_id },
+               "metadata" : {
+                             "source" : "test",
+                             "source_id" : "test",
+                             "base_count" : "50",
+                             "paired" : "yes",
+                             "assay" : "test",
+                             "library" : "test",
+                             "read_count" : "100",
+                             "ref_genome" : "Ecoli",
+                             "domain" : "Bacteria",
+                             "ext_source_date" : "41717",
+                             "sample_id" : "test11",
+                             "title" : "Test upload",
+                             "platform" : "Illumina"
                              },
                }
 
         return ws_saveobject(name,obj, WSTYPES.var_vcftype,meth.workspace_id,meth.token)
 
-    
-    stages = [Stage(runBowtie,"Aligning Reads",pollHadoopJob),
+    meth.advance("Preparing Input files")
+    ret  = prepareInputfiles(meth.token,meth.workspace_id,Input_file,wtype)
+    file1 = Input_file.split(',')[0]
+    file2 = Input_file.split(',')[1]
+    stages = [Stage(fastqToPE,"Preparing PE",pollGridJob),
+              Stage(runBowtie,"Aligning Reads",pollHadoopJob),
               Stage(runSNP,"Calling Variations",pollHadoopJob),
               Stage(runMerge,"Merging Output",None),
-              Stage(writeShock,"Uploading Output To Shock",pollGridJob),
+              Stage(writeShock,"Uploading Output To Shock",None),
               Stage(writeWS, "Uploading to Workspace", None)]
 
-    t=namedtuple("ff",["job_id"])
-    return to_JSON({"hello":writeWS([{"output":t("id=1425")}])})
+    #t=namedtuple("ff",["job_id"])
+    #return to_JSON({"hello":writeWS([{"output":t("id=1425")}])})
+    ret = runPipeline(stages,meth,auth)
     
+    return to_JSON(ret[-1])
       
 @method(name = "Calculate Gene Expression")
 def jnomics_calculate_expression(meth, workspace = None,paired=None,
                                  Input_file_path=None,
-                                 ref=None):
+                                 ref=None,src_id=None):
     """Calculate Expression
 
-    :param workspace : name of workspace; default is current
+    :param workspace : Name of workspace; default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
     :param paired : Paired-End say 'yes'; else 'no'; default is 'no'
@@ -615,10 +659,13 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     :default paired : no
     :param Input_file_path: Input the raw sequencing data
     :type Input_file_path: kbtypes.Unicode
-    :ui_name Input_file_path : Input files 
+    :ui_name Input_file_path : Input files
     :param ref: Reference Genome (kb_id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
+    :param src_id: Source and Source Id
+    :type src_id : kbtypes.Unicode
+    :ui_name src_id : Source/Source Id
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -667,7 +714,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
         return client.workspaceUpload(cufflinks_output,ref.replace('kb|',''),
                                       desc,title,srcdate,ontoid,
                                       ontodef,ontoname,paired,
-                                      shock_id,"",auth)
+                                      shock_id,src_id.replace('/',' '),"",auth)
     @pipelineStep(None)
     def writeBamfile(client,previous_steps):
         tophatid  = idc.allocate_id_range(IDServerids.rnaseq_alignment,1)
@@ -685,15 +732,21 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     @pipelineStep(None)
     def saveWorkspace_obj(client,previous_steps):
         previous_steps = previous_steps[-1]
+	json_error = None
         if 'output' in previous_steps:
             job_id =  previous_steps['output'].job_id
-        pattern2 = re.compile('Writing the Expression object kb\|sample_test.[0-9]*')
+        pattern2 = re.compile('Writing the Expression object kb\|sample.[0-9]*')
         sampleid = parselog(str(job_id),pattern2,auth)
-        realid = sampleid.split('Writing the Expression object ')[1]
-        result = cathdfsfile(realid,auth)
-        jsonobj = json.loads(str(result))
-        wsreturn = ws_saveobject(realid,jsonobj,exptype,meth.workspace_id,meth.token)
-        return {"submitted" : realid , "type" : exptype , "status" : wsreturn}
+	if sampleid:
+        	realid = sampleid.split('Writing the Expression object ')[1]
+        #realid = 'kb\|sample.20064'
+                result = cathdfsfile(realid,auth)
+                jsonobj = json.loads(str(result))
+                wsreturn = ws_saveobject(realid,jsonobj,exptype,meth.workspace_id,meth.token)
+        else:
+		json_error = previous_steps['output'].failure_info
+        #    raise Exception , "Workspace obj generation Failed"
+        return {"submitted" : realid , "type" : exptype , "status" : wsreturn , "error" :  json_error}
 
     def ontologydata(poid=None,eoid=None):
         exp =  expressionService(OTHERURLS.expression)
@@ -730,13 +783,173 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     cufflinks_out_path = os.path.join(Output_file_path,"cufflinks")
     cufflinks_output =  os.path.join(cufflinks_out_path,"transcripts.gtf")
     cufflinksobjname = str(sample_id)+'_transcripts.gtf'
-    #stages = #[Stage(getfiles,"Prepare Input files",None),
+
     stages= [Stage(runTophat,"Aligning Reads",pollGridJob),
              Stage(runCufflinks,"Assembling Transcripts",pollGridJob),
              Stage(writeBamfile,"Writing Alignment file",None),
              Stage(uploadtoShock,"Uploading to Shock",None),
              Stage(workspaceobj,"Preparing Workspace obj",pollGridJob),
              Stage(saveWorkspace_obj,"Saving Object",None)]
+    
+    ret = runPipeline(stages,meth,auth)
+    return to_JSON(ret[-1])
+
+@method(name = "Calculate Gene Expression - Batch Mode")
+def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
+                                 Input_file_path=None,
+                                 ref=None,src_id=None):
+    """Calculate Expression
+
+    :param workspace : name of workspace; default is current
+    :type workspace : kbtypes.Unicode
+    :ui_name workspace : Workspace
+    :param paired : Paired-End say 'yes'; else 'no'; default is 'no'
+    :type paired : kbtypes.Unicode
+    :ui_name paired : Paired-End (?)
+    :default paired : no
+    :param Input_file_path: Input the raw sequencing data
+    :type Input_file_path: kbtypes.Unicode
+    :ui_name Input_file_path : Input files 
+    :param ref: Reference Genome (kb_id)
+    :type ref : kbtypes.Unicode
+    :ui_name ref : Reference
+    :param src_id: Source and Source Id
+    :type src_id : kbtypes.Unicode
+    :ui_name src_id : Source/Source Id
+    :return: Workspace id
+    :rtype: kbtypes.Unicode
+    """
+
+    meth.stages = 7
+    token = meth.token
+    auth = Authentication(userFromToken(meth.token), "", meth.token)
+    ws = workspaceService(OTHERURLS.workspace)
+    idc = IDServerAPI(OTHERURLS.ids)
+
+    act_ref = ref.replace('|','_')
+
+    wtype = WSTYPES.rnaseq_sampletype 
+    exptype = WSTYPES.rnaseq_exptype 
+    bamtype = WSTYPES.rnaseq_bamtype 
+ 
+    node_id = None
+    stats = []
+    myfile = None
+    sample_id = None
+
+    @pipelineStep("compute")
+    def runTophat(client,previous_steps):
+        previous_steps = previous_steps[-1]
+        tohat_jobs = [] 
+        i_files = Input_file_path.split(";")
+        for ifile in i_files:
+            tophat_out_path =  os.path.join(Output_file_path,ifile.replace(",","_")+"/tophat") 
+            tophat_jobs = client.alignTophat(act_ref, Input_file_path,
+                                     "", tophat_out_path,
+                                     "", "", auth)
+        return tophat_jobs
+
+    @pipelineStep("compute")
+    def runCufflinks(client,previous_steps):
+         previous_steps = previous_steps[-1]
+         cufflinks_jobs = [] 
+         i_files = Input_file_path.split(";")
+         for ifile in i_files:
+             cufflinks_in_path = os.path.join(Output_file_path,ifile.replace(",","_")+"/tophat/accepted_hits.bam")
+             cufflinks_out_path =  os.path.join(Output_file_path,ifile.replace(",","_")+"/cufflinks")
+             cufflinks_jobs.append(client.callCufflinks( cufflinks_in_path,
+                                     cufflinks_out_path,
+                                     "", "", "", auth))
+         return cufflinks_jobs
+        
+    @pipelineStep("compute")
+    def workspaceobj(client,previous_steps):
+        previous_steps = previous_steps[-1]
+        if 'output' in previous_steps and 'shock_id' in previous_steps['output']:
+            shock_id = previous_steps['output']['shock_id']
+        if not isFileFound(entityfile,auth):
+            out = getGenomefeatures(ref,auth)
+            ret = writefile(entityfile,out,auth) 
+        ontodict = ontologydata(po_id,eo_id)
+        ontoid = ",".join([ key for (key,value) in ontodict.items()])
+        ontodef =  ",".join([value for (key,value) in ontodict.items()])
+        ontoname = ontodef
+        return client.workspaceUpload(cufflinks_output,ref.replace('kb|',''),
+                                      desc,title,srcdate,ontoid,
+                                      ontodef,ontoname,paired,
+                                      shock_id,"","",auth)
+    @pipelineStep(None)
+    def writeBamfile(client,previous_steps):
+        tophatid  = idc.allocate_id_range(IDServerids.rnaseq_alignment,1)
+        tophatobjname = IDServerids.rnaseq_alignment+"."+str(tophatid)
+        filedata = shockfileload(auth,tophatobjname,cufflinks_in_path)
+        objdata = { "name" : str(sample_id)+"_accepted_hits.bam" ,"paired" : paired , "created" :  strftime("%d %b %Y %H:%M:%S +0000", gmtime()) ,
+                "shock_ref": { "shock_id" : filedata['shock_id']  , "shock_url" : OTHERURLS.shock+'/node/'+filedata['shock_id'] },"metadata" : ret['metadata'][0] }
+        wsreturn = ws_saveobject(tophatobjname,objdata,bamtype,meth.workspace_id,meth.token)
+        return wsreturn
+
+    @pipelineStep(None)
+    def uploadtoShock(client,previous_steps):
+         return shockfileload(auth,cufflinksobjname,cufflinks_output)
+    
+    @pipelineStep(None)
+    def saveWorkspace_obj(client,previous_steps):
+        previous_steps = previous_steps[-1]
+        if 'output' in previous_steps:
+            job_id =  previous_steps['output'].job_id
+        pattern2 = re.compile('Writing the Expression object kb\|sample_test.[0-9]*')
+        try: 
+           sampleid = parselog(str(job_id),pattern2,auth)
+        except FileNotFound as e:
+            raise  ShockUploadException("Error in Parsing log file: {}".format(err))
+        realid = sampleid.split('Writing the Expression object ')[1]
+        result = cathdfsfile(realid,auth)
+        jsonobj = json.loads(str(result))
+        wsreturn = ws_saveobject(realid,jsonobj,exptype,meth.workspace_id,meth.token)
+        return {"submitted" : realid , "type" : exptype , "status" : wsreturn}
+
+    def ontologydata(poid=None,eoid=None):
+        exp =  expressionService(OTHERURLS.expression)
+        #json_error = None
+        #status = None
+        poids = poid[0].split(",") 
+        eoids = eoid[0].split(",")
+        podesc = exp.get_po_descriptions(poids)
+        eodesc = exp.get_eo_descriptions(eoids)
+        ontoids = ",".join(poids + eoids)
+        ontodef = ",".join([ value for (key,value) in podesc.items() ] + [value for (key1,value1) in eodesc.items()])
+        return dict(podesc.items() + eodesc.items())
+    
+    meth.advance("Preparing Input files")
+    ret  = prepareInputfiles(meth.token,workspace,Input_file_path,wtype)
+    #return to_JSON(ret)
+    if 'metadata' in ret:
+        if 'sample_id' in ret['metadata'][0]:
+            sample_id = ret['metadata'][0]['sample_id']
+            title = sample_id
+        if 'title' in  ret['metadata'][0]:
+            desc =  ret['metadata'][0]['title']
+        if 'ext_source_date' in  ret['metadata'][0]:
+            srcdate = ret['metadata'][0]['ext_source_date']
+        if 'po_id' in  ret['metadata'][0]:
+            po_id = ret['metadata'][0]['po_id']
+        if 'eo_id' in  ret['metadata'][0]:
+            eo_id = ret['metadata'][0]['eo_id']
+    
+    Output_file_path = "narrative_RNASeq_"+str(sample_id)+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
+    entityfile = str(act_ref) + "_fids.txt"
+    #tophat_out_path = os.path.join(Output_file_path, "tophat")
+    #cufflinks_in_path = os.path.join(tophat_out_path,"accepted_hits.bam")
+    #cufflinks_out_path = os.path.join(Output_file_path,"cufflinks")
+    cufflinks_output =  os.path.join(cufflinks_out_path,"transcripts.gtf")
+    cufflinksobjname = str(sample_id)+'_transcripts.gtf'
+    #stages = #[Stage(getfiles,"Prepare Input files",None),
+    stages= [Stage(runTophat,"Aligning Reads",pollGridJobs)]
+             #Stage(runCufflinks,"Assembling Transcripts",pollGridJobs),
+             #Stage(writeBamfile,"Writing Alignment file",None),
+             #Stage(uploadtoShock,"Uploading to Shock",None),
+             #Stage(workspaceobj,"Preparing Workspace obj",pollGridJob),
+             #Stage(saveWorkspace_obj,"Saving Object",None)]
 
     return to_JSON(runPipeline(stages,meth,auth))
     
@@ -744,7 +957,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
 def jnomics_differential_expression(meth,workspace= None,title=None, alignment_files=None,exp_files=None,
                                  ref=None):
     """Identify differential Expression
-    :param workspace: name of workspace, default is current
+    :param workspace: Name of workspace, default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
     :param title : Experiment title
@@ -790,7 +1003,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
                                     cuffdiff_out_path,
                                     act_ref,
                                     "", condn_labels,merged_gtf,
-                                    "", auth)
+                                    "","", auth)
 
     @pipelineStep("compute")
     def savediffWorkspace_obj(client,previous_steps):
@@ -822,7 +1035,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
             diff_exp["shock_ref"]["shock_url"] = OTHERURLS.shock+"/node/"+value
             diff_exp_files.append(diff_exp)
 
-        diffid = "kb|differentialExpression."+str(idc.allocate_id_range("kb|differentialExpression_test",1))
+        diffid = "kb|differentialExpression."+str(idc.allocate_id_range(diffexptype,1))
         diffexpobj = { "name" : diffid,
                        "title" : title, 
                        "created" : strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
@@ -874,29 +1087,37 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     stages = [Stage(runCuffmerge,"Merging Assembled Transcripts",pollGridJob),
               Stage(runCuffdiff,"Differential Expression",pollGridJob),
               Stage(savediffWorkspace_obj,"Saving Workspace Obj",None)]
-    
-    return  to_JSON(runPipeline(stages,meth,auth))
-
+    ret = runPipeline(stages,meth,auth)
+    return  to_JSON(ret[-1])
 
 @method(name = "Create Expression Series ")
-def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,design=None,summary=None):
+def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,design=None,summary=None,source_Id=None,src_date=None):
     """search a file
 
     :param workspace: Worspace id
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace 
-    :param exp_samples: Expression sample ids
+    :param exp_samples: Expression Sample ids (kb|sample.xxxx)
     :type exp_samples : kbtypes.Unicode
     :ui_name exp_samples : Expression Samples
     :param ref: Reference genome
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
+    :param title: Title
+    :type title : kbtypes.Unicode
+    :ui_name title : Experiment Title
     :param design: Design of the Experiment
     :type design : kbtypes.Unicode
     :ui_name  design : Experiment Design
     :param summary : Summary of the Experiment 
     :type summary : kbtypes.Unicode
     :ui_name summary : Experiment Summary
+    :param source_Id: source_Id
+    :type source_Id : kbtypes.Unicode
+    :ui_name source_Id : Source Id 
+    :param src_date: External Source Date
+    :type src_date : kbtypes.Unicode
+    :ui_name src_date : Publication Date 
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -914,123 +1135,185 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,design=None,s
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': expfile, 'type': exptype})
         return obj
     
-    source_id = ""
-    title = ""
-    ext_src_date = ""
+    #source_id = ""
+    #title = ""
+    #ext_src_date = ""
     files = exp_samples.strip('\r\n').split(",")
-    exp_sampleids = []
-    for expfile in files:
-        myobj = ws_getObject(workspace, expfile, exptype, token)
-        source_id = myobj['data']['source_id']
-        title = myobj['data']['description']
-        ext_src_date = myobj['data']['external_source_date']
-        exp_sampleids.append(source_id)
+    source_Id = source_Id + "___" + "RNA-Seq"
+    #exp_sampleids = []
+    #for expfile in files:
+    #    myobj = ws_getObject(workspace, expfile, exptype, token)
+        #source_id = myobj['data']['source_id']
+        #sample_id = myobj['data']['id']
+        #title = myobj['data']['description']
+        #ext_src_date = myobj['data']['external_source_date']
+        #exp_sampleids.append(sample_id)
 
-    genome_map = [workspace+"/"+x for x in files]
+    genome_map = [workspace+"/"+x for x in files]    
+    #return to_JSON(meth.workspace_id)
 
     ### get id from ID server
-    objid = idc.allocate_id_range("kb|series_test",1)
-
+    #register_ids("kb|series","KB",["GSE30249___RNA-Seq"])
+    id_dict = idc.register_ids(IDServerids.rnaseq_series,"KB",[source_Id])
+    objid = id_dict.values()[0]     
     meth.advance("Preparing the Series Object")
 
-    seriesobj = { 'id' : "kb|series_test." + str(objid) ,
-                  'source_id' : source_id ,
+    seriesobj = { 'id' : str(objid) ,
+                  'source_id' : source_Id ,
                   'genome_expression_sample_ids_map' : { ref : genome_map },
                   #'genome_expression_sample_ids_map' : {workspace+"/"+x+"/" for x in files 'kb|g.3907': [workspace+"/"+kb|sample_test.13397.json/1' , '863/kb|sample_test.13398.json/1'] } ,
                   'title' : title ,
                   'summary' : summary ,
                   'design' : design ,
-                  'publication_id' : source_id ,
-                  'external_source_date' : ext_src_date }
+                  #'publication_id' : source_id ,
+                  'external_source_date' : src_date }
     
     wsreturn = ws_saveobject(seriesobj['id'],seriesobj,expseriestype,meth.workspace_id,meth.token)
 
     return to_JSON(wsreturn)
 
+@method(name = "Generate Data Table ")
+def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
+    """search a file
 
-@method(name = "Check files on HDFS and throw exception")
-def Checkfiles(meth,filepath=None):
-    """search a file 
-    :param filepath: filepath
-    :type filepath : kbtypes.Unicode
-    :ui_name filepath : filepath
+    :param workspace: Worspace id
+    :type workspace : kbtypes.Unicode
+    :ui_name workspace : Workspace
+    :param name: Datatable Name
+    :type name : kbtypes.Unicode
+    :ui_name name : Name
+    :param exp_series: Expression Series Id
+    :type exp_series : kbtypes.Unicode
+    :ui_name exp_series : Expression Series ID
+    :param ref: Reference (kb_id)
+    :type ref : kbtypes.Unicode
+    :ui_name ref : Reference
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    #exp =  expressionService(OTHERURLS.expression)
-    
-    json_error = None
-    status = None
+    meth.stages =  1 
+    token = meth.token
+
     auth = Authentication(userFromToken(meth.token), "", meth.token)
-
-    def isFileFound(filepath, auth):
-        client = openDataClientConnection()
-        status = client.listStatus(filepath,auth)
-        if not status:
-            return to_JSON(False)
-        closeClientConnection(client)
-        return to_JSON(True)
+    ws = workspaceService(OTHERURLS.workspace)
+    idc = IDServerAPI(OTHERURLS.ids)
     
-    ret  = isFileFound(filepath,auth)
-    return to_JSON(ret)
+    wstype =  WSTYPES.rnaseq_expseriestype
+    exp_type =  WSTYPES.rnaseq_exptype
+    dt_type = WSTYPES.datatabletype
 
-@method(name = "Check dict has key")
-def haskey(meth,filepath=None):
-    """search a file 
-    :param filepath: filepath
-    :type filepath : kbtypes.Unicode
-    :ui_name filepath : filepath
+    datatable={}
+    row_ids = []
+    row_labels = []
+    column_ids = []
+    column_labels = []
+    fpkmdata = []
+    exp_levels = []
+    row_pos = -1
+    sids = []
+    filename = os.path.basename(exp_series)
+    
+    try: 
+        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
+    except FileNotFound as e:
+        raise FileNotFound("File Not Found: {}".format(err))
+    #return json.dumps(obj)
+        #return {"output" : str(status), "error": json_error}
+    if 'genome_expression_sample_ids_map' in obj['data']:
+        samples = obj['data']['genome_expression_sample_ids_map'][ref]
+        for sample in samples:
+            sids.append({'ref' : sample })
+            
+        sample_list = ws.get_objects(sids)
+        #return to_JSON(sample_list)
+        #sample_list = ["srividya22:home/kb|sample_test.13451/1","srividya22:home/kb|sample_test.13452/1"]
+        #sample_list = ["srividya22:home/kb|sample.20008/1","srividya22:home/kb|sample.20011/1","srividya22:home/kb|sample.20014/1"]
+        #return to_JSON(sample_list)
+        #return range(len(sample_list))
+        for k in range(len(sample_list)):
+            #wsid = sample_list[k].strip().split('/')[0]
+            #sampleid = sample_list[k].strip().split('/')[1]
+            sample_obj = sample_list[k]
+            if 'data' in sample_obj and 'expression_levels' in sample_obj['data']:
+                 column_ids.append(str(sample_obj['data']['id']))
+                 exp_levels = sample_obj['data']['expression_levels']
+                 #return exp_levels
+                 for x,y in exp_levels.items():
+                     #if str(x) in sortdict:
+                     #    sortdict[str(x)]= sortdict[str(x)].append(y)
+                     #else:
+                     #     sortdict[str(x)]= [y]
+                     if x in row_ids:
+                         rowid_pos = row_ids.index(str(x))
+                         fpkmdata[(row_pos  * len(sample_list)) + k] = float(y)
+                     else:
+                         row_ids.append(str(x))
+                         for j in range(len(sample_list)):
+                             if j==k:
+                                 fpkmdata.append(float(y))
+                             else:
+                                 fpkmdata.append(float(0))
+    dt_id = "kb|datatable."+str(idc.allocate_id_range("kb|datatable",1))
+    dt_obj = OrderedDict({"id" : dt_id, "name" : name, "row_ids" : row_ids, "row_labels" : row_ids , "column_labels" : column_ids , "column_ids" : column_ids, "data" : [fpkmdata] })
+    return  to_JSON(ws_saveobject(dt_id,dt_obj,dt_type,meth.workspace_id,meth.token))
+
+@method(name = "Filter Expression Data Table ")
+def filterDataTable(meth,workspace= None,dtname=None):
+    """search a file
+
+    :param workspace: Worspace id
+    :type workspace : kbtypes.Unicode
+    :ui_name workspace : Workspace
+    :param dtname: Datatable Name
+    :type dtname : kbtypes.Unicode
+    :ui_name dtname : DataTable Name
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    
-    json_error = None
-    status = None
+    meth.stages =  1 
+    token = meth.token
+
     auth = Authentication(userFromToken(meth.token), "", meth.token)
-
-    #def haskey(keyname, auth):
-    #    client = openDataClientConnection()
-   #     status = client.listStatus(filepath,auth)
-   #     if not status:
-   #         return to_JSON(False)
-   #     closeClientConnection(client)
-   #     return to_JSON(True)
+    ws = workspaceService(OTHERURLS.workspace)
+    idc = IDServerAPI(OTHERURLS.ids)
     
-    #ret  = isFileFound(filepath,auth)
-    obj = {"shock_ref":{"shock_id":"1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a","shock_url":"https://kbase.us/services/shock-api//1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a"},"created":"2014-04-22 20:48:41","name":"SRX031076_1.fastq","metadata":{"source":"NCBI","paired":"yes","source_id":"SRA026096","tissue":["xylem"],"ref_genome":"Populus trichocarpa","domain":"Plants","sample_id":"SRX031076","ext_source_date":"Apr 20 2014","title":"Test sample from poplar RNAseq data","platform":"Illumina","condition":["stem,field study"],"po_id": ["PO:0009047,PO:0005352,PO:0025425"],"eo_id" : ["EO:0007256"]},"type":"fastq"}
-    ret = False
-    if "shock_ref" in obj and "shock" in obj["shock_ref"]:
-        ret = True
-    return to_JSON(ret)
+    wstype =  WSTYPES.rnaseq_expseriestype
+    exp_type =  WSTYPES.rnaseq_exptype
+    dt_type = WSTYPES.datatabletype
 
-@method(name = "Submit a awe job")
-def submitawejob(meth,filepath=None):
-    """search a file 
-    :param filepath: filepath
-    :type filepath : kbtypes.Unicode
-    :ui_name filepath : filepath
-    :return: Workspace id
-    :rtype: kbtypes.Unicode
-    """
+    try: 
+        ret = ws.get_object({'auth': token, 'workspace': workspace, 'id': dtname, 'type': dt_type})
+        result = ret['data']
+    except FileNotFound as e:
+        raise FileNotFound("File Not Found: {}".format(err))
+    nsamples = len(result['column_ids'])
+    rindex = 0 
+    diff_index = {}
+    for i in xrange(0,(len(result['data'][0])-(nsamples -1)),nsamples):
+        lindex= i + nsamples
+        maxl = max(result['data'][0][i:lindex])
+        minl = [ x for index, x in enumerate(result['data'][0][i:lindex]) if x != float(0) ] 
+        if len(minl) == 1 and minl[0] == maxl:
+            diff_index[rindex] = maxl
+        elif len(minl) > 1:
+            diff_index[rindex] = maxl - min(minl)
+        rindex = rindex + 1
     
-    json_error = None
-    status = None
-    auth = Authentication(userFromToken(meth.token), "", meth.token)
-
-    #def haskey(keyname, auth):
-    #    client = openDataClientConnection()
-   #     status = client.listStatus(filepath,auth)
-   #     if not status:
-   #         return to_JSON(False)
-   #     closeClientConnection(client)
-   #     return to_JSON(True)
-    
-    #ret  = isFileFound(filepath,auth)
-    obj = {"shock_ref":{"shock_id":"1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a","shock_url":"https://kbase.us/services/shock-api//1ab40b5b-bb86-4f6e-99f3-38dbcac5f60a"},"created":"2014-04-22 20:48:41","name":"SRX031076_1.fastq","metadata":{"source":"NCBI","paired":"yes","source_id":"SRA026096","tissue":["xylem"],"ref_genome":"Populus trichocarpa","domain":"Plants","sample_id":"SRX031076","ext_source_date":"Apr 20 2014","title":"Test sample from poplar RNAseq data","platform":"Illumina","condition":["stem,field study"],"po_id": ["PO:0009047,PO:0005352,PO:0025425"],"eo_id" : ["EO:0007256"]},"type":"fastq"}
-    ret = False
-    if "shock_ref" in obj and "shock" in obj["shock_ref"]:
-        ret = True
-    return to_JSON(ret)
+    sorted_dict = sorted(diff_index.items(), key=itemgetter(1),reverse=True)[:100]
+    sorted_dt = OrderedDict({ "id" : "", "name" : "","row_ids" : [] ,"column_ids" : [] ,"row_labels" : [] ,"column_labels" : [] , "data" : [] })
+    for k, v in sorted_dict:
+        left = k * nsamples
+        right = k * nsamples + nsamples
+        sorted_dt["row_ids"].append(result["row_ids"][k])
+        sorted_dt["data"].append(result['data'][0][left:right])
+        
+    sorted_dt["column_ids"] = result["column_ids"]
+    sorted_dt['row_labels'] = sorted_dt["row_ids"]
+    sorted_dt["column_labels"] = sorted_dt['column_ids']
+    sorted_dt["id"] = "kb|filtereddatatable."+str(idc.allocate_id_range("kb|filtereddatatable",1))
+    sorted_dt["name"] = result["name"]
+    #return to_JSON(sorted_dt)
+    return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
 
 finalize_service()
 

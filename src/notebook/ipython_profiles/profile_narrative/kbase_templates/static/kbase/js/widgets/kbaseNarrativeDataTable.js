@@ -111,7 +111,6 @@
                 ],
                 bInfo: false,
                 bLengthChange: false,
-                bPaginate: false,
                 bAutoWidth: true,
                 bScrollCollapse: true,
                 sScrollY: '225px',
@@ -175,19 +174,6 @@
                 }, 
                 this)
             );
-//             this.$dataTable.find('span.kb-data-obj-name').each(function(i) {
-//                 var elem = $(this)
-//                            .clone()
-// //                           .removeClass('kb-data-obj-name')
-//                            .css({display: 'inline', width: 'auto', visibility: 'hidden'})
-//                            .appendTo('body');
-
-//                 if (elem.width() > $(this).width())
-//                     $(this).css({color: '#ff0000'});
-//                 console.log(elem.width() + " " + $(this).width())
-
-//                 elem.remove();
-//             });
             this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right', container: 'body'});
         },
     })

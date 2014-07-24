@@ -31,7 +31,7 @@
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
-            workspaceURL: "https://kbase.us/services/ws", // "http://kbase.us/services/ws",
+            workspaceURL: "https://kbase.us/services/ws",
             wsBrowserURL: "/functional-site/#/ws/",
             landingPageURL: "/functional-site/#/",
             uploaderURL: "http://kbase.us/services/docs/uploader/uploader.html",
@@ -47,6 +47,13 @@
             this._super(options);
             if (this.options.wsId)
                 this.wsId = options.wsId;
+
+            if (window.kb && window.kb.urls) {
+                this.options.uploaderURL = window.kb.urls.uploader;
+                this.options.workspaceURL = window.kb.urls.workspace;
+                this.options.wsBrowserURL = window.kb.urls.ws_browser;
+                this.options.landingPageURL = window.kb.urls.landing_pages;
+            }
 
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
@@ -197,7 +204,6 @@
             // encapsulating data panel - all the data-related stuff goes in here.
             // this way, it can all be hidden easily.
             this.$dataPanel = $('<div id="data-tabs">');
-//            this.$elem.append(this.$dataPanel);
 
             // a loading panel that just has a spinning gif sitting in the middle.
             this.$loadingPanel = $('<div>')
@@ -206,7 +212,6 @@
                                  .append($('<div>')
                                          .attr('id', 'message'))
                                  .hide();
-//            this.$elem.append(this.$loadingPanel);
 
             // Something similar for the info modal
             this.$infoModalLoadingPanel = $('<div>')
@@ -221,7 +226,6 @@
             this.$errorPanel = $('<div>')
                                .addClass('kb-error')
                                .hide();
-//            this.$elem.append(this.$errorPanel);
 
             this.$elem.append($('<div>')
                               .addClass('panel panel-primary kb-data-main-panel')

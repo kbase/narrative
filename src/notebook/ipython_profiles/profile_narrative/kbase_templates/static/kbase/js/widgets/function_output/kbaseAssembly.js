@@ -31,7 +31,8 @@
                 "filename": [], 
                 "ids": [], 
                 "message": null, 
-                "pipeline": [['spades']], 
+                "recipe": null,
+                "pipeline": [['spades']],
                 "queue": null, 
                 "single": [[]],
                 "pair": [],
@@ -93,31 +94,31 @@
 
             var asm_div = $('<div class="row">');
             var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
-                                      <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">3-Assembly Pipeline</option> \
-                                      <option value="sga_preprocess,bhammer,tagdust,spades">AssemblyRAST Pipeline</option> \
-                                      <option value="a6">A6 Pipeline</option> \
-                                      <option value="pacbio,?min_long_read_length=3500,?genome_size=40000">PacBio SMRT Pipeline</option> \
-                                      <option value="spades">SPAdes Assembler</option> \
-                                      <option value="ray">Ray Assembler</option> \
-                                      <option value="idba">IDBA-UD Assembler</option> \
+                                      <option value="auto">Arast Smart Workflow</option> \
+                                      <option value="fast">Fast Pipeline</option> \
+                                      <option value="tune_velvet">Intelligent Velvet</option> \
                                       <option value="kiki">Kiki Assembler</option> \
                                     </select></span>');
+            // var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
+            //                           <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">3-Assembly Pipeline</option> \
+            //                           <option value="sga_preprocess,bhammer,tagdust,spades">AssemblyRAST Pipeline</option> \
+            //                           <option value="a6">A6 Pipeline</option> \
+            //                           <option value="pacbio,?min_long_read_length=3500,?genome_size=40000">PacBio SMRT Pipeline</option> \
+            //                           <option value="spades">SPAdes Assembler</option> \
+            //                           <option value="ray">Ray Assembler</option> \
+            //                           <option value="idba">IDBA-UD Assembler</option> \
+            //                           <option value="kiki">Kiki Assembler</option> \
+            //                         </select></span>');
+
             var asm_desc = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
 	    asm_btn.one("click", function() {
-
-
-
-
-
-
-
-                var assembler = asm_choose.find('select option:selected').val();
+                var recipe = [asm_choose.find('select option:selected').val()];
                 var desc = asm_desc.find('input').val();
 		
-                arRequest.pipeline = [assembler.split(',')];
+                arRequest.recipe = recipe;
                 arRequest.message = desc;
                 asm_div.find('fieldset').attr('disabled', "true");
 		
@@ -187,7 +188,7 @@
 					//// Create dropdowns
 					$.when(defer_asm, defer_auto).done(function(assemblies, best){
 					    var import_btn_group = $('<span class="btn-group"></span>');
-					    var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Import Contigs <span class="caret"></span> </button>');
+					    var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Save Contigs <span class="caret"></span> </button>');
 					    var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
 					    var contig_import_auto = $('<li><a>Auto Select</a></li>');
 					    contig_import_auto.one("click", function() {

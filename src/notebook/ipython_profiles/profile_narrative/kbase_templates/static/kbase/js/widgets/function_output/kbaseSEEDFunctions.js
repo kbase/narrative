@@ -92,7 +92,8 @@
             var Level1 = [];
 
             //d3.text("assets/data/subsys.txt", function(text) {
-            d3.text("/static/subsys.txt", function(text) {
+            //d3.text("/static/subsys.txt", function(text) {
+            d3.text("/functional-site/assets/data/subsys.txt", function(text) {
                 var data = d3.tsv.parseRows(text);
 
                 for (i = 0; i < data.length; i++) {
@@ -133,7 +134,7 @@
 
                                 if ( j === ontologyDepth - 1 && subsysToGeneMap[data[i][j]] !== undefined) {
                                     subsysToGeneMap[data[i][j]].forEach( function(f){
-                                        var gene = { "name" : f, "size" : 0 };
+                                        var gene = { "name" : f, "size" : "" };
                                         node.children.push( gene );
                                     });
                                 }
@@ -191,7 +192,19 @@
             var nodeEnter = node.enter().append("g")
                 .attr("class", "node")
                 .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-                .style("opacity", 1e-6);
+                .style("opacity", 1e-6)
+                .on("mouseover", function(d) {
+                    d3.select(this).selectAll('text, rect')
+                    .style('font-weight', 'bold')
+                    .style('font-size', '90%')
+                    .style('stroke-width', '3px');
+                })
+                .on("mouseout", function(d) {
+                    d3.select(this).selectAll('text, rect')
+                    .style('font-weight', 'normal')
+                    .style('font-size', '80%')
+                    .style('stroke-width', '1.5px');
+                });
 
             // Enter any new nodes at the parent's previous position.
             nodeEnter.append("rect")
@@ -212,7 +225,8 @@
                 .attr("x", function (d) { return 0 + 275 - scale(d.size) - d.depth * self.stepSize;} )
                 .attr("height", self.barHeight)
                 .attr("width", function (d) { return scale(d.size); })
-                .style("fill", self.color);
+                .style("fill", self.color)
+                .on("click", $.proxy(function(d) {self.click(d)}, self));
 
             nodeEnter.append("text")
                 .attr("dy", 3.5)

@@ -72,7 +72,7 @@
 			tables.append(tbl)
 		    }
 		}
-		if (info.single_end_libs != undefined) {
+		if (info.references != undefined) {
 		    for (var i = 0; i < info.references.length; i++) {
 			var tbl = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">');
 			tbl.append('<thead><tr><th>Reference File</th></tr></thead>');

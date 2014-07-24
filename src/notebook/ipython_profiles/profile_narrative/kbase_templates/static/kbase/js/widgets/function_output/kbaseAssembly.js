@@ -164,16 +164,37 @@
 				    kill_div.html("");
                                     if (stat.search('Complete') != -1) {
                                         var report_txt = null;
-					var assemblies;
-					get_assemblies(job_id).done(function(asm){
-					    console.log(asm);
-					    assemblies = JSON.parse(asm);
-					    console.log(assemblies);
+					var defer_asm = $.Deferred();
+					var defer_auto = $.Deferred();
 
+					//// Get all assemblies
+					get_assemblies(job_id).done(function(asm){
+					    defer_asm.resolve(JSON.parse(asm));
+					    return defer_asm.promise();
+					});
+					
+					//// Get auto assembly
+					get_best_assembly(job_id).done(function(asm){
+					    best = JSON.parse(asm)[0];
+					    best_id = best.shock_id;
+					    best_url = best.shock_url;
+					    defer_auto.resolve({'shock_url': best.shock_url,
+								'shock_id': best.shock_id,
+								'name': best.filename})
+					    return defer_auto.promise()
+					});
+
+					//// Create dropdowns
+					$.when(defer_asm, defer_auto).done(function(assemblies, best){
 					    var import_btn_group = $('<span class="btn-group"></span>');
 					    var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Import Contigs <span class="caret"></span> </button>');
 					    var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-					    import_btn_sel.append('<li><a href="#">Automatic</a></li>')
+					    var contig_import_auto = $('<li><a>Auto Select</a></li>');
+					    contig_import_auto.one("click", function() {
+						import_contigs_to_ws(token, fba_url, ws_url, ws_name, best.shock_id, best.shock_url, best.name);
+					    });
+
+					    import_btn_sel.append(contig_import_auto);
 					    import_btn_sel.append('<li class="divider"></li>')
 					    for (i=0; i<assemblies.length;i++){
 						var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
@@ -185,7 +206,6 @@
 						});
 						import_btn_sel.append(contig_import);
 					    }
-					    
 					    import_btn_group.append(import_btn);
 					    import_btn_group.append(import_btn_sel);
 					    result_btn_row.append(import_btn_group);
@@ -202,7 +222,7 @@
 							result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
 						    }).always(function(){
 										    
-                                                    self.$elem.append(report_div);
+							self.$elem.append(report_div);
 							self.$elem.append(result_btn_row);
 						    })
                                             })
@@ -252,6 +272,11 @@
 
 	    var get_assemblies = function(job_id){
 		var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/results?type=contigs,scaffolds');
+		return prom
+	    }
+
+	    var get_best_assembly = function(job_id){
+		var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/assemblies/auto')
 		return prom
 	    }
 

@@ -46,7 +46,7 @@ def _assemble_contigs(meth, asm_input):
     """
     ws = os.environ['KB_WORKSPACE_ID']
     token = os.environ['KB_AUTH_TOKEN']
-    arURL = 'http://140.221.84.124:8000/'
+    arURL = 'http://kbase.us/services/assembly/'
     ar_user = token.split('=')[1].split('|')[0]
 
     wsClient = workspaceService(service.URLS.workspace, token=token)
@@ -60,6 +60,7 @@ def _assemble_contigs(meth, asm_input):
                        "ar_user" : ar_user,
                        "ar_token" : token,
                        "ws_url" : service.URLS.workspace,
+                       "ws_name" : os.environ['KB_WORKSPACE_ID'],
                        "kbase_assembly_input": asm_data['data']})
 
 @method(name="Get Contigs from Assembly Service")

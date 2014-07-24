@@ -52,7 +52,7 @@
 
     $.KBWidget({
 
-		  name: "kbaseLogin",
+	    name: "kbaseLogin",
 
         version: "1.0.0",
         options: {
@@ -63,12 +63,19 @@
             fields : ['name', 'kbase_sessionid', 'user_id', 'token'],
         },
 
+        cookieName : 'kbase_session',
+
         get_kbase_cookie : function (field) {
 
+            if (!$.cookie(this.cookieName))
+                return {};
+
             var chips = localStorage.getItem('kbase_session');
+            // var chips = $.cookie('kbase_session');
 
             if (chips != undefined) {
                 chips = JSON.parse(chips);
+//                chips = this.parse_cookie(chips);
             }
             else {
                 chips = {};
@@ -78,6 +85,11 @@
                 ? chips
                 : chips[field];
         },
+
+        // parse_cookie : function (cookieStr) {
+        //     var fields = cookieStr.split('\|');
+
+        // },
 
         sessionId : function () {
             return this.get_kbase_cookie('kbase_sessionid');
@@ -124,7 +136,8 @@
                 if (!this.is_token_valid(this.get_kbase_cookie('token'))) {
                     localStorage.removeItem('kbase_session');
                     // nuke the cookie, too, just in case it's still there.
-                    $.cookie('kbase_session', null);
+                    $.removeCookie(this.cookieName, { path: '/', domain: '.kbase.us' });
+                    $.removeCookie(this.cookieName, { path: '/' });
                 }
                 else {
                     if (this.registerLogin) {
@@ -961,17 +974,26 @@
 
                                 if (data.kbase_sessionid) {
 
-									// if ($.cookie) {
-         //                                $.cookie('kbase_session',
-         //                                      'unEQUALSSIGN' + data.user_id
-         //                                    + 'PIPESIGN'
-         //                                    + 'kbase_sessionidEQUALSSIGN' + data.kbase_sessionid
-         //                                    + 'PIPESIGN'
-         //                                    + 'token_idEQUALSSIGN' + data.kbase_sessionid,
-         //                                    { expires: 60 });
-         //                            }
+                                    if ($.cookie) {
+                                        // $.cookie('kbase_session',
+                                        //       'unEQUALSSIGN' + data.user_id
+                                        //     + 'PIPESIGN'
+                                        //     + 'kbase_sessionidEQUALSSIGN' + data.kbase_sessionid
+                                        //     + 'PIPESIGN'
+                                        //     + 'token_idEQUALSSIGN' + data.kbase_sessionid,
+                                        //     { expires: 60 });
+                                        var cookieString = 'un=' + data.user_id + 
+                                                           '|kbase_sessionid=' + data.kbase_sessionid +
+                                                           '|user_id=' + data.user_id +
+                                                           '|token=' + data.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
+                                        $.cookie(this.cookieName, cookieString, { path: '/', domain: 'kbase.us', expires: 60 });
+                                        $.cookie(this.cookieName, cookieString, { path: '/', expires: 60 });
+                                    }
 
-                                    var cookieArray = [];
+
+
+
+                                    // var cookieArray = [];
 
                                     var args = { success : 1 };//this.get_kbase_cookie();
                                     var fields = this.options.fields;
@@ -983,9 +1005,7 @@
                                     var jsonARGS = JSON.stringify(args);
 
                                     localStorage.setItem('kbase_session', jsonARGS);
-
                                     this.populateLoginInfo(args);
-
                                     this.trigger('loggedIn', this.get_kbase_cookie());
 
                                     callback.call(this,args);
@@ -1048,6 +1068,7 @@
 
             localStorage.removeItem('kbase_session');
             $.removeCookie('kbase_session', { path: '/' });
+            $.removeCookie(this.cookieName, { path: '/', domain: 'kbase.us' });
 
             // the rest of this is just housekeeping.
 

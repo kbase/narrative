@@ -94,6 +94,7 @@
             //d3.text("assets/data/subsys.txt", function(text) {
             //d3.text("/static/subsys.txt", function(text) {
             d3.text("/functional-site/assets/data/subsys.txt", function(text) {
+
                 var data = d3.tsv.parseRows(text);
 
                 for (i = 0; i < data.length; i++) {
@@ -134,6 +135,7 @@
 
                                 if ( j === ontologyDepth - 1 && subsysToGeneMap[data[i][j]] !== undefined) {
                                     subsysToGeneMap[data[i][j]].forEach( function(f){
+
                                         var gene = { "name" : f, "size" : "" };
                                         node.children.push( gene );
                                     });

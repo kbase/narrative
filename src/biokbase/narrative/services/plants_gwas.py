@@ -349,14 +349,21 @@ def genelist_network2ws(meth, gene_ids=None, out_id=None):
 
     gl = set()
     eids = []
+    lids = set()
+    mids = set()
     for gid in gene_ids.split(','):
       if 'kb|g.' in gid:
-        gl.add(gid)
+        if 'CDS' in gid:
+          gl.add(gid)
+        elif 'locus' in gid:
+          lids.add(gid)
+        elif 'mRNA' in gid:
+          mids.add(gid)
+        else:
+          gl.add(gid)
       else:
         eids.append(gid)
     sid2fids = cdmic.source_ids_to_fids(eids)
-    lids = set()
-    mids = set()
     for sid in sid2fids:
       for fid in sid2fids[sid]:
         if 'locus' in fid:
@@ -365,18 +372,21 @@ def genelist_network2ws(meth, gene_ids=None, out_id=None):
           gl.add(fid)
         elif 'mRNA' in fid:
           mids.add(fid)
-        elif len(fid) > 1:
-          # no idea ... just add to gl
+        else:
           gl.add(fid)
-    lidmap = idm.longest_cds_from_locus(list(lids))
+    lidmap = ()
+    if len(lids) > 0: lidmap = idm.longest_cds_from_locus(list(lids))
     for lid in lidmap:
-      for k in lid:
+      for k in lidmap[lid]:
         gl.add(k)
-    lidmap = idm.longest_cds_from_mrna(list(mids))
+    midl = list(mids)
+    
+    lidmap = ()
+    if len(mids) > 0: lidmap = idm.longest_cds_from_mrna(list(mids))
     for lid in lidmap:
-      for k in lid:
+      for k in lidmap[lid]:
         gl.add(k)
-
+    
     gl_str = ",".join(gl);
 
     meth.advance("Running GeneList to Networks")

@@ -71,7 +71,7 @@
                     IPython.notebook.kernel.execute( cmd );
                 }
 
-                window.location.href = "http://kbase.us";
+                window.location.href = "/";
             },
 
             prior_login_callback: function(args) {

@@ -71,11 +71,9 @@
                 return {};
 
             var chips = localStorage.getItem('kbase_session');
-            // var chips = $.cookie('kbase_session');
 
-            if (chips != undefined) {
+            if (chips != undefined  && chips != null) {
                 chips = JSON.parse(chips);
-//                chips = this.parse_cookie(chips);
             }
             else {
                 chips = {};
@@ -85,11 +83,6 @@
                 ? chips
                 : chips[field];
         },
-
-        // parse_cookie : function (cookieStr) {
-        //     var fields = cookieStr.split('\|');
-
-        // },
 
         sessionId : function () {
             return this.get_kbase_cookie('kbase_sessionid');

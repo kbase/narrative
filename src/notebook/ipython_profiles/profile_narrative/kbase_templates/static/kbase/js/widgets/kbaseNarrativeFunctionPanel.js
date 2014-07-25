@@ -99,17 +99,38 @@
             return this;
         },
         
+        refreshAJAX: function() {
+            this.showLoadingMessage("Loading available KBase Services...");
+
+            var prom = $.getJSON('static/kbase/services.json', $.proxy(
+                function(serviceSet) {
+                    this.populateFunctionList(serviceSet);
+                    this.showFunctionPanel();
+                }, this)
+            );
+
+            prom.fail($.proxy(function(error) {
+                    this.showLoadingMessage("Unable to load from cache, waiting on kernel...");
+                    $([IPython.events]).one('status_started.Kernel', $.proxy(function() {
+                        this.refresh();
+                    }, this));
+                }, this)
+            );
+        },
+
         /**
          * Refreshes the list of loaded functions.
          * This makes a kernel call, fetches the list of functions as an object,
          * pulls out necessary fields, and constructs the function list from them.
          * @private
          */
-        refresh: function() {
+        refresh: function(msg) {
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel)
                 return;
 
-            this.showLoadingMessage("Loading available KBase Services...");
+            if (!msg)
+                msg = "Loading available KBase Services...";
+            this.showLoadingMessage(msg);
 
             // Command to load and fetch all functions from the kernel
             var fetchFunctionsCommand = 'import biokbase.narrative.common.service_root as root\n' + 

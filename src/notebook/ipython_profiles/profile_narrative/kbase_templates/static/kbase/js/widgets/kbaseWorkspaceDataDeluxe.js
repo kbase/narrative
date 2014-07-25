@@ -148,8 +148,7 @@
          * @private
          */
         loggedInCallback: function(event, auth) {
-            this.authToken = auth;
-            this.wsClient = new Workspace(this.options.workspaceURL, this.authToken);
+            this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
             this.refresh();
             return this;
@@ -162,7 +161,6 @@
          * @private
          */
         loggedOutCallback: function(event, auth) {
-            this.authToken = null;
             this.wsClient = null;
             this.isLoggedIn = false;
             this.refresh();

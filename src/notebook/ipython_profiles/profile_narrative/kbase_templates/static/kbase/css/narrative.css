@@ -295,6 +295,13 @@ nav ul li.selected {
 
 
 /* center pane */
+
+
+#notebook_name {
+	color: #006698;
+	font-family: "OxygenBold", Arial, sans-serif;
+}
+
 #content-column {
 	/*float: left; */
 /*	max-width: 1170px;
@@ -674,7 +681,7 @@ p span.notification{
 	min-height: 0;
 	border: none !important;
 	background-image: none !important;
-	background-color: #fff !important;
+	background-color: #f9f9f9 !important;
 	-webkit-box-shadow: none;
 	box-shadow: none;
 }
@@ -687,7 +694,7 @@ p span.notification{
 	position: absolute;
 	width: 100%;
 	top: 3px;
-	background-color: #fff;
+	background-color: #f9f9f9;
 	border-bottom: 2px solid #ddd;
 	padding-bottom: 5px;
 }
@@ -736,7 +743,7 @@ p span.notification{
 #ipython-main-app {
 	position: absolute;
 	bottom: 5;
-	top: 120px;
+	top: 90px;
 	right: 10px;
 	left: 310px;
 	overflow: auto;

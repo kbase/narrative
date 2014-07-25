@@ -603,6 +603,7 @@ def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):
     :return: Uploaded RAST Genome
     :rtype: kbtypes.Unicode
     :output_widget: GenomeAnnotation
+    :input_widget: rastGenomeImportInput
     """
     #315750.3
     gids = genome_ids.split(',')

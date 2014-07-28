@@ -20,35 +20,6 @@ narrative.init = function() {
     var jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
     jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
-    /**
-     * Initializes the environment, once we know the kernel has started.
-     * There's an issue with the kernel starting asynchronously, without an event
-     * to catch when it's done - if a command is passed to it before finishing, it errors out.
-     *
-     * To work around this, initEnvironment catches any error, and tries to run itself again after
-     * a second.
-     */
-    var initEnvironment = function(token, workspaceId) {
-        try {
-            // Send the token and workspace id to the kernel
-            var cmd = "import os\n" +
-                      "os.environ['KB_AUTH_TOKEN'] = '" + token + "'\n" +
-                      "os.environ['KB_WORKSPACE_ID'] = '" + workspaceId + "'\n";
-            IPython.notebook.kernel.execute(cmd, {}, {'silent' : true});
-            IPython.notebook.set_autosave_interval(0);
-
-            jobsWidget.refresh();
-            functionWidget.refresh();
-        }
-        catch (error) {
-            // If there's a kernel error, it's probably not set up yet, or not available.
-            // Wait a second and try again.
-            setTimeout(function() {
-                initEnvironment(token, workspaceId);
-            }, 1000);
-        }
-    };
-
     /*
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.
@@ -72,6 +43,8 @@ narrative.init = function() {
             loadingImage: "/static/kbase/images/ajax-loader.gif",
             ws_id: IPython.notebook.metadata.ws_name
         });
+
+        jobsWidget.refresh();
     });
 };
 

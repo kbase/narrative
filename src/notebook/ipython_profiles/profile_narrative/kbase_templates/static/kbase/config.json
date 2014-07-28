@@ -34,6 +34,6 @@
         "landing_pages" : "http://demo.kbase.us/functional-site/#/",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
         "genomeCmp" : "https://kbase.us/services/genome_comparison/jsonrpc",
-        "trees" : "http://198.128.58.219:7047"
+        "trees" : "https://kbase.us/services/trees"
     }
 }

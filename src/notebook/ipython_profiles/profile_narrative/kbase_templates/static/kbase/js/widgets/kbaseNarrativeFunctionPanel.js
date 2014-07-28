@@ -111,8 +111,10 @@
 
             prom.fail($.proxy(function(error) {
                     this.showLoadingMessage("Unable to load from cache, waiting on kernel...");
+
                     $([IPython.events]).one('status_started.Kernel', $.proxy(function() {
-                        this.refresh();
+                        console.log("Pausing for 500 ms before requesting service info from kernel");
+                        setTimeout( $.proxy(function() { this.refresh(); }, this), 500 );
                     }, this));
                 }, this)
             );

@@ -163,7 +163,7 @@ c.NotebookApp.kbase_auth = True
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-c.IPKernelApp.exec_lines = ['import biokbase.narrative.magics']
+c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics' ]
 
 # The importstring for the OutStream factory
 # c.IPKernelApp.outstream_class = 'IPython.zmq.iostream.OutStream'
@@ -495,7 +495,6 @@ c.IPKernelApp.exec_lines = ['import biokbase.narrative.magics']
 # c.NotebookManager.save_script = False
 
 # The directory to use for notebooks.
-# c.NotebookManager.notebook_dir = u'/Users/sychan/src/kbase/dev_container/modules/narrative/src'
 c.NotebookApp.notebook_manager_class='biokbase.narrative.kbasewsmanager.KBaseWSNotebookManager'
 
 #----------------------

@@ -18,11 +18,12 @@
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
         "genomeCmp" : "http://140.221.85.57:8283/jsonrpc",
         "narrative_job_proxy" : "http://140.221.67.185:7068"
+        "genomeCmp" : "http://dev06.berkeley.kbase.us:8283/jsonrpc",
+        "trees" : "http://140.221.67.152:7047"
     },
 
     "prod": {
         "fba" : "http://kbase.us/services/fba_model_services/",
-        "glamm" : "https://140.221.84.217:7040/glamm/#",
         "invocation" : "https://kbase.us/services/invocation",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
         "protein_info" : "https://kbase.us/services/protein_info_service",
@@ -34,6 +35,7 @@
         "ws_browser" : "https://demo.kbase.us/functional-site/#/ws",
         "landing_pages" : "http://demo.kbase.us/functional-site/#/",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
-        "genomeCmp" : "http://140.221.85.57:8283/jsonrpc"
+        "genomeCmp" : "https://kbase.us/services/genome_comparison/jsonrpc",
+        "trees" : "https://kbase.us/services/trees"
     }
 }

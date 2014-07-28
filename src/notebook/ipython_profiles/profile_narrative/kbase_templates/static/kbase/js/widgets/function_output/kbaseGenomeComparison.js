@@ -4,7 +4,6 @@ $.KBWidget({
     name: "GenomeComparisonWidget",
     parent: "kbaseAuthenticatedWidget",
     version: "1.0.0",
-    token: null,
 	ws_name: null,
 	job_id: null,
 	ws_id: null,
@@ -14,14 +13,14 @@ $.KBWidget({
     	ws_id: null
     },
 
-    wsUrl: "https://kbase.us/services/ws/",
+    wsUrl: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
     jobSrvUrl: "https://kbase.us/services/userandjobstate/",
-    cmpImgUrl: "http://140.221.85.57:8283/image",
+    cmpImgUrl: "https://kbase.us/services/genome_comparison/image",  //"http://dev06.berkeley.kbase.us:8283/image",
     loadingImage: "static/kbase/images/ajax-loader.gif",
     timer: null,
     geneRows: 21,
     geneRowH: 21,
-	pref: (new Date()).getTime(),
+	pref: null,
     size: 500,
     imgI: 0,
     imgJ: 0,
@@ -32,12 +31,14 @@ $.KBWidget({
     geneJ: -1,
     dirJ: 1,
     cmp: null,
+    cmp_ref: null,
 
     init: function(options) {
         this._super(options);
         this.ws_name = options.ws_name;
         this.job_id = options.job_id;
         this.ws_id = options.ws_id;
+    	this.pref = this.uuid();
         return this;
     },
     
@@ -45,20 +46,36 @@ $.KBWidget({
         var self = this;
         var container = this.$elem;
     	container.empty();
-        if (self.token == null) {
+        if (!self.authToken()) {
         	container.append("<div>[Error] You're not logged in</div>");
         	return;
         }
 
-        var kbws = new Workspace(this.wsUrl, {'token': self.token});
-        var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.token});
+        var kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
+        var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.authToken()});
 
         var dataIsReady = function() {
+        	var cmp_ref = self.cmp_ref;
+        	if (!cmp_ref)
+        		cmp_ref = self.ws_name + "/" + self.ws_id;
+            kbws.get_objects([{ref: cmp_ref}], function(data) {
+            	self.cmp = data[0].data;
+            	var info = data[0].info;
+            	self.cmp_ref = info[6] + "/" + info[0] + "/" + info[4];
+            	cmpIsLoaded();
+        	}, function(data) {
+            	var tdElem = $('#'+self.pref+'job');
+				tdElem.html("Error accessing comparison object: " + data.error.message);
+            });
+        };
+        var cmpIsLoaded = function() {
         	container.empty();
             container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading comparison data...</div>");
-            kbws.get_objects([{ref: self.ws_name + "/" + self.ws_id}], function(data) {
-            	container.empty();
-            	self.cmp = data[0].data;
+        	kbws.get_object_subset([{ref: self.cmp.genome1ref, included: ["scientific_name"]},
+        	                        {ref: self.cmp.genome2ref, included: ["scientific_name"]}], function(data) {
+            	var genome1id = data[0].data.scientific_name;
+            	var genome2id = data[1].data.scientific_name;
+        		container.empty();
             	var table = $('<table/>')
             		.addClass('table table-bordered')
             		.css({'margin-left': 'auto', 'margin-right': 'auto'});
@@ -77,9 +94,9 @@ $.KBWidget({
     					count2hits++;
     			}
             	table.append(createTableRow("Comparison object", self.ws_id));
-            	table.append(createTableRow("Genome1 (x-axis)", self.cmp.genome1id + 
+            	table.append(createTableRow("Genome1 (x-axis)", genome1id + 
             			" (" + self.cmp.proteome1names.length + " genes, " + count1hits + " have hits)"));
-            	table.append(createTableRow("Genome2 (y-axis)", self.cmp.genome2id + 
+            	table.append(createTableRow("Genome2 (y-axis)", genome2id + 
             			" (" + self.cmp.proteome2names.length + " genes, " + count2hits + " have hits)"));
             	if (self.scale == null)
             		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
@@ -242,10 +259,10 @@ $.KBWidget({
             	});
             }, function(data) {
             	var tdElem = $('#'+self.pref+'job');
-				tdElem.html("Error accessing comparison object: " + data.error.message);
+				tdElem.html("Error accessing genome objects: " + data.error.message);
             });
         };
-    	if (self.job_id == null) {
+    	if (self.job_id == null || self.cmp_ref != null) {
     		dataIsReady();
     	} else {
         	var panel = $('<div class="loader-table"/>');
@@ -270,7 +287,7 @@ $.KBWidget({
         				clearInterval(self.timer);
 					
         				if (wasError === 0) {
-            				dataIsReady();
+        					dataIsReady();
         				}
         			}
         		}, function(data) {
@@ -331,7 +348,7 @@ $.KBWidget({
 		self.imgI = Math.round(self.imgI);
 		self.imgJ = Math.round(self.imgJ);
 		var img = self.cmpImgUrl + "?ws=" + self.ws_name + "&id=" + self.ws_id + "&x=" + self.imgI + 
-				"&y=" + self.imgJ + "&w=" + self.size + "&sp=" + self.scale + "&token=" + encodeURIComponent(self.token);
+				"&y=" + self.imgJ + "&w=" + self.size + "&sp=" + self.scale + "&token=" + encodeURIComponent(self.authToken());
 		$('#'+self.pref+'img').attr('src', img);
 		self.refreshDetailedRect();
 	},
@@ -445,13 +462,13 @@ $.KBWidget({
 	},
 
     loggedInCallback: function(event, auth) {
-        this.token = auth.token;
+        //this.token = auth.token;
         this.render();
         return this;
     },
 
     loggedOutCallback: function(event, auth) {
-        this.token = null;
+        //this.token = null;
         this.render();
         return this;
     },
@@ -467,16 +484,13 @@ $.KBWidget({
         	    geneI: self.geneI,
         	    dirI: self.dirI,
         	    geneJ: self.geneJ,
-        	    dirJ: self.dirJ
+        	    dirJ: self.dirJ,
+        	    cmp_ref: self.cmp_ref
         };
-        console.log("getState:")
-        console.log(state);
         return state;
     },
 
     loadState: function(state) {
-        console.log("loadState:")
-        console.log(state);
         if (!state)
             return;
         var self = this;
@@ -487,10 +501,23 @@ $.KBWidget({
 	    self.dirI = state.dirI;
 	    self.geneJ = state.geneJ;
 	    self.dirJ = state.dirJ;
+	    self.cmp_ref = state.cmp_ref;
     	if (self.scale == null)
     		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
-	    self.refreshImage();
-	    self.refreshGenes();
+    	if (!self.cmp) {
+    		self.render();
+    	} else {
+    		self.refreshImage();
+    		self.refreshGenes();
+    	}
+    },
+    
+    uuid: function() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+            function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);
+            });
     }
 })
 }( jQuery ) );

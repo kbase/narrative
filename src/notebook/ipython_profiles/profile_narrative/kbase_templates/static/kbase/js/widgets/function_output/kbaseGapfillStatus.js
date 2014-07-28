@@ -46,7 +46,7 @@
 
         render: function(options) {
             var self = this;
-            var pref = (new Date()).getTime();
+            var pref = this.uuid();
             var container = this.$elem;
             var job_data = options.job_data
             var kbws = new workspaceService(this.wsUrl);
@@ -114,5 +114,13 @@
 
             return this;
         },
+
+        uuid: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+                function(c) {
+                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                    return v.toString(16);
+                });
+        }
     });
 })(jQuery);

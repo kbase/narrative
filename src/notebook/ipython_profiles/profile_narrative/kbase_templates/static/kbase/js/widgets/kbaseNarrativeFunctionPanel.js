@@ -99,17 +99,40 @@
             return this;
         },
         
+        refreshAJAX: function() {
+            this.showLoadingMessage("Loading available KBase Services...");
+
+            var prom = $.getJSON('static/kbase/services.json', $.proxy(
+                function(serviceSet) {
+                    this.populateFunctionList(serviceSet);
+                    this.showFunctionPanel();
+                }, this)
+            );
+
+            prom.fail($.proxy(function(error) {
+                    this.showLoadingMessage("Unable to load from cache, waiting on kernel...");
+
+                    $([IPython.events]).one('status_started.Kernel', $.proxy(function() {
+                        console.log("Pausing for 500 ms before requesting service info from kernel");
+                        setTimeout( $.proxy(function() { this.refresh(); }, this), 500 );
+                    }, this));
+                }, this)
+            );
+        },
+
         /**
          * Refreshes the list of loaded functions.
          * This makes a kernel call, fetches the list of functions as an object,
          * pulls out necessary fields, and constructs the function list from them.
          * @private
          */
-        refresh: function() {
+        refresh: function(msg) {
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel)
                 return;
 
-            this.showLoadingMessage("Loading available KBase Services...");
+            if (!msg)
+                msg = "Loading available KBase Services...";
+            this.showLoadingMessage(msg);
 
             // Command to load and fetch all functions from the kernel
             var fetchFunctionsCommand = 'import biokbase.narrative.common.service_root as root\n' + 
@@ -178,12 +201,18 @@
          * @private
          */
         populateFunctionList: function(serviceSet) {
+            var totalFunctions = 0;
+            var totalServices = 0;
+
             var serviceAccordion = [];
 
             for (var serviceName in serviceSet) {
+                totalServices++;
+
                 var $methodList = $('<ul>');
                 var service = serviceSet[serviceName];
                 for (var i=0; i<service.methods.length; i++) {
+                    totalFunctions++;
                     var method = service.methods[i];
                     method['service'] = serviceName;
                     $methodList.append(this.buildFunction(method));
@@ -194,6 +223,9 @@
                     'body' : $methodList
                 });
             }
+
+            // console.log("Total Services: " + totalServices);
+            // console.log("Total Functions: " + totalFunctions);
 
             this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
         },

@@ -10,22 +10,12 @@ var narrative = {};
 narrative.init = function() {
     var token = null;
     var narr_ws = null;
-    
-    $(document).on('loggedIn.kbase', function(event, token) {
-        token = $('#signin-button').kbaseLogin('session', 'token');
-    });
-
-    $(document).on('loggedOut.kbase', function(event, token) {
-        if (narr_ws)
-          narr_ws.loggedOut(token);
-        window.location.href = '/';
-    });
 
     var dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
     dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
     var functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
-    functionWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+    functionWidget.refreshAJAX();
 
     var jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
     jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
@@ -66,10 +56,11 @@ narrative.init = function() {
     $([IPython.events]).one('status_started.Kernel', function() {
 
         var workspaceId = null;
-        if (IPython.notebook.metadata) {
+        if (IPython && IPython.notebook && IPython.notebook.metadata) {
             workspaceId = IPython.notebook.metadata.ws_name;                
         }
-        token = $('#signin-button').kbaseLogin('session', 'token');
+
+        IPython.notebook.set_autosave_interval(0);
 
         if (workspaceId) {
             $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objtable/' + workspaceId);
@@ -81,9 +72,6 @@ narrative.init = function() {
             loadingImage: "/static/kbase/images/ajax-loader.gif",
             ws_id: IPython.notebook.metadata.ws_name
         });
-
-        narr_ws.loggedIn(token);
-        initEnvironment(token, workspaceId);
     });
 };
 

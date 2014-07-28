@@ -494,7 +494,7 @@ def view_phenotype(meth, phenotype_set_id):
 
     :return: Phenotype Set Data
     :rtype: kbtypes.KBasePhenotypes.PhenotypeSet
-    :output_widget:  
+    :output_widget: kbasePhenotypeSet
     """
     meth.stages = 2  # for reporting progress
     meth.advance("Starting...")

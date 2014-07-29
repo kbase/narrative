@@ -158,7 +158,7 @@
             for (var i=0; i<narrJobs.length; i++) {
                 if (uniqueJobs.hasOwnProperty(narrJobs[i].id))
                     continue;
-                uniqueJobs[narrJobs[i].id] = 1;
+                uniqueJobs[narrJobs[i].id] = narrJobs[i];
                 jobList.push("'" + narrJobs[i].id + "'");
             }
 
@@ -229,7 +229,6 @@
             for (var i=0; i<jobs.length; i++) {
                 $jobTable.append(this.renderJob(jobs[i]));
             }
-            console.log($jobTable);
             this.$jobsPanel.empty().append($jobTable);
         },
 
@@ -258,30 +257,57 @@
         },
 
         makeJobDetailButton: function(job) {
-            var showDetailModal = function(job) {
+            var showDetailModal = function(job, sourceId) {
                 var $modalBody = $('<div>');
+                var buttonList = [
+                    {
+                        name : 'Close',
+                        type : 'primary',
+                        callback : function(e, $prompt) {
+                            $prompt.closePrompt();
+                        },
+                    }
+                ];
+
+                if (sourceId) {
+                    buttonList.push({
+                        name : 'Scroll To',
+                        type : 'primary',
+                        callback : function(e, $prompt) {
+                            $prompt.closePrompt();
+                            $('#' + sourceId).click();
+                            $('html, body').animate({ scrollTop: $('#' + sourceId).offset().top-160 }, 1000);
+                        }
+                    });
+                }
+                else {
+                    buttonList.push({
+                        name : 'Unknown source',
+                        type : 'default disabled'
+                    });
+                }
                 $('<div>').kbasePrompt(
                     {
-                        title: 'Job Details',
-                        body: $modalBody,
-                        controls : [
-                            {
-                                name: 'Close',
-                                type : 'primary',
-                                callback : function(e, $prompt) {
-                                    $prompt.closePrompt();
-                                },
-                            }
-                        ]
+                        title : 'Job Details',
+                        body : $modalBody,
+                        controls : buttonList
                     }
                 ).openPrompt();
                 $modalBody.kbaseJobWatcher({ jobInfo : job });
             };
 
+            var sourceId = "";
+            // fuck, looping through for now.
+            var jobs = IPython.notebook.metadata.job_ids;
+            for (var i=0; i<jobs.length; i++) {
+                if (jobs[i].id === job[0])
+                    sourceId = jobs[i].source;
+            }
+
             var $btn = $('<span>')
                        .addClass('glyphicon glyphicon-info-sign kb-function-help')
                        .click(function(e) {
-                           showDetailModal(job);
+                           showDetailModal(job, sourceId);
                        });
 
             return $btn;

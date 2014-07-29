@@ -840,7 +840,7 @@
                                     case 'J':
                                         var jobId = matches[2];
                                         self.dbg("[JOB ID] " + jobId);
-                                        self.registerJobId(jobId);
+                                        self.registerJobId(jobId, cell);
                                         break;
 
                                     default:
@@ -877,21 +877,26 @@
          * This stores the job id in the Narrative's metadata.
          * XXX: Should this trigger a save?
          */
-        registerJobId: function(jobId) {
+        registerJobId: function(jobId, sourceCell) {
+            // This is possibly the ugliest hack here. In the future, all cells should actually know their 
+            // fancy UUIDs. But that *might* be backwards incompatible with existing narratives that we want
+            // to show off.
+            //
+            // Really, all cells should be "NarrativeInput" or "NarrativeOutput" widgets that wrap their actual
+            // contents, and we can poke those widgets for their IDs. But that's later.
+            var txt = sourceCell.get_text();
+            var cellId = 'unknown';
+
+            if (txt)
+                cellId = $('<div>').append(txt).find('.panel').attr('id');
+
             var narJobInfo = {
                 id : jobId,
-                source : '',
+                source : cellId,
                 target : '',
             };
 
             this.trigger('registerJob.Narrative', narJobInfo);
-            // var metadata = IPython.notebook.metadata;
-            // this.trigger('')
-            // metadata.job_ids.push({
-            //     'id' : jobId,       // the job id itself, from the ujs (or wherever)
-            //     'source' : '',      // the function that triggered this job
-            //     'target' : '',      // the id of the output cell that this id is linked with
-            // });
         },
 
         /**

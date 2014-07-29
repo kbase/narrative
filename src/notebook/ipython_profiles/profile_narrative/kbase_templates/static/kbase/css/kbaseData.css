@@ -12,8 +12,11 @@ div[class="tooltip-inner"] {
 .tooltip {
     z-index: 2000 !important;
 }
+
 .kb-data-main-panel {
     height: 100%;
+    margin-bottom: 5px;
+    max-height: 425px;
 }
 
 #kb-ws {

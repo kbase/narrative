@@ -25,13 +25,12 @@ narrative.init = function() {
      * Go ahead and fill in the rest of the Javascript stuff.
      */
     $([IPython.events]).one('status_started.Kernel', function() {
+        IPython.notebook.set_autosave_interval(0);
 
         var workspaceId = null;
         if (IPython && IPython.notebook && IPython.notebook.metadata) {
-            workspaceId = IPython.notebook.metadata.ws_name;                
+            workspaceId = IPython.notebook.metadata.ws_name;
         }
-
-        IPython.notebook.set_autosave_interval(0);
 
         if (workspaceId) {
             $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objtable/' + workspaceId);
@@ -44,8 +43,7 @@ narrative.init = function() {
             ws_id: IPython.notebook.metadata.ws_name
         });
 
-        jobsWidget.refresh();
+        // still needs to wait ~500ms for some godawful reason.
+        setTimeout( function() { jobsWidget.refresh(); }, 500);
     });
 };
-
-

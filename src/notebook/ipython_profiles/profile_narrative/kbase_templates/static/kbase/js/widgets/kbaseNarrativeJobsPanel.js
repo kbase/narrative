@@ -142,18 +142,23 @@
          */
         refresh: function() {
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || 
-                !IPython.notebook.metadata || !IPython.notebook.metadata.job_ids)
+                !IPython.notebook.metadata)
                 return;
 
-            this.showLoadingMessage("Loading running jobs...");
+            if (!IPython.notebook.metadata.job_ids) {
+                this.showMessage('No running jobs!');
+                return;
+            }
+
+            this.showLoadingMessage('Loading running jobs...');
 
             var narrJobs = IPython.notebook.metadata.job_ids;
             var uniqueJobs = {};
             var jobList = [];
             for (var i=0; i<narrJobs.length; i++) {
-                if (uniqueJobs.hasOwnProperty(narrJobs[i]))
+                if (uniqueJobs.hasOwnProperty(narrJobs[i].id))
                     continue;
-                uniqueJobs[narrJobs[i]] = 1;
+                uniqueJobs[narrJobs[i].id] = 1;
                 jobList.push("'" + narrJobs[i].id + "'");
             }
 
@@ -173,16 +178,16 @@
                     this.parseKernelResponse(msgType, content); 
                 }, this),
                 'execute_reply' : $.proxy(function(content) { 
-                    this.handleCallback("execute_reply", content); 
+                    this.handleCallback('execute_reply', content); 
                 }, this),
                 'clear_output' : $.proxy(function(content) { 
-                    this.handleCallback("clear_output", content); 
+                    this.handleCallback('clear_output', content); 
                 }, this),
                 'set_next_input' : $.proxy(function(content) { 
-                    this.handleCallback("set_next_input", content); 
+                    this.handleCallback('set_next_input', content); 
                 }, this),
                 'input_request' : $.proxy(function(content) { 
-                    this.handleCallback("input_request", content); 
+                    this.handleCallback('input_request', content); 
                 }, this),
             };
 
@@ -206,11 +211,11 @@
         },
 
         handleCallback: function(call, content) {
-            if (content.status === "error") {
+            if (content.status === 'error') {
                 this.showError(content);
             }
             else {
-                console.debug("kbaseJobManagerPanel." + call);
+                console.debug('kbaseJobManagerPanel.' + call);
                 console.debug(content);
             }
         },
@@ -233,28 +238,22 @@
             if (!job || job.length < 12) {
                 return $row;
             }
-            $row.append($("<div class='kb-jobs-title'>").append(job[1]).append(this.makeJobDetailButton(job)));
-            $row.append($("<div class='kb-jobs-descr'>").append(job[12]));
+            $row.append($('<div class="kb-jobs-title">').append(job[1]).append(this.makeJobDetailButton(job)));
+            $row.append($('<div class="kb-jobs-descr">').append(job[12]));
 
             var $itemTable = $('<table class="kb-jobs-info-table">');
             var $statusRow = $('<tr>').append($('<th>').append('Status:'));
             $statusRow.append($('<td>').append(this.makeStatusElement(job)));
             $itemTable.append($statusRow);
             if (job[9] != null) {
-              var $startedRow = $('<tr>').append($('<th>').append('Started:'));
-              var $startedCell = $("<td>");
-              $startedCell.append(this.makePrettyTimestamp(job[9], " remaining"));
-              $startedRow.append($startedCell);
-              $itemTable.append($startedRow);
+                var $startedRow = $('<tr>').append($('<th>').append('Est. Finish:'));
+                var $startedCell = $('<td>');
+                $startedCell.append(this.makePrettyTimestamp(job[9], ' remaining'));
+                $startedRow.append($startedCell);
+                $itemTable.append($startedRow);
             }
             
-
             $row.append($itemTable);
-
-        /*    $row.append($('<td>').append(job[1]));
-            $row.append($('<td>').append(job[12]));
-            $row.append($('<td>').append(this.makeStatusElement(job)));
-            $row.append($('<td>').append(this.makeJobDetailButton(job))); */
             return $row;
         },
 
@@ -303,37 +302,37 @@
          * @private
          */
         makeStatusElement: function(job) {
-            var status = "<div job-id='" + job[0] + "'>";
-            var deleteSpan = "<span class='pull-right glyphicon glyphicon-remove kbujs-delete-job' data-toggle='tooltip' title='Delete Job'></span>";
+            var status = '<div job-id="' + job[0] + '">';
+            var deleteSpan = '<span class="pull-right glyphicon glyphicon-remove kbujs-delete-job" data-toggle="tooltip" title="Delete Job"></span>';
 
             if (job[11] === 1)
-                status += "<span class='kbujs-error-cell kbujs-error' error-job-id='" + job[0] + "'>" +
-                              "<span class='glyphicon glyphicon-exclamation-sign'></span>" +
-                              "&nbsp;Error: " +
+                status += '<span class="kbujs-error-cell kbujs-error" error-job-id="' + job[0] + '">' +
+                              '<span class="glyphicon glyphicon-exclamation-sign"></span>' +
+                              '&nbsp;Error: ' +
                               job[4] +
-                          "</span>" +
+                          '</span>' +
                           deleteSpan;
             else if (job[10] === 1)
-                status += "<span>Complete: " + job[4] + "</span>" + deleteSpan;
+                status += '<span>Complete: ' + job[4] + '</span>' + deleteSpan;
             else {
-                status = "<div>" + job[4];
+                status = '<div>' + job[4];
                 var progressType = job[8].toLowerCase();
                 var progress = job[6];
                 var max = job[7];
 
-                if (progressType === "percent") {
-                    status += " (" + progress + "%)</div>";
+                if (progressType === 'percent') {
+                    status += ' (' + progress + '%)</div>';
                 }
-                if (progressType === "task") {
-                    status += " (" + progress + " / " + max + ")</div>";
+                if (progressType === 'task') {
+                    status += ' (' + progress + ' / ' + max + ')</div>';
                 }
-                if (progressType !== "none") {
-                    status +=  "<div class='pull-right' style='width: 75%'>" + this.makeProgressBarElement(job, false) + "</div></div>";
+                if (progressType !== 'none') {
+                    status +=  '<div class="pull-right" style="width: 75%">' + this.makeProgressBarElement(job, false) + '</div></div>';
                 }
 
                 
             }
-            return status + "</div>";
+            return status + '</div>';
         },
 
         /**
@@ -355,7 +354,7 @@
             var timediff = this.calcTimeDifference(null, d);
             var timeMillis = d ? d.getTime() : "";
 
-            var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "' millis='" + timeMillis + "' class='kbujs-timestamp'>" + timediff + "</div>";
+            var timeHtml = '<div href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" class="kbujs-timestamp">' + timediff + '</div>';
             return timeHtml;
         },
 
@@ -442,32 +441,32 @@
             var max = job[7] || 0;
             var progress = job[6] || 0;
 
-            if (type === "percent") {
-                var bar = "";
+            if (type === 'percent') {
+                var bar = '';
                 if (showNumber)
-                    bar += progress + "%";
+                    bar += progress + '%';
 
-                return bar + "<div class='progress' style='margin-bottom: 0; pull-right;'>" + 
-                           "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
-                               progress + "' aria-valuemin='0' aria-valuemax='100' style='width: " + 
-                               progress + "%;'>" +
-                               "<span class='sr-only'>" + progress + "% Complete" + "</span>" +
-                           "</div>" +
-                       "</div>";
+                return bar + '<div class="progress" style="margin-bottom: 0; pull-right;">' + 
+                               '<div class="progress-bar" role="progressbar" aria-valuenow="' + 
+                                 progress + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + 
+                                 progress + '%;">' +
+                                 '<span class="sr-only">' + progress + '% Complete</span>' +
+                               '</div>' +
+                             '</div>';
             }
             else {
-                var bar = "";
+                var bar = '';
                 if (showNumber)
-                    bar += progress + " / " + max;
-                return bar + "<div class='progress' style='margin-bottom: 0'>" + 
-                           "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
-                           progress + "' aria-valuemin='0' aria-valuemax='" + max + "' style='width: " + 
-                           (progress / max * 100) + "%;'>" +
-                               "<span class='sr-only'>" + progress + " / " + max + "</span>" +
-                           "</div>" +
-                       "</div>";
+                    bar += progress + ' / ' + max;
+                return bar + '<div class="progress" style="margin-bottom: 0">' + 
+                           '<div class="progress-bar" role="progressbar" aria-valuenow="' + 
+                           progress + '" aria-valuemin="0" aria-valuemax="' + max + '" style="width: ' + 
+                           (progress / max * 100) + '%;">' +
+                               '<span class="sr-only">' + progress + ' / ' + max + '</span>' +
+                           '</div>' +
+                       '</div>';
             }
-            return "<div></div>";
+            return '<div></div>';
         },
 
         /**
@@ -502,15 +501,15 @@
             var addLeadingZeroes = function(value) {
                 value = String(value);
                 if (value.length === 1)
-                    return "0" + value;
+                    return '0' + value;
                 return value;
             };
 
-            return d.getFullYear() + "-" + 
-                   addLeadingZeroes((d.getMonth() + 1)) + "-" + 
-                   addLeadingZeroes(d.getDate()) + " " + 
-                   addLeadingZeroes(d.getHours()) + ":" + 
-                   addLeadingZeroes(d.getMinutes()) + ":" + 
+            return d.getFullYear() + '-' + 
+                   addLeadingZeroes((d.getMonth() + 1)) + '-' + 
+                   addLeadingZeroes(d.getDate()) + ' ' + 
+                   addLeadingZeroes(d.getHours()) + ':' + 
+                   addLeadingZeroes(d.getMinutes()) + ':' + 
                    addLeadingZeroes(d.getSeconds());
         },
 
@@ -532,42 +531,42 @@
                 time = dateObj;
 
             if (time === null)
-                return "Unknown time";
+                return 'Unknown time';
 
             // start with seconds
             var timeRem = Math.abs((time - now) / 1000 );
-            var unit = " sec";
+            var unit = ' sec';
 
             // if > 60 seconds, go to minutes.
             if (timeRem >= 60) {
                 timeRem /= 60;
-                unit = " min";
+                unit = ' min';
 
                 // if > 60 minutes, go to hours.
                 if (timeRem >= 60) {
                     timeRem /= 60;
-                    unit = " hrs";
+                    unit = ' hrs';
 
                     // if > 24 hours, go to days
                     if (timeRem >= 24) {
                         timeRem /= 24;
-                        unit = " days";
+                        unit = ' days';
                     }
 
                     // now we're in days. if > 364.25, go to years)
                     if (timeRem >= 364.25) {
                         timeRem /= 364.25;
-                        unit = " yrs";
+                        unit = ' yrs';
 
                         // now we're in years. just for fun, if we're over a century, do that too.
                         if (timeRem >= 100) {
                             timeRem /= 100;
-                            unit = " centuries";
+                            unit = ' centuries';
 
                             // ok, fine, i'll do millennia, too.
                             if (timeRem >= 10) {
                                 timeRem /= 10;
-                                unit = " millennia";
+                                unit = ' millennia';
                             }
                         }
                     }
@@ -575,11 +574,11 @@
             }
 
 
-            var timediff = "~" + timeRem.toFixed(1) + unit;
+            var timediff = '~' + timeRem.toFixed(1) + unit;
             if (time > now)
-                timediff += " from now";
+                timediff += ' from now';
             else
-                timediff += " ago";
+                timediff += ' ago';
 
             return timediff;
         },

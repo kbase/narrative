@@ -90,20 +90,22 @@ class KBjobManager():
             try:
                 info_list.append(self.poll_job(job_id, ujs_proxy))
             except Exception:
-                info_list.append([job_id, 
-                                  u'error', 
-                                  u'error', 
-                                  u'0000-00-00T00:00:00+0000', 
-                                  u'error', 
-                                  u'0000-00-00T00:00:00+0000', 
-                                  None, 
-                                  None, 
-                                  u'error',
-                                  u'0000-00-00T00:00:00+0000',
-                                  0,
-                                  0,
-                                  u'error',
-                                  None])
+                raise
+                # info_list.append([job_id, 
+                #                   u'error', 
+                #                   u'error', 
+                #                   u'0000-00-00T00:00:00+0000', 
+                #                   u'error', 
+                #                   u'0000-00-00T00:00:00+0000', 
+                #                   None, 
+                #                   None, 
+                #                   u'error',
+                #                   u'0000-00-00T00:00:00+0000',
+                #                   0,
+                #                   0,
+                #                   u'error',
+                #                   None])
+
         if as_json:
             import json
             info_list = json.dumps(info_list)

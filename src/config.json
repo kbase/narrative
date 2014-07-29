@@ -11,15 +11,15 @@
         "reset_password" : "https://gologin.kbase.us/ResetPassword",
         "update_profile" : "https://gologin.kbase.us/account/UpdateProfile",
         "uploader" : "http://kbase.us/services/docs/uploader/uploader.html",
-        "user_and_job_state" : "https://140.221.67.151/services/userandjobstate",
         "workspace" : "http://dev04.berkeley.kbase.us:7058",
         "ws_browser" : "http://narrative.kbase.us/functional-site/#/ws",
         "landing_pages" : "http://narrative.kbase.us/functional-site/#/",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
         "genomeCmp" : "http://140.221.85.57:8283/jsonrpc",
-        "narrative_job_proxy" : "http://140.221.67.185:7068"
-        "genomeCmp" : "http://dev06.berkeley.kbase.us:8283/jsonrpc",
-        "trees" : "http://140.221.67.152:7047"
+        "user_and_job_state" : "http://140.221.67.185:7083",
+        "narrative_job_proxy" : "http://140.221.67.185:7068",
+        "trees" : "http://140.221.67.152:7047",
+        "awe" : "http://140.221.67.185:7080"
     },
 
     "prod": {

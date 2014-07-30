@@ -18,6 +18,7 @@
 	ws_url: null,
 	ws_name: null,
 	fba_url: null,
+	state: {},
 
         init: function(options) {
             this._super(options);
@@ -112,7 +113,12 @@
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
+	    //// If assembly has been run, restore stuff
+
+
+
 	    asm_btn.one("click", function() {
+		self.state['clicked'] = true;
                 var recipe = [asm_choose.find('select option:selected').val()];
                 var desc = asm_desc.find('input').val();
 		
@@ -313,7 +319,7 @@
 	getState: function(){
 	    var self = this;
 	    console.log('get state')
-	    var state = {job_id: self.job_id};
+	    var state = self.state;
 	    console.log(state);
 	    return state;
 	},
@@ -322,8 +328,15 @@
 	    var self = this;
 	    console.log(self);
 	    console.log('load state');
-	    console.log(state);
-	    
+	    self.state = state;
+	    console.log(self.state);	    
+	    if (self.state['clicked']) {
+		console.log('assembly already run')
+		self.$elem.find('fieldset').attr('disabled', "true");
+	    } else{
+		console.log('not run yet')
+	    }
+
 	},
 
 	showResults: function(token, assemblies, best, route, report){

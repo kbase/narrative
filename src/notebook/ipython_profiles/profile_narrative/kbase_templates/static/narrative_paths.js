@@ -104,6 +104,7 @@ console.log("WAT?");
 				'kbaseDeletePrompt'                 : 'kbase/js/ui-common/src/widgets/kbaseDeletePrompt',
 				'kbaseErrorPrompt'                  : 'kbase/js/ui-common/src/widgets/kbaseErrorPrompt',
 				'kbaseFormBuilder'                  : 'kbase/js/ui-common/src/widgets/kbaseFormBuilder',
+                'kbaseGeneTable'                    : 'kbase/js/ui-common/src/widgets/kbaseGeneTable'
 				'kbaseLogin'                        : 'kbase/js/ui-common/src/widgets/kbaseLogin',
 				'kbaseLoginFuncSite'                : 'kbase/js/ui-common/src/widgets/kbaseLoginFuncSite',
 				'kbaseModal'                        : 'kbase/js/ui-common/src/widgets/kbaseModal',

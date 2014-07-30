@@ -299,7 +299,7 @@
     </a>
 
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-      <ul class="nav navbar-nav">
+      <!-- <ul class="nav navbar-nav">
         <li class="dropdown active">
           <a href="/functional-site/#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
           <ul class="dropdown-menu">
@@ -310,6 +310,16 @@
         <li><a href="/functional-site/#/search/?q=*">Search Data</a></li>
         <li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li>
         <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>
+      </ul> -->
+
+      <ul class="nav navbar-nav"> 
+     
+          <li class="active"><a href="/functional-site/#/narratives/">Narratives</a></li>
+          <li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li>
+          <li>
+              <li><a href="/functional-site/#/search/?q=*">Search Data</a></li>
+          </li>
+          <li><a target="_blank" href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>          
       </ul>
 
       <div id="signin-button" class="pull-right"></div>
@@ -350,9 +360,9 @@
         <div id="app" class="wrapper" ui-view></div>
 
         </div> <!-- end wrap, this pushes the footer down -->
-            <div id="footer">
+        <!--    <div id="footer">
               <div class="disclaimer">This site is for demonstration purposes only.</div>
-            </div>
+            </div> -->
 
 <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -364,7 +374,9 @@
                                async: false,
                                dataType: 'json'
                              }).responseText );
-  window.kb = { urls : configJSON[configJSON['config']] };
+  window.kbconfig = { urls : configJSON[configJSON['config']], 
+                      version: configJSON['version'],
+                      name: configJSON['name'] };
 </script>
 
 <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>

@@ -19,6 +19,7 @@ import sys
 import types
 import re
 import biokbase.narrative.upload_handler
+from biokbase.narrative.common.url_config import URLS
 
 from IPython.core.display import display, Javascript
 from ast import literal_eval
@@ -38,8 +39,10 @@ inv_cwd = '/'
 have_browser = None
 
 # End points for various services
-endpoint = { 'invocation' : 'https://kbase.us/services/invocation',
-             'workspace' : 'https://kbase.us/services/ws/' }
+endpoint = { 'invocation' : URLS.invocation,
+             'workspace' : URLS.workspace }
+# endpoint = { 'invocation' : 'https://kbase.us/services/invocation',
+#              'workspace' : 'https://kbase.us/services/ws/' }
 
 # IPython interpreter object
 ip = None

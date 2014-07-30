@@ -25,7 +25,7 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
 from biokbase.Jnomics.jnomics_api import JnomicsData, JnomicsCompute
-from biokbase.Jnomics.jnomics_api.ttypes import Authentication, JnomicsThriftException 
+from biokbase.Jnomics.jnomics_api.ttypes import Authentication, JnomicsThriftException
 from biokbase.Jnomics.jnomics_api.ttypes import JnomicsThriftJobStatus, JnomicsThriftJobID , JnomicsThriftHandle
 
 from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
@@ -112,7 +112,7 @@ class WSTYPES:
 class IDServerids:
     ### variation
     var_vcf = 'kb|variant'
-    ###RNASeq 
+    ###RNASeq
     rnaseq_expsample = 'kb|sample'
     rnaseq_series = 'kb|series'
     rnaseq_alignment = 'kb|alignment'
@@ -121,12 +121,12 @@ class IDServerids:
 
 # Init logging.
 _log = logging.getLogger(__name__)
-    
+
 init_service(name = NAME, desc="Variation and Expression service", version = VERSION)
 
 clients = {}
 
-    
+
 ##
 ##Decorators for control logic
 ##
@@ -278,7 +278,7 @@ def prepareInputfiles(token,workspace=None,files=None,wstype=None):
     files = files.split(",")
     for nfile in files:
         filename = os.path.basename(nfile)
-        try: 
+        try:
             obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
         except FileNotFound as e:
             raise FileNotFound("File Not Found: {}".format(err))
@@ -289,7 +289,7 @@ def prepareInputfiles(token,workspace=None,files=None,wstype=None):
             meta.append(obj['data']['metadata'])
         shockfilename = filename.replace("|","_")
         job_ids.append(readShock(node_id,shockfilename,auth))
-        
+
     for jid in job_ids:
         status = pollGridJob(jid, auth)
         if status and not status.running_state == 2:
@@ -301,7 +301,7 @@ def shockfileload(auth,filename=None,filepath=None):
     json_error = None
     status = None
     pattern =  re.compile("\[id=(.*?)]")
-    try: 
+    try:
         jobid = writeShock(filename,filepath,auth)
     except JnomicsThriftException as e:
         json_error = e.msg
@@ -316,7 +316,7 @@ def shockfileload(auth,filename=None,filepath=None):
     shockid  = str(sid).rstrip().split('=')[1].replace(']','')
     if not shockid:
         json_error =  "Shock Upload Unsuccessful"
-    
+
     return {"submitted" : filename , "shock_id" : shockid , "error": json_error}
 
 def ws_saveobject(sampleid,data,wstype,wsid,token):
@@ -376,8 +376,8 @@ def pollGridJob(job_id, auth):
 def pollGridJobs(job_ids, auth):
     '''Returns status of grid job'''
     status = []
-    ret = [] 
-    running_state = [] 
+    ret = []
+    running_state = []
     client = openComputeClientConnection()
     for jid in job_ids:
          status.append(client.getGridJobStatus(jid,auth))
@@ -407,7 +407,7 @@ def runSteps(step, auth, poll_func=None, previous_steps=None):
         job_ids = step(previous_steps)
     except JnomicsThriftException as e:
         json_error=e.msg
-        
+
     if json_error:
         return {"output" : status, "error": json_error}
 
@@ -415,7 +415,7 @@ def runSteps(step, auth, poll_func=None, previous_steps=None):
         status = poll_func(job_ids, auth)
     else:
         return {"output": job_ids, "error" : json_error}
-    
+
     for k in status:
         if status[k] and not status[k].running_state == 2:
             json_error = status[k].failure_info
@@ -435,7 +435,7 @@ def runStep(step, auth, poll_func=None, previous_steps=None):
         job_id = step(previous_steps)
     except JnomicsThriftException as e:
         json_error=e.msg
-        
+
     if json_error:
         return {"output" : status, "error": json_error}
 
@@ -443,7 +443,7 @@ def runStep(step, auth, poll_func=None, previous_steps=None):
         status = poll_func(job_id, auth)
     else:
         return {"output": job_id, "error" : json_error}
-    
+
     if status and not status.running_state == 2:
         json_error = status.failure_info
 
@@ -468,7 +468,7 @@ def openClientConnection(client_class, url):
 
     clients[client] = transport
     return client
-    
+
 def openDataClientConnection():
     return openClientConnection(CLIENT_CLASSES["data"],URLS["data"])
 
@@ -499,8 +499,8 @@ def pipelineStep(client_type = None):
             return d
         return _f
     return _dec
-    
-    
+
+
 def clientWrap(client_type, func):
     if client_type =="compute":
         client= openComputeClientConnection()
@@ -549,7 +549,7 @@ def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
     #data = ws.get_object({'auth':meth.token, 'workspace':meth.workspace_id,
     #                      'id': Input_file, 'type':WSTYPES.var_sampletype})
     #return to_JSON(data)
-    
+
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     wtype = WSTYPES.var_sampletype
 
@@ -563,28 +563,28 @@ def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
                                 input_pe_path,
                                 "",auth)
 
-    
+
     @pipelineStep("compute")
     def runBowtie(client, previous_steps):
         return client.alignBowtie(input_pe_path,
                                   Input_organism,
                                   align_out_path,
                                   "",auth)
-        
+
     snp_out_path = os.path.join(Output_file_path, "snps")
-    
+
     @pipelineStep("compute")
     def runSNP(client, previous_steps):
         return client.snpSamtools(align_out_path,
                                   Input_organism,
                                   snp_out_path,
                                   auth)
-    
+
     merge_outpath = os.path.join(Output_file_path, "output.vcf")
     @pipelineStep("compute")
     def runMerge(client, previous_steps):
         return client.mergeVCF(snp_out_path, align_out_path, merge_outpath, auth)
-    
+
     filename = Input_file.replace(',','_')+".vcf"
 
     @pipelineStep(None)
@@ -641,9 +641,9 @@ def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
     #t=namedtuple("ff",["job_id"])
     #return to_JSON({"hello":writeWS([{"output":t("id=1425")}])})
     ret = runPipeline(stages,meth,auth)
-    
+
     return to_JSON(ret[-1])
-      
+
 @method(name = "Calculate Gene Expression")
 def jnomics_calculate_expression(meth, workspace = None,paired=None,
                                  Input_file_path=None,
@@ -678,10 +678,10 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
 
     act_ref = ref.replace('|','_')
 
-    wtype = WSTYPES.rnaseq_sampletype 
-    exptype = WSTYPES.rnaseq_exptype 
-    bamtype = WSTYPES.rnaseq_bamtype 
- 
+    wtype = WSTYPES.rnaseq_sampletype
+    exptype = WSTYPES.rnaseq_exptype
+    bamtype = WSTYPES.rnaseq_bamtype
+
     node_id = None
     stats = []
     myfile = None
@@ -698,7 +698,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
         return client.callCufflinks( cufflinks_in_path,
                                      cufflinks_out_path,
                                      "", "", "", auth)
-        
+
     @pipelineStep("compute")
     def workspaceobj(client,previous_steps):
         previous_steps = previous_steps[-1]
@@ -706,7 +706,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
             shock_id = previous_steps['output']['shock_id']
         if not isFileFound(entityfile,auth):
             out = getGenomefeatures(ref,auth)
-            ret = writefile(entityfile,out,auth) 
+            ret = writefile(entityfile,out,auth)
         ontodict = ontologydata(po_id,eo_id)
         ontoid = ",".join([ key for (key,value) in ontodict.items()])
         ontodef =  ",".join([value for (key,value) in ontodict.items()])
@@ -728,7 +728,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     @pipelineStep(None)
     def uploadtoShock(client,previous_steps):
          return shockfileload(auth,cufflinksobjname,cufflinks_output)
-    
+
     @pipelineStep(None)
     def saveWorkspace_obj(client,previous_steps):
         previous_steps = previous_steps[-1]
@@ -752,14 +752,14 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
         exp =  expressionService(OTHERURLS.expression)
         #json_error = None
         #status = None
-        poids = poid[0].split(",") 
+        poids = poid[0].split(",")
         eoids = eoid[0].split(",")
         podesc = exp.get_po_descriptions(poids)
         eodesc = exp.get_eo_descriptions(eoids)
         ontoids = ",".join(poids + eoids)
         ontodef = ",".join([ value for (key,value) in podesc.items() ] + [value for (key1,value1) in eodesc.items()])
         return dict(podesc.items() + eodesc.items())
-    
+
     meth.advance("Preparing Input files")
     ret  = prepareInputfiles(meth.token,workspace,Input_file_path,wtype)
     #return to_JSON(ret)
@@ -775,7 +775,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
             po_id = ret['metadata'][0]['po_id']
         if 'eo_id' in  ret['metadata'][0]:
             eo_id = ret['metadata'][0]['eo_id']
-    
+
     Output_file_path = "narrative_RNASeq_"+str(sample_id)+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
     entityfile = str(act_ref) + "_fids.txt"
     tophat_out_path = os.path.join(Output_file_path, "tophat")
@@ -790,7 +790,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
              Stage(uploadtoShock,"Uploading to Shock",None),
              Stage(workspaceobj,"Preparing Workspace obj",pollGridJob),
              Stage(saveWorkspace_obj,"Saving Object",None)]
-    
+
     ret = runPipeline(stages,meth,auth)
     return to_JSON(ret[-1])
 
@@ -809,7 +809,7 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
     :default paired : no
     :param Input_file_path: Input the raw sequencing data
     :type Input_file_path: kbtypes.Unicode
-    :ui_name Input_file_path : Input files 
+    :ui_name Input_file_path : Input files
     :param ref: Reference Genome (kb_id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
@@ -828,10 +828,10 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
 
     act_ref = ref.replace('|','_')
 
-    wtype = WSTYPES.rnaseq_sampletype 
-    exptype = WSTYPES.rnaseq_exptype 
-    bamtype = WSTYPES.rnaseq_bamtype 
- 
+    wtype = WSTYPES.rnaseq_sampletype
+    exptype = WSTYPES.rnaseq_exptype
+    bamtype = WSTYPES.rnaseq_bamtype
+
     node_id = None
     stats = []
     myfile = None
@@ -840,10 +840,10 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
     @pipelineStep("compute")
     def runTophat(client,previous_steps):
         previous_steps = previous_steps[-1]
-        tohat_jobs = [] 
+        tohat_jobs = []
         i_files = Input_file_path.split(";")
         for ifile in i_files:
-            tophat_out_path =  os.path.join(Output_file_path,ifile.replace(",","_")+"/tophat") 
+            tophat_out_path =  os.path.join(Output_file_path,ifile.replace(",","_")+"/tophat")
             tophat_jobs = client.alignTophat(act_ref, Input_file_path,
                                      "", tophat_out_path,
                                      "", "", auth)
@@ -852,7 +852,7 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
     @pipelineStep("compute")
     def runCufflinks(client,previous_steps):
          previous_steps = previous_steps[-1]
-         cufflinks_jobs = [] 
+         cufflinks_jobs = []
          i_files = Input_file_path.split(";")
          for ifile in i_files:
              cufflinks_in_path = os.path.join(Output_file_path,ifile.replace(",","_")+"/tophat/accepted_hits.bam")
@@ -861,7 +861,7 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
                                      cufflinks_out_path,
                                      "", "", "", auth))
          return cufflinks_jobs
-        
+
     @pipelineStep("compute")
     def workspaceobj(client,previous_steps):
         previous_steps = previous_steps[-1]
@@ -869,7 +869,7 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
             shock_id = previous_steps['output']['shock_id']
         if not isFileFound(entityfile,auth):
             out = getGenomefeatures(ref,auth)
-            ret = writefile(entityfile,out,auth) 
+            ret = writefile(entityfile,out,auth)
         ontodict = ontologydata(po_id,eo_id)
         ontoid = ",".join([ key for (key,value) in ontodict.items()])
         ontodef =  ",".join([value for (key,value) in ontodict.items()])
@@ -891,14 +891,14 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
     @pipelineStep(None)
     def uploadtoShock(client,previous_steps):
          return shockfileload(auth,cufflinksobjname,cufflinks_output)
-    
+
     @pipelineStep(None)
     def saveWorkspace_obj(client,previous_steps):
         previous_steps = previous_steps[-1]
         if 'output' in previous_steps:
             job_id =  previous_steps['output'].job_id
         pattern2 = re.compile('Writing the Expression object kb\|sample_test.[0-9]*')
-        try: 
+        try:
            sampleid = parselog(str(job_id),pattern2,auth)
         except FileNotFound as e:
             raise  ShockUploadException("Error in Parsing log file: {}".format(err))
@@ -912,14 +912,14 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
         exp =  expressionService(OTHERURLS.expression)
         #json_error = None
         #status = None
-        poids = poid[0].split(",") 
+        poids = poid[0].split(",")
         eoids = eoid[0].split(",")
         podesc = exp.get_po_descriptions(poids)
         eodesc = exp.get_eo_descriptions(eoids)
         ontoids = ",".join(poids + eoids)
         ontodef = ",".join([ value for (key,value) in podesc.items() ] + [value for (key1,value1) in eodesc.items()])
         return dict(podesc.items() + eodesc.items())
-    
+
     meth.advance("Preparing Input files")
     ret  = prepareInputfiles(meth.token,workspace,Input_file_path,wtype)
     #return to_JSON(ret)
@@ -935,7 +935,7 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
             po_id = ret['metadata'][0]['po_id']
         if 'eo_id' in  ret['metadata'][0]:
             eo_id = ret['metadata'][0]['eo_id']
-    
+
     Output_file_path = "narrative_RNASeq_"+str(sample_id)+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
     entityfile = str(act_ref) + "_fids.txt"
     #tophat_out_path = os.path.join(Output_file_path, "tophat")
@@ -952,7 +952,7 @@ def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
              #Stage(saveWorkspace_obj,"Saving Object",None)]
 
     return to_JSON(runPipeline(stages,meth,auth))
-    
+
 @method(name = "Identify Differential Expression")
 def jnomics_differential_expression(meth,workspace= None,title=None, alignment_files=None,exp_files=None,
                                  ref=None):
@@ -962,7 +962,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     :ui_name workspace : Workspace
     :param title : Experiment title
     :type title : kbtypes.Unicode
-    :ui_name title : Experiment Name 
+    :ui_name title : Experiment Name
     :param alignment_files: Alignment files in .bam format
     :type alignment_files: kbtypes.Unicode
     :ui_name alignment_files : Alignment files
@@ -977,7 +977,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     """
     meth.stages = 5
     token = meth.token
-    
+
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     ws = workspaceService(OTHERURLS.workspace)
     idc = IDServerAPI(OTHERURLS.ids)
@@ -991,7 +991,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
 
     node_id = None
     stats = []
-    
+
     @pipelineStep("compute")
     def runCuffmerge(client,previous_steps):
         return client.callCuffmerge(Merge_files,act_ref,
@@ -1013,7 +1013,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
             filepath =  os.path.join(cuffdiff_out_path,dfile)
             jid = writeShock(title+"_"+dfile,filepath,auth)
             idsdict[dfile] = jid
-        
+
         for key,value in idsdict.items():
             status = pollGridJob(value, auth)
             if status and not status.running_state == 2:
@@ -1025,7 +1025,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
             shockid = parselog(str(value.job_id),pattern,auth)
         #del idsdict[key]
             idsdict[key] = str(shockid).rstrip().split('=')[1].replace(']','')
-    
+
         diff_exp_files = []
         for key, value in idsdict.items():
             diff_exp = {}
@@ -1037,7 +1037,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
 
         diffid = "kb|differentialExpression."+str(idc.allocate_id_range(diffexptype,1))
         diffexpobj = { "name" : diffid,
-                       "title" : title, 
+                       "title" : title,
                        "created" : strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
                        "diff_expression" :  diff_exp_files
                      }
@@ -1058,14 +1058,14 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
 
     meth.advance("Preparing Input Files")
     ret  = prepareInputfiles(meth.token,workspace,alignment_files,exptype)
-          
+
     for nfile in expfiles:
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': nfile, 'type': exptype})
         node_id =  obj['data']['shock_url']
         filename = str(obj['data']['id']).replace(".","_")+".gtf"
         objnames.append(filename)
         job_ids.append(readShock(node_id.split("/node/")[1],filename,auth))
-         
+
     for jid in job_ids:
         status = pollGridJob(jid, auth)
         if status and not status.running_state == 2:
@@ -1096,7 +1096,7 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
 
     :param workspace: Worspace id
     :type workspace : kbtypes.Unicode
-    :ui_name workspace : Workspace 
+    :ui_name workspace : Workspace
     :param exp_samples: Expression Sample ids (kb|sample.xxxx)
     :type exp_samples : kbtypes.Unicode
     :ui_name exp_samples : Expression Samples
@@ -1109,19 +1109,19 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
     :param design: Design of the Experiment
     :type design : kbtypes.Unicode
     :ui_name  design : Experiment Design
-    :param summary : Summary of the Experiment 
+    :param summary : Summary of the Experiment
     :type summary : kbtypes.Unicode
     :ui_name summary : Experiment Summary
     :param source_Id: source_Id
     :type source_Id : kbtypes.Unicode
-    :ui_name source_Id : Source Id 
+    :ui_name source_Id : Source Id
     :param src_date: External Source Date
     :type src_date : kbtypes.Unicode
-    :ui_name src_date : Publication Date 
+    :ui_name src_date : Publication Date
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    meth.stages =  1 
+    meth.stages =  1
     token = meth.token
 
     auth = Authentication(userFromToken(meth.token), "", meth.token)
@@ -1134,7 +1134,7 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
     def ws_getObject(workspace,expfile,exptype,token):
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': expfile, 'type': exptype})
         return obj
-    
+
     #source_id = ""
     #title = ""
     #ext_src_date = ""
@@ -1149,13 +1149,13 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
         #ext_src_date = myobj['data']['external_source_date']
         #exp_sampleids.append(sample_id)
 
-    genome_map = [workspace+"/"+x for x in files]    
+    genome_map = [workspace+"/"+x for x in files]
     #return to_JSON(meth.workspace_id)
 
     ### get id from ID server
     #register_ids("kb|series","KB",["GSE30249___RNA-Seq"])
     id_dict = idc.register_ids(IDServerids.rnaseq_series,"KB",[source_Id])
-    objid = id_dict.values()[0]     
+    objid = id_dict.values()[0]
     meth.advance("Preparing the Series Object")
 
     seriesobj = { 'id' : str(objid) ,
@@ -1167,7 +1167,7 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
                   'design' : design ,
                   #'publication_id' : source_id ,
                   'external_source_date' : src_date }
-    
+
     wsreturn = ws_saveobject(seriesobj['id'],seriesobj,expseriestype,meth.workspace_id,meth.token)
 
     return to_JSON(wsreturn)
@@ -1191,13 +1191,13 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    meth.stages =  1 
+    meth.stages =  1
     token = meth.token
 
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     ws = workspaceService(OTHERURLS.workspace)
     idc = IDServerAPI(OTHERURLS.ids)
-    
+
     wstype =  WSTYPES.rnaseq_expseriestype
     exp_type =  WSTYPES.rnaseq_exptype
     dt_type = WSTYPES.datatabletype
@@ -1212,8 +1212,8 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
     row_pos = -1
     sids = []
     filename = os.path.basename(exp_series)
-    
-    try: 
+
+    try:
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
     except FileNotFound as e:
         raise FileNotFound("File Not Found: {}".format(err))
@@ -1223,7 +1223,7 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
         samples = obj['data']['genome_expression_sample_ids_map'][ref]
         for sample in samples:
             sids.append({'ref' : sample })
-            
+
         sample_list = ws.get_objects(sids)
         #return to_JSON(sample_list)
         #sample_list = ["srividya22:home/kb|sample_test.13451/1","srividya22:home/kb|sample_test.13452/1"]
@@ -1270,35 +1270,35 @@ def filterDataTable(meth,workspace= None,dtname=None):
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    meth.stages =  1 
+    meth.stages =  1
     token = meth.token
 
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     ws = workspaceService(OTHERURLS.workspace)
     idc = IDServerAPI(OTHERURLS.ids)
-    
+
     wstype =  WSTYPES.rnaseq_expseriestype
     exp_type =  WSTYPES.rnaseq_exptype
     dt_type = WSTYPES.datatabletype
 
-    try: 
+    try:
         ret = ws.get_object({'auth': token, 'workspace': workspace, 'id': dtname, 'type': dt_type})
         result = ret['data']
     except FileNotFound as e:
         raise FileNotFound("File Not Found: {}".format(err))
     nsamples = len(result['column_ids'])
-    rindex = 0 
+    rindex = 0
     diff_index = {}
     for i in xrange(0,(len(result['data'][0])-(nsamples -1)),nsamples):
         lindex= i + nsamples
         maxl = max(result['data'][0][i:lindex])
-        minl = [ x for index, x in enumerate(result['data'][0][i:lindex]) if x != float(0) ] 
+        minl = [ x for index, x in enumerate(result['data'][0][i:lindex]) if x != float(0) ]
         if len(minl) == 1 and minl[0] == maxl:
             diff_index[rindex] = maxl
         elif len(minl) > 1:
             diff_index[rindex] = maxl - min(minl)
         rindex = rindex + 1
-    
+
     sorted_dict = sorted(diff_index.items(), key=itemgetter(1),reverse=True)[:100]
     sorted_dt = OrderedDict({ "id" : "", "name" : "","row_ids" : [] ,"column_ids" : [] ,"row_labels" : [] ,"column_labels" : [] , "data" : [] })
     for k, v in sorted_dict:
@@ -1306,7 +1306,7 @@ def filterDataTable(meth,workspace= None,dtname=None):
         right = k * nsamples + nsamples
         sorted_dt["row_ids"].append(result["row_ids"][k])
         sorted_dt["data"].append(result['data'][0][left:right])
-        
+
     sorted_dt["column_ids"] = result["column_ids"]
     sorted_dt['row_labels'] = sorted_dt["row_ids"]
     sorted_dt["column_labels"] = sorted_dt['column_ids']
@@ -1314,6 +1314,40 @@ def filterDataTable(meth,workspace= None,dtname=None):
     sorted_dt["name"] = result["name"]
     #return to_JSON(sorted_dt)
     return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
+
+@method(name="Render Heatmap")
+def gene_network(meth, hm=None, workspace_id=None):
+    """This method creates a heatmap
+
+        :param hm: Heatmap Object
+        :type hm: kbtypes.Unicode
+        :param workspace_id: Workspace ID
+        :type workspace_id: kbtypes.Unicode
+        :return: Rows for display
+        :rtype: kbtypes.Unicode
+        :output_widget: kbaseHeatmap
+        """
+    #:param workspace_id: Workspace name (use current if empty)
+    #:type workspace_id: kbtypes.Unicode
+    meth.stages = 1
+    # if not workspace_id:
+    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
+    #     workspace_id = meth.workspace_id
+    meth.advance("Retrieve network table from workspace")
+    if hm:
+        auth = Authentication(userFromToken(meth.token), "", meth.token)
+        ws = workspaceService(OTHERURLS.workspace)
+        dt_type = WSTYPES.datatabletype
+
+        raw_data = ws.get_object({'auth': meth.token, 'workspace': workspace_id, 'id': hm, 'type': dt_type})
+    else:
+        raw_data = {}
+    # ideally, you should make the height dynamic based upon the amount of data.
+    # By default, the widget has 100px of padding around the data, and the rest of the height is used for the heatmap
+    # So figure out how much you want. 50px/row looks like the minimum you can use, more may be better.
+    # calculate (height of row (at least 50) ) * num_row_labels and toss that in as the height param.
+    data = {'dataset': raw_data, 'height' : '1000px'}
+    return json.dumps(data)
 
 finalize_service()
 

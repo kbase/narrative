@@ -11,6 +11,13 @@ narrative.init = function() {
     var token = null;
     var narr_ws = null;
 
+    var versionStr = 'KBase Narrative<br>Alpha version';
+    if (window.kbconfig && 
+        window.kbconfig.name && 
+        window.kbconfig.version)
+        versionStr = window.kbconfig.name + '<br>' + window.kbconfig.version;
+    $('.version-stamp').empty().html(versionStr);
+
     var dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
     dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 

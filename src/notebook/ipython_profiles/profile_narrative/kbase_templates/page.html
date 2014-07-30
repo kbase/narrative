@@ -188,7 +188,9 @@
                                async: false, 
                                dataType: 'json'
                              }).responseText );
-  window.kb = { urls : configJSON[configJSON['config']] };
+  window.kbconfig = { urls : configJSON[configJSON['config']], 
+                      version: configJSON['version'],
+                      name: configJSON['name'] };
 </script>
 
 <!-- <script src="{{ static_url("components/bootstrap/bootstrap/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script> -->

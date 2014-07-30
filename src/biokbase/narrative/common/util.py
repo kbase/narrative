@@ -84,8 +84,9 @@ class AweJob(object):
     def job_count(self):
         """Get count of jobs remaining in AWE.
         """
+        headers = {"Authorization": "OAuth {}".format(self._meth.token)}
         url = self.URL + "/job/" + self._jid
-        r = requests.get(url)
+        r = requests.get(url, headers=headers)
         response = json.loads(r.text)
         remain_tasks = response.get("data", dict()).get("remaintasks")
         return remain_tasks

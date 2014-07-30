@@ -12,18 +12,26 @@
         },
 //	fbaURL: "https://kbase.us/services/KBaseFBAModeling",
 //	fbaURL: 'http://140.221.85.73:4043',
+	
+	job_id: 0,
+        arURL: null,
+	ws_url: null,
+	ws_name: null,
+	fba_url: null,
 
         init: function(options) {
             this._super(options);
+            var self = this;
             var kb_info = options.kbase_assembly_input;
 	    console.log(kb_info)
+	    console.log('test')
 	    //Get this from options
             var user = options.ar_user
-            var token = options.ar_token
-            var arURL = options.ar_url
-	    var ws_url = options.ws_url
-	    var ws_name = options.ws_name
-	    var fba_url = 'http://140.221.85.73:4043'
+            token = options.ar_token
+            self.arURL = options.ar_url
+	    self.ws_url = options.ws_url
+	    self.ws_name = options.ws_name
+	    self.fba_url = 'http://140.221.85.73:4043'
             var arRequest = {
                 "data_id": null,
 		"kbase_assembly_input": options.kbase_assembly_input,
@@ -38,8 +46,9 @@
                 "pair": [],
                 "reference": null, 
                 "version": "widget"};
-            var self = this;
+	    // State variables
 
+	    
 	    // Parses the AssemblyInput object and displays it in the table
 	    var data_report = $('<div class="panel panel-info" style="padding:10px">')
 		    .append('<div class="panel-heading panel-title">Assembly Service Data Set </div>');
@@ -99,17 +108,6 @@
                                       <option value="tune_velvet">Intelligent Velvet</option> \
                                       <option value="kiki">Kiki Assembler</option> \
                                     </select></span>');
-            // var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
-            //                           <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">3-Assembly Pipeline</option> \
-            //                           <option value="sga_preprocess,bhammer,tagdust,spades">AssemblyRAST Pipeline</option> \
-            //                           <option value="a6">A6 Pipeline</option> \
-            //                           <option value="pacbio,?min_long_read_length=3500,?genome_size=40000">PacBio SMRT Pipeline</option> \
-            //                           <option value="spades">SPAdes Assembler</option> \
-            //                           <option value="ray">Ray Assembler</option> \
-            //                           <option value="idba">IDBA-UD Assembler</option> \
-            //                           <option value="kiki">Kiki Assembler</option> \
-            //                         </select></span>');
-
             var asm_desc = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
@@ -124,7 +122,7 @@
 		
                 $.ajax({
                     contentType: 'application/json',
-                    url: arURL + 'user/' + user + '/job/new/',
+                    url: self.arURL + 'user/' + user + '/job/new/',
                     type: 'post',
                     data: JSON.stringify(arRequest),
                     headers: {Authorization: token},
@@ -132,6 +130,7 @@
                     success: function(data){
                         console.log(data);
                         job_id = data;
+			self.job_id = data;
                             // var job_alert = $('<div class="row "><span class="col-md-4 col-md-offset-4 alert alert-success alert-dismissable"> \
                             //   <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> \
                             //   <strong>Success: </strong> Assembly Job ' + data + ' submitted.</span></div>');
@@ -156,7 +155,7 @@
 			/////////////////////////////////////////
                         var update_status = function() {
                             var prom = check_status(job_id);
-			    var result_btn_row = $('<div class="row pull-right">')
+
                             $.when(prom).done(function(stat){
                                 status_box.html(make_status_table(job_id, desc, stat));
 				status_box.css("border", "none")
@@ -167,7 +166,8 @@
                                         var report_txt = null;
 					var defer_asm = $.Deferred();
 					var defer_auto = $.Deferred();
-
+					var defer_route = $.Deferred();
+					var defer_report = $.Deferred();
 					//// Get all assemblies
 					get_assemblies(job_id).done(function(asm){
 					    defer_asm.resolve(JSON.parse(asm));
@@ -184,50 +184,26 @@
 								'name': best.filename})
 					    return defer_auto.promise()
 					});
-
-					//// Create dropdowns
-					$.when(defer_asm, defer_auto).done(function(assemblies, best){
-					    var import_btn_group = $('<span class="btn-group"></span>');
-					    var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Save Contigs <span class="caret"></span> </button>');
-					    var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-					    var contig_import_auto = $('<li><a>Auto Select</a></li>');
-					    contig_import_auto.one("click", function() {
-						import_contigs_to_ws(token, fba_url, ws_url, ws_name, best.shock_id, best.shock_url, best.name);
-					    });
-
-					    import_btn_sel.append(contig_import_auto);
-					    import_btn_sel.append('<li class="divider"></li>')
-					    for (i=0; i<assemblies.length;i++){
-						var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
-						ws_contig_name = job_id + '_' + assemblies[i].name;
-						shock_url = assemblies[i].file_infos[0].shock_url;
-						shock_id = assemblies[i].file_infos[0].shock_id;
-						contig_import.one("click", function() {
-						    import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, ws_contig_name);
-						});
-						import_btn_sel.append(contig_import);
-					    }
-					    import_btn_group.append(import_btn);
-					    import_btn_group.append(import_btn_sel);
-					    result_btn_row.append(import_btn_group);
 					
-                                            request_job_report(job_id).done(function(route){
-						var report_div = '<div class="">'
-						
-						get_job_report_txt(job_id)
-						    .done(function(quast_txt){
-							var formatted = quast_txt.replace(/\n/g, '<br>')
-							var formatted2 = formatted.replace(/\s/g, '&nbsp')
-							var full_link = arURL + route;
-							report_div += '<code style="font-size:4px>' + formatted2 +'</code><br>'
-							result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
-						    }).always(function(){
-										    
-							self.$elem.append(report_div);
-							self.$elem.append(result_btn_row);
-						    })
-                                            })
+					///// Ask server to serve files
+					request_job_report(job_id).done(function(route){
+					    defer_route.resolve(route);
+					    return defer_route.promise();
 					});
+					
+					///// Get the quast report
+					get_job_report_txt(job_id).done(function(quast_txt){
+					    var formatted = quast_txt.replace(/\n/g, '<br>')
+					    var formatted2 = formatted.replace(/\s/g, '&nbsp')
+					    defer_report.resolve(formatted2);
+					    return defer_report.promise();
+					});
+
+					//// All request done, show results and create buttons
+					$.when(defer_asm, defer_auto, defer_route, defer_report).done(function(assemblies, best, route, report){
+					    self.showResults(token, assemblies, best, route, report);
+					}
+					);
                                     }
                                 }
                             })
@@ -251,46 +227,51 @@
             };
 
             var check_status = function(j_id) {
-                var prom = $.get(arURL + '/user/' + user + '/job/' + j_id + '/status/')
+                var prom = $.get(self.arURL + '/user/' + user + '/job/' + j_id + '/status/')
                 return prom;
             }
 	    
             var request_job_report = function(job_id) {
 		console.log('report')
-                var prom = $.get(arURL + '/static/serve/' + user + '/job/' + job_id)
+                var prom = $.get(self.arURL + '/static/serve/' + user + '/job/' + job_id)
                 return prom;
             }
 	    
             var get_job_report_txt = function(job_id) {
-                var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/report');
+                var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/report');
                 return prom
             }
 
             var get_job_report_log = function(job_id) {
-                var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/log');
+                var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/log');
                 return prom
             }
 
 	    var get_assemblies = function(job_id){
-		var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/results?type=contigs,scaffolds');
+		var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/results?type=contigs,scaffolds');
 		return prom
 	    }
 
 	    var get_best_assembly = function(job_id){
-		var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/assemblies/auto')
+		var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/assemblies/auto')
 		return prom
 	    }
 
             var kill_job = function(job_id, token) {
                 var prom = $.ajax({
                     contentType: 'application/json',
-                    url: arURL + 'user/' + user + '/job/' + job_id + '/kill',
+                    url: self.arURL + 'user/' + user + '/job/' + job_id + '/kill',
                     type: 'get',
                     headers: {Authorization: token}});
                 return prom;
             }
 
-	    var import_contigs_to_ws = function(token, fba_url, ws_url, ws_name, shock_id, shock_url, contig_name){
+
+
+            return this;	    
+        },
+
+	import_contigs_to_ws: function(token, fba_url, ws_url, ws_name, shock_id, shock_url, contig_name){
 		var contig_name = $('<div class="input-group"> <span class="input-group-addon">ContigSet Name</span> <input type="text" class="form-control cname-input" value="'+ contig_name +'"> </div>');
 		var $importModal = $('<div></div>').kbasePrompt(
 		    {
@@ -327,10 +308,62 @@
 		);
 		
 		$importModal.openPrompt();
-	    }
+	    },
 
-            return this;	    
-        }
+	getState: function(){
+	    var self = this;
+	    console.log('get state')
+	    var state = {job_id: self.job_id};
+	    console.log(state);
+	    return state;
+	},
+
+	loadState: function(state){
+	    var self = this;
+	    console.log(self);
+	    console.log('load state');
+	    console.log(state);
+	    
+	},
+
+	showResults: function(token, assemblies, best, route, report){
+	    var self = this;
+	    var result_btn_row = $('<div class="row pull-right">')
+	    var import_btn_group = $('<span class="btn-group"></span>');
+	    var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Save Contigs <span class="caret"></span> </button>');
+	    var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
+	    var contig_import_auto = $('<li><a>Auto Select</a></li>');
+	    contig_import_auto.one("click", function() {
+		self.import_contigs_to_ws(token, self.fba_url, self.ws_url, self.ws_name, best.shock_id, best.shock_url, best.name);
+	    });
+
+	    import_btn_sel.append(contig_import_auto);
+	    import_btn_sel.append('<li class="divider"></li>')
+	    for (i=0; i<assemblies.length;i++){
+		var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
+		ws_contig_name = job_id + '_' + assemblies[i].name;
+		shock_url = assemblies[i].file_infos[0].shock_url;
+		shock_id = assemblies[i].file_infos[0].shock_id;
+		contig_import.one("click", function() {
+		    self.import_contigs_to_ws(token, self.fba_url, self.ws_url, self.ws_name, shock_id, shock_url, ws_contig_name);
+		});
+		import_btn_sel.append(contig_import);
+	    }
+	    import_btn_group.append(import_btn);
+	    import_btn_group.append(import_btn_sel);
+	    result_btn_row.append(import_btn_group);
+
+	    var full_link = self.arURL + route;
+	    var report_div = '<div class="">'
+		
+	    report_div += '<code style="font-size:4px>' + report +'</code><br>'
+	    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
+	    self.$elem.append(report_div);
+	    self.$elem.append(result_btn_row);
+
+	},
+
+
 
     })})( jQuery )
 

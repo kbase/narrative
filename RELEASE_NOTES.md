@@ -5,6 +5,7 @@ This is built on the IPython Notebook (more notes will follow).
 
 ### Release 7/29/2014
 __Changes__
+- Updated nav bar to match changes to functional site
 - Updated many KBase functions from all domains (Microbes, Communities, and Plants)
 - Added widgets and functions for viewing SEED functional categories
 - Added a version date-stamp

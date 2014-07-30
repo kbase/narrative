@@ -25,10 +25,14 @@
         pref: null,
         timer: null,
         loadingImage: "static/kbase/images/ajax-loader.gif",
+        token: null,
 
         init: function(options) {
             this._super(options);
             this.pref = this.uuid();
+
+            this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
+            this.$elem.append(this.$messagePane);
 
             if (!this.options.treeID) {
                 this.renderError("No tree to render!");
@@ -37,14 +41,7 @@
             } else if (!this.options.kbCache && !this.authToken()) {
                 this.renderError("No cache given, and not logged in!");
             } else {
-                if (!this.options.kbCache)
-                    this.wsClient = new Workspace(this.options.workspaceURL, {token: this.authToken()});
-
-                this.$messagePane = $("<div/>")
-                                    .addClass("kbwidget-message-pane kbwidget-hide-message");
-                this.$elem.append(this.$messagePane);
-
-                this.treeClient = new Tree(this.options.treeServiceURL, {token: this.authToken()});
+            	this.token = this.authToken();
 
                 this.render();
             }
@@ -53,12 +50,14 @@
         },
 
         render: function() {
+        	this.wsClient = new Workspace(this.options.workspaceURL, {token: this.token});
+            this.treeClient = new Tree(this.options.treeServiceURL, {token: this.token});
             this.loading(false);
             if (this.treeWsRef || this.options.jobID == null) {
             	this.loadTree();
             } else {
                 var self = this;
-                var jobSrv = new UserAndJobState(self.options.ujsServiceURL, {token: this.authToken()});
+                var jobSrv = new UserAndJobState(self.options.ujsServiceURL, {token: this.token});
                 self.$elem.empty();
 
             	var panel = $('<div class="loader-table"/>');
@@ -131,8 +130,29 @@
             		self.treeWsRef = info[6] + "/" + info[0] + "/" + info[4];
             	}
                 var tree = objArr[0].data;
+
+                var refToInfoMap = {};
+                var objIdentityList = [];
+                for (var key in tree.ws_refs) {
+                	objIdentityList.push({ref: tree.ws_refs[key]['g'][0]});
+                }
+                $.when(self.wsClient.get_object_info(objIdentityList)).done(function(data) {
+                	for (var i in data) {
+                		var objInfo = data[i];
+                		refToInfoMap[objIdentityList[i].ref] = objInfo;
+                	}
+                }).fail(function(err) {
+            		console.log("Error getting genomes info:");
+            		console.log(err);
+            	});
+
                 new EasyTree(self.canvasId, tree.tree, tree.default_node_labels, function(node) {
-                	alert("Node id: " + node.id);
+                	var ref = tree.ws_refs[node.id]['g'][0];
+                	var objInfo = refToInfoMap[ref];
+                	if (objInfo) {
+                		var url = "/functional-site/#/genomes/" + objInfo[7] + "/" + objInfo[1];
+                        window.open(url, '_blank');
+                	}
                 }, function(node) {
                 	if (node.id && node.id.indexOf("user") == 0)
                 		return "#0000ff";
@@ -230,6 +250,19 @@
                 self.treeWsRef = state.treeWsRef;
                 self.render();
             }
+        },
+
+        loggedInCallback: function(event, auth) {
+        	if (this.token == null) {
+        		this.token = auth.token;
+        		this.render();
+        	}
+            return this;
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.render();
+            return this;
         }
 
     });

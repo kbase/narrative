@@ -79,21 +79,13 @@ CLIENT_CLASSES = {"compute": JnomicsCompute.Client,
 
 class OTHERURLS:
     _host = '140.221.84.248'
-    #shock = "http://shock1.chicago.kbase.us"
     shock = "https://kbase.us/services/shock-api"
-    #shock = "http://shock.metagenomics.anl.gov"
     awe = "http://140.221.85.36:8000"
     workspace = "http://kbase.us/services/ws"
-    #workspace = "http://140.221.84.209:7058"
     ids = "http://kbase.us/services/idserver"
     ontology = "http://140.221.85.171:7062"
-    #cdmi  = "http://140.221.85.181:7032"
     cdmi = "https://kbase.us/services/cdmi_api"
     expression = "http://kbase.us/services/plant_expression"
-    #expression = "http://{}:7075".format(_host)
-    #workspace = "http://kbase.us/services/workspace"
-    #invocation = "https://kbase.us/services/invocation"
-    #invocation = "http://140.221.85.110:443"
     invocation = "http://140.221.85.185:7049"
 
 class WSTYPES:
@@ -530,7 +522,7 @@ def runPipeline(stages,meth,auth):
 ##
 
 @method(name = "Calculate Variatons")
-def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
+def jnomics_calculate_variations(meth,workspace=None,Input_file=None,paired=None,
                                  Input_organism=None):
     """Calculate variations
     :param workspace: name of workspace; default is current
@@ -538,6 +530,10 @@ def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
     :ui_name workspace: Workspace
     :param Input_file: Input to the raw sequencing data (paired end, comma sep)
     :type Input_file: kbtypes.Unicode
+    :param paired :  Paired-End say 'yes'; else 'no'; default is 'no'
+    :ui_name paired : Paired-End (?)
+    :type paired : kbtypes.Unicode
+    :default paired : no
     :param Input_organism: Input organism (kb_id)
     :type Input_organism: kbtypes.Unicode
     :ui_name Input_organism : Reference
@@ -545,11 +541,6 @@ def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
     :rtype: kbtypes.Unicode
     """
 
-    #ws = workspaceService(OTHERURLS.workspace)
-    #data = ws.get_object({'auth':meth.token, 'workspace':meth.workspace_id,
-    #                      'id': Input_file, 'type':WSTYPES.var_sampletype})
-    #return to_JSON(data)
-    
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     wtype = WSTYPES.var_sampletype
 
@@ -608,27 +599,15 @@ def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
                "created":strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
                "shock_ref":{ "shock_id" : shock_id,
                              "shock_url" : OTHERURLS.shock+"/"+shock_id },
-               "metadata" : {
-                             "source" : "test",
-                             "source_id" : "test",
-                             "base_count" : "50",
-                             "paired" : "yes",
-                             "assay" : "test",
-                             "library" : "test",
-                             "read_count" : "100",
-                             "ref_genome" : "Ecoli",
-                             "domain" : "Bacteria",
-                             "ext_source_date" : "41717",
-                             "sample_id" : "test11",
-                             "title" : "Test upload",
-                             "platform" : "Illumina"
-                             },
+               "metadata" : meta
                }
 
         return ws_saveobject(name,obj, WSTYPES.var_vcftype,meth.workspace_id,meth.token)
 
     meth.advance("Preparing Input files")
-    ret  = prepareInputfiles(meth.token,meth.workspace_id,Input_file,wtype)
+    ret  = prepareInputfiles(meth.token,workspace,Input_file,wtype)
+    if 'metadata' in ret:
+         meta = ret['metadata'][0]          
     file1 = Input_file.split(',')[0]
     file2 = Input_file.split(',')[1]
     stages = [Stage(fastqToPE,"Preparing PE",pollGridJob),
@@ -638,8 +617,6 @@ def jnomics_calculate_variations(meth,workpace=None,Input_file=None,
               Stage(writeShock,"Uploading Output To Shock",None),
               Stage(writeWS, "Uploading to Workspace", None)]
 
-    #t=namedtuple("ff",["job_id"])
-    #return to_JSON({"hello":writeWS([{"output":t("id=1425")}])})
     ret = runPipeline(stages,meth,auth)
     
     return to_JSON(ret[-1])
@@ -659,7 +636,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     :default paired : no
     :param Input_file_path: Input the raw sequencing data
     :type Input_file_path: kbtypes.Unicode
-    :ui_name Input_file_path : Input file
+    :ui_name Input_file_path : Input files
     :param ref: Reference Genome (kb_id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
@@ -1217,19 +1194,12 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
     except FileNotFound as e:
         raise FileNotFound("File Not Found: {}".format(err))
-    #return json.dumps(obj)
-        #return {"output" : str(status), "error": json_error}
     if 'genome_expression_sample_ids_map' in obj['data']:
         samples = obj['data']['genome_expression_sample_ids_map'][ref]
         for sample in samples:
             sids.append({'ref' : sample })
             
         sample_list = ws.get_objects(sids)
-        #return to_JSON(sample_list)
-        #sample_list = ["srividya22:home/kb|sample_test.13451/1","srividya22:home/kb|sample_test.13452/1"]
-        #sample_list = ["srividya22:home/kb|sample.20008/1","srividya22:home/kb|sample.20011/1","srividya22:home/kb|sample.20014/1"]
-        #return to_JSON(sample_list)
-        #return range(len(sample_list))
         for k in range(len(sample_list)):
             #wsid = sample_list[k].strip().split('/')[0]
             #sampleid = sample_list[k].strip().split('/')[1]
@@ -1243,18 +1213,19 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
                      #    sortdict[str(x)]= sortdict[str(x)].append(y)
                      #else:
                      #     sortdict[str(x)]= [y]
-                     if x in row_ids:
+                     if str(x) in row_ids:
                          rowid_pos = row_ids.index(str(x))
-                         fpkmdata[(row_pos  * len(sample_list)) + k] = float(y)
+                         fpkmdata[rowid_pos][k] = float(y)
                      else:
                          row_ids.append(str(x))
+                         pos = row_ids.index(str(x))
+                         fpkmdata.insert(pos, [float(0)] * len(sample_list))
                          for j in range(len(sample_list)):
                              if j==k:
-                                 fpkmdata.append(float(y))
-                             else:
-                                 fpkmdata.append(float(0))
+                                 fpkmdata[pos][j] = float(y)
+                             
     dt_id = "kb|datatable."+str(idc.allocate_id_range("kb|datatable",1))
-    dt_obj = OrderedDict({"id" : dt_id, "name" : name, "row_ids" : row_ids, "row_labels" : row_ids , "column_labels" : column_ids , "column_ids" : column_ids, "data" : [fpkmdata] })
+    dt_obj = OrderedDict({"id" : dt_id, "name" : name, "row_ids" : row_ids, "row_labels" : row_ids , "column_labels" : column_ids , "column_ids" : column_ids, "data" : fpkmdata })
     return  to_JSON(ws_saveobject(dt_id,dt_obj,dt_type,meth.workspace_id,meth.token))
 
 @method(name = "Filter Expression Data Table ")
@@ -1287,32 +1258,24 @@ def filterDataTable(meth,workspace= None,dtname=None):
     except FileNotFound as e:
         raise FileNotFound("File Not Found: {}".format(err))
     nsamples = len(result['column_ids'])
-    rindex = 0 
-    diff_index = {}
-    for i in xrange(0,(len(result['data'][0])-(nsamples -1)),nsamples):
-        lindex= i + nsamples
-        maxl = max(result['data'][0][i:lindex])
-        minl = [ x for index, x in enumerate(result['data'][0][i:lindex]) if x != float(0) ] 
-        if len(minl) == 1 and minl[0] == maxl:
-            diff_index[rindex] = maxl
-        elif len(minl) > 1:
-            diff_index[rindex] = maxl - min(minl)
-        rindex = rindex + 1
-    
+    diff_index= {}
+
+    for i in xrange(0,len(result['row_ids'])):
+        maxl = max(result['data'][i])
+        minl = min([ x for index, x in enumerate(result['data'][i]) if x != float(0) ])
+        diff_index[i]= (maxl - minl)
+
     sorted_dict = sorted(diff_index.items(), key=itemgetter(1),reverse=True)[:100]
     sorted_dt = OrderedDict({ "id" : "", "name" : "","row_ids" : [] ,"column_ids" : [] ,"row_labels" : [] ,"column_labels" : [] , "data" : [] })
     for k, v in sorted_dict:
-        left = k * nsamples
-        right = k * nsamples + nsamples
         sorted_dt["row_ids"].append(result["row_ids"][k])
-        sorted_dt["data"].append(result['data'][0][left:right])
-        
+        sorted_dt["data"].append(result["data"][k])
+
     sorted_dt["column_ids"] = result["column_ids"]
     sorted_dt['row_labels'] = sorted_dt["row_ids"]
     sorted_dt["column_labels"] = sorted_dt['column_ids']
     sorted_dt["id"] = "kb|filtereddatatable."+str(idc.allocate_id_range("kb|filtereddatatable",1))
     sorted_dt["name"] = result["name"]
-    #return to_JSON(sorted_dt)
     return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
 
 finalize_service()

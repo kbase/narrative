@@ -119,7 +119,7 @@ class JSONObjectEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class GWAS(object):
+class IdMap(object):
 
     def __init__(self, url=None, timeout=30 * 60, user_id=None,
                  password=None, token=None, ignore_authrc=False):
@@ -152,10 +152,10 @@ class GWAS(object):
         if self.timeout < 1:
             raise ValueError('Timeout value must be at least 1 second')
 
-    def prepare_variation(self, args):
+    def lookup_genome(self, s, type):
 
-        arg_hash = {'method': 'GWAS.prepare_variation',
-                    'params': [args],
+        arg_hash = {'method': 'IdMap.lookup_genome',
+                    'params': [s, type],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -187,10 +187,10 @@ class GWAS(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def calculate_kinship_matrix(self, args):
+    def lookup_features(self, genome_id, aliases, feature_type, source_db):
 
-        arg_hash = {'method': 'GWAS.calculate_kinship_matrix',
-                    'params': [args],
+        arg_hash = {'method': 'IdMap.lookup_features',
+                    'params': [genome_id, aliases, feature_type, source_db],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -222,10 +222,10 @@ class GWAS(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def run_gwas(self, args):
+    def lookup_feature_synonyms(self, genome_id, feature_type):
 
-        arg_hash = {'method': 'GWAS.run_gwas',
-                    'params': [args],
+        arg_hash = {'method': 'IdMap.lookup_feature_synonyms',
+                    'params': [genome_id, feature_type],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -257,10 +257,10 @@ class GWAS(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def variations_to_genes(self, args):
+    def longest_cds_from_locus(self, arg_1):
 
-        arg_hash = {'method': 'GWAS.variations_to_genes',
-                    'params': [args],
+        arg_hash = {'method': 'IdMap.longest_cds_from_locus',
+                    'params': [arg_1],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -292,10 +292,10 @@ class GWAS(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def genelist_to_networks(self, args):
+    def longest_cds_from_mrna(self, arg_1):
 
-        arg_hash = {'method': 'GWAS.genelist_to_networks',
-                    'params': [args],
+        arg_hash = {'method': 'IdMap.longest_cds_from_mrna',
+                    'params': [arg_1],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }

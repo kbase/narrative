@@ -140,8 +140,8 @@
 
                 // These are the 'delete' and 'run' buttons for the cell
                 var buttons = "<div class='buttons pull-right'>" + //style='margin-top:10px'>" +
-                                  "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default'>Delete</button> " +
-                                  "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary'>Run</button>" + 
+                                  "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default btn-sm'>Delete</button> " +
+                                  "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary btn-sm'>Run</button>" + 
                               "</div>";
 
                 // The progress bar remains hidden until invoked by running the cell

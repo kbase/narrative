@@ -103,7 +103,7 @@
             self.$elem.append(data_report);
 
             var asm_div = $('<div class="row">');
-            var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
+            var asm_choose = $('<label class="col-md-1 control-label asm-choose">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
                                       <option value="auto">Arast Smart Workflow</option> \
                                       <option value="fast">Fast Pipeline</option> \
                                       <option value="tune_velvet">Intelligent Velvet</option> \
@@ -113,15 +113,14 @@
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
-	    //// If assembly has been run, restore stuff
-
-
-
 	    asm_btn.one("click", function() {
 		self.state['clicked'] = true;
                 var recipe = [asm_choose.find('select option:selected').val()];
                 var desc = asm_desc.find('input').val();
-		
+
+		self.state['recipe'] = recipe;
+		self.state['description'] = desc;
+
                 arRequest.recipe = recipe;
                 arRequest.message = desc;
                 asm_div.find('fieldset').attr('disabled', "true");
@@ -333,6 +332,7 @@
 	    if (self.state['clicked']) {
 		console.log('assembly already run')
 		self.$elem.find('fieldset').attr('disabled', "true");
+		$('.asm-choose').attr('value', self.state['recipe']);
 	    } else{
 		console.log('not run yet')
 	    }

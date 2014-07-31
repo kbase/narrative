@@ -303,7 +303,7 @@ def gene_network2ws(meth, obj_id=None, out_id=None):
     ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
 
     raw_data = ws.get(obj_id)
-    
+
 
     gl = [ gr[2] for gr in raw_data['genes']]
     gl_str = ",".join(gl);
@@ -343,7 +343,7 @@ def genelist_network2ws(meth, gene_ids=None, out_id=None):
     # if not workspace_id:
     #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
     #     workspace_id = meth.workspace_id
-    
+
     cdmic = CDMI_API(URLS.cdmi)
     idm = IdMap(URLS.idmap)
 
@@ -380,13 +380,13 @@ def genelist_network2ws(meth, gene_ids=None, out_id=None):
       for k in lidmap[lid]:
         gl.add(k)
     midl = list(mids)
-    
+
     lidmap = ()
     if len(mids) > 0: lidmap = idm.longest_cds_from_mrna(list(mids))
     for lid in lidmap:
       for k in lidmap[lid]:
         gl.add(k)
-    
+
     gl_str = ",".join(gl);
 
     meth.advance("Running GeneList to Networks")
@@ -399,6 +399,7 @@ def genelist_network2ws(meth, gene_ids=None, out_id=None):
     #    raise GWASException(2, "submit job failed, no job id")
 
     meth.advance("Returning object")
+
     return _workspace_output(out_id)
 
 
@@ -429,7 +430,6 @@ def gene_network(meth, gene_list=None, external_ids=None):
         raw_data = {}
     data = {'gwas': raw_data, 'external_ids' : external_ids}
     return json.dumps(data)
-
 
 
 # Finalize (registers service)

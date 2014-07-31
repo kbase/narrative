@@ -106,6 +106,7 @@
                 'kbapplication'                     : 'kbase/js/ui-common/src/widgets/../kbapplication',
                 'kbwidget'                          : 'kbase/js/ui-common/src/widgets/../kbwidget',
                 'all'                               : 'kbase/js/ui-common/src/widgets/all',
+                'jim'                               : 'kbase/js/ui-common/src/widgets/jim',
                 'kbaseBambiMotifCard'               : 'kbase/js/ui-common/src/widgets/bambi/kbaseBambiMotifCard',
                 'kbaseBambiRawOutputCard'           : 'kbase/js/ui-common/src/widgets/bambi/kbaseBambiRawOutputCard',
                 'kbaseBambiRunParametersCard'       : 'kbase/js/ui-common/src/widgets/bambi/kbaseBambiRunParametersCard',
@@ -123,7 +124,7 @@
                 'kbaseFormulationForm'              : 'kbase/js/ui-common/src/widgets/fbas/kbaseFormulationForm',
                 'kbaseRunFba'                       : 'kbase/js/ui-common/src/widgets/fbas/kbaseRunFba',
                 'kbaseContigBrowser'                : 'kbase/js/ui-common/src/widgets/genomes/kbaseContigBrowser',
-                'kbaseContigBrowserButtons'         : 'kbase/js/ui-common/src/widgets/genomes/kbaseContigBrowserButtons',
+                //'kbaseContigBrowserButtons'         : 'kbase/js/ui-common/src/widgets/genomes/kbaseContigBrowserButtons',
                 'kbaseGeneBiochemistry'             : 'kbase/js/ui-common/src/widgets/genomes/kbaseGeneBiochemistry',
                 'kbaseGeneDomains'                  : 'kbase/js/ui-common/src/widgets/genomes/kbaseGeneDomains',
                 'kbaseGeneInfo'                     : 'kbase/js/ui-common/src/widgets/genomes/kbaseGeneInfo',
@@ -204,11 +205,11 @@
                 'kbaseTomtomRunResultCard'          : 'kbase/js/ui-common/src/widgets/meme/kbaseTomtomRunResultCard',
                 'logo'                              : 'kbase/js/ui-common/src/widgets/meme/logo',
                 'kbaseSeqSearch'                    : 'kbase/js/ui-common/src/widgets/misc/kbaseSeqSearch',
-                'kbaseModelCore'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelCore',
+                //'kbaseModelCore'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelCore',
                 'kbaseModelMeta'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelMeta',
                 'kbaseModelOpts'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelOpts',
                 'kbaseModelTable'                   : 'kbase/js/ui-common/src/widgets/models/kbaseModelTable',
-                // 'kbaseModelTabs'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelTabs',
+                //'kbaseModelTabs'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelTabs',
                 'force-directed'                    : 'kbase/js/ui-common/src/widgets/networks/force-directed',
                 'kbaseNetworkCard'                  : 'kbase/js/ui-common/src/widgets/networks/kbaseNetworkCard',
                 'kbasePPICard'                      : 'kbase/js/ui-common/src/widgets/networks/kbasePPICard',
@@ -260,7 +261,7 @@
       }
 
       kb_require(['narrative_paths'], function() {
-          kb_require(['jquery', 'CDMI_API', 'all'],
+          kb_require(['jquery', 'CDMI_API', 'jim'],
               function($, cdmi) {
                   //add initialization code
                   var x = new CDMI_API('http://kbase.us/services/cdmi_api');

@@ -731,6 +731,23 @@ def _compare_pan_genome(meth, genome_ids):
     #return json.dumps({'data': data})
     return json.dumps({'ws': meth.workspace_id, 'name':meta[1]})
 
+@method(name="Export orthologs from Pan-genome")
+def _export_gene_set_pan_genome(meth, pan_genome_id):
+    """Export orthologs from Pangenome as external FeatureSet objects. [26] 
+    
+    :param pan_genome_id: ID of pan-genome object [26.1]
+    :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
+    :ui_name pan_genome_id: Pan-genome ID
+
+    :return: Generated Compare Genome
+    :rtype: kbtypes.KBaseGenomes.Pangenome
+    :output_widget: kbasePanGenomeGeneSetExport
+    """
+    
+    meth.stages = 1 # for reporting progress
+    
+    return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
+
 @method(name="Compare Models")
 def _compare_models(meth, model_ids):
     """Compare two or models and compute core, noncore unique reactions, functional roles with their subsystem information. 

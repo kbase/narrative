@@ -5,7 +5,7 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "kbasePanGenome",
+        name: "kbasePanGenomeGeneSetExport",
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
@@ -18,8 +18,9 @@
         wsUrl: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
         token: null,
         kbws: null,
-        geneIndex: {}, // {genome_ref -> {feature_id -> feature_index}}
+        geneIndex: {},   // {genome_ref -> {feature_id -> feature_index}}
         genomeNames: {}, // {genome_ref -> genome_name}
+        genomeRefs: {},  // {genome_ref -> workspace/genome_object_name}
         loaded: false,
         	
         init: function(options) {
@@ -71,7 +72,18 @@
 
         		var table = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
         				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');
-        		var tabs = container.kbTabs({tabs: [{name: 'Orthologs', content: table, active: true}]});
+        		var tab = $("<div/>");
+        		tab.append("<p><b>Please choose ortholog and push 'Export' "+
+        				"button on opened ortholog tab.</b></p><br>");
+        		tab.append(table);
+        		
+        		var tabPane = $('<div id="'+self.pref+'tab-content">');
+        		container.append(tabPane);
+        		tabPane.kbaseTabs({canDelete : true, tabs : []});
+
+        		//var tabs = container.kbTabs({tabs: [{name: 'Orthologs', content: tab, active: true}]});
+
+    			tabPane.kbaseTabs('addTab', {tab: 'Orthologs', content: tab, canDelete : false, show: true});
 
         		var tableSettings = {
         				"sPaginationType": "full_numbers",
@@ -80,13 +92,14 @@
         				"aaSorting": [[ 3, "desc" ]],
         				"aoColumns": [
         				              { "sTitle": "Function", 'mData': 'function'},
-        				              { "sTitle": "ID", 'mData': 'id'}, //"sWidth": "10%"
+        				              { "sTitle": "ID", 'mData': function(d) {
+        				            	  return '<a class="show-orthologs_'+self.pref+'" data-id="'+d.id+'">'
+        				            	  +d.id+'</a>'
+        				              }},
         				              { "sTitle": "Type", 'mData': 'type'},
         				              { "sTitle": "Ortholog Count", 'mData': function(d) {
-        				            	  return '<a class="show-orthologs" data-id="'+d.id+'">'
-        				            	  +d.orthologs.length+'</a>'
-        				              }
-        				              }
+        				            	  return ''+d.orthologs.length
+        				              }}
         				              ],
         				              "oLanguage": {
         				            	  "sEmptyTable": "No objects in workspace",
@@ -101,13 +114,16 @@
 
         		function events() {
         			// event for clicking on ortholog count
-        			$('.show-orthologs').unbind('click');
-        			$('.show-orthologs').click(function() {
+        			$('.show-orthologs_'+self.pref).unbind('click');
+        			$('.show-orthologs_'+self.pref).click(function() {
         				var id = $(this).data('id');
-        				var info = 'blah blah';
+            			if (tabPane.kbaseTabs('hasTab', id)) {
+            				tabPane.kbaseTabs('showTab', id);
+            				return;
+            			}
         				var ortholog = getOrthologInfo(id);
-        				var tabContent = self.buildOrthoTable(ortholog);
-        				tabs.addTab({name: id, content: tabContent, removable: true});
+        				var tabContent = self.buildOrthoTable(id, ortholog);
+        				tabPane.kbaseTabs('addTab', {tab: id, content: tabContent, canDelete : true, show: true});
         			})
         		}
 
@@ -141,6 +157,7 @@
         		for (var genomePos in genomeRefs) {
         			var ref = genomeRefs[genomePos];
         			self.genomeNames[ref] = data[genomePos].data.scientific_name;
+        			self.genomeRefs[ref] = data[genomePos].info[7] + "/" + data[genomePos].info[1];
         			var geneIdToIndex = {};
         			for (var genePos in data[genomePos].data.features) {
         				var geneId = data[genomePos].data.features[genePos].id;
@@ -153,10 +170,9 @@
         	});
         },
 
-        buildOrthoTable: function(ortholog) {
-        	console.log(ortholog);
+        buildOrthoTable: function(orth_id, ortholog) {
         	var self = this;
-        	var tab = $("<div><img src=\""+this.options.loadingImage+"\">&nbsp;&nbsp;loading pan-genome data...</div>");
+        	var tab = $("<div><img src=\""+this.options.loadingImage+"\">&nbsp;&nbsp;loading gene data...</div>");
         	var req = [];
         	for (var i in ortholog.orthologs) {
         		var genomeRef = ortholog.orthologs[i][2];
@@ -166,69 +182,113 @@
         	}
         	var prom = this.kbws.get_object_subset(req);
         	$.when(prom).done(function(data) {
-        		console.log(data);
-        		buildOrthoTableLoaded(data, tab);
+        		var genes = [];
+        		for (var i in data) {
+        			var feature = data[i].data.features[0];
+        			var genomeRef = req[i].ref;
+        			feature["genome_ref"] = genomeRef;
+        			var ref = self.genomeRefs[genomeRef];
+        			var genome = self.genomeNames[genomeRef];
+        			var id = feature.id;
+        			var func = feature['function'];
+        			if (!func)
+        				func = '-';
+        			var seq = feature.protein_translation;
+        			var len = seq ? seq.length : 'no translation';
+        			genes.push({ref: ref, genome: genome, id: id, func: func, len: len, original: feature});
+        		}
+        		self.buildOrthoTableLoaded(orth_id, genes, tab);
         	}).fail(function(e){
         		console.log("Error caching genes: " + e.error.message);
         	});
         	return tab;
         },
 
-        buildOrthoTableLoaded: function(genes, tab) {
-
+        buildOrthoTableLoaded: function(orth_id, genes, tab) {
+        	var pref2 = this.genUUID();
+        	var self = this;
+        	tab.empty();
     		var table = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
     				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');
+    		tab.append('<p><b>Name of feature set object:</b>&nbsp;'+
+    				'<input type="text" id="input_'+pref2+'" '+
+    				'value="'+self.options.name+'.'+orth_id+'.featureset" style="width: 350px;"/>'+
+    				'&nbsp;<button id="btn_'+pref2+'">Export</button><br>'+
+    				'<font size="-1">(only features with protein translations will be exported)</font></p><br>');
     		tab.append(table);
         	var tableSettings = {
-        			"sPaginationType": "bootstrap",
+        			"sPaginationType": "full_numbers",
         			"iDisplayLength": 10,
-        			"aaData": data.orthologs,
-        			"aaSorting": [[ 3, "desc" ]],
+        			"aaData": genes,
+        			"aaSorting": [[ 1, "asc" ]],
         			"aoColumns": [
-        			              { "sTitle": "Function", 'mData': 'function'},
-        			              { "sTitle": "ID", 'mData': 'id'}, //"sWidth": "10%"
-        			              { "sTitle": "Type", 'mData': 'type'},
-        			              { "sTitle": "Ortholog Count", 'mData': function(d) {
-        			            	  return '<a class="show-orthologs" data-id="'+d.id+'">'
-        			            	  +d.orthologs.length+'</a>'
-        			              },
-        			              },
+        			              { "sTitle": "Genome", 'mData': function(d) {
+        			            	  return '<a class="show-genomes_'+pref2+'" data-id="'+d.ref+'">'+d.genome+'</a>'
+        			              }},
+        			              { "sTitle": "ID", 'mData': function(d) {
+        			            	  return '<a class="show-genes_'+pref2+'" data-id="'+d.ref+"/"+d.id+'">'+d.id+'</a>'
+        			              }},
+        			              { "sTitle": "Function", 'mData': 'func'},
+        			              { "sTitle": "Protein sequence length", 'mData': 'len'},
         			              ],
         			              "oLanguage": {
         			            	  "sEmptyTable": "No objects in workspace",
         			            	  "sSearch": "Search: "
         			              },
-        			              'fnDrawCallback': events
+        			              'fnDrawCallback': events2
         	}
-
 
         	// create the table
         	table.dataTable(tableSettings);
-
-        	function events() {
-        		// event for clicking on ortholog count
-        		$('.show-orthologs').unbind('click');
-        		$('.show-orthologs').click(function() {
+        	$('#btn_'+pref2).click(function (e) {
+            	var target_obj_name = $("#input_"+pref2).val();
+            	if (target_obj_name.length == 0) {
+            		alert("Error: feature set object name shouldn't be empty");
+            		return;
+            	}
+            	self.exportFeatureSet(orth_id, target_obj_name, genes);
+        	});
+        	
+        	function events2() {
+        		$('.show-genomes_'+pref2).unbind('click');
+        		$('.show-genomes_'+pref2).click(function() {
         			var id = $(this).data('id');
-        			var info = 'blah blah';
-        			tabs.addTab({name: id, content: 'Coming soon', removable: true});
+            		var url = "/functional-site/#/genomes/" + id;
+                    window.open(url, '_blank');
         		})
-        	}
-
-        	// work in progress
-        	function getOrthologInfo(id) {
-        		console.log(data)
-        		for (var i in data) {
-        			if (data[i].id == id) {
-        				console.log('match')
-
-        				var ort_list = data.orthologs
-        				return ort_list
-        			}
-        		}
+        		$('.show-genes_'+pref2).unbind('click');
+        		$('.show-genes_'+pref2).click(function() {
+        			var id = $(this).data('id');
+            		var url = "/functional-site/#/genes/" + id;
+                    window.open(url, '_blank');
+        		})
         	}
         },
 
+        exportFeatureSet: function(orth_id, target_obj_name, genes) {
+        	var elements = {};
+        	var size = 0;
+        	for (var i in genes) {
+        		var gene = genes[i];
+        		if (gene.original.protein_translation) {
+        			elements["" + i] = {data: gene.original};
+        			size++;
+        		}
+        	}
+        	var featureSet = {description: 'Feature set exported from pan-genome "' + 
+        			this.options.name + '", otholog "' + orth_id + '"', elements: elements};
+        	this.kbws.save_objects({workspace: this.options.ws, objects: 
+        		[{type: "KBaseSearch.FeatureSet", name: target_obj_name, data: featureSet}]}, 
+        		function(data) {
+        			alert("Feature set object containing " + size + " genes " +
+        					"was successfuly exported");
+        		},
+        		function(err) {
+        			alert("Error: " + err.error.message);
+        		}
+        	);
+        },
+        
         getData: function() {
         	return {title:"Pan-genome orthologs",id:this.options.name, workspace:this.options.ws};
         },

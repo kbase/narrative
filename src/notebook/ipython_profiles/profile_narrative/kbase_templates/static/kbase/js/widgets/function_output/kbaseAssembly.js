@@ -213,8 +213,7 @@
 			    console.log(pool[i])
 			    console.log('#asm-' + pool[i]);
 			    $('#asm-' + pool[i]).attr('disabled', "false");
-//			    $('#asm-' + pool[i]).attr('hidden', "false");
-			    $('#asm-' + pool[i]).css('visibility', "visible");
+			    $('#asm-' + pool[i]).show()
 			    var asm_idx = pool.indexOf(pool[i]);
 			    pool.splice(asm_idx, 1);
 			    update_asm_pool(pool);
@@ -236,8 +235,7 @@
 			    console.log(asm_picked)
 			    update_asm_pool(asm_picked);
 			    $('#' + asm_id).attr('disabled', "true");
-//			    $('#' + asm_id).attr('hidden', "true");
-			    $('#' + asm_id).css('visibility', "hidden");
+			    $('#' + asm_id).hide();
 			});
 			add_asm_sel.append(asm);
 		    })(i);

@@ -706,9 +706,11 @@
                 return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
             };
 
-            var paramList = params.map(function(p) { 
-                return "'" + addSlashes(p) + "'"; 
-            });
+            var paramList = params.map(
+                function(p) { 
+                    return "'" + addSlashes(p) + "'"; 
+                }
+            );
             cmd += "method(" + paramList + ")";
 
             return cmd;

@@ -1842,8 +1842,8 @@ def _align_protein_sequences(meth, feature_set, alignment_method, out_msa):
     elements = ws.get_objects([{'ref': workspace+'/'+feature_set}])[0]['data']['elements']
     gene_sequences = {}
     for key in elements:
-        id = elements[key].data.id
-        seq = elements[key].data.protein_translation
+        id = elements[key]['data']['id']
+        seq = elements[key]['data']['protein_translation']
         gene_sequences[id] = seq
     treeClient = KBaseTrees(url = service.URLS.trees, token = token)
     construct_multiple_alignment_params = {
@@ -1853,7 +1853,7 @@ def _align_protein_sequences(meth, feature_set, alignment_method, out_msa):
         'out_msa_id': out_msa 
     }
     job_id = treeClient.construct_multiple_alignment(construct_multiple_alignment_params)
-    return json.dumps({'ws_name': workspaceID, 'obj_id': msaID, 'job_id' : jobID})
+    return json.dumps({'workspaceID': workspace, 'msaID': out_msa, 'jobID' : job_id})
 
 
 #

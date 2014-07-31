@@ -113,13 +113,55 @@
             
             $.when(prom).done($.proxy(function(objArr) {
                 self.$elem.empty();
-                var msa = objArr[0].data;
-                console.log(msa);
+                var aln = objArr[0].data.alignment;
+                var size = 0;
+                var len = null;
+                var max_lbl_len = 0;
+                for (var key in aln) {
+                	size++;
+                	if (max_lbl_len < key.length)
+                		max_lbl_len = key.length;
+                	len = aln[key].length;
+                }
+                var canvasId = "canvas-" + self.pref;
+                var canvasDiv = $('<div>').append($('<canvas id="' + canvasId + '">'));
+                canvasDiv.css({'max-height':400, 'overflow':'scroll'});
+                self.$elem.append(canvasDiv);
+                var canvas = document.getElementById(canvasId);
+                canvas.width = (max_lbl_len + 2 + len) * 8;
+            	canvas.height = size * 12;
+                var line = 0;
+                for (var key in aln) {
+                	for (var i = 0; i < key.length; i++)
+                		self.drawSymbol(canvas, key.substring(i, i + 1), "rgb(0,0,0)", i, line);
+                	var seq = aln[key];
+                	for (var i = 0; i < seq.length; i++)
+                		self.drawSymbol(canvas, seq.substring(i, i + 1), "rgb(0,0,0)", max_lbl_len + 2 + i, line);
+                	line++;
+                }
                 self.loading(true);
             }, this));
             $.when(prom).fail($.proxy(function(error) { this.renderError(error); }, this));
         },
 
+        drawSymbol: function(canvas, smb, color, xpos, ypos) {
+            var text = smb;
+            var ctx = canvas.getContext("2d");
+            var fontH = 10;
+            var fontW = 7;
+            var font = fontH + "pt courier-new";
+            CanvasTextFunctions.enable(ctx);
+            ctx.strokeStyle = color;
+            //ctx.fillStyle = "rgb(180, 245, 220)";
+            var smbW = ctx.measureText(font, fontH, text);
+            var x = xpos * (fontW + 1) + (fontW - smbW) / 2;
+            var y = ypos * (fontH + 2);
+            //var h = fontsize;
+            //ctx.fillRect(x, y, w, h);
+            ctx.drawText(font, fontH, x, y + fontH * 0.9, text);
+
+        },
+        
         renderError: function(error) {
             errString = "Sorry, an unknown error occurred";
             if (typeof error === "string")

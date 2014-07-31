@@ -1815,6 +1815,47 @@ def _build_promconstraint(meth, genome_id, series_id, regulome_id):
     
     return json.dumps({'name': name, 'ws': workspaceName})
 
+@method(name="Align Protein Sequences")
+def _align_protein_sequences(meth, feature_set, alignment_method, out_msa):
+    """Construct multiple sequence alignment object based on set of proteins. [27]
+
+    :param feature_set: An object with protein features [27.1]
+    :type feature_set: kbtypes.KBaseSearch.FeatureSet
+    :ui_name feature_set: Feture Set Object
+    :param alignment_method: name of alignment method (one of Muscle, Clustal, ProbCons, T-Coffee, Mafft), leave it blank for default Clustal method [27.2]
+    :type alignment_method: kbtypes.Unicode
+    :ui_name alignment_method: Multiple Alignment Method
+    :param out_msa: Multiple sequence alignment object ID. If empty, an ID will be chosen randomly. [27.3]
+    :type out_msa: kbtypes.KBaseTrees.MSA
+    :ui_name out_msa: Output MSA ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseMSA
+    """
+    if not alignment_method:
+        alignment_method = 'Clustal'
+    if not out_msa:
+        out_msa = "msa_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    ws = workspaceService(service.URLS.workspace, token=token)
+    elements = ws.get_objects([{'ref': workspace+'/'+feature_set}])[0]['data']['elements']
+    gene_sequences = {}
+    for key in elements:
+        id = elements[key].data.id
+        seq = elements[key].data.protein_translation
+        gene_sequences[id] = seq
+    treeClient = KBaseTrees(url = service.URLS.trees, token = token)
+    construct_multiple_alignment_params = {
+        'gene_sequences': gene_sequences,                                  
+        'alignment_method': alignment_method, 
+        'out_workspace': workspace, 
+        'out_msa_id': out_msa 
+    }
+    job_id = treeClient.construct_multiple_alignment(construct_multiple_alignment_params)
+    return json.dumps({'ws_name': workspaceID, 'obj_id': msaID, 'job_id' : jobID})
+
+
 #
 #@method(name="Edit Data")
 #def _edit_data(meth, obj_name, type):

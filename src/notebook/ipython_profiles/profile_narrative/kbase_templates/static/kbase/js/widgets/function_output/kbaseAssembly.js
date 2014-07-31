@@ -209,13 +209,12 @@
 	    var nav = $('<ul class="nav nav-pills"> \
                            <li><a href="#frag-recipes">Recipes</a></li> \
                            <li><a href="#frag-assemblers">Assemblers</a></li> \
-                           <li><a href="#frag-pipeline">Pipeline</a></li> \
-                           <li><a href="#frag-advanced">Advanced</a></li> \
+                           <li><a href="#frag-pipeline">Pipeline</a><span class="label label-info">beta</span></li> \
                          </ul>');
 	    tabs.append(nav);
 
 	    /////// Recipes
-            var asm_div = $('<div class="row" id="frag-recipes">');
+            var asm_div = $('<div class="row" id="frag-recipes"><small>Recipes are curated intelligent workflows designed for specific scenarios.</small></div>');
             var asm_choose = $('<span class="col-md-3"><select class="form-control" name="assemblers"> \
                                       <option value="auto">Arast Smart Workflow</option> \
                                       <option value="fast">Fast Pipeline</option> \
@@ -230,7 +229,7 @@
 
 
 	    //////// Assemblers
-	    var asm_div2 = $('<div id="frag-assemblers">');
+	    var asm_div2 = $('<div id="frag-assemblers"><small>Assemble contigs using multiple assemblers and compare results</small></div>');
             var asm_row = $('<div class="row">');
 	    var add_asm_group = $('<span class="btn-group col-md-3"></span>');
 	    var add_asm_btn = $('<button type="button" class="btn btn-default btn-success dropdown-toggle" data-toggle="dropdown"> Add Assembler <span class="caret"></span> </button>');
@@ -265,7 +264,7 @@
 		    (function(i) {
 			var asm_id = 'asm-' + asms[i].name
 			var asm = $('<li data-toggle="tooltip" data-placement="right" title="' + asms[i].description + '" id="' + asm_id + '"><a>' + asms[i].name + '</a></li>');
-			asm.tooltip({containter: 'body'})
+			asm.tooltip({container: 'body'})
 			var asm_name = asms[i].name;
 			asm.on('click', function(){
 			    asm_picked.push(asm_name);
@@ -289,7 +288,7 @@
 
 
 	    //////// Pipeline
-	    var asm_div3 = $('<div id="frag-pipeline">');
+	    var asm_div3 = $('<div id="frag-pipeline"> <small>Build a customized pipeline using available preprocessing, assembly, and postprocessing tools</small></div>');
             var pipe_row1 = $('<div class="row">');
 	    var add_pipe_group = $('<span class="btn-group col-md-3"></span>');
 	    var add_pipe_btn = $('<button type="button" class="btn btn-default btn-success dropdown-toggle" data-toggle="dropdown"> Add Module <span class="caret"></span> </button>');
@@ -326,16 +325,16 @@
 			for (j=0; j<asms.length;j++){
 			    (function(j) {
 				var asm_id = 'pipe-' + asms[j].name
-				var asm = $('<li data-toggle="tooltip" data-placement="right" title="' + asms[j].description + '" id="' + asm_id + '"><a>' + asms[j].name + '</a></li>');
-				asm.tooltip({containter: 'body'})
+				var asm2 = $('<li data-toggle="tooltip" data-placement="right" title="' + asms[j].description + '" id="' + asm_id + '"><a>' + asms[j].name + '</a></li>');
+				asm2.tooltip({container: 'body'})
 				var asm_name = asms[j].name;
-				asm.on('click', function(){
+				asm2.on('click', function(){
 				    pipe_picked.push(asm_name);
 				    update_pipe_pool(pipe_picked);
 				    $('#' + asm_id).attr('disabled', "true");
 				    $('#' + asm_id).hide();
 				});
-				add_pipe_sel.append(asm);
+				add_pipe_sel.append(asm2);
 
 			    })(j);}
 

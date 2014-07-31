@@ -410,9 +410,8 @@ class LifecycleSubject(object):
     change as long as the invariants 0 <= stage <= num_stages
     and 1 <= num_stages hold. Note that 0 is a special stage number
     meaning 'not yet started'.
-        """
+    """
     def __init__(self, stages=1):
-        open("/tmp/kbnarr", "a").write("@@ LIFECYCLE SUBJECT\n")
         if not isinstance(stages, int) or stages < 1:
             raise ValueError("Number of stages ({}) must be > 0".format(stages))
         self._stages = stages
@@ -654,32 +653,48 @@ class LifecycleLogger(LifecycleObserver):
         :param debug: Whether to set debug as the log level
         :type debug: bool
         """
+        self._name = name
         # use the IPython application singleton's 'log' trait
-        self._log = Application.instance().log
+        # self._log = Application.instance().log
+        self._log = kblogging.get_logger(name)
+        if debug:
+            self._log.setLevel(logging.DEBUG)
+        else:
+            self._log.setLevel(logging.INFO)
         self._is_debug = debug
+        self._start_time = None
 
     def _write(self, level, event, msg):
         if msg and (len(msg) > self.MAX_MSG_LEN):
             msg = msg[:self.MAX_MSG_LEN] + " [..]"
         # replace newlines with softer dividers
         msg = msg.replace("\n\n", "\n").replace("\n", " // ").replace("\r", "")
-        # format a timestamp
-        ts = time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
         # log the whole tamale
-        self._log.log(level, "ts={ts} event={e} {m}".format(ts=ts, e=event, m=msg))
+        self._log.log(level, "{} {}".format(event, msg))
 
     def started(self, params):
-        self._write(logging.INFO, "started", "params={}".format(params))
+        self._write(logging.INFO, "func.begin", "params={}".format(params))
+        self._start_time = time.time()
 
     def done(self):
-        self._write(logging.INFO, "done", "")
+        t = time.time()
+        if self._start_time is not None:
+            dur = t - self._start_time
+            self._start_time = None
+        else:
+            dur = -1
+        self._write(logging.INFO, "func.end", "dur={:.3g}".format(dur))
+
+    def stage(self, n, total, name):
+        self._write(logging.INFO, "func.stage.{}".format(name),
+                    "num={:d} total={:d}".format(n, total))
 
     def error(self, code, err):
-        self._write(logging.ERROR, "err({:d})".format(code), "msg={}".format(err))
+        self._write(logging.ERROR, "func.error code={:d}".format(code), "msg={}".format(err))
 
     def debug(self, msg):
         if self._is_debug:
-            self._write(logging.DEBUG, "dbg", "msg={}".format(msg))
+            self._write(logging.DEBUG, "func.debug", "msg={}".format(msg))
 
 
 class ServiceMethod(trt.HasTraits, LifecycleSubject):
@@ -734,7 +749,6 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         self._history = status_class(self)
         self.register(self._history)
         self._observers = []  # keep our own list of 'optional' observers
-        self.quiet(quiet)
         # set traits from 'meta', if present
         for key, val in meta.iteritems():
             if hasattr(self, key):
@@ -745,6 +759,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             self.desc = get_func_desc(func)
             params, output, vis_info = get_func_info(func)
             self.set_func(func, tuple(params), (output,), vis_info)
+        # Set logging level. Do this last so it can use func. name
+        self.quiet(quiet)
 
     def quiet(self, value=True):
         """Control printing of status messages.
@@ -757,7 +773,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         else:
             # make some noise
             if not self._observers:  # for idempotence
-                self._observers = [LifecyclePrinter(), LifecycleLogger("kb.narr", debug=True)]
+                self._observers = [LifecyclePrinter(),
+                                   LifecycleLogger(self.name, debug=True)]
                 map(self.register, self._observers)
 
     def set_func(self, fn, params, outputs, vis_info):

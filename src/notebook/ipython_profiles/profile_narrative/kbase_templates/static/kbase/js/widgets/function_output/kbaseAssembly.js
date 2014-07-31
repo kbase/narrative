@@ -260,7 +260,8 @@
 		for (i=0; i<asms.length;i++){
 		    (function(i) {
 			var asm_id = 'asm-' + asms[i].name
-			var asm = $('<li id="' + asm_id + '"><a>' + asms[i].name + '</a></li>');
+			var asm = $('<li data-toggle="tooltip" data-placement="right" title="' + asms[i].description + '" id="' + asm_id + '"><a>' + asms[i].name + '</a></li>');
+			asm.tooltip({containter: 'body'})
 			var asm_name = asms[i].name;
 			asm.on('click', function(){
 			    asm_picked.push(asm_name);
@@ -321,7 +322,8 @@
 			for (j=0; j<asms.length;j++){
 			    (function(j) {
 				var asm_id = 'pipe-' + asms[j].name
-				var asm = $('<li id="' + asm_id + '"><a>' + asms[j].name + '</a></li>');
+				var asm = $('<li data-toggle="tooltip" data-placement="right" title="' + asms[j].description + '" id="' + asm_id + '"><a>' + asms[j].name + '</a></li>');
+				asm.tooltip({containter: 'body'})
 				var asm_name = asms[j].name;
 				asm.on('click', function(){
 				    pipe_picked.push(asm_name);
@@ -474,7 +476,6 @@
                 arRequest.message = desc;
 	    	run_asm(arRequest);
 	    });
-
 
 
             tabs.append(asm_div);

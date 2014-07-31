@@ -1307,11 +1307,8 @@ def gene_network(meth, hm=None, workspace_id=None):
         raw_data = ws.get_object({'auth': meth.token, 'workspace': workspace_id, 'id': hm, 'type': dt_type})
     else:
         raw_data = {}
-    # ideally, you should make the height dynamic based upon the amount of data.
-    # By default, the widget has 100px of padding around the data, and the rest of the height is used for the heatmap
-    # So figure out how much you want. 50px/row looks like the minimum you can use, more may be better.
-    # calculate (height of row (at least 50) ) * num_row_labels and toss that in as the height param.
-    data = {'dataset': raw_data, 'height' : '1000px'}
+
+    data = {'dataset': raw_data, 'height' : str(len(raw_data["data"]["row_labels"]) * 18) + "px"}
     return json.dumps(data)
 
 finalize_service()

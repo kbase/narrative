@@ -332,7 +332,7 @@
 	    if (self.state['clicked']) {
 		console.log('assembly already run')
 		self.$elem.find('fieldset').attr('disabled', "true");
-		$('.asm-choose').attr('value', self.state['recipe']);
+		$('select option[value = "' + self.state['recipe'] + '"]').attr('selected', 'selected');
 	    } else{
 		console.log('not run yet')
 	    }

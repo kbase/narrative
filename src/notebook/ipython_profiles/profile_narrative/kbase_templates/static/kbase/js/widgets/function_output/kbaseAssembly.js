@@ -41,7 +41,7 @@
                 "ids": [], 
                 "message": null, 
                 "recipe": null,
-                "pipeline": [['spades']],
+                "pipeline": null,
                 "queue": null, 
                 "single": [[]],
                 "pair": [],
@@ -369,6 +369,17 @@
                 arRequest.message = desc;
 	    	run_asm(arRequest, desc);
 	    });
+
+
+	    asm_btn2.one("click", function(){
+                var recipe = [asm_choose.find('select option:selected').val()];
+                var desc = asm_desc2.find('input').val();
+	    	self.state['description'] = desc;
+                arRequest.pipeline = [asm_picked.join(' ')];
+                arRequest.message = desc;
+	    	run_asm(arRequest);
+	    });
+
 
             tabs.append(asm_div);
             tabs.append(asm_div2);

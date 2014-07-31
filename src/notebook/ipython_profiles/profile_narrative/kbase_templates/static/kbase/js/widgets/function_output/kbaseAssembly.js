@@ -101,9 +101,19 @@
 	    var dt = make_data_table(kb_info);
 	    data_report.append(dt)
             self.$elem.append(data_report);
+	    var tabs = $('<div id="tabs">')
+	    var nav = $('<ul class="nav nav-pills"> \
+                           <li class="active"><a href="#frag-recipes">Recipes</a></li> \
+                           <li><a href="#frag-assemblers">Assemblers</a></li> \
+                           <li><a href="#frag-pipeline">Pipeline</a></li> \
+                           <li><a href="#frag-advanced">Advanced</a></li> \
+                         </ul>');
+	    tabs.append(nav);
 
-            var asm_div = $('<div class="row">');
-            var asm_choose = $('<label class="col-md-1 control-label asm-choose">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
+
+	    /////// Recipes
+            var asm_div = $('<div class="row" id="frag-recipes">');
+            var asm_choose = $('<span class="col-md-3"><select class="form-control" name="assemblers"> \
                                       <option value="auto">Arast Smart Workflow</option> \
                                       <option value="fast">Fast Pipeline</option> \
                                       <option value="tune_velvet">Intelligent Velvet</option> \
@@ -111,7 +121,22 @@
                                     </select></span>');
             var asm_desc = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
-            asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
+//            asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
+            asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc));
+
+
+	    //////// Assemblers
+
+
+            var asm_div2 = $('<div class="row" id="frag-assemblers">');
+            var asm_choose2 = $('<label class="col-md-1 control-label asm-choose">Multi</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
+                                      <option value="auto">Arast Smart Workflow</option> \
+                                      <option value="fast">Fast Pipeline</option> \
+                                      <option value="tune_velvet">Intelligent Velvet</option> \
+                                      <option value="kiki">Kiki Assembler</option> \
+                                    </select></span>');
+            var asm_desc2 = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
+            asm_div2.append($('<fieldset><div class="form-group">').append(asm_choose2, asm_desc2));
 
 	    asm_btn.one("click", function() {
 		self.state['clicked'] = true;
@@ -228,7 +253,10 @@
                 });
 
             });
-            self.$elem.append(asm_div);
+            tabs.append(asm_div);
+            tabs.append(asm_div2);
+            self.$elem.append(tabs);
+	    $('#tabs').tabs();
 	    
             var make_status_table = function(job_id, desc, status) {
 		var status_box = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">')
@@ -353,45 +381,42 @@
 	},
 
 	showResults: function(token, assemblies, best, route, report, job_id){
-	    console.log('showResults')
 	    var self = this;
-	    if (self.reloaded) {
-		console.log('Widget already reloaded')
-		return;
-	    }
-	    var result_btn_row = $('<div class="row pull-right">')
-	    var import_btn_group = $('<span class="btn-group"></span>');
-	    var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Save Contigs <span class="caret"></span> </button>');
-	    var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-	    var contig_import_auto = $('<li><a>Auto Select</a></li>');
-	    contig_import_auto.one("click", function() {
-		self.import_contigs_to_ws(token, self.fba_url, self.ws_url, self.ws_name, best.shock_id, best.shock_url, best.name);
-	    });
-
-	    import_btn_sel.append(contig_import_auto);
-	    import_btn_sel.append('<li class="divider"></li>')
-	    for (i=0; i<assemblies.length;i++){
-		var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
-		ws_contig_name = job_id + '_' + assemblies[i].name;
-		shock_url = assemblies[i].file_infos[0].shock_url;
-		shock_id = assemblies[i].file_infos[0].shock_id;
-		contig_import.one("click", function() {
-		    self.import_contigs_to_ws(token, self.fba_url, self.ws_url, self.ws_name, shock_id, shock_url, ws_contig_name);
+	    if (!self.reloaded) {
+		var result_btn_row = $('<div class="row pull-right">')
+		var import_btn_group = $('<span class="btn-group"></span>');
+		var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Save Contigs <span class="caret"></span> </button>');
+		var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
+		var contig_import_auto = $('<li><a>Auto Select</a></li>');
+		contig_import_auto.one("click", function() {
+		    self.import_contigs_to_ws(token, self.fba_url, self.ws_url, self.ws_name, best.shock_id, best.shock_url, best.name);
 		});
-		import_btn_sel.append(contig_import);
-	    }
-	    import_btn_group.append(import_btn);
-	    import_btn_group.append(import_btn_sel);
-	    result_btn_row.append(import_btn_group);
 
-	    var full_link = self.arURL + route;
-	    var report_div = '<div class="">'
+		import_btn_sel.append(contig_import_auto);
+		import_btn_sel.append('<li class="divider"></li>')
+		for (i=0; i<assemblies.length;i++){
+		    var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
+		    ws_contig_name = job_id + '_' + assemblies[i].name;
+		    shock_url = assemblies[i].file_infos[0].shock_url;
+		    shock_id = assemblies[i].file_infos[0].shock_id;
+		    contig_import.one("click", function() {
+			self.import_contigs_to_ws(token, self.fba_url, self.ws_url, self.ws_name, shock_id, shock_url, ws_contig_name);
+		    });
+		    import_btn_sel.append(contig_import);
+		}
+		import_btn_group.append(import_btn);
+		import_btn_group.append(import_btn_sel);
+		result_btn_row.append(import_btn_group);
+
+		var full_link = self.arURL + route;
+		var report_div = '<div class="">'
 		
-	    report_div += '<code style="font-size:4px>' + report +'</code><br>'
-	    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
-	    self.$elem.append(report_div);
-	    self.$elem.append(result_btn_row);
-	    self.reloaded = true;
+		report_div += '<code style="font-size:4px>' + report +'</code><br>'
+		result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
+		self.$elem.append(report_div);
+		self.$elem.append(result_btn_row);
+		self.reloaded = true;
+	    }
 	},
 
 

@@ -774,13 +774,13 @@ def _compare_models(meth, model_ids):
     return json.dumps({'data': comparemod})
 
 
-@method(name="Genome Comparison from PanGenome")
+@method(name="Genome Comparison from Pangenome")
 def _compare_genomes(meth, pangenome_id):
     """Genome Comparison analysis based on the PanGenome input. 
     
-    :param pangenome_id: PanGenome id 
+    :param pangenome_id: Pangenome ID 
     :type pangenome_id: kbtypes.KBaseGenomes.Pangenome
-    :ui_name pangenome_id: Genome IDs
+    :ui_name pangenome_id: Pangenome ID
 
     :return: Uploaded Genome Comparison Data
     :rtype: kbtypes.KBaseGenomes.GenomeComparison

@@ -38,7 +38,7 @@
                 var simuTable = $('<table class="table table-bordered table-striped" style="width: 100%;">');
                 var tabs = container.kbTabs({tabs: [
                                             {name: 'Overview', active: true},
-                                            {name: 'SimulationSet', content: simuTable}]
+                                            {name: 'Simulation Results', content: simuTable}]
                                           })
 
                 var keys = [
@@ -74,7 +74,7 @@
                      "aaSorting": [[ 3, "desc" ]],
                      "aoColumns": [
                        { "sTitle": "Name", 'mData': 'id'},
-                       { "sTitle": "phenoclass", 'mData': function(d) {
+                       { "sTitle": "Class", 'mData': function(d) {
                          return d.phenoclass;
                        }},
                        { "sTitle": "Simulated Growth", 'mData': function(d) {

@@ -129,8 +129,12 @@
 			    post.push(all[i]);
 			}
 		    }
+		    console.log('all')
+		    console.log(all)
 
-		    deferred.resolve([pre, asms, post]);
+		    //// FIX: modules are tagged, rather than categorized
+//		    deferred.resolve([pre, asms, post]);
+		    deferred.resolve([all]);
 		})
 		return deferred.promise();
 	    }

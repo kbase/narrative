@@ -28,7 +28,7 @@
 	    console.log('test')
 	    //Get this from options
             var user = options.ar_user
-            token = options.ar_token
+            self.token = options.ar_token
             self.arURL = options.ar_url
 	    self.ws_url = options.ws_url
 	    self.ws_name = options.ws_name
@@ -124,18 +124,19 @@
                 arRequest.recipe = recipe;
                 arRequest.message = desc;
                 asm_div.find('fieldset').attr('disabled', "true");
-		
+		console.log('go');
+		console.log(self);
                 $.ajax({
                     contentType: 'application/json',
                     url: self.arURL + 'user/' + user + '/job/new/',
                     type: 'post',
                     data: JSON.stringify(arRequest),
-                    headers: {Authorization: token},
+                    headers: {Authorization: self.token},
                     datatype: 'json',
                     success: function(data){
                         console.log(data);
                         job_id = data;
-			self.job_id = data;
+			self.state['job_id'] = data;
                             // var job_alert = $('<div class="row "><span class="col-md-4 col-md-offset-4 alert alert-success alert-dismissable"> \
                             //   <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> \
                             //   <strong>Success: </strong> Assembly Job ' + data + ' submitted.</span></div>');
@@ -145,7 +146,7 @@
 			var kill_div = $('<div></div>')
 			var kill_btn = $('<span class="button btn btn-danger pull-right">Terminate</span>')
 			kill_btn.one("click", function(){
-			    kill_job(job_id, token).done(function(res){
+			    kill_job(job_id, self.token).done(function(res){
 				console.log(res)
 				kill_btn.text('Terminating...');
 			    })
@@ -206,7 +207,12 @@
 
 					//// All request done, show results and create buttons
 					$.when(defer_asm, defer_auto, defer_route, defer_report).done(function(assemblies, best, route, report){
-					    self.showResults(token, assemblies, best, route, report);
+					    self.state['assemblies'] = assemblies
+					    self.state['best'] = best
+					    self.state['route'] = route
+					    self.state['report'] = report
+					    console.log('showing results for the first time')
+					    self.showResults(self.token, assemblies, best, route, report, job_id);
 					}
 					);
                                     }
@@ -333,14 +339,26 @@
 		console.log('assembly already run')
 		self.$elem.find('fieldset').attr('disabled', "true");
 		$('select option[value = "' + self.state['recipe'] + '"]').attr('selected', 'selected');
+		self.showResults(self.token, 
+				 self.state['assemblies'],
+				 self.state['best'],
+				 self.state['route'],
+				 self.state['report'],
+				 self.state['job_id']);
+		
 	    } else{
 		console.log('not run yet')
 	    }
 
 	},
 
-	showResults: function(token, assemblies, best, route, report){
+	showResults: function(token, assemblies, best, route, report, job_id){
+	    console.log('showResults')
 	    var self = this;
+	    if (self.reloaded) {
+		console.log('Widget already reloaded')
+		return;
+	    }
 	    var result_btn_row = $('<div class="row pull-right">')
 	    var import_btn_group = $('<span class="btn-group"></span>');
 	    var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Save Contigs <span class="caret"></span> </button>');
@@ -373,7 +391,7 @@
 	    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
 	    self.$elem.append(report_div);
 	    self.$elem.append(result_btn_row);
-
+	    self.reloaded = true;
 	},
 
 

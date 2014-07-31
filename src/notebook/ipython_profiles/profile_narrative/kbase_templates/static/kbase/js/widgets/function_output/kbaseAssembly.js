@@ -107,6 +107,33 @@
 		return deferred.promise();
 	    }
 
+	    var get_modules = function(){
+		var deferred = $.Deferred();
+		$.get(self.arURL + '/module/avail').done(function(mod_avail){
+		    pre = []
+		    asms = []
+		    post = []
+		    all = JSON.parse(mod_avail);
+		    for (i=0; i<all.length; i++) {
+			if (all[i].stages.search('pre') != -1){
+			    pre.push(all[i]);
+			}
+		    }
+		    for (i=0; i<all.length; i++) {
+			if (all[i].stages.search('assembler') != -1){
+			    asms.push(all[i]);
+			}
+		    }
+		    for (i=0; i<all.length; i++) {
+			if (all[i].stages.search('post') != -1){
+			    post.push(all[i]);
+			}
+		    }
+
+		    deferred.resolve([pre, asms, post]);
+		})
+		return deferred.promise();
+	    }
 
             var kill_job = function(job_id, token) {
                 var prom = $.ajax({
@@ -196,6 +223,8 @@
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
 
+
+
 	    //////// Assemblers
 	    var asm_div2 = $('<div id="frag-assemblers">');
             var asm_row = $('<div class="row">');
@@ -251,11 +280,70 @@
 	    asm_row.append(add_asm_group, assembler_pool);
 	    asm_row2.append(asm_desc2, asm_btn2);
 	    asm_div2.append(asm_row, asm_row2);
-
 	    //////////////////// end Assemblers
 
 
+	    //////// Pipeline
+	    var asm_div3 = $('<div id="frag-pipeline">');
+            var pipe_row1 = $('<div class="row">');
+	    var add_pipe_group = $('<span class="btn-group col-md-3"></span>');
+	    var add_pipe_btn = $('<button type="button" class="btn btn-default btn-success dropdown-toggle" data-toggle="dropdown"> Add Module <span class="caret"></span> </button>');
+	    var add_pipe_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
+	    var pipeline_pool = $('<div class="well col-md-8">')
+	    var pipe_picked = []
+            var pipe_row2 = $('<div class="row">');
+            var pipe_desc = $('<div class="col-md-9"><input type="text" class="form-control" style="width:100%" placeholder="Description"></div>')
+            var pipe_btn = $('<span class="col-md-3"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
 
+	    var update_pipe_pool = function(pool){
+		var body = $('<div>');
+		for (i=0; i<pool.length;i++){
+		    (function(i) {
+			body.append($('<div class="btn btn-primary btn-sm">' + pool[i] + '</div>').on('click', function(){
+			    console.log(pool[i])
+			    console.log('#asm-' + pool[i]);
+			    $('#pipe-' + pool[i]).attr('disabled', "false");
+			    $('#pipe-' + pool[i]).show()
+			    var asm_idx = pool.indexOf(pool[i]);
+			    pool.splice(asm_idx, 1);
+			    update_pipe_pool(pool);
+			}))
+		    })(i);
+		}
+		console.log(body)
+		pipeline_pool.html(body);
+	    }
+
+	    get_modules().done(function(lists){
+		for (i=0; i<lists.length;i++){
+		    (function(i) {
+			var asms = lists[i];
+			for (j=0; j<asms.length;j++){
+			    (function(j) {
+				var asm_id = 'pipe-' + asms[j].name
+				var asm = $('<li id="' + asm_id + '"><a>' + asms[j].name + '</a></li>');
+				var asm_name = asms[j].name;
+				asm.on('click', function(){
+				    pipe_picked.push(asm_name);
+				    update_pipe_pool(pipe_picked);
+				    $('#' + asm_id).attr('disabled', "true");
+				    $('#' + asm_id).hide();
+				});
+				add_pipe_sel.append(asm);
+
+			    })(j);}
+
+
+		    })(i);
+		}
+	    })
+	    
+	    add_pipe_group.append(add_pipe_btn);
+	    add_pipe_group.append(add_pipe_sel);
+	    pipe_row1.append(add_pipe_group, pipeline_pool);
+	    pipe_row2.append(pipe_desc, pipe_btn);
+	    asm_div3.append(pipe_row1, pipe_row2);
+	    //////////////////// end Pipeline
 
 	    var run_asm = function(arRequest) {
 	    	self.state['clicked'] = true;
@@ -372,7 +460,6 @@
 
 
 	    asm_btn2.one("click", function(){
-                var recipe = [asm_choose.find('select option:selected').val()];
                 var desc = asm_desc2.find('input').val();
 	    	self.state['description'] = desc;
                 arRequest.pipeline = [asm_picked.join(' ')];
@@ -380,9 +467,19 @@
 	    	run_asm(arRequest);
 	    });
 
+	    pipe_btn.one("click", function(){
+                var desc = pipe_desc.find('input').val();
+	    	self.state['description'] = desc;
+                arRequest.pipeline = [pipe_picked]
+                arRequest.message = desc;
+	    	run_asm(arRequest);
+	    });
+
+
 
             tabs.append(asm_div);
             tabs.append(asm_div2);
+            tabs.append(asm_div3);
             self.$elem.append(tabs);
 	    $('#tabs').tabs();
 	    

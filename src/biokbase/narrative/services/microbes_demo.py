@@ -220,10 +220,10 @@ def _upload_contigs(meth, contig_set):
 
 @method(name="Upload Genome (GBK-file)")
 def _upload_genome(meth, genome_id):
-    """Upload a Genome and ContigSet from GBK-file into your workspace.
-    This function should be run before adding SEED annotations to this Genome. [20]
+    """Upload a Genome and ContigSet from GBK-file (or files in case of zip) into your workspace.
+    This function should be run before adding SEED annotations to this Genome. [25]
 
-    :param genome_id: Output Genome ID. If empty, an ID will be chosen randomly. [20.1]
+    :param genome_id: Output Genome ID. If empty, an ID will be chosen randomly. [25.1]
     :type genome_id: kbtypes.KBaseGenomes.Genome
     :ui_name genome_id: Genome Object ID
     :return: Preparation message
@@ -235,6 +235,34 @@ def _upload_genome(meth, genome_id):
     meth.stages = 1
     workspace = os.environ['KB_WORKSPACE_ID']
     return json.dumps({'ws_name': workspace, 'genome_id': genome_id, 'type': 'gbk'})
+
+@method(name="Import NCBI Genome")
+def _import_ncbi_genome(meth, ncbi_genome_name, genome_id):
+    """Import a Genome and ContigSet from NCBI into your workspace. [26]
+
+    :param ncbi_genome_name: Name of public genome accessible on NCBI FTP. [26.1]
+    :type ncbi_genome_name: kbtypes.Unicode
+    :ui_name ncbi_genome_name: NCBI Genome Name
+    :param genome_id: Output Genome ID. If empty, an ID will be chosen automatically. [26.2]
+    :type genome_id: kbtypes.KBaseGenomes.Genome
+    :ui_name genome_id: Genome Object ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :input_widget: NcbiGenomeImportInput
+    :output_widget: GenomeAnnotation
+    """
+    if not genome_id:
+        genome_id = ncbi_genome_name.replace(' ', '_') + '.ncbi'
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    cmpClient = GenomeComparison(url = service.URLS.genomeCmp, token = token)
+    import_ncbi_genome_params = {
+        'genome_name': ncbi_genome_name, 
+        'out_genome_ws': workspace, 
+        'out_genome_id': genome_id, 
+    }
+    cmpClient.import_ncbi_genome(import_ncbi_genome_params)
+    return json.dumps({'ws_name': workspace, 'ws_id': genome_id})
 
 @method(name="Convert Contigs to a Genome")
 def _prepare_genome(meth, contig_set, scientific_name, out_genome):

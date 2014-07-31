@@ -50,6 +50,79 @@
 	    // State variables
 
 	    
+
+	    /////////// Functions 
+
+            var make_status_table = function(job_id, desc, status) {
+		var status_box = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">')
+                    .append('<thead><tr><th>Job ID</th><th>Description</th><th>Status</th></tr></thead>')
+                    .append('<tbody><td>' + job_id + '</td><td>'+ desc +'</td><td>'+ status +'</td></tbody>')
+                return status_box;
+            };
+
+            var check_status = function(j_id) {
+                var prom = $.get(self.arURL + '/user/' + user + '/job/' + j_id + '/status/')
+                return prom;
+            }
+	    
+            var request_job_report = function(job_id) {
+		console.log('report')
+                var prom = $.get(self.arURL + '/static/serve/' + user + '/job/' + job_id)
+                return prom;
+            }
+	    
+            var get_job_report_txt = function(job_id) {
+                var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/report');
+                return prom
+            }
+
+            var get_job_report_log = function(job_id) {
+                var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/log');
+                return prom
+            }
+
+	    var get_assemblies = function(job_id){
+		var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/results?type=contigs,scaffolds');
+		return prom
+	    }
+
+	    var get_best_assembly = function(job_id){
+		var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/assemblies/auto')
+		return prom
+	    }
+
+	    var get_assemblers = function(){
+		var deferred = $.Deferred();
+		$.get(self.arURL + '/module/avail').done(function(mod_avail){
+		    asms = []
+		    all = JSON.parse(mod_avail);
+		    console.log(all)
+		    for (i=0; i<all.length; i++) {
+			if (all[i].stages.search('assembler') != -1){
+			    asms.push(all[i]);
+			}
+		    }
+		    deferred.resolve(asms);
+		})
+		return deferred.promise();
+	    }
+
+
+            var kill_job = function(job_id, token) {
+                var prom = $.ajax({
+                    contentType: 'application/json',
+                    url: self.arURL + 'user/' + user + '/job/' + job_id + '/kill',
+                    type: 'get',
+                    headers: {Authorization: token}});
+                return prom;
+            }
+
+
+	    //////////// End functions
+
+
+
+
 	    // Parses the AssemblyInput object and displays it in the table
 	    var data_report = $('<div class="panel panel-info" style="padding:10px">')
 		    .append('<div class="panel-heading panel-title">Assembly Service Data Set </div>');
@@ -126,17 +199,17 @@
 
 
 	    //////// Assemblers
-
-
             var asm_div2 = $('<div class="row" id="frag-assemblers">');
-            var asm_choose2 = $('<label class="col-md-1 control-label asm-choose">Multi</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
-                                      <option value="auto">Arast Smart Workflow</option> \
-                                      <option value="fast">Fast Pipeline</option> \
-                                      <option value="tune_velvet">Intelligent Velvet</option> \
-                                      <option value="kiki">Kiki Assembler</option> \
-                                    </select></span>');
-            var asm_desc2 = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
-            asm_div2.append($('<fieldset><div class="form-group">').append(asm_choose2, asm_desc2));
+	    var add_asm_group = $('<span class="btn-group"></span>');
+	    var add_asm_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Add Assembler <span class="caret"></span> </button>');
+	    var add_asm_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
+
+	    console.log('get')
+	    get_assemblers().done(function(asms){
+		console.log(asms)
+	    })
+
+//            asm_div2.append($('<fieldset><div class="form-group">').append(asm_choose2, asm_desc2));
 
 	    asm_btn.one("click", function() {
 		self.state['clicked'] = true;
@@ -258,54 +331,6 @@
             self.$elem.append(tabs);
 	    $('#tabs').tabs();
 	    
-            var make_status_table = function(job_id, desc, status) {
-		var status_box = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">')
-                    .append('<thead><tr><th>Job ID</th><th>Description</th><th>Status</th></tr></thead>')
-                    .append('<tbody><td>' + job_id + '</td><td>'+ desc +'</td><td>'+ status +'</td></tbody>')
-                return status_box;
-            };
-
-            var check_status = function(j_id) {
-                var prom = $.get(self.arURL + '/user/' + user + '/job/' + j_id + '/status/')
-                return prom;
-            }
-	    
-            var request_job_report = function(job_id) {
-		console.log('report')
-                var prom = $.get(self.arURL + '/static/serve/' + user + '/job/' + job_id)
-                return prom;
-            }
-	    
-            var get_job_report_txt = function(job_id) {
-                var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/report');
-                return prom
-            }
-
-            var get_job_report_log = function(job_id) {
-                var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/log');
-                return prom
-            }
-
-	    var get_assemblies = function(job_id){
-		var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/results?type=contigs,scaffolds');
-		return prom
-	    }
-
-	    var get_best_assembly = function(job_id){
-		var prom = $.get(self.arURL + '/user/' + user + '/job/' + job_id + '/assemblies/auto')
-		return prom
-	    }
-
-            var kill_job = function(job_id, token) {
-                var prom = $.ajax({
-                    contentType: 'application/json',
-                    url: self.arURL + 'user/' + user + '/job/' + job_id + '/kill',
-                    type: 'get',
-                    headers: {Authorization: token}});
-                return prom;
-            }
-
-
 
             return this;	    
         },

@@ -252,7 +252,11 @@ def _import_ncbi_genome(meth, ncbi_genome_name, genome_id):
     :output_widget: GenomeAnnotation
     """
     if not genome_id:
-        genome_id = ncbi_genome_name.replace(' ', '_') + '.ncbi'
+        chars = ['\'',' ','-','=','.','/','(',')','_',':','+','*','#',',','[',']']
+        genome_id_prefix = ncbi_genome_name
+        for ch in chars:
+            genome_id_prefix = genome_id_prefix.replace(ch, '_')
+        genome_id = genome_id_prefix + '.ncbi'
     meth.stages = 1
     token, workspace = meth.token, meth.workspace_id
     cmpClient = GenomeComparison(url = service.URLS.genomeCmp, token = token)

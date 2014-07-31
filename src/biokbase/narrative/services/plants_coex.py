@@ -55,26 +55,23 @@ NAME = "Plants Coexpression Service"
 
 
 class URLS:
-    _host = '140.221.84.248'
-    main = "http://140.221.84.236:8000/node"
-    shock = "http://140.221.84.236:8000"
-    awe = "http://140.221.85.182:7080"
-    expression = "http://{}:7075".format(_host)
+    #awe = "http://140.221.85.182:7080"
+    awe = "https://kbase.us/services/awe-api/"
     workspace = "http://kbase.us/services/workspace"
     ws = "http://kbase.us/services/ws"
     #ws = "http://140.221.84.209:7058"
     ids = "http://kbase.us/services/idserver"
-    #ontology = "http://kbase.us/services/ontology_service"
-    ontology = "http://140.221.85.171:7062"
-    gwas = "http://140.221.85.182:7086"
-    coex = "http://140.221.85.182:7063"
-    ujs = "http://140.221.85.171:7083"
-    #cdmi = "http://kbase.us/services/cdmi_api"
+    ontology = "http://kbase.us/services/ontology_service"
+    #ontology = "http://140.221.85.171:7062"
+    gwas = "https://kbase.us/services/GWAS"
+    coex = "https://kbase.us/services/coexpression"
+    ujs = "https://kbase.us/services/userandjobstate/"
+    cdmi = "http://kbase.us/services/cdmi_api"
     #cdmi = "http://140.221.84.182:7032"
-    cdmi  = "http://140.221.85.181:7032"
+    #cdmi  = "http://140.221.85.181:7032"
     #idmap = "http://140.221.85.96:7111"
-    #idmap = "http://140.221.85.181:7111"
-    idmap = "http://kbase.us/services/id_map"
+    idmap = "http://140.221.85.181:7111"
+    #idmap = "http://kbase.us/services/id_map"
 
 
 class Node:

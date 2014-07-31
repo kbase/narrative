@@ -45,21 +45,33 @@ class="notebook_app"
 
 {% block site %}
 <div id="main-container">
-    <div id="menubar" class="hidden">
+
+    <div id="left-column">
+        <div id="kb-ws"></div>
+        <div id="kb-jobs-panel" class="left-pane"></div>
+        <div id="kb-function-panel" class="left-pane"></div>
+        <div id="kb-function-help"></div>
+
+     </div>
+
+     <div id="content-column">
+        <div id="menubar-container" class="narrative-menu-container pull-left">
+            <div id="menubar">
                 <div class="navbar">
                     <div>
                         <div >
-                            <ul id="menus" class="nav navbar-nav">
+                            <!-- <ul id="menus" class="nav navbar-nav ">
                                 <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">File</a>
                                     <ul class="dropdown-menu">
                                         <li id="new_notebook"><a href="#">New</a></li>
-                                        <li id="open_notebook"><a href="#">Open...</a></li>
-                                        <!-- <hr/> -->
+                                        <li id="open_notebook"><a href="#">Open...</a></li> 
+                                         <hr/> 
                                         <li class="divider"></li>
-                                        <li id="copy_notebook"><a href="#">Make a Copy...</a></li>
+                                        <li id="copy_notebook"><a href="#">Make a Copy...</a></li> 
                                         <li id="rename_notebook"><a href="#">Rename...</a></li>
-                                        <li id="save_checkpoint"><a href="#">Save and Checkpoint</a></li>
-                                        <!-- <hr/> -->
+                                        <li id="save_checkpoint"><a href="#">Save</a></li>
+                                        <li id="save_checkpoint"><a href="#">Save and Checkpoint</a></li> 
+                                         <hr/> 
                                         <li class="divider"></li>
                                         <li id="restore_checkpoint" class="dropdown-submenu"><a href="#">Revert to Checkpoint</a>
                                           <ul class="dropdown-menu">
@@ -79,7 +91,7 @@ class="notebook_app"
                                         </li>
                                         <li class="divider"></li>
 
-                                        <li id="kill_and_exit"><a href="#" >Close and halt</a></li>
+                                        <li id="kill_and_exit"><a href="#" >Close and halt</a></li> 
                                     </ul>
                                 </li>
                                 <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit</a>
@@ -88,17 +100,17 @@ class="notebook_app"
                                         <li id="copy_cell"><a href="#">Copy Cell</a></li>
                                         <li id="paste_cell_above" class="disabled"><a href="#">Paste Cell Above</a></li>
                                         <li id="paste_cell_below" class="disabled"><a href="#">Paste Cell Below</a></li>
-                                        <li id="paste_cell_replace" class="disabled"><a href="#">Paste Cell &amp; Replace</a></li>
+                                        <li id="paste_cell_replace" class="disabled"><a href="#">Paste Cell &amp; Replace</a></li> 
                                         <li id="delete_cell"><a href="#">Delete Cell</a></li>
                                         <li id="undelete_cell" class="disabled"><a href="#">Undo Delete Cell</a></li>
                                         <li class="divider"></li>
                                         <li id="split_cell"><a href="#">Split Cell</a></li>
                                         <li id="merge_cell_above"><a href="#">Merge Cell Above</a></li>
-                                        <li id="merge_cell_below"><a href="#">Merge Cell Below</a></li>
+                                        <li id="merge_cell_below"><a href="#">Merge Cell Below</a></li> 
                                         <li class="divider"></li>
                                         <li id="move_cell_up"><a href="#">Move Cell Up</a></li>
                                         <li id="move_cell_down"><a href="#">Move Cell Down</a></li>
-                                        <li class="divider"></li>
+                                        <li class="divider"></li> 
                                         <li id="select_previous"><a href="#">Select Previous Cell</a></li>
                                         <li id="select_next"><a href="#">Select Next Cell</a></li>
                                     </ul>
@@ -113,10 +125,10 @@ class="notebook_app"
                                     <ul class="dropdown-menu">
                                         <li id="insert_cell_above"><a href="#">Insert Cell Above</a></li>
                                         <li id="insert_cell_below"><a href="#">Insert Cell Below</a></li>
-                                        <li id="insert_rickroll_cell_below"><a href="#">Insert Rickroll Widget Below</a></li>
+                                        <li id="insert_rickroll_cell_below"><a href="#">Insert Rickroll Widget Below</a></li> 
                                     </ul>
                                 </li>
-                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Cell</a>
+                               <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Cell</a>
                                     <ul class="dropdown-menu">
                                         <li id="run_cell"><a href="#">Run</a></li>
                                         <li id="run_cell_in_place"><a href="#">Run in Place</a></li>
@@ -148,7 +160,7 @@ class="notebook_app"
                                             </ul>
                                         </li>
                                     </ul>
-                                </li>
+                                </li> 
                                 <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Kernel</a>
                                     <ul class="dropdown-menu">
                                         <li id="int_kernel"><a href="#">Interrupt</a></li>
@@ -168,41 +180,26 @@ class="notebook_app"
                                         <li><a href="http://matplotlib.sourceforge.net/" target="_blank">Matplotlib</a></li>
                                     </ul>
                                 </li>
-                            </ul>
-                            <div id="notification_area"></div>
+                            </ul> 
+                            <div id="notification_area"></div> -->
                         </div>
                     </div>
                 </div>
-            </div>
-<!--     <div id="kb-ws-guard">Connecting to KBase..</div>
- -->
-    <div id="left-column">
-        <div id="kb-ws"></div>
-        <div id="kb-jobs-panel" class="left-pane"></div>
-        <div id="kb-function-panel" class="left-pane"></div>
-        <div id="kb-function-help"></div>
-
-     </div>
-
-     <div id="content-column">
-        <div id="menubar-container" class="narrative-menu-container pull-left">
-            <div id="maintoolbar" class="navbar" style="z-index:100;">
-              <div class="toolbar-inner navbar-nobg pull-left">
-                <div id="maintoolbar-container" class="container"></div>
-              </div>
-            </div>
-            <div></div>
-            <div id="narrative-title">
-                <span id="save_widget" class="nav pull-left">
-                    <span id="notebook_name"></span>
-                    <span id="checkpoint_status"></span>
-                    <span id="autosave_status"></span>
-                </span>
-                <span> &nbsp;</span>
+                <div id="maintoolbar" class="navbar" style="z-index:100;">
+                    <div class="toolbar-inner navbar-nobg pull-left">
+                        <div id="maintoolbar-container" class="container"></div>
+                    </div>
+                    <div class="version-stamp pull-right">KBase Narrative<br></div>
+                </div>
+                <div id="narrative-title">
+                    <span id="save_widget" class="nav pull-left">
+                        <span id="notebook_name"></span>
+                        <span id="checkpoint_status"></span>
+                        <span id="autosave_status"></span>
+                    </span>
+                </div>
             </div>
         </div>
-
-
 
         <div id="ipython-main-app">
             <div id="notebook_panel">
@@ -240,6 +237,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/InvocationService.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/KBaseTrees.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/genomeComparisonClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs2.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -267,6 +265,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseDefaultNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseBuildMediaInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/rastGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <!-- function output JS widgets -->
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput.js") }}" type="text/javascript" charset="utf-8"></script>

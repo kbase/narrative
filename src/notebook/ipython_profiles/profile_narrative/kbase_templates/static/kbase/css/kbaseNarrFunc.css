@@ -281,6 +281,8 @@
   padding: 5px 10px;
 }
 
+
+
 .kb-func-panel .panel-body {
     padding: 0px 10px;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -313,6 +315,10 @@
     padding: 5px 10px;
 }
 
+.kb-cell-error .panel-heading {
+    background-image: none;
+    padding: 5px 10px;
+}
 /*** styling for the jobs manager */
 .kb-jobs-title {
     font-family: "OxygenBold", Arial, sans-serif; 

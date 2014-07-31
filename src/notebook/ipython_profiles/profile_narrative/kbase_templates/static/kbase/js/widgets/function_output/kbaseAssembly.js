@@ -194,7 +194,6 @@
             var asm_desc = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
-//            asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc));
 
 
 	    //////// Assemblers
@@ -253,17 +252,14 @@
 	    asm_row2.append(asm_desc2, asm_btn2);
 	    asm_div2.append(asm_row, asm_row2);
 
+	    //////////////////// end Assemblers
 
-	    asm_btn.one("click", function() {
-		self.state['clicked'] = true;
-                var recipe = [asm_choose.find('select option:selected').val()];
-                var desc = asm_desc.find('input').val();
 
-		self.state['recipe'] = recipe;
-		self.state['description'] = desc;
 
-                arRequest.recipe = recipe;
-                arRequest.message = desc;
+
+	    var run_asm = function(arRequest) {
+	    	self.state['clicked'] = true;
+
                 asm_div.find('fieldset').attr('disabled', "true");
                 $.ajax({
                     contentType: 'application/json',
@@ -275,81 +271,81 @@
                     success: function(data){
                         console.log(data);
                         job_id = data;
-			self.state['job_id'] = data;
+	    		self.state['job_id'] = data;
                         var status = 'Submitted';
-                        var status_box = make_status_table(job_id, desc, status);
-			var kill_div = $('<div></div>')
-			var kill_btn = $('<span class="button btn btn-danger pull-right">Terminate</span>')
-			kill_btn.one("click", function(){
-			    kill_job(job_id, self.token).done(function(res){
-				console.log(res)
-				kill_btn.text('Terminating...');
-			    })
-			})
+                        var status_box = make_status_table(job_id, arRequest.message, status);
+	    		var kill_div = $('<div></div>')
+	    		var kill_btn = $('<span class="button btn btn-danger pull-right">Terminate</span>')
+	    		kill_btn.one("click", function(){
+	    		    kill_job(job_id, self.token).done(function(res){
+	    			console.log(res)
+	    			kill_btn.text('Terminating...');
+	    		    })
+	    		})
                         self.$elem.append(status_box);
-			kill_div.append(kill_btn);
+	    		kill_div.append(kill_btn);
                         self.$elem.append(kill_div);
 
 			
-			/////////////////////////////////////////
-			///     Wait for job to complete  ///////
-			/////////////////////////////////////////
+	    		/////////////////////////////////////////
+	    		///     Wait for job to complete  ///////
+	    		/////////////////////////////////////////
                         var update_status = function() {
                             var prom = check_status(job_id);
 
                             $.when(prom).done(function(stat){
-                                status_box.html(make_status_table(job_id, desc, stat));
-				status_box.css("border", "none")
+                                status_box.html(make_status_table(job_id, arRequest.message, stat));
+	    			status_box.css("border", "none")
                                 if (stat.search('Complete') != -1 || stat.search('FAIL') != -1) {
                                     clearInterval(status_updater);
-				    kill_div.html("");
+	    			    kill_div.html("");
                                     if (stat.search('Complete') != -1) {
                                         var report_txt = null;
-					var defer_asm = $.Deferred();
-					var defer_auto = $.Deferred();
-					var defer_route = $.Deferred();
-					var defer_report = $.Deferred();
-					//// Get all assemblies
-					get_assemblies(job_id).done(function(asm){
-					    defer_asm.resolve(JSON.parse(asm));
-					    return defer_asm.promise();
-					});
+	    				var defer_asm = $.Deferred();
+	    				var defer_auto = $.Deferred();
+	    				var defer_route = $.Deferred();
+	    				var defer_report = $.Deferred();
+	    				//// Get all assemblies
+	    				get_assemblies(job_id).done(function(asm){
+	    				    defer_asm.resolve(JSON.parse(asm));
+	    				    return defer_asm.promise();
+	    				});
 					
-					//// Get auto assembly
-					get_best_assembly(job_id).done(function(asm){
-					    best = JSON.parse(asm)[0];
-					    best_id = best.shock_id;
-					    best_url = best.shock_url;
-					    defer_auto.resolve({'shock_url': best.shock_url,
-								'shock_id': best.shock_id,
-								'name': best.filename})
-					    return defer_auto.promise()
-					});
+	    				//// Get auto assembly
+	    				get_best_assembly(job_id).done(function(asm){
+	    				    best = JSON.parse(asm)[0];
+	    				    best_id = best.shock_id;
+	    				    best_url = best.shock_url;
+	    				    defer_auto.resolve({'shock_url': best.shock_url,
+	    							'shock_id': best.shock_id,
+	    							'name': best.filename})
+	    				    return defer_auto.promise()
+	    				});
 					
-					///// Ask server to serve files
-					request_job_report(job_id).done(function(route){
-					    defer_route.resolve(route);
-					    return defer_route.promise();
-					});
+	    				///// Ask server to serve files
+	    				request_job_report(job_id).done(function(route){
+	    				    defer_route.resolve(route);
+	    				    return defer_route.promise();
+	    				});
 					
-					///// Get the quast report
-					get_job_report_txt(job_id).done(function(quast_txt){
-					    var formatted = quast_txt.replace(/\n/g, '<br>')
-					    var formatted2 = formatted.replace(/\s/g, '&nbsp')
-					    defer_report.resolve(formatted2);
-					    return defer_report.promise();
-					});
+	    				///// Get the quast report
+	    				get_job_report_txt(job_id).done(function(quast_txt){
+	    				    var formatted = quast_txt.replace(/\n/g, '<br>')
+	    				    var formatted2 = formatted.replace(/\s/g, '&nbsp')
+	    				    defer_report.resolve(formatted2);
+	    				    return defer_report.promise();
+	    				});
 
-					//// All request done, show results and create buttons
-					$.when(defer_asm, defer_auto, defer_route, defer_report).done(function(assemblies, best, route, report){
-					    self.state['assemblies'] = assemblies
-					    self.state['best'] = best
-					    self.state['route'] = route
-					    self.state['report'] = report
-					    console.log('showing results for the first time')
-					    self.showResults(self.token, assemblies, best, route, report, job_id);
-					}
-					);
+	    				//// All request done, show results and create buttons
+	    				$.when(defer_asm, defer_auto, defer_route, defer_report).done(function(assemblies, best, route, report){
+	    				    self.state['assemblies'] = assemblies
+	    				    self.state['best'] = best
+	    				    self.state['route'] = route
+	    				    self.state['report'] = report
+	    				    console.log('showing results for the first time')
+	    				    self.showResults(self.token, assemblies, best, route, report, job_id);
+	    				}
+	    				);
                                     }
                                 }
                             })
@@ -362,7 +358,18 @@
                     }
                 });
 
-            });
+            };
+	    
+	    asm_btn.one("click", function(){
+                var recipe = [asm_choose.find('select option:selected').val()];
+                var desc = asm_desc.find('input').val();
+	    	self.state['recipe'] = recipe;
+	    	self.state['description'] = desc;
+                arRequest.recipe = recipe;
+                arRequest.message = desc;
+	    	run_asm(arRequest, desc);
+	    });
+
             tabs.append(asm_div);
             tabs.append(asm_div2);
             self.$elem.append(tabs);

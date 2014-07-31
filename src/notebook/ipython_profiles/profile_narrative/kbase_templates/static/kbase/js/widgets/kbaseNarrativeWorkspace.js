@@ -698,7 +698,17 @@
                       // "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
                       // "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
 
-            var paramList = params.map(function(p) { return "'" + p + "'"; });
+            // very nice quote-escaper found here:
+            // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
+            // and
+            // http://phpjs.org/functions/addslashes/
+            var addSlashes = function(str) {
+                return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+            };
+
+            var paramList = params.map(function(p) { 
+                return "'" + addSlashes(p) + "'"; 
+            });
             cmd += "method(" + paramList + ")";
 
             return cmd;

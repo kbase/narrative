@@ -125,11 +125,12 @@
             return $('<div>')
                    .append($('<div>').append('Rast Login:'))
                    .append($('<div>')
-                           .append($('<form class="form-inline" role="form">')
+                           .append($('<form class="form-inline" role="form" autocomplete="off">')
                                 .append($('<div class="form-group">')
                                    .append($('<input>')
                                            .attr('id', 'rast-id')
                                            .attr('placeholder', 'RAST username')
+                                           .attr('autocomplete', 'off')
                                            .addClass('form-control')
                                            .attr('type', 'text')
                                            ).css({'padding-right' : '10px'}))
@@ -138,6 +139,7 @@
                                            .attr('id', 'rast-pw')
                                            .attr('placeholder', 'RAST password')
                                            .attr('type', 'password')
+                                           .attr('autocomplete', 'off')
                                            .addClass('form-control')))));
         },
 

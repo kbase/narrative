@@ -119,7 +119,7 @@ class JSONObjectEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class GenomeComparison(object):
+class IdMap(object):
 
     def __init__(self, url=None, timeout=30 * 60, user_id=None,
                  password=None, token=None, ignore_authrc=False):
@@ -152,10 +152,10 @@ class GenomeComparison(object):
         if self.timeout < 1:
             raise ValueError('Timeout value must be at least 1 second')
 
-    def blast_proteomes(self, input):
+    def lookup_genome(self, s, type):
 
-        arg_hash = {'method': 'GenomeComparison.blast_proteomes',
-                    'params': [input],
+        arg_hash = {'method': 'IdMap.lookup_genome',
+                    'params': [s, type],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -187,10 +187,10 @@ class GenomeComparison(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def annotate_genome(self, input):
+    def lookup_features(self, genome_id, aliases, feature_type, source_db):
 
-        arg_hash = {'method': 'GenomeComparison.annotate_genome',
-                    'params': [input],
+        arg_hash = {'method': 'IdMap.lookup_features',
+                    'params': [genome_id, aliases, feature_type, source_db],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -222,10 +222,10 @@ class GenomeComparison(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def get_ncbi_genome_names(self):
+    def lookup_feature_synonyms(self, genome_id, feature_type):
 
-        arg_hash = {'method': 'GenomeComparison.get_ncbi_genome_names',
-                    'params': [],
+        arg_hash = {'method': 'IdMap.lookup_feature_synonyms',
+                    'params': [genome_id, feature_type],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -257,10 +257,10 @@ class GenomeComparison(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def import_ncbi_genome(self, input):
+    def longest_cds_from_locus(self, arg_1):
 
-        arg_hash = {'method': 'GenomeComparison.import_ncbi_genome',
-                    'params': [input],
+        arg_hash = {'method': 'IdMap.longest_cds_from_locus',
+                    'params': [arg_1],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -288,6 +288,41 @@ class GenomeComparison(object):
         resp = json.loads(ret.read())
 
         if 'result' in resp:
-            pass  # nothing to return
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def longest_cds_from_mrna(self, arg_1):
+
+        arg_hash = {'method': 'IdMap.longest_cds_from_mrna',
+                    'params': [arg_1],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')

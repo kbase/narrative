@@ -3,6 +3,20 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 7/30/2014
+__Changes__
+- Updated config to make landing page links relative to deployment site
+- Modified provisioning code to address a potential timeout issue (the 502 Bad Gateway error)
+- Adjusted RAST genome loading widget to ignore browser's credentials
+- Updated NCBI genome importer
+- Updated GWAS services endpoints
+
+__Known Issues__
+- Cookie with auth information occasionally gets overwritten with a useless one - logging out and back in will fix this
+- Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
+- R support is occasionally problematic.
+
+
 ### Release 7/29/2014
 __Changes__
 - Updated nav bar to match changes to functional site

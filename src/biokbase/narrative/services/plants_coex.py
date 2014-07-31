@@ -90,7 +90,7 @@ class Node:
         uedges = [] if uedges is None else uedges
         self._register_nodes(unodes)
         self._register_edges(uedges)
-  
+
     def get_node_id(self, node, nt = "GENE"):
       if not node in self.ugids.keys() :
           #print node + ":" + nt
@@ -129,7 +129,7 @@ class Node:
         if(nt2 == 'CLUSTER'):
           if not node2 in self.clst2genes.keys() : self.clst2genes[node2] = {}
           self.clst2genes[node2][node1] = 1
-   
+
     def _register_nodes(self, unodes):
       self.nodes = unodes
       self.ugids = {}
@@ -155,13 +155,13 @@ class Node:
           if(nt2 == 'CLUSTER'):
             if not node2 in self.clst2genes.keys() : self.clst2genes[node2] = {}
             self.clst2genes[node2][node1] = 1
-        
+
 
     def get_gene_list(self, cnode):
       if(cnode in self.clst2genes.keys()) : return self.clst2genes[cnode].keys()
       return []
 
-        
+
 def kb_id2ext_id(idc, in_list, chunk_size):
     n = len(in_list);
     rst = {}
@@ -173,14 +173,14 @@ def kb_id2ext_id(idc, in_list, chunk_size):
         else:
             sub_lst = in_list[idx:n]
         while True:
-            try: 
+            try:
                 rst_tmp = idc.kbase_ids_to_external_ids(sub_lst)
                 break
             except:
                 pass
         rst = dict(rst.items() + rst_tmp.items())
     return rst
-     
+
 AweJob.URL = URLS.awe
 
 files = {"expression": "data.csv",
@@ -193,7 +193,7 @@ files_rst = {
          "cluster" : "coex_modules.csv" }
 files_desc = dict(expression="Expression data",
                   sample_id="Sample file",
-                  annotation="Annotation file", 
+                  annotation="Annotation file",
                   expression_filtered="Filtered expression data",
                   edge_net = "Network edge list",
                   cluster = "Cluster membership file")
@@ -223,15 +223,15 @@ AWE_JOB_FILTER = """
         "user": "default",
         "clientgroups":"",
          "sessionId":"xyz1234"
-    }, 
+    },
     "tasks": [
         {
             "cmd": {
-                "args": "-i @data_csv --output=data_filtered_csv -m anova --sample_index=@sample_id_csv  -u n -r y -d y $coex_filter", 
-                "description": "filtering", 
+                "args": "-i @data_csv --output=data_filtered_csv -m anova --sample_index=@sample_id_csv  -u n -r y -d y $coex_filter",
+                "description": "filtering",
                 "name": "coex_filter"
-            }, 
-            "dependsOn": [], 
+            },
+            "dependsOn": [],
             "inputs": {
                "data_csv": {
                     "host": "$shock_uri",
@@ -241,7 +241,7 @@ AWE_JOB_FILTER = """
                     "host": "$shock_uri",
                     "node": "$sample_id"
                 }
-            }, 
+            },
             "outputs": {
                 "data_filtered_csv": {
                     "host": "$shock_uri"
@@ -249,8 +249,8 @@ AWE_JOB_FILTER = """
             },
             "taskid": "0",
             "skip": 0,
-            "totalwork": 1                
-        }    
+            "totalwork": 1
+        }
     ]
 }
 """
@@ -264,41 +264,41 @@ AWE_JOB_NC = """
         "user": "default",
         "clientgroups":"",
          "sessionId":"xyz1234"
-    }, 
+    },
     "tasks": [
         {
             "cmd": {
-                "args": "-i @data_filtered_csv -o net_edge_csv $coex_net_method -t edge -r 0.8 -k 40 -p 50 $coex_net_cut", 
-                "description": "coex network", 
+                "args": "-i @data_filtered_csv -o net_edge_csv $coex_net_method -t edge -r 0.8 -k 40 -p 50 $coex_net_cut",
+                "description": "coex network",
                 "name": "coex_net"
-            }, 
+            },
             "inputs": {
                "data_filtered_csv": {
                     "host": "$shock_uri",
                     "node": "$expression"
                 }
-            }, 
+            },
             "outputs": {
                 "net_edge_csv": {
                     "host": "$shock_uri"
                 }
             },
             "taskid": "0",
-            "skip": 0, 
+            "skip": 0,
             "totalwork": 1
         },
         {
             "cmd": {
-                "args": "-i @data_filtered_csv -o module_csv $coex_clust_cmethod $coex_clust_nmethod -r 0.8 -k 40 -p 50 -d 0.99 $coex_clust_nmodule", 
-                "description": "clustering", 
+                "args": "-i @data_filtered_csv -o module_csv $coex_clust_cmethod $coex_clust_nmethod -r 0.8 -k 40 -p 50 -d 0.99 $coex_clust_nmodule",
+                "description": "clustering",
                 "name": "coex_cluster2"
-            }, 
+            },
             "inputs": {
                "data_filtered_csv": {
                     "host": "$shock_uri",
                     "node": "$expression"
                 }
-            }, 
+            },
             "outputs": {
                 "hclust_tree_method=hclust.txt": {
                     "host": "$shock_uri"
@@ -345,7 +345,7 @@ def upload_file(uri, filename, att_content):
         return response['data']['id']
     except Exception as err:
         raise UploadException("Problem with parsing response from upload: {}".format(err))
-    
+
 
 def check_job_status(uri, id_):
     url = "%s/job/%s" % (uri, id_)
@@ -437,7 +437,7 @@ def ws_obj2shock(ws, obj_id, advance=None, meth=None):
             sids.append({'ref': samid})
         samples = ws.get_objects(sids)
         break
-     
+
 
     cif = open(files['expression'], 'w')
     header = ",".join([s['data']['source_id'] for s in samples])
@@ -703,14 +703,14 @@ def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
     cdmie = CDMI_EntityAPI(URLS.cdmi)
     #idm = IdMap(URLS.idmap)
     gids = [ i for i in sorted(nc.ugids.keys()) if 'CDS' in i or 'locus' in i or (not 'clst' in i and not i.startswith('cluster'))]
-    
+
     mrnas_l = cdmie.get_relationship_Encompasses(gids, [],['to_link'],[])
     mrnas = dict((i[1]['from_link'],i[1]['to_link']) for i in mrnas_l)
     locus_l = cdmie.get_relationship_Encompasses(mrnas.values(), [],['to_link'],[])
     locus = dict((i[1]['from_link'],i[1]['to_link']) for i in locus_l)
     lgids = [ locus[mrnas[i]] for i in gids]# it will ignore original locus ids in gids
 
-   
+
     meth.advance("Run enrichment test for each clusters")
     rows = []
     for hr_nd in net_object[0]['data']['nodes']:
@@ -722,11 +722,11 @@ def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
         #for i in glist:
         #    if i in mrnas: i = mrnas[i]
         #    if i in locus: i = locus[i]
-        #    if 'locus' in i: llist.append(i) 
+        #    if 'locus' in i: llist.append(i)
         #llist = [ locus[mrnas[i]] ]; # it will ignore orignal locus ids (TODO: keep locus)
 
         enr_list = oc.get_go_enrichment(glist, domain_list, ec_list, 'hypergeometric', 'GO')
-        
+
         enr_list = sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
         go_enr_smry = "";
         go_enr_anns = ["", "", ""]
@@ -745,7 +745,7 @@ def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
     wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".cenr", 'meta' : {'orginal' : net_obj_id}}]})
 
     rows = sorted(rows, key=lambda x: x[1], reverse=True)
-    
+
     #meth.debug("rows: {}".format(rows))
     header = ["Cluster ID", "# of Genes", "Annotation1", "Annotation2", "Annotation3"]
     data = {'table': [header] + rows}
@@ -754,11 +754,11 @@ def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
 
 @method(name="Construct subnetwork from user-selected clusters")
 def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
-    """Construct subnetwork connecting genes in user-selected clusters 
+    """Construct subnetwork connecting genes in user-selected clusters
 
     :param net_obj_id: Cluster object id
     :type net_obj_id: kbtypes.KBaseNetworks.Network
-    :param cluster_id_list: Comma-separated list of user-selected cluster ids 
+    :param cluster_id_list: Comma-separated list of user-selected cluster ids
     :type cluster_id_list:kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
@@ -776,7 +776,7 @@ def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
     net_object = wsd.get_objects([{'workspace' : meth.workspace_id, 'name' : net_obj_id}]);
     nc = Node(net_object[0]['data']['nodes'], net_object[0]['data']['edges'])
 
-    
+
 
     keeping_ids = {}
     for cnode in nc.clst2genes.keys():
@@ -797,7 +797,7 @@ def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
     net_object[0]['data']['nodes'] = nnodes
     net_object[0]['data']['edges'] = nedges
     net_object[0]['data']['user_annotations']['filtered'] = cluster_id_list
-    
+
     wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".trmd", 'meta' : {'orginal' : net_obj_id, 'cluster_id_list' : cluster_id_list}}]})
 
     meth.advance("Create plot specification")
@@ -820,6 +820,32 @@ def network_diagram(meth, workspace_id=None, obj_id=None):
     if not workspace_id:
         workspace_id = meth.workspace_id
 	return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': obj_id })
+
+@method(name="Functional modules")
+def gene_network(meth, nto=None):
+    """Display information for network clusters.
+
+        :param nto: Network Typed Object
+        :type nto: kbtypes.KBaseNetworks.Network
+        :return: Rows for display
+        :rtype: kbtypes.Unicode
+        :output_widget: kbasePlantsNTO
+        """
+    #:param workspace_id: Workspace name (use current if empty)
+    #:type workspace_id: kbtypes.Unicode
+    meth.stages = 1
+    # if not workspace_id:
+    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
+    #     workspace_id = meth.workspace_id
+    meth.advance("Retrieve NTO from workspace")
+    if nto:
+        ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
+        raw_data = ws.get(nto)
+    else:
+        raw_data = {}
+    data = {'input': raw_data}
+    return json.dumps(data)
+
 
 # Finalize (registers service)
 finalize_service()

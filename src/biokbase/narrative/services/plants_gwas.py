@@ -354,33 +354,6 @@ def gene_network(meth, nto=None):
     data = {'input': raw_data}
     return json.dumps(data)
 
-@method(name="Gene cluster analysis")
-def gene_network(meth, nto=None):
-    """This method searches KBase indexed co-expression networks where
-        genes from the gene_list are present and displays internal networks formed by these genes in an interactive visualization.
-
-        :param nto: Network Typed Object
-        :type nto: kbtypes.KBaseNetworks.Network
-        :return: Rows for display
-        :rtype: kbtypes.Unicode
-        :output_widget: kbasePlantsNTO
-        """
-    #:param workspace_id: Workspace name (use current if empty)
-    #:type workspace_id: kbtypes.Unicode
-    meth.stages = 1
-    # if not workspace_id:
-    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
-    #     workspace_id = meth.workspace_id
-    meth.advance("Retrieve NTO from workspace")
-    if nto:
-        ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
-        raw_data = ws.get(nto)
-    else:
-        raw_data = {}
-    data = {'input': raw_data}
-    return json.dumps(data)
-
-
 
 # Finalize (registers service)
 finalize_service()

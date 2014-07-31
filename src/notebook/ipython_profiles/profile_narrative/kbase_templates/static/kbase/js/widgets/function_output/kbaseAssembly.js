@@ -216,9 +216,9 @@
 	    /////// Recipes
             var asm_div = $('<div class="row" id="frag-recipes"><small>Recipes are curated intelligent workflows designed for specific scenarios.</small></div>');
             var asm_choose = $('<span class="col-md-3"><select class="form-control" name="assemblers"> \
-                                      <option value="auto">Arast Smart Workflow</option> \
-                                      <option value="fast">Fast Pipeline</option> \
-                                      <option value="tune_velvet">Intelligent Velvet</option> \
+                                      <option value="auto">Automatic Assembly</option> \
+                                      <option value="faster">Fast Pipeline</option> \
+                                      <option value="smart">Arast Smart Workflow</option> \
                                       <option value="kiki">Kiki Assembler</option> \
                                     </select></span>');
             var asm_desc = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')

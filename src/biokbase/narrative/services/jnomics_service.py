@@ -14,6 +14,7 @@ import ast
 import StringIO
 import uuid;
 import math
+from collections import Counter
 from collections import namedtuple
 from functools import wraps
 from time import gmtime, strftime
@@ -258,6 +259,19 @@ def getGenomefeatures(ref,auth):
                 #       print(locs[key][0][0] + "\t" + str(locs[key][0][1]) + "\t" + str(int(locs[key][0][1]) + int(locs[key][0][3])) + "\t" + locs[key][0][2] + "\t" + key,file = entityfile)
             print >>output, locs[key][0][0] + "\t" + str(locs[key][0][1]) + "\t" + str(int(locs[key][0][1]) + int(locs[key][0][3])) + "\t" + locs[key][0][2] + "\t" + key
     return output
+
+def histogram(iterable, low, high, bins):
+    '''Count elements from the iterable into evenly spaced bins
+
+        >>> scores = [82, 85, 90, 91, 70, 87, 45]
+        >>> histogram(scores, 0, 100, 10)
+        [0, 0, 0, 0, 1, 0, 0, 1, 3, 2]
+
+    '''
+    step = (high - low + 0.0) / bins
+    ranges = range(int(round(low)),int(round(high)),int(round(step)))
+    dist = Counter((float(x) - low) // step for x in iterable)
+    return { "x_axis" : ranges , "y_axis" : [dist[b] for b in range(bins)] }
 
 def prepareInputfiles(token,workspace=None,files=None,wstype=None):
     auth = Authentication(userFromToken(token), "", token)
@@ -771,164 +785,53 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     ret = runPipeline(stages,meth,auth)
     return to_JSON(ret[-1])
 
-@method(name = "Calculate Gene Expression - Batch Mode")
-def jnomics_calculate_expression_batch(meth, workspace = None,paired=None,
-                                 Input_file_path=None,
-                                 ref=None,src_id=None):
-    """Calculate Expression
+@method(name = "Plot Gene Expression Histogram")
+def generateHistogram(meth,workspace= None,exp_file=None):
 
-    :param workspace : name of workspace; default is current
+    """Plot Gene Expression Histogram
+    :param workspace: Name of workspace, default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
-    :param paired : Paired-End say 'yes'; else 'no'; default is 'no'
-    :type paired : kbtypes.Unicode
-    :ui_name paired : Paired-End (?)
-    :default paired : no
-    :param Input_file_path: Input the raw sequencing data
-    :type Input_file_path: kbtypes.Unicode
-    :ui_name Input_file_path : Input files 
-    :param ref: Reference Genome (kb_id)
-    :type ref : kbtypes.Unicode
-    :ui_name ref : Reference
-    :param src_id: Source and Source Id
-    :type src_id : kbtypes.Unicode
-    :ui_name src_id : Source/Source Id
+    :param exp_file: Gene Expression file
+    :type exp_file: kbtypes.Unicode
+    :ui_name exp_file : Gene Expression file
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-
-    meth.stages = 7
+    
+    meth.stages = 1
     token = meth.token
-    auth = Authentication(userFromToken(meth.token), "", meth.token)
+    auth = Authentication(userFromToken(token), "", token)
     ws = workspaceService(OTHERURLS.workspace)
-    idc = IDServerAPI(OTHERURLS.ids)
-
-    act_ref = ref.replace('|','_')
-
-    wtype = WSTYPES.rnaseq_sampletype 
+    filename = os.path.basename(exp_file)
     exptype = WSTYPES.rnaseq_exptype 
-    bamtype = WSTYPES.rnaseq_bamtype 
- 
-    node_id = None
-    stats = []
-    myfile = None
-    sample_id = None
-
-    @pipelineStep("compute")
-    def runTophat(client,previous_steps):
-        previous_steps = previous_steps[-1]
-        tohat_jobs = [] 
-        i_files = Input_file_path.split(";")
-        for ifile in i_files:
-            tophat_out_path =  os.path.join(Output_file_path,ifile.replace(",","_")+"/tophat") 
-            tophat_jobs = client.alignTophat(act_ref, Input_file_path,
-                                     "", tophat_out_path,
-                                     "", "", auth)
-        return tophat_jobs
-
-    @pipelineStep("compute")
-    def runCufflinks(client,previous_steps):
-         previous_steps = previous_steps[-1]
-         cufflinks_jobs = [] 
-         i_files = Input_file_path.split(";")
-         for ifile in i_files:
-             cufflinks_in_path = os.path.join(Output_file_path,ifile.replace(",","_")+"/tophat/accepted_hits.bam")
-             cufflinks_out_path =  os.path.join(Output_file_path,ifile.replace(",","_")+"/cufflinks")
-             cufflinks_jobs.append(client.callCufflinks( cufflinks_in_path,
-                                     cufflinks_out_path,
-                                     "", "", "", auth))
-         return cufflinks_jobs
-        
-    @pipelineStep("compute")
-    def workspaceobj(client,previous_steps):
-        previous_steps = previous_steps[-1]
-        if 'output' in previous_steps and 'shock_id' in previous_steps['output']:
-            shock_id = previous_steps['output']['shock_id']
-        if not isFileFound(entityfile,auth):
-            out = getGenomefeatures(ref,auth)
-            ret = writefile(entityfile,out,auth) 
-        ontodict = ontologydata(po_id,eo_id)
-        ontoid = ",".join([ key for (key,value) in ontodict.items()])
-        ontodef =  ",".join([value for (key,value) in ontodict.items()])
-        ontoname = ontodef
-        return client.workspaceUpload(cufflinks_output,ref.replace('kb|',''),
-                                      desc,title,srcdate,ontoid,
-                                      ontodef,ontoname,paired,
-                                      shock_id,"","",auth)
-    @pipelineStep(None)
-    def writeBamfile(client,previous_steps):
-        tophatid  = idc.allocate_id_range(IDServerids.rnaseq_alignment,1)
-        tophatobjname = IDServerids.rnaseq_alignment+"."+str(tophatid)
-        filedata = shockfileload(auth,tophatobjname,cufflinks_in_path)
-        objdata = { "name" : str(sample_id)+"_accepted_hits.bam" ,"paired" : paired , "created" :  strftime("%d %b %Y %H:%M:%S +0000", gmtime()) ,
-                "shock_ref": { "shock_id" : filedata['shock_id']  , "shock_url" : OTHERURLS.shock+'/node/'+filedata['shock_id'] },"metadata" : ret['metadata'][0] }
-        wsreturn = ws_saveobject(tophatobjname,objdata,bamtype,meth.workspace_id,meth.token)
-        return wsreturn
-
-    @pipelineStep(None)
-    def uploadtoShock(client,previous_steps):
-         return shockfileload(auth,cufflinksobjname,cufflinks_output)
-    
-    @pipelineStep(None)
-    def saveWorkspace_obj(client,previous_steps):
-        previous_steps = previous_steps[-1]
-        if 'output' in previous_steps:
-            job_id =  previous_steps['output'].job_id
-        pattern2 = re.compile('Writing the Expression object kb\|sample_test.[0-9]*')
-        try: 
-           sampleid = parselog(str(job_id),pattern2,auth)
-        except FileNotFound as e:
-            raise  ShockUploadException("Error in Parsing log file: {}".format(err))
-        realid = sampleid.split('Writing the Expression object ')[1]
-        result = cathdfsfile(realid,auth)
-        jsonobj = json.loads(str(result))
-        wsreturn = ws_saveobject(realid,jsonobj,exptype,meth.workspace_id,meth.token)
-        return {"submitted" : realid , "type" : exptype , "status" : wsreturn}
-
-    def ontologydata(poid=None,eoid=None):
-        exp =  expressionService(OTHERURLS.expression)
-        #json_error = None
-        #status = None
-        poids = poid[0].split(",") 
-        eoids = eoid[0].split(",")
-        podesc = exp.get_po_descriptions(poids)
-        eodesc = exp.get_eo_descriptions(eoids)
-        ontoids = ",".join(poids + eoids)
-        ontodef = ",".join([ value for (key,value) in podesc.items() ] + [value for (key1,value1) in eodesc.items()])
-        return dict(podesc.items() + eodesc.items())
-    
-    meth.advance("Preparing Input files")
-    ret  = prepareInputfiles(meth.token,workspace,Input_file_path,wtype)
-    #return to_JSON(ret)
-    if 'metadata' in ret:
-        if 'sample_id' in ret['metadata'][0]:
-            sample_id = ret['metadata'][0]['sample_id']
-            title = sample_id
-        if 'title' in  ret['metadata'][0]:
-            desc =  ret['metadata'][0]['title']
-        if 'ext_source_date' in  ret['metadata'][0]:
-            srcdate = ret['metadata'][0]['ext_source_date']
-        if 'po_id' in  ret['metadata'][0]:
-            po_id = ret['metadata'][0]['po_id']
-        if 'eo_id' in  ret['metadata'][0]:
-            eo_id = ret['metadata'][0]['eo_id']
-    
-    Output_file_path = "narrative_RNASeq_"+str(sample_id)+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
-    entityfile = str(act_ref) + "_fids.txt"
-    #tophat_out_path = os.path.join(Output_file_path, "tophat")
-    #cufflinks_in_path = os.path.join(tophat_out_path,"accepted_hits.bam")
-    #cufflinks_out_path = os.path.join(Output_file_path,"cufflinks")
-    cufflinks_output =  os.path.join(cufflinks_out_path,"transcripts.gtf")
-    cufflinksobjname = str(sample_id)+'_transcripts.gtf'
-    #stages = #[Stage(getfiles,"Prepare Input files",None),
-    stages= [Stage(runTophat,"Aligning Reads",pollGridJobs)]
-             #Stage(runCufflinks,"Assembling Transcripts",pollGridJobs),
-             #Stage(writeBamfile,"Writing Alignment file",None),
-             #Stage(uploadtoShock,"Uploading to Shock",None),
-             #Stage(workspaceobj,"Preparing Workspace obj",pollGridJob),
-             #Stage(saveWorkspace_obj,"Saving Object",None)]
-
-    return to_JSON(runPipeline(stages,meth,auth))
+    dt_type = WSTYPES.datatabletype
+    idc = IDServerAPI(OTHERURLS.ids)
+    try:
+        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': exptype})
+    except FileNotFound as e:
+        raise FileNotFound("File Not Found: {}".format(err))
+    #return json.dumps(obj)
+        #return {"output" : str(status), "error": json_error}
+    if 'expression_levels' in obj['data']:
+        hdict = obj['data']['expression_levels']
+        tot_genes =  len(hdict)
+        lmin = round(min([v for k,v in hdict.items()]))
+        lmax = round(max([v for k,v in hdict.items()]))
+    hist_dt = histogram(hdict.values(),lmin,lmax,50)
+    title = "Histogram  - " + exp_file
+    hist_json = {"title" :  title , "x_label" : "Gene Expression Level", "y_label" : "Frequency", "data" : hist_dt}
+    #### hist_json is the json input for histogram #######
+    #return to_JSON({"title" :  title , "x_label" : "Gene Expression Level", "y_label" : "Frequency", "data" : hist_dt}) 
+    sorted_dt = OrderedDict({ "id" : "", "name" : "","row_ids" : [] ,"column_ids" : [] ,"row_labels" : [] ,"column_labels" : [] , "data" : [] })
+    sorted_dt["row_ids"] = [hist_json["x_label"]]
+    sorted_dt["column_ids"] = [hist_json["y_label"]]
+    sorted_dt['row_labels'] = [hist_json["x_label"]]
+    sorted_dt["column_labels"] =  [hist_json["y_label"]]
+    sorted_dt["data"] = [[float(i) for i in hist_json["data"]["x_axis"]],[float(j) for j in hist_json["data"]["y_axis"]]]
+    sorted_dt["id"] = "kb|histogramdatatable."+str(idc.allocate_id_range("kb|histogramdatatable",1))
+    sorted_dt["name"] = hist_json["title"]
+    return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
     
 @method(name = "Identify Differential Expression")
 def jnomics_differential_expression(meth,workspace= None,title=None, alignment_files=None,exp_files=None,

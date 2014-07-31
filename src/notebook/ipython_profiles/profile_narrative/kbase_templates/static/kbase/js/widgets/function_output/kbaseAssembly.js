@@ -198,12 +198,16 @@
 
 
 	    //////// Assemblers
-            var asm_div2 = $('<div class="row" id="frag-assemblers">');
+	    var asm_div2 = $('<div id="frag-assemblers">');
+            var asm_row = $('<div class="row">');
 	    var add_asm_group = $('<span class="btn-group col-md-3"></span>');
 	    var add_asm_btn = $('<button type="button" class="btn btn-default btn-success dropdown-toggle" data-toggle="dropdown"> Add Assembler <span class="caret"></span> </button>');
 	    var add_asm_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
 	    var assembler_pool = $('<div class="well col-md-8">')
 	    var asm_picked = []
+            var asm_row2 = $('<div class="row">');
+            var asm_desc2 = $('<div class="col-md-9"><input type="text" class="form-control" style="width:100%" placeholder="Description"></div>')
+            var asm_btn2 = $('<span class="col-md-3"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
 
 	    var update_asm_pool = function(pool){
 		var body = $('<div>');
@@ -245,10 +249,9 @@
 	    
 	    add_asm_group.append(add_asm_btn);
 	    add_asm_group.append(add_asm_sel);
-	    asm_div2.append(add_asm_group, assembler_pool);
-
-
-
+	    asm_row.append(add_asm_group, assembler_pool);
+	    asm_row2.append(asm_desc2, asm_btn2);
+	    asm_div2.append(asm_row, asm_row2);
 
 
 	    asm_btn.one("click", function() {
@@ -262,8 +265,6 @@
                 arRequest.recipe = recipe;
                 arRequest.message = desc;
                 asm_div.find('fieldset').attr('disabled', "true");
-		console.log('go');
-		console.log(self);
                 $.ajax({
                     contentType: 'application/json',
                     url: self.arURL + 'user/' + user + '/job/new/',
@@ -275,10 +276,6 @@
                         console.log(data);
                         job_id = data;
 			self.state['job_id'] = data;
-                            // var job_alert = $('<div class="row "><span class="col-md-4 col-md-offset-4 alert alert-success alert-dismissable"> \
-                            //   <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> \
-                            //   <strong>Success: </strong> Assembly Job ' + data + ' submitted.</span></div>');
-                            // self.$elem.append(job_alert);
                         var status = 'Submitted';
                         var status_box = make_status_table(job_id, desc, status);
 			var kill_div = $('<div></div>')

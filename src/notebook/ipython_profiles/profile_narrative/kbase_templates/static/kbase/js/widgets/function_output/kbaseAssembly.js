@@ -176,13 +176,12 @@
             self.$elem.append(data_report);
 	    var tabs = $('<div id="tabs">')
 	    var nav = $('<ul class="nav nav-pills"> \
-                           <li class="active"><a href="#frag-recipes">Recipes</a></li> \
+                           <li><a href="#frag-recipes">Recipes</a></li> \
                            <li><a href="#frag-assemblers">Assemblers</a></li> \
                            <li><a href="#frag-pipeline">Pipeline</a></li> \
                            <li><a href="#frag-advanced">Advanced</a></li> \
                          </ul>');
 	    tabs.append(nav);
-
 
 	    /////// Recipes
             var asm_div = $('<div class="row" id="frag-recipes">');
@@ -194,22 +193,65 @@
                                     </select></span>');
             var asm_desc = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
-//            asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
-            asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc));
+            asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
+//            asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc));
 
 
 	    //////// Assemblers
             var asm_div2 = $('<div class="row" id="frag-assemblers">');
-	    var add_asm_group = $('<span class="btn-group"></span>');
-	    var add_asm_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Add Assembler <span class="caret"></span> </button>');
+	    var add_asm_group = $('<span class="btn-group col-md-3"></span>');
+	    var add_asm_btn = $('<button type="button" class="btn btn-default btn-success dropdown-toggle" data-toggle="dropdown"> Add Assembler <span class="caret"></span> </button>');
 	    var add_asm_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
+	    var assembler_pool = $('<div class="well col-md-8">')
+	    var asm_picked = []
 
-	    console.log('get')
+	    var update_asm_pool = function(pool){
+		var body = $('<div>');
+		for (i=0; i<pool.length;i++){
+		    (function(i) {
+			body.append($('<div class="btn btn-primary btn-sm">' + pool[i] + '</div>').on('click', function(){
+			    console.log(pool[i])
+			    console.log('#asm-' + pool[i]);
+			    $('#asm-' + pool[i]).attr('disabled', "false");
+//			    $('#asm-' + pool[i]).attr('hidden', "false");
+			    $('#asm-' + pool[i]).css('visibility', "visible");
+			    var asm_idx = pool.indexOf(pool[i]);
+			    pool.splice(asm_idx, 1);
+			    update_asm_pool(pool);
+			}))
+		    })(i);
+		}
+		console.log(body)
+		assembler_pool.html(body);
+	    }
+
 	    get_assemblers().done(function(asms){
+		for (i=0; i<asms.length;i++){
+		    (function(i) {
+			var asm_id = 'asm-' + asms[i].name
+			var asm = $('<li id="' + asm_id + '"><a>' + asms[i].name + '</a></li>');
+			var asm_name = asms[i].name;
+			asm.on('click', function(){
+			    asm_picked.push(asm_name);
+			    console.log(asm_picked)
+			    update_asm_pool(asm_picked);
+			    $('#' + asm_id).attr('disabled', "true");
+//			    $('#' + asm_id).attr('hidden', "true");
+			    $('#' + asm_id).css('visibility', "hidden");
+			});
+			add_asm_sel.append(asm);
+		    })(i);
+		}
 		console.log(asms)
 	    })
+	    
+	    add_asm_group.append(add_asm_btn);
+	    add_asm_group.append(add_asm_sel);
+	    asm_div2.append(add_asm_group, assembler_pool);
 
-//            asm_div2.append($('<fieldset><div class="form-group">').append(asm_choose2, asm_desc2));
+
+
+
 
 	    asm_btn.one("click", function() {
 		self.state['clicked'] = true;

@@ -638,7 +638,7 @@
 		    report_html.toggle()
 		})
 		report_btn_group.append(report_btn_toggle);
-		report_btn_group.append('<button class="btn btn-primary"><a href='+ full_link +' target="_blank"><span class="glyphicon glyphicon-new-window" style="color:white;font-size:80%"></span></a></button>')
+		report_btn_group.append('<button class="btn btn-primary"><a href='+ full_link +' target="_blank"><span class="glyphicon glyphicon-new-window" style="color:white;font-size:90%"></span></a></button>')
 		result_btn_row.append(report_btn_group)
 		self.$elem.append(report_div);
 		self.$elem.append(result_btn_row);

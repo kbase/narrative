@@ -1513,7 +1513,7 @@ def _build_genome_set_from_tree(meth, tree_id,genome_set):
     
     :return: Genome Set Result
     :rtype: kbtypes.Unicode
-    :output_widget: kbaseViewGenomeSet
+    :output_widget: kbaseGenomeSetBuilder
     """
     
     meth.stages = 2
@@ -1526,36 +1526,42 @@ def _build_genome_set_from_tree(meth, tree_id,genome_set):
     elements = {}
     gcount = 0
     namehash = {}
+    objectids = []
     for key in refs:
         if key[:5] != "kb|g.":
-            newname = data['data']['default_node_labels'][key];
-            namehash[newname] = 1
             param = 'param'+`gcount`
             gcount = gcount+1
             ref = refs[key]['g'][0]
+            objectids.append({'ref':ref})
             elements[param] = {'ref': ref}
-    
+
+    infos = ws.get_object_info(objectids,0);
+    for item in infos:
+        namehash[item[1]] = 1
+
     for key in refs:
         if key[:5] == "kb|g.":
             ref = refs[key]['g'][0]
             newname = data['data']['default_node_labels'][key];
-            newname = re.sub('[\W]', '_', newname)
+            newname = re.sub('[^a-zA-Z0-9_\.]', '_', newname)
             if newname in namehash:
                 count = 0
                 testname = newname+'_'+`count`
                 while testname in namehash:
                     count = count + 1
                     testname = newname+'_'+`count`
+
                 newname = testname
-           	namehash[newname] = 1
-           	wsinfo = ws.copy_object({
+
+            namehash[newname] = 1
+            wsinfo = ws.copy_object({
                 'to':{'workspace':workspace,'name':newname},
                 'from':{'objid':ref.split('/')[1],'wsid':ref.split('/')[0]}
-                })
-            ws = wsinfo[6]
+            })
+            wsid = wsinfo[6]
             name = wsinfo[0]
             version = wsinfo[4]
-            ref = `ws`+"/"+`name`+"/"+`version`
+            ref = `wsid`+"/"+`name`+"/"+`version`
             param = 'param'+`gcount`
             gcount = gcount+1
             elements[param] = {'ref': ref}
@@ -1569,7 +1575,8 @@ def _build_genome_set_from_tree(meth, tree_id,genome_set):
                 'name': genome_set
         }]
     })
-    return json.dumps({'id': genome_set, 'wsid': workspace})
+
+    return json.dumps({'loadExisting': 1,'genomeSetName': genome_set, 'wsName': workspace})
 
 @method(name="Build Genome Set Object")
 def _build_genome_set(meth, out_genome_set):

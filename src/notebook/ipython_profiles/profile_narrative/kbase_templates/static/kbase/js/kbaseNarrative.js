@@ -50,5 +50,3 @@ narrative.init = function() {
         });
     });
 };
-
-

@@ -69,6 +69,7 @@ Stage = namedtuple("Stage", ["func","name","poll"])
 
 #URLS = {"compute":URL("variation.services.kbase.us", 10000),
 #        "data":URL("variation.services.kbase.us", 10001)}
+
 URLS = {"compute":URL("140.221.67.178", 10000),
         "data":URL("140.221.67.178", 10001)}
 
@@ -294,6 +295,8 @@ def prepareInputfiles(token,workspace=None,files=None,wstype=None):
         if 'data' in obj and 'metadata' in obj['data']:
             meta.append(obj['data']['metadata'])
         shockfilename = filename.replace("|","_")
+        if isFileFound(shockfilename,auth):
+            pass
         job_ids.append(readShock(node_id,shockfilename,auth))
         
     for jid in job_ids:
@@ -397,8 +400,6 @@ def pollGridJobs(job_ids, auth):
                                       True,running_state[i], -1, "-1",
                                       -1.0,-1.0))
     return ret
-
-    #return False
 
 def runSteps(step, auth, poll_func=None, previous_steps=None):
     '''Runs multiple pipeline step.
@@ -752,20 +753,23 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
         return dict(podesc.items() + eodesc.items())
     
     meth.advance("Preparing Input files")
-    ret  = prepareInputfiles(meth.token,workspace,Input_file_path,wtype)
+    try:
+        ret  = prepareInputfiles(meth.token,workspace,Input_file_path,wtype)
     #return to_JSON(ret)
-    if 'metadata' in ret:
-        if 'sample_id' in ret['metadata'][0]:
-            sample_id = ret['metadata'][0]['sample_id']
-            title = sample_id
-        if 'title' in  ret['metadata'][0]:
-            desc =  ret['metadata'][0]['title']
-        if 'ext_source_date' in  ret['metadata'][0]:
-            srcdate = ret['metadata'][0]['ext_source_date']
-        if 'po_id' in  ret['metadata'][0]:
-            po_id = ret['metadata'][0]['po_id']
-        if 'eo_id' in  ret['metadata'][0]:
-            eo_id = ret['metadata'][0]['eo_id']
+        if 'metadata' in ret:
+            if 'sample_id' in ret['metadata'][0]:
+                sample_id = ret['metadata'][0]['sample_id']
+                title = sample_id
+            if 'title' in  ret['metadata'][0]:
+                desc =  ret['metadata'][0]['title']
+            if 'ext_source_date' in  ret['metadata'][0]:
+                srcdate = ret['metadata'][0]['ext_source_date']
+            if 'po_id' in  ret['metadata'][0]:
+                po_id = ret['metadata'][0]['po_id']
+            if 'eo_id' in  ret['metadata'][0]:
+                eo_id = ret['metadata'][0]['eo_id']
+    except FileNotFound as e:
+            raise FileNotFound("File Not Found: {}".format(err))
     
     Output_file_path = "narrative_RNASeq_"+str(sample_id)+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
     entityfile = str(act_ref) + "_fids.txt"
@@ -800,6 +804,7 @@ def generateHistogram(meth,workspace= None,exp_file=None):
     """
     
     meth.stages = 1
+    meth.advance("Generating Histogram Plot")
     token = meth.token
     auth = Authentication(userFromToken(token), "", token)
     ws = workspaceService(OTHERURLS.workspace)
@@ -1014,26 +1019,12 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
     def ws_getObject(workspace,expfile,exptype,token):
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': expfile, 'type': exptype})
         return obj
-    
-    #source_id = ""
-    #title = ""
-    #ext_src_date = ""
+ 
     files = exp_samples.strip('\r\n').split(",")
     source_Id = source_Id + "___" + "RNA-Seq"
-    #exp_sampleids = []
-    #for expfile in files:
-    #    myobj = ws_getObject(workspace, expfile, exptype, token)
-        #source_id = myobj['data']['source_id']
-        #sample_id = myobj['data']['id']
-        #title = myobj['data']['description']
-        #ext_src_date = myobj['data']['external_source_date']
-        #exp_sampleids.append(sample_id)
 
     genome_map = [workspace+"/"+x for x in files]    
-    #return to_JSON(meth.workspace_id)
 
-    ### get id from ID server
-    #register_ids("kb|series","KB",["GSE30249___RNA-Seq"])
     id_dict = idc.register_ids(IDServerids.rnaseq_series,"KB",[source_Id])
     objid = id_dict.values()[0]     
     meth.advance("Preparing the Series Object")
@@ -1072,6 +1063,7 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
     :rtype: kbtypes.Unicode
     """
     meth.stages =  1 
+    meth.advance("Create Expression Datatable")
     token = meth.token
 
     auth = Authentication(userFromToken(meth.token), "", meth.token)
@@ -1104,18 +1096,11 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
             
         sample_list = ws.get_objects(sids)
         for k in range(len(sample_list)):
-            #wsid = sample_list[k].strip().split('/')[0]
-            #sampleid = sample_list[k].strip().split('/')[1]
             sample_obj = sample_list[k]
             if 'data' in sample_obj and 'expression_levels' in sample_obj['data']:
                  column_ids.append(str(sample_obj['data']['id']))
                  exp_levels = sample_obj['data']['expression_levels']
-                 #return exp_levels
                  for x,y in exp_levels.items():
-                     #if str(x) in sortdict:
-                     #    sortdict[str(x)]= sortdict[str(x)].append(y)
-                     #else:
-                     #     sortdict[str(x)]= [y]
                      if str(x) in row_ids:
                          rowid_pos = row_ids.index(str(x))
                          fpkmdata[rowid_pos][k] = float(y)
@@ -1145,6 +1130,7 @@ def filterDataTable(meth,workspace= None,dtname=None):
     :rtype: kbtypes.Unicode
     """
     meth.stages =  1 
+    meth.advance("filtering Expression DataTable")
     token = meth.token
 
     auth = Authentication(userFromToken(meth.token), "", meth.token)
@@ -1180,6 +1166,33 @@ def filterDataTable(meth,workspace= None,dtname=None):
     sorted_dt["id"] = "kb|filtereddatatable."+str(idc.allocate_id_range("kb|filtereddatatable",1))
     sorted_dt["name"] = result["name"]
     return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
+
+@method(name = "Test Genome features ")
+def genomefeatures(meth,workspace= None,ref=None):
+     """search a file
+
+    :param workspace: Worspace id
+    :type workspace : kbtypes.Unicode
+    :ui_name workspace : Workspace
+    :param ref: Datatable Name
+    :type ref : kbtypes.Unicode
+    :ui_name ref : Reference Name
+    :return: Workspace id
+    :rtype: kbtypes.Unicode
+    """
+
+     meth.stages =  1 
+     meth.advance("Genome features")
+     token = meth.token
+
+     auth = Authentication(userFromToken(meth.token), "", meth.token)
+     ws = workspaceService(OTHERURLS.workspace)
+     entityfile = str(ref.replace('|','_'))+"_fids.txt"
+     if not isFileFound(entityfile,auth):
+        out = getGenomefeatures(ref,auth)
+        ret = writefile(entityfile,out,auth) 
+    
+     return to_JSON(ret)
 
 finalize_service()
 

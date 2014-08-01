@@ -760,7 +760,33 @@
          * @private
          */
         handleExecuteReply: function (cell, content) {
-//            console.debug("Done running the function", content);
+            this.dbg('[handleExecuteReply]');
+            this.dbg(content);
+
+            if (content.status === 'error') {
+                var errorBlob = {
+                    msg : content.evalue,
+                    type : content.ename,
+                }
+
+                var removeVt = function(line) {
+                    return line.replace(/\[\d+(;\d+)?m/g, '');
+                }
+
+                var errTb = content.traceback.map(function(line) {
+                    return {
+                        filename: null,
+                        function: null,
+                        line: null,
+                        text: removeVt(line)
+                    };
+                });
+                
+                errorBlob.traceback = errTb;
+                this.createErrorCell(cell, JSON.stringify(errorBlob));
+
+            }
+            console.debug("Done running the function", content);
             this.showCellProgress(cell, "DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});

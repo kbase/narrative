@@ -1,4 +1,6 @@
-Last updated: Bill Riehl <wjriehl@lbl.gov> 6/26/2014
+Last updated: Dan Gunter <dkgunter@lbl.gov> 7/31/2014
+
+To report bugs, login using your KBase developer user/pass at: https://atlassian.kbase.us
 
 Introduction
 ============

@@ -62,6 +62,7 @@ def monkeypatch_class(name, bases, namespace):
 # it as a patch to the IPython core and then submit a PR
 def do_patching( c ):
     auth_cookie_name = "kbase_narr_session"
+    backup_cookie = "kbase_session"
 
     if c.NotebookApp.get('kbase_auth',False):
         IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.notebook.handlers.NamedNotebookHandler.get() in process {}".format(os.getpid()))
@@ -97,6 +98,10 @@ def do_patching( c ):
             if auth_cookie_name in self.cookies and hasattr(self,'notebook_manager'):
                 IPython.html.base.handlers.app_log.debug("kbase_session = " + self.cookies[auth_cookie_name].value)
                 cookie_pusher(self.cookies[auth_cookie_name].value, getattr(self,'notebook_manager'))
+            else if backup_cookie in self.cookies and hasattr(self, 'notebook_manager'):
+                IPython.html.base.handlers.app_log.debug("kbase_session = " + self.cookies[backup_cookie].value)
+                cookie_pusher(self.cookies[backup_cookie].value, getattr(self,'notebook_manager'))
+
             return old_get(self,notebook_id)
 
         IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.services.notebooks.handlers.NotebookRootHandler.get() in process {}".format(os.getpid()))
@@ -105,6 +110,8 @@ def do_patching( c ):
         def get(self):
             if auth_cookie_name in self.cookies:
                 cookie_pusher( self.cookies[auth_cookie_name].value,getattr(self,'notebook_manager'))
+            else if backup_cookie in self.cookies:
+                cookie_pusher( self.cookies[backup_cookie].value,getattr(self,'notebook_manager'))
             return old_get1(self)
 
     IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.base.handlers.RequestHandler.write_error() in process {}".format(os.getpid()))

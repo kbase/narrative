@@ -821,7 +821,7 @@ def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
     :type cluster_id_list:kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
-    :output_widget: ForceDirectedNetwork
+    :output_widget: kbasePlantsNTO
     """
     meth.stages = 2
 
@@ -860,25 +860,55 @@ def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
     wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".trmd", 'meta' : {'orginal' : net_obj_id, 'cluster_id_list' : cluster_id_list}}]})
 
     meth.advance("Create plot specification")
-    return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': net_obj_id + ".trmd" })
+    data = {'input': net_object[0]['data']}
+    #return json.dumps({'token': meth.token, 'workspaceID': meth.workspace_id, 'networkObjectID': net_obj_id + ".trmd" })
+    return json.dumps(data)
 
-@method(name="Network diagram")
-def network_diagram(meth, workspace_id=None, obj_id=None):
-    """Create and embed an interactive view of the network as a force-directed graph.
+#@method(name="Network diagram")
+#def network_diagram(meth, workspace_id=None, obj_id=None):
+#    """Create and embed an interactive view of the network as a force-directed graph.
+#
+#    :param workspace_id: Workspace name (if empty, defaults to current workspace)
+#    :type workspace_id: kbtypes.Unicode
+#    :param obj_id: Coexpression network workspace identifier.
+#    :type obj_id: kbtypes.KBaseNetworks.Network
+#    :return: Workspace objectID for network
+#    :rtype: kbtypes.Unicode
+#    :output_widget: ForceDirectedNetwork
+#    """
+#    meth.stages = 1
+#    meth.advance("Create plot specification")
+#    if not workspace_id:
+#        workspace_id = meth.workspace_id
+#	return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': obj_id })
 
-    :param workspace_id: Workspace name (if empty, defaults to current workspace)
-    :type workspace_id: kbtypes.Unicode
-    :param obj_id: Coexpression network workspace identifier.
-    :type obj_id: kbtypes.KBaseNetworks.Network
-    :return: Workspace objectID for network
-    :rtype: kbtypes.Unicode
-    :output_widget: ForceDirectedNetwork
-    """
+
+@method(name="Functional modules")
+def gene_network(meth, nto=None):
+    """Display information for network clusters.
+
+        :param nto: Network Typed Object
+        :type nto: kbtypes.KBaseNetworks.Network
+        :return: Rows for display
+        :rtype: kbtypes.Unicode
+        :output_widget: kbasePlantsNTO
+        """
+    #:param workspace_id: Workspace name (use current if empty)
+    #:type workspace_id: kbtypes.Unicode
     meth.stages = 1
-    meth.advance("Create plot specification")
-    if not workspace_id:
-        workspace_id = meth.workspace_id
-	return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': obj_id })
+    # if not workspace_id:
+    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
+    #     workspace_id = meth.workspace_id
+    meth.advance("Retrieve NTO from workspace")
+    if nto:
+        ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
+        raw_data = ws.get(nto)
+    else:
+        raw_data = {}
+    data = {'input': raw_data}
+    return json.dumps(data)
+
+
 
 # Finalize (registers service)
 finalize_service()

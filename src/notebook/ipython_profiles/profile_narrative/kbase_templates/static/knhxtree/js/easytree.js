@@ -105,6 +105,8 @@ function EasyTree(canvasId, treeString, nodeIdToNameMap, leafClickListener, node
             if (id >= 0 && id < kn_g_tree.node.length) {
                 var tree = kn_g_tree, conf = kn_g_conf, i = id;
                 if (i < tree.node.length && tree.node[i].child.length) {
+                	if (!tree.node[i].parent)
+                		return;
                     tree.node[i].hidden = !tree.node[i].hidden;
                     var nn = tree.node.length;
                     tree.node = kn_expand_node(tree.node[tree.node.length-1]);

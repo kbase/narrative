@@ -435,6 +435,7 @@ def genelist_to_featureset(meth, gene_ids=None, out_id=None):
                                    ["User IDs", ",".join(qid2cds.keys())]
                                  ]})
 
+# TODO: Don't forget to check gene function is there or not
 @method(name="FeatureSet GO Analysis")
 def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain='biological_process', out_id=None):
     """This method annotate GO terms and execute GO enrichment test 
@@ -451,7 +452,7 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     :type out_id: kbtypes.KBaseSearch.FeatureSet
     :return: New workspace object
     :rtype: kbtypes.Unicode
-    :output_widget: ValueListWidget
+    :output_widget: GeneTableWidget
     """
     # :param workspace_id: Workspace name (if empty, defaults to current workspace)
     # :type workspace_id: kbtypes.Unicode
@@ -471,10 +472,13 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     ots = oc.get_goidlist(list(set(qid2cds.values())), domain_list, ec_list)
     enr_list = oc.get_go_enrichment(list(set(qid2cds.values())), domain_list, ec_list, 'hypergeometric', 'GO')
     enr_list = sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
+    header = ["GO ID", "Description", "Domain", "p-value"]
+    fields = []
     go_enr_smry = ""
     for i in range(len(enr_list)):
       goen = enr_list[i]
       if goen['pvalue'] > float(p_value) : continue
+      fields.append([goen['goID'], goen['goDesc'][0], goen['goDesc'][1], "{:6.4f}".format(goen['pvalue']) ])
       #fs['fse.'+goen['goID']+".desc" ] = goen['goDesc'][0]
       #fs['fse.'+goen['goID']+".domain" ] = goen['goDesc'][1]
       #fs['fse.'+goen['goID']+".p_value" ] = `goen['pvalue']`
@@ -482,6 +486,7 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
         go_enr_smry += goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0] + "\n"
         #go_enr_anns[i] = goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0]
     go_enr_smry
+    data = {'table': [header] + fields}
     
     meth.advance("Annotate GO Term")
     go_key = lambda go, i, ext: "go.{}.{:d}.{}".format(go, i, ext)
@@ -504,10 +509,11 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
 
 
     meth.advance("Returning object")
-    return json.dumps({'values': [
-                                   ["Workspace object", out_id],
-                                   ["Enrichment Summary", go_enr_smry]
-                                 ]})
+    return json.dumps(data)
+    #return json.dumps({'values': [
+    #                               ["Workspace object", out_id],
+    #                               ["Enrichment Summary", go_enr_smry]
+    #                             ]})
 
 
 @method(name="FeatureSet to Networks")
@@ -564,7 +570,7 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
     :type out_id: kbtypes.KBaseSearch.FeatureSet
     :return: New workspace object
     :rtype: kbtypes.Unicode
-    :output_widget: ValueListWidget
+    :output_widget: GeneTableWidget
     """
     # :param workspace_id: Workspace name (if empty, defaults to current workspace)
     # :type workspace_id: kbtypes.Unicode
@@ -593,9 +599,12 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
       nid2name[ne['entity_id']] = ne['name'] 
 
     pwy_enr_smry = ""
+    header = ["Pathway ID", "Name", "p-value"]
+    fields = []
     for i in range(len(enr_list)):
       pwy_en = enr_list[i]
       if float(pwy_en[0]) > float(p_value) : continue
+      fields.append([pwy_en[1], nid2name[pwy_en[1]], pwy_en[0]])
       #fs['fse.'+goen['goID']+".desc" ] = goen['goDesc'][0]
       #fs['fse.'+goen['goID']+".domain" ] = goen['goDesc'][1]
       #fs['fse.'+goen['goID']+".p_value" ] = `goen['pvalue']`
@@ -604,17 +613,18 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
         #go_enr_anns[i] = goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0]
     
       
+    data = {'table': [header] + fields}
     meth.advance("Saving output to Workspace")
 
-    #ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'network_enrichment' : enr_dict}}]})
     ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'pwy_enr_summary' :pwy_enr_smry}}]})
 
 
     meth.advance("Returning object")
-    return json.dumps({'values': [
-                                   ["Workspace object", out_id],
-                                   ["Enrichment Summary", pwy_enr_smry]
-                                 ]})
+    return json.dumps(data)
+    #return json.dumps({'values': [
+    #                               ["Workspace object", out_id],
+    #                               ["Enrichment Summary", pwy_enr_smry]
+    #                             ]})
 
 
 @method(name="Gene network")

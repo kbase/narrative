@@ -81,7 +81,7 @@ def maf(meth, maf=0.05, variation=None, out=None, comment=None):
     :type maf: kbtypes.Numeric
     :param variation: Population variation object
     :type variation: kbtypes.KBaseGwasData.GwasPopulationVariation
-    :param out: Population variation, filtered 
+    :param out: Population variation, filtered
     :type out: kbtypes.KBaseGwasData.GwasPopulationVariation
     :param comment: Comment
     :type comment: kbtypes.Unicode
@@ -404,14 +404,12 @@ def genelist_network2ws(meth, gene_ids=None, out_id=None):
 
 
 @method(name="Gene network")
-def gene_network(meth, gene_list=None, external_ids=None):
+def gene_network(meth, nto=None):
     """This method searches KBase indexed co-expression networks where
         genes from the gene_list are present and displays internal networks formed by these genes in an interactive visualization.
-        
-        :param gene_list: GWAS Gene list
-        :type gene_list: kbtypes.KBaseGwasData.GwasGeneList
-        :param external_ids: Space delimited list of external IDs (optional. Use this or workspace id)
-        :type external_ids: kbtypes.Unicode
+
+        :param nto: Network Typed Object
+        :type nto: kbtypes.KBaseNetworks.Network
         :return: Rows for display
         :rtype: kbtypes.Unicode
         :output_widget: kbasePlantsNetworkNarrative
@@ -422,13 +420,13 @@ def gene_network(meth, gene_list=None, external_ids=None):
     # if not workspace_id:
     #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
     #     workspace_id = meth.workspace_id
-    meth.advance("Retrieve gene from workspace")
-    if gene_list:
+    meth.advance("Retrieve NTO from workspace")
+    if nto:
         ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
-        raw_data = ws.get(gene_list)
+        raw_data = ws.get(nto)
     else:
         raw_data = {}
-    data = {'gwas': raw_data, 'external_ids' : external_ids}
+    data = {'input': raw_data}
     return json.dumps(data)
 
 

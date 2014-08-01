@@ -761,17 +761,27 @@
          */
         handleExecuteReply: function (cell, content) {
             this.dbg('[handleExecuteReply]');
-            this.dbg(content);
+            // this.dbg(content);
 
+            this.dbg(cell);
+            /* This catches and displays any errors that don't get piped through
+             * the back-end service.py mechanism.
+             * Any code that makes it that far gets reported through the output
+             * mechanism and ends here with an 'ok' message.
+             */
             if (content.status === 'error') {
                 var errorBlob = {
                     msg : content.evalue,
                     type : content.ename,
-                }
+                };
+
+                if (cell && cell.metadata && cell.metadata['kb-cell'] &&
+                    cell.metadata['kb-cell'].method)
+                    errorBlob.method_name = cell.metadata['kb-cell'].method.title;
 
                 var removeVt = function(line) {
                     return line.replace(/\[\d+(;\d+)?m/g, '');
-                }
+                };
 
                 var errTb = content.traceback.map(function(line) {
                     return {
@@ -781,7 +791,7 @@
                         text: removeVt(line)
                     };
                 });
-                
+
                 errorBlob.traceback = errTb;
                 this.createErrorCell(cell, JSON.stringify(errorBlob));
 

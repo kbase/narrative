@@ -472,6 +472,9 @@ def _output_object(name):
     return json.dumps({'output': name})
 
 
+def _workspace_output(wsid):
+    return json.dumps({'values': [["Workspace object", wsid]]})
+
 def ws_obj2shock(ws, obj_id, advance=None, meth=None):
     """Put a workspace object in SHOCK.
 
@@ -541,6 +544,7 @@ def filter_expr(meth, series_obj_id=None, filtering_method="anova",
     :type p_value: kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
+    :output_widget: ValueListWidget
     """
     meth.stages = 3
 
@@ -559,7 +563,7 @@ def filter_expr(meth, series_obj_id=None, filtering_method="anova",
     AweJob.URL = URLS.awe
     AweJob(meth, started="Differential expression filter", running="Differential expression filter").run(jid[0])
 
-    return _output_object(series_obj_id+".fltrd")
+    return _workspace_output(series_obj_id+".fltrd")
 
 
 @method(name="Construct co-expression network and clusters")
@@ -580,6 +584,7 @@ def build_net_clust(meth, series_obj_id=None, net_method='simple', clust_method=
     :type num_module: kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
+    :output_widget: ValueListWidget
     """
     meth.stages = 3
 
@@ -599,7 +604,7 @@ def build_net_clust(meth, series_obj_id=None, net_method='simple', clust_method=
     AweJob(meth, started="Construct coex network and clusters", running="Construct coex network and clusters").run(jid[0])
 
 
-    return _output_object('coex_by_' +series_obj_id)
+    return _workspace_output('coex_by_' +series_obj_id)
 
 
 @method(name="Add ontology annotation for network genes")
@@ -610,6 +615,7 @@ def go_anno_net(meth, net_obj_id=None):
     :type net_obj_id: kbtypes.KBaseNetworks.Network
     :return: Workspace id
     :rtype: kbtypes.Unicode
+    :output_widget: ValueListWidget
     """
     meth.stages = 5
 
@@ -669,7 +675,7 @@ def go_anno_net(meth, net_obj_id=None):
     }
     wsd.save_objects({'workspace': ws_save_id, 'objects': [obj]})
 
-    return _output_object(net_obj_id + ".ano")
+    return _workspace_output(net_obj_id + ".ano")
 
 
 def annotate_nodes(net_object, ots=None, oan=None, funcs=None, funcs_org=None, eids=None,

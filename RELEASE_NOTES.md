@@ -7,6 +7,10 @@ This is built on the IPython Notebook (more notes will follow).
 __Changes__
 - Addressed issue with auth information getting overridden (leading to the 400 HTTP error)
 - Addressed problems that cause the 502 Bad Gateway error
+- Revised names and descriptions on some widgets
+- Added widget to build a genome set from a tree
+- Revised gapfilling and phenotype view widgets
+- 
 
 __Known Issues__
 - Current version of jquery.datatables is finicky and can create popup errors. These can be safely ignored.

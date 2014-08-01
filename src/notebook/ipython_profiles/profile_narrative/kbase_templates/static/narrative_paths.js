@@ -163,6 +163,7 @@ console.log("WAT?");
 				'kbaseTaxonOverview'                : 'kbase/js/ui-common/src/widgets/taxa/kbaseTaxonOverview',
 				//'kbaseTree'                         : 'kbase/js/ui-common/src/widgets/trees/kbaseTree',
 				'kbaseBarchart'                     : 'kbase/js/ui-common/src/widgets/vis/kbaseBarchart',
+				'kbaseHistogram'                     : 'kbase/js/ui-common/src/widgets/vis/kbaseHistogram',
 				'kbaseChordchart'                   : 'kbase/js/ui-common/src/widgets/vis/kbaseChordchart',
 				'kbaseCircularHeatmap'              : 'kbase/js/ui-common/src/widgets/vis/kbaseCircularHeatmap',
 				'kbaseForcedNetwork'                : 'kbase/js/ui-common/src/widgets/vis/kbaseForcedNetwork',

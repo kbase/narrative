@@ -297,7 +297,7 @@
 	    add_pipe_btn.find('span').css("color", "white");
 
 	    var add_pipe_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-	    var pipeline_pool = $('<div class="well col-md-9 pipe-pool">')
+	    var pipeline_pool = $('<div class="well col-md-9" id="pipe-pool">')
 	    var pipe_picked = []
             var pipe_row2 = $('<div class="row">');
             var pipe_desc = $('<div class="col-md-10"><input type="text" class="asm-form form-control" style="width:100%" placeholder="Description"></div>')
@@ -560,27 +560,31 @@
 		self.$elem.find('#tabs').tabs("option", "disabled", true)
 		$('select option[value = "' + self.state['recipe'] + '"]').attr('selected', 'selected');
 
-		//// Restore assemblers
-		var pool = self.state.asm_pool
-		var body = $('<div>');
-		for (i=0; i<pool.length;i++){
-		    (function(i) {
-			body.append($('<div class="btn btn-primary btn-sm" style="margin:5px">' + pool[i] + '</div>'))
-			
-		    })(i);
+		// //// Restore assemblers
+		if (self.state.asm_pool){
+		    var pool = self.state.asm_pool
+		    var body = $('<div>');
+		    for (i=0; i<pool.length;i++){
+			(function(i) {
+			    body.append($('<div class="btn btn-primary btn-sm" style="margin:5px">' + pool[i] + '</div>'))
+			    
+			})(i);
+		    }
+		    self.$elem.find('#asm-pool').html(body);
 		}
-		self.$elem.find('#asm-pool').html(body);
 
-		//// Restore pipeline
-		var pool = self.state.pipe_pool
-		var body = $('<div>');
-		for (i=0; i<pool.length;i++){
-		    (function(i) {
-			body.append($('<div class="btn btn-primary btn-sm" style="margin:5px">' + pool[i] + '</div>'))
-			
-		    })(i);
+		// //// Restore pipeline
+		if (self.state.pipe_pool){
+		    var pool = self.state.pipe_pool
+		    var body = $('<div>');
+		    for (i=0; i<pool.length;i++){
+			(function(i) {
+			    console.log(pool[i])
+			    body.append($('<div class="btn btn-primary btn-sm">' + pool[i] + '</div>'))
+			})(i);
+		    }
+		    self.$elem.find('#pipe-pool').html(body);
 		}
-		self.$elem.find('#pipe-pool').html(body);
 
 		self.showResults(self.token, 
 				 self.state['assemblies'],

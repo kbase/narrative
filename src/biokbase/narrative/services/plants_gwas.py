@@ -437,27 +437,8 @@ def genelist_to_featureset(meth, gene_ids=None, out_id=None):
     ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
 
     gene_ids_ns = gene_ids.replace(" ","")
-<<<<<<< HEAD
-    qid2cds = ids2cds(gene_ids_ns.split(','))
-    fs = {"description" : "User generated feature set by " + gene_ids,
-          "elements" : {}
-         }
-    cdmie = CDMI_EntityAPI(URLS.cdmi)
-    cdmic = CDMI_API(URLS.cdmi)
-    cds_ids = qid2cds.values()
-    cds2l = cds2locus(cds_ids);
-    lfunc = cdmic.fids_to_functions(cds2l.values())
-
-    fm = cdmie.get_entity_Feature(cds_ids,['feature_type', 'source_id', 'sequence_length', 'function', 'alias'])
-    for i in cds_ids:
-      if i in fm:
-        if not fm[i]['function'] and cds2l[i] in lfunc:
-          fm[i]['function'] = lfunc[cds2l[i]]
-        fs['elements'][i] = {"data" : { 'type' : fm[i]['feature_type'], 'id' : i, 'dna_sequence_length' : int(fm[i]['sequence_length']), 'function' : fm[i]['function'], 'aliases' : fm[i]['alias']}}
-
-=======
     fs = genelist2fs(gene_ids_ns.split(","))
->>>>>>> master
+
     ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : gene_ids}}]})
 
     meth.advance("Returning object")

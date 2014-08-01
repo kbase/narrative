@@ -1701,11 +1701,11 @@ def _insert_genome_into_species_tree(meth, genome, neighbor_count, out_tree):
     job_id = treeClient.construct_species_tree(construct_species_tree_params)
     return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
 
-@method(name="View Species Tree")
-def _view_species_tree(meth, tree_id):
-    """ View a Species Tree from your workspace [21]
+@method(name="View Tree")
+def _view_tree(meth, tree_id):
+    """ View a Tree from your workspace [21]
 
-    :param tree_id: a Species Tree id [21.1]
+    :param tree_id: a Tree id [21.1]
     :type tree_id: kbtypes.KBaseTrees.Tree
     :ui_name tree_id: Tree ID
     :return: Species Tree Result
@@ -1842,7 +1842,11 @@ def _align_protein_sequences(meth, feature_set, alignment_method, out_msa):
     elements = ws.get_objects([{'ref': workspace+'/'+feature_set}])[0]['data']['elements']
     gene_sequences = {}
     for key in elements:
-        id = elements[key]['data']['id']
+        elem = elements[key]['data']
+        id = elem['id']
+        if 'genome_ref' in elem:
+            genome_obj_name = ws.get_object_info([{'ref' : elem['genome_ref']}],0)[0][1]
+            id = genome_obj_name + '/' + id
         seq = elements[key]['data']['protein_translation']
         gene_sequences[id] = seq
     treeClient = KBaseTrees(url = service.URLS.trees, token = token)
@@ -1855,6 +1859,33 @@ def _align_protein_sequences(meth, feature_set, alignment_method, out_msa):
     job_id = treeClient.construct_multiple_alignment(construct_multiple_alignment_params)
     return json.dumps({'workspaceID': workspace, 'msaID': out_msa, 'jobID' : job_id})
 
+@method(name="Build Gene Tree")
+def _build_gene_tree(meth, msa, out_tree):
+    """ Build phylogenetic tree for multiple alignmnet of protein sequences [28]
+
+    :param msa: a Multiple sequence alignment [28.1]
+    :type msa: kbtypes.KBaseTrees.MSA
+    :ui_name msa: MSA ID
+    :param out_tree: Output gene tree ID. If empty, an ID will be chosen randomly. [28.2]
+    :type out_tree: kbtypes.KBaseTrees.Tree
+    :ui_name out_tree: Output gene tree ID
+    :return: Species Tree Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseTree
+    """
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    if not out_tree:
+        out_tree = "genetree_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    treeClient = KBaseTrees(url = service.URLS.trees, token = token)
+    construct_tree_for_alignment_params = {
+        'msa_ref': workspace + '/' + msa, 
+        'tree_method': 'FastTree', 
+        'out_workspace': workspace, 
+        'out_tree_id': out_tree
+    }
+    job_id = treeClient.construct_tree_for_alignment(construct_tree_for_alignment_params)
+    return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
 
 #
 #@method(name="Edit Data")

@@ -125,7 +125,7 @@
                 }
                 var canvasId = "canvas-" + self.pref;
                 var canvasDiv = $('<div>').append($('<canvas id="' + canvasId + '">'));
-                canvasDiv.css({'max-height':400, 'overflow':'scroll'});
+                canvasDiv.css({'max-height':400, 'max-width':1080, 'overflow':'scroll'});
                 self.$elem.append(canvasDiv);
                 var canvas = document.getElementById(canvasId);
                 canvas.width = (max_lbl_len + 2 + len) * 8;

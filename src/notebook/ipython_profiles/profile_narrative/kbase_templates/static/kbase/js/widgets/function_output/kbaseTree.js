@@ -131,20 +131,31 @@
 
                 var refToInfoMap = {};
                 var objIdentityList = [];
-                for (var key in tree.ws_refs) {
-                	objIdentityList.push({ref: tree.ws_refs[key]['g'][0]});
-                }
-                $.when(self.wsClient.get_object_info(objIdentityList)).done(function(data) {
-                	for (var i in data) {
-                		var objInfo = data[i];
-                		refToInfoMap[objIdentityList[i].ref] = objInfo;
+                if (tree.ws_refs) {
+                	for (var key in tree.ws_refs) {
+                		objIdentityList.push({ref: tree.ws_refs[key]['g'][0]});
                 	}
-                }).fail(function(err) {
-            		console.log("Error getting genomes info:");
-            		console.log(err);
-            	});
-
+                }
+                if (objIdentityList.length > 0) {
+                	$.when(self.wsClient.get_object_info(objIdentityList)).done(function(data) {
+                		for (var i in data) {
+                			var objInfo = data[i];
+                			refToInfoMap[objIdentityList[i].ref] = objInfo;
+                		}
+                	}).fail(function(err) {
+                		console.log("Error getting genomes info:");
+                		console.log(err);
+                	});
+                }
                 new EasyTree(self.canvasId, tree.tree, tree.default_node_labels, function(node) {
+                	if ((!tree.ws_refs) || (!tree.ws_refs[node.id])) {
+                		var node_name = tree.default_node_labels[node.id];
+                		if (node_name.indexOf('/') > 0) {  // Gene label
+                    		var url = "/functional-site/#/genes/" + self.options.workspaceID + "/" + node_name;
+                            window.open(url, '_blank');
+                		}
+                		return;
+                	}
                 	var ref = tree.ws_refs[node.id]['g'][0];
                 	var objInfo = refToInfoMap[ref];
                 	if (objInfo) {

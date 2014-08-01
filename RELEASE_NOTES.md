@@ -3,6 +3,16 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 8/1/2014
+__Changes__
+- Addressed issue with auth information getting overridden (leading to the 400 HTTP error)
+- Addressed problems that cause the 502 Bad Gateway error
+
+__Known Issues__
+- Current version of jquery.datatables is finicky and can create popup errors. These can be safely ignored.
+- Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
+- R support is occasionally problematic.
+
 ### Release 7/30/2014
 __Changes__
 - Updated config to make landing page links relative to deployment site

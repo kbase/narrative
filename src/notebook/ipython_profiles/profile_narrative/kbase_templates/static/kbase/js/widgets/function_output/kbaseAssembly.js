@@ -223,7 +223,7 @@
                                       <option value="kiki">Kiki Assembler</option> \
                                     </select></span>');
             var asm_desc = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
-            var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
+            var asm_btn = $('<span class="col-md-1 pull-right"><button class="btn btn-large btn-primary pull-right"><span class="glyphicon glyphicon-play-circle"  style="color:white;"></span> Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
 
@@ -233,15 +233,15 @@
 	    var asm_div2 = $('<div id="frag-assemblers"><small>Assemble contigs using multiple assemblers and compare results</small></div>');
             var asm_row = $('<div class="row">');
 	    var add_asm_group = $('<span class="btn-group col-md-2"></span>');
-	    var add_asm_btn = $('<button type="button" class="btn btn-large btn-warning asm-form dropdown-toggle" data-toggle="dropdown"> \
+	    var add_asm_btn = $('<button type="button" class="btn btn-warning asm-form dropdown-toggle" data-toggle="dropdown"> \
                                    <span class="glyphicon glyphicon-plus-sign"></span>  Assembler <span class="caret"></span> </button>');
 	    add_asm_btn.find('span').css("color", "white");
 	    var add_asm_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-	    var assembler_pool = $('<div class="well col-md-9" id="asm-pool">')
+	    var assembler_pool = $('<div class="well col-md-8 col-md-offset-1" id="asm-pool">')
 	    var asm_picked = []
             var asm_row2 = $('<div class="row">');
             var asm_desc2 = $('<div class="col-md-10"><input type="text" class="asm-form form-control" style="width:100%" placeholder="Description"></div>')
-            var asm_btn2 = $('<button class="btn btn-large col-md-2 btn-primary pull-right asm-form">Assemble</button>');
+            var asm_btn2 = $('<button class="btn btn-default col-md-2 btn-primary pull-right asm-form"><span class="glyphicon glyphicon-play-circle"  style="color:white;"></span> Assemble</button>');
 
 	    var update_asm_pool = function(assembler_pool, pool){
 		var body = $('<div>');
@@ -297,17 +297,17 @@
 	    add_pipe_btn.find('span').css("color", "white");
 
 	    var add_pipe_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-	    var pipeline_pool = $('<div class="well col-md-9" id="pipe-pool">')
+	    var pipeline_pool = $('<div class="well col-md-8 col-md-offset-1" id="pipe-pool">')
 	    var pipe_picked = []
             var pipe_row2 = $('<div class="row">');
             var pipe_desc = $('<div class="col-md-10"><input type="text" class="asm-form form-control" style="width:100%" placeholder="Description"></div>')
-            var pipe_btn = $('<button class="btn btn-large col-md-2 asm-form btn-primary pull-right">Assemble</button>');
+            var pipe_btn = $('<button class="btn btn-large col-md-2 asm-form btn-primary pull-right"><span class="glyphicon glyphicon-play-circle"  style="color:white;"></span> Assemble</button>');
 
 	    var update_pipe_pool = function(pool){
 		var body = $('<div>');
 		for (i=0; i<pool.length;i++){
 		    (function(i) {
-			body.append($('<div class="btn btn-primary btn-sm">' + pool[i] + '</div>').on('click', function(){
+			body.append($('<div class="btn btn-primary btn-sm">' + pool[i] + '<span class="glyphicon glyphicon-chevron-right pull-right" style="color:white"></span></div>').on('click', function(){
 			    console.log(pool[i])
 			    console.log('#asm-' + pool[i]);
 			    $('#pipe-' + pool[i]).attr('disabled', "false");

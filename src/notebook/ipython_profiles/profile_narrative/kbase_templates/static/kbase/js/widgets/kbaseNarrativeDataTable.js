@@ -111,7 +111,6 @@
                 ],
                 bInfo: false,
                 bLengthChange: false,
-                bPaginate: false,
                 bAutoWidth: true,
                 bScrollCollapse: true,
                 sScrollY: '225px',

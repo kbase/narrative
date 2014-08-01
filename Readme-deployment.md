@@ -128,12 +128,12 @@ The Dockerfile that builds the Narrative can be found in /path/to/narrative/dock
 Build the Narrative Docker container
 ===
 Now we can build our Docker container.  
-The Lua provisioning library (currently) looks for containers named sychan/narrative:latest, so that’s the name we’ll give it.
+The Lua provisioning library (currently) looks for containers named kbase/narrative:latest, so that’s the name we’ll give it.
 
 Eventually, it might be nice to have an external container repository that manages this, and every night or so, we just pull the most recent container and deploy it.
 ```
 > cd /path/to/narrative/..
-> docker build -q -t sychan/narrative .
+> docker build -q -t kbase/narrative .
 ```
 
 This will take around half an hour to pull, compile, and deploy the various components. So go get a cup of coffee or take a nap at this point.
@@ -143,11 +143,11 @@ A quick breakdown of this function:
 
 **-q** : this directive is for “quiet” mode. The current container builds generate lots of output and reach some internal docker limit of how much log output can be stored. A symptom of this problem is that the build will halt with the error "invalid byte in chunk length".
 
-**-t &lt;username&gt;/&lt;container name&gt;** : this tags the new container with a given name, instead of just a UUID. You can give it an additional :tag (e.g. sychan/narrative:tag) on the end, otherwise it’ll tag it as “latest”. When a new version is made, the current “latest” tagged container will give up its name and fall back on a UUID.
+**-t &lt;username&gt;/&lt;container name&gt;** : this tags the new container with a given name, instead of just a UUID. You can give it an additional :tag (e.g. kbase/narrative:tag) on the end, otherwise it’ll tag it as “latest”. When a new version is made, the current “latest” tagged container will give up its name and fall back on a UUID.
 
 To keep track of older container when a new one is produced, we create a new tag with a datestamp
 ```
-> docker tag sychan/narrative:latest sychan/narrative:YYYYMMDD
+> docker tag kbase/narrative:latest kbase/narrative:YYYYMMDD
 ```
 
 This creates a whole slew of intermediate container layers that all get built on top of each other. Once the final container is built, these are superfluous and should be deleted. You can see which ones are active or exited with:
@@ -207,7 +207,7 @@ To look into a container for potential Narrative problems, run:
 This shows a list of all running containers along with the username of the person running it (sorry for formatting)
 ```
 CONTAINER ID        IMAGE                       COMMAND                CREATED             STATUS              PORTS                     NAMES
-972f371bc2fc        sychan/narrative:20140624   /bin/bash /kb/deploy   3 minutes ago       Up 3 minutes        0.0.0.0:49153->8888/tcp   wjriehl  
+972f371bc2fc        kbase/narrative:20140624   /bin/bash /kb/deploy   3 minutes ago       Up 3 minutes        0.0.0.0:49153->8888/tcp   wjriehl  
 ```
 You can use the container ID to look at the container’s stdout and stderr with the command
 ```

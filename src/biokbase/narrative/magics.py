@@ -3,27 +3,30 @@
 # sychan 7/12/2013
 #
 
-from __future__ import print_function
+# System
+import errno
+import getpass
+import logging
+import os
+import random
+import re
+import string
+import sys
+import time
+import types
+# IPython
 from IPython.core.magic import (Magics, magics_class, line_magic,
                                 cell_magic, line_cell_magic)
-
-from biokbase.InvocationService.Client import InvocationService as InvocationClient
-import biokbase.auth
-import getpass
-import random
-import string
-import os
-import errno
-import time
-import sys
-import types
-import re
-import biokbase.narrative.upload_handler
-
-from IPython.core.display import display, Javascript
-from ast import literal_eval
 from IPython.display import HTML
+# KBase
+import biokbase.auth
+from biokbase.InvocationService.Client import \
+    InvocationService as InvocationClient
+import biokbase.narrative.upload_handler
+from biokbase.narrative.common.url_config import URLS
 
+# Logging
+_log = logging.getLogger(__name__)
 
 # Module variables for maintaining KBase Notebook state
 user_id = None
@@ -38,8 +41,10 @@ inv_cwd = '/'
 have_browser = None
 
 # End points for various services
-endpoint = { 'invocation' : 'https://kbase.us/services/invocation',
-             'workspace' : 'https://kbase.us/services/ws/' }
+endpoint = {'invocation': URLS.invocation,
+            'workspace': URLS.workspace }
+# endpoint = { 'invocation' : 'https://kbase.us/services/invocation',
+#              'workspace' : 'https://kbase.us/services/ws/' }
 
 # IPython interpreter object
 ip = None
@@ -47,22 +52,34 @@ ip = None
 # default start directory
 workdir = "/tmp/narrative"
 
-# Actually performs the login with username and password
-def do_login( user, password):
+
+def user_msg(s):
+    """Show a message to the user.
+    Adds a newline.
+    """
+    _log.debug("user_msg len={:d}".format(len(s)))
+    sys.stderr.write(s + "\n")
+
+
+def do_login(user, password):
+    """Actually performs the login with username and password
+    """
     global user_id, token, user_profile, inv_client, inv_session
     try:
-        t = biokbase.auth.Token( user_id = user, password = password)
+        t = biokbase.auth.Token(user_id=user, password=password)
         if t.token:
             set_token(t.token)
         else:
-            raise biokbase.auth.AuthFail( "Could not get token with username and password given")
+            raise biokbase.auth.AuthFail("Could not get token with username and password given")
     except biokbase.auth.AuthFail, a:
-        print("Failed to login with username password provided. Please try again.",file=sys.stderr)
+        user_msg("Failed to login with username password provided. "
+                     "Please try again.")
         token = None
     if token is not None:
-        print("Logged in as %s" % user_id,file=sys.stderr)
+        user_msg("Logged in as {}".format(user_id))
 
-def set_token( newtoken):
+
+def set_token(newtoken):
     global user_id, token, user_profile, inv_client, inv_session
     if newtoken:
         token = newtoken
@@ -71,23 +88,24 @@ def set_token( newtoken):
         user_id = user_profile.user_id
         # If we had a previous session, clear it out
         if inv_session is not None:
-            print("Clearing anonymous invocation session",file=sys.stderr)
+            user_msg("Clearing anonymous invocation session")
             inv_client.exit_session( inv_session)
         inv_client = None
         inv_session = None
         ws_client = None
 
+
 def clear_token():
     global user_id, token, user_profile, inv_client, inv_session
     if token is not None:
-        print("Clearing credentials and profile for %s" % user_id,file=sys.stderr)
+        user_msg("Clearing credentials and profile for {}".format(user_id))
         user_id = None
         token = None
         user_profile = None
     biokbase.auth.set_environ_token( None)
     # If we had a previous session, clear it out
     if inv_session is not None:
-        print("Clearing anonymous invocation session",file=sys.stderr)
+        user_msg("Clearing anonymous invocation session")
         inv_client.exit_session( inv_session)
     inv_client = None
     inv_session = None
@@ -95,11 +113,12 @@ def clear_token():
 
 # Define the KBase notebook magics
 
+
 @magics_class
 class kbasemagics(Magics):
 
     @line_magic
-    def kblogin(self,line):
+    def kblogin(self, line):
         """
         Login using username and password to KBase and then push login token into the environment.
         Usage is: kblogin {userid}
@@ -109,30 +128,36 @@ class kbasemagics(Magics):
         by any libraries that have implemented that support.
         """
         try:
-            (user,password) = line.split();
+            (user, password) = line.split()
         except ValueError:
             user = line
             password = None
         global user_id, token, user_profile, inv_client, inv_session
         # display(Javascript("IPython.notebook.kernel.execute( 'biokbase.narrative.have_browser = 1')"))
         if user_id is not None:
-            print("Already logged in as %s. Please kblogout first if you want to re-login" % user_id,file=sys.stderr)
+            user_msg("Already logged in as {}. "
+                         "Please kblogout first if you want to re-login"
+                         .format(user_id))
         elif user is None:
-            print("kblogin requires at least a username",file=sys.stderr)
+            user_msg("kblogin requires at least a username")
         else:
             try:
-                # try to login with only user_id in case there is an ssh_agent running
-                t = biokbase.auth.Token( user_id = user)
+                # try to login with only user_id in case there is
+                # an ssh_agent running
+                t = biokbase.auth.Token(user_id=user)
                 if t.token is None:
                     if password is None:
-                        password = getpass.getpass( "Please enter the KBase password for %s : " % user)
-                    t = biokbase.auth.Token( user_id = user, password = password)
+                        password = getpass.getpass("Please enter the KBase "
+                                                   "password for '%s': " % user)
+                    t = biokbase.auth.Token(user_id=user, password=password)
                 if t.token:
-                    set_token( t.token)
+                    set_token(t.token)
                 else:
-                    raise biokbase.auth.AuthFail( "Could not get token with username and password given")
+                    raise biokbase.auth.AuthFail(
+                        "Could not get token with username and password given")
             except biokbase.auth.AuthFail, a:
-                print("Failed to login with username password provided. Please try again.",file=sys.stderr)
+                user_msg("Failed to login with username password provided. "
+                         "Please try again.")
                 token = None
         if token is not None:
             return user_id
@@ -140,47 +165,55 @@ class kbasemagics(Magics):
             return None
 
     @line_magic
-    def kblogout(self,line):
-        "Logout by removing credentials from environment and clearing session objects"
+    def kblogout(self, line):
+        """Logout by removing credentials from environment and
+           clearing session objects
+        """
         # Call the clear_token method
         clear_token()
         return
         
     @line_magic
-    def uploader(self,line):
+    def uploader(self, line):
         """
         Bring up basic input form that allows you to upload files into /tmp/narrative
         using PLUpload client libraries
         Note that this is a demonstration prototype!
         """
-        return HTML( biokbase.narrative.upload_handler.HTML_EXAMPLE)
+        return HTML(biokbase.narrative.upload_handler.HTML_EXAMPLE)
         
     @line_magic
-    def jquploader(self,line):
+    def jquploader(self, line):
         """
         Bring up an html cell with JQuery UI PLUpload widget that supports drag and drop
         Note that this is a demonstration prototype!
         """
-        return HTML( biokbase.narrative.upload_handler.JQUERY_UI_EXAMPLE)
+        return HTML(biokbase.narrative.upload_handler.JQUERY_UI_EXAMPLE)
         
     @line_magic
     def inv_session(self, line=None):
-        "Return the current invocation session id, create one if necessary. Parameters are ignored"
+        """Return the current invocation session id, create one if necessary.
+        Parameters are ignored
+        """
         global user_id, token, user_profile, inv_client, inv_session, endpoint
 
         if inv_client is None:
             if token is None:
-                print("You are not currently logged in, using anonymous, unauthenticated access",file=sys.stderr)
+                user_msg("You are not currently logged in. Using anonymous,"
+                             " unauthenticated access")
             try:
                 inv_client = InvocationClient( url = endpoint['invocation'], token = token)
                 sess_id = "nrtv_" + str(int(time.time())) + "_" + ''.join(random.choice(string.hexdigits) for x in range(6))
                 inv_session = inv_client.start_session(sess_id)
                 if inv_session == sess_id:
-                    print("New anonymous session created : %s" % inv_session,file=sys.stderr)
+                    user_msg("New anonymous session created : %s"
+                                 % inv_session)
                 else:
-                    print("New authenticated session created for user %s" % user_id,file=sys.stderr)
+                    user_msg("New authenticated session created "
+                                 "for user %s" % user_id)
             except Exception, e:
-                print("Error initializing a new invocation service client: %s" % e,file=sys.stderr)
+                user_msg("Error initializing a new invocation service "
+                             "client: %s" % e)
         return inv_session
                 
     @line_cell_magic
@@ -260,16 +293,17 @@ class kbasemagics(Magics):
             else:
                 res = inv_client.run_pipeline(session, line, [], 200, cwd)
                 if res[1]:
-                    print("\n".join(res[1]), file=sys.stderr)
+                    user_msg("\n".join(res[1]))
                 else:
                     return "".join(res[0])
         except Exception, e:
-            print("Error: %s" % str(e), file=sys.stderr)
+            _log.error("inv_run_line msg={}".format(e))
+            user_msg("Error: %s" % str(e))
             return None
         # return res[0]
 
     @line_magic
-    def inv_ls(self,line,print_output=True):
+    def inv_ls(self, line, print_output=True):
         """
         List files on the invocation service for this session
         """
@@ -285,16 +319,18 @@ class kbasemagics(Magics):
             cwd = inv_cwd
             d = ''
         try:
-            res = inv_client.list_files( sess, cwd,d)
-            dirs = [ "%12s   %s   %s" % ('directory', d['mod_date'],d['name']) for d in res[0]]
-            files = [ "%12d   %s   %s" % (f['size'], f['mod_date'],f['name']) for f in res[1]]
+            res = inv_client.list_files(sess, cwd, d)
+            dirs = ["%12s   %s   %s" % ('directory', d['mod_date'],
+                                        d['name']) for d in res[0]]
+            files = ["%12d   %s   %s" % (f['size'], f['mod_date'],
+                                         f['name']) for f in res[1]]
             print_dir = "\n".join(dirs)
             print_file = "\n".join(files)
             if print_output is True:
                 print(print_dir + "\n" + print_file)
             res = print_dir + "\n" + print_file
         except Exception, e:
-            print("Error: %s" % str(e),file=sys.stderr)
+            user_msg("Error: %s" % str(e))
             res = None
         return res
 
@@ -304,7 +340,7 @@ class kbasemagics(Magics):
         global user_id, token, user_profile, inv_client, inv_session,inv_cwd
         sess = self.inv_session()
         if len(line) < 1:
-            print("Error - must specify a new directory name",file=sys.stderr)
+            user_msg("Error - must specify a new directory name")
             res = None
         else:
             cwd = inv_cwd
@@ -312,7 +348,7 @@ class kbasemagics(Magics):
             try:
                 res = inv_client.make_directory( sess, cwd,d)
             except Exception, e:
-                print("Error: %s" % str(e),file=sys.stderr)
+                user_msg("Error: %s" % str(e))
                 res = None
         return res
 
@@ -324,7 +360,7 @@ class kbasemagics(Magics):
         global user_id, token, user_profile, inv_client, inv_session,inv_cwd
         sess = self.inv_session()
         if len(line) < 1:
-            print("Error - must specify a directory to remove",file=sys.stderr)
+            user_msg("Error - must specify a directory to remove")
             res = None
         else:
             cwd = inv_cwd
@@ -332,12 +368,12 @@ class kbasemagics(Magics):
             try:
                 res = inv_client.remove_directory( sess, cwd,d)
             except Exception, e:
-                print("Error: %s" % str(e),file=sys.stderr)
+                user_msg("Error: %s" % str(e))
                 res = None
         return res
 
     @line_magic
-    def inv_cd(self,line):
+    def inv_cd(self, line):
         "Invocation service change directory"
         global user_id, token, user_profile, inv_client, inv_session,inv_cwd
         sess = self.inv_session()
@@ -347,10 +383,10 @@ class kbasemagics(Magics):
                 res = inv_client.change_directory( sess, inv_cwd,d)
                 inv_cwd = res
             except Exception as e:
-                print("Error: %s" % str(e),file=sys.stderr)
+                user_msg("Error: %s" % str(e))
                 res = None
         else:
-            print("Error - please specify a directory",file=sys.stderr)
+            user_msg("Error - please specify a directory")
             res = None
         return res
 
@@ -362,19 +398,19 @@ class kbasemagics(Magics):
         return inv_cwd
 
     @line_magic
-    def inv_valid_commands(self,line):
+    def inv_valid_commands(self, line):
         "Invocation service inventory of command scripts"
         global user_id, token, user_profile, inv_client, inv_session
         sess = self.inv_session()
         try:
             res = inv_client.valid_commands()
         except Exception as e:
-            print("Error: %s" % str(e),file=sys.stderr)
+            user_msg("Error: %s" % str(e))
             res = None
         return res
 
     @line_magic
-    def inv_remove_files(self,line):
+    def inv_remove_files(self, line):
         """
         Invocation service remove files
         Parameters are: [cwd] filename
@@ -383,10 +419,10 @@ class kbasemagics(Magics):
         global user_id, token, user_profile, inv_client, inv_session
         res = None
         if len(line) < 1:
-            print("Must specify filename and optionally a cwd",file=sys.stderr)
+            user_msg("Must specify filename and optionally a cwd")
         else:
             try:
-                (cwd,filename) = line.split()
+                (cwd, filename) = line.split()
             except:
                 filename = line
                 cwd = inv_cwd
@@ -394,16 +430,16 @@ class kbasemagics(Magics):
             try:
                 res = inv_client.remove_files( sess, cwd, filename)
             except Exception as e:
-                print("Error: %s" % str(e),file=sys.stderr)
+                user_msg("Error: %s" % str(e))
         return res
 
     @line_magic
-    def inv_rename_files(self,line):
+    def inv_rename_files(self, line):
         "Invocation service rename files"
         global user_id, token, user_profile, inv_client, inv_session
         res = None
         if len(line) < 1:
-            print("Must specify: cwd from_filename to_filename",file=sys.stderr)
+            user_msg("Must specify: cwd from_filename to_filename")
         else:
             try:
                 (cwd, fromfn, tofn) = line.split()
@@ -411,14 +447,15 @@ class kbasemagics(Magics):
                 try:
                     (fromfn, tofn) = line.split()
                 except:
-                    print("Must at least from_filename and to_filename",file=sys.stderr)
+                    user_msg("Must at least from_filename and to_filename")
                     return(None)
                 cwd = inv_cwd
             sess = self.inv_session()
             try:
                 res = inv_client.rename_file( sess, cwd, fromfn, tofn)
             except Exception as e:
-                print("Unable to rename %s to %s in directory %s: %s" % (fromfn,tofn,cwd,str(e)),file=sys.stderr)
+                user_msg("Unable to rename %s to %s in directory %s: %s"
+                             % (fromfn,tofn,cwd,str(e)))
         return res
 
     @line_magic
@@ -427,7 +464,7 @@ class kbasemagics(Magics):
         global user_id, token, user_profile, inv_client, inv_session
         res = None
         if len(line) < 1:
-            print("Must specify: cwd from_filename to_filename",file=sys.stderr)
+            user_msg("Must specify: cwd from_filename to_filename")
         else:
             try:
                 (cwd, fromfn, tofn) = line.split()
@@ -435,14 +472,15 @@ class kbasemagics(Magics):
                 try:
                     (fromfn, tofn) = line.split()
                 except:
-                    print("Must at least from_filename and to_filename",file=sys.stderr)
-                    return(None)
+                    user_msg("Must at least from_filename and to_filename")
+                    return None
                 cwd = inv_cwd
             sess = self.inv_session()
             try:
                 res = inv_client.copy( sess, cwd, fromfn, tofn)
             except Exception as e:
-                print("Unable to copy %s to %s in directory %s: %s" % (fromfn,tofn,cwd,str(e)),file=sys.stderr)
+                user_msg("Unable to copy %s to %s in directory %s: %s" %
+                             (fromfn,tofn,cwd,str(e)))
         return res
 
     @line_magic
@@ -470,7 +508,7 @@ class kbasemagics(Magics):
         res = None
         constr = None
         if len(line) < 1:
-            print("Must specify filename, contents and optionally a cwd",file=sys.stderr)
+            user_msg("Must specify filename, contents and optionally a cwd")
         else:
             try:
                 (filename, contents, cwd) = line.split()
@@ -478,8 +516,8 @@ class kbasemagics(Magics):
                 try:
                     (filename, contents) = line.split()
                 except:
-                    print("Must at least filename and contents",file=sys.stderr)
-                    return(None)
+                    user_msg("Must at least filename and contents")
+                    return None
                 cwd = inv_cwd
             sess = self.inv_session()
             filematch = re.match('<(.+)',filename)
@@ -489,43 +527,45 @@ class kbasemagics(Magics):
                     with open( filename, "r") as myfile:
                         constr = myfile.read()
                 except Exception as e:
-                    print("Error: %s" % str(e),file=sys.stderr)                    
+                    user_msg("Error: %s" % str(e))
             else:
                 try:
                     con1 = ip.ev(contents)
                     contstr = str(con1)
                 except Exception as e:
-                    print("Unable to convert %s to string: %s" % (contents,e),file=sys.stderr)
+                    user_msg("Unable to convert %s to string: %s" %
+                                 (contents, e))
                     constr = None
             if constr:
                 try:
-                    res = inv_client.put_file( sess, filename, contstr, cwd)
+                    res = inv_client.put_file(sess, filename, contstr, cwd)
                 except Exception as e:
-                    print("Error: %s" % str(e),file=sys.stderr)
+                    user_msg("Error: %s" % str(e))
         return res
 
     @line_magic
-    def inv_get_file(self,line):
+    def inv_get_file(self, line):
         "Invocation service get file contents"
         global user_id, token, user_profile, inv_client, inv_session
         res = None
         if len(line) < 1:
-            print("Must specify filename and optionally a cwd",file=sys.stderr)
+            user_msg("Must specify filename and,"
+                     " optionally, a working directory.")
         else:
             try:
-                (filename,cwd) = line.split()
+                (filename, wdir) = line.split()
             except:
                 filename = line
-                cwd = inv_cwd
+                wdir = inv_cwd
             sess = self.inv_session()
             try:
-                res = inv_client.get_file( sess, filename, cwd)
+                res = inv_client.get_file(sess, filename, wdir)
             except Exception as e:
-                print("Error: %s" % str(e),file=sys.stderr)
+                user_msg("Error: %s" % str(e))
         return res
 
     @line_magic
-    def inv_get_tutorial_text(self,line):
+    def inv_get_tutorial_text(self, line):
         "Invocation service make directory"
         global user_id, token, user_profile, inv_client, inv_session
         return res
@@ -533,6 +573,7 @@ class kbasemagics(Magics):
 # Grab the ipython object and the config object if available
 #
 try:
+    # XXX: Where are these defined/imported?
     ip = get_ipython()
     conf = get_config()
 except NameError:
@@ -541,21 +582,28 @@ except NameError:
 except:
     # Hmmm, bad, rethrow it
     raise
-if ip is not None:
-    ip.register_magics( kbasemagics)
+if ip is None:
+    user_msg("Cannot fetch IPython instance")
+else:
+    ip.register_magics(kbasemagics)
     # If we have a browser, have it set the have_browser flag
     # Try to bring in a token to the environment
     t = biokbase.auth.Token()
     if t.token is not None:
         user_id = t.user_id
         token = t.token
-        user_profile = biokbase.auth.User( token = token)
-        print("Logged in automatically as %s from environment defaults" % user_id,file=sys.stderr)
+        user_profile = biokbase.auth.User(token=token)
+        user_msg("Logged in automatically as %s from environment defaults"
+                 % user_id)
     else:
-        print("You are not currently logged in. Access to kbase will be unauthenticated (where allowed).\n",file=sys.stderr)
-        print("Please login with kblogin for personal access",file=sys.stderr)
-    print("KBase narrative module loaded.\nUse 'kblogin {username}' and 'kblogout' to acquire and dispose of KBase credentials.\n",file=sys.stderr)
-    print("IPython magics defined for invocation service access are prefixed with inv_*\n",file=sys.stderr)
+        user_msg("You are not currently logged in. Access to kbase will be "
+                 "unauthenticated (where allowed).\n"
+                 "Please login with kblogin for personal access.")
+    user_msg("KBase narrative module loaded.\n"
+             "Use 'kblogin {username}' and "
+             "'kblogout' to acquire and dispose of KBase credentials.\n"
+             "IPython magics defined for invocation service access are "
+             "prefixed with inv_*")
 
     # build a bunch of helper functions under the "invoker" namespace
     # that simply run the various commands available from "valid_command"
@@ -564,18 +612,19 @@ if ip is not None:
     # based heavily on method here:
     # http://dietbuddha.blogspot.com/2012/11/python-metaprogramming-dynamic-module.html
 
-    icmd = types.ModuleType('icmd',"Top level module for invocation command helper functions")
+    icmd = types.ModuleType('icmd', "Top level module for invocation command "
+                                    "helper functions")
     sys.modules['icmd'] = icmd
 
     def mkfn(script):
-        def fn( *args):
+        def fn(*args):
             args2 = [script]
             args2 += list(args)
             if inv_client is None:
                 ip.magic("inv_session")
             stdout, stderr = inv_client.run_pipeline(inv_session," ".join(args2),[],200,'/')
             if stderr:
-                print( "\n".join(stderr), file=sys.stderr)
+                user_msg("\n".join(stderr))
             return stdout
         return fn
 
@@ -586,13 +635,13 @@ if ip is not None:
         catname = str(category['name']).replace('-','_')
         m = types.ModuleType(catname,category['title'])
         setattr(icmd,catname, m)
-        sys.modules[ 'icmd.%s' % catname] = m
+        sys.modules['icmd.%s' % catname] = m
         for item in category['items']:
             script = str(item['cmd']).replace('-','_')
             fn = mkfn(str(item['cmd']))
             fn.__name__ = script
             fn.__doc__ = "Runs the %s script via invocation service" % item['cmd']
-            setattr( m, script, fn)
+            setattr(m, script, fn)
     ip.ex('import icmd')
     try:
         os.makedirs(workdir)
@@ -600,4 +649,5 @@ if ip is not None:
         if exception.errno != errno.EEXIST:
             raise
     os.chdir(workdir)
-    print("Invocation service script helper functions have been loaded under the icmd.* namespace\n",file=sys.stderr)
+    user_msg("Invocation service script helper functions have been loaded "
+             "under the icmd.* namespace")

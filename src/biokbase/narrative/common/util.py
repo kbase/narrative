@@ -14,11 +14,40 @@ import time
 from biokbase.workspaceService.Client import workspaceService as WS1
 from biokbase.workspaceServiceDeluxe.Client import Workspace as WS2
 from biokbase.workspaceServiceDeluxe.Client import ServerError, URLError
-from biokbase.narrative.common import kblogging
 
-# Init logging.
-_log = logging.getLogger(__name__)
 
+class _KBaseEnv(object):
+    """Single place to get/set KBase environment variables.
+
+    Usage:
+       # get value
+       token = KBaseEnv().auth_token
+       # set value
+       KBaseEnv().narrative = "hello"
+       # introspect var names
+       print(KBaseEnv.env_auth_token)
+    """
+    env_auth_token = "KB_AUTH_TOKEN"
+    env_narrative = "KB_NARRATIVE"
+
+    @property
+    def auth_token(self):
+        return os.getenv(self.env_auth_token, "")
+
+    @auth_token.setter
+    def auth_token(self, value):
+        os.environ[self.env_auth_token] = value
+
+    @property
+    def narrative(self):
+        return os.getenv(self.env_narrative, "")
+
+    @narrative.setter
+    def narrative(self, value):
+        os.environ[self.env_narrative] = value
+
+# Single instance
+kbase_env = _KBaseEnv()
 
 class AweTimeoutError(Exception):
     def __init__(self, jobid,  timeout):
@@ -84,8 +113,9 @@ class AweJob(object):
     def job_count(self):
         """Get count of jobs remaining in AWE.
         """
+        headers = {"Authorization": "OAuth {}".format(self._meth.token)}
         url = self.URL + "/job/" + self._jid
-        r = requests.get(url)
+        r = requests.get(url, headers=headers)
         response = json.loads(r.text)
         remain_tasks = response.get("data", dict()).get("remaintasks")
         return remain_tasks
@@ -333,76 +363,6 @@ class Workspace2(WS2):
                     _log.error("list_types: server.error={}".format(err))
                 continue
         return result.values()[0] if module else result
-
-#     def set_project(self):
-#         """Set the 'is a project' tag on this workspace.
-#         """
-#         try:
-# f.get_object_info([{'wsid': ws_id,
-#                                              'name': ws_tag['project']}],
-#                                            0);
-#         except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
-#             # If it is a not found error, create it, otherwise reraise
-#             if e.message.find('not found'):
-#                 obj_save_data = {'name': ws_tag['project'],
-#                                  'type': ws_tag_type,
-#                                  'data': {'description': 'Tag! You\'re a project!'},
-#                                  'meta': {},
-#                                  'provenance': [],
-#                                  'hidden': 1}
-#                 ws_meta = wsclient.save_objects({'id': ws_id,
-#                                                  'objects': [obj_save_data]});
-#             else:
-#                 raise e
-#         return True
-#
-# def get_user_id(wsclient):
-#     """
-#     Grab the userid from the token in the wsclient object
-#     This is a pretty brittle way to do things, and will need to be changed eventually
-#     """
-#     try:
-#         token = wsclient._headers.get('AUTHORIZATION', None)
-#         match = user_id_regex.match(token)
-#         if match:
-#             return match.group(1)
-#         else:
-#             return None
-#     except Exception, e:
-#         raise e
-#
-# def check_homews(wsclient, user_id=None):
-#     """
-#     Helper routine to make sure that the user's home workspace is built. Putting it here
-#     so that when/if it changes we only have a single place to change things.
-#     Takes a wsclient, and if it is authenticated, extracts the user_id from the token
-#     and will check for the existence of the home workspace and
-#     create it if necessary. Will pass along any exceptions. Will also make sure that
-#     it is tagged with a workspace_meta object named "_project"
-#     returns the workspace name and workspace id as a tuple
-#
-#     Note that parsing the token from the wsclient object is brittle and should be changed!
-#     """
-#     if user_id is None:
-#         user_id = get_user_id(wsclient)
-#     try:
-#         homews = "%s:home" % user_id
-#         workspace_identity = {'workspace': homews}
-#         ws_meta = wsclient.get_workspace_info(workspace_identity)
-#     except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
-#         # If it is a not found error, create it, otherwise reraise
-#         if e.message.find('not found'):
-#             ws_meta = wsclient.create_workspace({'workspace': homews,
-#                                                  'globalread': 'n',
-#                                                  'description': 'User home workspace'})
-#         else:
-#             raise e
-#     if ws_meta:
-#         check_project_tag(wsclient, ws_meta[0])
-#         # return the textual name and the numeric ws_id
-#         return ws_meta[1], ws_meta[0]
-#     else:
-#         raise Exception('Unable to find or create home workspace: %s' % homews)
 
 
 class BuildDocumentation(Command):

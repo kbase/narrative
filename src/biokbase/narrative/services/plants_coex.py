@@ -23,11 +23,12 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 #from IPython.display import display, HTML
 # Other KBase
 from biokbase.GWAS.Client import GWAS
+from biokbase.CoExpression.Client import CoExpression
 #from biokbase.workspaceService.Client import workspaceService
 #from biokbase.workspaceServiceDeluxe.Client import Workspace
 from biokbase.cdmi.client import CDMI_API,CDMI_EntityAPI
 from biokbase.OntologyService.Client import Ontology
-##from biokbase.IdMap.Client import IdMap
+from biokbase.IdMap.Client import IdMap
 from biokbase.idserver.client import IDServerAPI
 from biokbase.narrative.common.util import AweJob
 from biokbase.narrative.common.util import Workspace2
@@ -54,25 +55,23 @@ NAME = "Plants Coexpression Service"
 
 
 class URLS:
-    _host = '140.221.84.248'
-    main = "http://{40.221.84.236:8000/node"
-    shock = "http://140.221.84.236:8000"
-    awe = "http://140.221.85.171:7080"
-    expression = "http://{}:7075".format(_host)
+    #awe = "http://140.221.85.182:7080"
+    awe = "https://kbase.us/services/awe-api/"
     workspace = "http://kbase.us/services/workspace"
     ws = "http://kbase.us/services/ws"
     #ws = "http://140.221.84.209:7058"
     ids = "http://kbase.us/services/idserver"
-    #ontology = "http://kbase.us/services/ontology_service"
-    ontology = "http://140.221.85.171:7062"
-    gwas = "http://140.221.85.171:7086"
-    gwas1 = "http://140.221.85.95:7086"
-    ujs = "http://140.221.85.171:7083"
-    #cdmi = "http://kbase.us/services/cdmi_api"
+    ontology = "http://kbase.us/services/ontology_service"
+    #ontology = "http://140.221.85.171:7062"
+    gwas = "https://kbase.us/services/GWAS"
+    coex = "https://kbase.us/services/coexpression"
+    ujs = "https://kbase.us/services/userandjobstate/"
+    cdmi = "http://kbase.us/services/cdmi_api"
     #cdmi = "http://140.221.84.182:7032"
-    cdmi  = "http://140.221.85.181:7032"
+    #cdmi  = "http://140.221.85.181:7032"
     #idmap = "http://140.221.85.96:7111"
     #idmap = "http://140.221.85.181:7111"
+    idmap = "http://kbase.us/services/id_map"
 
 
 class Node:
@@ -159,9 +158,90 @@ class Node:
       if(cnode in self.clst2genes.keys()) : return self.clst2genes[cnode].keys()
       return []
 
+def ids2cds(ql):
+    cdmic = CDMI_API(URLS.cdmi)
+    idm = IdMap(URLS.idmap)
+
+    gl = set()
+    rd = {}
+    eids = []
+    lids = set()
+    mids = set()
+    for gid in ql:
+      rd[gid] = gid
+      if 'kb|g.' in gid:
+        if 'locus' in gid:
+          lids.add(gid)
+        elif 'mRNA' in gid:
+          mids.add(gid)
+      else:
+        eids.append(gid)
+
+    sid2fids = cdmic.source_ids_to_fids(eids)
+    for sid in sid2fids:
+      for fid in sid2fids[sid]:
+        rd[sid] = fid
+        if 'locus' in fid:
+          lids.add(fid)
+        elif 'mRNA' in fid:
+          mids.add(fid)
+    lidmap = ()
+    if len(lids) > 0: lidmap = idm.longest_cds_from_locus(list(lids))
+    for lid in lidmap:
+      for k in lidmap[lid]:
+        gl.add(k)
+    midl = list(mids)
+    midmap = ()
+    if len(mids) > 0: lidmap = idm.longest_cds_from_mrna(list(mids))
+    for lid in midmap:
+      for k in midmap[lid]:
+        gl.add(k)
+
+    for gid in ql:
+      if 'kb|g.' in gid:
+        if 'locus' in gid:
+          for k in lidmap[gid]:
+            rd[gid] = k
+        elif 'mRNA' in gid:
+          for k in midmap[gid]:
+            rd[gid] = k
+      else:
+        if 'locus' in rd[gid]:
+            for k in lidmap[rd[gid]]:
+              rd[gid] = k
+        elif 'mRNA' in rd[gid]:
+            for k in midmap[rd[gid]]:
+              rd[gid] = k
+    return rd
+
+def cds2locus(gids):
+    cdmie = CDMI_EntityAPI(URLS.cdmi)
+    mrnas_l = cdmie.get_relationship_IsEncompassedIn(gids, [], ['to_link'], [])
+    mrnas = dict((i[1]['from_link'], i[1]['to_link']) for i in mrnas_l)
+    locus_l = cdmie.get_relationship_IsEncompassedIn(mrnas.values(), [], ['to_link'], [])
+    locus = dict((i[1]['from_link'], i[1]['to_link']) for i in locus_l)
+    lgids = dict((i,locus[mrnas[i]]) for i in gids if i in mrnas and mrnas[i] in locus)
+    return lgids
+    
         
-        
-        
+def kb_id2ext_id(idc, in_list, chunk_size):
+    n = len(in_list);
+    rst = {}
+    for idx in range(0, n, chunk_size):
+        sub_lst = []
+        if(idx + chunk_size < n):
+            idx_n = idx+chunk_size
+            sub_lst = in_list[idx:idx_n]
+        else:
+            sub_lst = in_list[idx:n]
+        while True:
+            try: 
+                rst_tmp = idc.kbase_ids_to_external_ids(sub_lst)
+                break
+            except:
+                pass
+        rst = dict(rst.items() + rst_tmp.items())
+    return rst
      
 AweJob.URL = URLS.awe
 
@@ -392,6 +472,9 @@ def _output_object(name):
     return json.dumps({'output': name})
 
 
+def _workspace_output(wsid):
+    return json.dumps({'values': [["Workspace object", wsid]]})
+
 def ws_obj2shock(ws, obj_id, advance=None, meth=None):
     """Put a workspace object in SHOCK.
 
@@ -447,14 +530,12 @@ def ws_obj2shock(ws, obj_id, advance=None, meth=None):
             'samples': samples, 'gnid': genome_id}
 
 @method(name="Differential expression filter")
-def filter_expr(meth, series_ws_id=None, series_obj_id=None, filtering_method=None,
-                num_genes=None, p_value=None):
+def filter_expr(meth, series_obj_id=None, filtering_method="anova",
+                num_genes=None, p_value="1.0"):
     """Filter expression table to differentially expressed genes
 
-    :param series_ws_id:Workspace name for the expression series data (if empty, defaults to current workspace)
-    :type series_ws_id:kbtypes.Unicode
     :param series_obj_id:Object id of the expression series data
-    :type series_obj_id:kbtypes.WorkspaceObjectId
+    :type series_obj_id:kbtypes.KBaseExpression.ExpressionSeries
     :param filtering_method: Filtering method ('anova' for ANOVA or 'lor' for log-odd ratio)
     :type filtering_method: kbtypes.Unicode
     :param num_genes: Target number of genes (choose this or p-value below)
@@ -463,102 +544,34 @@ def filter_expr(meth, series_ws_id=None, series_obj_id=None, filtering_method=No
     :type p_value: kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
+    :output_widget: ValueListWidget
     """
-    meth.stages = 9
+    meth.stages = 3
 
     meth.advance("Initialize COEX service")
+    cc = CoExpression(URLS.coex, token=meth.token)
 
-    # Connect to workspace.
-    if not series_ws_id:
-        series_ws_id = meth.workspace_id
-    wsd = Workspace2(token=meth.token, wsid=series_ws_id)
+    argsx = {"ws_id" : meth.workspace_id, "inobj_id" : series_obj_id, "outobj_id" : series_obj_id+".fltrd",  "p_value" : "0.05", "method" : filtering_method, "num_genes" : num_genes}
+    meth.advance("submit job to select genes")
+    try:
+        jid = cc.filter_genes(argsx)
+    except Exception as err:
+        raise COEXException("submit job failed: {}".format(err))
+    if not jid:
+        raise COEXException(2, "submit job failed, no job id")
 
-    meth.advance("Downloading expression data")
-    full_obj = ws_obj2shock(wsd, series_obj_id, advance=meth.advance, meth=meth)
-    shock_ids = full_obj['shock_ids']
+    AweJob.URL = URLS.awe
+    AweJob(meth, started="Differential expression filter", running="Differential expression filter").run(jid[0])
 
-    # Read & substitute values into job spec
-    subst = shock_ids.copy()
-    if num_genes is not None:
-        subst.update({"coex_filter": "-n {}".format(num_genes)})
-    elif num_genes is None and p_value is not None:
-        subst.update({"coex_filter": "-p {}".format(num_genes)})
-    else:
-        raise COEXException("None of p_value and num_genes are specified")
-    
-    subst.update(dict(shock_uri=URLS.shock, session_id=sessionID))
-    awe_job_str = Template(AWE_JOB_FILTER).substitute(subst)
-    # Submit job
-    job_id = submit_awe_job(URLS.awe, awe_job_str)
-    # record provenance
-    awe_job_dict = json.loads(awe_job_str)
-    coex_filter_args = awe_job_dict['tasks'][0]['cmd']['args']
-
-    # Wait for job to complete
-    AweJob(meth, started="Filtering expression object", running="Filter expression object").run(job_id)
-
-    download_urls = get_output_filter(URLS.awe, job_id)
-
-    meth.advance("Upload filtered object")
-    # now put them back into ws
-    elm = {}
-    fif = urllib2.urlopen(download_urls[files_rst['expression_filtered']])
-    # TODO: make sure # of sample IDs are match to the header of filtered data
-    fif.readline()   # skip header
-
-    nsamples = len(full_obj['samples'])
-    # don't need but to be safe
-    for i in range(nsamples):
-        elm[i] = {}
-    
-    for line in fif:
-        line.strip()
-        values = line.split(',')
-        gene_id = values[0].replace("\"", "")
-        for i in range(nsamples):
-            elm[i][gene_id] = float(values[i + 1])
-    samples = full_obj['samples']
-
-    data_list = []
-    sid_list = []
-    for i in range(nsamples):
-        samples[i]['data']['expression_levels'] = elm[i]
-        if samples[i]['data']['title'] is None:
-            samples[i]['data']['title'] = " filtered by coex_filter"
-        else:
-            samples[i]['data']['title'] += " filtered by coex_filter"
-        if samples[i]['data']['description'] is None:
-            samples[i]['data']['description'] = "Generated by coex_filter " + coex_filter_args
-        else:
-            samples[i]['data']['description'] += " Generated by coex_filter " + coex_filter_args
-        samples[i]['data']['id'] += ".filtered"
-        samples[i]['data']['source_id'] += ".filtered"
-        data_list.append({'type': 'KBaseExpression.ExpressionSample', 'data': samples[i]['data'],
-                          'name': samples[i]['data']['id']})
-    sv_rst = wsd.save_objects({'workspace': meth.workspace_id, 'objects': data_list})
-    for i in range(nsamples): sid_list.append(str(sv_rst[i][6]) + "/" + str(sv_rst[i][0]) + "/" + str(sv_rst[i][4]))
-
-    series = full_obj['series']
-    series['genome_expression_sample_ids_map'][full_obj['gnid']] = sid_list
-    series['title'] += " filtered by coex_filter for " + full_obj['gnid']
-    series['source_id'] += ".filtered"
-    series['id'] += ".filtered"
-    data_list = [{'type': 'KBaseExpression.ExpressionSeries', 'data': series,
-                  'name': series['id'], 'meta': {'org.data.csv': shock_ids['expression'],
-                                                 'org.sample.csv': shock_ids['sample_id']}}]
-    wsd.save_objects({'workspace': meth.workspace_id, 'objects': data_list})
-
-    return _output_object(series['id'])
+    return _workspace_output(series_obj_id+".fltrd")
 
 
 @method(name="Construct co-expression network and clusters")
-def build_net_clust(meth, series_ws_id=None, series_obj_id=None, net_method='simple', clust_method='hclust',
+def build_net_clust(meth, series_obj_id=None, net_method='simple', clust_method='hclust',
                     cut_off=None, num_module=None):
     """Construct co-expression network and a set of densely interconnected clusters in co-expression network based on
        expression table object
 
-    :param series_ws_id: Workspace name for the expression series data (if empty, defaults to current workspace)
-    :type series_ws_id: kbtypes.Unicode
     :param series_obj_id: Object id of the expression Series data
     :type series_obj_id: kbtypes.KBaseExpression.ExpressionSeries
     :param net_method : Network construction algorithm ('simple' for Pearson correlation coefficient or 'WGCNA')
@@ -571,141 +584,38 @@ def build_net_clust(meth, series_ws_id=None, series_obj_id=None, net_method='sim
     :type num_module: kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
+    :output_widget: ValueListWidget
     """
-    meth.stages = 9
+    meth.stages = 3
 
-    # Check arguments.
-    # (note: This should go away once narrative API supports enumerations)
-    def _check(val, name, allowed):
-        if val not in [a.lower() for a in allowed]:
-            values = ", ".join(["'{}'".format(a) for a in allowed])
-            raise ValueError("Unknown {}, '{}', not in: {}"
-                             .format(name, val, values))
-    _check(net_method.lower(), "network construction algorithm", ('simple', 'WGNCA'))
-    _check(clust_method.lower(), "clustering algorithm", ('hclust', 'WGNCA'))
+    meth.advance("Initialize COEX service")
+    cc = CoExpression(URLS.coex, token=meth.token)
 
-    meth.advance("init COEX service")
+    argsx = {"ws_id" : meth.workspace_id, "inobj_id" : series_obj_id, "outobj_id" : 'coex_by_' +series_obj_id,  "cut_off" : cut_off, "net_method" : net_method, "clust_method" : clust_method, "num_modules" : num_module}
+    meth.advance("submit job to construct network and clusters")
+    try:
+        jid = cc.const_coex_net_clust(argsx)
+    except Exception as err:
+        raise COEXException("submit job failed: {}".format(err))
+    if not jid:
+        raise COEXException(2, "submit job failed, no job id")
 
-    # Connect to workspace.
-    if not series_ws_id:
-        series_ws_id = meth.workspace_id
-    wsd = Workspace2(token=meth.token, wsid=series_ws_id)
+    AweJob.URL = URLS.awe
+    AweJob(meth, started="Construct coex network and clusters", running="Construct coex network and clusters").run(jid[0])
 
-    # Read obj from SHOCK.
-    full_obj = ws_obj2shock(wsd, series_obj_id, advance=meth.advance, meth=meth)
-    shock_ids = full_obj['shock_ids']
 
-    # Read & substitute values into job spec
-    subst = shock_ids.copy()
-    subst.update({
-        "coex_net_cut": "-c {}".format(cut_off),
-        "coex_net_method": "-m {}".format(net_method),
-        "coex_clust_nmodule": "-s {}".format(num_module),
-        "coex_clust_cmethod": "-c {}".format(clust_method),
-        "coex_clust_nmethod": "-n {}".format(net_method)
-    })
-    subst.update(dict(shock_uri=URLS.shock, session_id=sessionID))
-    awe_job_str = Template(AWE_JOB_NC).substitute(subst)
-
-    #print awe_job_str
-
-    # Submit job.
-    job_id = submit_awe_job(URLS.awe, awe_job_str)
-    # record provenance
-    awe_job_dict = json.loads(awe_job_str)
-    coex_net_args = awe_job_dict['tasks'][0]['cmd']['args']
-    coex_clust_args = awe_job_dict['tasks'][1]['cmd']['args']
-
-    AweJob(meth, started="building co-expression network and clusters",
-           running="build co-expression network and clusters").run(job_id)
-    download_urls = get_output_netclust(URLS.awe, job_id)
-
-    # Generate Networks datasets.
-    # setup
-    net_ds_id = series_obj_id + ".net"
-    clt_ds_id = series_obj_id + ".clt"
-    # common base
-    base = {
-        'network_type': 'FUNCTIONAL_ASSOCIATION',
-        'taxons': [full_obj['gnid']],
-        'source_ref': 'WORKSPACE',
-        'name': None,
-        'id': clt_ds_id,
-        'description': "Coexpression {} object of " + series_obj_id,
-        'properties': {
-            'original_data_type': 'workspace',
-            'original_ws_id': series_ws_id,
-            'original_obj_id': series_obj_id,
-        }
-    }
-    # modify base to create network and cluster datasets
-    # (note: deepcopy is needed to get 2 copies of 'properties')
-    datasets = map(copy.deepcopy, (base, base))
-    datasets[0]['name'], datasets[1]['name'] = net_ds_id, clt_ds_id
-    for i, thing in enumerate(("network", "cluster")):
-        datasets[i]['description'] = datasets[i]['description'].format(thing)
-    datasets[0]['properties']['coex_net_args'] = coex_net_args
-    datasets[1]['properties']['coex_clust_args'] = coex_clust_args
-
-    # Process coex network/cluster files.
-    meth.advance("Process coex network & cluster files")
-    # setup
-    nc = Node()
-    parse_values = lambda line: line.strip().replace('"', '').split(',')
-    # network file
-    cnf = urllib2.urlopen(download_urls[files_rst['edge_net']])
-    cnf.readline()  # skip header
-    for line in cnf:
-        values = parse_values(line)
-        if values[0] != values[1]:
-            # we add edges meaningful
-            nc.add_edge(float(values[2]), net_ds_id, values[0], 'GENE', values[1], 'GENE', 0.0)
-    # cluster file
-    cnf = urllib2.urlopen(download_urls[files_rst['cluster']])
-    cnf.readline()  # skip header
-    for line in cnf:
-        values = parse_values(line)
-        nc.add_edge(1.0, clt_ds_id, values[0], 'GENE', "cluster." + values[1], 'CLUSTER', 0.0)
-
-    # generate Networks object
-    net_object = {
-        'datasets': datasets,
-        'nodes': nc.nodes,
-        'edges': nc.edges,
-        'user_annotations': {},
-        'name': 'Coexpression Network',
-        'id': series_obj_id + ".netclt",
-        'properties': {
-            'graphType': 'edu.uci.ics.jung.graph.SparseMultigraph'
-        }
-    }
-
-    # Store results object into workspace
-    meth.advance("Store results in workspace")
-    obj = {
-        'type': 'KBaseNetworks.Network',
-        'data': net_object,
-        'name': series_obj_id + ".netclt",
-        'meta': {
-            'org.data.csv': shock_ids['expression'],
-            'org.sample.csv': shock_ids['sample_id']
-        }
-    }
-    wsd.save_objects({'workspace': meth.workspace_id, 'objects': [obj]})
-
-    return _output_object(series_obj_id + ".netclt")
+    return _workspace_output('coex_by_' +series_obj_id)
 
 
 @method(name="Add ontology annotation for network genes")
-def go_anno_net(meth, workspace=None, net_obj_id=None):
+def go_anno_net(meth, net_obj_id=None):
     """Add Gene Ontology annotation to network gene nodes
 
-    :param workspace: Workspace name for the expression series data (if empty, defaults to current workspace)
-    :type workspace: kbtypes.Unicode
     :param net_obj_id: Network object id
     :type net_obj_id: kbtypes.KBaseNetworks.Network
     :return: Workspace id
     :rtype: kbtypes.Unicode
+    :output_widget: ValueListWidget
     """
     meth.stages = 5
 
@@ -713,7 +623,7 @@ def go_anno_net(meth, workspace=None, net_obj_id=None):
     #gc = GWAS(URLS.gwas, token=meth.token)
 
     # load from current or other workspace
-    wsid = workspace or meth.workspace_id
+    wsid =  meth.workspace_id
     # save to current workspace
     ws_save_id = meth.workspace_id
 
@@ -729,23 +639,30 @@ def go_anno_net(meth, workspace=None, net_obj_id=None):
     cdmie = CDMI_EntityAPI(URLS.cdmi)
     #idm = IdMap(URLS.idmap)
     gids = [i for i in sorted(nc.ugids.keys())
-            if 'CDS' in i or 'locus' in i or (not 'clst' in i and not i.startswith('cluster'))]
+            if 'CDS' in i or 'locus' in i or (not 'clst' in i and not i.startswith('cluster') and 'ps.' not in i )]
 
     meth.advance("Get relationships from central data model")
-    eids = idc.kbase_ids_to_external_ids(gids)
-    mrnas_l = cdmie.get_relationship_Encompasses(gids, [], ['to_link'], [])
-    mrnas = dict((i[1]['from_link'], i[1]['to_link']) for i in mrnas_l)
-    locus_l = cdmie.get_relationship_Encompasses(mrnas.values(), [], ['to_link'], [])
-    locus = dict((i[1]['from_link'], i[1]['to_link']) for i in locus_l)
-    lgids = [locus[mrnas[i]] for i in gids if i in mrnas.keys()]  # ignore original locus ids in gids
+    #eids = idc.kbase_ids_to_external_ids(gids)
+    eids = kb_id2ext_id(idc, gids, 100)
+    gids2cds = ids2cds(gids)
+    cgids    = gids2cds.values()
+    cds2l    = cds2locus(cgids)
+    #mrnas_l = cdmie.get_relationship_Encompasses(gids, [], ['to_link'], [])
+    #mrnas = dict((i[1]['from_link'], i[1]['to_link']) for i in mrnas_l)
+    #locus_l = cdmie.get_relationship_Encompasses(mrnas.values(), [], ['to_link'], [])
+    #locus = dict((i[1]['from_link'], i[1]['to_link']) for i in locus_l)
+    #lgids = [locus[mrnas[i]] for i in gids if i in mrnas.keys()]  # ignore original locus ids in gids
+    lgids = cds2l.values()
 
     meth.advance("Annotate ({:d} nodes, {:d} edges)".format(
                  len(net_object['nodes']), len(net_object['edges'])))
-    ots = oc.get_goidlist(lgids, ['biological_process'], ['IEA'])
-    oan = oc.get_go_annotation(lgids)
+    #ots = oc.get_goidlist(lgids, ['biological_process'], ['IEA'])
+    ots = oc.get_goidlist(cgids, [], [])
+    oan = () #oc.get_go_annotation(lgids)
     funcs = cdmic.fids_to_functions(lgids)
-    annotate_nodes(net_object, ots=ots, oan=oan, funcs=funcs, eids=eids,
-                   locus=locus, mrnas=mrnas)
+    funcs_org = cdmic.fids_to_functions(cgids)
+    annotate_nodes(net_object, ots=ots, oan=oan, funcs=funcs, funcs_org=funcs_org, eids=eids,
+                   gids2cds=gids2cds, cds2l=cds2l)
 
     meth.advance("Save annotated object to workspace {}".format(ws_save_id))
     obj = {
@@ -758,11 +675,11 @@ def go_anno_net(meth, workspace=None, net_obj_id=None):
     }
     wsd.save_objects({'workspace': ws_save_id, 'objects': [obj]})
 
-    return _output_object(net_obj_id + ".ano")
+    return _workspace_output(net_obj_id + ".ano")
 
 
-def annotate_nodes(net_object, ots=None, oan=None, funcs=None, eids=None,
-                   locus=None, mrnas=None):
+def annotate_nodes(net_object, ots=None, oan=None, funcs=None, funcs_org=None, eids=None,
+                   gids2cds=None, cds2l=None):
     """Annotate nodes. Called from `go_anno_net()`.
 
     :param net_object: Object, modified with annotations.
@@ -782,38 +699,42 @@ def annotate_nodes(net_object, ots=None, oan=None, funcs=None, eids=None,
 
     for hr_nd in net_object['nodes']:
         gid = hr_nd['entity_id']
-        if gid.startswith('cluster.') or 'clst' in gid:
+        if gid.startswith('cluster.') or 'clst' in gid or 'ps.' in gid:
             continue
-        lid = locus[mrnas[gid]]
+        cid = gids2cds[gid]
+        lid = cds2l[cid]
         if gid in eids:
             hr_nd['user_annotations']['external_id'] = eids[gid][1]
-        if lid in funcs and funcs[lid] is not None:
+        # try to annotate both locus and cds because some genomes have functions in CDS
+        if lid in funcs and funcs[lid]:
             hr_nd['user_annotations']['functions'] = funcs[lid]
-        if lid in ots:
+        if not hr_nd['user_annotations']['functions'] and gids2cds[gid] in funcs_org and funcs_org[gids2cds[gid]]:
+            hr_nd['user_annotations']['functions'] = funcs_org[gids2cds[gid]]
+        if cid in ots:
             go_enr_list = []
-            for lcnt, go in enumerate(ots[lid].keys()):
+            for lcnt, go in enumerate(ots[cid].keys()):
                 if lcnt < 0:
-                    go_enr_list.append(go + "(go)" + ots[lid][go][0]['desc'] + '\n')
-                for i, goen in enumerate(ots[lid][go]):
+                    go_enr_list.append(go + "(go)" + ots[cid][go][0]['desc'] + '\n')
+                for i, goen in enumerate(ots[cid][go]):
                     for ext in "domain", "ec", "desc":
                         hr_nd['user_annotations'][go_key(go, i, ext)] = goen[ext]
             hr_nd['user_annotations']['go_annotation'] = ''.join(go_enr_list)
-        if lid in oan['gene_enrichment_annotations']:
-            oan_gea_lid = oan['gene_enrichment_annotations'][lid]  # short alias
-            oan_gea_lid.sort(key=lambda x: x.get('p_value', 1.0))
-            go_enr_list = []
-            for i, goen in enumerate(oan_gea_lid):
-                goen_oid, goen_desc = goen['ontology_id'], goen['ontology_description']
-                hr_nd['user_annotations'][gea_key(i, goen_oid, "desc")] = goen_desc
-                has_pvalue = 'p_value' in goen
-                if has_pvalue:  # optional
-                    hr_nd['user_annotations'][gea_key(i, goen_oid, "p_value")] = goen['p_value']
-                hr_nd['user_annotations'][gea_key(i, goen_oid, "type")] = goen['ontology_type']
-                if i < MAX_COUNT:
-                    if not has_pvalue: continue
-                    pval = "{:6.4f}".format(float(goen['p_value'])) if has_pvalue else "go"
-                    go_enr_list.append("{}({}){}\n".format(goen_oid, pval, goen_desc))
-            hr_nd['user_annotations']['go_enrichnment_annotation'] = ''.join(go_enr_list)
+#        if lid in oan['gene_enrichment_annotations']:
+#            oan_gea_lid = oan['gene_enrichment_annotations'][lid]  # short alias
+#            oan_gea_lid.sort(key=lambda x: x.get('p_value', 1.0))
+#            go_enr_list = []
+#            for i, goen in enumerate(oan_gea_lid):
+#                goen_oid, goen_desc = goen['ontology_id'], goen['ontology_description']
+#                hr_nd['user_annotations'][gea_key(i, goen_oid, "desc")] = goen_desc
+#                has_pvalue = 'p_value' in goen
+#                if has_pvalue:  # optional
+#                    hr_nd['user_annotations'][gea_key(i, goen_oid, "p_value")] = goen['p_value']
+#                hr_nd['user_annotations'][gea_key(i, goen_oid, "type")] = goen['ontology_type']
+#                if i < MAX_COUNT:
+#                    if not has_pvalue: continue
+#                    pval = "{:6.4f}".format(float(goen['p_value'])) if has_pvalue else "go"
+#                    go_enr_list.append("{}({}){}\n".format(goen_oid, pval, goen_desc))
+#            hr_nd['user_annotations']['go_enrichnment_annotation'] = ''.join(go_enr_list)
 
 
 @method(name="Annotate clusters with enriched ontology terms")
@@ -850,18 +771,9 @@ def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
     net_object = wsd.get_objects([{'workspace' : meth.workspace_id, 'name' : net_obj_id}]);
     nc = Node(net_object[0]['data']['nodes'], net_object[0]['data']['edges'])
 
-    idc = IDServerAPI(URLS.ids)
-    cdmic = CDMI_API(URLS.cdmi)
-    cdmie = CDMI_EntityAPI(URLS.cdmi)
-    #idm = IdMap(URLS.idmap)
     gids = [ i for i in sorted(nc.ugids.keys()) if 'CDS' in i or 'locus' in i or (not 'clst' in i and not i.startswith('cluster'))]
     
-    mrnas_l = cdmie.get_relationship_Encompasses(gids, [],['to_link'],[])
-    mrnas = dict((i[1]['from_link'],i[1]['to_link']) for i in mrnas_l)
-    locus_l = cdmie.get_relationship_Encompasses(mrnas.values(), [],['to_link'],[])
-    locus = dict((i[1]['from_link'],i[1]['to_link']) for i in locus_l)
-    lgids = [ locus[mrnas[i]] for i in gids]# it will ignore original locus ids in gids
-
+    gids2cds = ids2cds(gids)
    
     meth.advance("Run enrichment test for each clusters")
     rows = []
@@ -869,9 +781,16 @@ def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
         gid = hr_nd['entity_id']
         if not (gid.startswith('cluster.') or 'clst' in gid ): continue
         glist = nc.get_gene_list(gid)
-        llist = [ locus[mrnas[i]] for i in glist]; # it will ignore orignal locus ids (TODO: keep locus)
+        # now everything is in CDS id
+        #llist = []
+        #for i in glist:
+        #    if i in mrnas: i = mrnas[i]
+        #    if i in locus: i = locus[i]
+        #    if 'locus' in i: llist.append(i) 
+        #llist = [ locus[mrnas[i]] ]; # it will ignore orignal locus ids (TODO: keep locus)
+        cds_gl = [gids2cds[i] for i in glist]
 
-        enr_list = oc.get_go_enrichment(llist, domain_list, ec_list, 'hypergeometric', 'GO')
+        enr_list = oc.get_go_enrichment(cds_gl, domain_list, ec_list, 'hypergeometric', 'GO')
         
         enr_list = sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
         go_enr_smry = "";
@@ -903,12 +822,12 @@ def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
     """Construct subnetwork connecting genes in user-selected clusters 
 
     :param net_obj_id: Cluster object id
-    :type net_obj_id:kbtypes.WorkspaceObjectId
+    :type net_obj_id: kbtypes.KBaseNetworks.Network
     :param cluster_id_list: Comma-separated list of user-selected cluster ids 
     :type cluster_id_list:kbtypes.Unicode
     :return: Workspace id
     :rtype: kbtypes.Unicode
-    :output_widget: ForceDirectedNetwork
+    :output_widget: kbasePlantsNTO
     """
     meth.stages = 2
 
@@ -947,25 +866,55 @@ def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
     wsd.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net_object[0]['data'], 'name' : net_obj_id + ".trmd", 'meta' : {'orginal' : net_obj_id, 'cluster_id_list' : cluster_id_list}}]})
 
     meth.advance("Create plot specification")
-    return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': net_obj_id + ".trmd" })
+    data = {'input': net_object[0]['data']}
+    #return json.dumps({'token': meth.token, 'workspaceID': meth.workspace_id, 'networkObjectID': net_obj_id + ".trmd" })
+    return json.dumps(data)
 
-@method(name="Network diagram")
-def network_diagram(meth, workspace_id=None, obj_id=None):
-    """Create and embed an interactive view of the network as a force-directed graph.
+#@method(name="Network diagram")
+#def network_diagram(meth, workspace_id=None, obj_id=None):
+#    """Create and embed an interactive view of the network as a force-directed graph.
+#
+#    :param workspace_id: Workspace name (if empty, defaults to current workspace)
+#    :type workspace_id: kbtypes.Unicode
+#    :param obj_id: Coexpression network workspace identifier.
+#    :type obj_id: kbtypes.KBaseNetworks.Network
+#    :return: Workspace objectID for network
+#    :rtype: kbtypes.Unicode
+#    :output_widget: ForceDirectedNetwork
+#    """
+#    meth.stages = 1
+#    meth.advance("Create plot specification")
+#    if not workspace_id:
+#        workspace_id = meth.workspace_id
+#	return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': obj_id })
 
-    :param workspace_id: Workspace name (if empty, defaults to current workspace)
-    :type workspace_id: kbtypes.Unicode
-    :param obj_id: Coexpression network workspace identifier.
-    :type obj_id: kbtypes.Unicode
-    :return: Workspace objectID for network
-    :rtype: kbtypes.Unicode
-    :output_widget: ForceDirectedNetwork
-    """
+
+@method(name="Functional modules")
+def gene_network(meth, nto=None):
+    """Display information for network clusters.
+
+        :param nto: Network Typed Object
+        :type nto: kbtypes.KBaseNetworks.Network
+        :return: Rows for display
+        :rtype: kbtypes.Unicode
+        :output_widget: kbasePlantsNTO
+        """
+    #:param workspace_id: Workspace name (use current if empty)
+    #:type workspace_id: kbtypes.Unicode
     meth.stages = 1
-    meth.advance("Create plot specification")
-    if not workspace_id:
-        workspace_id = meth.workspace_id
-	return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': obj_id })
+    # if not workspace_id:
+    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
+    #     workspace_id = meth.workspace_id
+    meth.advance("Retrieve NTO from workspace")
+    if nto:
+        ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
+        raw_data = ws.get(nto)
+    else:
+        raw_data = {}
+    data = {'input': raw_data}
+    return json.dumps(data)
+
+
 
 # Finalize (registers service)
 finalize_service()

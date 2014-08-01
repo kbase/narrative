@@ -140,8 +140,8 @@
 
                 // These are the 'delete' and 'run' buttons for the cell
                 var buttons = "<div class='buttons pull-right'>" + //style='margin-top:10px'>" +
-                                  "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default'>Delete</button> " +
-                                  "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary'>Run</button>" + 
+                                  "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default btn-sm'>Delete</button> " +
+                                  "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary btn-sm'>Run</button>" + 
                               "</div>";
 
                 // The progress bar remains hidden until invoked by running the cell
@@ -698,7 +698,19 @@
                       // "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
                       // "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
 
-            var paramList = params.map(function(p) { return "'" + p + "'"; });
+            // very nice quote-escaper found here:
+            // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
+            // and
+            // http://phpjs.org/functions/addslashes/
+            var addSlashes = function(str) {
+                return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+            };
+
+            var paramList = params.map(
+                function(p) { 
+                    return "'" + addSlashes(p) + "'"; 
+                }
+            );
             cmd += "method(" + paramList + ")";
 
             return cmd;
@@ -748,7 +760,43 @@
          * @private
          */
         handleExecuteReply: function (cell, content) {
-//            console.debug("Done running the function", content);
+            this.dbg('[handleExecuteReply]');
+            // this.dbg(content);
+
+            this.dbg(cell);
+            /* This catches and displays any errors that don't get piped through
+             * the back-end service.py mechanism.
+             * Any code that makes it that far gets reported through the output
+             * mechanism and ends here with an 'ok' message.
+             */
+            if (content.status === 'error') {
+                var errorBlob = {
+                    msg : content.evalue,
+                    type : content.ename,
+                };
+
+                if (cell && cell.metadata && cell.metadata['kb-cell'] &&
+                    cell.metadata['kb-cell'].method)
+                    errorBlob.method_name = cell.metadata['kb-cell'].method.title;
+
+                var removeVt = function(line) {
+                    return line.replace(/\[\d+(;\d+)?m/g, '');
+                };
+
+                var errTb = content.traceback.map(function(line) {
+                    return {
+                        filename: null,
+                        function: null,
+                        line: null,
+                        text: removeVt(line)
+                    };
+                });
+
+                errorBlob.traceback = errTb;
+                this.createErrorCell(cell, JSON.stringify(errorBlob));
+
+            }
+            console.debug("Done running the function", content);
             this.showCellProgress(cell, "DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
@@ -1127,31 +1175,6 @@
             this.loadAllRecentCellStates();
             this.trigger('updateData.Narrative');
             return this;
-        },
-
-        /**
-         * Log in to all the widgets.
-         *
-         * @param token
-         * @returns this
-         */
-        loggedIn: function(token) {
-            // this.ws_client = new workspaceService(this.options.workspaceURL);
-            // this.ws_auth = token;
-            // var un = token.match(/un=[\w_]+|/);
-            // this.ws_user = un[0].substr(3, un[0].length - 3);
-            // grab ws_id to give to, e.g., upload widget
-
-            //this.dataTableWidget.loggedIn(this.ws_client, this.ws_auth).ws_id;
-
-
-            // this.workspace("id", this.ws_id); // add to global accessor
-
-
-            // create/refresh the upload dialog, which needs login to populate types
-//            this.uploadWidget = this.uploadWidget_dlg.kbaseUploadWidget(this.uploadWidget_opts);
-            //this.uploadWidget.createDialog(); -- redundant
-            this.render();
         },
 
         /**

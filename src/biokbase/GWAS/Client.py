@@ -152,10 +152,10 @@ class GWAS(object):
         if self.timeout < 1:
             raise ValueError('Timeout value must be at least 1 second')
 
-    def filter_vcf(self, ws_id, obj_id, maf):
+    def prepare_variation(self, args):
 
-        arg_hash = {'method': 'GWAS.filter_vcf',
-                    'params': [ws_id, obj_id, maf],
+        arg_hash = {'method': 'GWAS.prepare_variation',
+                    'params': [args],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -187,10 +187,10 @@ class GWAS(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def gwas_randomly_select_snps(self, ws_id, obj_id, num_snps):
+    def calculate_kinship_matrix(self, args):
 
-        arg_hash = {'method': 'GWAS.gwas_randomly_select_snps',
-                    'params': [ws_id, obj_id, num_snps],
+        arg_hash = {'method': 'GWAS.calculate_kinship_matrix',
+                    'params': [args],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -222,10 +222,10 @@ class GWAS(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def gwas_run_structure_batch(self, ws_id, obj_id, min_population, max_population):
+    def run_gwas(self, args):
 
-        arg_hash = {'method': 'GWAS.gwas_run_structure_batch',
-                    'params': [ws_id, obj_id, min_population, max_population],
+        arg_hash = {'method': 'GWAS.run_gwas',
+                    'params': [args],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -257,10 +257,10 @@ class GWAS(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def gwas_run_kinship(self, ws_id, obj_id):
+    def variations_to_genes(self, args):
 
-        arg_hash = {'method': 'GWAS.gwas_run_kinship',
-                    'params': [ws_id, obj_id],
+        arg_hash = {'method': 'GWAS.variations_to_genes',
+                    'params': [args],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -292,185 +292,10 @@ class GWAS(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def gwas_run_gwas(self, genotype_ws_id, genotype_obj_id, structure_obj_id, structure_num_population, kinship_obj_id, trait_obj_id):
+    def genelist_to_networks(self, args):
 
-        arg_hash = {'method': 'GWAS.gwas_run_gwas',
-                    'params': [genotype_ws_id, genotype_obj_id, structure_obj_id, structure_num_population, kinship_obj_id, trait_obj_id],
-                    'version': '1.1',
-                    'id': str(random.random())[2:]
-                    }
-
-        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
-        try:
-            request = urllib2.Request(self.url, body, self._headers)
-            ret = urllib2.urlopen(request, timeout=self.timeout)
-        except HTTPError as h:
-            if _CT in h.headers and h.headers[_CT] == _AJ:
-                b = h.read()
-                err = json.loads(b)
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:            # this should never happen... but if it does
-                    se = ServerError('Unknown', 0, b)
-                    se.httpError = h
-                    # h.read() will return '' in the calling code.
-                    raise se
-            else:
-                raise h
-        if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' +
-                           ret.code)
-        resp = json.loads(ret.read())
-
-        if 'result' in resp:
-            return resp['result'][0]
-        else:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
-
-    def gwas_run_gwas2(self, genotype_ws_id, genotype_obj_id, kinship_obj_id, trait_obj_id, pvalue_cutoff):
-
-        arg_hash = {'method': 'GWAS.gwas_run_gwas2',
-                    'params': [genotype_ws_id, genotype_obj_id, kinship_obj_id, trait_obj_id, pvalue_cutoff],
-                    'version': '1.1',
-                    'id': str(random.random())[2:]
-                    }
-
-        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
-        try:
-            request = urllib2.Request(self.url, body, self._headers)
-            ret = urllib2.urlopen(request, timeout=self.timeout)
-        except HTTPError as h:
-            if _CT in h.headers and h.headers[_CT] == _AJ:
-                b = h.read()
-                err = json.loads(b)
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:            # this should never happen... but if it does
-                    se = ServerError('Unknown', 0, b)
-                    se.httpError = h
-                    # h.read() will return '' in the calling code.
-                    raise se
-            else:
-                raise h
-        if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' +
-                           ret.code)
-        resp = json.loads(ret.read())
-
-        if 'result' in resp:
-            return resp['result'][0]
-        else:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
-
-    def gwas_create_population_object(self, ws_id, GwasPopulation_file_id, output_population_object_name, GwasPopulation_description, kbase_genome_id, comment):
-
-        arg_hash = {'method': 'GWAS.gwas_create_population_object',
-                    'params': [ws_id, GwasPopulation_file_id, output_population_object_name, GwasPopulation_description, kbase_genome_id, comment],
-                    'version': '1.1',
-                    'id': str(random.random())[2:]
-                    }
-
-        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
-        try:
-            request = urllib2.Request(self.url, body, self._headers)
-            ret = urllib2.urlopen(request, timeout=self.timeout)
-        except HTTPError as h:
-            if _CT in h.headers and h.headers[_CT] == _AJ:
-                b = h.read()
-                err = json.loads(b)
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:            # this should never happen... but if it does
-                    se = ServerError('Unknown', 0, b)
-                    se.httpError = h
-                    # h.read() will return '' in the calling code.
-                    raise se
-            else:
-                raise h
-        if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' +
-                           ret.code)
-        resp = json.loads(ret.read())
-
-        if 'result' in resp:
-            return resp['result'][0]
-        else:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
-
-    def gwas_create_population_trait_object(self, ws_id, GwasPopulation_obj_id, population_trait_file_id, protocol, comment, originator, output_trait_object_name, kbase_genome_id, trait_ontology_id, trait_name, unit_of_measure):
-
-        arg_hash = {'method': 'GWAS.gwas_create_population_trait_object',
-                    'params': [ws_id, GwasPopulation_obj_id, population_trait_file_id, protocol, comment, originator, output_trait_object_name, kbase_genome_id, trait_ontology_id, trait_name, unit_of_measure],
-                    'version': '1.1',
-                    'id': str(random.random())[2:]
-                    }
-
-        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
-        try:
-            request = urllib2.Request(self.url, body, self._headers)
-            ret = urllib2.urlopen(request, timeout=self.timeout)
-        except HTTPError as h:
-            if _CT in h.headers and h.headers[_CT] == _AJ:
-                b = h.read()
-                err = json.loads(b)
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:            # this should never happen... but if it does
-                    se = ServerError('Unknown', 0, b)
-                    se.httpError = h
-                    # h.read() will return '' in the calling code.
-                    raise se
-            else:
-                raise h
-        if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' +
-                           ret.code)
-        resp = json.loads(ret.read())
-
-        if 'result' in resp:
-            return resp['result'][0]
-        else:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
-
-    def gwas_create_population_variation_object(self, ws_id, population_variation_file_shock_url, population_variation_file_shock_id, GwasPopulation_obj_id, assay, filetype, comment, originator, output_variation_object_name, kbase_genome_id):
-
-        arg_hash = {'method': 'GWAS.gwas_create_population_variation_object',
-                    'params': [ws_id, population_variation_file_shock_url, population_variation_file_shock_id, GwasPopulation_obj_id, assay, filetype, comment, originator, output_variation_object_name, kbase_genome_id],
-                    'version': '1.1',
-                    'id': str(random.random())[2:]
-                    }
-
-        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
-        try:
-            request = urllib2.Request(self.url, body, self._headers)
-            ret = urllib2.urlopen(request, timeout=self.timeout)
-        except HTTPError as h:
-            if _CT in h.headers and h.headers[_CT] == _AJ:
-                b = h.read()
-                err = json.loads(b)
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:            # this should never happen... but if it does
-                    se = ServerError('Unknown', 0, b)
-                    se.httpError = h
-                    # h.read() will return '' in the calling code.
-                    raise se
-            else:
-                raise h
-        if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' +
-                           ret.code)
-        resp = json.loads(ret.read())
-
-        if 'result' in resp:
-            return resp['result'][0]
-        else:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
-
-    def gwas_variation_to_genes(self, ws_id, gwas_obj_id, pmin, distance):
-
-        arg_hash = {'method': 'GWAS.gwas_variation_to_genes',
-                    'params': [ws_id, gwas_obj_id, pmin, distance],
+        arg_hash = {'method': 'GWAS.genelist_to_networks',
+                    'params': [args],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }

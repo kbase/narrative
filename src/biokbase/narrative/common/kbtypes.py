@@ -984,12 +984,6 @@ class GenomeComparison(object):
         """ProteomeComparison type"""
         info_text = "GenomeComparison.ProteomeComparison"
 
-class KBaseTrees(object):
-    """KBaseTrees module"""
-    class Tree(tls.Unicode, TypeMeta):
-        """Tree type"""
-        info_text = "KBaseTrees.Tree"
-
 class Regenerator(object):
     """Regenerate self with AUTO section filled in.
     """

@@ -27,6 +27,11 @@
                           "import os\n" +
                           "os.environ['KB_AUTH_TOKEN'] = '" + token + "'\n";
 
+                if (IPython.notebook.metadata && IPython.notebook.metadata.name) {
+                    cmd += "\nos.environ['KB_NARRATIVE'] = '" +
+                        IPython.notebook.metadata.name + "'\n"
+                }
+
                 if (IPython.notebook.metadata && IPython.notebook.metadata.ws_name) {
                     cmd += "\nos.environ['KB_WORKSPACE_ID'] = '" + IPython.notebook.metadata.ws_name + "'\n" + 
                            "from biokbase.narrative.services import *";  // timing is everything!

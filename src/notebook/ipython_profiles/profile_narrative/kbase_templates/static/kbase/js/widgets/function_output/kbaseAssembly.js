@@ -30,6 +30,7 @@
             var user = options.ar_user
             self.token = options.ar_token
             self.arURL = options.ar_url
+            //self.arURL = 'http://140.221.84.121:8000/'
 	    self.ws_url = options.ws_url
 	    self.ws_name = options.ws_name
 	    self.fba_url = 'http://140.221.85.73:4043'
@@ -41,7 +42,7 @@
                 "ids": [], 
                 "message": null, 
                 "recipe": null,
-                "pipeline": null,
+                "pipeline": [['spades']],
                 "queue": null, 
                 "single": [[]],
                 "pair": [],
@@ -283,7 +284,7 @@
 	    add_asm_group.append(add_asm_sel);
 	    asm_row.append(add_asm_group, assembler_pool);
 	    asm_row2.append(asm_desc2, asm_btn2);
-	    asm_div2.append(asm_row, asm_row2);
+	    asm_div2.append($('<fieldset><div class="form-group">')).append(asm_row, asm_row2);
 	    //////////////////// end Assemblers
 
 
@@ -352,8 +353,11 @@
 
 	    var run_asm = function(arRequest) {
 	    	self.state['clicked'] = true;
-
+		// Disable fields
                 asm_div.find('fieldset').attr('disabled', "true");
+                asm_div2.find('fieldset').attr('disabled', "true");
+		asm_btn2.attr("disabled", "true");
+		pipe_btn.attr("disabled", "true");
                 $.ajax({
                     contentType: 'application/json',
                     url: self.arURL + 'user/' + user + '/job/new/',
@@ -454,6 +458,7 @@
             };
 	    
 	    asm_btn.one("click", function(){
+                asm_div.find('fieldset').attr('disabled', "true");
                 var recipe = [asm_choose.find('select option:selected').val()];
                 var desc = asm_desc.find('input').val();
 	    	self.state['recipe'] = recipe;
@@ -465,6 +470,7 @@
 
 
 	    asm_btn2.one("click", function(){
+
                 var desc = asm_desc2.find('input').val();
 	    	self.state['description'] = desc;
                 arRequest.pipeline = [asm_picked.join(' ')];

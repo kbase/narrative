@@ -98,7 +98,7 @@ def do_patching( c ):
             if auth_cookie_name in self.cookies and hasattr(self,'notebook_manager'):
                 IPython.html.base.handlers.app_log.debug("kbase_session = " + self.cookies[auth_cookie_name].value)
                 cookie_pusher(self.cookies[auth_cookie_name].value, getattr(self,'notebook_manager'))
-            else if backup_cookie in self.cookies and hasattr(self, 'notebook_manager'):
+            elif backup_cookie in self.cookies and hasattr(self, 'notebook_manager'):
                 IPython.html.base.handlers.app_log.debug("kbase_session = " + self.cookies[backup_cookie].value)
                 cookie_pusher(self.cookies[backup_cookie].value, getattr(self,'notebook_manager'))
 
@@ -110,7 +110,7 @@ def do_patching( c ):
         def get(self):
             if auth_cookie_name in self.cookies:
                 cookie_pusher( self.cookies[auth_cookie_name].value,getattr(self,'notebook_manager'))
-            else if backup_cookie in self.cookies:
+            elif backup_cookie in self.cookies:
                 cookie_pusher( self.cookies[backup_cookie].value,getattr(self,'notebook_manager'))
             return old_get1(self)
 

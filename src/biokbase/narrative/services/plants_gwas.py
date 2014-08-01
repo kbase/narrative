@@ -49,8 +49,8 @@ class URLS:
     #gwas = "http://140.221.85.182:7086"
     gwas = "https://kbase.us/services/GWAS"
     ujs = "https://kbase.us/services/userandjobstate"
-    #networks = "http://kbase.us/services/networks"
-    networks = "http://140.221.85.172:7064/KBaseNetworksRPC/networks"
+    networks = "http://kbase.us/services/networks"
+    #networks = "http://140.221.85.172:7064/KBaseNetworksRPC/networks"
     idmap = "http://kbase.us/services/id_map"
     #idmap = "http://140.221.85.181:7111"
 

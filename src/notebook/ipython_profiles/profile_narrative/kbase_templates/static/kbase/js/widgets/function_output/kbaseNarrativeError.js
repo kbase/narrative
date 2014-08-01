@@ -99,8 +99,11 @@
                         if (entry.function == "__call__")
                             continue;  // ignore wrapper
                         ctr++;
-                        var txt = ctr + ") ";
-                        txt += "in '" + entry.function + "' line " + entry.line + ": ";
+                        var txt = "";
+                        if (entry.function || entry.line) {
+                            var txt = ctr + ") ";
+                            txt += "in '" + entry.function + "' line " + entry.line + ": ";
+                        }
                         txt += entry.text;
                         s += ind + txt + "\n";
                     }

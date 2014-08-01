@@ -35,7 +35,7 @@ init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
 @method(name="Simplified Assembly From Reads")
 def _assemble_contigs(meth, asm_input):
-    """Use a KBase pipeline to assemble a set of contigs from generated reads files.
+    """Use the AssemblyRAST service to assemble a set of contigs from sequenced reads.
     This starts a job that might run for several hours.
     When it finishes, the assembled ContigSet will be stored in your data space. [1]
 
@@ -64,94 +64,6 @@ def _assemble_contigs(meth, asm_input):
                        "ws_url" : service.URLS.workspace,
                        "ws_name" : os.environ['KB_WORKSPACE_ID'],
                        "kbase_assembly_input": asm_data['data']})
-
-@method(name="Get Contigs from Assembly Service")
-def _get_contigs(meth, job_id, contig_num, contig_name):
-    """Pull down assembled contigs from the Assembly Service.  Enter the Job ID of the Assembly computation.
-    The Contig Number indicates the single desired contig returned from a multi-pipeline assembly.
-
-    :param job_id: The Job ID of the desired assembly
-    :type job_id: kbtypes.Unicode
-    :ui_name job_id: Job Id
-    :param contig_num: The contig # returned by Assembly Service (optional)
-    :type contig_num: kbtypes.Unicode
-    :ui_name contig_num: Contig Number
-    :param contig_name: The name of the ContigSet to be created (optional)
-    :type contig_name: kbtypes.Unicode
-    :ui_name contig_name: Output Contig Name
-    :return: An assembly job
-    :rtype: kbtypes.Unicode
-    """
-    ws = os.environ['KB_WORKSPACE_ID']
-    token = os.environ['KB_AUTH_TOKEN']
-    arURL = '140.221.84.124'
-    ar_user = token.split('=')[1].split('|')[0]
-    wsClient = workspaceService(service.URLS.workspace, token=token)
-    aclient = ArastClient(arURL, ar_user, token)
-
-    #### Get Fasta from Assembly service
-    outdir = os.path.join('/tmp', str(uuid.uuid4()))
-    if not contig_num:
-        contig_num = 1
-    aclient.get_assemblies(job_id=job_id, asm_id=contig_num, outdir=outdir)
-    outfile = os.path.join(outdir, os.listdir(outdir)[0])
-
-    #### Fasta to ContigSet
-    def fasta_to_contigset(fasta_file, name):
-        contig_set = {'name:': name,
-                      'source':'AssemblyService',
-                      'type': 'Genome',
-                      'contigs': [],
-                      'id': name,
-                      'source_id': name}
-
-        ##### Parse Fasta content
-        contig = {'description': ''}
-        seq_buffer = ''
-        with open(fasta_file) as f:
-            for line in f:
-                if line[0] == '>':
-                    header = line[1:].rstrip()
-                    contig['id'] = header
-                    contig['name'] = header
-                    header = ''
-                elif line[0] == '\n':
-                    if seq_buffer != '':
-                        contig['sequence'] = seq_buffer
-                        m = hashlib.md5()
-                        m.update(seq_buffer)
-                        contig['md5'] = str(m.hexdigest())
-                        contig['length'] = len(seq_buffer)
-                        seq_buffer = ''
-                        contig_set['contigs'].append(contig)
-                        contig = {'description': ''}
-                else:
-                    seq_buffer += line.rstrip()
-            if seq_buffer != '':
-                contig['sequence'] = seq_buffer
-                m = hashlib.md5()
-                m.update(seq_buffer)
-                contig['md5'] = str(m.hexdigest())
-                contig['length'] = len(seq_buffer)
-                contig_set['contigs'].append(contig)
-        m = hashlib.md5()
-        m.update(str(contig_set['contigs']))
-        contig_set['md5'] = str(m.hexdigest())
-        
-        return contig_set
-
-    if not contig_name:
-        contig_name = str(job_id) + '.assembly.contigset'
-
-    cs_data = fasta_to_contigset(outfile, contig_name)
-    ws_saveobj_params = {'id': contig_name,
-                         'type': 'KBaseGenomes.ContigSet',
-                         'workspace': ws,
-                         'data': cs_data}
-    wsClient.save_object(ws_saveobj_params)
-
-    return json.dumps({'Success': '{} saved to worksapace as {}'.format(
-                os.path.basename(outfile), contig_name)})
 
 @method(name="Assemble Genome from Fasta")
 def _assemble_genome(meth, contig_file, out_genome):
@@ -254,7 +166,11 @@ def _import_ncbi_genome(meth, ncbi_genome_name, genome_id):
     :output_widget: GenomeAnnotation
     """
     if not genome_id:
-        genome_id = ncbi_genome_name.replace(' ', '_') + '.ncbi'
+        chars = ['\'',' ','-','=','.','/','(',')','_',':','+','*','#',',','[',']']
+        genome_id_prefix = ncbi_genome_name
+        for ch in chars:
+            genome_id_prefix = genome_id_prefix.replace(ch, '_')
+        genome_id = genome_id_prefix + '.ncbi'
     meth.stages = 1
     token, workspace = meth.token, meth.workspace_id
     cmpClient = GenomeComparison(url = service.URLS.genomeCmp, token = token)
@@ -738,6 +654,23 @@ def _compute_pan_genome(meth, genome_set,pangenome_id):
     meta = fbaclient.build_pangenome(pangenome_parameters)
     
     return json.dumps({'ws': workspace_id, 'name':meta[1]})
+
+@method(name="Export orthologs from Pan-genome")
+def _export_gene_set_pan_genome(meth, pan_genome_id):
+    """Export orthologs from Pangenome as external FeatureSet objects. [26] 
+    
+    :param pan_genome_id: ID of pan-genome object [26.1]
+    :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
+    :ui_name pan_genome_id: Pan-genome ID
+
+    :return: Generated Compare Genome
+    :rtype: kbtypes.KBaseGenomes.Pangenome
+    :output_widget: kbasePanGenomeGeneSetExport
+    """
+    
+    meth.stages = 1 # for reporting progress
+    
+    return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
 
 @method(name="Compare Models")
 def _compare_models(meth, model_ids):
@@ -1550,11 +1483,11 @@ def _insert_genome_into_species_tree(meth, genome, neighbor_count, out_tree):
     job_id = treeClient.construct_species_tree(construct_species_tree_params)
     return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
 
-@method(name="View Species Tree")
-def _view_species_tree(meth, tree_id):
-    """ View a Species Tree from your workspace [21]
+@method(name="View Tree")
+def _view_tree(meth, tree_id):
+    """ View a Tree from your workspace [21]
 
-    :param tree_id: a Species Tree id [21.1]
+    :param tree_id: a Tree id [21.1]
     :type tree_id: kbtypes.KBaseTrees.Tree
     :ui_name tree_id: Tree ID
     :return: Species Tree Result
@@ -1737,6 +1670,78 @@ def _build_promconstraint(meth, genome_id, series_id, regulome_id):
     name = fba_meta_data[1]
     
     return json.dumps({'name': name, 'ws': workspaceName})
+
+@method(name="Align Protein Sequences")
+def _align_protein_sequences(meth, feature_set, alignment_method, out_msa):
+    """Construct multiple sequence alignment object based on set of proteins. [27]
+
+    :param feature_set: An object with protein features [27.1]
+    :type feature_set: kbtypes.KBaseSearch.FeatureSet
+    :ui_name feature_set: Feture Set Object
+    :param alignment_method: name of alignment method (one of Muscle, Clustal, ProbCons, T-Coffee, Mafft), leave it blank for default Clustal method [27.2]
+    :type alignment_method: kbtypes.Unicode
+    :ui_name alignment_method: Multiple Alignment Method
+    :param out_msa: Multiple sequence alignment object ID. If empty, an ID will be chosen randomly. [27.3]
+    :type out_msa: kbtypes.KBaseTrees.MSA
+    :ui_name out_msa: Output MSA ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseMSA
+    """
+    if not alignment_method:
+        alignment_method = 'Clustal'
+    if not out_msa:
+        out_msa = "msa_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    ws = workspaceService(service.URLS.workspace, token=token)
+    elements = ws.get_objects([{'ref': workspace+'/'+feature_set}])[0]['data']['elements']
+    gene_sequences = {}
+    for key in elements:
+        elem = elements[key]['data']
+        id = elem['id']
+        if 'genome_ref' in elem:
+            genome_obj_name = ws.get_object_info([{'ref' : elem['genome_ref']}],0)[0][1]
+            id = genome_obj_name + '/' + id
+        seq = elements[key]['data']['protein_translation']
+        gene_sequences[id] = seq
+    treeClient = KBaseTrees(url = service.URLS.trees, token = token)
+    construct_multiple_alignment_params = {
+        'gene_sequences': gene_sequences,                                  
+        'alignment_method': alignment_method, 
+        'out_workspace': workspace, 
+        'out_msa_id': out_msa 
+    }
+    job_id = treeClient.construct_multiple_alignment(construct_multiple_alignment_params)
+    return json.dumps({'workspaceID': workspace, 'msaID': out_msa, 'jobID' : job_id})
+
+@method(name="Build Gene Tree")
+def _build_gene_tree(meth, msa, out_tree):
+    """ Build phylogenetic tree for multiple alignmnet of protein sequences [28]
+
+    :param msa: a Multiple sequence alignment [28.1]
+    :type msa: kbtypes.KBaseTrees.MSA
+    :ui_name msa: MSA ID
+    :param out_tree: Output gene tree ID. If empty, an ID will be chosen randomly. [28.2]
+    :type out_tree: kbtypes.KBaseTrees.Tree
+    :ui_name out_tree: Output gene tree ID
+    :return: Species Tree Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseTree
+    """
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    if not out_tree:
+        out_tree = "genetree_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    treeClient = KBaseTrees(url = service.URLS.trees, token = token)
+    construct_tree_for_alignment_params = {
+        'msa_ref': workspace + '/' + msa, 
+        'tree_method': 'FastTree', 
+        'out_workspace': workspace, 
+        'out_tree_id': out_tree
+    }
+    job_id = treeClient.construct_tree_for_alignment(construct_tree_for_alignment_params)
+    return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
 
 #
 #@method(name="Edit Data")

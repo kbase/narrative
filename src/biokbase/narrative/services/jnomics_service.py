@@ -742,6 +742,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
         else:
 		json_error = previous_steps['output'].failure_info
         #    raise Exception , "Workspace obj generation Failed"
+
         return {"submitted" : realid , "type" : exptype , "status" : wsreturn , "error" :  json_error}
 
     def ontologydata(poid=None,eoid=None):

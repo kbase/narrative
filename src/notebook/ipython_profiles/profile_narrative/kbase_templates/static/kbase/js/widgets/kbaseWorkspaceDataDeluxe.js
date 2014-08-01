@@ -623,7 +623,7 @@
             if (landingPageType) {
                 var landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
                 detailsBtn.click(function(event) { window.open(landingPage); });
-                detailsBtn.html("View Object");
+                detailsBtn.html("View Landing Page");
             }
             else {
                 detailsBtn.html("Landing Page Unavailable");

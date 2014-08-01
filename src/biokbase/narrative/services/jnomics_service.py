@@ -638,7 +638,7 @@ def jnomics_calculate_variations(meth,workspace=None,Input_file=None,paired=None
 @method(name = "Calculate Gene Expression")
 def jnomics_calculate_expression(meth, workspace = None,paired=None,
                                  Input_file_path=None,
-                                 ref=None,src_id=None):
+                                 ref=None,src_id=None,outputfile=None):
     """Calculate Expression
 
     :param workspace : Name of workspace; default is current
@@ -657,6 +657,9 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     :param src_id: Source and Source Id
     :type src_id : kbtypes.Unicode
     :ui_name src_id : Source/Source Id
+    :param outputfile : Output File prefix
+    :type outputfile : kbtypes.Unicode
+    :ui_name outputfile : Output file prefix
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -709,7 +712,8 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     @pipelineStep(None)
     def writeBamfile(client,previous_steps):
         tophatid  = idc.allocate_id_range(IDServerids.rnaseq_alignment,1)
-        tophatobjname = IDServerids.rnaseq_alignment+"."+str(tophatid)
+        tophatobjname = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_SampleAlignment"
+        #tophatobjname = IDServerids.rnaseq_alignment+"."+str(tophatid)
         filedata = shockfileload(auth,tophatobjname,cufflinks_in_path)
         objdata = { "name" : str(sample_id)+"_accepted_hits.bam" ,"paired" : paired , "created" :  strftime("%d %b %Y %H:%M:%S +0000", gmtime()) ,
                 "shock_ref": { "shock_id" : filedata['shock_id']  , "shock_url" : OTHERURLS.shock+'/node/'+filedata['shock_id'] },"metadata" : ret['metadata'][0] }
@@ -728,12 +732,13 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
             job_id =  previous_steps['output'].job_id
         pattern2 = re.compile('Writing the Expression object kb\|sample.[0-9]*')
         sampleid = parselog(str(job_id),pattern2,auth)
-	if sampleid:
+	objid = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_ExpressionSample"
+        if sampleid:
         	realid = sampleid.split('Writing the Expression object ')[1]
         #realid = 'kb\|sample.20064'
                 result = cathdfsfile(realid,auth)
                 jsonobj = json.loads(str(result))
-                wsreturn = ws_saveobject(realid,jsonobj,exptype,meth.workspace_id,meth.token)
+                wsreturn = ws_saveobject(objid,jsonobj,exptype,meth.workspace_id,meth.token)
         else:
 		json_error = previous_steps['output'].failure_info
         #    raise Exception , "Workspace obj generation Failed"
@@ -789,7 +794,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     return to_JSON(ret[-1])
 
 @method(name = "Plot Gene Expression Histogram")
-def generateHistogram(meth,workspace= None,exp_file=None):
+def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
 
     """Plot Gene Expression Histogram
     :param workspace: Name of workspace, default is current
@@ -798,6 +803,9 @@ def generateHistogram(meth,workspace= None,exp_file=None):
     :param exp_file: Gene Expression file
     :type exp_file: kbtypes.Unicode
     :ui_name exp_file : Gene Expression file
+    :param outputfile : Output File prefix
+    :type outputfile : kbtypes.Unicode
+    :ui_name outputfile : Output file prefix
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -833,13 +841,14 @@ def generateHistogram(meth,workspace= None,exp_file=None):
     sorted_dt['row_labels'] = [hist_json["x_label"]]
     sorted_dt["column_labels"] =  [hist_json["y_label"]]
     sorted_dt["data"] = [[float(i) for i in hist_json["data"]["x_axis"]],[float(j) for j in hist_json["data"]["y_axis"]]]
-    sorted_dt["id"] = "kb|histogramdatatable."+str(idc.allocate_id_range("kb|histogramdatatable",1))
+    #sorted_dt["id"] = "kb|histogramdatatable."+str(idc.allocate_id_range("kb|histogramdatatable",1))
+    sorted_dt["id"] = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_HistogramSummary"
     sorted_dt["name"] = hist_json["title"]
     return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
     
 @method(name = "Identify Differential Expression")
 def jnomics_differential_expression(meth,workspace= None,title=None, alignment_files=None,exp_files=None,
-                                 ref=None):
+                                 ref=None,outputfile=None):
     """Identify differential Expression
     :param workspace: Name of workspace, default is current
     :type workspace : kbtypes.Unicode
@@ -856,6 +865,9 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     :param ref : Reference Genome (kb_id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
+    :param outputfile : Output File prefix
+    :type outputfile : kbtypes.Unicode
+    :ui_name outputfile : Output file prefix
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -920,7 +932,8 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
             diff_exp["shock_ref"]["shock_url"] = OTHERURLS.shock+"/node/"+value
             diff_exp_files.append(diff_exp)
 
-        diffid = "kb|differentialExpression."+str(idc.allocate_id_range(diffexptype,1))
+        #diffid = "kb|differentialExpression."+str(idc.allocate_id_range(diffexptype,1)) 
+        diffid = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_DifferentialExpression"
         diffexpobj = { "name" : diffid,
                        "title" : title,
                        "created" : strftime("%d %b %Y %H:%M:%S +0000", gmtime()),
@@ -976,7 +989,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     return  to_JSON(ret[-1])
 
 @method(name = "Create Expression Series ")
-def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,design=None,summary=None,source_Id=None,src_date=None):
+def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,design=None,summary=None,source_Id=None,src_date=None,outputfile=None):
     """search a file
 
     :param workspace: Worspace id
@@ -1003,6 +1016,9 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
     :param src_date: External Source Date
     :type src_date : kbtypes.Unicode
     :ui_name src_date : Publication Date
+    :param outputfile : Output File prefix
+    :type outputfile : kbtypes.Unicode
+    :ui_name outputfile : Output file prefix
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -1025,11 +1041,13 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
     source_Id = source_Id + "___" + "RNA-Seq"
     genome_map = [workspace+"/"+x for x in files]    
 
-    id_dict = idc.register_ids(IDServerids.rnaseq_series,"KB",[source_Id])
-    objid = id_dict.values()[0]
+    #id_dict = idc.register_ids(IDServerids.rnaseq_series,"KB",[source_Id])
+    #objid = id_dict.values()[0]
+    ### change to rename the obj
+    objid = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_ExpressionSeries"
     meth.advance("Preparing the Series Object")
-
-    seriesobj = { 'id' : str(objid) ,
+    ### change id to kb id str(objid)
+    seriesobj = { 'id' : objid ,
                   'source_id' : source_Id ,
                   'genome_expression_sample_ids_map' : { ref : genome_map },
                   #'genome_expression_sample_ids_map' : {workspace+"/"+x+"/" for x in files 'kb|g.3907': [workspace+"/"+kb|sample_test.13397.json/1' , '863/kb|sample_test.13398.json/1'] } ,
@@ -1044,7 +1062,7 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
     return to_JSON(wsreturn)
 
 @method(name = "Generate Data Table ")
-def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
+def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outputfile=None):
     """search a file
 
     :param workspace: Worspace id
@@ -1059,6 +1077,9 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
     :param ref: Reference (kb_id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
+    :param outputfile : Output File prefix
+    :type outputfile : kbtypes.Unicode
+    :ui_name outputfile : Output file prefix
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -1114,12 +1135,13 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None):
                              if j==k:
                                  fpkmdata[pos][j] = float(y)
 
-    dt_id = "kb|datatable."+str(idc.allocate_id_range("kb|datatable",1))
+    #dt_id = "kb|datatable."+str(idc.allocate_id_range("kb|datatable",1))
+    dt_id = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_ExpressionDataTable"
     dt_obj = OrderedDict({"id" : dt_id, "name" : name, "row_ids" : row_ids, "row_labels" : row_ids , "column_labels" : column_ids , "column_ids" : column_ids, "data" : fpkmdata })
     return  to_JSON(ws_saveobject(dt_id,dt_obj,dt_type,meth.workspace_id,meth.token))
 
 @method(name = "Filter Expression Data Table ")
-def filterDataTable(meth,workspace= None,dtname=None):
+def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     """search a file
 
     :param workspace: Worspace id
@@ -1128,6 +1150,9 @@ def filterDataTable(meth,workspace= None,dtname=None):
     :param dtname: Datatable Name
     :type dtname : kbtypes.Unicode
     :ui_name dtname : DataTable Name
+    :param outputfile : Output File prefix
+    :type outputfile : kbtypes.Unicode
+    :ui_name outputfile : Output file prefix
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
@@ -1169,7 +1194,8 @@ def filterDataTable(meth,workspace= None,dtname=None):
     sorted_dt["column_ids"] = result["column_ids"]
     sorted_dt['row_labels'] = sorted_dt["row_ids"]
     sorted_dt["column_labels"] = sorted_dt['column_ids']
-    sorted_dt["id"] = "kb|filtereddatatable."+str(idc.allocate_id_range("kb|filtereddatatable",1))
+    #sorted_dt["id"] = "kb|filtereddatatable."+str(idc.allocate_id_range("kb|filtereddatatable",1))
+    sorted_dt["id"] = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_FilteredDataTable"
     sorted_dt["name"] = result["name"]
     return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
 
@@ -1177,10 +1203,12 @@ def filterDataTable(meth,workspace= None,dtname=None):
 def gene_network(meth, hm=None, workspace_id=None):
     """This method creates a heatmap
 
-        :param hm: Heatmap Object
+        :param hm: Filtered Datatable
         :type hm: kbtypes.Unicode
+        :ui_name hm : Filtered Datatable
         :param workspace_id: Workspace ID
         :type workspace_id: kbtypes.Unicode
+        :ui_name workspace_id : Workspace
         :return: Rows for display
         :rtype: kbtypes.Unicode
         :output_widget: kbaseHeatmap

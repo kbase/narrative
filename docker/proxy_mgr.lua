@@ -29,6 +29,8 @@
 
 local M={}
 
+local auth_cookie_name = "kbase_narr_session"
+
 -- regexes for matching/validating keys and values
 local key_regex = "[%w_%-%.]+"
 local val_regex = "[%w_%-:%.]+"
@@ -487,7 +489,7 @@ get_session = function()
    local error_msg = nil;
    if cheader then
       -- ngx.log( ngx.INFO, string.format("cookie = %s",cheader))
-      local session = string.match( cheader,"kbase_session=([%S]+);?")
+      local session = string.match( cheader, auth_cookie_name .. "=([%S]+);?")
       if session then
 	 -- ngx.log( ngx.INFO, string.format("kbase_session = %s",session))
 	 session = string.gsub(session,";$","")

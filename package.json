@@ -1,0 +1,21 @@
+{
+    "name"         : "ui-common"
+  , "description"  : "Common repository for UI components"
+  , "version"      : "0.0.1"
+  , "private"      : true
+  , "repository"   : "git.kbase.us/ui-common.git"
+  , "scripts"      : {
+      "test"       : "./node_modules/.bin/mocha"
+  }
+  , "version": "0.0.1"
+  , "dependencies" : {
+        "jquery"     : ">=1.8.3"
+      , "jsdom"      : ">=0.8.3"
+      , "mocha"      : ">=1.8.1"
+      , "requirejs"  : ">=2.1.5"
+      , "should"     : ">=1.2.2"
+      , "uglify-js"  : ">=2.3.6"
+      , "underscore" : ">=1.4.4"
+      , "grunt-cli"  : ">=0.1.9"
+  }
+}

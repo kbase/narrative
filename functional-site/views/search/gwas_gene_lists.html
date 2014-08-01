@@ -1,0 +1,116 @@
+<div class="row search-result-column-header-row">
+    <div class="btn-group search-result-column-header col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <div class="btn-group search-result-column-header search-result-select-all col-xs-1 col-sm-1 col-md-1 col-lg-1">
+            <button type="button" class="btn btn-default search-result-column-header-toggle" ng-class="{'disabled': !options.userState.loggedIn}" ng-click="toggleAll(options.resultJSON.items)">
+                <span class="glyphicon" ng-class="{'glyphicon-check': options.userState.selectAll[options.selectedCategory][options.searchOptions.perCategory[options.selectedCategory].page],'glyphicon-unchecked': !options.userState.selectAll[options.selectedCategory][options.searchOptions.perCategory[options.selectedCategory].page]}"></span>
+            </button>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1 object_id">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Object Id</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(options.selectedCategory, 'object_id', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(options.selectedCategory, 'object_id', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(options.selectedCategory, 'object_id', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1 object_name">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong>Object Name</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(options.selectedCategory, 'object_name', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(options.selectedCategory, 'object_name', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(options.selectedCategory, 'object_name', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group search-result-column-header col-xs-1 col-sm-1 col-md-1 col-lg-1 num_genes">
+            <button type="button" class="btn btn-default dropdown-toggle search-result-column-header-btn" data-toggle="dropdown">
+                <strong># Genes</strong>
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a onclick="addSort(options.selectedCategory, 'num_genes', 'asc')">
+                        <span class="glyphicon glyphicon-sort-by-order"/>
+                        <span>Sort ascending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="addSort(options.selectedCategory, 'num_genes', 'desc')">
+                        <span class="glyphicon glyphicon-sort-by-order-alt"/>
+                        <span>Sort descending</span>
+                    </a>
+                </li>
+                <li>
+                    <a onclick="removeSort(options.selectedCategory, 'num_genes', true)">
+                        <span class="glyphicon glyphicon-remove"/>
+                        <span>Clear this sort</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<section>
+    <div class="row" ng-repeat="item in options.resultJSON.items">
+        <div class="search-typedRecord row">
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-checkbox">
+                <a ng-click="toggleCheckbox(item.row_id, item)" class="search-checkbox-link" ng-class="{'disabled': !options.userState.loggedIn}">
+                    <span class="glyphicon" ng-class="{'glyphicon-unchecked': !options.userState.selections[item.row_id], 'glyphicon-check': options.userState.selections[item.row_id]}"/>
+                </a>
+            </div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-position">{{item.position}}.</div>
+            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 search-result-column object_id">{{item.object_id}}</div>
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2 search-result-column object_name">
+                <span>
+                    <a target='_blank' class='object-name' href='#{{options.landingPages.gwasGeneList}}{{item.workspace_name}}/{{item.object_name}}'>
+                        <strong><em>{{item.object_name}}</em></strong>
+                    </a>
+                </span>
+            </div>
+            <div class="col-xs-2 col-sm-2 col-md-3 col-lg-3 search-result-column genes">{{item.genes.split("  ").length}}</div>
+        </div>        
+        <div ng-class="{'collapse': options.userState.viewType != 'expanded'}" class="search-typedRecord-expanded row">
+            <div class="well search-result-column-expanded row">
+                <table class="search-result-expanded-entry">
+                    <tr><td class="search-result-column-expanded-entry-cell"><strong>Gene List:</strong></td><td class="search-result-column-expanded-entry-cell"><tr ng-repeat='p in item.genes.split("  ")'><td>{{p}}</td></tr></td></tr>                    
+                    <tr><td class="search-result-column-expanded-entry-cell"><strong>SNP List:</strong></td><td class="search-result-column-expanded-entry-cell">{{item.genes_snp_list}}</td></tr>                    
+                </table>
+            </div>
+        </div>        
+    </div>
+</section>

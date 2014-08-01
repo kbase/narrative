@@ -1,0 +1,566 @@
+
+
+
+<div data-spy="scroll" data-target="#navbar-example">
+<div class="row">
+    <div class="col-md-2">
+        <ul class="nav nav-pills nav-stacked" id="navbar" ng-controller="ScrollCtrl" style="position:fixed;">
+            <li><a ng-click="gotoAnchor('genomes')">Genomes</a></li>
+            <li><a ng-click="gotoAnchor('genes')">Genome Features</a></li>
+            <li><a ng-click="gotoAnchor('gwas')">GWAS</a></li>
+            <li><a ng-click="gotoAnchor('reactions')">Reactions</a></li>
+            <li><a ng-click="gotoAnchor('compounds')">Compounds</a></li>
+            <li><a ng-click="gotoAnchor('media')">Media</a></li>
+            <li><a ng-click="gotoAnchor('models')">Models</a></li>
+            <li><a ng-click="gotoAnchor('fbas')">FBAs</a></li>
+            <li><a ng-click="gotoAnchor('meme')">MEME</a></li>
+            <li><a ng-click="gotoAnchor('bambi')">BAMBI</a></li>
+            <li><a ng-click="gotoAnchor('mak')">MAK</a></li>
+            <li><a ng-click="gotoAnchor('cmonkey')">Cmonkey</a></li>
+            <li><a ng-click="gotoAnchor('inferelator')">Inferelator</a></li>
+            <li><a ng-click="gotoAnchor('regprecise')">RegPrecise</a></li>
+            <li><a ng-click="gotoAnchor('ppi')">PPI</a></li>
+        </ul>
+    </div>
+    <div class="col-md-10">
+
+        <!-- GENOMES -->
+        <div class="page-header"><h3 id="genomes">Genomes</h3></div>
+        <h4>URLs</h4>
+        <a href="#/genomes">#/genomes</a> <span class="glyphicon glyphicon-unchecked"></span><br>
+        <h5>Params</h5>
+            #/genomes/CDS/$genomeID <br>
+            #/genomes/$workspaceID/$genomeID <br>            
+        <h5>Examples</h5>
+        <form class="form-inline" role="form" type="genomes/CDS">
+            #/genomes/CDS/
+            <div class="form-group">
+                <label class="sr-only" for="input1">gnome id</label>
+                <input class="form-control" id="input1" placeholder="kb|g.0" value="kb|g.0">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-check"></span>               
+        </form>
+        <form class="form-inline" role="form" type="genomes">
+            #/genomes/
+            <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="KBaseCDMGenomes" value="KBaseCDMGenomes">
+            </div>
+            <div class="form-group">
+                <label class="sr-only" for="input2">genome id</label>
+                <input class="form-control" id="input2" placeholder="Genome Id" value="kb|g.0">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-unchecked"></span>
+        </form>
+
+       <!-- GENOME FEATURES -->
+       <div class="page-header"><h3 id="genes">Genome Features</h3></div>
+        <h4>URLs</h4>
+        <a href="#/genes">#/genes</a> <span class="glyphicon glyphicon-unchecked"></span><br>
+        <h5>Params</h5>
+            #/genes/CDS/$genomeID/$featureID <br>
+            #/genes/$workspaceID/$genomeID/$featureID <br>
+        <h5>Examples</h5>
+
+        <form class="form-inline" role="form" type="genes/CDS">
+            #/genes/CDS/
+            <div class="form-group">
+                <label class="sr-only" for="input1">genome id</label>
+                <input class="form-control" id="input1" placeholder="Genome Id" value="kb|g.0">
+            </div>
+            <div class="form-group">
+                <label class="sr-only" for="input2">gene id</label>
+                <input class="form-control" id="input2" placeholder="Feature Id" value="kb|g.0.peg.2173">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-check"></span>               
+        </form>
+        <form class="form-inline" role="form" type="genes">
+            #/genes/
+            <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="KBaseCDMGenomes">
+            </div>
+            <div class="form-group">
+                <label class="sr-only" for="input2">genome id</label>
+                <input class="form-control" id="input2" placeholder="Genome Id" value="kb|g.0">
+            </div>
+            <div class="form-group">
+                <label class="sr-only" for="input3">genome id</label>
+                <input class="form-control" id="input3" placeholder="Feature Id" value="kb|g.0.peg.2173">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-unchecked"></span>
+        </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Population</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasPopulation/">#/KBaseGwasData.GwasPopulation/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasPopulation/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasPopulation">
+              #/KBaseGwasData.GwasPopulation/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="arabidopsis_population_atwell_et_al">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Traits</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasPopulationTrait/">#/KBaseGwasData.GwasPopulationTrait/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasPopulationTrait/$workspaceId/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasPopulationTrait">
+              #/KBaseGwasData.GwasPopulationTrait/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="Trait-avrRpm1-arabidopsis_population_atwell_et_al">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Variations</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasPopulationVariation/">#/KBaseGwasData.GwasPopulationVariation/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasPopulationVariation/$workspaceId/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasPopulationVariation">
+              #/KBaseGwasData.GwasPopulationVariation/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="arabidopsis_250KSNPs_197_ecotypes_vcf">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Gene List</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasGeneList/">#/KBaseGwasData.GwasGeneList/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasGeneList/$workspaceId/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasGeneList">
+              #/KBaseGwasData.GwasGeneList/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="TopVariations-Trait-avrRpm1-arabidopsis_population_atwell_et_al.genelist.4">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="gwas">GWAS Top Variations</h3></div>
+        <h4>URLs</h4>
+            <a href="#/KBaseGwasData.GwasTopVariations/">#/KBaseGwasData.GwasTopVariations/</a>
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/KBaseGwasData.GwasTopVariations/$workspaceId/$objId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="KBaseGwasData.GwasTopVariations">
+              #/KBaseGwasData.GwasTopVariations/
+              <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBasePublicGwasData">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">object id</label>
+                    <input class="form-control" id="input2" placeholder="Object Id" value="TopVariations-Trait-avrRpm1-arabidopsis_population_atwell_et_al">
+                </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+        <div class="page-header"><h3 id="reactions">Reactions</h3></div>
+        <h4>URLs</h4>
+        <a href="#/rxns">#/rxns</a> <span class="glyphicon glyphicon-check"></span><br>
+        <h5>Params</h5>        
+            #/rxns/$rxn/<br>
+        <h5>Examples</h5>        
+        <form class="form-inline" role="form" type="rxns">
+            #/rxns/
+            <div class="form-group">
+                <label class="sr-only" for="input1">rxn id</label>
+                <input class="form-control" id="input1" placeholder="rxn00001" value="rxn00001">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-check"></span>      
+        </form>
+
+
+        <div class="page-header"><h3 id="compounds">Compounds</h3></div>
+        <h4>URLs</h4>
+            <a href="#/cpds">#/cpds</a> <span class="glyphicon glyphicon-check"></span><br>
+        <h5>Params</h5>
+            #/cpds/$cpd <br>
+        <h5>Examples</h5>
+            <form class="form-inline" role="form" type="cpds">
+              #/cpds/
+              <div class="form-group">
+                <label class="sr-only" for="input1">cpd id</label>
+                <input class="form-control" id="input1" placeholder="cpd00001" value="cpd00001">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                <span class="glyphicon glyphicon-check"></span>               
+            </form>
+
+
+        <div name="media" class="page-header"><h3 id="media">Media</h3></div>
+        <h4>URLs</h4>
+            <a href="#/media">#/media</a>  [ points to <span class="label label-primary">KBaseMedia</span> ]
+            <span class="glyphicon glyphicon-check"></span> <br>
+        <h5>Params</h5>
+            #/media/$workspace/<br>   
+            #/media/$workspace/$media_id<br>
+        <h5>Examples</h5>
+            <form class="form-inline" role="form" type="media">
+                #/media/
+                <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBaseMedia">
+                </div>
+                <a class="btn btn-default api-url-submit">Go</a>
+                <span class="glyphicon glyphicon-check"></span>
+            </form>
+            <form class="form-inline" role="form" type="media">
+                #/media/
+                <div class="form-group">
+                    <label class="sr-only" for="input1">workspace id</label>
+                    <input class="form-control" id="input1" placeholder="Workspace Id" value="KBaseMedia">
+                </div> /
+                <div class="form-group">
+                    <label class="sr-only" for="input2">media id</label>
+                    <input class="form-control" id="input2" placeholder="Media Id" value="Biolog-C-cytd">
+                </div>
+                <a class="btn btn-default api-url-submit">Go</a>
+                <span class="glyphicon glyphicon-unchecked"></span>
+            </form>
+
+
+        <div class="page-header"><h3 id="models">Models</h3></div>
+        <h4>URLs</h4>
+            <a href="#/models">#/models</a> [ points to <span class="label label-primary">KBaseCDMModels</span> ] 
+            <span class="glyphicon glyphicon-check"></span><br>
+        <h5>Params</h5>        
+          #/models/$workspace/<br>
+          #/models/$workspace/$model_id<br>
+          #/cards/models/$workspace/$model_id<br>
+        <h5>Examples</h5>      
+        <form class="form-inline" role="form" type="models">
+            #/models/
+            <div class="form-group">
+            <label class="sr-only" for="input1">workspace id</label>
+            <input class="form-control" id="input1" placeholder="Workspace Id" value="KBaseCDMModels">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-check"></span>
+        </form>
+        <form class="form-inline" role="form" type="models">
+            #/models/
+            <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="KBaseCDMModels">
+            </div> /
+            <div class="form-group">
+                <label class="sr-only" for="input2">model id</label>
+                <input class="form-control" id="input2" placeholder="Model Id" value="kb|g.19.fbamdl.0">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-check"></span>              
+        </form>
+        <form class="form-inline" role="form" type="cards/models">
+            #/cards/models/
+            <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="KBaseCDMModels">
+            </div> /
+            <div class="form-group">
+                <label class="sr-only" for="input2">model id</label>
+                <input class="form-control" id="input2" placeholder="Model Id" value="kb|g.19.fbamdl.0">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-check"></span>              
+        </form>        
+
+
+
+        <div class="page-header"><h3 id="fbas">FBA</h3></div>
+        <h4>URLs</h4>        
+            <a href="#/fbas">#/fbas</a>
+            <span class="glyphicon glyphicon-check"></span>
+        <h5>Params</h5>
+            #/fbas/$workspace<br>        
+            #/fbas/$workspace/$fba_id<br>
+            #/cards/fbas/$workspace/$fba_id<br>            
+        <h5>Examples</h5>
+        <form class="form-inline" role="form" type="fbas">
+            #/fbas/
+            <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="KBaseFBA">
+            </div>
+            <a class="btn btn-default api-url-submit">Go</a>
+            <span class="glyphicon glyphicon-check"></span>
+        </form>        
+        <form class="form-inline" role="form" type="fbas">
+            #/fbas/
+            <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="KBaseFBA">
+            </div> /
+            <div class="form-group">
+                <label class="sr-only" for="input2">fba id</label>
+                <input class="form-control" id="input2" placeholder="Fba Id" value="kb|g.0.fbamdl.301.fba.1">
+            </div>
+            <submit type="submit" class="btn btn-default api-url-submit">Go</submit>
+            <span class="glyphicon glyphicon-check"></span>              
+        </form>
+        <form class="form-inline" role="form" type="cards/fbas">
+            #/cards/fbas/
+            <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="KBaseFBA">
+            </div> /
+            <div class="form-group">
+                <label class="sr-only" for="input2">fba id</label>
+                <input class="form-control" id="input2" placeholder="Fba Id" value="kb|g.0.fbamdl.301.fba.1">
+            </div>
+            <submit type="submit" class="btn btn-default api-url-submit">Go</submit>
+            <span class="glyphicon glyphicon-check"></span>              
+        </form>
+
+        <div class="page-header"><h3 id="meme">MEME</h3></div>
+        <h4>URLs</h4>
+            <a href="#/meme">#/meme</a> [ points to <span class="label label-primary">AKtest</span> ] 
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/meme/$workspaceId<br>
+            #/meme/$workspaceId/$memeRunResultId<br>
+            #/meme/$workspaceId/$tomtomRunResultId<br>
+            #/meme/$workspaceId/$mastRunResultId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="meme">
+                #/meme/
+                <div class="form-group">
+                <label class="sr-only" for="input1">workspace id</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+                </div>
+                <a class="btn btn-default api-url-submit">Go</a>
+                <span class="glyphicon glyphicon-check"></span>
+            </form>
+            <form class="form-inline" role="form" type="meme">
+              #/meme/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">meme_run_result</label>
+                <input class="form-control" id="input2" placeholder="Meme Run Result Id" value="kb|memerunresult.187">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+            <form class="form-inline" role="form" type="meme">
+              #/meme/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">tomtom_run_result</label>
+                <input class="form-control" id="input2" placeholder="Tomtom Run Result Id" value="kb|tomtomrunresult.61">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+            <form class="form-inline" role="form" type="meme">
+              #/meme/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">mast_run_result</label>
+                <input class="form-control" id="input2" placeholder="Mast Run Result Id" value="kb|mastrunresult.72">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="bambi">BAMBI</h3></div>
+        <h4>URLs</h4>
+            #/bambi
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/bambi/$workspaceId/$bambiRunResultId<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="bambi">
+              #/bambi/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Id" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">bambi_run_result</label>
+                <input class="form-control" id="input2" placeholder="Bambi Run Result ID" value="kb|bambirunresult.4">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="mak">MAK</h3></div>
+        <h4>URLs</h4>
+            #/mak
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/mak/$workspaceName/$makResultName<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="mak">
+              #/mak/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="networks_typed_objects_examples">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">mak_result</label>
+                <input class="form-control" id="input2" placeholder="MAK Result name" value="MAKResult_example">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+        <div class="page-header"><h3 id="cmonkey">cMonkey</h3></div>
+        <h4>URLs</h4>
+            #/cmonkey
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/cmonkey/$workspaceName/$cmonkeyRunResultName<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="cmonkey">
+              #/cmonkey/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">cmonkey_run_result</label>
+                <input class="form-control" id="input2" placeholder="Cmonkey Run Result Id" value="kb|cmonkeyrunresult.157">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+       <div class="page-header"><h3 id="inferelator">Inferelator</h3></div>
+        <h4>URLs</h4>
+            #/inferelator
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/inferelator/$workspaceName/$inferelatorRunResultName<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="inferelator">
+              #/inferelator/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="AKtest">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">inferelator_run_result</label>
+                <input class="form-control" id="input2" placeholder="Inferelator Run Result Id" value="kb|inferelatorrunresult.52">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+      <div class="page-header"><h3 id="regprecise">RegPrecise</h3></div>
+        <h4>URLs</h4>
+            #/regprecise
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/regprecise/$workspaceName/$regulomeName<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="regprecise">
+              #/regprecise/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="KBasePublicNetworks">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">regulome</label>
+                <input class="form-control" id="input2" placeholder="Regulome name" value="kb|g.96.regulome.0">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+      <div class="page-header"><h3 id="ppi">PPI</h3></div>
+        <h4>URLs</h4>
+            #/ppid
+            <span class="glyphicon glyphicon-check"></span><br>
+
+        <h5>Params</h5>        
+            #/ppid/$workspaceName/$dataset_name<br>
+        <h5>Examples</h5>        
+            <form class="form-inline" role="form" type="ppid">
+              #/ppid/
+              <div class="form-group">
+                <label class="sr-only" for="input1">workspace</label>
+                <input class="form-control" id="input1" placeholder="Workspace Name" value="KBasePublicNetworks">
+              </div> /
+              <div class="form-group">
+                <label class="sr-only" for="input2">ppi_dataset</label>
+                <input class="form-control" id="input2" placeholder="PPI dataset name" value="kb|ppid.1">
+              </div>
+              <a class="btn btn-default api-url-submit">Go</a>
+                  <span class="glyphicon glyphicon-check"></span>
+            </form>
+
+        <br><br>
+        </div>
+
+
+
+</div>
+
+
+</div>

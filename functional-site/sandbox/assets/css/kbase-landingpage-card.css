@@ -1,0 +1,37 @@
+.kblp-card {
+	display: inline-block;
+	width: auto;
+	height: auto;
+	position: relative;
+	border: 1px solid #aaa;
+	-webkit-border-radius: 6px;
+	   -moz-border-radius: 6px;
+	        border-radius: 6px;
+}
+
+.kblp-header {
+	background-color: #d0d0d0;
+	border: 1px solid #aaa;
+	padding: 3px;
+	min-width: 300px;
+}
+
+.kblp-header-name {
+	position: relative;
+}
+
+.kblp-header-buttons {
+	float: right;
+	position: relative;
+	top: 0px;
+}
+
+.kblp-footer {
+
+}
+
+.kblp-body {
+	display: inline-block;
+	padding: 3px;
+	overflow: auto;
+}

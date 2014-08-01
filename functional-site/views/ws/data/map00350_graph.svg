@@ -1,0 +1,402 @@
+<svg>
+<g>
+    <rect rxns="rxn02610" x="993" y="134" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="996" y="147" font-size="9" stroke="grey" fill="black" >5.3.3.12</text>
+</g>
+<g>
+    <rect rxns="rxn03345" x="1164" y="381" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1167" y="394" font-size="9" stroke="grey" fill="black" >1.4.3.4</text>
+</g>
+<g>
+    <rect rxns="rxn03343,rxn03344" x="1228" y="536" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1231" y="549" font-size="9" stroke="grey" fill="black" >1.2.1.5</text>
+</g>
+<g>
+    <rect rxns="rxn01836" x="1088" y="317" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1091" y="330" font-size="9" stroke="grey" fill="black" >1.4.3.4</text>
+</g>
+<g>
+    <rect rxns="rxn01838" x="1126" y="289" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1129" y="302" font-size="9" stroke="grey" fill="black" >2.1.1.6</text>
+</g>
+<g>
+    <rect rxns="rxn02088" x="1228" y="289" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1231" y="302" font-size="9" stroke="grey" fill="black" >2.1.1.6</text>
+</g>
+<g>
+    <rect rxns="rxn03339" x="1088" y="535" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1091" y="548" font-size="9" stroke="grey" fill="black" >2.1.1.6</text>
+</g>
+<g>
+    <rect rxns="rxn03335,rxn03336" x="1088" y="419" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1091" y="432" font-size="9" stroke="grey" fill="black" >1.2.1.5</text>
+</g>
+<g>
+    <rect rxns="rxn03333" x="1004" y="419" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1007" y="432" font-size="9" stroke="grey" fill="black" >1.1.1.1</text>
+</g>
+<g>
+    <rect rxns="rxn03334" x="1004" y="535" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1007" y="548" font-size="9" stroke="grey" fill="black" >2.1.1.6</text>
+</g>
+<g>
+    <rect rxns="rxn03346" x="1228" y="381" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1231" y="394" font-size="9" stroke="grey" fill="black" >1.4.3.4</text>
+</g>
+<g>
+    <rect rxns="rxn01837" x="1177" y="256" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1180" y="269" font-size="9" stroke="grey" fill="black" >2.1.1.28</text>
+</g>
+<g>
+    <rect rxns="rxn02087" x="1305" y="381" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1308" y="394" font-size="9" stroke="grey" fill="black" >1.4.3.4</text>
+</g>
+<g>
+    <rect rxns="rxn01839" x="1030" y="256" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1033" y="269" font-size="9" stroke="grey" fill="black" >1.14.17.1</text>
+</g>
+<g>
+    <rect rxns="rxn02364,rxn02365" x="893" y="419" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="896" y="432" font-size="9" stroke="grey" fill="black" >1.2.1.5</text>
+</g>
+<g>
+    <rect rxns="rxn02367" x="918" y="535" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="921" y="548" font-size="9" stroke="grey" fill="black" >2.1.1.6</text>
+</g>
+<g>
+    <rect rxns="rxn02993" x="919" y="317" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="922" y="330" font-size="9" stroke="grey" fill="black" >1.4.3.4</text>
+</g>
+<g>
+    <rect rxns="rxn03340,rxn03341" x="847" y="535" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="850" y="548" font-size="9" stroke="grey" fill="black" >1.2.1.5</text>
+</g>
+<g>
+    <rect rxns="rxn02994" x="847" y="289" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="850" y="302" font-size="9" stroke="grey" fill="black" >2.1.1.6</text>
+</g>
+<g>
+    <rect rxns="rxn03342" x="844" y="419" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="847" y="432" font-size="9" stroke="grey" fill="black" >1.4.3.4</text>
+</g>
+<g>
+    <rect rxns="rxn01499" x="819" y="245" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="822" y="258" font-size="9" stroke="grey" fill="black" >4.1.1.25</text>
+</g>
+<g>
+    <rect rxns="rxn01499" x="819" y="266" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="822" y="279" font-size="9" stroke="grey" fill="black" >4.1.1.28</text>
+</g>
+<g>
+    <rect rxns="rxn02779" x="80" y="283" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="83" y="296" font-size="9" stroke="grey" fill="black" >1.11.1.8</text>
+</g>
+<g>
+    <rect rxns="rxn06542" x="165" y="258" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="168" y="271" font-size="9" stroke="grey" fill="black" >1.11.1.8</text>
+</g>
+<g>
+    <rect rxns="rxn06409" x="248" y="258" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="251" y="271" font-size="9" stroke="grey" fill="black" >1.11.1.8</text>
+</g>
+<g>
+    <rect rxns="rxn00801" x="606" y="721" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="609" y="734" font-size="9" stroke="grey" fill="black" >3.7.1.5</text>
+</g>
+<g>
+    <rect rxns="rxn02728" x="606" y="645" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="609" y="658" font-size="9" stroke="grey" fill="black" >5.2.1.4</text>
+</g>
+<g>
+    <rect rxns="rxn01803" x="541" y="599" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="544" y="612" font-size="9" stroke="grey" fill="black" >4.1.1.62</text>
+</g>
+<g>
+    <rect rxns="rxn01919" x="606" y="587" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="609" y="600" font-size="9" stroke="grey" fill="black" >1.13.11.4</text>
+</g>
+<g>
+    <rect rxns="rxn01918" x="581" y="531" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="584" y="544" font-size="9" stroke="grey" fill="black" >1.2.1.29</text>
+</g>
+<g>
+    <rect rxns="rxn01824" x="556" y="482" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="559" y="495" font-size="9" stroke="grey" fill="black" >4.1.1.-</text>
+</g>
+<g>
+    <rect rxns="rxn02276" x="477" y="627" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="480" y="640" font-size="9" stroke="grey" fill="black" >5.2.1.2</text>
+</g>
+<g>
+    <rect rxns="rxn01825" x="477" y="532" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="480" y="545" font-size="9" stroke="grey" fill="black" >1.13.11.5</text>
+</g>
+<g>
+    <rect rxns="rxn02366" x="151" y="534" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="154" y="547" font-size="9" stroke="grey" fill="black" >1.13.11.15</text>
+</g>
+<g>
+    <rect rxns="rxn01945" x="195" y="493" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="198" y="506" font-size="9" stroke="grey" fill="black" >1.14.14.9</text>
+</g>
+<g>
+    <rect rxns="rxn00527" x="452" y="300" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="455" y="313" font-size="9" stroke="grey" fill="black" >2.6.1.1</text>
+</g>
+<g>
+    <rect rxns="rxn02397" x="537" y="419" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="540" y="432" font-size="9" stroke="grey" fill="black" >5.3.2.1</text>
+</g>
+<g>
+    <rect rxns="rxn01827" x="477" y="444" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="480" y="457" font-size="9" stroke="grey" fill="black" >1.13.11.27</text>
+</g>
+<g>
+    <rect rxns="rxn01820,rxn01822" x="425" y="493" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="428" y="506" font-size="9" stroke="grey" fill="black" >1.14.13.18</text>
+</g>
+<g>
+    <rect rxns="rxn03268" x="337" y="638" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="340" y="651" font-size="9" stroke="grey" fill="black" >2.3.1.-</text>
+</g>
+<g>
+    <rect rxns="rxn01946" x="277" y="539" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="280" y="552" font-size="9" stroke="grey" fill="black" >6.2.1.-</text>
+</g>
+<g>
+    <rect rxns="rxn01943" x="225" y="418" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="228" y="431" font-size="9" stroke="grey" fill="black" >1.2.1.53</text>
+</g>
+<g>
+    <rect rxns="rxn01943,rxn01944" x="252" y="446" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="255" y="459" font-size="9" stroke="grey" fill="black" >1.2.1.5</text>
+</g>
+<g>
+    <rect rxns="rxn01715" x="276" y="345" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="279" y="358" font-size="9" stroke="grey" fill="black" >1.4.3.4</text>
+</g>
+<g>
+    <rect rxns="rxn01717" x="321" y="317" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="324" y="330" font-size="9" stroke="grey" fill="black" >2.1.1.27</text>
+</g>
+<g>
+    <rect rxns="rxn03337" x="1109" y="88" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1112" y="101" font-size="9" stroke="grey" fill="black" >1.14.18.1</text>
+</g>
+<g>
+    <rect rxns="rxn01497" x="584" y="133" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="587" y="146" font-size="9" stroke="grey" fill="black" >1.14.18.1</text>
+</g>
+<g>
+    <rect rxns="rxn01496" x="710" y="301" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="713" y="314" font-size="9" stroke="grey" fill="black" >2.6.1.49</text>
+</g>
+<g>
+    <rect rxns="rxn02295" x="80" y="258" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="83" y="271" font-size="9" stroke="grey" fill="black" >1.11.1.8</text>
+</g>
+<g>
+    <rect rxns="rxn01326" x="682" y="274" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="685" y="287" font-size="9" stroke="grey" fill="black" >1.14.16.2</text>
+</g>
+<g>
+    <rect rxns="rxn00524" x="682" y="255" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="685" y="268" font-size="9" stroke="grey" fill="black" >1.14.18.1</text>
+</g>
+<g>
+    <rect rxns="rxn00522" x="537" y="361" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="540" y="374" font-size="9" stroke="grey" fill="black" >1.4.3.2</text>
+</g>
+<g>
+    <rect rxns="rxn00527" x="502" y="300" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="505" y="313" font-size="9" stroke="grey" fill="black" >2.6.1.5</text>
+</g>
+<g>
+    <rect rxns="rxn00521" x="567" y="286" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="570" y="299" font-size="9" stroke="grey" fill="black" >4.1.99.2</text>
+</g>
+<g>
+    <rect rxns="rxn00529" x="302" y="284" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="305" y="297" font-size="9" stroke="grey" fill="black" >4.1.1.28</text>
+</g>
+<g>
+    <rect rxns="rxn00529" x="252" y="284" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="255" y="297" font-size="9" stroke="grey" fill="black" >4.1.1.25</text>
+</g>
+<g>
+    <rect rxns="rxn00531" x="619" y="286" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="622" y="299" font-size="9" stroke="grey" fill="black" >5.4.3.6</text>
+</g>
+<g>
+    <rect rxns="rxn02363" x="102" y="492" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="105" y="505" font-size="9" stroke="grey" fill="black" >1.14.14.9</text>
+</g>
+<g>
+    <rect rxns="rxn03055,rxn03056" x="176" y="600" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="179" y="613" font-size="9" stroke="grey" fill="black" >1.1.1.312</text>
+</g>
+<g>
+    <rect rxns="rxn03040" x="151" y="656" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="154" y="669" font-size="9" stroke="grey" fill="black" >5.3.3.10</text>
+</g>
+<g>
+    <rect rxns="rxn03041" x="151" y="713" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="154" y="726" font-size="9" stroke="grey" fill="black" >4.1.1.68</text>
+</g>
+<g>
+    <rect rxns="rxn04706" x="255" y="772" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="258" y="785" font-size="9" stroke="grey" fill="black" >4.2.1.-</text>
+</g>
+<g>
+    <rect rxns="rxn01203" x="359" y="783" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="362" y="796" font-size="9" stroke="grey" fill="black" >4.1.2.-</text>
+</g>
+<g>
+    <rect rxns="rxn00508,rxn00509" x="359" y="837" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="362" y="850" font-size="9" stroke="grey" fill="black" >1.2.1.16</text>
+</g>
+<g>
+    <rect rxns="rxn02392" x="586" y="401" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="589" y="414" font-size="9" stroke="grey" fill="black" >1.1.1.237</text>
+</g>
+<g>
+    <rect rxns="rxn02392,rxn02394" x="586" y="380" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="589" y="393" font-size="9" stroke="grey" fill="black" >1.1.1.222</text>
+</g>
+<g>
+    <rect rxns="rxn03055" x="126" y="600" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="129" y="613" font-size="9" stroke="grey" fill="black" >1.2.1.60</text>
+</g>
+<g>
+    <rect rxns="rxn01943" x="302" y="446" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="305" y="459" font-size="9" stroke="grey" fill="black" >1.2.1.29</text>
+</g>
+<g>
+    <rect rxns="rxn02996" x="193" y="391" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="196" y="404" font-size="9" stroke="grey" fill="black" >1.1.1.90</text>
+</g>
+<g>
+    <rect rxns="rxn01715" x="252" y="364" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="255" y="377" font-size="9" stroke="grey" fill="black" >1.4.3.21</text>
+</g>
+<g>
+    <rect rxns="rxn01715" x="302" y="364" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="305" y="377" font-size="9" stroke="grey" fill="black" >1.4.9.2</text>
+</g>
+<g>
+    <rect rxns="rxn01920" x="631" y="531" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="634" y="544" font-size="9" stroke="grey" fill="black" >1.2.3.1</text>
+</g>
+<g>
+    <rect rxns="rxn00024" x="682" y="236" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="685" y="249" font-size="9" stroke="grey" fill="black" >1.10.3.1</text>
+</g>
+<g>
+    <rect rxns="rxn01497" x="634" y="133" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="637" y="146" font-size="9" stroke="grey" fill="black" >1.10.3.1</text>
+</g>
+<g>
+    <rect rxns="rxn01494" x="832" y="186" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="835" y="199" font-size="9" stroke="grey" fill="black" >1.13.11.29</text>
+</g>
+<g>
+    <rect rxns="rxn03153,rxn03154" x="1030" y="186" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1033" y="199" font-size="9" stroke="grey" fill="black" >1.13.11.29</text>
+</g>
+<g>
+    <rect rxns="rxn03155,rxn03156" x="1030" y="224" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1033" y="237" font-size="9" stroke="grey" fill="black" >1.13.11.30</text>
+</g>
+<g>
+    <rect rxns="rxn01495" x="832" y="223" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="835" y="236" font-size="9" stroke="grey" fill="black" >1.13.11.30</text>
+</g>
+<g>
+    <rect rxns="rxn02419" x="735" y="407" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="738" y="420" font-size="9" stroke="grey" fill="black" >1.1.1.237</text>
+</g>
+<g>
+    <rect rxns="rxn02420" x="735" y="517" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="738" y="530" font-size="9" stroke="grey" fill="black" >2.3.1.140</text>
+</g>
+<g>
+    <rect rxns="rxn02993" x="893" y="336" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="896" y="349" font-size="9" stroke="grey" fill="black" >1.4.3.21</text>
+</g>
+<g>
+    <rect rxns="rxn02993" x="943" y="336" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="946" y="349" font-size="9" stroke="grey" fill="black" >1.4.9.2</text>
+</g>
+<g>
+    <rect rxns="rxn02364" x="943" y="419" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="946" y="432" font-size="9" stroke="grey" fill="black" >1.2.1.29</text>
+</g>
+<g>
+    <rect rxns="rxn03267" x="277" y="638" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="280" y="651" font-size="9" stroke="grey" fill="black" >2.3.1.14</text>
+</g>
+<g>
+    <rect rxns="rxn02885" x="203" y="748" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="206" y="761" font-size="9" stroke="grey" fill="black" >5.3.3.-</text>
+</g>
+<g>
+    <rect rxns="rxn00033" x="394" y="444" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="397" y="457" font-size="9" stroke="grey" fill="black" >1.2.3.13</text>
+</g>
+<g>
+    <rect rxns="rxn00527" x="452" y="319" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="455" y="332" font-size="9" stroke="grey" fill="black" >2.6.1.9</text>
+</g>
+<g>
+    <rect rxns="rxn00527" x="502" y="319" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="505" y="332" font-size="9" stroke="grey" fill="black" >2.6.1.57</text>
+</g>
+<g>
+    <rect rxns="rxn02883" x="303" y="748" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="306" y="761" font-size="9" stroke="grey" fill="black" >4.2.1.-</text>
+</g>
+<g>
+    <rect rxns="rxn02771" x="376" y="337" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="379" y="350" font-size="9" stroke="grey" fill="black" >2.1.1.-</text>
+</g>
+<g>
+    <rect rxns="rxn01826" x="556" y="503" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="559" y="516" font-size="9" stroke="grey" fill="black" >1.13.12.-</text>
+</g>
+<g>
+    <rect rxns="rxn00993" x="477" y="718" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="480" y="731" font-size="9" stroke="grey" fill="black" >3.7.1.2</text>
+</g>
+<g>
+    <rect rxns="rxn01497" x="709" y="132" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="712" y="145" font-size="9" stroke="grey" fill="black" >1.14.18.1</text>
+</g>
+<g>
+    <rect rxns="rxn00036" x="759" y="132" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="762" y="145" font-size="9" stroke="grey" fill="black" >1.10.3.1</text>
+</g>
+<g>
+    <rect rxns="rxn14143" x="1109" y="134" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="1112" y="147" font-size="9" stroke="grey" fill="black" >1.14.18.-</text>
+</g>
+<g>
+    <rect rxns="rxn14069" x="791" y="322" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="794" y="335" font-size="9" stroke="grey" fill="black" >4.3.1.22</text>
+</g>
+<g>
+    <rect rxns="rxn02396" x="366" y="392" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="369" y="405" font-size="9" stroke="grey" fill="black" >4.1.1.80</text>
+</g>
+<g>
+    <rect rxns="R09254" x="452" y="338" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="455" y="351" font-size="9" stroke="grey" fill="black" >2.6.1.58</text>
+</g>
+<g>
+    <rect rxns="rxn06359" x="206" y="542" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="209" y="555" font-size="9" stroke="grey" fill="black" >1.14.12.9</text>
+</g>
+<g>
+    <rect rxns="R09830" x="502" y="338" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="505" y="351" font-size="9" stroke="grey" fill="black" >1.4.1.20</text>
+</g>
+</svg>

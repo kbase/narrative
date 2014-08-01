@@ -1,0 +1,139 @@
+
+
+
+rect:hover,
+circle:hover,
+line,
+.cpd-label,
+.edited-label{
+    cursor: hand;
+    cursor: pointer;
+}
+
+/*
+        var stroke_color = '#666';
+        var stroke_color2 = '#000';
+        var stroke_width = '1.5px';
+        var highlight = 'steelblue';
+
+        var flux_threshold = 0.001;
+        var heat_colors = ['#731d1d','#8a2424', '#b35050', '#d05060', '#f28e8e'];
+        var neg_heat_colors = ['#4f4f04','#7c7c07', '#8b8d08', '#acc474', '#dded00'];
+        var gapfill_color = '#f000ff';
+        var gene_stroke = '#777';
+        var g_present_color = '#8bc7e5';
+        */
+
+/* kegg map styling */
+.line1, 
+.line2,
+.link {
+	stroke-width: 2px;
+	stroke: #666;
+}
+
+
+.line-start, 
+.line-middle, 
+.line-end {
+	fill: #F00;
+	fill-opacity: 0.3;
+	stroke: #000;
+	style-width: 2px;
+}
+
+
+.rxn {
+	fill: #fff;
+	stroke-width: 2px;
+	stroke: #666;
+}
+
+.map {
+    fill: #fff;
+    stroke-width: 1px;
+    stroke: #666;    
+}
+.cpd-label,
+.map-label {
+    fill: #666;
+}
+
+.rxn-label {
+	font-size: 10px;
+	stroke: #666;
+}
+
+.cpd {
+	stroke-width: 2px;
+	fill: #fff;
+	stroke: #666;
+}
+
+svg {
+	shape-rendering: geometricPrecision;
+}
+
+/* cdd viewer */
+
+.cdd-box {
+	fill: lightsteelblue;
+	stroke: steelblue;
+	stroke-width: 1px;
+
+}
+
+.grid-line {
+    stroke-width: 1px;
+	stroke: #999;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+
+/* etc viewer */
+.etc-step-box {
+    fill: #fff;
+    stroke-width: 1px;
+    stroke: #777;
+}
+.etc-step-text {
+    font-size: 8pt;
+    fill: #777;
+}
+.etc-step-text:hover {
+    cursor: pointer;
+    cursor: hand;
+}
+
+
+
+ .node circle {
+   fill: #fff;
+   stroke: steelblue;
+   stroke-width: 3px;
+ }
+
+ .node text { font: 12px sans-serif; }
+
+ .link {
+   fill: none;
+   stroke: #ccc;
+   stroke-width: 2px;
+ }
+

@@ -1,0 +1,31 @@
+{
+    "$lib_root/kbase-ui-min.js" : [
+        "javascript/lib/jquery/kbase/kbaseWidget.js",
+        "javascript/lib/jquery/kbase/kbaseAuthenticatedWidget.js",
+        "javascript/lib/jquery/kbase/kbaseAccordion.js",
+        "javascript/lib/jquery/kbase/kbaseBox.js",
+        "javascript/lib/jquery/kbase/kbaseButtonControls.js",
+        "javascript/lib/jquery/kbase/kbasePrompt.js",
+        "javascript/lib/jquery/kbase/kbaseDeletePrompt.js",
+        "javascript/lib/jquery/kbase/kbaseErrorPrompt.js",
+        "javascript/lib/jquery/kbase/kbaseFormBuilder.js",
+        "javascript/lib/jquery/kbase/kbaseLogin.js",
+        "javascript/lib/jquery/kbase/kbaseTable.js",
+        "javascript/lib/jquery/kbase/kbaseTabs.js",
+        "javascript/lib/jquery/kbase/kbaseDataBrowser.js"
+    ],
+    "$lib_root/kbase-iris-min.js" : [
+        "javascript/lib/jquery/kbase/kbaseIrisCommands.js",
+        "javascript/lib/jquery/kbase/kbaseIrisFileBrowser.js",
+        "javascript/lib/jquery/kbase/kbaseIrisFileEditor.js",
+        "javascript/lib/jquery/kbase/kbaseIrisGrammar.js",
+        "javascript/lib/jquery/kbase/kbaseIrisProcessList.js",
+        "javascript/lib/jquery/kbase/kbaseIrisTerminal.js",
+        "javascript/lib/jquery/kbase/kbaseIrisTutorial.js"
+    ],
+    "$lib_root/kbase-workspace-min.js" : [
+        "javascript/lib/jquery/kbase/kbaseWorkspaceBrowser.js"
+    ]
+}
+
+

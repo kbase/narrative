@@ -1,0 +1,26 @@
+<svg>
+<g>
+    <rect rxns="rxn04443" x="748" y="121" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="751" y="134" font-size="9" stroke="grey" fill="black" >2.2.1.1</text>
+</g>
+<g>
+    <rect rxns="rxn04442" x="627" y="121" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="630" y="134" font-size="9" stroke="grey" fill="black" >5.3.1.-</text>
+</g>
+<g>
+    <rect rxns="R09857" x="825" y="577" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="828" y="590" font-size="9" stroke="grey" fill="black" >2.4.1.-</text>
+</g>
+<g>
+    <rect rxns="R09856" x="888" y="619" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="891" y="632" font-size="9" stroke="grey" fill="black" >2.1.1.-</text>
+</g>
+<g>
+    <rect rxns="R09858" x="702" y="578" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="705" y="591" font-size="9" stroke="grey" fill="black" >2.1.3.-</text>
+</g>
+<g>
+    <rect rxns="R09853" x="702" y="491" width="48" height="18" stroke="black" fill="white"></rect>
+    <text x="705" y="504" font-size="9" stroke="grey" fill="black" >2.1.3.-</text>
+</g>
+</svg>

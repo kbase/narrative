@@ -33,7 +33,7 @@ init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
 @method(name="Assemble Contigs from Reads")
 def _assemble_contigs(meth, asm_input):
-    """Use a KBase pipeline to assemble a set of contigs from generated reads files.
+    """Use the AssemblyRAST service to assemble a set of contigs from sequenced reads.
     This starts a job that might run for several hours.
     When it finishes, the assembled ContigSet will be stored in your data space. [1]
 
@@ -62,94 +62,6 @@ def _assemble_contigs(meth, asm_input):
                        "ws_url" : service.URLS.workspace,
                        "ws_name" : os.environ['KB_WORKSPACE_ID'],
                        "kbase_assembly_input": asm_data['data']})
-
-@method(name="Get Contigs from Assembly Service")
-def _get_contigs(meth, job_id, contig_num, contig_name):
-    """Pull down assembled contigs from the Assembly Service.  Enter the Job ID of the Assembly computation.
-    The Contig Number indicates the single desired contig returned from a multi-pipeline assembly.
-
-    :param job_id: The Job ID of the desired assembly
-    :type job_id: kbtypes.Unicode
-    :ui_name job_id: Job Id
-    :param contig_num: The contig # returned by Assembly Service (optional)
-    :type contig_num: kbtypes.Unicode
-    :ui_name contig_num: Contig Number
-    :param contig_name: The name of the ContigSet to be created (optional)
-    :type contig_name: kbtypes.Unicode
-    :ui_name contig_name: Output Contig Name
-    :return: An assembly job
-    :rtype: kbtypes.Unicode
-    """
-    ws = os.environ['KB_WORKSPACE_ID']
-    token = os.environ['KB_AUTH_TOKEN']
-    arURL = '140.221.84.124'
-    ar_user = token.split('=')[1].split('|')[0]
-    wsClient = workspaceService(service.URLS.workspace, token=token)
-    aclient = ArastClient(arURL, ar_user, token)
-
-    #### Get Fasta from Assembly service
-    outdir = os.path.join('/tmp', str(uuid.uuid4()))
-    if not contig_num:
-        contig_num = 1
-    aclient.get_assemblies(job_id=job_id, asm_id=contig_num, outdir=outdir)
-    outfile = os.path.join(outdir, os.listdir(outdir)[0])
-
-    #### Fasta to ContigSet
-    def fasta_to_contigset(fasta_file, name):
-        contig_set = {'name:': name,
-                      'source':'AssemblyService',
-                      'type': 'Genome',
-                      'contigs': [],
-                      'id': name,
-                      'source_id': name}
-
-        ##### Parse Fasta content
-        contig = {'description': ''}
-        seq_buffer = ''
-        with open(fasta_file) as f:
-            for line in f:
-                if line[0] == '>':
-                    header = line[1:].rstrip()
-                    contig['id'] = header
-                    contig['name'] = header
-                    header = ''
-                elif line[0] == '\n':
-                    if seq_buffer != '':
-                        contig['sequence'] = seq_buffer
-                        m = hashlib.md5()
-                        m.update(seq_buffer)
-                        contig['md5'] = str(m.hexdigest())
-                        contig['length'] = len(seq_buffer)
-                        seq_buffer = ''
-                        contig_set['contigs'].append(contig)
-                        contig = {'description': ''}
-                else:
-                    seq_buffer += line.rstrip()
-            if seq_buffer != '':
-                contig['sequence'] = seq_buffer
-                m = hashlib.md5()
-                m.update(seq_buffer)
-                contig['md5'] = str(m.hexdigest())
-                contig['length'] = len(seq_buffer)
-                contig_set['contigs'].append(contig)
-        m = hashlib.md5()
-        m.update(str(contig_set['contigs']))
-        contig_set['md5'] = str(m.hexdigest())
-        
-        return contig_set
-
-    if not contig_name:
-        contig_name = str(job_id) + '.assembly.contigset'
-
-    cs_data = fasta_to_contigset(outfile, contig_name)
-    ws_saveobj_params = {'id': contig_name,
-                         'type': 'KBaseGenomes.ContigSet',
-                         'workspace': ws,
-                         'data': cs_data}
-    wsClient.save_object(ws_saveobj_params)
-
-    return json.dumps({'Success': '{} saved to worksapace as {}'.format(
-                os.path.basename(outfile), contig_name)})
 
 @method(name="Assemble Genome from Fasta")
 def _assemble_genome(meth, contig_file, out_genome):

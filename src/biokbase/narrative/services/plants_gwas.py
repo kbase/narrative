@@ -39,9 +39,6 @@ GENE_NETWORK_OBJECT_TYPE = "KBaseGwasData.GwasGeneList"
 
 
 class URLS:
-    #_host = '140.221.84.248'
-    #main = "http://140.221.84.236:8000/node"
-    #shock = "http://140.221.84.236:8000"
     #awe = "http://140.221.85.182:7080"
     awe = "https://kbase.us/services/awe-api/"
     #workspace = "https://kbase.us/services/ws/"
@@ -333,8 +330,6 @@ def gwas_variation_to_genes(meth, workspaceID=None, gwasObjectID=None, num2snps=
         gl_oid = gc.variations_to_genes(argsx)
     except Exception as err:
         raise GWASException("submit job failed: {}".format(err))
-    #if not gl_oid: # it may return empty string based on current script
-    #    raise GWASException(2, "submit job failed, no job id")
 
     ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
     raw_data = ws.get(gl_out)
@@ -344,7 +339,6 @@ def gwas_variation_to_genes(meth, workspaceID=None, gwasObjectID=None, num2snps=
     ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : fs_out, 'meta' : {'original' : gl_out}}]})
 
     meth.advance("Returning object")
-    #return _workspace_output("Genelist.{}-{}".format(gwasObjectID, pmin))
     return json.dumps({'values': [
                                    ["Workspace GwasGeneList object", gl_out],
                                    ["Workspace FeatureSet object", fs_out]
@@ -365,62 +359,14 @@ def gene_table(meth, obj_id=None):
     :rtype: kbtypes.Unicode
     :output_widget: GeneTableWidget
     """
-    # :param workspace_id: Workspace name (if empty, defaults to current workspace)
-    # :type workspace_id: kbtypes.Unicode
     meth.stages = 1
     meth.advance("Retrieve genes from workspace")
-    # if not workspace_id:
-    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
-    #     workspace_id = meth.workspace_id
     ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
     raw_data = ws.get(obj_id)
     genes = raw_data['genes']
     header = ["KBase Chromosome ID", "Source gene ID", "KBase Gene ID", "Gene function", "Source Chromosome ID"]
     data = {'table': [header] + genes}
     return json.dumps(data)
-
-@method(name="GeneList to Networks")
-def gene_network2ws(meth, obj_id=None, out_id=None):
-    """This method displays a gene list
-    along with functional annotation in a table.
-
-    :param obj_id: Gene List workspace object identifier.
-    :type obj_id: kbtypes.KBaseGwasData.GwasGeneList
-    :param out_id: Output Networks object identifier
-    :type out_id: kbtypes.KBaseNetworks.Network
-    :return: New workspace object
-    :rtype: kbtypes.Unicode
-    :output_widget: ValueListWidget
-    """
-    # :param workspace_id: Workspace name (if empty, defaults to current workspace)
-    # :type workspace_id: kbtypes.Unicode
-    meth.stages = 3
-    meth.advance("init GWAS service")
-    gc = GWAS(URLS.gwas, token=meth.token)
-
-    meth.advance("Retrieve genes from workspace")
-    # if not workspace_id:
-    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
-    #     workspace_id = meth.workspace_id
-    ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
-
-    raw_data = ws.get(obj_id)
-    
-
-    gl = [ gr[2] for gr in raw_data['genes']]
-    gl_str = ",".join(gl);
-
-    meth.advance("Running GeneList to Networks")
-    argsx = {"ws_id" : meth.workspace_id, "inobj_id" : gl_str,  "outobj_id": out_id}
-    try:
-        gl_oid = gc.genelist_to_networks(argsx)
-    except Exception as err:
-        raise GWASException("submit job failed: {}".format(err))
-    #if not gl_oid: # it may return empty string based on current script
-    #    raise GWASException(2, "submit job failed, no job id")
-
-    meth.advance("Returning object")
-    return _workspace_output(out_id)
 
       
 @method(name="User genelist to FeatureSet")
@@ -441,15 +387,14 @@ def genelist_to_featureset(meth, gene_ids=None, out_id=None):
     
     gene_ids_ns = gene_ids.replace(" ","")
     fs = genelist2fs(gene_ids_ns.split(","))
+
     ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : gene_ids}}]})
 
     meth.advance("Returning object")
-    #return _workspace_output(out_id)
     return json.dumps({'values': [
                                    ["Workspace object", out_id]
                                  ]})
 
-# TODO: Don't forget to check gene function is there or not
 @method(name="FeatureSet GO Analysis")
 def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain='biological_process', out_id=None):
     """This method annotate GO terms and execute GO enrichment test 
@@ -468,8 +413,6 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     :rtype: kbtypes.Unicode
     :output_widget: GeneTableWidget
     """
-    # :param workspace_id: Workspace name (if empty, defaults to current workspace)
-    # :type workspace_id: kbtypes.Unicode
     meth.stages = 3
     meth.advance("Prepare Enrichment Test")
 
@@ -518,18 +461,11 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
       
     meth.advance("Saving output to Workspace")
     ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'enr_summary' : go_enr_smry}}]})
-    #meth.advance("Returning object")
     return json.dumps(data)
-    #return json.dumps({'values': [
-    #                               ["Workspace object", out_id],
-    #                               ["Enrichment Summary", go_enr_smry]
-    #                             ]})
-
 
 @method(name="FeatureSet to Networks")
 def gene_network2ws(meth, feature_set_id=None, out_id=None):
-    """This method displays a gene list
-    along with functional annotation in a table.
+    """ Query all available network data in KBase central store.
 
     :param feature_set_id: FeatureSet workspace object id
     :type feature_set_id: kbtypes.KBaseSearch.FeatureSet
@@ -539,8 +475,6 @@ def gene_network2ws(meth, feature_set_id=None, out_id=None):
     :rtype: kbtypes.Unicode
     :output_widget: ValueListWidget
     """
-    # :param workspace_id: Workspace name (if empty, defaults to current workspace)
-    # :type workspace_id: kbtypes.Unicode
     meth.stages = 3
     meth.advance("init GWAS service")
     gc = GWAS(URLS.gwas, token=meth.token)
@@ -558,8 +492,6 @@ def gene_network2ws(meth, feature_set_id=None, out_id=None):
         gl_oid = gc.genelist_to_networks(argsx)
     except Exception as err:
         raise GWASException("submit job failed: {}".format(err))
-    #if not gl_oid: # it may return empty string based on current script
-    #    raise GWASException(2, "submit job failed, no job id")
 
     meth.advance("Returning object")
     return _workspace_output(out_id)
@@ -582,15 +514,9 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
     :rtype: kbtypes.Unicode
     :output_widget: GeneTableWidget
     """
-    # :param workspace_id: Workspace name (if empty, defaults to current workspace)
-    # :type workspace_id: kbtypes.Unicode
     meth.stages = 3
     meth.advance("Prepare Enrichment Test")
 
-    # if not workspace_id:
-    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
-    #     workspace_id = meth.workspace_id
-    
     oc = Ontology(url=URLS.ontology)
     ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
     fs = ws.get(feature_set_id)
@@ -615,12 +541,8 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
       pwy_en = enr_list[i]
       if float(pwy_en[0]) > float(p_value) : continue
       fields.append([pwy_en[1], nid2name[pwy_en[1]], pwy_en[0]])
-      #fs['fse.'+goen['goID']+".desc" ] = goen['goDesc'][0]
-      #fs['fse.'+goen['goID']+".domain" ] = goen['goDesc'][1]
-      #fs['fse.'+goen['goID']+".p_value" ] = `goen['pvalue']`
       if i < 3 :
         pwy_enr_smry += pwy_en[1]+"(" + "{:6.4f}".format(float(pwy_en[0])) + ")" + nid2name[pwy_en[1]] + "\n"
-        #go_enr_anns[i] = goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0]
     
       
     data = {'table': [header] + fields}
@@ -631,10 +553,6 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
 
     meth.advance("Returning object")
     return json.dumps(data)
-    #return json.dumps({'values': [
-    #                               ["Workspace object", out_id],
-    #                               ["Enrichment Summary", pwy_enr_smry]
-    #                             ]})
 
 
 @method(name="Gene network")

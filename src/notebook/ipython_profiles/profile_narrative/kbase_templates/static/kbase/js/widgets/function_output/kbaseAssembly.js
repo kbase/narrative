@@ -356,6 +356,7 @@
 
 	    var run_asm = function(arRequest) {
 	    	self.state['clicked'] = true;
+	    	self.state['tab'] = tabs.tabs("option", "active");
 		// Disable fields
                 asm_div.find('fieldset').attr('disabled', "true");
 		self.$elem.find('.asm-form').attr('disabled', "true");
@@ -553,7 +554,8 @@
 		console.log('assembly already run')
 		self.$elem.find('fieldset').attr('disabled', "true");
 		self.$elem.find('.asm-form').attr('disabled', "true");
-
+		self.$elem.find('#tabs').tabs("option", "active", self.state.tab)
+		self.$elem.find('#tabs').tabs("option", "disabled", true)
 		$('select option[value = "' + self.state['recipe'] + '"]').attr('selected', 'selected');
 		self.showResults(self.token, 
 				 self.state['assemblies'],

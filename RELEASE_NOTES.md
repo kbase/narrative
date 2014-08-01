@@ -10,7 +10,7 @@ __Changes__
 - Revised names and descriptions on some widgets
 - Added widget to build a genome set from a tree
 - Revised gapfilling and phenotype view widgets
-- 
+- Numerous widgets to GWAS and Plant-specific widgets and functionality
 
 __Known Issues__
 - Current version of jquery.datatables is finicky and can create popup errors. These can be safely ignored.

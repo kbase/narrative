@@ -12,6 +12,8 @@ import random
 import numbers
 import uuid
 import hashlib
+import re
+import sys
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
@@ -31,7 +33,7 @@ NAME = "Microbes Services"
 # Initialize
 init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
-@method(name="Assemble Contigs from Reads")
+@method(name="Simplified Assembly From Reads")
 def _assemble_contigs(meth, asm_input):
     """Use a KBase pipeline to assemble a set of contigs from generated reads files.
     This starts a job that might run for several hours.
@@ -221,7 +223,7 @@ def _upload_contigs(meth, contig_set):
 @method(name="Upload Genome (GBK-file)")
 def _upload_genome(meth, genome_id):
     """Upload a Genome and ContigSet from GBK-file (or files in case of zip) into your workspace.
-    This function should be run before adding SEED annotations to this Genome. [25]
+    This function should be run before adding KBase annotations to this Genome. [25]
 
     :param genome_id: Output Genome ID. If empty, an ID will be chosen randomly. [25.1]
     :type genome_id: kbtypes.KBaseGenomes.Genome
@@ -350,10 +352,10 @@ def _annotate_genome(meth, genome, out_genome):
     job_id = cmpClient.annotate_genome(annotate_genome_params)
     return json.dumps({'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
 
-@method(name="Add SEED Annotation")
-def _add_seed_annotation(meth, genome, out_genome):
-    """Add SEED annotations to a genome.  This function will start a job that might run for an hour or longer.
-    When the job finishes, the Genome with SEED annotations will be stored in your workspace. [21]
+@method(name="Add KBase Annotation")
+def _add_kbase_annotation(meth, genome, out_genome):
+    """Add KBase annotations to a genome.  This function will start a job that might run for an hour or longer.
+    When the job finishes, the Genome with KBase annotations will be stored in your workspace. [21]
     
     :param genome: Source genome ID [21.1]
     :type genome: kbtypes.KBaseGenomes.Genome
@@ -397,9 +399,9 @@ def _show_genome(meth, genome):
     token, workspaceName = meth.token, meth.workspace_id
     return json.dumps({'ws_name': workspaceName, 'ws_id': genome})
 
-@method(name="View SEED Functions")
-def _show_SEED_functional_categories(meth, genome):
-    """View and explore the SEED Functional categories associated with genes in your genome.
+@method(name="View KBase Subsystem Data")
+def _show_KBase_functional_categories(meth, genome):
+    """View and explore the KBase Subsystem categories associated with genes in your genome.
 
     :param genome: select the genome you want to view
     :type genome: kbtypes.KBaseGenomes.Genome
@@ -1220,7 +1222,7 @@ def _compare_fbas(meth, fba_id1, fba_id2):
     return json.dumps({'ids': [fba_id1, fba_id2],"ws": meth.workspace_id})
 
 @method(name="Gapfill a Metabolic Model")
-def _gapfill_fba(meth, fba_model_id, media_id, output_model_id):
+def _gapfill_fba(meth, fba_model_id, media_id,source_model_id,int_sol, output_model_id):
     """Run Gapfilling on an metabolic model.  Gapfill attempts to identify the minimal number of reactions
     needed to add to your metabolic model in order for the model to predict growth in the
     given media condition (or in complete media if no Media is provided).  Gapfilling is
@@ -1235,6 +1237,14 @@ def _gapfill_fba(meth, fba_model_id, media_id, output_model_id):
     :param media_id: the media condition in which to gapfill [12.2]
     :type media_id: kbtypes.KBaseBiochem.Media
     :ui_name media_id: Media
+    
+    :param source_model_id: model to gapfill from
+    :type source_model_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name source_model_id: Source Gapfill Model
+    
+    :param int_sol: automatically integrate solution (yes/no)
+    :type int_sol: kbtypes.Unicode
+    :ui_name int_sol: Integrate Solution
     
     :param output_model_id: select a name for the model result object (optional)
     :type output_model_id: kbtypes.Unicode
@@ -1274,6 +1284,13 @@ def _gapfill_fba(meth, fba_model_id, media_id, output_model_id):
     }
     if(output_model_id):
         gapfill_params['out_model'] = output_model_id;
+        
+    if(source_model_id):
+        gapfill_params['source_model'] = source_model_id;
+        gapfill_params['source_model_ws'] = workspaceName;
+        
+    if(int_sol):
+        gapfill_params['integrate_solution'] = int_sol;
 
     output = fbaClient.gapfill_model(gapfill_params);
 
@@ -1547,6 +1564,79 @@ def _view_species_tree(meth, tree_id):
     meth.stages = 1
     workspace = meth.workspace_id
     return json.dumps({'treeID': tree_id, 'workspaceID': workspace, 'height':'500px'})
+
+@method(name="Build Genome Set From Tree")
+def _build_genome_set_from_tree(meth, tree_id,genome_set):
+    """ Build a genome set from the contents of the species tree, copying any CDM genomes 
+    into local workspace.
+
+    :param species_tree: a species tree with close genomes
+    :type species_tree: kbtypes.KBaseTrees.Tree
+    :ui_name species_tree: Species Tree
+    
+    :param genome_set: ID to use when saving genome set
+    :type genome_set: kbtypes.KBaseSearch.GenomeSet
+    :ui_name genome_set: Output Genome Set ID
+    
+    :return: Genome Set Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseViewGenomeSet
+    """
+    
+    meth.stages = 2
+    meth.advance("Building genome set from tree...")
+    token, workspace = meth.token, meth.workspace_id
+    ws = workspaceService(service.URLS.workspace, token=token)
+    data = ws.get_objects([{'ref': workspace+'/'+tree_id}])[0]
+    wsid = data['info'][6]
+    refs = data['data']['ws_refs']
+    elements = {}
+    gcount = 0
+    namehash = {}
+    for key in refs:
+        if key[:5] != "kb|g.":
+            newname = data['data']['default_node_labels'][key];
+            namehash[newname] = 1
+            param = 'param'+`gcount`
+            gcount = gcount+1
+            ref = refs[key]['g'][0]
+            elements[param] = {'ref': ref}
+    
+    for key in refs:
+        if key[:5] == "kb|g.":
+            ref = refs[key]['g'][0]
+            newname = data['data']['default_node_labels'][key];
+            newname = re.sub('[\W]', '_', newname)
+            if newname in namehash:
+                count = 0
+                testname = newname+'_'+`count`
+                while testname in namehash:
+                    count = count + 1
+                    testname = newname+'_'+`count`
+                newname = testname
+           	namehash[newname] = 1
+           	wsinfo = ws.copy_object({
+                'to':{'workspace':workspace,'name':newname},
+                'from':{'objid':ref.split('/')[1],'wsid':ref.split('/')[0]}
+                })
+            ws = wsinfo[6]
+            name = wsinfo[0]
+            version = wsinfo[4]
+            ref = `ws`+"/"+`name`+"/"+`version`
+            param = 'param'+`gcount`
+            gcount = gcount+1
+            elements[param] = {'ref': ref}
+
+    description = 'GenomeSet of genome included in species tree ' + workspace + '/' + tree_id
+    ws.save_objects({
+        'workspace': workspace,
+        'objects': [{
+                'type': 'KBaseSearch.GenomeSet',
+                'data': {'description': description,'elements': elements},
+                'name': genome_set
+        }]
+    })
+    return json.dumps({'id': genome_set, 'wsid': workspace})
 
 @method(name="Build Genome Set Object")
 def _build_genome_set(meth, out_genome_set):

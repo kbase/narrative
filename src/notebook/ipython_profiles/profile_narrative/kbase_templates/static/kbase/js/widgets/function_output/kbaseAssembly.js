@@ -239,7 +239,7 @@
 	    var asm_picked = []
             var asm_row2 = $('<div class="row">');
             var asm_desc2 = $('<div class="col-md-9"><input type="text" class="form-control" style="width:100%" placeholder="Description"></div>')
-            var asm_btn2 = $('<span class="col-md-3"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
+            var asm_btn2 = $('<button class="btn btn-large btn-primary pull-right">Assemble</button>');
 
 	    var update_asm_pool = function(pool){
 		var body = $('<div>');
@@ -298,7 +298,7 @@
 	    var pipe_picked = []
             var pipe_row2 = $('<div class="row">');
             var pipe_desc = $('<div class="col-md-9"><input type="text" class="form-control" style="width:100%" placeholder="Description"></div>')
-            var pipe_btn = $('<span class="col-md-3"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
+            var pipe_btn = $('<button class="btn btn-large btn-primary pull-right">Assemble</button>');
 
 	    var update_pipe_pool = function(pool){
 		var body = $('<div>');
@@ -580,14 +580,16 @@
 		import_btn_sel.append(contig_import_auto);
 		import_btn_sel.append('<li class="divider"></li>')
 		for (i=0; i<assemblies.length;i++){
-		    var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
-		    ws_contig_name = job_id + '_' + assemblies[i].name;
-		    shock_url = assemblies[i].file_infos[0].shock_url;
-		    shock_id = assemblies[i].file_infos[0].shock_id;
-		    contig_import.one("click", function() {
-			self.import_contigs_to_ws(token, self.fba_url, self.ws_url, self.ws_name, shock_id, shock_url, ws_contig_name);
-		    });
+		    (function(i){
+			var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
+			ws_contig_name = job_id + '_' + assemblies[i].name;
+			shock_url = assemblies[i].file_infos[0].shock_url;
+			shock_id = assemblies[i].file_infos[0].shock_id;
+			contig_import.one("click", function() {
+			    self.import_contigs_to_ws(token, self.fba_url, self.ws_url, self.ws_name, shock_id, shock_url, ws_contig_name);
+			});
 		    import_btn_sel.append(contig_import);
+		    })(i);
 		}
 		import_btn_group.append(import_btn);
 		import_btn_group.append(import_btn_sel);

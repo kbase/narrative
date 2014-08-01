@@ -365,7 +365,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     
     meth.advance("Retrieve Data from Workspace")
     seq_obj = _get_ws(workspace, in_seq, CWS.seq)
-    seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
+    #seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
     _run_invo("echo 'pick_otus:enable_rev_strand_match True' > picrust.params")
     _run_invo("echo 'pick_otus:similarity 0.97' >> picrust.params")
     stdout, stderr = _run_invo("mg-upload2shock %s picrust.params"%(URLS.shock))
@@ -373,7 +373,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     param_nid = json.loads(stdout)['id']
     wf_tmp = Template(picrustWF)
-    wf_str = wf_tmp.substitute(shock=URLS.shock, seq_url=seq_url, param=param_nid)
+    wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_obj['ID'], param=param_nid)
     
     meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
     ajob = _submit_awe(wf_str)

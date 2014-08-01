@@ -3,6 +3,40 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 7/30/2014
+__Changes__
+- Updated config to make landing page links relative to deployment site
+- Modified provisioning code to address a potential timeout issue (the 502 Bad Gateway error)
+- Adjusted RAST genome loading widget to ignore browser's credentials
+- Updated NCBI genome importer
+- Updated GWAS services endpoints
+
+__Known Issues__
+- Cookie with auth information occasionally gets overwritten with a useless one - logging out and back in will fix this
+- Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
+- R support is occasionally problematic.
+
+
+### Release 7/29/2014
+__Changes__
+- Updated nav bar to match changes to functional site
+- Updated many KBase functions from all domains (Microbes, Communities, and Plants)
+- Added widgets and functions for viewing SEED functional categories
+- Added a version date-stamp
+- Updated look and feel of many elements
+- Updated authentication and token management to behave better
+- Changed Narrative containers to all be named kbase/narrative:datestamp
+- Updated config.json to reference more deployed services
+- Added an input widget type that includes a hidden, untracked, password field
+- Updated references to registered typed objects from the Workspace
+- Fixed a problem where Services panel might get stuck and hang while loading a large Narrative
+- Updated more HTTP errors to have a sensible error page
+
+__Known Issues__
+- Cookie with auth information occasionally gets overwritten with a useless one - logging out and back in will fix this
+- Unaddressed issues from previous release
+
+
 ### Release 7/22/2014
 __Changes__
 - Added widgets and functions for viewing phylogenies

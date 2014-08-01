@@ -328,7 +328,7 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     in_seq1_id = _get_ws(workspace, in_seq1, CWS.seq)['ID']
     in_seq2_id = _get_ws(workspace, in_seq2, CWS.seq)['ID']
 
-	wf_tmp = Template(emirgeWF)
+    wf_tmp = Template(emirgeWF)
     wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_nid, param=param_nid)
     meth.advance("Submiting EMIRGE to AWE")
     time.sleep(4)

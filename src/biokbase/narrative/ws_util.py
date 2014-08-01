@@ -1,16 +1,13 @@
 """
 Some helper functions for workspace stuff
 """
-#-----------------------------------------------------------------------------
-# Imports
-#-----------------------------------------------------------------------------
-
-import datetime
-import dateutil.parser
-import json
+import logging
 import re
 import biokbase
 import biokbase.workspaceServiceDeluxe
+
+
+_log = logging.getLogger(__name__)
 
 # regex for parsing out workspace_id and object_id from
 # a "ws.{workspace}.{object}" string
@@ -169,20 +166,28 @@ def check_project_tag( wsclient, ws_id):
             raise e
     return True
 
+
 def get_user_id(wsclient):
-    """
-    Grab the userid from the token in the wsclient object
-    This is a pretty brittle way to do things, and will need to be changed eventually
+    """Grab the userid from the token in the wsclient object
+    This is a pretty brittle way to do things, and will need to be
+    changed, eventually.
     """
     try:
-        token = wsclient._headers.get('AUTHORIZATION',None)
+        token = wsclient._headers.get('AUTHORIZATION', None)
+        if token is None:
+            _log.error("auth.error No 'AUTHORIZATION' key found "
+                       "in client headers: '{}'"
+                       .format(wsclient._headers))
+            return None
         match = user_id_regex.match(token)
         if match:
             return match.group(1)
         else:
             return None
     except Exception, e:
+        _log.error("Cannot get userid: {}".format(e))
         raise e
+
 
 def check_homews( wsclient, user_id = None):
     """

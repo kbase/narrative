@@ -10,17 +10,20 @@
         options: {
             color: "black",
         },
+//	fbaURL: "https://kbase.us/services/KBaseFBAModeling",
+//	fbaURL: 'http://140.221.85.73:4043',
 
         init: function(options) {
             this._super(options);
             var kb_info = options.kbase_assembly_input;
-
 	    console.log(kb_info)
 	    //Get this from options
             var user = options.ar_user
             var token = options.ar_token
             var arURL = options.ar_url
 	    var ws_url = options.ws_url
+	    var ws_name = options.ws_name
+	    var fba_url = 'http://140.221.85.73:4043'
             var arRequest = {
                 "data_id": null,
 		"kbase_assembly_input": options.kbase_assembly_input,
@@ -28,7 +31,8 @@
                 "filename": [], 
                 "ids": [], 
                 "message": null, 
-                "pipeline": [['spades']], 
+                "recipe": null,
+                "pipeline": [['spades']],
                 "queue": null, 
                 "single": [[]],
                 "pair": [],
@@ -39,7 +43,6 @@
 	    // Parses the AssemblyInput object and displays it in the table
 	    var data_report = $('<div class="panel panel-info" style="padding:10px">')
 		    .append('<div class="panel-heading panel-title">Assembly Service Data Set </div>');
-
 
 	    var make_data_table = function(info) {
 		var tables = $('<div>')
@@ -70,7 +73,7 @@
 			tables.append(tbl)
 		    }
 		}
-		if (info.single_end_libs != undefined) {
+		if (info.references != undefined) {
 		    for (var i = 0; i < info.references.length; i++) {
 			var tbl = $('<table class="table table-striped table-bordered" style="margin-left:auto; margin-right:auto">');
 			tbl.append('<thead><tr><th>Reference File</th></tr></thead>');
@@ -91,24 +94,31 @@
 
             var asm_div = $('<div class="row">');
             var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
-                                      <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">3-Assembly Pipeline</option> \
-                                      <option value="sga_preprocess,bhammer,tagdust,spades">AssemblyRAST Pipeline</option> \
-                                      <option value="a6">A6 Pipeline</option> \
-                                      <option value="pacbio,?min_long_read_length=3500,?genome_size=40000">PacBio SMRT Pipeline</option> \
-                                      <option value="spades">SPAdes Assembler</option> \
-                                      <option value="ray">Ray Assembler</option> \
-                                      <option value="idba">IDBA-UD Assembler</option> \
+                                      <option value="auto">Arast Smart Workflow</option> \
+                                      <option value="fast">Fast Pipeline</option> \
+                                      <option value="tune_velvet">Intelligent Velvet</option> \
                                       <option value="kiki">Kiki Assembler</option> \
                                     </select></span>');
+            // var asm_choose = $('<label class="col-md-1 control-label">Assembly pipeline</label> <span class="col-md-3"><select class="form-control" name="assemblers"> \
+            //                           <option value="sga_preprocess,bhammer,tagdust,kiki spades idba">3-Assembly Pipeline</option> \
+            //                           <option value="sga_preprocess,bhammer,tagdust,spades">AssemblyRAST Pipeline</option> \
+            //                           <option value="a6">A6 Pipeline</option> \
+            //                           <option value="pacbio,?min_long_read_length=3500,?genome_size=40000">PacBio SMRT Pipeline</option> \
+            //                           <option value="spades">SPAdes Assembler</option> \
+            //                           <option value="ray">Ray Assembler</option> \
+            //                           <option value="idba">IDBA-UD Assembler</option> \
+            //                           <option value="kiki">Kiki Assembler</option> \
+            //                         </select></span>');
+
             var asm_desc = $('<span class="col-md-7"><input type="text" class="form-control" style="width:100%" placeholder="Description"></span>')
             var asm_btn = $('<span class="col-md-1"><button class="btn btn-large btn-primary pull-right">Assemble</button></span>');
             asm_div.append($('<fieldset><div class="form-group">').append(asm_choose, asm_desc, asm_btn));
 
 	    asm_btn.one("click", function() {
-                var assembler = asm_choose.find('select option:selected').val();
+                var recipe = [asm_choose.find('select option:selected').val()];
                 var desc = asm_desc.find('input').val();
 		
-                arRequest.pipeline = [assembler.split(',')];
+                arRequest.recipe = recipe;
                 arRequest.message = desc;
                 asm_div.find('fieldset').attr('disabled', "true");
 		
@@ -141,8 +151,12 @@
                         self.$elem.append(kill_div);
 
 			
+			/////////////////////////////////////////
+			///     Wait for job to complete  ///////
+			/////////////////////////////////////////
                         var update_status = function() {
                             var prom = check_status(job_id);
+			    var result_btn_row = $('<div class="row pull-right">')
                             $.when(prom).done(function(stat){
                                 status_box.html(make_status_table(job_id, desc, stat));
 				status_box.css("border", "none")
@@ -151,23 +165,69 @@
 				    kill_div.html("");
                                     if (stat.search('Complete') != -1) {
                                         var report_txt = null;
-                                        request_job_report(job_id).done(function(){
-                                            var report_div = '<div class="">'
-					    var result_btn_row = $('<div class="row pull-right">')
-                                            get_job_report_txt(job_id)
-						.done(function(quast_txt){
-                                                var full_link = arURL + '/static/' + user + '/job/' + job_id + '/quast/contig/report.html';
-                                                var formatted = quast_txt.replace(/\n/g, '<br>')
-                                                var formatted2 = formatted.replace(/\s/g, '&nbsp')
-						    report_div += '<code style="font-size:4px>' + formatted2 +'</code><br>'
-						    result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
-                                            }).always(function(){
-						var full_link_log = arURL + '/static/' + user + '/job/' + job_id + '/' + job_id + '_report.txt';
-						result_btn_row.append('<span class=""><a href='+ full_link_log +' class="btn btn-primary" target="_blank">Assembly Log</a></span></div>')
-                                                self.$elem.append(report_div);
-						self.$elem.append(result_btn_row);
-					    })
-                                        })
+					var defer_asm = $.Deferred();
+					var defer_auto = $.Deferred();
+
+					//// Get all assemblies
+					get_assemblies(job_id).done(function(asm){
+					    defer_asm.resolve(JSON.parse(asm));
+					    return defer_asm.promise();
+					});
+					
+					//// Get auto assembly
+					get_best_assembly(job_id).done(function(asm){
+					    best = JSON.parse(asm)[0];
+					    best_id = best.shock_id;
+					    best_url = best.shock_url;
+					    defer_auto.resolve({'shock_url': best.shock_url,
+								'shock_id': best.shock_id,
+								'name': best.filename})
+					    return defer_auto.promise()
+					});
+
+					//// Create dropdowns
+					$.when(defer_asm, defer_auto).done(function(assemblies, best){
+					    var import_btn_group = $('<span class="btn-group"></span>');
+					    var import_btn = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"> Save Contigs <span class="caret"></span> </button>');
+					    var import_btn_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
+					    var contig_import_auto = $('<li><a>Auto Select</a></li>');
+					    contig_import_auto.one("click", function() {
+						import_contigs_to_ws(token, fba_url, ws_url, ws_name, best.shock_id, best.shock_url, best.name);
+					    });
+
+					    import_btn_sel.append(contig_import_auto);
+					    import_btn_sel.append('<li class="divider"></li>')
+					    for (i=0; i<assemblies.length;i++){
+						var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
+						ws_contig_name = job_id + '_' + assemblies[i].name;
+						shock_url = assemblies[i].file_infos[0].shock_url;
+						shock_id = assemblies[i].file_infos[0].shock_id;
+						contig_import.one("click", function() {
+						    import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, ws_contig_name);
+						});
+						import_btn_sel.append(contig_import);
+					    }
+					    import_btn_group.append(import_btn);
+					    import_btn_group.append(import_btn_sel);
+					    result_btn_row.append(import_btn_group);
+					
+                                            request_job_report(job_id).done(function(route){
+						var report_div = '<div class="">'
+						
+						get_job_report_txt(job_id)
+						    .done(function(quast_txt){
+							var formatted = quast_txt.replace(/\n/g, '<br>')
+							var formatted2 = formatted.replace(/\s/g, '&nbsp')
+							var full_link = arURL + route;
+							report_div += '<code style="font-size:4px>' + formatted2 +'</code><br>'
+							result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
+						    }).always(function(){
+										    
+							self.$elem.append(report_div);
+							self.$elem.append(result_btn_row);
+						    })
+                                            })
+					});
                                     }
                                 }
                             })
@@ -196,14 +256,30 @@
             }
 	    
             var request_job_report = function(job_id) {
-                var prom = $.get(arURL + '/static/serve/' + user + '/job/' + job_id + '/?quast')
+		console.log('report')
+                var prom = $.get(arURL + '/static/serve/' + user + '/job/' + job_id)
                 return prom;
             }
 	    
             var get_job_report_txt = function(job_id) {
-                var prom = $.get(arURL + '/static/' + user + '/job/' + job_id + '/quast/contig/report.txt');
+                var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/report');
                 return prom
             }
+
+            var get_job_report_log = function(job_id) {
+                var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/log');
+                return prom
+            }
+
+	    var get_assemblies = function(job_id){
+		var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/results?type=contigs,scaffolds');
+		return prom
+	    }
+
+	    var get_best_assembly = function(job_id){
+		var prom = $.get(arURL + '/user/' + user + '/job/' + job_id + '/assemblies/auto')
+		return prom
+	    }
 
             var kill_job = function(job_id, token) {
                 var prom = $.ajax({
@@ -214,19 +290,45 @@
                 return prom;
             }
 
-	    // var create_ws_contig = function(raw_contig_str){
-	    // 	var kbws = new Workspace(ws_url, {"token": token});
-		
-	    // 	var obj_params = {'type': 'KBaseAssembly.AssemblyInput',
-	    // 			  'data': {'hello': 'hello data'},
-	    // 			  'name': String(job_id) + '-assembly'}
-		
-		
-	    // var save_params = {'workspace': 'cbun:home',
-	    // 		       'objects': [obj_params]}
-	    // kbws.save_objects(save_params)
+	    var import_contigs_to_ws = function(token, fba_url, ws_url, ws_name, shock_id, shock_url, contig_name){
+		var contig_name = $('<div class="input-group"> <span class="input-group-addon">ContigSet Name</span> <input type="text" class="form-control cname-input" value="'+ contig_name +'"> </div>');
+		var $importModal = $('<div></div>').kbasePrompt(
+		    {
+			title : 'Import Contigs',
+			body : contig_name,
+			modalClass : 'fade', //Not required. jquery animation class to show/hide. Defaults to 'fade'
+			controls : [
+			    'cancelButton',
+			    {
+				name : 'Import',
+				type : 'primary',
+				callback : function(e, $prompt) {
+				    $prompt.closePrompt();
+				    cname = contig_name.find('input').val()
+				    console.log(contig_name.find('input'));
 
-	    // };
+				    console.log(cname);
+
+				    var fba = new fbaModelServices(fba_url, {'token': token});
+				    fba.fasta_to_ContigSet({'fasta': shock_id, 
+							    'workspace': ws_name, 
+							    'uid': cname, 
+							    'name': cname, 
+							    'shockurl': shock_url
+							   }).done(function(data){
+							       console.log(data);
+							   });
+//				    import_contigs_to_ws(token, fba_url, ws_url, ws_name, shock_id, shock_url, cname)
+				}
+			    }
+			],
+			footer : '',
+		    }
+		);
+		
+		$importModal.openPrompt();
+	    }
+
             return this;	    
         }
 

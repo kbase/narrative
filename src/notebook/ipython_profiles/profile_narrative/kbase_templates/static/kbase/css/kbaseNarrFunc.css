@@ -281,6 +281,8 @@
   padding: 5px 10px;
 }
 
+
+
 .kb-func-panel .panel-body {
     padding: 0px 10px;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -310,6 +312,11 @@
 }
 
 .kb-cell-output .nav>li>a {
+    padding: 5px 10px;
+}
+
+.kb-cell-error .panel-heading {
+    background-image: none;
     padding: 5px 10px;
 }
 

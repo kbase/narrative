@@ -485,9 +485,7 @@
             tabs.append(asm_div2);
             tabs.append(asm_div3);
             self.$elem.append(tabs);
-	    $('#tabs').tabs();
-	    
-
+	    tabs.tabs()
             return this;	    
         },
 

@@ -128,6 +128,19 @@ class MongoHandler(logging.Handler):
     """MongoDB logging handler.
     """
     DEFAULT_FIELDS = ('asctime', 'name')
+    PARSE_EXPR = re.compile(r"""
+        (?:
+            \s*                        # leading whitespace
+            ([0-9a-zA-Z_.\-]+)         # Name
+            =
+            (?:                        # Value:
+              ([^"\s]+) |              # - simple value
+              "((?:[^"] | (?<=\\)")*)" # - quoted string
+            )
+            \s*
+        ) |
+        ([^= ]+)                        # Text w/o key=value
+        """, flags=re.X)
 
     def __init__(self, level=logging.NOTSET, coll=None, fields=None):
         """Make a new handler.
@@ -147,18 +160,19 @@ class MongoHandler(logging.Handler):
         """
         # Parse message; format is "event name=value name=value .." and
         # any name=value pair without '=' is added to the overall msg.
-        msg_parts = record.message.split()
-        doc = {'event': msg_parts[0],
+        event, msg = record.message.split(None, 1)
+        doc = {'event': event,
                'user': _log_meta.user,
                'narr': _log_meta.notebook,
                'sess': _log_meta.session_id}
         text = []
-        for part in msg_parts[1:]:
-            if '=' in part:
-                name, value = part.split('=')
-                doc[name] = value
+        for n, v, vq, txt in self.PARSE_EXPR.findall(msg):
+            if n:
+                if vq:
+                    v = vq.replace('\\"', '"')
+                doc[n] = v
             else:
-                text.append(part)
+                text.append(txt)
         if text:
             doc['message'] = ' '.join(text)
 

@@ -673,7 +673,9 @@ class LifecycleLogger(LifecycleObserver):
         self._log.log(level, "{} {}".format(event, msg))
 
     def started(self, params):
-        self._write(logging.INFO, "func.begin", "params={}".format(params))
+        # note: quote params so the logging can handle spaces inside them
+        pstr = str(params).replace('"', '\\"')  # escape embedded quotes
+        self._write(logging.INFO, "func.begin", 'params="{}"'.format(pstr))
         self._start_time = time.time()
 
     def done(self):

@@ -629,13 +629,22 @@
 		import_btn_group.append(import_btn_sel);
 		result_btn_row.append(import_btn_group);
 
+		var report_btn_group = $('<div class="btn-group">')
 		var full_link = self.arURL + route;
 		var report_div = '<div class="" style="margin-top:15px">'
-		
+		var report_html = $('<iframe class="col-md-12" style="margin-top:15px" frameborder="0" height="1200px" src="' + full_link + '">');
 		report_div += '<code style="font-size:4px>' + report +'</code><br>'
-		result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')
+		var report_btn_toggle = $('<button class="btn btn-primary">Full Report</button>').on('click', function(){
+		    report_html.toggle()
+		})
+		report_btn_group.append(report_btn_toggle);
+		report_btn_group.append('<button class="btn btn-primary"><a href='+ full_link +' target="_blank"><span class="glyphicon glyphicon-new-window" style="color:white;font-size:80%"></span></a></button>')
+		result_btn_row.append(report_btn_group)
 		self.$elem.append(report_div);
 		self.$elem.append(result_btn_row);
+		self.$elem.append(report_html);
+		report_html.hide();
+
 		self.reloaded = true;
 	    }
 	},

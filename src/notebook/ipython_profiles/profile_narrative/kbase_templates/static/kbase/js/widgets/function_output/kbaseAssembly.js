@@ -208,9 +208,9 @@
             self.$elem.append(data_report);
 	    var tabs = $('<div id="tabs">')
 	    var nav = $('<ul class="nav nav-pills"> \
-                           <li><a href="#frag-recipes">Recipes</a></li> \
-                           <li><a href="#frag-assemblers">Assemblers</a></li> \
-                           <li><a href="#frag-pipeline">Pipeline</a><span class="label label-info">beta</span></li> \
+                           <li><a href="#frag-recipes"><span class="glyphicon glyphicon-list-alt"><span> Recipe</a></li> \
+                           <li><a href="#frag-assemblers"><span class="glyphicon glyphicon-flash"><span> Assemblers</a></li> \
+                           <li><a href="#frag-pipeline"><span class="glyphicon glyphicon-pencil"><span> Pipeline</a><span class="label label-info">beta</span></li> \
                          </ul>');
 	    tabs.append(nav);
 
@@ -233,15 +233,15 @@
 	    var asm_div2 = $('<div id="frag-assemblers"><small>Assemble contigs using multiple assemblers and compare results</small></div>');
             var asm_row = $('<div class="row">');
 	    var add_asm_group = $('<span class="btn-group col-md-2"></span>');
-	    var add_asm_btn = $('<button type="button" class="btn btn-large btn-warning dropdown-toggle" data-toggle="dropdown"> \
+	    var add_asm_btn = $('<button type="button" class="btn btn-large btn-warning asm-form dropdown-toggle" data-toggle="dropdown"> \
                                    <span class="glyphicon glyphicon-plus-sign"></span>  Assembler <span class="caret"></span> </button>');
 	    add_asm_btn.find('span').css("color", "white");
 	    var add_asm_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
 	    var assembler_pool = $('<div class="well col-md-9">')
 	    var asm_picked = []
             var asm_row2 = $('<div class="row">');
-            var asm_desc2 = $('<div class="col-md-10"><input type="text" class="form-control" style="width:100%" placeholder="Description"></div>')
-            var asm_btn2 = $('<button class="btn btn-large col-md-2 btn-primary pull-right">Assemble</button>');
+            var asm_desc2 = $('<div class="col-md-10"><input type="text" class="asm-form form-control" style="width:100%" placeholder="Description"></div>')
+            var asm_btn2 = $('<button class="btn btn-large col-md-2 btn-primary pull-right asm-form">Assemble</button>');
 
 	    var update_asm_pool = function(pool){
 		var body = $('<div>');
@@ -291,17 +291,17 @@
 	    //////// Pipeline
 	    var asm_div3 = $('<div id="frag-pipeline"> <small>Build a customized pipeline using available preprocessing, assembly, and postprocessing tools</small></div>');
             var pipe_row1 = $('<div class="row">');
-	    var add_pipe_group = $('<span class="btn-group col-md-3"></span>');
-	    var add_pipe_btn = $('<button type="button" class="btn btn-large btn-warning dropdown-toggle" data-toggle="dropdown"> \
-                                   <span class="glyphicon glyphicon-plus-sign"></span>  Pipeline Stage <span class="caret"></span> </button>');
+	    var add_pipe_group = $('<span class="btn-group col-md-2"></span>');
+	    var add_pipe_btn = $('<button type="button" class="asm-form btn btn-large btn-warning dropdown-toggle" data-toggle="dropdown"> \
+                                   <span class="glyphicon glyphicon-plus-sign"></span>  Pipe Stage <span class="caret"></span> </button>');
 	    add_pipe_btn.find('span').css("color", "white");
 
 	    var add_pipe_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-	    var pipeline_pool = $('<div class="well col-md-8">')
+	    var pipeline_pool = $('<div class="well col-md-9">')
 	    var pipe_picked = []
             var pipe_row2 = $('<div class="row">');
-            var pipe_desc = $('<div class="col-md-9"><input type="text" class="form-control" style="width:100%" placeholder="Description"></div>')
-            var pipe_btn = $('<button class="btn btn-large btn-primary pull-right">Assemble</button>');
+            var pipe_desc = $('<div class="col-md-10"><input type="text" class="asm-form form-control" style="width:100%" placeholder="Description"></div>')
+            var pipe_btn = $('<button class="btn btn-large col-md-2 asm-form btn-primary pull-right">Assemble</button>');
 
 	    var update_pipe_pool = function(pool){
 		var body = $('<div>');
@@ -358,9 +358,7 @@
 	    	self.state['clicked'] = true;
 		// Disable fields
                 asm_div.find('fieldset').attr('disabled', "true");
-                asm_div2.find('fieldset').attr('disabled', "true");
-		asm_btn2.attr("disabled", "true");
-		pipe_btn.attr("disabled", "true");
+		self.$elem.find('.asm-form').attr('disabled', "true");
                 $.ajax({
                     contentType: 'application/json',
                     url: self.arURL + 'user/' + user + '/job/new/',
@@ -554,6 +552,8 @@
 	    if (self.state['clicked']) {
 		console.log('assembly already run')
 		self.$elem.find('fieldset').attr('disabled', "true");
+		self.$elem.find('.asm-form').attr('disabled', "true");
+
 		$('select option[value = "' + self.state['recipe'] + '"]').attr('selected', 'selected');
 		self.showResults(self.token, 
 				 self.state['assemblies'],

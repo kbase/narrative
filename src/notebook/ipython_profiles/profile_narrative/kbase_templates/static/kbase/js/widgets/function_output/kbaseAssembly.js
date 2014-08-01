@@ -616,10 +616,10 @@
 		for (i=0; i<assemblies.length;i++){
 		    (function(i){
 			var contig_import = $('<li><a>' + assemblies[i].name + '</a></li>');
-			ws_contig_name = job_id + '_' + assemblies[i].name;
-			shock_url = assemblies[i].file_infos[0].shock_url;
-			shock_id = assemblies[i].file_infos[0].shock_id;
-			contig_import.one("click", function() {
+			contig_import.on("click", function() {
+			    shock_url = assemblies[i].file_infos[0].shock_url;
+			    shock_id = assemblies[i].file_infos[0].shock_id;
+			    ws_contig_name = job_id + '_' + assemblies[i].name;
 			    self.import_contigs_to_ws(token, self.fba_url, self.ws_url, self.ws_name, shock_id, shock_url, ws_contig_name);
 			});
 		    import_btn_sel.append(contig_import);

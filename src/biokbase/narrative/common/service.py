@@ -746,6 +746,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         :param meta: Other key/value pairs to set as traits of the method.
         """
         LifecycleSubject.__init__(self)
+        self.name, self.full_name, self.run = "", "", None
         self._history = status_class(self)
         self.register(self._history)
         self._observers = []  # keep our own list of 'optional' observers
@@ -774,7 +775,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             # make some noise
             if not self._observers:  # for idempotence
                 self._observers = [LifecyclePrinter(),
-                                   LifecycleLogger(self.name, debug=True)]
+                                   LifecycleLogger(self.full_name, debug=True)]
                 map(self.register, self._observers)
 
     def set_func(self, fn, params, outputs, vis_info):
@@ -796,6 +797,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         self.run = fn
         if self.name is None:
             self.name = fn.__name__
+        self.full_name = '.'.join([fn.__module__, self.name])
 
         # Handle parameters
         for i, p in enumerate(params):

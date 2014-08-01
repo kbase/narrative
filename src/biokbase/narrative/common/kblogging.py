@@ -1,9 +1,31 @@
 """
-Common narrative logging functions
+Common narrative logging functions.
+
+Other biokbase modules can use the logging like this:
+
+    from biokbase.narrative.common.kblogging import get_logger
+    _log = get_logger(__name__)
+
+Log messages are free-form, *but* the MongoDB handler will break any
+parts of the message in the form '<key>=<value>' into their own fields
+in the MongoDB record.
+
+Logging to MongoDB will be enabled if the file KBASE_TMP_CFGFILE
+(see defn. below) is present and readable as a JSON file with the
+keys given by the MongoSettings class, e.g.:
+    {
+        "host": "localhost",
+        "port": 27017,
+        "user": "joe",
+        "password": "schmoe",
+        "db": "mydb",
+        "collection": "mylogs"
+    }
 """
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
-__date__ = '1/30/14'
+__date__ = '2014-07-31'
 
+import json
 import logging
 import os
 import re
@@ -17,6 +39,39 @@ except ImportError:
 # Local
 from .util import kbase_env
 
+
+## Constants
+
+
+KBASE_TMP_DIR = "/tmp"
+KBASE_TMP_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative.log")
+KBASE_TMP_CFGFILE = os.path.join(KBASE_TMP_DIR, "kbase-logdb.conf")
+
+
+## Functions
+
+
+def get_logger(name=""):
+    """Get a given KBase log obj.
+
+    :param name: name (a.b.c) of the logging namespace, which may be
+                 relative or absolute (starting with 'biokbase.'), or
+                 empty in which case the root logger is returned
+    :return: Log object
+    :rtype: logging.Logger
+    """
+    # no name => root
+    if not name:
+        log = logging.getLogger("biokbase")
+    # absolute name
+    elif name.startswith("biokbase."):
+        log = logging.getLogger(name)
+    # relative name
+    else:
+        log = logging.getLogger("biokbase." + name)
+    return log
+
+## Classes
 
 class LogMeta(object):
     """Static metadata providing context for logs.
@@ -47,40 +102,18 @@ class LogMeta(object):
         return result
 
 
-class Mongo(object):
+class MongoSettings(object):
     """MongoDB settings.
     """
-    host = 'localhost'
-    port = 27017
-    #user = 'narrative'
-    #password = 'letm3in'
+    host, port = 'localhost', 27017
     user, password = None, None
-    db = 'logging'
-    collection = 'narrative'
+    db, collection = 'test', None
 
-KBASE_TMP_DIR = "/tmp"
-KBASE_TMP_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative.log")
-
-
-def get_logger(name=""):
-    """Get a given KBase log obj.
-
-    :param name: name (a.b.c) of the logging namespace
-    :return: Log object
-    :rtype: logging.Logger
-    """
-    if not name:
-        return logging.getLogger("biokbase")  # root of hierarchy
-    return logging.getLogger("biokbase." + name)
-
-_log = get_logger()
-_log_meta = LogMeta()
-
-# Turn on debugging by setting environment variable KBASE_DEBUG.
-if os.environ.get("KBASE_DEBUG", None):
-    _log.setLevel(logging.DEBUG)
-else:
-    _log.setLevel(logging.WARN)
+    def __init__(self, config_file):
+        d = json.load(open(config_file))
+        for key in d:
+            if hasattr(self, key):
+                setattr(self, key, d[key])
 
 
 class KBLoggingFormatter(logging.Formatter):
@@ -90,19 +123,10 @@ class KBLoggingFormatter(logging.Formatter):
                                            for k, v in os.environ.items()
                                            if k.startswith('KB_')]))
 
-# Add log handler.
-_h = logging.FileHandler(KBASE_TMP_LOGFILE)
-
-
-_h.setFormatter(logging.Formatter(
-    "%(levelname)s %(asctime)s %(name)s user={} narr={} event=%(message)s"
-    .format(_log_meta.user, _log_meta.notebook)))
-_log.addHandler(_h)
-
-
-# If mongo is available, add that one too
 
 class MongoHandler(logging.Handler):
+    """MongoDB logging handler.
+    """
     DEFAULT_FIELDS = ('asctime', 'name')
 
     def __init__(self, level=logging.NOTSET, coll=None, fields=None):
@@ -132,8 +156,6 @@ class MongoHandler(logging.Handler):
         for part in msg_parts[1:]:
             if '=' in part:
                 name, value = part.split('=')
-                if name == 'asctime':
-                    name = 'time'
                 doc[name] = value
             else:
                 text.append(part)
@@ -142,22 +164,67 @@ class MongoHandler(logging.Handler):
 
         # Extract rest of fields from record into output doc
         for k in self._fields:
-            doc[k] = getattr(record, k)
+            if k == 'asctime':
+                doc['time'] = getattr(record, 'asctime')
+            else:
+                doc[k] = getattr(record, k)
 
         self._coll.insert(doc)
 
-if log_to_mongo:
-    # Connect
-    try:
-        client = pymongo.MongoClient(host=Mongo.host, port=Mongo.port)
-        db = client[Mongo.db]
-        if Mongo.user is not None:
-            db.authenticate(Mongo.user, Mongo.password)
-    except pymongo.errors.PyMongoError, err:
-        _log.info("Could not connect to to MongoDB for logging: {}".format(err))
-    # Add handler
-    handler = MongoHandler(coll=db[Mongo.collection])
-    _log.addHandler(handler)
 
+def init_handlers():
+    """Initialize and add the log handlers.
+    """
+    # Turn on debugging by setting environment variable KBASE_DEBUG.
+    if os.environ.get("KBASE_DEBUG", None):
+        _log.setLevel(logging.DEBUG)
+    else:
+        _log.setLevel(logging.INFO)
 
+    # Add log handler.
+    hndlr = logging.FileHandler(KBASE_TMP_LOGFILE)
 
+    hndlr.setFormatter(logging.Formatter(
+        "%(levelname)s %(asctime)s %(name)s user={} narr={} %(message)s"
+        .format(_log_meta.user, _log_meta.notebook)))
+    _log.addHandler(hndlr)
+
+    # If mongo is available, add that one too
+
+    if log_to_mongo:
+        # Load settings from a special configuration file
+        cfg = KBASE_TMP_CFGFILE
+        try:
+            mgo = MongoSettings(cfg)
+        except IOError, err:
+            _log.error("Cannot read MongoDB config from {}: {}".format(cfg, err))
+            _log.warn("Logging to MongoDB skipped")
+            mgo = None
+        # Try to connect to MongoDB
+        if mgo is not None:
+            try:
+                client = pymongo.MongoClient(host=mgo.host, port=mgo.port)
+                db = client[mgo.db]
+                if mgo.user is not None:
+                    db.authenticate(mgo.user, mgo.password)
+            except pymongo.errors.PyMongoError, err:
+                _log.error("Could not connect to to MongoDB for logging: {}"
+                           .format(err))
+                _log.warn("Logging to MongoDB skipped")
+                db = None
+            # If connection succeeded, add handler
+            _log.info("Connected to MongoDB")
+            if db is not None:
+                # Add handler
+                handler = MongoHandler(coll=db[mgo.collection])
+                _log.addHandler(handler)
+
+## Run on import
+
+# Get root log obj.
+_log = get_logger()
+_log_meta = LogMeta()
+
+# If no handlers, initialize them
+if not _log.handlers:
+    init_handlers()

@@ -237,13 +237,13 @@
                                    <span class="glyphicon glyphicon-plus-sign"></span>  Assembler <span class="caret"></span> </button>');
 	    add_asm_btn.find('span').css("color", "white");
 	    var add_asm_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-	    var assembler_pool = $('<div class="well col-md-9">')
+	    var assembler_pool = $('<div class="well col-md-9" id="asm-pool">')
 	    var asm_picked = []
             var asm_row2 = $('<div class="row">');
             var asm_desc2 = $('<div class="col-md-10"><input type="text" class="asm-form form-control" style="width:100%" placeholder="Description"></div>')
             var asm_btn2 = $('<button class="btn btn-large col-md-2 btn-primary pull-right asm-form">Assemble</button>');
 
-	    var update_asm_pool = function(pool){
+	    var update_asm_pool = function(assembler_pool, pool){
 		var body = $('<div>');
 		for (i=0; i<pool.length;i++){
 		    (function(i) {
@@ -252,7 +252,7 @@
 			    $('#asm-' + pool[i]).show()
 			    var asm_idx = pool.indexOf(pool[i]);
 			    pool.splice(asm_idx, 1);
-			    update_asm_pool(pool);
+			    update_asm_pool(assembler_pool, pool);
 			}))
 		    })(i);
 		}
@@ -270,7 +270,7 @@
 			asm.on('click', function(){
 			    asm_picked.push(asm_name);
 			    console.log(asm_picked)
-			    update_asm_pool(asm_picked);
+			    update_asm_pool(assembler_pool, asm_picked);
 			    $('#' + asm_id).attr('disabled', "true");
 			    $('#' + asm_id).hide();
 			});
@@ -297,7 +297,7 @@
 	    add_pipe_btn.find('span').css("color", "white");
 
 	    var add_pipe_sel = $('<ul class="dropdown-menu" role="menu"></ul>')
-	    var pipeline_pool = $('<div class="well col-md-9">')
+	    var pipeline_pool = $('<div class="well col-md-9 pipe-pool">')
 	    var pipe_picked = []
             var pipe_row2 = $('<div class="row">');
             var pipe_desc = $('<div class="col-md-10"><input type="text" class="asm-form form-control" style="width:100%" placeholder="Description"></div>')
@@ -472,9 +472,9 @@
 
 
 	    asm_btn2.one("click", function(){
-
                 var desc = asm_desc2.find('input').val();
 	    	self.state['description'] = desc;
+	    	self.state['asm_pool'] = asm_picked;
                 arRequest.pipeline = [asm_picked.join(' ')];
                 arRequest.message = desc;
 	    	run_asm(arRequest);
@@ -483,6 +483,7 @@
 	    pipe_btn.one("click", function(){
                 var desc = pipe_desc.find('input').val();
 	    	self.state['description'] = desc;
+	    	self.state['pipe_pool'] = pipe_picked;
                 arRequest.pipeline = [pipe_picked]
                 arRequest.message = desc;
 	    	run_asm(arRequest);
@@ -493,7 +494,8 @@
             tabs.append(asm_div2);
             tabs.append(asm_div3);
             self.$elem.append(tabs);
-	    tabs.tabs()
+	    tabs.tabs();
+	    tabs.tabs("option", "active", 0);
             return this;	    
         },
 
@@ -557,6 +559,29 @@
 		self.$elem.find('#tabs').tabs("option", "active", self.state.tab)
 		self.$elem.find('#tabs').tabs("option", "disabled", true)
 		$('select option[value = "' + self.state['recipe'] + '"]').attr('selected', 'selected');
+
+		//// Restore assemblers
+		var pool = self.state.asm_pool
+		var body = $('<div>');
+		for (i=0; i<pool.length;i++){
+		    (function(i) {
+			body.append($('<div class="btn btn-primary btn-sm" style="margin:5px">' + pool[i] + '</div>'))
+			
+		    })(i);
+		}
+		self.$elem.find('#asm-pool').html(body);
+
+		//// Restore pipeline
+		var pool = self.state.pipe_pool
+		var body = $('<div>');
+		for (i=0; i<pool.length;i++){
+		    (function(i) {
+			body.append($('<div class="btn btn-primary btn-sm" style="margin:5px">' + pool[i] + '</div>'))
+			
+		    })(i);
+		}
+		self.$elem.find('#pipe-pool').html(body);
+
 		self.showResults(self.token, 
 				 self.state['assemblies'],
 				 self.state['best'],
@@ -601,7 +626,7 @@
 		result_btn_row.append(import_btn_group);
 
 		var full_link = self.arURL + route;
-		var report_div = '<div class="">'
+		var report_div = '<div class="" style="margin-top:15px">'
 		
 		report_div += '<code style="font-size:4px>' + report +'</code><br>'
 		result_btn_row.append('<span class=""><a href='+ full_link +' class="btn btn-primary" target="_blank" style="padding:5px">Full Analysis</a></span>')

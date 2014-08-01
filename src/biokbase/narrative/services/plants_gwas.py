@@ -463,6 +463,9 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
     fs = ws.get(feature_set_id)
     qid2cds = ids2cds(fs['elements'].keys())
+    cds2l   = cds2locus(qid2cds.values())
+    cdmic = CDMI_API(URLS.cdmi)
+    lfunc = cdmic.fids_to_functions(cds2l.values())
     
     meth.advance("Execute Enrichment Test")
     ec = ec.replace(" ","")
@@ -479,36 +482,29 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
       goen = enr_list[i]
       if goen['pvalue'] > float(p_value) : continue
       fields.append([goen['goID'], goen['goDesc'][0], goen['goDesc'][1], "{:6.4f}".format(goen['pvalue']) ])
-      #fs['fse.'+goen['goID']+".desc" ] = goen['goDesc'][0]
-      #fs['fse.'+goen['goID']+".domain" ] = goen['goDesc'][1]
-      #fs['fse.'+goen['goID']+".p_value" ] = `goen['pvalue']`
       if i < 3 :
         go_enr_smry += goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0] + "\n"
-        #go_enr_anns[i] = goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0]
     go_enr_smry
     data = {'table': [header] + fields}
     
     meth.advance("Annotate GO Term")
     go_key = lambda go, i, ext: "go.{}.{:d}.{}".format(go, i, ext)
     for gid in fs['elements']:
-      if 'metadata' not in fs['elements'][gid]: fs['elements'][gid]['metadata'] = {}
       lid = qid2cds[gid]
+      if 'data' in fs['elements'][gid]:
+        if not fs['elements'][gid]['data']['function']: fs['elements'][gid]['data']['function'] = lfunc[cds2l[lid]]
+      if 'metadata' not in fs['elements'][gid]: fs['elements'][gid]['metadata'] = {}
       if lid in ots:
           go_enr_list = []
           for lcnt, go in enumerate(ots[lid].keys()):
-              #if lcnt < 0:
-                  #fs['elements'][gid]['data']['annotations'].append(go + "(go)" + ots[lid][go][0]['desc'] + '\n')
               for i, goen in enumerate(ots[lid][go]):
                   for ext in "domain", "ec", "desc":
                       fs['elements'][gid]['metadata'][go_key(go, i, ext)] = goen[ext]
                       fs['elements'][gid]['metadata'][go_key(go, i, ext)] = goen[ext]
       
     meth.advance("Saving output to Workspace")
-
     ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'enr_summary' : go_enr_smry}}]})
-
-
-    meth.advance("Returning object")
+    #meth.advance("Returning object")
     return json.dumps(data)
     #return json.dumps({'values': [
     #                               ["Workspace object", out_id],

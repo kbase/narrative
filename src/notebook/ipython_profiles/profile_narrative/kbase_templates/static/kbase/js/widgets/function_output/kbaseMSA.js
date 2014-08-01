@@ -5,13 +5,12 @@
 
 (function($, undefined) {
     $.KBWidget({
-        name: 'kbaseTree',
+        name: 'kbaseMSA',
         parent: 'kbaseAuthenticatedWidget',
         version: '0.0.1',
         options: {
-            treeID: null,
+            msaID: null,
             workspaceID: null,
-            treeObjVer: null,
             jobID: null,
             kbCache: null,
             workspaceURL: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
@@ -20,7 +19,7 @@
             height: null,
         },
 
-        treeWsRef: null,
+        msaWsRef: null,
         pref: null,
         timer: null,
         loadingImage: "static/kbase/images/ajax-loader.gif",
@@ -33,8 +32,8 @@
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
-            if (!this.options.treeID) {
-                this.renderError("No tree to render!");
+            if (!this.options.msaID) {
+                this.renderError("No MSA to render!");
             } else if (!this.options.workspaceID) {
                 this.renderError("No workspace given!");
             } else if (!this.options.kbCache && !this.authToken()) {
@@ -51,8 +50,8 @@
         render: function() {
         	this.wsClient = new Workspace(this.options.workspaceURL, {token: this.token});
             this.loading(false);
-            if (this.treeWsRef || this.options.jobID == null) {
-            	this.loadTree();
+            if (this.msaWsRef || this.options.jobID == null) {
+            	this.loadMSA();
             } else {
                 var self = this;
                 var jobSrv = new UserAndJobState(self.options.ujsServiceURL, {token: this.token});
@@ -64,7 +63,7 @@
             			style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
             	panel.append(table);
             	table.append('<tr><td>Job was created with id</td><td>'+self.options.jobID+'</td></tr>');
-            	table.append('<tr><td>Output result will be stored as</td><td>'+self.options.treeID+'</td></tr>');
+            	table.append('<tr><td>Output result will be stored as</td><td>'+self.options.msaID+'</td></tr>');
             	table.append('<tr><td>Current job state is</td><td id="'+self.pref+'job"></td></tr>');
             	var timeLst = function(event) {
             		jobSrv.get_job_status(self.options.jobID, function(data) {
@@ -79,17 +78,17 @@
                         }
             			if (complete === 1) {
             				clearInterval(self.timer);
-            				if (this.treeWsRef) {
+            				if (this.msaWsRef) {
             					// Just skip all this cause data was already showed through setState()
             				} else {
             					if (wasError === 0) {
-            						self.loadTree();
+            						self.loadMSA();
             					}
             				}
             			}
             		}, function(data) {
         				clearInterval(self.timer);
-        				if (this.treeWsRef) {
+        				if (this.msaWsRef) {
         					// Just skip all this cause data was already showed through setState()
         				} else {
         					var tdElem = $('#'+self.pref+'job');
@@ -102,9 +101,9 @@
             }
         },
         
-        loadTree: function() {
+        loadMSA: function() {
             var prom;
-            var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.treeID, this.options.treeObjVer, this.treeWsRef);
+            var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.msaID, null, this.msaWsRef);
             if (this.options.kbCache)
                 prom = this.options.kbCache.req('ws', 'get_objects', [objId]);
             else
@@ -114,64 +113,55 @@
             
             $.when(prom).done($.proxy(function(objArr) {
                 self.$elem.empty();
-
-                self.canvasId = "knhx-canvas-" + self.pref;
-                self.$canvas = $('<div>')
-                               .append($('<canvas id="' + self.canvasId + '">'));
-                if (self.options.height) {
-                    self.$canvas.css({'max-height':self.options.height, 'overflow':'scroll'});
+                var aln = objArr[0].data.alignment;
+                var size = 0;
+                var len = null;
+                var max_lbl_len = 0;
+                for (var key in aln) {
+                	size++;
+                	if (max_lbl_len < key.length)
+                		max_lbl_len = key.length;
+                	len = aln[key].length;
                 }
-                self.$elem.append(self.$canvas);
-
-            	if (!self.treeWsRef) {
-            		var info = objArr[0].info;
-            		self.treeWsRef = info[6] + "/" + info[0] + "/" + info[4];
-            	}
-                var tree = objArr[0].data;
-
-                var refToInfoMap = {};
-                var objIdentityList = [];
-                if (tree.ws_refs) {
-                	for (var key in tree.ws_refs) {
-                		objIdentityList.push({ref: tree.ws_refs[key]['g'][0]});
-                	}
+                var canvasId = "canvas-" + self.pref;
+                var canvasDiv = $('<div>').append($('<canvas id="' + canvasId + '">'));
+                canvasDiv.css({'max-height':400, 'max-width':1080, 'overflow':'scroll'});
+                self.$elem.append(canvasDiv);
+                var canvas = document.getElementById(canvasId);
+                canvas.width = (max_lbl_len + 2 + len) * 8;
+            	canvas.height = size * 12;
+                var line = 0;
+                for (var key in aln) {
+                	for (var i = 0; i < key.length; i++)
+                		self.drawSymbol(canvas, key.substring(i, i + 1), "rgb(0,0,0)", i, line);
+                	var seq = aln[key];
+                	for (var i = 0; i < seq.length; i++)
+                		self.drawSymbol(canvas, seq.substring(i, i + 1), "rgb(0,0,0)", max_lbl_len + 2 + i, line);
+                	line++;
                 }
-                if (objIdentityList.length > 0) {
-                	$.when(self.wsClient.get_object_info(objIdentityList)).done(function(data) {
-                		for (var i in data) {
-                			var objInfo = data[i];
-                			refToInfoMap[objIdentityList[i].ref] = objInfo;
-                		}
-                	}).fail(function(err) {
-                		console.log("Error getting genomes info:");
-                		console.log(err);
-                	});
-                }
-                new EasyTree(self.canvasId, tree.tree, tree.default_node_labels, function(node) {
-                	if ((!tree.ws_refs) || (!tree.ws_refs[node.id])) {
-                		var node_name = tree.default_node_labels[node.id];
-                		if (node_name.indexOf('/') > 0) {  // Gene label
-                    		var url = "/functional-site/#/genes/" + self.options.workspaceID + "/" + node_name;
-                            window.open(url, '_blank');
-                		}
-                		return;
-                	}
-                	var ref = tree.ws_refs[node.id]['g'][0];
-                	var objInfo = refToInfoMap[ref];
-                	if (objInfo) {
-                		var url = "/functional-site/#/genomes/" + objInfo[7] + "/" + objInfo[1];
-                        window.open(url, '_blank');
-                	}
-                }, function(node) {
-                	if (node.id && node.id.indexOf("user") == 0)
-                		return "#0000ff";
-            		return null;
-                });
                 self.loading(true);
             }, this));
             $.when(prom).fail($.proxy(function(error) { this.renderError(error); }, this));
         },
 
+        drawSymbol: function(canvas, smb, color, xpos, ypos) {
+            var text = smb;
+            var ctx = canvas.getContext("2d");
+            var fontH = 10;
+            var fontW = 7;
+            var font = fontH + "pt courier-new";
+            CanvasTextFunctions.enable(ctx);
+            ctx.strokeStyle = color;
+            //ctx.fillStyle = "rgb(180, 245, 220)";
+            var smbW = ctx.measureText(font, fontH, text);
+            var x = xpos * (fontW + 1) + (fontW - smbW) / 2;
+            var y = ypos * (fontH + 2);
+            //var h = fontsize;
+            //ctx.fillRect(x, y, w, h);
+            ctx.drawText(font, fontH, x, y + fontH * 0.9, text);
+
+        },
+        
         renderError: function(error) {
             errString = "Sorry, an unknown error occurred";
             if (typeof error === "string")
@@ -189,10 +179,10 @@
 
         getData: function() {
             return {
-                type: 'Tree',
-                id: this.options.treeID,
+                type: 'MSA',
+                id: this.options.msaID,
                 workspace: this.options.workspaceID,
-                title: 'Tree'
+                title: 'Multiple sequence alignment'
             };
         },
 
@@ -248,15 +238,15 @@
         getState: function() {
             var self = this;
             var state = {
-            	treeWsRef: self.treeWsRef
+            	msaWsRef: self.msaWsRef
             };
             return state;
         },
 
         loadState: function(state) {
             var self = this;
-            if (state && state.treeWsRef) {
-                self.treeWsRef = state.treeWsRef;
+            if (state && state.msaWsRef) {
+                self.msaWsRef = state.msaWsRef;
                 self.render();
             }
         },

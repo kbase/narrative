@@ -48,11 +48,11 @@
             if (this.options.wsId)
                 this.wsId = options.wsId;
 
-            if (window.kb && window.kb.urls) {
-                this.options.uploaderURL = window.kb.urls.uploader;
-                this.options.workspaceURL = window.kb.urls.workspace;
-                this.options.wsBrowserURL = window.kb.urls.ws_browser;
-                this.options.landingPageURL = window.kb.urls.landing_pages;
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.uploaderURL = window.kbconfig.urls.uploader;
+                this.options.workspaceURL = window.kbconfig.urls.workspace;
+                this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
+                this.options.landingPageURL = window.kbconfig.urls.landing_pages;
             }
 
             /**
@@ -623,7 +623,7 @@
             if (landingPageType) {
                 var landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
                 detailsBtn.click(function(event) { window.open(landingPage); });
-                detailsBtn.html("View Object");
+                detailsBtn.html("View Landing Page");
             }
             else {
                 detailsBtn.html("Landing Page Unavailable");

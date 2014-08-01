@@ -30,10 +30,13 @@
         "uploader" : "http://kbase.us/services/docs/uploader/uploader.html",
         "user_and_job_state" : "https://kbase.us/services/userandjobstate",
         "workspace" : "https://kbase.us/services/ws",
-        "ws_browser" : "https://demo.kbase.us/functional-site/#/ws",
-        "landing_pages" : "http://demo.kbase.us/functional-site/#/",
+        "ws_browser" : "https://narrative.kbase.us/functional-site/#/ws",
+        "landing_pages" : "/functional-site/#/",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
         "genomeCmp" : "https://kbase.us/services/genome_comparison/jsonrpc",
         "trees" : "https://kbase.us/services/trees"
-    }
+    },
+
+    "name" : "KBase Narrative",
+    "version" : "v. alpha, 7/30/2014"
 }

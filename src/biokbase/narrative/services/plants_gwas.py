@@ -446,9 +446,7 @@ def genelist_to_featureset(meth, gene_ids=None, out_id=None):
     meth.advance("Returning object")
     #return _workspace_output(out_id)
     return json.dumps({'values': [
-                                   ["Workspace object", out_id],
-                                   ["CDS IDs", ",".join(qid2cds.values())],
-                                   ["User IDs", ",".join(qid2cds.keys())]
+                                   ["Workspace object", out_id]
                                  ]})
 
 # TODO: Don't forget to check gene function is there or not

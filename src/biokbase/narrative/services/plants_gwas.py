@@ -81,7 +81,7 @@ def maf(meth, maf=0.05, variation=None, out=None, comment=None):
     :type maf: kbtypes.Numeric
     :param variation: Population variation object
     :type variation: kbtypes.KBaseGwasData.GwasPopulationVariation
-    :param out: Population variation, filtered 
+    :param out: Population variation, filtered
     :type out: kbtypes.KBaseGwasData.GwasPopulationVariation
     :param comment: Comment
     :type comment: kbtypes.Unicode
@@ -304,113 +304,44 @@ def gene_network2ws(meth, obj_id=None, out_id=None):
 
     raw_data = ws.get(obj_id)
     
+    meth.advance("Construct networks")
+    ds = set()
+    #tx = set()
 
     gl = [ gr[2] for gr in raw_data['genes']]
-    gl_str = ",".join(gl);
+    for gene in gl:
+    #    rst= re.search('\A(kb\|g\.\d+)', gene)
+    #    tx.add(rst.group(1))
+        lds = nc.entity2datasets(gene)
+        llds = [ i['id'] for i in lds]
+        ds.update((llds))
+    #for t in tx:
+    #    lds = nc.taxon2datasets(t)
+    #    llds = [ i['id'] for i in lds]
+    #    ds.update((llds))
 
-    meth.advance("Running GeneList to Networks")
-    argsx = {"ws_id" : meth.workspace_id, "inobj_id" : gl_str,  "outobj_id": out_id}
-    try:
-        gl_oid = gc.genelist_to_networks(argsx)
-    except Exception as err:
-        raise GWASException("submit job failed: {}".format(err))
-    #if not gl_oid: # it may return empty string based on current script
-    #    raise GWASException(2, "submit job failed, no job id")
+    # TODO: include cluster node later
+    #cnet = nc.build_first_neighbor_network(list(ds),gl,['GENE_CLUSTER'])
+    #agl = [i['entity_id'] for i in cnet['nodes']]
+    #gl = gl.union(agl)
+    #net = nc.build_internal_network(list(ds),list(gl),['GENE_GENE','GENE_CLUSTER'])
+    net = nc.build_internal_network(list(ds),gl,['GENE_GENE'])
+    ws.save_objects({'workspace' : meth.workspace_id, 'objects' : [{'type' : 'KBaseNetworks.Network', 'data' : net, 'name' : out_id, 'meta' : {'source' : obj_id}}]})
 
-    meth.advance("Returning object")
-    return _workspace_output(out_id)
-
-@method(name="User genelist to Networks")
-def genelist_network2ws(meth, gene_ids=None, out_id=None):
-    """This method displays a gene list
-    along with functional annotation in a table.
-
-    :param gene_ids: List of genes (comma separated)
-    :type gene_ids: kbtypes.Unicode
-    :param out_id: Output Networks object identifier
-    :type out_id: kbtypes.KBaseNetworks.Network
-    :return: New workspace object
-    :rtype: kbtypes.Unicode
-    :output_widget: ValueListWidget
-    """
-    # :param workspace_id: Workspace name (if empty, defaults to current workspace)
-    # :type workspace_id: kbtypes.Unicode
-    meth.stages = 3
-    meth.advance("init GWAS service")
-    gc = GWAS(URLS.gwas, token=meth.token)
-
-    meth.advance("Converting external ids to internal ids")
-    # if not workspace_id:
-    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
-    #     workspace_id = meth.workspace_id
+    #sys.stderr.write('@ ' + list(gl)[0] + '-----\n')
+    #sys.stderr.write('@ ' + list(ds)[0] + '+++++\n')
+    #sys.stderr.flush()
     
-    cdmic = CDMI_API(URLS.cdmi)
-    idm = IdMap(URLS.idmap)
-
-    gl = set()
-    eids = []
-    lids = set()
-    mids = set()
-    for gid in gene_ids.split(','):
-      if 'kb|g.' in gid:
-        if 'CDS' in gid:
-          gl.add(gid)
-        elif 'locus' in gid:
-          lids.add(gid)
-        elif 'mRNA' in gid:
-          mids.add(gid)
-        else:
-          gl.add(gid)
-      else:
-        eids.append(gid)
-    sid2fids = cdmic.source_ids_to_fids(eids)
-    for sid in sid2fids:
-      for fid in sid2fids[sid]:
-        if 'locus' in fid:
-          lids.add(fid)
-        elif 'CDS' in fid:
-          gl.add(fid)
-        elif 'mRNA' in fid:
-          mids.add(fid)
-        else:
-          gl.add(fid)
-    lidmap = ()
-    if len(lids) > 0: lidmap = idm.longest_cds_from_locus(list(lids))
-    for lid in lidmap:
-      for k in lidmap[lid]:
-        gl.add(k)
-    midl = list(mids)
-    
-    lidmap = ()
-    if len(mids) > 0: lidmap = idm.longest_cds_from_mrna(list(mids))
-    for lid in lidmap:
-      for k in lidmap[lid]:
-        gl.add(k)
-    
-    gl_str = ",".join(gl);
-
-    meth.advance("Running GeneList to Networks")
-    argsx = {"ws_id" : meth.workspace_id, "inobj_id" : gl_str,  "outobj_id": out_id}
-    try:
-        gl_oid = gc.genelist_to_networks(argsx)
-    except Exception as err:
-        raise GWASException("submit job failed: {}".format(err))
-    #if not gl_oid: # it may return empty string based on current script
-    #    raise GWASException(2, "submit job failed, no job id")
-
-    meth.advance("Returning object")
     return _workspace_output(out_id)
 
 
 @method(name="Gene network")
-def gene_network(meth, gene_list=None, external_ids=None):
+def gene_network(meth, nto=None):
     """This method searches KBase indexed co-expression networks where
         genes from the gene_list are present and displays internal networks formed by these genes in an interactive visualization.
-        
-        :param gene_list: GWAS Gene list
-        :type gene_list: kbtypes.KBaseGwasData.GwasGeneList
-        :param external_ids: Space delimited list of external IDs (optional. Use this or workspace id)
-        :type external_ids: kbtypes.Unicode
+
+        :param nto: Network Typed Object
+        :type nto: kbtypes.KBaseNetworks.Network
         :return: Rows for display
         :rtype: kbtypes.Unicode
         :output_widget: kbasePlantsNetworkNarrative
@@ -421,13 +352,39 @@ def gene_network(meth, gene_list=None, external_ids=None):
     # if not workspace_id:
     #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
     #     workspace_id = meth.workspace_id
-    meth.advance("Retrieve gene from workspace")
-    if gene_list:
+    meth.advance("Retrieve NTO from workspace")
+    if nto:
         ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
-        raw_data = ws.get(gene_list)
+        raw_data = ws.get(nto)
     else:
         raw_data = {}
-    data = {'gwas': raw_data, 'external_ids' : external_ids}
+    data = {'input': raw_data}
+    return json.dumps(data)
+
+@method(name="Gene cluster analysis")
+def gene_network(meth, nto=None):
+    """This method searches KBase indexed co-expression networks where
+        genes from the gene_list are present and displays internal networks formed by these genes in an interactive visualization.
+
+        :param nto: Network Typed Object
+        :type nto: kbtypes.KBaseNetworks.Network
+        :return: Rows for display
+        :rtype: kbtypes.Unicode
+        :output_widget: kbasePlantsNTO
+        """
+    #:param workspace_id: Workspace name (use current if empty)
+    #:type workspace_id: kbtypes.Unicode
+    meth.stages = 1
+    # if not workspace_id:
+    #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))
+    #     workspace_id = meth.workspace_id
+    meth.advance("Retrieve NTO from workspace")
+    if nto:
+        ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
+        raw_data = ws.get(nto)
+    else:
+        raw_data = {}
+    data = {'input': raw_data}
     return json.dumps(data)
 
 

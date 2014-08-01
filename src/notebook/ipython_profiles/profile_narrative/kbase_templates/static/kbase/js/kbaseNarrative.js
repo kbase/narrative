@@ -49,5 +49,3 @@ narrative.init = function() {
         });
     });
 };
-
-

@@ -252,7 +252,11 @@ def _import_ncbi_genome(meth, ncbi_genome_name, genome_id):
     :output_widget: GenomeAnnotation
     """
     if not genome_id:
-        genome_id = ncbi_genome_name.replace(' ', '_') + '.ncbi'
+        chars = ['\'',' ','-','=','.','/','(',')','_',':','+','*','#',',','[',']']
+        genome_id_prefix = ncbi_genome_name
+        for ch in chars:
+            genome_id_prefix = genome_id_prefix.replace(ch, '_')
+        genome_id = genome_id_prefix + '.ncbi'
     meth.stages = 1
     token, workspace = meth.token, meth.workspace_id
     cmpClient = GenomeComparison(url = service.URLS.genomeCmp, token = token)
@@ -730,6 +734,23 @@ def _compare_pan_genome(meth, genome_ids):
 
     #return json.dumps({'data': data})
     return json.dumps({'ws': meth.workspace_id, 'name':meta[1]})
+
+@method(name="Export orthologs from Pan-genome")
+def _export_gene_set_pan_genome(meth, pan_genome_id):
+    """Export orthologs from Pangenome as external FeatureSet objects. [26] 
+    
+    :param pan_genome_id: ID of pan-genome object [26.1]
+    :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
+    :ui_name pan_genome_id: Pan-genome ID
+
+    :return: Generated Compare Genome
+    :rtype: kbtypes.KBaseGenomes.Pangenome
+    :output_widget: kbasePanGenomeGeneSetExport
+    """
+    
+    meth.stages = 1 # for reporting progress
+    
+    return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
 
 @method(name="Compare Models")
 def _compare_models(meth, model_ids):
@@ -1680,11 +1701,11 @@ def _insert_genome_into_species_tree(meth, genome, neighbor_count, out_tree):
     job_id = treeClient.construct_species_tree(construct_species_tree_params)
     return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
 
-@method(name="View Species Tree")
-def _view_species_tree(meth, tree_id):
-    """ View a Species Tree from your workspace [21]
+@method(name="View Tree")
+def _view_tree(meth, tree_id):
+    """ View a Tree from your workspace [21]
 
-    :param tree_id: a Species Tree id [21.1]
+    :param tree_id: a Tree id [21.1]
     :type tree_id: kbtypes.KBaseTrees.Tree
     :ui_name tree_id: Tree ID
     :return: Species Tree Result
@@ -1793,6 +1814,78 @@ def _build_promconstraint(meth, genome_id, series_id, regulome_id):
     name = fba_meta_data[1]
     
     return json.dumps({'name': name, 'ws': workspaceName})
+
+@method(name="Align Protein Sequences")
+def _align_protein_sequences(meth, feature_set, alignment_method, out_msa):
+    """Construct multiple sequence alignment object based on set of proteins. [27]
+
+    :param feature_set: An object with protein features [27.1]
+    :type feature_set: kbtypes.KBaseSearch.FeatureSet
+    :ui_name feature_set: Feture Set Object
+    :param alignment_method: name of alignment method (one of Muscle, Clustal, ProbCons, T-Coffee, Mafft), leave it blank for default Clustal method [27.2]
+    :type alignment_method: kbtypes.Unicode
+    :ui_name alignment_method: Multiple Alignment Method
+    :param out_msa: Multiple sequence alignment object ID. If empty, an ID will be chosen randomly. [27.3]
+    :type out_msa: kbtypes.KBaseTrees.MSA
+    :ui_name out_msa: Output MSA ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseMSA
+    """
+    if not alignment_method:
+        alignment_method = 'Clustal'
+    if not out_msa:
+        out_msa = "msa_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    ws = workspaceService(service.URLS.workspace, token=token)
+    elements = ws.get_objects([{'ref': workspace+'/'+feature_set}])[0]['data']['elements']
+    gene_sequences = {}
+    for key in elements:
+        elem = elements[key]['data']
+        id = elem['id']
+        if 'genome_ref' in elem:
+            genome_obj_name = ws.get_object_info([{'ref' : elem['genome_ref']}],0)[0][1]
+            id = genome_obj_name + '/' + id
+        seq = elements[key]['data']['protein_translation']
+        gene_sequences[id] = seq
+    treeClient = KBaseTrees(url = service.URLS.trees, token = token)
+    construct_multiple_alignment_params = {
+        'gene_sequences': gene_sequences,                                  
+        'alignment_method': alignment_method, 
+        'out_workspace': workspace, 
+        'out_msa_id': out_msa 
+    }
+    job_id = treeClient.construct_multiple_alignment(construct_multiple_alignment_params)
+    return json.dumps({'workspaceID': workspace, 'msaID': out_msa, 'jobID' : job_id})
+
+@method(name="Build Gene Tree")
+def _build_gene_tree(meth, msa, out_tree):
+    """ Build phylogenetic tree for multiple alignmnet of protein sequences [28]
+
+    :param msa: a Multiple sequence alignment [28.1]
+    :type msa: kbtypes.KBaseTrees.MSA
+    :ui_name msa: MSA ID
+    :param out_tree: Output gene tree ID. If empty, an ID will be chosen randomly. [28.2]
+    :type out_tree: kbtypes.KBaseTrees.Tree
+    :ui_name out_tree: Output gene tree ID
+    :return: Species Tree Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseTree
+    """
+    meth.stages = 1
+    token, workspace = meth.token, meth.workspace_id
+    if not out_tree:
+        out_tree = "genetree_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
+    treeClient = KBaseTrees(url = service.URLS.trees, token = token)
+    construct_tree_for_alignment_params = {
+        'msa_ref': workspace + '/' + msa, 
+        'tree_method': 'FastTree', 
+        'out_workspace': workspace, 
+        'out_tree_id': out_tree
+    }
+    job_id = treeClient.construct_tree_for_alignment(construct_tree_for_alignment_params)
+    return json.dumps({'treeID': out_tree, 'workspaceID': workspace, 'height':'500px', 'jobID': job_id})
 
 #
 #@method(name="Edit Data")

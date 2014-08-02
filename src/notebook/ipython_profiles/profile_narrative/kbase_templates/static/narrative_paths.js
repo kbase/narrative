@@ -1,5 +1,3 @@
-console.log("WAT?");
-
     define('kbpaths', [], function(paths) {
         requirejs.config({
         	baseUrl: 'static/foo/bar/',

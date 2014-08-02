@@ -5,13 +5,14 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "kbasePanGenomeGeneSetExport",
+        name: "kbasePanGenome",
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
         	ws: null,
         	name: null,
-            loadingImage: "static/kbase/images/ajax-loader.gif"
+            loadingImage: "static/kbase/images/ajax-loader.gif",
+            withExport: false
         },
 
         pref: null,
@@ -73,8 +74,10 @@
         		var table = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
         				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');
         		var tab = $("<div/>");
-        		tab.append("<p><b>Please choose ortholog and push 'Export' "+
-        				"button on opened ortholog tab.</b></p><br>");
+        		if (self.options.withExport) {
+        			tab.append("<p><b>Please choose ortholog and push 'Export' "+
+        						"button on opened ortholog tab.</b></p><br>");
+        		}
         		tab.append(table);
         		
         		var tabPane = $('<div id="'+self.pref+'tab-content">');
@@ -210,11 +213,14 @@
         	tab.empty();
     		var table = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
     				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');
-    		tab.append('<p><b>Name of feature set object:</b>&nbsp;'+
-    				'<input type="text" id="input_'+pref2+'" '+
-    				'value="'+self.options.name+'.'+orth_id+'.featureset" style="width: 350px;"/>'+
-    				'&nbsp;<button id="btn_'+pref2+'">Export</button><br>'+
-    				'<font size="-1">(only features with protein translations will be exported)</font></p><br>');
+    		if (self.options.withExport) {
+    			tab.append('<p><b>Name of feature set object:</b>&nbsp;'+
+    					'<input type="text" id="input_'+pref2+'" '+
+    					'value="'+self.options.name+'.'+orth_id+'.featureset" style="width: 350px;"/>'+
+    					'&nbsp;<button id="btn_'+pref2+'">Export</button><br>'+
+    					'<font size="-1">(only features with protein translations will be exported)</font></p><br>'
+    			);
+    		}
     		tab.append(table);
         	var tableSettings = {
         			"sPaginationType": "full_numbers",
@@ -240,15 +246,16 @@
 
         	// create the table
         	table.dataTable(tableSettings);
-        	$('#btn_'+pref2).click(function (e) {
-            	var target_obj_name = $("#input_"+pref2).val();
-            	if (target_obj_name.length == 0) {
-            		alert("Error: feature set object name shouldn't be empty");
-            		return;
-            	}
-            	self.exportFeatureSet(orth_id, target_obj_name, genes);
-        	});
-        	
+    		if (self.options.withExport) {
+    			$('#btn_'+pref2).click(function (e) {
+    				var target_obj_name = $("#input_"+pref2).val();
+    				if (target_obj_name.length == 0) {
+    					alert("Error: feature set object name shouldn't be empty");
+    					return;
+    				}
+    				self.exportFeatureSet(orth_id, target_obj_name, genes);
+    			});
+    		}        	
         	function events2() {
         		$('.show-genomes_'+pref2).unbind('click');
         		$('.show-genomes_'+pref2).click(function() {

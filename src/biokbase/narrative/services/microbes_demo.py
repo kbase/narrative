@@ -603,43 +603,50 @@ def _import_seed_genomes(meth, genome_ids):
     return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
 
 
-@method(name="Compute Pan_Genome")
-def _compare_pan_genome(meth, genome_ids):
+@method(name="Compute Pan-Genome")
+def _compute_pan_genome(meth, genome_set):
     """Compute a Pangenome from a given set of genomes. 
     
-    :param genome_ids: list of genome ids (comma seperated)
-    :type genome_ids: kbtypes.KBaseGenomes.Genome
-    :ui_name genome_ids: Genome IDs
+    :param genome_set: set of genomes
+    :type genome_set: kbtypes.KBaseSearch.GenomeSet
+    :ui_name genome_set: Set of Genomes
 
     :return: Generated Compare Genome
     :rtype: kbtypes.KBaseGenomes.Pangenome
     :output_widget: kbasePanGenome
     """
+
+    #grab token and workspace info, setup the client
+    token, ws_name = meth.token, meth.workspace_id;
+    ws = workspaceService(service.URLS.workspace, token=token)
     
-    gids = genome_ids.split(',')
+    data = ws.get_objects([{'ref': ws_name+'/'+genome_set}])[0]
+    genome_set_elements = data['data']['elements']
+    gids = []
+    for key in genome_set_elements:
+        genome_ref = genome_set_elements[key]['ref']
+        gids.append(genome_ref.split('/')[1]);
+
+    #gids = genome_ids.split(',')
     
     meth.stages = len(gids)+1 # for reporting progress
     meth.advance("Starting...")
     
-    #grab token and workspace info, setup the client
-    token, ws = meth.token, meth.workspace_id;
-
     #fba = fbaModelServices(url = service.URLS.fba, token = token)
     fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
     wss = []
     for gid in gids:
         meth.advance("genomes: "+gid);
-        wss.append(ws)
+        wss.append(ws_name)
 
     meta = fba.build_pangenome({'genomes': gids, 
                                 'genome_workspaces': wss, 
-                                'workspace': ws})
+                                'workspace': ws_name})
 
-    ws = workspaceService(service.URLS.workspace, token=token)
     meth.advance("Fetching pan genome")
-    params = [{
-        'workspace' : meth.workspace_id, 'name':meta[1]
-    }]
+    #params = [{
+    #    'workspace' : meth.workspace_id, 'name':meta[1]
+    #}]
 
     #data = ws.get_objects(params)
     #print meth.debug(json.dumps(data))
@@ -657,12 +664,12 @@ def _export_gene_set_pan_genome(meth, pan_genome_id):
 
     :return: Generated Compare Genome
     :rtype: kbtypes.KBaseGenomes.Pangenome
-    :output_widget: kbasePanGenomeGeneSetExport
+    :output_widget: kbasePanGenome
     """
     
     meth.stages = 1 # for reporting progress
     
-    return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
+    return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id, 'withExport': 'true'})
 
 @method(name="Compare Models")
 def _compare_models(meth, model_ids):

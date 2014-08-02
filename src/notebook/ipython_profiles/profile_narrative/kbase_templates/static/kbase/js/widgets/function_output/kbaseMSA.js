@@ -24,6 +24,33 @@
         timer: null,
         loadingImage: "static/kbase/images/ajax-loader.gif",
         token: null,
+        aminoAcidColors: {
+        	"K": "#ff9f9f",
+        	"R": "#ff9f9f",
+        	//////////////////
+        	"S": "#6fff6f",
+        	"T": "#6fff6f",
+        	"Q": "#6fff6f",
+        	"N": "#6fff6f",
+        	//////////////////
+        	"L": "#9fcfff",
+        	"V": "#9fcfff",
+        	"I": "#9fcfff",
+        	"A": "#9fcfff",
+        	"C": "#9fcfff",
+        	"F": "#9fcfff",
+        	"W": "#9fcfff",
+        	"M": "#9fcfff",
+        	//////////////////
+        	"H": "#9fffff",
+        	"Y": "#9fffff",
+        	//////////////////
+        	"E": "#ff9fff",
+        	"D": "#ff9fff",
+        	//////////////////
+        	"G": "orange",
+        	"P": "yellow"
+        },
 
         init: function(options) {
             this._super(options);
@@ -124,19 +151,23 @@
                 	len = aln[key].length;
                 }
                 var canvasId = "canvas-" + self.pref;
-                var canvasDiv = $('<div>').append($('<canvas id="' + canvasId + '">'));
+                var canvasDivId = "canvas-div-" + self.pref;
+                var canvasDiv = $('<div id="' + canvasDivId + '">').append($('<canvas id="' + canvasId + '">'));
                 canvasDiv.css({'max-height':400, 'max-width':1080, 'overflow':'scroll'});
                 self.$elem.append(canvasDiv);
+                watchForWidgetMaxWidthCorrection(canvasDivId);
                 var canvas = document.getElementById(canvasId);
                 canvas.width = (max_lbl_len + 2 + len) * 8;
             	canvas.height = size * 12;
                 var line = 0;
                 for (var key in aln) {
                 	for (var i = 0; i < key.length; i++)
-                		self.drawSymbol(canvas, key.substring(i, i + 1), "rgb(0,0,0)", i, line);
+                		self.drawSymbol(canvas, key.substring(i, i + 1), "#ffffff", i, line);
                 	var seq = aln[key];
-                	for (var i = 0; i < seq.length; i++)
-                		self.drawSymbol(canvas, seq.substring(i, i + 1), "rgb(0,0,0)", max_lbl_len + 2 + i, line);
+                	for (var i = 0; i < seq.length; i++) {
+                		var smb = seq.substring(i, i + 1);
+                		self.drawSymbol(canvas, smb, self.getColor(smb), max_lbl_len + 2 + i, line);
+                	}
                 	line++;
                 }
                 self.loading(true);
@@ -151,15 +182,22 @@
             var fontW = 7;
             var font = fontH + "pt courier-new";
             CanvasTextFunctions.enable(ctx);
-            ctx.strokeStyle = color;
-            //ctx.fillStyle = "rgb(180, 245, 220)";
+            ctx.strokeStyle = "#000000";
+            ctx.fillStyle = color;
             var smbW = ctx.measureText(font, fontH, text);
-            var x = xpos * (fontW + 1) + (fontW - smbW) / 2;
+            var x = xpos * (fontW + 1);
             var y = ypos * (fontH + 2);
             //var h = fontsize;
-            //ctx.fillRect(x, y, w, h);
-            ctx.drawText(font, fontH, x, y + fontH * 0.9, text);
+            ctx.fillRect(x - 1, y - 1, fontW + 1, fontH + 2);
+            ctx.drawText(font, fontH, x + (fontW - smbW) / 2, y + fontH * 0.9, text);
 
+        },
+        
+        getColor: function(smb) {
+        	var ret = this.aminoAcidColors[smb];
+        	if (!ret)
+        		ret = "#ffffff";
+        	return ret;
         },
         
         renderError: function(error) {

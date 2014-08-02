@@ -143,7 +143,7 @@ function EasyTree(canvasId, treeString, nodeIdToNameMap, leafClickListener, node
 
 		// put the canvas in a container
 		var o = document.createElement("div");
-		o.setAttribute('id', 'canvasContainer');
+		o.setAttribute('id', canvasId + '_container');
 		o.setAttribute('style', 'position: relative;');
 		var canvas_parent = canvas.parentNode || canvas.parent;
 		canvas_parent.removeChild(canvas);

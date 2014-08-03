@@ -135,15 +135,15 @@
         				"sPaginationType": "full_numbers",
         				"iDisplayLength": 10,
         				"aaData": data.orthologs,
-        				"aaSorting": [[ 3, "desc" ]],
+        				"aaSorting": [[ 2, "desc" ], [0, "asc"]],
         				"aoColumns": [
         				              { "sTitle": "Function", 'mData': 'function'},
         				              { "sTitle": "ID", 'mData': function(d) {
         				            	  return '<a class="show-orthologs_'+self.pref+'" data-id="'+d.id+'">'
         				            	  +d.id+'</a>'
         				              }},
-        				              { "sTitle": "Type", 'mData': 'type'},
-        				              { "sTitle": "Ortholog Count", 'mData': function(d) {
+        				              /*{ "sTitle": "Type", 'mData': 'type'},*/
+        				              { "sTitle": "Gene Count", 'mData': function(d) {
         				            	  return ''+d.orthologs.length
         				              }}
         				              ],
@@ -273,13 +273,13 @@
         			"sPaginationType": "full_numbers",
         			"iDisplayLength": 10,
         			"aaData": genes,
-        			"aaSorting": [[ 1, "asc" ]],
+        			"aaSorting": [[0, "asc"], [ 1, "asc" ]],
         			"aoColumns": [
         			              { "sTitle": "Genome name", 'mData': function(d) {
         			            	  return '<a class="show-genomes_'+pref2+'" data-id="'+d.ref+'">'+
         			            	  '<span style="white-space: nowrap;">'+d.genome+'</span></a>'
         			              }},
-        			              { "sTitle": "ID", 'mData': function(d) {
+        			              { "sTitle": "Gene ID", 'mData': function(d) {
         			            	  return '<a class="show-genes_'+pref2+'" data-id="'+d.ref+"/"+d.id+'">'+d.id+'</a>'
         			              }},
         			              { "sTitle": "Function", 'mData': 'func'},

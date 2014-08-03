@@ -655,13 +655,13 @@ def _compute_pan_genome(meth, genome_set,pangenome_id):
     
     return json.dumps({'ws': workspace_id, 'name':meta[1]})
 
-@method(name="View Pan-genome")
+@method(name="View Pangenome")
 def _view_pan_genome(meth, pan_genome_id):
     """Show Pangenome object. [29] 
     
-    :param pan_genome_id: ID of pan-genome object [29.1]
+    :param pan_genome_id: ID of pangenome object [29.1]
     :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
-    :ui_name pan_genome_id: Pan-genome ID
+    :ui_name pan_genome_id: Pangenome ID
 
     :return: Generated Compare Genome
     :rtype: kbtypes.KBaseGenomes.Pangenome
@@ -673,13 +673,13 @@ def _view_pan_genome(meth, pan_genome_id):
     return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
 
 
-@method(name="Export orthologs from Pan-genome")
+@method(name="Export orthologs from Pangenome")
 def _export_gene_set_pan_genome(meth, pan_genome_id):
     """Export orthologs from Pangenome as external FeatureSet objects. [26] 
     
-    :param pan_genome_id: ID of pan-genome object [26.1]
+    :param pan_genome_id: ID of pangenome object [26.1]
     :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
-    :ui_name pan_genome_id: Pan-genome ID
+    :ui_name pan_genome_id: Pangenome ID
 
     :return: Generated Compare Genome
     :rtype: kbtypes.KBaseGenomes.Pangenome

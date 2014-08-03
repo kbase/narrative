@@ -5,13 +5,14 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "kbasePanGenomeGeneSetExport",
+        name: "kbasePanGenome",
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
         	ws: null,
         	name: null,
-            loadingImage: "static/kbase/images/ajax-loader.gif"
+            loadingImage: "static/kbase/images/ajax-loader.gif",
+            withExport: false
         },
 
         pref: null,
@@ -26,9 +27,7 @@
         init: function(options) {
             this._super(options);
             this.pref = this.genUUID();
-            var auth = this.authToken();
-            if (auth)
-            	this.token = auth;
+            this.token = this.authToken();
         	var container = this.$elem;
         	container.empty();
         	container.append("<div><img src=\""+this.options.loadingImage+"\">&nbsp;&nbsp;loading pan-genome data...</div>");
@@ -43,7 +42,7 @@
 
         	var container = this.$elem;
 
-        	if (this.token == null) {
+        	if (!this.token) {
             	container.empty();
         		container.append("<div>[Error] You're not logged in</div>");
         		return;
@@ -55,10 +54,10 @@
         	$.when(prom).done(function(data) {
         		if (self.loaded)
         			return;
-        		self.loaded = true;
-        		container.empty();
         		var data = data[0].data;
-        		buildTable(data)
+        		self.cacheGeneFunctions(data.genome_refs, function() {
+        			buildTable(data);
+        		});
         	}).fail(function(e){
         		container.empty();
         		container.append('<div class="alert alert-danger">'+
@@ -68,36 +67,83 @@
         	function buildTable(data) {
         		//console.log(data);
 
-        		self.cacheGeneFunctions(data.genome_refs);
-
-        		var table = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
-        				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');
-        		var tab = $("<div/>");
-        		tab.append("<p><b>Please choose ortholog and push 'Export' "+
-        				"button on opened ortholog tab.</b></p><br>");
-        		tab.append(table);
-        		
+        		self.loaded = true;
+        		container.empty();
         		var tabPane = $('<div id="'+self.pref+'tab-content">');
         		container.append(tabPane);
         		tabPane.kbaseTabs({canDelete : true, tabs : []});
 
-        		//var tabs = container.kbTabs({tabs: [{name: 'Orthologs', content: tab, active: true}]});
+        		var showOverview = true;
+        		if (self.options.withExport)
+        			showOverview = false;
+        		///////////////////////////////////// Statistics ////////////////////////////////////////////
+        		var tabStat = $("<div/>");
+    			tabPane.kbaseTabs('addTab', {tab: 'Overview', content: tabStat, canDelete : false, show: showOverview});
+        		var tableOver = $('<table class="table table-striped table-bordered" '+
+        				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
+        		tabStat.append(tableOver);
+        		tableOver.append('<tr><td>Pan-genome object ID</td><td>'+self.options.name+'</td></tr>');
+        		tableOver.append('<tr><td>Orthologs</td><td><b>'+data.orthologs.length+'</b></td></tr>');
+        		
+        		var genomeStat = {};  // genome_ref -> [ortholog_count,{ortholog_id -> gene_count},genes_covered_by_orthologs]
+        		for (var i in data.orthologs) {
+        			var orth = data.orthologs[i];
+        			var orth_id = orth.id;
+        			for (var j in orth.orthologs) {
+        				var gene = orth.orthologs[j];
+                		var genomeRef = gene[2];
+                		if (!genomeStat[genomeRef])
+                			genomeStat[genomeRef] = [0, {}, 0];
+                		if (!genomeStat[genomeRef][1][orth_id]) {
+                			genomeStat[genomeRef][1][orth_id] = 0;
+                			genomeStat[genomeRef][0]++;
+                		}
+                		genomeStat[genomeRef][1][orth_id]++;
+                		genomeStat[genomeRef][2]++;
+        			}
+        		}
+        		
+        		for (var genomeRef in self.genomeNames) {
+        			var genomeName = self.genomeNames[genomeRef];
+        			var orthCount = 0;
+    				var genesInOrth = 0;
+        			if (genomeStat[genomeRef]) {
+        				var stat = genomeStat[genomeRef];
+        				orthCount = stat[0];
+        				genesInOrth = stat[2];
+        			}
+        			var genesAll = 0;
+        			for (var i in self.geneIndex[genomeRef])
+        				genesAll++;
+            		tableOver.append('<tr><td>'+genomeName+'</td><td><b>'+genesAll+'</b> genes, <b>'+
+            				genesInOrth+'</b> of them are covered by <b>'+orthCount+'</b> orthologs</td></tr>');
+        		}
+        		
+        		///////////////////////////////////// Orthologs /////////////////////////////////////////////
+        		var tableOrth = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
+        				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');
+        		var tabOrth = $("<div/>");
+        		if (self.options.withExport) {
+        			tabOrth.append("<p><b>Please choose ortholog and push 'Export' "+
+        						"button on opened ortholog tab.</b></p><br>");
+        		}
+        		tabOrth.append(tableOrth);
 
-    			tabPane.kbaseTabs('addTab', {tab: 'Orthologs', content: tab, canDelete : false, show: true});
+    			tabPane.kbaseTabs('addTab', {tab: 'Orthologs', content: tabOrth, canDelete : false, show: !showOverview});
 
         		var tableSettings = {
         				"sPaginationType": "full_numbers",
         				"iDisplayLength": 10,
         				"aaData": data.orthologs,
-        				"aaSorting": [[ 3, "desc" ]],
+        				"aaSorting": [[ 2, "desc" ], [0, "asc"]],
         				"aoColumns": [
         				              { "sTitle": "Function", 'mData': 'function'},
         				              { "sTitle": "ID", 'mData': function(d) {
         				            	  return '<a class="show-orthologs_'+self.pref+'" data-id="'+d.id+'">'
         				            	  +d.id+'</a>'
         				              }},
-        				              { "sTitle": "Type", 'mData': 'type'},
-        				              { "sTitle": "Ortholog Count", 'mData': function(d) {
+        				              /*{ "sTitle": "Type", 'mData': 'type'},*/
+        				              { "sTitle": "Gene Count", 'mData': function(d) {
         				            	  return ''+d.orthologs.length
         				              }}
         				              ],
@@ -110,7 +156,7 @@
 
 
         		// create the table
-        		table.dataTable(tableSettings);
+        		tableOrth.dataTable(tableSettings);
 
         		function events() {
         			// event for clicking on ortholog count
@@ -144,7 +190,7 @@
         	return this;
         },
 
-        cacheGeneFunctions: function(genomeRefs) {
+        cacheGeneFunctions: function(genomeRefs, callback) {
         	var self = this;
         	var req = [];
         	for (var i in genomeRefs) {
@@ -165,8 +211,12 @@
         			}
         			self.geneIndex[ref] = geneIdToIndex;
         		}
+        		callback();
         	}).fail(function(e){
-        		console.log("Error caching genes: " + e.error.message);
+        		//console.log("Error caching genes: " + e.error.message);
+        		container.empty();
+        		container.append('<div class="alert alert-danger">'+
+        				e.error.message+'</div>');
         	});
         },
 
@@ -210,22 +260,26 @@
         	tab.empty();
     		var table = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
     				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');
-    		tab.append('<p><b>Name of feature set object:</b>&nbsp;'+
-    				'<input type="text" id="input_'+pref2+'" '+
-    				'value="'+self.options.name+'.'+orth_id+'.featureset" style="width: 350px;"/>'+
-    				'&nbsp;<button id="btn_'+pref2+'">Export</button><br>'+
-    				'<font size="-1">(only features with protein translations will be exported)</font></p><br>');
+    		if (self.options.withExport) {
+    			tab.append('<p><b>Name of feature set object:</b>&nbsp;'+
+    					'<input type="text" id="input_'+pref2+'" '+
+    					'value="'+self.options.name+'.'+orth_id+'.featureset" style="width: 350px;"/>'+
+    					'&nbsp;<button id="btn_'+pref2+'">Export</button><br>'+
+    					'<font size="-1">(only features with protein translations will be exported)</font></p><br>'
+    			);
+    		}
     		tab.append(table);
         	var tableSettings = {
         			"sPaginationType": "full_numbers",
         			"iDisplayLength": 10,
         			"aaData": genes,
-        			"aaSorting": [[ 1, "asc" ]],
+        			"aaSorting": [[0, "asc"], [ 1, "asc" ]],
         			"aoColumns": [
-        			              { "sTitle": "Genome", 'mData': function(d) {
-        			            	  return '<a class="show-genomes_'+pref2+'" data-id="'+d.ref+'">'+d.genome+'</a>'
+        			              { "sTitle": "Genome name", 'mData': function(d) {
+        			            	  return '<a class="show-genomes_'+pref2+'" data-id="'+d.ref+'">'+
+        			            	  '<span style="white-space: nowrap;">'+d.genome+'</span></a>'
         			              }},
-        			              { "sTitle": "ID", 'mData': function(d) {
+        			              { "sTitle": "Gene ID", 'mData': function(d) {
         			            	  return '<a class="show-genes_'+pref2+'" data-id="'+d.ref+"/"+d.id+'">'+d.id+'</a>'
         			              }},
         			              { "sTitle": "Function", 'mData': 'func'},
@@ -240,15 +294,16 @@
 
         	// create the table
         	table.dataTable(tableSettings);
-        	$('#btn_'+pref2).click(function (e) {
-            	var target_obj_name = $("#input_"+pref2).val();
-            	if (target_obj_name.length == 0) {
-            		alert("Error: feature set object name shouldn't be empty");
-            		return;
-            	}
-            	self.exportFeatureSet(orth_id, target_obj_name, genes);
-        	});
-        	
+    		if (self.options.withExport) {
+    			$('#btn_'+pref2).click(function (e) {
+    				var target_obj_name = $("#input_"+pref2).val();
+    				if (target_obj_name.length == 0) {
+    					alert("Error: feature set object name shouldn't be empty");
+    					return;
+    				}
+    				self.exportFeatureSet(orth_id, target_obj_name, genes);
+    			});
+    		}        	
         	function events2() {
         		$('.show-genomes_'+pref2).unbind('click');
         		$('.show-genomes_'+pref2).click(function() {

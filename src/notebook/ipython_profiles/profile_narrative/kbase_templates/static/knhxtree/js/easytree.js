@@ -105,6 +105,8 @@ function EasyTree(canvasId, treeString, nodeIdToNameMap, leafClickListener, node
             if (id >= 0 && id < kn_g_tree.node.length) {
                 var tree = kn_g_tree, conf = kn_g_conf, i = id;
                 if (i < tree.node.length && tree.node[i].child.length) {
+                	if (!tree.node[i].parent)
+                		return;
                     tree.node[i].hidden = !tree.node[i].hidden;
                     var nn = tree.node.length;
                     tree.node = kn_expand_node(tree.node[tree.node.length-1]);
@@ -141,7 +143,7 @@ function EasyTree(canvasId, treeString, nodeIdToNameMap, leafClickListener, node
 
 		// put the canvas in a container
 		var o = document.createElement("div");
-		o.setAttribute('id', 'canvasContainer');
+		o.setAttribute('id', canvasId + '_container');
 		o.setAttribute('style', 'position: relative;');
 		var canvas_parent = canvas.parentNode || canvas.parent;
 		canvas_parent.removeChild(canvas);

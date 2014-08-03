@@ -18,10 +18,13 @@
         // the magics module
 
         var setToken = function () {
-
             var registerLogin = function() {
                 // grab the token from the handler, since it isn't passed in with args
                 var token = $("#signin-button").kbaseLogin('session', 'token');
+
+                $("#signin-button").kbaseLogin('session').user_id;
+                USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
+                window.kb = new KBCacheClient(USER_TOKEN);
 
                 var cmd = "biokbase.narrative.magics.set_token('" + token + "')\n" +
                           "import os\n" +
@@ -50,8 +53,6 @@
                 setTimeout( function() { registerLogin(); }, 500 );
             }
         };
-
-
 
         var loginWidget = $("#signin-button").kbaseLogin({ 
             login_callback: function(args) {

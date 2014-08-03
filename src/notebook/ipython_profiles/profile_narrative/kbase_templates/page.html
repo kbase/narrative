@@ -36,47 +36,37 @@
 
     <script src="{{ static_url("components/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
-      /**
-       * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
-       * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
-       * (to avoid having the same thing happen on page refreshes and such).
-       *
-       * This uses Bowser to detect the browser and version:
-       * https://github.com/ded/bowser
-       */
-      function checkBrowser() {
-        var browserCheckItem = 'kbBrowserCheck';
+        /**
+         * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
+         * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
+         * (to avoid having the same thing happen on page refreshes and such).
+         *
+         * This uses Bowser to detect the browser and version:
+         * https://github.com/ded/bowser
+         */
+        function checkBrowser() {
+            var redirectUrl = '//kbase.us/help/messages/unsupported-browser';
 
-        //Just return if we've done this already this session. Seeing the same popup more than once is obnoxious.
-        if (sessionStorage) {
-            if (sessionStorage.getItem(browserCheckItem))
-                return;
+            if (bowser.msie && bowser.version <= 9) {
+                var protocol = window.location.protocol;
+                window.location = protocol + redirectUrl;
+            }
         }
 
-        var alertPrefix = 'Unsupported browser detected!\n\n';
-        var alertSuggest = 'For a better experience, we recommend using recent versions of ' +
-                           'Safari, Firefox, Chrome, or Internet Explorer.\n\n' +
-                           'Sorry for any inconvenience!';
-        var alertError = '';
-        if (bowser.msie && bowser.version <= 9) {
-            var alertError = 'You appear to be using Internet Explorer ' +
-                             bowser.version +
-                             '. Unfortunately, we don\'t support that web browser. Many ' +
-                             'functions will be unavailable or have compatibility problems.\n\n';
-        }
-
-        if (alertError) {
-            alert(alertPrefix + alertError + alertSuggest);
-        }
-
-        if (sessionStorage) {
-            sessionStorage.setItem(browserCheckItem, '1');
-        }
-      }
-
-      checkBrowser();
+        checkBrowser();
     </script>
 
+    <script>
+      var configJSON = $.parseJSON(
+                          $.ajax({
+                                   url: "{{ static_url('kbase/config.json') }}",
+                                   async: false,
+                                   dataType: 'json'
+                                 }).responseText );
+      window.kbconfig = { urls : configJSON[configJSON['config']],
+                          version: configJSON['version'],
+                          name: configJSON['name'] };
+    </script>
 
 
 <!--    <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script> -->
@@ -369,18 +359,6 @@
 
 <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
-
-<script>
-  var configJSON = $.parseJSON(
-                      $.ajax({
-                               url: "{{ static_url('kbase/config.json') }}",
-                               async: false,
-                               dataType: 'json'
-                             }).responseText );
-  window.kbconfig = { urls : configJSON[configJSON['config']],
-                      version: configJSON['version'],
-                      name: configJSON['name'] };
-</script>
 
 <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("base/js/namespace.js") }}" type="text/javascript" charset="utf-8"></script>

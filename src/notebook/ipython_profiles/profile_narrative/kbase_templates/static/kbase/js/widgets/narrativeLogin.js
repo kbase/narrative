@@ -21,10 +21,7 @@
             var registerLogin = function() {
                 // grab the token from the handler, since it isn't passed in with args
                 var token = $("#signin-button").kbaseLogin('session', 'token');
-
-                $("#signin-button").kbaseLogin('session').user_id;
-                USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-                window.kb = new KBCacheClient(USER_TOKEN);
+                window.kb = new KBCacheClient(token);
 
                 var cmd = "biokbase.narrative.magics.set_token('" + token + "')\n" +
                           "import os\n" +
@@ -40,8 +37,25 @@
                            "from biokbase.narrative.services import *";  // timing is everything!
                 }
 
-                IPython.notebook.kernel.execute( cmd );
+                var kernelCallback = function(type, content, etc) {
+                    console.log('KERNEL CALLBACK : "' + type + '"');
+                    console.log(content);
+                    if (etc)
+                        console.log(etc);
+                };
+
+                var callbacks = {
+                    'execute_reply' : function(content) { kernelCallback('execute_reply', content); },
+                    'output' : function(msgType, content) { kernelCallback('output', msgType, content); },
+                    'clear_output' : function(content) { kernelCallback('clear_output', content); },
+                    'set_next_input' : function(text) { kernelCallback('set_next_input', text); },
+                    'input_request' : function(content) { kernelCallback('input_request', content); },
+                };
+
+                IPython.notebook.kernel.execute( cmd, callbacks, {silent: false} );
             };
+
+
 
             // make sure the shell_channel is ready, otherwise sleep for .5 sec
             // and then try it. We use the ['kernel'] attribute deref in case

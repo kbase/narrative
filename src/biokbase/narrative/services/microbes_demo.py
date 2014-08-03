@@ -603,7 +603,7 @@ def _import_seed_genomes(meth, genome_ids):
     return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
 
 
-@method(name="Compute Pan-Genome")
+@method(name="Compute Pan-genome")
 def _compute_pan_genome(meth, genome_set):
     """Compute a Pangenome from a given set of genomes. 
     
@@ -653,6 +653,24 @@ def _compute_pan_genome(meth, genome_set):
 
     #return json.dumps({'data': data})
     return json.dumps({'ws': meth.workspace_id, 'name':meta[1]})
+
+@method(name="View Pan-genome")
+def _view_pan_genome(meth, pan_genome_id):
+    """Show Pangenome object. [29] 
+    
+    :param pan_genome_id: ID of pan-genome object [29.1]
+    :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
+    :ui_name pan_genome_id: Pan-genome ID
+
+    :return: Generated Compare Genome
+    :rtype: kbtypes.KBaseGenomes.Pangenome
+    :output_widget: kbasePanGenome
+    """
+    
+    meth.stages = 1 # for reporting progress
+    
+    return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
+
 
 @method(name="Export orthologs from Pan-genome")
 def _export_gene_set_pan_genome(meth, pan_genome_id):

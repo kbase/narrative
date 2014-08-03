@@ -26,7 +26,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'save_b',
                     label : 'Save and Checkpoint',
-                    icon : 'icon-save',
+                    icon : 'fa fa-save',
                     callback : function () {
                         IPython.notebook.save_checkpoint();
                         }
@@ -36,7 +36,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'cut_b',
                     label : 'Cut Cell',
-                    icon : 'icon-cut',
+                    icon : 'fa fa-cut',
                     callback : function () {
                         IPython.notebook.cut_cell();
                         }
@@ -44,7 +44,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'copy_b',
                     label : 'Copy Cell',
-                    icon : 'icon-copy',
+                    icon : 'fa fa-copy',
                     callback : function () {
                         IPython.notebook.copy_cell();
                         }
@@ -52,7 +52,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'paste_b',
                     label : 'Paste Cell Below',
-                    icon : 'icon-paste',
+                    icon : 'fa fa-paste',
                     callback : function () {
                         IPython.notebook.paste_cell_below();
                         }
@@ -63,7 +63,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'move_up_b',
                     label : 'Move Cell Up',
-                    icon : 'icon-arrow-up',
+                    icon : 'fa fa-arrow-up',
                     callback : function () {
                         IPython.notebook.move_cell_up();
                         }
@@ -71,7 +71,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'move_down_b',
                     label : 'Move Cell Down',
-                    icon : 'icon-arrow-down',
+                    icon : 'fa fa-arrow-down',
                     callback : function () {
                         IPython.notebook.move_cell_down();
                         }
@@ -82,7 +82,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'insert_above_b',
                     label : 'Insert Cell Above',
-                    icon : 'icon-circle-arrow-up',
+                    icon : 'fa fa-arrow-circle-up',
                     callback : function () {
                         IPython.notebook.insert_cell_above('code');
                         }
@@ -90,7 +90,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'insert_below_b',
                     label : 'Insert Cell Below',
-                    icon : 'icon-circle-arrow-down',
+                    icon : 'fa fa-arrow-circle-down',
                     callback : function () {
                         IPython.notebook.insert_cell_below('code');
                         }
@@ -101,7 +101,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'run_b',
                     label : 'Run Cell',
-                    icon : 'icon-play',
+                    icon : 'fa fa-play',
                     callback : function () {
                     IPython.notebook.execute_selected_cell();
                         }
@@ -109,7 +109,7 @@ var IPython = (function (IPython) {
                 {
                     id : 'interrupt_b',
                     label : 'Interrupt',
-                    icon : 'icon-stop',
+                    icon : 'fa fa-stop',
                     callback : function () {
                         IPython.notebook.kernel.interrupt();
                         }

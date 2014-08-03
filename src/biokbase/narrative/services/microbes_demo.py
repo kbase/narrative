@@ -12,6 +12,8 @@ import random
 import numbers
 import uuid
 import hashlib
+import re
+import sys
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
@@ -31,7 +33,7 @@ NAME = "Microbes Services"
 # Initialize
 init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
-@method(name="Assemble Contigs from Reads")
+@method(name="Simplified Assembly From Reads")
 def _assemble_contigs(meth, asm_input):
     """Use the AssemblyRAST service to assemble a set of contigs from sequenced reads.
     This starts a job that might run for several hours.
@@ -133,7 +135,7 @@ def _upload_contigs(meth, contig_set):
 @method(name="Upload Genome (GBK-file)")
 def _upload_genome(meth, genome_id):
     """Upload a Genome and ContigSet from GBK-file (or files in case of zip) into your workspace.
-    This function should be run before adding SEED annotations to this Genome. [25]
+    This function should be run before adding KBase annotations to this Genome. [25]
 
     :param genome_id: Output Genome ID. If empty, an ID will be chosen randomly. [25.1]
     :type genome_id: kbtypes.KBaseGenomes.Genome
@@ -180,10 +182,11 @@ def _import_ncbi_genome(meth, ncbi_genome_name, genome_id):
     cmpClient.import_ncbi_genome(import_ncbi_genome_params)
     return json.dumps({'ws_name': workspace, 'ws_id': genome_id})
 
-@method(name="Convert Contigs to a Genome")
-def _prepare_genome(meth, contig_set, scientific_name, out_genome):
-    """Wrap a ContigSet as a Genome object in your workspace.
-    This function should be run before trying to annotate a Genome. [3]
+@method(name="Annotate ContigSet")
+def _prepare_genome(meth, contig_set, scientific_name, genetic_code, out_genome):
+    """Build a Genome object from a ContigSet, creating structural and functional annotations.
+    The annotation job may run for an hour or longer. When the annotation job finishes,
+    the annotated Genome object will be stored in your workspace. [3]
 
     :param contig_set: An object with contig data [3.1]
     :type contig_set: kbtypes.KBaseGenomes.ContigSet
@@ -191,6 +194,9 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     :param scientific_name: enter the scientific name to assign to your new genome [3.2]
     :type scientific_name: kbtypes.Unicode
     :ui_name scientific_name: Scientific Name
+    :param genetic_code: enter the genetic code for your new genome (default is 11) [3.2]
+    :type genetic_code: kbtypes.Unicode
+    :ui_name genetic_code: Genetic Code
     :param out_genome: Annotated output genome ID. If empty, an ID will be chosen randomly. [3.3]
     :type out_genome: kbtypes.KBaseGenomes.Genome
     :ui_name out_genome: Output Genome ID
@@ -200,9 +206,12 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
     """
     if not scientific_name:
         return json.dump({'error': 'output genome name should be defined'})
+    if not genetic_code:
+        genetic_code = 11
     if not out_genome:
         out_genome = "genome_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
-    meth.stages = 1
+    meth.stages = 2
+    meth.advance("Annotating the contigs (3-4 minutes)...")
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
     fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
@@ -215,7 +224,7 @@ def _prepare_genome(meth, contig_set, scientific_name, out_genome):
         'uid': out_genome,
         'scientific_name': scientific_name,
         'domain': 'Bacteria',
-        'genetic_code': 11,
+        'genetic_code': genetic_code,
     }
     fbaClient.ContigSet_to_Genome(contigset_to_genome_params)
     wsClient = workspaceService(service.URLS.workspace, token=token)
@@ -259,10 +268,10 @@ def _annotate_genome(meth, genome, out_genome):
     job_id = cmpClient.annotate_genome(annotate_genome_params)
     return json.dumps({'ws_name': workspace, 'ws_id': out_genome, 'job_id': job_id})
 
-@method(name="Add SEED Annotation")
-def _add_seed_annotation(meth, genome, out_genome):
-    """Add SEED annotations to a genome.  This function will start a job that might run for an hour or longer.
-    When the job finishes, the Genome with SEED annotations will be stored in your workspace. [21]
+@method(name="Add KBase Annotation")
+def _add_kbase_annotation(meth, genome, out_genome):
+    """Add KBase annotations to a genome.  This function will start a job that might run for an hour or longer.
+    When the job finishes, the Genome with KBase annotations will be stored in your workspace. [21]
     
     :param genome: Source genome ID [21.1]
     :type genome: kbtypes.KBaseGenomes.Genome
@@ -306,9 +315,9 @@ def _show_genome(meth, genome):
     token, workspaceName = meth.token, meth.workspace_id
     return json.dumps({'ws_name': workspaceName, 'ws_id': genome})
 
-@method(name="View SEED Functions")
-def _show_SEED_functional_categories(meth, genome):
-    """View and explore the SEED Functional categories associated with genes in your genome.
+@method(name="View KBase Subsystem Data")
+def _show_KBase_functional_categories(meth, genome):
+    """View and explore the KBase Subsystem categories associated with genes in your genome.
 
     :param genome: select the genome you want to view
     :type genome: kbtypes.KBaseGenomes.Genome
@@ -391,7 +400,7 @@ def _genome_to_fba_model(meth, genome_id, fba_model_id):
     return json.dumps({'id': model_name, 'ws': workspaceName})
 
 @method(name="Translate Model to New Genome")
-def _translate_model_to_new_genome(meth, fba_model_id, proteome_cmp, output_id):
+def _translate_model_to_new_genome(meth, fba_model_id, proteome_cmp, remove_nogene, output_id):
     """ Functionality to assign a new genome to an imported model. 
     A proteome comparison is done between the orginal model genome 
     and the new desired genome. Metoblic reactions from original model 
@@ -404,6 +413,10 @@ def _translate_model_to_new_genome(meth, fba_model_id, proteome_cmp, output_id):
     :param proteome_cmp: Proteome comparison ID [19.3]
     :type proteome_cmp: kbtypes.GenomeComparison.ProteomeComparison
     :ui_name proteome_cmp: Proteome Comparison ID
+    
+    :param remove_nogene: specify "yes" if reactions with no genes should be removed
+    :type remove_nogene: kbtypes.Unicode
+    :ui_name remove_nogene: Remove No-gene Reactions
 
     :param output_id: ID to which translated model should be saved
     :type output_id: kbtypes.KBaseFBA.FBAModel
@@ -413,7 +426,12 @@ def _translate_model_to_new_genome(meth, fba_model_id, proteome_cmp, output_id):
     :rtype: kbtypes.KBaseFBA.FBAModel
     :output_widget: kbaseModelTabs
     """
-    meth.stages = 1  # for reporting progress
+    meth.stages = 2  # for reporting progress
+    meth.advance("Translating model to new genome...")
+    keep = 1;
+    if remove_nogene == 'yes':
+    	keep = 0;
+    	
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
     fbaClient = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
@@ -421,16 +439,16 @@ def _translate_model_to_new_genome(meth, fba_model_id, proteome_cmp, output_id):
                          'protcomp' : proteome_cmp,
                          'model' : fba_model_id,
                          'workspace' : workspace,
-                         'output_id' : output_id
-                         }
+                         'keep_nogene_rxn': keep,
+                         'output_id' : output_id}
     modeldata = fbaClient.translate_fbamodel(translate_params)
     
     return json.dumps({'ws': workspace, 'id': output_id})
 
 
-@method(name="View PhenotypeSet")
+@method(name="View Phenotype Set")
 def view_phenotype(meth, phenotype_set_id):
-    """Bring up a detailed view of your phenotypeset within the narrative. 
+    """Bring up a detailed view of your phenotype set within the narrative. 
     
     :param phenotype_set_id: the phenotype set to view
     :type phenotype_set_id: kbtypes.KBasePhenotypes.PhenotypeSet
@@ -438,7 +456,7 @@ def view_phenotype(meth, phenotype_set_id):
 
     :return: Phenotype Set Data
     :rtype: kbtypes.KBasePhenotypes.PhenotypeSet
-    :output_widget:  
+    :output_widget: kbasePhenotypeSet
     """
     meth.stages = 2  # for reporting progress
     meth.advance("Starting...")
@@ -494,39 +512,28 @@ def _simulate_phenotype(meth, model, phenotypeSet, phenotypeSimulationSet):
     
     return json.dumps({'name': name, 'ws': workspaceName})
 
-@method(name="View PhenotypeSimulationSet")
+@method(name="View Phenotype Simulation Results")
 def view_phenotype(meth, phenotype_set_id):
-    """Bring up a detailed view of your PhenotypeSimulationSet within the narrative. 
+    """Bring up a detailed view of your Phenotype Simulation results within the narrative. 
     
-    :param phenotype_set_id: the phenotype set to view
+    :param phenotype_set_id: the phenotype results to view
     :type phenotype_set_id: kbtypes.KBasePhenotypes.PhenotypeSimulationSet
-    :ui_name phenotype_set_id: Phenotype Set
+    :ui_name phenotype_set_id: Phenotype Simulation Set
     
-    :return: Phenotype Set Data
+    :return: Phenotype Simulation Set Data
     :rtype: kbtypes.KBasePhenotypes.PhenotypeSimulationSet
-    :output_widget: kbasePhenoSimutypeSet
+    :output_widget: kbaseSimulationSet
     """
     meth.stages = 2  # for reporting progress
     meth.advance("Starting...")
     
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id;
-    meth.advance("Loading the phenotypeSimultationSet")
+    meth.advance("Loading the phenotype simulation results")
     
-    #ws = os.environ['KB_WORKSPACE_ID']
-    #token = os.environ['KB_AUTH_TOKEN']
-    #ar_user = token.split('=')[1].split('|')[0]
     ws = workspaceService(service.URLS.workspace, token=userToken)
 
-    params = [{
-        'workspace' : meth.workspace_id, 'name':phenotype_set_id
-    }]
-
-    #data = ws.get_objects(params )
-    #print meth.debug(json.dumps(data))
-
-
-    return json.dumps({'workspace': meth.workspace_id, 'name' : phenotype_set_id})    
+    return json.dumps({'ws': meth.workspace_id, 'name' : phenotype_set_id})    
 
 @method(name="Import RAST Genomes")
 def _import_rast_genomes(meth, genome_ids, rast_username, rast_password):
@@ -603,56 +610,50 @@ def _import_seed_genomes(meth, genome_ids):
     return json.dumps({'ws_name': ws, 'ws_id': gids[0]})
 
 
-@method(name="Compute Pan-genome")
-def _compute_pan_genome(meth, genome_set):
-    """Compute a Pangenome from a given set of genomes. 
-    
-    :param genome_set: set of genomes
-    :type genome_set: kbtypes.KBaseSearch.GenomeSet
-    :ui_name genome_set: Set of Genomes
+@method(name="Compute Pangenome")
+def _compute_pan_genome(meth, genome_set,pangenome_id):
+    """ Rapidly compute ortholog families for a set of phylogenetically close genomes
 
-    :return: Generated Compare Genome
+    :param genome_set: a Genome Set to compute pangenome for
+    :type genome_set: kbtypes.KBaseSearch.GenomeSet
+    :ui_name genome_set: Genome Set ID
+    
+    :param pangenome_id: ID for output pangenome
+    :type pangenome_id: kbtypes.KBaseGenomes.Pangenome
+    :ui_name pangenome_id: Pangenome ID
+    
+    :return: Generated Pangenome Object
     :rtype: kbtypes.KBaseGenomes.Pangenome
     :output_widget: kbasePanGenome
     """
+    meth.stages = 2
+    meth.advance("Computing pangenome (20 sec per genome)...")
+    usertoken, workspace_id = meth.token, meth.workspace_id
 
-    #grab token and workspace info, setup the client
-    token, ws_name = meth.token, meth.workspace_id;
-    ws = workspaceService(service.URLS.workspace, token=token)
-    
-    data = ws.get_objects([{'ref': ws_name+'/'+genome_set}])[0]
+    ws = workspaceService(service.URLS.workspace, token=usertoken)
+    data = ws.get_objects([{'ref': workspace_id+'/'+genome_set}])[0]
     genome_set_elements = data['data']['elements']
-    gids = []
+    genomes = []
+    gwss = []
     for key in genome_set_elements:
-        genome_ref = genome_set_elements[key]['ref']
-        gids.append(genome_ref.split('/')[1]);
+        array = genome_set_elements[key]['ref'].split('/')
+        gwss.append(array[0])
+        genomes.append(array[1])
 
-    #gids = genome_ids.split(',')
+    pangenome_parameters = {
+        'genomes':genomes,
+        'genome_workspaces':gwss,
+        'workspace':workspace_id,
+        'auth':usertoken,
+        'wsurl':service.URLS.workspace}
     
-    meth.stages = len(gids)+1 # for reporting progress
-    meth.advance("Starting...")
+    if pangenome_id:
+        pangenome_parameters['output_id']=pangenome_id
     
-    #fba = fbaModelServices(url = service.URLS.fba, token = token)
-    fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
-    wss = []
-    for gid in gids:
-        meth.advance("genomes: "+gid);
-        wss.append(ws_name)
-
-    meta = fba.build_pangenome({'genomes': gids, 
-                                'genome_workspaces': wss, 
-                                'workspace': ws_name})
-
-    meth.advance("Fetching pan genome")
-    #params = [{
-    #    'workspace' : meth.workspace_id, 'name':meta[1]
-    #}]
-
-    #data = ws.get_objects(params)
-    #print meth.debug(json.dumps(data))
-
-    #return json.dumps({'data': data})
-    return json.dumps({'ws': meth.workspace_id, 'name':meta[1]})
+    fbaclient = fbaModelServices(url="http://140.221.85.73:4043", token=usertoken)
+    meta = fbaclient.build_pangenome(pangenome_parameters)
+    
+    return json.dumps({'ws': workspace_id, 'name':meta[1]})
 
 @method(name="View Pan-genome")
 def _view_pan_genome(meth, pan_genome_id):
@@ -726,81 +727,30 @@ def _compare_models(meth, model_ids):
     return json.dumps({'data': comparemod})
 
 
-@method(name="Genome Comparison from PanGenome")
-def _compare_genomes(meth, genome_ids):
+@method(name="Genome Comparison from Pangenome")
+def _compare_genomes(meth, pangenome_id):
     """Genome Comparison analysis based on the PanGenome input. 
     
-    :param model_ids: PanGenome id 
-    :type model_ids: kbtypes.KBaseGenomes.Pangenome
-    :ui_name model_ids: Genome IDs
+    :param pangenome_id: Pangenome ID 
+    :type pangenome_id: kbtypes.KBaseGenomes.Pangenome
+    :ui_name pangenome_id: Pangenome ID
 
     :return: Uploaded Genome Comparison Data
     :rtype: kbtypes.KBaseGenomes.GenomeComparison
     :output_widget: compgenomePa
     """
-    pid =genome_ids;
-    gids = genome_ids.split(',')
-
-    meth.stages = len(gids)+1 # for reporting progress
-    meth.advance("Starting...")
+    meth.stages = 2
+    meth.advance("Comparing all genomes in pangenome...")
     
     #grab token and workspace info, setup the client
     token, ws = meth.token, meth.workspace_id;
     wss =[]
     fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
 
-    for gid in gids:
-        meth.advance("Loading genomes: "+gid);
-        wss.append(ws)
-
-
-    meta =fba.compare_genomes({'pangenome_id': genome_ids, 
-                               'pangenome_ws': ws,
-                               'workspace': ws })
-   
-    #comparegenome = genomeout['genome_comparisons']                               
-    #funccomp = genomeout['function_comparisons']
-    #print meth.debug(json.dumps(comparegenome))
-    print meth.debug('Here is  Pan genome')
-    print meth.debug(json.dumps(ws, genome_ids))
-    return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
-
-@method(name="Genome Comparison from Proteome")
-def _compare_genomes(meth, genome_ids):
-    """Genome Comparison analysis based on the Proteome Comparison input. 
+    meta = fba.compare_genomes({'pangenome_id': pangenome_id, 
+                                'pangenome_ws': ws,
+                                'workspace': ws })
     
-    :param model_ids: ProteomeComparison id
-    :type model_ids: kbtypes.GenomeComparison.ProteomeComparison
-    :ui_name model_ids: Genome IDs
-
-    :return: Uploaded Genome Comparison Data
-    :rtype: kbtypes.KBaseGenomes.GenomeComparison
-    :output_widget: compgenomePr
-    """
-    
-    gids = genome_ids.split(',')
-
-    meth.stages = len(gids)+1 # for reporting progress
-    meth.advance("Starting...")
-    
-    #grab token and workspace info, setup the client
-    token, ws = meth.token, meth.workspace_id;
-    wss =[]
-    fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
-
-    for gid in gids:
-        meth.advance("Loading genomes: "+gid);
-        wss.append(ws)
-
-
-    meta=fba.compare_genomes({'protcomp_id': genome_ids, 
-                              'protcomp_ws': ws,
-                              'workspace': ws })
-   
-    #comparegenome = genomeout['genome_comparisons']                               
-    #funccomp = genomeout['function_comparisons']
-    #print meth.debug(json.dumps(comparegenome))
-    #print meth.debug(json.dumps(funccomp))
     return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
 
 @method(name="View Metabolic Model Details")
@@ -1223,7 +1173,7 @@ def _compare_fbas(meth, fba_id1, fba_id2):
     return json.dumps({'ids': [fba_id1, fba_id2],"ws": meth.workspace_id})
 
 @method(name="Gapfill a Metabolic Model")
-def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit, solution_time_limit):
+def _gapfill_fba(meth, fba_model_id, media_id,source_model_id,int_sol, output_model_id):
     """Run Gapfilling on an metabolic model.  Gapfill attempts to identify the minimal number of reactions
     needed to add to your metabolic model in order for the model to predict growth in the
     given media condition (or in complete media if no Media is provided).  Gapfilling is
@@ -1239,105 +1189,33 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
     :type media_id: kbtypes.KBaseBiochem.Media
     :ui_name media_id: Media
     
-    :param solution_limit: select the number of solutions you want to find [12.3]
-    :type solution_limit: kbtypes.Unicode
-    :ui_name solution_limit: Number of Solutions
-    :default solution_limit: 5
+    :param source_model_id: model to gapfill from
+    :type source_model_id: kbtypes.KBaseFBA.FBAModel
+    :ui_name source_model_id: Source Gapfill Model
     
-    :param total_time_limit: the total time you want to run gapfill [12.4]
-    :type total_time_limit: kbtypes.Unicode
-    :ui_name total_time_limit: Total Time Limit (s)
-    :default total_time_limit: 18000
+    :param int_sol: automatically integrate solution (yes/no)
+    :type int_sol: kbtypes.Unicode
+    :ui_name int_sol: Integrate Solution
     
-    :param solution_time_limit: the max time you want to spend per solution [12.5]
-    :type solution_time_limit: kbtypes.Unicode
-    :ui_name solution_time_limit: Solution Time Limit (s)
-    :default solution_time_limit: 3600
+    :param output_model_id: select a name for the model result object (optional)
+    :type output_model_id: kbtypes.Unicode
+    :ui_name output_model_id: Output Model ID
     
-    :return: job ID string
-    :rtype: kbtypes.Unicode
-    :output_widget: kbaseGapfillStatus
+    :return: Metabolic Model Data
+    :rtype: kbtypes.Model
+    :output_widget: kbaseModelTabs
     """
     
     # setting the output id appears to not work, so for now we leave it out
-    #:param output_model_id: select a name for the FBA result object (optional)
-    #:type output_model_id: kbtypes.Unicode
-    #:ui_name output_model_id: Output FBA Result Name
+    
     
     meth.stages = 2
-    meth.advance("Setting up gapfill parameters")
+    meth.advance("Running gapfill on model...")
     
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id;
 
     fbaClient = fbaModelServices(service.URLS.fba,token=userToken)
-
-    """
-    typedef structure {
-        FBAFormulation formulation;
-        int num_solutions;
-        bool nomediahyp;
-        bool nobiomasshyp;
-        bool nogprhyp;
-        bool nopathwayhyp;
-        bool allowunbalanced;
-        float activitybonus;
-        float drainpen;
-        float directionpen;
-        float nostructpen;
-        float unfavorablepen;
-        float nodeltagpen;
-        float biomasstranspen;
-        float singletranspen;
-        float transpen;
-        list<reaction_id> blacklistedrxns;
-        list<reaction_id> gauranteedrxns;
-        list<compartment_id> allowedcmps;
-        probanno_id probabilisticAnnotation;
-        workspace_id probabilisticAnnotation_workspace;
-    } GapfillingFormulation;
-    
-    typedef structure {
-        media_id media;
-        list<compound_id> additionalcpds;
-        prommodel_id prommodel;
-        workspace_id prommodel_workspace;
-        workspace_id media_workspace;
-        float objfraction;
-        bool allreversible;
-        bool maximizeObjective;
-        list<term> objectiveTerms;
-        list<feature_id> geneko;
-        list<reaction_id> rxnko;
-        list<bound> bounds;
-        list<constraint> constraints;
-        mapping<string,float> uptakelim;
-        float defaultmaxflux;
-        float defaultminuptake;
-        float defaultmaxuptake;
-        bool simplethermoconst;
-        bool thermoconst;
-        bool nothermoerror;
-        bool minthermoerror;
-    } FBAFormulation;
-    
-    typedef structure {
-        fbamodel_id model;
-        workspace_id model_workspace;
-        GapfillingFormulation formulation;
-        phenotype_set_id phenotypeSet;
-        workspace_id phenotypeSet_workspace;
-        bool integrate_solution;
-        fbamodel_id out_model;
-        workspace_id workspace;
-        gapfill_id gapFill;
-        int timePerSolution;
-        int totalTimeLimit;
-        string auth;
-        bool overwrite;
-        bool completeGapfill;
-    } gapfill_model_params;
-    """
     
     fba_formulation = {}
     if (media_id):
@@ -1345,50 +1223,34 @@ def _gapfill_fba(meth, fba_model_id, media_id, solution_limit, total_time_limit,
             'media' : media_id,
             'media_workspace' : workspaceName
         }
-
-    # set some default values
-    if not solution_limit:
-        solution_limit = 5 #10*60 #10 minutes
-    if not solution_time_limit:
-        solution_time_limit = 10*60 #10 minutes
-    if not total_time_limit:
-        total_time_limit = 10*60 #10 minutes
-        
     
     gapfill_formulation = {
         'formulation' : fba_formulation,
-        'num_solutions' : int(solution_limit),
     }
     gapfill_params = {
         'model' : fba_model_id,
         'model_workspace' : workspaceName,
         'formulation' : gapfill_formulation,
         'workspace' : workspaceName,
-        'timePerSolution' : int(solution_time_limit),
-        'totalTimeLimit' : int(total_time_limit)
-        #'auth' : token
     }
-    #if(output_model_id):
-    #    gapfill_params['out_model'] = output_model_id,
+    if(output_model_id):
+        gapfill_params['out_model'] = output_model_id;
+        
+    if(source_model_id):
+        gapfill_params['source_model'] = source_model_id;
+        gapfill_params['source_model_ws'] = workspaceName;
+        
+    if(int_sol):
+        gapfill_params['integrate_solution'] = int_sol;
 
-    meth.advance("Submitting gapfill job")
-    job_data = fbaClient.queue_gapfill_model(gapfill_params);
+    output = fbaClient.gapfill_model(gapfill_params);
 
-    job_id = job_data['id'].strip()
-    total_time_hrs = round(int(total_time_limit) / 3600.0,3)
-    hour_suffix = ""
-    if (total_time_hrs is not 1):
-        hour_suffix = "s"
+    if output_model_id:
+        data = json.dumps({'id': output_model_id, 'ws': ws})
+    else:
+        data = json.dumps({'id': fba_model_id, 'ws': ws})        
 
-    return json.dumps(
-        {
-            #'job_data':job_data
-            #'job_id':job_id,
-            'estimated_time_str': str(total_time_hrs) + " hour" + str(hour_suffix),
-            #'output_data_id' : str(job_data['jobdata']['postprocess_args'][0]['out_model'].strip()),
-            #'token' : token,
-            'job_data' : job_data
-        })
+    return data
 
 @method(name="Integrate Gapfill Solution")
 def _integrate_gapfill(meth, fba_model_id, gapfill_id, output_model_id):
@@ -1622,7 +1484,8 @@ def _insert_genome_into_species_tree(meth, genome, neighbor_count, out_tree):
     :rtype: kbtypes.Unicode
     :output_widget: kbaseTree
     """
-    meth.stages = 1
+    meth.stages = 2
+    meth.advance("Instantiating tree construction job...")
     token, workspace = meth.token, meth.workspace_id
     if not out_tree:
         out_tree = "sptree_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])
@@ -1652,6 +1515,86 @@ def _view_tree(meth, tree_id):
     meth.stages = 1
     workspace = meth.workspace_id
     return json.dumps({'treeID': tree_id, 'workspaceID': workspace, 'height':'500px'})
+
+@method(name="Build Genome Set From Tree")
+def _build_genome_set_from_tree(meth, tree_id,genome_set):
+    """ Build a genome set from the contents of the species tree, copying any CDM genomes 
+    into local workspace.
+
+    :param species_tree: a species tree with close genomes
+    :type species_tree: kbtypes.KBaseTrees.Tree
+    :ui_name species_tree: Species Tree
+    
+    :param genome_set: ID to use when saving genome set
+    :type genome_set: kbtypes.KBaseSearch.GenomeSet
+    :ui_name genome_set: Output Genome Set ID
+    
+    :return: Genome Set Result
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseGenomeSetBuilder
+    """
+    
+    meth.stages = 2
+    meth.advance("Building genome set from tree...")
+    token, workspace = meth.token, meth.workspace_id
+    ws = workspaceService(service.URLS.workspace, token=token)
+    data = ws.get_objects([{'ref': workspace+'/'+tree_id}])[0]
+    wsid = data['info'][6]
+    refs = data['data']['ws_refs']
+    elements = {}
+    gcount = 0
+    namehash = {}
+    objectids = []
+    for key in refs:
+        if key[:5] != "kb|g.":
+            param = 'param'+`gcount`
+            gcount = gcount+1
+            ref = refs[key]['g'][0]
+            objectids.append({'ref':ref})
+            elements[param] = {'ref': ref}
+
+    infos = ws.get_object_info(objectids,0);
+    for item in infos:
+        namehash[item[1]] = 1
+
+    for key in refs:
+        if key[:5] == "kb|g.":
+            ref = refs[key]['g'][0]
+            newname = data['data']['default_node_labels'][key];
+            newname = re.sub('[^a-zA-Z0-9_\.]', '_', newname)
+            if newname in namehash:
+                count = 0
+                testname = newname+'_'+`count`
+                while testname in namehash:
+                    count = count + 1
+                    testname = newname+'_'+`count`
+
+                newname = testname
+
+            namehash[newname] = 1
+            wsinfo = ws.copy_object({
+                'to':{'workspace':workspace,'name':newname},
+                'from':{'objid':ref.split('/')[1],'wsid':ref.split('/')[0]}
+            })
+            wsid = wsinfo[6]
+            name = wsinfo[0]
+            version = wsinfo[4]
+            ref = `wsid`+"/"+`name`+"/"+`version`
+            param = 'param'+`gcount`
+            gcount = gcount+1
+            elements[param] = {'ref': ref}
+
+    description = 'GenomeSet of genome included in species tree ' + workspace + '/' + tree_id
+    ws.save_objects({
+        'workspace': workspace,
+        'objects': [{
+                'type': 'KBaseSearch.GenomeSet',
+                'data': {'description': description,'elements': elements},
+                'name': genome_set
+        }]
+    })
+
+    return json.dumps({'loadExisting': 1,'genomeSetName': genome_set, 'wsName': workspace})
 
 @method(name="Build Genome Set Object")
 def _build_genome_set(meth, out_genome_set):
@@ -1687,7 +1630,8 @@ def _insert_genome_set_into_species_tree(meth, genome_set, neighbor_count, out_t
     :rtype: kbtypes.Unicode
     :output_widget: kbaseTree
     """
-    meth.stages = 1
+    meth.stages = 2
+    meth.advance("Instantiating tree construction job...")
     token, workspace = meth.token, meth.workspace_id
     if not out_tree:
         out_tree = "sptree_" + ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(8)])

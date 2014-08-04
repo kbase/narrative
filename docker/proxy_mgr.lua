@@ -29,6 +29,9 @@
 
 local M={}
 
+local auth_cookie_name = "kbase_narr_session"
+local num_prov_retry = 10
+
 -- regexes for matching/validating keys and values
 local key_regex = "[%w_%-%.]+"
 local val_regex = "[%w_%-:%.]+"
@@ -487,7 +490,7 @@ get_session = function()
    local error_msg = nil;
    if cheader then
       -- ngx.log( ngx.INFO, string.format("cookie = %s",cheader))
-      local session = string.match( cheader,"kbase_session=([%S]+);?")
+      local session = string.match( cheader, auth_cookie_name .. "=([%S]+);?")
       if session then
 	 -- ngx.log( ngx.INFO, string.format("kbase_session = %s",session))
 	 session = string.gsub(session,";$","")
@@ -574,28 +577,29 @@ discover = function()
 -- Spin up a new instance
 --
 new_container = function( session_id)
-		   local res = nil
-		   ngx.log( ngx.INFO, "Creating new notebook instance for ",session_id )
-		   local ok,res = pcall(notemgr.launch_notebook,session_id)
-		   if ok then
-		      ngx.log( ngx.INFO, "New instance at: " .. res)
-		      -- do a none blocking sleep for 5 seconds to allow the instance to spin up
-		      ngx.sleep(5)
-		      local success,err,forcible = proxy_map:set(session_id,res)
-		      if not success then
-			 ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-			 ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
-			 response = "Unable to set routing for notebook " .. err
-		      else
-			 success,err,forcible = proxy_state:set(session_id,true)
-			 success,err,forcible = proxy_last:set(session_id,os.time())
-		      end
-		   else
-		      ngx.log( ngx.ERR, "Failed to launch new instance : ".. p.write(res ))
-		      res = nil
-		   end
-		   return(res)
+	local res = nil
+	ngx.log( ngx.INFO, "Creating new notebook instance for ",session_id )
+	local ok,res = pcall(notemgr.launch_notebook,session_id)
+	if ok then
+		ngx.log( ngx.INFO, "New instance at: " .. res)
+		-- do a non-blocking sleep for 5 seconds to allow the instance to spin up
+
+		ngx.sleep(5)
+		local success,err,forcible = proxy_map:set(session_id,res)
+		if not success then
+			ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+			ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
+			response = "Unable to set routing for notebook " .. err
+		else
+			success,err,forcible = proxy_state:set(session_id,true)
+			success,err,forcible = proxy_last:set(session_id,os.time())
 		end
+	else
+		ngx.log( ngx.ERR, "Failed to launch new instance : ".. p.write(res ))
+		res = nil
+	end
+	return(res)
+end
 
 --
 -- Route to the appropriate proxy

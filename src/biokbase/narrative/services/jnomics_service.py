@@ -261,6 +261,16 @@ def getGenomefeatures(ref,auth):
             print >>output, locs[key][0][0] + "\t" + str(locs[key][0][1]) + "\t" + str(int(locs[key][0][1]) + int(locs[key][0][3])) + "\t" + locs[key][0][2] + "\t" + key
     return output
 
+def fidstoextids(fids,retries=0):
+    if retries > 10: return
+    idc = IDServerAPI(OTHERURLS.ids)
+    try:
+        ext_ids = idc.kbase_ids_to_external_ids(fids)
+    except:
+        retries+=1
+        fidstoextids(fids,retries)
+    return ext_ids
+
 def histogram(iterable, low, high, bins):
     '''Count elements from the iterable into evenly spaced bins
 
@@ -287,8 +297,9 @@ def prepareInputfiles(token,workspace=None,files=None,wstype=None):
         filename = os.path.basename(nfile)
         try:
             obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
-        except FileNotFound as e:
-            raise FileNotFound("File Not Found: {}".format(err))
+        except Exception as err:
+            pass
+            #raise FileNotFound("File Not Found: {}".format(err))
         #return {"output" : str(status), "error": json_error}
         if 'data' in obj and 'shock_ref' in obj['data'] and 'shock_id' in  obj['data']['shock_ref']:
             node_id = obj['data']['shock_ref']['shock_id']
@@ -536,7 +547,7 @@ def runPipeline(stages,meth,auth):
 ##Narrative Functions that will be displayed
 ##
 
-@method(name = "Calculate Variatons")
+@method(name = "Calculate Variations")
 def jnomics_calculate_variations(meth,workspace=None,Input_file=None,paired=None,
                                  Input_organism=None):
     """Calculate variations
@@ -699,8 +710,9 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
         if 'output' in previous_steps and 'shock_id' in previous_steps['output']:
             shock_id = previous_steps['output']['shock_id']
         if not isFileFound(entityfile,auth):
-            out = getGenomefeatures(ref,auth)
-            ret = writefile(entityfile,out,auth)
+            pass
+            #out = getGenomefeatures(ref,auth)
+            #ret = writefile(entityfile,out,auth)
         ontodict = ontologydata(po_id,eo_id)
         ontoid = ",".join([ key for (key,value) in ontodict.items()])
         ontodef =  ",".join([value for (key,value) in ontodict.items()])
@@ -761,6 +773,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     try:
         ret  = prepareInputfiles(meth.token,workspace,Input_file_path,wtype)
     #return to_JSON(ret)
+
         if 'metadata' in ret:
             if 'sample_id' in ret['metadata'][0]:
                 sample_id = ret['metadata'][0]['sample_id']
@@ -773,9 +786,10 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
                 po_id = ret['metadata'][0]['po_id']
             if 'eo_id' in  ret['metadata'][0]:
                 eo_id = ret['metadata'][0]['eo_id']
-    except FileNotFound as e:
-            raise FileNotFound("File Not Found: {}".format(err))
-    
+    except Exception as e:
+            pass
+            #raise FileNotFound("File Not Found: {}".format(e))
+
     Output_file_path = "narrative_RNASeq_"+str(sample_id)+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
     entityfile = str(act_ref) + "_fids.txt"
     tophat_out_path = os.path.join(Output_file_path, "tophat")
@@ -797,6 +811,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
 @method(name = "Plot Gene Expression Histogram")
 def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
 
+
     """Plot Gene Expression Histogram
     :param workspace: Name of workspace, default is current
     :type workspace : kbtypes.Unicode
@@ -809,21 +824,24 @@ def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
     :ui_name outputfile : Output file prefix
     :return: Workspace id
     :rtype: kbtypes.Unicode
+    :output_widget: kbaseHistogram
     """
-    
+
     meth.stages = 1
     meth.advance("Generating Histogram Plot")
     token = meth.token
     auth = Authentication(userFromToken(token), "", token)
     ws = workspaceService(OTHERURLS.workspace)
     filename = os.path.basename(exp_file)
-    exptype = WSTYPES.rnaseq_exptype 
+    exptype = WSTYPES.rnaseq_exptype
+
     dt_type = WSTYPES.datatabletype
     idc = IDServerAPI(OTHERURLS.ids)
     try:
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': exptype})
-    except FileNotFound as e:
-        raise FileNotFound("File Not Found: {}".format(err))
+    except Exception as e:
+        pass
+        #raise FileNotFound("File Not Found: {}".format(e))
     #return json.dumps(obj)
         #return {"output" : str(status), "error": json_error}
     if 'expression_levels' in obj['data']:
@@ -835,7 +853,7 @@ def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
     title = "Histogram  - " + exp_file
     hist_json = {"title" :  title , "x_label" : "Gene Expression Level", "y_label" : "Frequency", "data" : hist_dt}
     #### hist_json is the json input for histogram #######
-    #return to_JSON({"title" :  title , "x_label" : "Gene Expression Level", "y_label" : "Frequency", "data" : hist_dt}) 
+    #return to_JSON({"title" :  title , "x_label" : "Gene Expression Level", "y_label" : "Frequency", "data" : hist_dt})
     sorted_dt = OrderedDict({ "id" : "", "name" : "","row_ids" : [] ,"column_ids" : [] ,"row_labels" : [] ,"column_labels" : [] , "data" : [] })
     sorted_dt["row_ids"] = [hist_json["x_label"]]
     sorted_dt["column_ids"] = [hist_json["y_label"]]
@@ -845,8 +863,10 @@ def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
     #sorted_dt["id"] = "kb|histogramdatatable."+str(idc.allocate_id_range("kb|histogramdatatable",1))
     sorted_dt["id"] = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_HistogramSummary"
     sorted_dt["name"] = hist_json["title"]
-    return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
-    
+    #return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
+    ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token)
+    return  to_JSON({"dataset" : sorted_dt})
+
 @method(name = "Identify Differential Expression")
 def jnomics_differential_expression(meth,workspace= None,title=None, alignment_files=None,exp_files=None,
                                  ref=None,outputfile=None):
@@ -872,7 +892,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    
+
     meth.stages = 5
     token = meth.token
 
@@ -933,7 +953,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
             diff_exp["shock_ref"]["shock_url"] = OTHERURLS.shock+"/node/"+value
             diff_exp_files.append(diff_exp)
 
-        #diffid = "kb|differentialExpression."+str(idc.allocate_id_range(diffexptype,1)) 
+        #diffid = "kb|differentialExpression."+str(idc.allocate_id_range(diffexptype,1))
         diffid = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_DifferentialExpression"
         diffexpobj = { "name" : diffid,
                        "title" : title,
@@ -993,7 +1013,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
 def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,design=None,summary=None,source_Id=None,src_date=None,outputfile=None):
     """search a file
 
-    :param workspace: Worspace id
+    :param workspace: Name of workspace; default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
     :param exp_samples: Expression Sample ids (kb|sample.xxxx)
@@ -1023,7 +1043,7 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-   
+
     meth.stages =  1
     token = meth.token
 
@@ -1037,15 +1057,16 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
     def ws_getObject(workspace,expfile,exptype,token):
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': expfile, 'type': exptype})
         return obj
-    
+
     files = exp_samples.strip('\r\n').split(",")
     source_Id = source_Id + "___" + "RNA-Seq"
-    genome_map = [workspace+"/"+x for x in files]    
+    genome_map = [workspace+"/"+x for x in files]
 
     #id_dict = idc.register_ids(IDServerids.rnaseq_series,"KB",[source_Id])
     #objid = id_dict.values()[0]
     ### change to rename the obj
     objid = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_ExpressionSeries"
+
     meth.advance("Preparing the Series Object")
     ### change id to kb id str(objid)
     seriesobj = { 'id' : objid ,
@@ -1066,7 +1087,7 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
 def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outputfile=None):
     """search a file
 
-    :param workspace: Worspace id
+    :param workspace: Name of workspace; default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
     :param name: Datatable Name
@@ -1084,9 +1105,10 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outp
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    
-    meth.stages =  1 
+
+    meth.stages =  1
     meth.advance("Create Expression Datatable")
+
     meth.stages =  1
     token = meth.token
 
@@ -1111,8 +1133,9 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outp
 
     try:
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
-    except FileNotFound as e:
-        raise FileNotFound("File Not Found: {}".format(err))
+    except Exception as e:
+        pass
+        #raise FileNotFound("File Not Found: {}".format(e))
     if 'genome_expression_sample_ids_map' in obj['data']:
         samples = obj['data']['genome_expression_sample_ids_map'][ref]
         for sample in samples:
@@ -1145,7 +1168,7 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outp
 def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     """search a file
 
-    :param workspace: Worspace id
+    :param workspace: Name of workspace; default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
     :param dtname: Datatable Name
@@ -1157,12 +1180,13 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
-    meth.stages =  1 
+    meth.stages =  1
     meth.advance("filtering Expression DataTable")
     token = meth.token
 
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     ws = workspaceService(OTHERURLS.workspace)
+
     token = meth.token
 
     auth = Authentication(userFromToken(meth.token), "", meth.token)
@@ -1173,12 +1197,15 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     exp_type =  WSTYPES.rnaseq_exptype
     dt_type = WSTYPES.datatabletype
 
-    try: 
+    try:
         ret = ws.get_object({'auth': token, 'workspace': workspace, 'id': dtname, 'type': dt_type})
         result = ret['data']
-    except FileNotFound as e:
-        raise FileNotFound("File Not Found: {}".format(err))
+    except Exception as e :
+        pass
+        #raise FileNotFound("File Not Found: {}".format(e))
+
     nsamples = len(result['column_ids'])
+
     diff_index= {}
 
     for i in xrange(0,len(result['row_ids'])):
@@ -1190,10 +1217,12 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     sorted_dt = OrderedDict({ "id" : "", "name" : "","row_ids" : [] ,"column_ids" : [] ,"row_labels" : [] ,"column_labels" : [] , "data" : [] })
     for k, v in sorted_dict:
         sorted_dt["row_ids"].append(result["row_ids"][k])
-        sorted_dt["data"].append(result["data"][k])
 
+        sorted_dt["data"].append(result["data"][k])
+    retry = 0
+    extids = fidstoextids(sorted_dt["row_ids"],retry)
     sorted_dt["column_ids"] = result["column_ids"]
-    sorted_dt['row_labels'] = sorted_dt["row_ids"]
+    sorted_dt['row_labels'] = [ str(v[1].split(':')[1]) for k,v in extids.items() ]
     sorted_dt["column_labels"] = sorted_dt['column_ids']
     #sorted_dt["id"] = "kb|filtereddatatable."+str(idc.allocate_id_range("kb|filtereddatatable",1))
     sorted_dt["id"] = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_FilteredDataTable"
@@ -1207,7 +1236,7 @@ def gene_network(meth, hm=None, workspace_id=None):
         :param hm: Filtered Datatable
         :type hm: kbtypes.Unicode
         :ui_name hm : Filtered Datatable
-        :param workspace_id: Workspace ID
+        :param workspace_id: Name of workspace; default is current
         :type workspace_id: kbtypes.Unicode
         :ui_name workspace_id : Workspace
         :return: Rows for display
@@ -1229,11 +1258,8 @@ def gene_network(meth, hm=None, workspace_id=None):
         raw_data = ws.get_object({'auth': meth.token, 'workspace': workspace_id, 'id': hm, 'type': dt_type})
     else:
         raw_data = {}
-    # ideally, you should make the height dynamic based upon the amount of data.
-    # By default, the widget has 100px of padding around the data, and the rest of the height is used for the heatmap
-    # So figure out how much you want. 50px/row looks like the minimum you can use, more may be better.
-    # calculate (height of row (at least 50) ) * num_row_labels and toss that in as the height param.
-    data = {'dataset': raw_data, 'height' : '1000px'}
+    data = {'dataset': raw_data, 'height' : str(len(raw_data["data"]["row_labels"]) * 18) + "px"}
+
     return json.dumps(data)
 
 finalize_service()

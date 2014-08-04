@@ -641,36 +641,54 @@ def _compute_pan_genome(meth, genome_set,pangenome_id):
         genomes.append(array[1])
 
     pangenome_parameters = {
-    	'genomes':genomes,
-    	'genome_workspaces':gwss,
-    	'workspace':workspace_id,
-    	'auth':usertoken,
-    	'wsurl':service.URLS.workspace}
+        'genomes':genomes,
+        'genome_workspaces':gwss,
+        'workspace':workspace_id,
+        'auth':usertoken,
+        'wsurl':service.URLS.workspace}
     
     if pangenome_id:
         pangenome_parameters['output_id']=pangenome_id
-	
+    
     fbaclient = fbaModelServices(url="http://140.221.85.73:4043", token=usertoken)
     meta = fbaclient.build_pangenome(pangenome_parameters)
     
     return json.dumps({'ws': workspace_id, 'name':meta[1]})
 
-@method(name="Export orthologs from Pan-genome")
-def _export_gene_set_pan_genome(meth, pan_genome_id):
-    """Export orthologs from Pangenome as external FeatureSet objects. [26] 
+@method(name="View Pangenome")
+def _view_pan_genome(meth, pan_genome_id):
+    """Show Pangenome object. [29] 
     
-    :param pan_genome_id: ID of pan-genome object [26.1]
+    :param pan_genome_id: ID of pangenome object [29.1]
     :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
-    :ui_name pan_genome_id: Pan-genome ID
+    :ui_name pan_genome_id: Pangenome ID
 
     :return: Generated Compare Genome
     :rtype: kbtypes.KBaseGenomes.Pangenome
-    :output_widget: kbasePanGenomeGeneSetExport
+    :output_widget: kbasePanGenome
     """
     
     meth.stages = 1 # for reporting progress
     
     return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
+
+
+@method(name="Export orthologs from Pangenome")
+def _export_gene_set_pan_genome(meth, pan_genome_id):
+    """Export orthologs from Pangenome as external FeatureSet objects. [26] 
+    
+    :param pan_genome_id: ID of pangenome object [26.1]
+    :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
+    :ui_name pan_genome_id: Pangenome ID
+
+    :return: Generated Compare Genome
+    :rtype: kbtypes.KBaseGenomes.Pangenome
+    :output_widget: kbasePanGenome
+    """
+    
+    meth.stages = 1 # for reporting progress
+    
+    return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id, 'withExport': 'true'})
 
 @method(name="Compare Models")
 def _compare_models(meth, model_ids):

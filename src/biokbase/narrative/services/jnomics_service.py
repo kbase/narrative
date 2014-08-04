@@ -58,7 +58,7 @@ class FileNotFound(Exception):
     pass
 
 VERSION = (0, 0, 1)
-NAME = "VariationExpression"
+NAME = "Variation Expression Services"
 
 POLL_SLEEP_INTERVAL=10
 
@@ -568,6 +568,9 @@ def jnomics_calculate_variations(meth,workspace=None,Input_file=None,paired=None
 
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     wtype = WSTYPES.var_sampletype
+        
+    if not workspace:
+        workspace = meth.workspace_id
 
     Output_file_path = "narrative_variation_"+ str(uuid.uuid4().get_hex().upper()[0:6])
     align_out_path = os.path.join(Output_file_path , "align")
@@ -643,7 +646,9 @@ def jnomics_calculate_variations(meth,workspace=None,Input_file=None,paired=None
               Stage(writeWS, "Uploading to Workspace", None)]
 
     ret = runPipeline(stages,meth,auth)
+   
     return to_JSON(ret[-1])
+
 
 @method(name = "Calculate Gene Expression")
 def jnomics_calculate_expression(meth, workspace = None,paired=None,
@@ -676,6 +681,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
 
     meth.stages = 7
     token = meth.token
+
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     ws = workspaceService(OTHERURLS.workspace)
     idc = IDServerAPI(OTHERURLS.ids)
@@ -686,10 +692,15 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     exptype = WSTYPES.rnaseq_exptype
     bamtype = WSTYPES.rnaseq_bamtype
 
+        
+    if not workspace:
+        workspace = meth.workspace_id
+
     node_id = None
     stats = []
     myfile = None
     sample_id = None
+    stat = {}
 
     @pipelineStep("compute")
     def runTophat(client,previous_steps):
@@ -755,7 +766,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
 		json_error = previous_steps['output'].failure_info
         #    raise Exception , "Workspace obj generation Failed"
 
-        return {"submitted" : realid , "type" : exptype , "status" : wsreturn , "error" :  json_error}
+        return {"submitted" : objid , "type" : exptype , "status" : wsreturn , "error" :  json_error}
 
     def ontologydata(poid=None,eoid=None):
         exp =  expressionService(OTHERURLS.expression)
@@ -805,7 +816,12 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
              Stage(saveWorkspace_obj,"Saving Object",None)]
 
     ret = runPipeline(stages,meth,auth)
-    return to_JSON({"submitted" : ret[-1]["submitted"]})
+    if "output" in ret[-1] and "submitted"  in ret[-1]["output"]:
+           stat = {"submitted" : ret[-1]["output"]["submitted"]}
+    else:
+         stat = {"status" : "FAILED" , "error" : ret[-1]}
+   
+    return to_JSON(stat)
 
 @method(name = "Plot Gene Expression Histogram")
 def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
@@ -825,6 +841,9 @@ def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
     :rtype: kbtypes.Unicode
     :output_widget: kbaseHistogram
     """
+
+    if not workspace:
+        workspace = meth.workspace_id
 
     meth.stages = 1
     meth.advance("Generating Histogram Plot")
@@ -850,9 +869,9 @@ def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
         lmax = round(max([v for k,v in hdict.items()]))
     hist_dt = histogram(hdict.values(),lmin,lmax,50)
     title = "Histogram  - " + exp_file
-    hist_json = {"title" :  title , "x_label" : "Gene Expression Level", "y_label" : "Frequency", "data" : hist_dt}
+    hist_json = {"title" :  title , "x_label" : "Gene Expression Level (FPKM)", "y_label" : "Num of Genes", "data" : hist_dt}
     #### hist_json is the json input for histogram #######
-    #return to_JSON({"title" :  title , "x_label" : "Gene Expression Level", "y_label" : "Frequency", "data" : hist_dt})
+    #return to_JSON({"title" :  title , "x_label" : "Gene Expression Level ( FPKM )", "y_label" : "Num of Genes", "data" : hist_dt})
     sorted_dt = OrderedDict({ "id" : "", "name" : "","row_ids" : [] ,"column_ids" : [] ,"row_labels" : [] ,"column_labels" : [] , "data" : [] })
     sorted_dt["row_ids"] = [hist_json["x_label"]]
     sorted_dt["column_ids"] = [hist_json["y_label"]]
@@ -905,9 +924,13 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     exptype =  WSTYPES.rnaseq_exptype
     diffexptype = WSTYPES.rnaseq_diffexptype
     bamtype  = WSTYPES.rnaseq_bamtype
+        
+    if not workspace:
+        workspace = meth.workspace_id
 
     node_id = None
     stats = []
+    stat = {}
 
     @pipelineStep("compute")
     def runCuffmerge(client,previous_steps):
@@ -1006,7 +1029,13 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
               Stage(runCuffdiff,"Differential Expression",pollGridJob),
               Stage(savediffWorkspace_obj,"Saving Workspace Obj",None)]
     ret = runPipeline(stages,meth,auth)
-    return  to_JSON({ "submitted" : ret[-1]["submitted"]})
+
+    if "output" in ret[-1] and "submitted"  in ret[-1]["output"]:
+           stat = {"submitted" : ret[-1]["output"]["submitted"]}
+    else:
+         stat = {"status" : "FAILED" , "error" : ret[-1]}
+   
+    return to_JSON(stat)
 
 @method(name = "Create Expression Series ")
 def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,design=None,summary=None,source_Id=None,src_date=None,outputfile=None):
@@ -1052,6 +1081,9 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
 
     ws = workspaceService(OTHERURLS.workspace)
     idc = IDServerAPI(OTHERURLS.ids)
+        
+    if not workspace:
+        workspace = meth.workspace_id
 
     def ws_getObject(workspace,expfile,exptype,token):
         obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': expfile, 'type': exptype})
@@ -1118,6 +1150,9 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outp
     wstype =  WSTYPES.rnaseq_expseriestype
     exp_type =  WSTYPES.rnaseq_exptype
     dt_type = WSTYPES.datatabletype
+        
+    if not workspace:
+        workspace = meth.workspace_id
 
     datatable={}
     row_ids = []
@@ -1182,13 +1217,8 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     """
     meth.stages =  1
     meth.advance("filtering Expression DataTable")
-    token = meth.token
-
-    auth = Authentication(userFromToken(meth.token), "", meth.token)
-    ws = workspaceService(OTHERURLS.workspace)
 
     token = meth.token
-
     auth = Authentication(userFromToken(meth.token), "", meth.token)
     ws = workspaceService(OTHERURLS.workspace)
     idc = IDServerAPI(OTHERURLS.ids)
@@ -1196,6 +1226,10 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     wstype =  WSTYPES.rnaseq_expseriestype
     exp_type =  WSTYPES.rnaseq_exptype
     dt_type = WSTYPES.datatabletype
+    extids = []
+    
+    if not workspace:
+        workspace = meth.workspace_id
 
     try:
         ret = ws.get_object({'auth': token, 'workspace': workspace, 'id': dtname, 'type': dt_type})
@@ -1228,8 +1262,8 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     sorted_dt["id"] = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_FilteredDataTable"
     sorted_dt["name"] = result["name"]
     ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token)
-    return to_JSON({"submitted" : sorted_dt["id"] }
-
+    return to_JSON({"submitted" : sorted_dt["id"] })
+      
 @method(name="Render Heatmap")
 def gene_network(meth, hm=None, workspace_id=None):
     """This method creates a heatmap
@@ -1246,6 +1280,10 @@ def gene_network(meth, hm=None, workspace_id=None):
         """
     #:param workspace_id: Workspace name (use current if empty)
     #:type workspace_id: kbtypes.Unicode
+        
+    if not workspace_id:
+        workspace_id = meth.workspace_id
+
     meth.stages = 1
     # if not workspace_id:
     #     meth.debug("Workspace ID is empty, setting to current ({})".format(meth.workspace_id))

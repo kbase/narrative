@@ -68,21 +68,24 @@ qiimeWF = """{
       {
       "taskid" : "0",
       "cmd" : {
-      "name" : "app:QIIME.pick_closed_reference_otus.default",
-      "app_args" : [
-         {"resource":"shock",
-            "host" : "$shock",
-            "node" : "$seq",
-            "filename" : "input.fas"},
-         {"resource" : "shock",
-            "host" : "$shock",
-            "node" : "$param",
-            "filename" : "otu_picking_params_97.txt"},
-         {"resource" : "string",
-            "key" : "IDENTITY",
-            "value" : "97"
+         "name" : "app:QIIME.pick_closed_reference_otus.default",
+         "app_args" : [
+            {"resource":"shock",
+               "host" : "$shock",
+               "node" : "$seq",
+               "filename" : "input.fas"
+            },
+            {"resource" : "shock",
+               "host" : "$shock",
+               "node" : "$param",
+               "filename" : "otu_picking_params_97.txt"
+		    },
+            {"resource" : "string",
+               "key" : "IDENTITY",
+               "value" : "97"
+            }
+            ]
          }
-         ]
       }
    ]
 }"""

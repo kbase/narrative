@@ -1,3 +1,3 @@
 __all__ = ['microbes_demo', 'plants_gwas', 'plants_coex', 'communities_demo',
-           'invocation_tools', 'jnomics_service', 'test_service']
+           'invocation_tools', 'jnomics_service']
 

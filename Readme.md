@@ -54,6 +54,20 @@ Installing the Narrative virtual environment
 
 The Narrative Interface uses a virtual environment that captures the Python dependency state of your system, makes an copy of that environment (so to speak), and prevents all of the different IPython dependencies from trickling out into your system and colliding with different things once it gets installed. All this means is that a Narrative's virtual environment is protected from changes to your system environment, and vice-versa.
 
+First, however, you'll need to get a necessary submodule initialized:
+
+    git submodule init
+    git submodule update    
+
+If there are any problems with this step, run the following commands:
+
+    cd modules/ui-common
+    git checkout hardy
+    git pull
+
+Now you're set up with the correct Narrative environment.
+
+
 The installation process takes a little time to run, as it downloads the IPython core code, builds a virtual environment to encapsulate it in, and puts that in a specified directory.
 
 The `install.sh` script in the root of this repo does all the work. There are a few options of how to use it.

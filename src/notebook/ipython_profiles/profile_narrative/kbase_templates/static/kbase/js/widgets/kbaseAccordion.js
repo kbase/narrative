@@ -81,7 +81,7 @@ Widget to create an accordion control. Easy to use!
                                             $('<i></i>')
                                                 .css('margin-right', '5px')
                                                 .css('margin-left', '3px')
-                                                .addClass('icon-chevron-right')
+                                                .addClass('fa fa-chevron-right')
                                                 .addClass('pull-left')
                                                 .css('height', '22px')
                                                 .css('line-height', '22px')
@@ -108,15 +108,15 @@ Widget to create an accordion control. Easy to use!
                                                     if ($opened != undefined) {
                                                         $opened.collapse('hide');
                                                         var $i = $opened.parent().first().find('i');
-                                                        $i.removeClass('icon-chevron-down');
-                                                        $i.addClass('icon-chevron-right');
+                                                        $i.removeClass('fa fa-chevron-down');
+                                                        $i.addClass('fa fa-chevron-right');
                                                     }
 
                                                     if ($target.get(0) != $opened.get(0)) {
                                                         $target.collapse('show');
                                                         var $i = $(this).parent().find('i');
-                                                        $i.removeClass('icon-chevron-right');
-                                                        $i.addClass('icon-chevron-down');
+                                                        $i.removeClass('fa fa-chevron-right');
+                                                        $i.addClass('fa fa-chevron-down');
                                                     }
 
                                                 }

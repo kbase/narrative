@@ -760,10 +760,10 @@
          * @private
          */
         handleExecuteReply: function (cell, content) {
-            this.dbg('[handleExecuteReply]');
-            // this.dbg(content);
+            // this.dbg('[handleExecuteReply]');
+            // // this.dbg(content);
 
-            this.dbg(cell);
+            // this.dbg(cell);
             /* This catches and displays any errors that don't get piped through
              * the back-end service.py mechanism.
              * Any code that makes it that far gets reported through the output

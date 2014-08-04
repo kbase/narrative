@@ -9,6 +9,7 @@
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
+        	loadExisting: null,
         	wsName: null,
         	genomeSetName: null,
             loadingImage: "../images/ajax-loader.gif",
@@ -23,12 +24,39 @@
         init: function(options) {
             this._super(options);
             this.pref = this.genUUID();
-            this.render();
+            this.render(this);
             return this;
         },
 
-        render: function() {
-        	this.renderState({});
+        render: function(owner) {
+        	if (this.options.loadExisting == 1) {
+        		var prom = kb.ws.get_objects([{workspace:this.options.wsName, name: this.options.genomeSetName}]);
+        		$.when(prom).done(function(data) {
+                	var data = data[0].data;
+                	var state = { descr: data.description };
+                	var refs = [];
+                	for (var key in data.elements) {
+                		refs.push(data.elements[key]['ref']);
+                	}
+                	var oprom = kb.ui.translateRefs(refs);
+                	$.when(oprom).done(function(refhash) {
+                		var count = 0;
+                		for (var key in data.elements) {
+                			state[key] = refhash[data.elements[key]['ref']].label.split('/')[1];
+                		}
+                		console.log(state);
+                		owner.renderState(state);
+                	}).fail(function(e){
+                		this.$elem.append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>')
+            		});
+            	}).fail(function(e){
+                	this.$elem.append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>')
+            	});
+        	} else {
+        		this.renderState({});
+        	}
         },
         
         renderState: function(state) {

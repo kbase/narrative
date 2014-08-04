@@ -85,7 +85,8 @@
     <script>
       require.config({
           baseUrl: '{{ static_url() }}',
-            urlArgs: "bust=" + (new Date()).getTime(),
+            //urlArgs: "bust=" + (new Date()).getTime(),
+            waitSeconds : 30,
             paths : {
                 'jquery'      : 'kbase/js/ui-common/ext/jquery/jquery-1.10.2.min',
                 'jqueryui'    : 'kbase/js/ui-common/ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min',
@@ -264,9 +265,7 @@
       kb_require(['narrative_paths'], function() {
           kb_require(['jquery', 'CDMI_API', 'jim'],
               function($, cdmi) {
-                  //add initialization code
-                  var x = new CDMI_API('http://kbase.us/services/cdmi_api');
-                  console.log(x);
+
               }
           );
       });

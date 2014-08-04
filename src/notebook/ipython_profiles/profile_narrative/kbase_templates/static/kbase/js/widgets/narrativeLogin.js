@@ -23,7 +23,8 @@
                 var token = $("#signin-button").kbaseLogin('session', 'token');
                 window.kb = new KBCacheClient(token);
 
-                var cmd = "biokbase.narrative.magics.set_token('" + token + "')\n" +
+                var cmd = "import biokbase\n" +
+                          "biokbase.narrative.magics.set_token('" + token + "')\n" +
                           "import os\n" +
                           "os.environ['KB_AUTH_TOKEN'] = '" + token + "'\n";
 

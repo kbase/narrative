@@ -298,8 +298,7 @@ def prepareInputfiles(token,workspace=None,files=None,wstype=None):
         try:
             obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
         except Exception as err:
-            pass
-            #raise FileNotFound("File Not Found: {}".format(err))
+            raise FileNotFound("File Not Found: {}".format(err))
         #return {"output" : str(status), "error": json_error}
         if 'data' in obj and 'shock_ref' in obj['data'] and 'shock_id' in  obj['data']['shock_ref']:
             node_id = obj['data']['shock_ref']['shock_id']
@@ -721,6 +720,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
                                       desc,title,srcdate,ontoid,
                                       ontodef,ontoname,paired,
                                       shock_id,src_id.replace('/',' '),"",auth)
+
     @pipelineStep(None)
     def writeBamfile(client,previous_steps):
         tophatid  = idc.allocate_id_range(IDServerids.rnaseq_alignment,1)
@@ -786,9 +786,8 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
                 po_id = ret['metadata'][0]['po_id']
             if 'eo_id' in  ret['metadata'][0]:
                 eo_id = ret['metadata'][0]['eo_id']
-    except Exception as e:
-            pass
-            #raise FileNotFound("File Not Found: {}".format(e))
+    except Exception as err:
+            raise FileNotFound("File Not Found: {}".format(err))
 
     Output_file_path = "narrative_RNASeq_"+str(sample_id)+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
     entityfile = str(act_ref) + "_fids.txt"
@@ -806,7 +805,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
              Stage(saveWorkspace_obj,"Saving Object",None)]
 
     ret = runPipeline(stages,meth,auth)
-    return to_JSON(ret[-1])
+    return to_JSON({"submitted" : ret[-1]["submitted"]})
 
 @method(name = "Plot Gene Expression Histogram")
 def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
@@ -1007,7 +1006,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
               Stage(runCuffdiff,"Differential Expression",pollGridJob),
               Stage(savediffWorkspace_obj,"Saving Workspace Obj",None)]
     ret = runPipeline(stages,meth,auth)
-    return  to_JSON(ret[-1])
+    return  to_JSON({ "submitted" : ret[-1]["submitted"]})
 
 @method(name = "Create Expression Series ")
 def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,design=None,summary=None,source_Id=None,src_date=None,outputfile=None):
@@ -1081,7 +1080,7 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
 
     wsreturn = ws_saveobject(seriesobj['id'],seriesobj,expseriestype,meth.workspace_id,meth.token)
 
-    return to_JSON(wsreturn)
+    return to_JSON({"submitted" : seriesobj['id'] })
 
 @method(name = "Generate Data Table ")
 def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outputfile=None):
@@ -1162,8 +1161,9 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outp
     #dt_id = "kb|datatable."+str(idc.allocate_id_range("kb|datatable",1))
     dt_id = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_ExpressionDataTable"
     dt_obj = OrderedDict({"id" : dt_id, "name" : name, "row_ids" : row_ids, "row_labels" : row_ids , "column_labels" : column_ids , "column_ids" : column_ids, "data" : fpkmdata })
-    return  to_JSON(ws_saveobject(dt_id,dt_obj,dt_type,meth.workspace_id,meth.token))
-
+    ret = ws_saveobject(dt_id,dt_obj,dt_type,meth.workspace_id,meth.token)
+    return to_JSON({"submitted" : dt_id})
+    
 @method(name = "Filter Expression Data Table ")
 def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     """search a file
@@ -1227,7 +1227,8 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     #sorted_dt["id"] = "kb|filtereddatatable."+str(idc.allocate_id_range("kb|filtereddatatable",1))
     sorted_dt["id"] = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_FilteredDataTable"
     sorted_dt["name"] = result["name"]
-    return  to_JSON(ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token))
+    ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token)
+    return to_JSON({"submitted" : sorted_dt["id"] }
 
 @method(name="Render Heatmap")
 def gene_network(meth, hm=None, workspace_id=None):

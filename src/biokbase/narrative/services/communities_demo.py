@@ -409,7 +409,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
-    seq_obj = _get_ws(workspace, in_seq, CWS.seq)
+    seq_obj = _get_ws(workspace, in_seq, CWS.profile)
     seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
     wf_tmp = Template(picrustWF)
     wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_obj['ID'])

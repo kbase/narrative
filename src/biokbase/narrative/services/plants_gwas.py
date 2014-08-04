@@ -723,7 +723,7 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
 
     meth.advance("Execute Enrichment Test")
     qcdss = set(qid2cds.values())
-    enr_dict = oc.association_test(list(qcdss)), ref_wsid, ref_network, '', 'hypergeometric', 'none', p_value)
+    enr_dict = oc.association_test(list(qcdss), ref_wsid, ref_network, '', 'hypergeometric', 'none', p_value)
     enr_list = sorted([(value,key) for (key,value) in enr_dict.items()])
 
 

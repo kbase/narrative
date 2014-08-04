@@ -396,6 +396,8 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     :output_widget: ImageViewWidget
     """
     
+	method_name = "PICRUSt prediction"
+	
     meth.stages = 5
     meth.advance("Processing inputs")
     # validate
@@ -405,22 +407,16 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     
     meth.advance("Retrieve Data from Workspace")
     seq_obj = _get_ws(workspace, in_seq, CWS.seq)
-    #seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
-    #_run_invo("echo 'pick_otus:enable_rev_strand_match True' > picrust.params")
-    #_run_invo("echo 'pick_otus:similarity 0.97' >> picrust.params")
-    #stdout, stderr = _run_invo("mg-upload2shock %s picrust.params"%(URLS.shock))
-    #if stderr:
-    #    return json.dumps({'header': 'ERROR:\n%s'%stderr})
-    #param_nid = json.loads(stdout)['id']
-    wf_tmp = Template(picrustWF)
+    seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
+	wf_tmp = Template(picrustWF)
     wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_obj['ID'])
     
-    meth.advance("Submiting QIIME OTU picking")
+    meth.advance("Submiting "+method_name)
     ajob = _submit_awe(wf_str)
     if ajob['status'] != 200:
         return json.dumps({'header': 'ERROR:\n%d - %s'%(ajob['status'], ', '.join(ajob['error']))})
     
-    meth.advance("Waiting on QIIME OTU picking")
+    meth.advance("Waiting on "+method_name)
     aresult = _get_awe_results(ajob['data']['id'])
     if not aresult:
         return json.dumps({'header': 'ERROR:\nAWE error running QIIME'})
@@ -435,7 +431,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
 
 
 @method(name="QIIME OTU picking")
-def _run_picrust(meth, workspace, in_seq, out_name):
+def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
     """Closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
 		
 		:param workspace: name of workspace, default is current
@@ -452,6 +448,8 @@ def _run_picrust(meth, workspace, in_seq, out_name):
 		:output_widget: ImageViewWidget
 		"""
     
+	method_name = "QIIME OTU picking"
+		
     meth.stages = 5
     meth.advance("Processing inputs")
     # validate
@@ -461,27 +459,27 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     
     meth.advance("Retrieve Data from Workspace")
     seq_obj = _get_ws(workspace, in_seq, CWS.seq)
-    #seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
-    _run_invo("echo 'pick_otus:enable_rev_strand_match True' > picrust.params")
-    _run_invo("echo 'pick_otus:similarity 0.97' >> picrust.params")
-    stdout, stderr = _run_invo("mg-upload2shock %s picrust.params"%(URLS.shock))
+    seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
+    _run_invo("echo 'pick_otus:enable_rev_strand_match True' > qiime.params")
+    _run_invo("echo 'pick_otus:similarity 0.97' >> qiime.params")
+    stdout, stderr = _run_invo("mg-upload2shock %s qiime.params"%(URLS.shock))
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     param_nid = json.loads(stdout)['id']
-    wf_tmp = Template(picrustWF)
+    wf_tmp = Template(qiimeWF)
     wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_obj['ID'], param=param_nid)
     
-    meth.advance("Submiting PICRUSt prediction of KEGG BIOM to AWE")
+    meth.advance("Submiting "+method_name)
     ajob = _submit_awe(wf_str)
     if ajob['status'] != 200:
         return json.dumps({'header': 'ERROR:\n%d - %s'%(ajob['status'], ', '.join(ajob['error']))})
     
-    meth.advance("Waiting on PICRUSt prediction of KEGG BIOM")
+    meth.advance("Waiting on "+method_name)
     aresult = _get_awe_results(ajob['data']['id'])
     if not aresult:
         return json.dumps({'header': 'ERROR:\nAWE error running PICRUSt'})
     
-    meth.advance("Storing Profile BIOM in Workspace")
+    meth.advance("Storing BIOM in Workspace")
     last_task = aresult['tasks'][-1]
     name, info = last_task['outputs'].items()[0]
     data = {'name': name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': _get_shock_data(info['node'])}

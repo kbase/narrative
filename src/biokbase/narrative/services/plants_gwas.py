@@ -69,6 +69,127 @@ def _output_object(name):
 def _workspace_output(wsid):
     return json.dumps({'values': [["Workspace object", wsid]]})
 
+class Node:
+    nodes = []
+    edges = []
+    ugids = {}
+    igids = {}
+    gid2nt = {}
+    clst2genes = {}
+
+    def __init__(self, unodes = [], uedges=[]):
+      self._register_nodes(unodes)
+      self._register_edges(uedges)
+  
+    def get_node_id(self, node, nt = "GENE"):
+      if not node in self.ugids.keys() :
+          #print node + ":" + nt
+          self.ugids[node] = len(self.ugids)
+          self.nodes.append( {
+            'entity_id' : node,
+            'name' : node,
+            'user_annotations' : {},
+            'type' : nt,
+            'id' : 'kb|netnode.' + `self.ugids[node]`,
+            'properties' : {}
+          } )
+          self.igids['kb|netnode.' + `self.ugids[node]`] = node
+          self.gid2nt[node] = nt
+      return "kb|netnode." + `self.ugids[node]`
+
+    def get_node_id(self, node, eid, nt = "GENE"):
+      if not node in self.ugids.keys() :
+          #print node + ":" + nt
+          self.ugids[node] = len(self.ugids)
+          self.nodes.append( {
+            'entity_id' : node,
+            'name' : eid,
+            'user_annotations' : {},
+            'type' : nt,
+            'id' : 'kb|netnode.' + `self.ugids[node]`,
+            'properties' : {}
+          } )
+          self.igids['kb|netnode.' + `self.ugids[node]`] = node
+          self.gid2nt[node] = nt
+      return "kb|netnode." + `self.ugids[node]`
+
+    def add_edge(self, strength, ds_id, node1, nt1, node2, nt2, confidence):
+      #print node1 + "<->" + node2
+      self.edges.append( {
+          'name' : 'interacting gene pair',
+          'properties' : {},
+          'strength' : float(strength),
+          'dataset_id' : ds_id,
+          'directed' : 'false',
+          'user_annotations' : {},
+          'id' : 'kb|netedge.'+`len(self.edges)`,
+          'node_id1' : self.get_node_id(node1, nt1),
+          'node_id2' : self.get_node_id(node2, nt2),
+          'confidence' : float(confidence)
+      })
+      if(nt1 == 'CLUSTER'):
+        if not node1 in self.clstr2genes.keys() : self.clst2genes[node1] = {}
+        if(nt2 == 'GENE'):
+          self.clst2gene[node1][node2] = 1
+      else:
+        if(nt2 == 'CLUSTER'):
+          if not node2 in self.clst2genes.keys() : self.clst2genes[node2] = {}
+          self.clst2genes[node2][node1] = 1
+   
+    def add_edge(self, strength, ds_id, node1, nt1, node2, nt2, confidence, eid1, eid2):
+      #print node1 + "<->" + node2
+      self.edges.append( {
+          'name' : 'interacting gene pair',
+          'properties' : {},
+          'strength' : float(strength),
+          'dataset_id' : ds_id,
+          'directed' : 'false',
+          'user_annotations' : {},
+          'id' : 'kb|netedge.'+`len(self.edges)`,
+          'node_id1' : self.get_node_id(node1, eid1, nt1),
+          'node_id2' : self.get_node_id(node2, eid2, nt2),
+          'confidence' : float(confidence)
+      })
+      if(nt1 == 'CLUSTER'):
+        if not node1 in self.clstr2genes.keys() : self.clst2genes[node1] = {}
+        if(nt2 == 'GENE'):
+          self.clst2gene[node1][node2] = 1
+      else:
+        if(nt2 == 'CLUSTER'):
+          if not node2 in self.clst2genes.keys() : self.clst2genes[node2] = {}
+          self.clst2genes[node2][node1] = 1
+   
+    def _register_nodes(self, unodes):
+      self.nodes = unodes
+      self.ugids = {}
+      for node in self.nodes:
+        nnid = node['id']
+        nnid = nnid.replace("kb|netnode.","");
+        self.ugids[node['entity_id']] = nnid
+        self.igids[node['id']] = node['entity_id']
+        self.gid2nt[node['entity_id']] = node['type']
+
+    def _register_edges(self, uedges):
+      self.edges = uedges
+      for edge in self.edges:
+        node1 = self.igids[edge['node_id1']];
+        nt1  = self.gid2nt[node1];
+        node2 = self.igids[edge['node_id2']];
+        nt2  = self.gid2nt[node2];
+        if(nt1 == 'CLUSTER'):
+          if not node1 in self.clstr2genes.keys() : self.clst2genes[node1] = {}
+          if(nt2 == 'GENE'):
+            self.clst2genes[node1][node2] = 1
+        else:
+          if(nt2 == 'CLUSTER'):
+            if not node2 in self.clst2genes.keys() : self.clst2genes[node2] = {}
+            self.clst2genes[node2][node1] = 1
+        
+
+    def get_gene_list(self, cnode):
+      if(cnode in self.clst2genes.keys()) : return self.clst2genes[cnode].keys()
+      return []
+     
 
 
 def ids2cds(ql):
@@ -592,10 +713,17 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
     if  not ref_wsid : ref_wsid = meth.workspace_id
     ws2 = Workspace2(token=meth.token, wsid=ref_wsid)
     net = ws2.get(ref_network)
+
+    # checking user input
+    if 'edges' not in net or 'nodes' not in net or 'elements' not in fs: return "{}" 
+
     qid2cds = ids2cds(fs['elements'].keys())
+    # parse networks object
+    nc = Node(net['nodes'],net['edges']);
 
     meth.advance("Execute Enrichment Test")
-    enr_dict = oc.association_test(list(set(qid2cds.values())), ref_wsid, ref_network, '', 'hypergeometric', 'none', p_value)
+    qcdss = set(qid2cds.values())
+    enr_dict = oc.association_test(list(qcdss)), ref_wsid, ref_network, '', 'hypergeometric', 'none', p_value)
     enr_list = sorted([(value,key) for (key,value) in enr_dict.items()])
 
 
@@ -604,19 +732,29 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
       nid2name[ne['entity_id']] = ne['name']
 
     pwy_enr_smry = ""
-    header = ["Pathway ID", "Name", "p-value"]
+    header = ["Pathway ID", "Name", "p-value", "genes/FeatureSet"]
     fields = []
+    objects = []
     for i in range(len(enr_list)):
       pwy_en = enr_list[i]
       if float(pwy_en[0]) > float(p_value) : continue
-      fields.append([pwy_en[1], nid2name[pwy_en[1]], pwy_en[0]])
+      cgenes = set(nc.get_gene_list(pwy_en[1]))
+      cgenes = list(cgenes.intersection(qcdss))
+      cfs = genelist2fs(cgenes)
+      if len(cgenes) > 3:
+        fields.append([pwy_en[1], nid2name[pwy_en[1]], pwy_en[0], out_id + "_to_" + pwy_en[1]])
+        objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : cfs, 'name' : out_id + "_to_" + pwy_en[1], 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'pwy_id' :pwy_en[1]}})
+      else:
+        ecgenes = [cfs['elements'][i]['data']['aliases'][0] for i in cgenes]
+        fields.append([pwy_en[1], nid2name[pwy_en[1]], pwy_en[0], ",".join(ecgenes)])
       if i < 3 :
         pwy_enr_smry += pwy_en[1]+"(" + "{:6.4f}".format(float(pwy_en[0])) + ")" + nid2name[pwy_en[1]] + "\n"
 
     data = {'table': [header] + fields}
     meth.advance("Saving output to Workspace")
 
-    ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'pwy_enr_summary' :pwy_enr_smry}}]})
+    objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'pwy_enr_summary' :pwy_enr_smry}})
+    ws.save_objects({'workspace' : meth.workspace_id, 'objects' :objects})
 
 
     meth.advance("Returning object")

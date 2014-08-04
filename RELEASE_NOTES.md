@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 8/4/2014
+__Changes__
+- Added MathJax.js directly into the repo to combat problems on the back end (this is a temporary fix - we need to install the backend MathJax locally somehow, or update the version)
+- Added a fix where if a call to globusonline fails, the Narrative doesn't initialize properly, leading to broken service panels.
+- Fixed a bug that caused some graphical widgets to time out while loading their script files.
+
 ### Release 8/1/2014
 __Changes__
 - Addressed issue with auth information getting overridden (leading to the 400 HTTP error)

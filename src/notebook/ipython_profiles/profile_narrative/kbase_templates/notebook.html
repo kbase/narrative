@@ -374,41 +374,6 @@ class="notebook_app"
 <script src="{{ static_url("knhxtree/js/knhx.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("knhxtree/js/easytree.js") }}" type="text/javascript" charset="utf-8"></script>
 
-<script>
-
-// $(function() {
-
-//   var original = $;
-//   require(['kbvis/src/kbpaths'], function() {
-//   /*console.log('got paths');
-//   console.log(requirejs.s.contexts._.config);
-//   console.log(require.toUrl('kbaseLinechart' + '.js'));
-//   console.log(require.toUrl('vis' + '.js'));
-//   console.log(require.toUrl('d3' + '.js'));
-//   console.log(require.toUrl('bootstrap' + '.js'));
-//   console.log(require.toUrl('jqueryui' + '.js'));*/
-//     require(['jquery','vis'], function() {
-//       //console.log('got vis');
-//       var newJQ = $;
-//       $ = original;
-//       for (prop in newJQ.fn) {
-//         if (prop.match(/^kbase/)) {
-//           $[prop] = newJQ.fn[prop];
-//           $.fn[prop] = newJQ.fn[prop];
-//         }
-//       }
-// /*console.log($.kbaseAccordion);
-// console.log($.kbasePlantsNetworkNarrative);
-// console.log($.kbaseBarchart);
-// console.log($.kbaseLinechart);
-// console.log('plants network narrative');
-// console.log($.kbasePlantsNetworkNarrative);*/
-//     });
-//   });
-// });
-
-</script>
-
 <!-- Standard IPython Notebook Javascript -->
 
 
@@ -467,13 +432,5 @@ class="notebook_app"
 <script src="{{ static_url("auth/js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
-
-<script>
-$(function() {
-  $("#signin-button").kbaseLogin('session').user_id;
-  USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-  kb = new KBCacheClient(USER_TOKEN)
-})
-</script>
 
 {% endblock %}

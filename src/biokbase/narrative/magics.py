@@ -83,13 +83,13 @@ def set_token(newtoken):
     global user_id, token, user_profile, inv_client, inv_session
     if newtoken:
         token = newtoken
-        biokbase.auth.set_environ_token( token)
-        user_profile = biokbase.auth.User( token = token)
+        biokbase.auth.set_environ_token(token)
+        user_profile = biokbase.auth.User(token = token)
         user_id = user_profile.user_id
         # If we had a previous session, clear it out
         if inv_session is not None:
             user_msg("Clearing anonymous invocation session")
-            inv_client.exit_session( inv_session)
+            inv_client.exit_session(inv_session)
         inv_client = None
         inv_session = None
         ws_client = None

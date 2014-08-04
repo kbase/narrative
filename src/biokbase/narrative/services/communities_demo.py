@@ -389,7 +389,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
     :param in_seq: object name of OTU table
-    :type in_seq: kbtypes.Unicode
+    :type in_seq: kbtypes.Communities.Profile
     :ui_name in_seq: Input Sequence
     :param out_name: object name of resulting BIOM profile
     :type out_name: kbtypes.Unicode

@@ -81,10 +81,10 @@ qiimeWF = """{
          {"resource" : "string",
             "key" : "IDENTITY",
             "value" : "97"
-			}
+         }
          ]
-	   }
-	]
+      }
+   ]
 }"""
 
 picrustWF = """{
@@ -98,32 +98,32 @@ picrustWF = """{
    },
    "shockhost" : "$shock",
    "tasks" : [
-	   {
-	  	"taskid" : "0",
-	  	"cmd" : {
-	  		"name" : "app:PIRCUSt.normalize_by_copy_number.default",
-	  		"app_args" : [
-	 			 {"resource":"shock",
-	  				"host" : "$shock",
-					"node" : "$seq",
-					"filename" : "input.fas"
-					}
-	  		]
-		}
-	  },
-	  {
-	  	"taskid" : "1",
-	 	"cmd" : {
-	  		"name" : "app:PIRCUSt.predict_metagenomes.default",
-	  		"app_args" : [
-	  			{"resource":"task",
-				"task" : "0",
-	  			"position" : 0
-				}
-			]
-		}
-	  }
-	]
+      {
+        "taskid" : "0",
+        "cmd" : {
+           "name" : "app:PIRCUSt.normalize_by_copy_number.default",
+           "app_args" : [
+              {"resource":"shock",
+                 "host" : "$shock",
+               "node" : "$seq",
+               "filename" : "input.fas"
+               }
+           ]
+      }
+     },
+     {
+        "taskid" : "1",
+       "cmd" : {
+           "name" : "app:PIRCUSt.predict_metagenomes.default",
+           "app_args" : [
+              {"resource":"task",
+            "task" : "0",
+              "position" : 0
+            }
+         ]
+      }
+     }
+   ]
 }"""
 
 emirgeWF = """{
@@ -146,7 +146,7 @@ emirgeWF = """{
                "host" : "$shock",
                "node" : "$seq",
                "filename" : "input.fas"
-			}
+          }
          ]
       }
    ]
@@ -396,8 +396,8 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     :output_widget: ImageViewWidget
     """
     
-	method_name = "PICRUSt prediction"
-	
+    method_name = "PICRUSt prediction"
+    
     meth.stages = 5
     meth.advance("Processing inputs")
     # validate
@@ -408,7 +408,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     meth.advance("Retrieve Data from Workspace")
     seq_obj = _get_ws(workspace, in_seq, CWS.seq)
     seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
-	wf_tmp = Template(picrustWF)
+    wf_tmp = Template(picrustWF)
     wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_obj['ID'])
     
     meth.advance("Submiting "+method_name)
@@ -433,23 +433,23 @@ def _run_picrust(meth, workspace, in_seq, out_name):
 @method(name="QIIME OTU picking")
 def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
     """Closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
-		
-		:param workspace: name of workspace, default is current
-		:type workspace: kbtypes.Unicode
-		:ui_name workspace: Workspace
-		:param in_seq: object name of input sequence file
-		:type in_seq: kbtypes.Communities.SequenceFile
-		:ui_name in_seq: Input Sequence
-		:param out_name: object name of resulting BIOM profile
-		:type out_name: kbtypes.Unicode
-		:ui_name out_name: Output Name
-		:return: QIIME OTU table, biom file
-		:rtype: kbtypes.Unicode
-		:output_widget: ImageViewWidget
-		"""
+        
+        :param workspace: name of workspace, default is current
+        :type workspace: kbtypes.Unicode
+        :ui_name workspace: Workspace
+        :param in_seq: object name of input sequence file
+        :type in_seq: kbtypes.Communities.SequenceFile
+        :ui_name in_seq: Input Sequence
+        :param out_name: object name of resulting BIOM profile
+        :type out_name: kbtypes.Unicode
+        :ui_name out_name: Output Name
+        :return: QIIME OTU table, biom file
+        :rtype: kbtypes.Unicode
+        :output_widget: ImageViewWidget
+        """
     
-	method_name = "QIIME OTU picking"
-		
+    method_name = "QIIME OTU picking"
+
     meth.stages = 5
     meth.advance("Processing inputs")
     # validate

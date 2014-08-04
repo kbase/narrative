@@ -24,6 +24,8 @@
                 window.kb = new KBCacheClient(token);
 
                 var cmd = "import biokbase\n" +
+                          "import biokbase.narrative\n" +
+                          "import biokbase.narrative.magics\n" +  // slap on that duct tape!
                           "biokbase.narrative.magics.set_token('" + token + "')\n" +
                           "import os\n" +
                           "os.environ['KB_AUTH_TOKEN'] = '" + token + "'\n";

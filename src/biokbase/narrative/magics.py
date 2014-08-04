@@ -592,7 +592,9 @@ else:
     if t.token is not None:
         user_id = t.user_id
         token = t.token
-        user_profile = biokbase.auth.User(token=token)
+        # XXX: This isn't actually used anywhere! But it does trigger a poke at globusonline...
+        user_profile = None
+#        user_profile = biokbase.auth.User(token=token)
         user_msg("Logged in automatically as %s from environment defaults"
                  % user_id)
     else:

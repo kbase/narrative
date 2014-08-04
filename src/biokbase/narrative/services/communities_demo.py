@@ -53,6 +53,40 @@ class URLS:
     invocation = "https://kbase.us/services/invocation"
 
 #old: -i @input.fas -o ucr -p @otu_picking_params.txt -r /home/ubuntu/data/gg_13_5_otus/rep_set/97_otus.fasta
+
+qiimeWF = """{
+   "info" : {
+      "clientgroups" : "docker",
+      "noretry" : true,
+      "project" : "project",
+      "name" : "qiime",
+      "user" : "narrative",
+      "pipeline" : "qiime"
+   },
+   "shockhost" : "$shock",
+   "tasks" : [
+      {
+      "taskid" : "0",
+      "cmd" : {
+      "name" : "app:QIIME.pick_closed_reference_otus.default",
+      "app_args" : [
+         {"resource":"shock",
+            "host" : "$shock",
+            "node" : "$seq",
+            "filename" : "input.fas"},
+         {"resource" : "shock",
+            "host" : "$shock",
+            "node" : "$param",
+            "filename" : "otu_picking_params_97.txt"},
+         {"resource" : "string",
+            "key" : "IDENTITY",
+            "value" : "97"
+			}
+         ]
+	   }
+	]
+}"""
+
 picrustWF = """{
    "info" : {
       "clientgroups" : "docker",
@@ -64,52 +98,58 @@ picrustWF = """{
    },
    "shockhost" : "$shock",
    "tasks" : [
-      {
-	  "taskid" : "0",
-	  "cmd" : {
-		"name" : "app:QIIME.pick_closed_reference_otus.default",
-		"app_args" : [
-			{"resource":"shock",
-				"host" : "$shock",
-				"node" : "$seq",
-				"filename" : "input.fas"},
-			{"resource" : "shock",
-				"host" : "$shock",
-				"node" : "$param",
-				"filename" : "otu_picking_params_97.txt"},
-			{"resource" : "string",
-				"key" : "IDENTITY",
-				"value" : "97"}
-			]
-         }
-      },
-	  {
-	  	"taskid" : "1",
+	   {
+	  	"taskid" : "0",
 	  	"cmd" : {
 	  		"name" : "app:PIRCUSt.normalize_by_copy_number.default",
 	  		"app_args" : [
-	 			 {"resource":"task",
-	  				"task" : "0",
-	 				 "position" : 0}
+	 			 {"resource":"shock",
+	  				"host" : "$shock",
+					"node" : "$seq",
+					"filename" : "input.fas"
+					}
 	  		]
 		}
 	  },
 	  {
-	  	"taskid" : "2",
+	  	"taskid" : "1",
 	 	"cmd" : {
 	  		"name" : "app:PIRCUSt.predict_metagenomes.default",
 	  		"app_args" : [
 	  			{"resource":"task",
-				"task" : "1",
-	  			"position" : 0}
-	  			]
-	  		}
+				"task" : "0",
+	  			"position" : 0
+				}
+			]
+		}
 	  }
 	]
 }"""
 
 emirgeWF = """{
-	
+   "info" : {
+      "clientgroups" : "docker",
+      "noretry" : true,
+      "project" : "project",
+      "name" : "emirge",
+      "user" : "narrative",
+      "pipeline" : "emirge"
+   },
+   "shockhost" : "$shock",
+   "tasks" : [
+      {
+      "taskid" : "0",
+      "cmd" : {
+         "name" : "app:Emirge.emirge.default",
+         "app_args" : [
+            {"resource":"shock",
+               "host" : "$shock",
+               "node" : "$seq",
+               "filename" : "input.fas"
+			}
+         ]
+      }
+   ]
 }"""
 
 # Initialize
@@ -345,8 +385,8 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_seq: object name of input sequence file
-    :type in_seq: kbtypes.Communities.SequenceFile
+    :param in_seq: object name of OTU table
+    :type in_seq: kbtypes.Unicode
     :ui_name in_seq: Input Sequence
     :param out_name: object name of resulting BIOM profile
     :type out_name: kbtypes.Unicode
@@ -355,6 +395,62 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
     """
+    
+    meth.stages = 5
+    meth.advance("Processing inputs")
+    # validate
+    if not (in_seq and out_name):
+        return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
+    workspace = _get_wsname(meth, workspace)
+    
+    meth.advance("Retrieve Data from Workspace")
+    seq_obj = _get_ws(workspace, in_seq, CWS.seq)
+    #seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
+    #_run_invo("echo 'pick_otus:enable_rev_strand_match True' > picrust.params")
+    #_run_invo("echo 'pick_otus:similarity 0.97' >> picrust.params")
+    #stdout, stderr = _run_invo("mg-upload2shock %s picrust.params"%(URLS.shock))
+    #if stderr:
+    #    return json.dumps({'header': 'ERROR:\n%s'%stderr})
+    #param_nid = json.loads(stdout)['id']
+    wf_tmp = Template(picrustWF)
+    wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_obj['ID'])
+    
+    meth.advance("Submiting QIIME OTU picking")
+    ajob = _submit_awe(wf_str)
+    if ajob['status'] != 200:
+        return json.dumps({'header': 'ERROR:\n%d - %s'%(ajob['status'], ', '.join(ajob['error']))})
+    
+    meth.advance("Waiting on QIIME OTU picking")
+    aresult = _get_awe_results(ajob['data']['id'])
+    if not aresult:
+        return json.dumps({'header': 'ERROR:\nAWE error running QIIME'})
+    
+    meth.advance("Storing BIOM in Workspace")
+    last_task = aresult['tasks'][-1]
+    name, info = last_task['outputs'].items()[0]
+    data = {'name': name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': _get_shock_data(info['node'])}
+    _put_ws(workspace, out_name, CWS.profile, data=data)
+    text = "BIOM %s created for QIIME OTU picking of %s"%(out_name, in_seq)
+    return json.dumps({'header': text})
+
+
+@method(name="QIIME OTU picking")
+def _run_picrust(meth, workspace, in_seq, out_name):
+    """Closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
+		
+		:param workspace: name of workspace, default is current
+		:type workspace: kbtypes.Unicode
+		:ui_name workspace: Workspace
+		:param in_seq: object name of input sequence file
+		:type in_seq: kbtypes.Communities.SequenceFile
+		:ui_name in_seq: Input Sequence
+		:param out_name: object name of resulting BIOM profile
+		:type out_name: kbtypes.Unicode
+		:ui_name out_name: Output Name
+		:return: QIIME OTU table, biom file
+		:rtype: kbtypes.Unicode
+		:output_widget: ImageViewWidget
+		"""
     
     meth.stages = 5
     meth.advance("Processing inputs")
@@ -392,6 +488,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     _put_ws(workspace, out_name, CWS.profile, data=data)
     text = "Abundance Profile BIOM %s created for PICRUSt prediction of %s"%(out_name, in_seq)
     return json.dumps({'header': text})
+
 
 @method(name="Transform Abundance Profile to Functional Profile for Modeling")
 def _map_annot(meth, workspace, in_name, out_name):

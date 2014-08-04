@@ -408,6 +408,35 @@ def gene_network2ws(meth, obj_id=None, out_id=None):
     meth.advance("Returning object")
     return _workspace_output(out_id)
 
+@method(name="FeatureSet table")
+def featureset_table(meth, obj_id=None):
+    """This method displays a FeatureSet gene list
+    along with functional annotation in a table.
+
+    :param obj_id: FeatureSet workspace object identifier.
+    :type obj_id: kbtypes.KBaseSearch.FeatureSet
+    :return: Rows for display
+    :rtype: kbtypes.Unicode
+    :output_widget: GeneTableWidget
+    """
+    meth.stages = 1
+    meth.advance("Retrieve genes from workspace")
+    ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
+    fs = ws.get(obj_id)
+    if 'elements' not in fs: return {}
+    header = ["KBase ID", "Source gene ID", "Gene function"]
+    fs2 = genelist2fs(fs['elements'].keys())
+    fields = []
+    for gid in fs2['elements']:
+      if 'data' in fs2['elements'][gid]:
+        rec = fs2['elements'][gid]['data']
+        sid = ""
+        if rec['aliases'] and len(rec['aliases']) > 0: sid = rec['aliases'][0]
+        fields.append([rec['id'], sid, rec['function']])
+      
+    data = {'table': [header] + fields}
+    return json.dumps(data)
+
 @method(name="User genelist to FeatureSet")
 def genelist_to_featureset(meth, gene_ids=None, out_id=None):
     """This method converts user gene list to FeatureSet typed object.
@@ -442,9 +471,9 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     :type feature_set_id: kbtypes.KBaseSearch.FeatureSet
     :param p_value: p-value cutoff
     :type p_value: kbtypes.Unicode
-    :param ec: Evidence code list (comma separated, IEA, ...)
+    :param ec: Evidence code list (comma separated, IEA,ISS,IDA,IEP,IPI,RCA ..)
     :type ec:kbtypes.Unicode
-    :param domain: Domain list (comma separated, biological_process, ...)
+    :param domain: Domain list (comma separated, biological_process,molecular_function,cellular_component)
     :type domain: kbtypes.Unicode
     :param out_id: Output FeatureSet object identifier
     :type out_id: kbtypes.KBaseSearch.FeatureSet

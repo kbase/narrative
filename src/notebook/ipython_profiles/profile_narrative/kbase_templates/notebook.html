@@ -2,14 +2,12 @@
 
 {% block stylesheet %}
 
-    {% if mathjax_url %}
-        <script type="text/javascript" src="{{mathjax_url}}?config=TeX-AMS_HTML-full&delayStartupUntil=configured" charset="utf-8"></script>
-    {% endif %}
+    <script type="text/javascript" src="{{ static_url("components/mathjax/mathjax.js") }}" charset="utf-8"></script>
 
     <script type="text/javascript">
         // MathJax disabled, set as null to distingish from *missing* MathJax,
         // where it will be undefined, and should prompt a dialog later.
-        window.mathjax_url = "{{mathjax_url}}";
+        window.mathjax_url = "mathjax.js"; //{{ static_url("components/mathjax/mathjax.js") }}"; //"{{mathjax_url}}";
     </script>
 
     <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
@@ -293,6 +291,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/KBaseTrees.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/genomeComparisonClient.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgetMaxWidthCorrection.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs2.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -302,7 +301,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/kbaseDeletePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbaseContigBrowserButtons.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbasePhenotypeSet.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/genomes/kbasePanGenome.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- script src="{{ static_url("kbase/js/widgets/genomes/kbasePanGenome.js") }}" type="text/javascript" charset="utf-8"></script -->
 <script src="{{ static_url("components/d3/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/UserAndJobStateClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -360,7 +359,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeSetBuilder.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseCompareFBAs.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseSEEDFunctions.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbasePanGenomeGeneSetExport.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbasePanGenome.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseMSA.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -372,41 +371,6 @@ class="notebook_app"
 <script src="{{ static_url("knhxtree/js/canvastext.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("knhxtree/js/knhx.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("knhxtree/js/easytree.js") }}" type="text/javascript" charset="utf-8"></script>
-
-<script>
-
-// $(function() {
-
-//   var original = $;
-//   require(['kbvis/src/kbpaths'], function() {
-//   /*console.log('got paths');
-//   console.log(requirejs.s.contexts._.config);
-//   console.log(require.toUrl('kbaseLinechart' + '.js'));
-//   console.log(require.toUrl('vis' + '.js'));
-//   console.log(require.toUrl('d3' + '.js'));
-//   console.log(require.toUrl('bootstrap' + '.js'));
-//   console.log(require.toUrl('jqueryui' + '.js'));*/
-//     require(['jquery','vis'], function() {
-//       //console.log('got vis');
-//       var newJQ = $;
-//       $ = original;
-//       for (prop in newJQ.fn) {
-//         if (prop.match(/^kbase/)) {
-//           $[prop] = newJQ.fn[prop];
-//           $.fn[prop] = newJQ.fn[prop];
-//         }
-//       }
-// /*console.log($.kbaseAccordion);
-// console.log($.kbasePlantsNetworkNarrative);
-// console.log($.kbaseBarchart);
-// console.log($.kbaseLinechart);
-// console.log('plants network narrative');
-// console.log($.kbasePlantsNetworkNarrative);*/
-//     });
-//   });
-// });
-
-</script>
 
 <!-- Standard IPython Notebook Javascript -->
 
@@ -466,13 +430,5 @@ class="notebook_app"
 <script src="{{ static_url("auth/js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
-
-<script>
-$(function() {
-  $("#signin-button").kbaseLogin('session').user_id;
-  USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-  kb = new KBCacheClient(USER_TOKEN)
-})
-</script>
 
 {% endblock %}

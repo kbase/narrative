@@ -23,22 +23,23 @@
                 var token = $("#signin-button").kbaseLogin('session', 'token');
                 window.kb = new KBCacheClient(token);
 
-                var cmd = "import biokbase\n" +
-                          "import biokbase.narrative\n" +
-                          "import biokbase.narrative.magics\n" +  // slap on that duct tape!
-                          "biokbase.narrative.magics.set_token('" + token + "')\n" +
-                          "import os\n" +
-                          "os.environ['KB_AUTH_TOKEN'] = '" + token + "'\n";
+                var cmd = "import os" +
+                          "\nimport biokbase" +
+                          "\nimport biokbase.narrative" +
+                          "\nimport biokbase.narrative.magics";  // slap on that duct tape!
 
                 if (IPython.notebook.metadata && IPython.notebook.metadata.name) {
                     cmd += "\nos.environ['KB_NARRATIVE'] = '" +
-                        IPython.notebook.metadata.name + "'\n"
+                           IPython.notebook.metadata.name + "'"
                 }
 
                 if (IPython.notebook.metadata && IPython.notebook.metadata.ws_name) {
-                    cmd += "\nos.environ['KB_WORKSPACE_ID'] = '" + IPython.notebook.metadata.ws_name + "'\n" + 
-                           "from biokbase.narrative.services import *";  // timing is everything!
+                    cmd += "\nos.environ['KB_WORKSPACE_ID'] = '" + IPython.notebook.metadata.ws_name + "'" +
+                           "\nfrom biokbase.narrative.services import *";  // timing is everything!
                 }
+
+                cmd += "\nbiokbase.narrative.magics.set_token('" + token + "')" +
+                       "\nos.environ['KB_AUTH_TOKEN'] = '" + token + "'";
 
                 var kernelCallback = function(type, content, etc) {
                     console.log('KERNEL CALLBACK : "' + type + '"');

@@ -1740,6 +1740,19 @@ def _align_protein_sequences(meth, feature_set, alignment_method, out_msa):
     job_id = treeClient.construct_multiple_alignment(construct_multiple_alignment_params)
     return json.dumps({'workspaceID': workspace, 'msaID': out_msa, 'jobID' : job_id})
 
+@method(name="View Multiple Alignment")
+def _view_alignment(meth, msa_id):
+    """View multiple sequence alignment. [29]
+
+    :param msa_id: Multiple sequence alignment object ID.[29.1]
+    :type msa_id: kbtypes.KBaseTrees.MSA
+    :ui_name msa_id: MSA ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseMSA
+    """
+    return json.dumps({'workspaceID': meth.workspace_id, 'msaID': msa_id})
+
 @method(name="Build Gene Tree")
 def _build_gene_tree(meth, msa, out_tree):
     """ Build phylogenetic tree for multiple alignmnet of protein sequences [28]

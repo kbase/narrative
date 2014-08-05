@@ -12,7 +12,7 @@ import base64
 import logging
 import ast
 import StringIO
-import uuid;
+import uuid
 import math
 from collections import Counter
 from collections import namedtuple
@@ -82,13 +82,13 @@ CLIENT_CLASSES = {"compute": JnomicsCompute.Client,
 class OTHERURLS:
     _host = '140.221.84.248'
     shock = "https://kbase.us/services/shock-api"
-    awe = "http://140.221.85.36:8000"
+    #awe = "http://140.221.85.36:8000"
     workspace = "http://kbase.us/services/ws"
     ids = "http://kbase.us/services/idserver"
-    ontology = "http://140.221.85.171:7062"
+    #ontology = "http://140.221.85.171:7062"
     cdmi = "https://kbase.us/services/cdmi_api"
-    expression = "http://kbase.us/services/plant_expression"
-    invocation = "http://140.221.85.185:7049"
+    expression = "https://kbase.us/services/plant_expression"
+    #invocation = "http://140.221.85.185:7049"
 
 class WSTYPES:
     ### Variation workspace types
@@ -701,7 +701,29 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     myfile = None
     sample_id = None
     stat = {}
+    po_id = None
+    eo_id = None
 
+    def getpodata(poid=None):
+         try:
+             exp =  expressionService(OTHERURLS.expression)
+         except:
+             raise
+           #json_error = None
+            #status = Non 
+         poids = poid[0].split(",")
+         podesc = exp.get_po_descriptions(poids)
+         return podesc
+
+    def geteodata(eoid=None):
+        try:
+             exp =  expressionService(OTHERURLS.expression)
+        except:
+             raise 
+        eoids = eoid[0].split(",")
+        eodesc = exp.get_eo_descriptions(eoids)
+        return eodesc
+    
     @pipelineStep("compute")
     def runTophat(client,previous_steps):
         return client.alignTophat(act_ref, Input_file_path,
@@ -723,14 +745,28 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
             pass
             #out = getGenomefeatures(ref,auth)
             #ret = writefile(entityfile,out,auth)
-        ontodict = ontologydata(po_id,eo_id)
-        ontoid = ",".join([ key for (key,value) in ontodict.items()])
-        ontodef =  ",".join([value for (key,value) in ontodict.items()])
-        ontoname = ontodef
-        return client.workspaceUpload(cufflinks_output,ref.replace('kb|',''),
+        if not po_id and not eo_id:
+            retwsobj = client.workspaceUpload(cufflinks_output,ref.replace('kb|',''),
+                                              desc,title,srcdate,"",
+                                              "","",paired,
+                                              shock_id,src_id.replace('/',' '),"",auth)
+        else:    
+            if po_id and not eo_id:
+                ontodict = getpodata(po_id)
+            elif eo_id and not po_id:
+                ontodict = geteodata(eo_id)
+            elif eo_id and po_id:
+                podesc = getpodata(po_id)
+                eodesc = geteodata(eo_id)
+                ontodict = dict(podesc.items()+eodesc.items())
+            ontoid = ",".join([ key for (key,value) in ontodict.items()])
+            ontodef =  ",".join([value for (key,value) in ontodict.items()])
+            ontoname = ontodef
+            retwsobj = client.workspaceUpload(cufflinks_output,ref.replace('kb|',''),
                                       desc,title,srcdate,ontoid,
                                       ontodef,ontoname,paired,
                                       shock_id,src_id.replace('/',' '),"",auth)
+        return retwsobj
 
     @pipelineStep(None)
     def writeBamfile(client,previous_steps):
@@ -768,37 +804,24 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
 
         return {"submitted" : objid , "type" : exptype , "status" : wsreturn , "error" :  json_error}
 
-    def ontologydata(poid=None,eoid=None):
-        exp =  expressionService(OTHERURLS.expression)
-        #json_error = None
-        #status = None
-        poids = poid[0].split(",")
-        eoids = eoid[0].split(",")
-        podesc = exp.get_po_descriptions(poids)
-        eodesc = exp.get_eo_descriptions(eoids)
-        ontoids = ",".join(poids + eoids)
-        ontodef = ",".join([ value for (key,value) in podesc.items() ] + [value for (key1,value1) in eodesc.items()])
-        return dict(podesc.items() + eodesc.items())
-
     meth.advance("Preparing Input files")
     try:
         ret  = prepareInputfiles(meth.token,workspace,Input_file_path,wtype)
-    #return to_JSON(ret)
 
-        if 'metadata' in ret:
-            if 'sample_id' in ret['metadata'][0]:
-                sample_id = ret['metadata'][0]['sample_id']
-                title = sample_id
-            if 'title' in  ret['metadata'][0]:
-                desc =  ret['metadata'][0]['title']
-            if 'ext_source_date' in  ret['metadata'][0]:
-                srcdate = ret['metadata'][0]['ext_source_date']
-            if 'po_id' in  ret['metadata'][0]:
-                po_id = ret['metadata'][0]['po_id']
-            if 'eo_id' in  ret['metadata'][0]:
-                eo_id = ret['metadata'][0]['eo_id']
     except Exception as err:
             raise FileNotFound("File Not Found: {}".format(err))
+    if 'metadata' in ret:
+        if 'sample_id' in ret['metadata'][0]:
+            sample_id = ret['metadata'][0]['sample_id']
+            title = sample_id
+        if 'title' in  ret['metadata'][0]:
+            desc =  ret['metadata'][0]['title']
+        if 'ext_source_date' in  ret['metadata'][0]:
+            srcdate = ret['metadata'][0]['ext_source_date']
+        if 'po_id' in  ret['metadata'][0]:
+            po_id = ret['metadata'][0]['po_id']
+        if 'eo_id' in  ret['metadata'][0]:
+            eo_id = ret['metadata'][0]['eo_id']
 
     Output_file_path = "narrative_RNASeq_"+str(sample_id)+'_'+ str(uuid.uuid4().get_hex().upper()[0:6])
     entityfile = str(act_ref) + "_fids.txt"
@@ -1227,7 +1250,8 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     exp_type =  WSTYPES.rnaseq_exptype
     dt_type = WSTYPES.datatabletype
     extids = []
-    
+    result =  None 
+
     if not workspace:
         workspace = meth.workspace_id
 
@@ -1236,12 +1260,11 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
         result = ret['data']
     except Exception as e :
         pass
-        #raise FileNotFound("File Not Found: {}".format(e))
 
     nsamples = len(result['column_ids'])
 
     diff_index= {}
-
+    
     for i in xrange(0,len(result['row_ids'])):
         maxl = max(result['data'][i])
         minl = min([ x for index, x in enumerate(result['data'][i]) if x != float(0) ])
@@ -1263,13 +1286,8 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     sorted_dt["name"] = result["name"]
     ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token)
     return to_JSON({"submitted" : sorted_dt["id"] })
-<<<<<<< HEAD
       
 @method(name="Render Heatmap")
-=======
-
-@method(name = "Render Heatmap")
->>>>>>> master
 def gene_network(meth, hm=None, workspace_id=None):
     """This method creates a heatmap
 

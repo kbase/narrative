@@ -585,7 +585,7 @@ new_container = function( session_id)
 		ngx.log( ngx.INFO, "New instance at: " .. res)
 		-- do a non-blocking sleep for 5 seconds to allow the instance to spin up
 
-		ngx.sleep(5)
+--		ngx.sleep(5)
 		local success,err,forcible = proxy_map:set(session_id,res)
 		if not success then
 			ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR

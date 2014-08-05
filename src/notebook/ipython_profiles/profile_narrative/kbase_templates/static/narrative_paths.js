@@ -2,7 +2,7 @@
         requirejs.config({
         	//baseUrl: 'static/foo/bar/',
             //urlArgs: "bust=" + (new Date()).getTime(),
-            waitSeconds : 30,
+            waitSeconds : 30 ,
             paths : {
                 'jquery'      : 'kbase/js/ui-common/ext/jquery/jquery-1.10.2.min',
                 'jqueryui'    : 'kbase/js/ui-common/ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min',

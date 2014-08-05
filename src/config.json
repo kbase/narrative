@@ -2,7 +2,7 @@
     "config" : "prod",
 
     "dev": {
-        "cdmi" : "http://kbase.us/services/cdmi_api/",
+        "cdmi" : "https://kbase.us/services/cdmi_api/",
         "fba" : "http://kbase.us/services/fba_model_services/",
         "glamm" : "http://140.221.84.217:7040/glamm/#",
         "invocation" : "https://kbase.us/services/invocation",
@@ -21,7 +21,7 @@
     },
 
     "prod": {
-        "fba" : "http://kbase.us/services/fba_model_services/",
+        "fba" : "https://kbase.us/services/fba_model_services/",
         "invocation" : "https://kbase.us/services/invocation",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
         "protein_info" : "https://kbase.us/services/protein_info_service",
@@ -38,5 +38,5 @@
     },
 
     "name" : "KBase Narrative",
-    "version" : "v. alpha, 7/30/2014"
+    "version" : "v. alpha, 8/4/2014"
 }

@@ -6,6 +6,7 @@
  */
 "use strict";
 
+
 var narrative = {};
 narrative.init = function() {
     var token = null;

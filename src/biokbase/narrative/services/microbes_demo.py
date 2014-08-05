@@ -641,36 +641,54 @@ def _compute_pan_genome(meth, genome_set,pangenome_id):
         genomes.append(array[1])
 
     pangenome_parameters = {
-    	'genomes':genomes,
-    	'genome_workspaces':gwss,
-    	'workspace':workspace_id,
-    	'auth':usertoken,
-    	'wsurl':service.URLS.workspace}
+        'genomes':genomes,
+        'genome_workspaces':gwss,
+        'workspace':workspace_id,
+        'auth':usertoken,
+        'wsurl':service.URLS.workspace}
     
     if pangenome_id:
         pangenome_parameters['output_id']=pangenome_id
-	
+    
     fbaclient = fbaModelServices(url="http://140.221.85.73:4043", token=usertoken)
     meta = fbaclient.build_pangenome(pangenome_parameters)
     
     return json.dumps({'ws': workspace_id, 'name':meta[1]})
 
-@method(name="Export orthologs from Pan-genome")
-def _export_gene_set_pan_genome(meth, pan_genome_id):
-    """Export orthologs from Pangenome as external FeatureSet objects. [26] 
+@method(name="View Pangenome")
+def _view_pan_genome(meth, pan_genome_id):
+    """Show Pangenome object. [29] 
     
-    :param pan_genome_id: ID of pan-genome object [26.1]
+    :param pan_genome_id: ID of pangenome object [29.1]
     :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
-    :ui_name pan_genome_id: Pan-genome ID
+    :ui_name pan_genome_id: Pangenome ID
 
     :return: Generated Compare Genome
     :rtype: kbtypes.KBaseGenomes.Pangenome
-    :output_widget: kbasePanGenomeGeneSetExport
+    :output_widget: kbasePanGenome
     """
     
     meth.stages = 1 # for reporting progress
     
     return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
+
+
+@method(name="Export orthologs from Pangenome")
+def _export_gene_set_pan_genome(meth, pan_genome_id):
+    """Export orthologs from Pangenome as external FeatureSet objects. [26] 
+    
+    :param pan_genome_id: ID of pangenome object [26.1]
+    :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
+    :ui_name pan_genome_id: Pangenome ID
+
+    :return: Generated Compare Genome
+    :rtype: kbtypes.KBaseGenomes.Pangenome
+    :output_widget: kbasePanGenome
+    """
+    
+    meth.stages = 1 # for reporting progress
+    
+    return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id, 'withExport': 'true'})
 
 @method(name="Compare Models")
 def _compare_models(meth, model_ids):
@@ -1725,6 +1743,19 @@ def _align_protein_sequences(meth, feature_set, alignment_method, out_msa):
     }
     job_id = treeClient.construct_multiple_alignment(construct_multiple_alignment_params)
     return json.dumps({'workspaceID': workspace, 'msaID': out_msa, 'jobID' : job_id})
+
+@method(name="View Multiple Alignment")
+def _view_alignment(meth, msa_id):
+    """View multiple sequence alignment. [29]
+
+    :param msa_id: Multiple sequence alignment object ID.[29.1]
+    :type msa_id: kbtypes.KBaseTrees.MSA
+    :ui_name msa_id: MSA ID
+    :return: Preparation message
+    :rtype: kbtypes.Unicode
+    :output_widget: kbaseMSA
+    """
+    return json.dumps({'workspaceID': meth.workspace_id, 'msaID': msa_id})
 
 @method(name="Build Gene Tree")
 def _build_gene_tree(meth, msa, out_tree):

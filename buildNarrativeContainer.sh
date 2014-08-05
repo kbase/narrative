@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DS=$( date +%Y%m%d )
+DS=$( date +%Y%m%d%H )
 
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"

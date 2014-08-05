@@ -195,6 +195,26 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
 
+@method(name="Abundance Profile 2 Annotation Table")
+def _abundanceProfile2annotationTable(meth, workspace, abundance_profile):
+    """Transform a metagenomic abundance profile into an annotation table object. The annotation table can be used as input for metabolic modeling modeling.
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param abundance_profile: ID for input abundance profile
+    :type abundance_profile: kbtypes.Communities.Profile
+    :ui_name abundance_profile: Abundance Profile
+    :return: Annotation table
+    :rtype: kbtypes.Unicode
+    :output_widget: ImageViewWidget
+    """
+    meth.stages = 1
+    if not abundance_profile:
+        raise Exception("Metagenome List object name is not set.")
+    workspace = _get_wsname(meth, workspace)
+    return json.dumps({'ws': workspace, 'id': abundance_profile})
+
 @method(name="Import Metagenome List")
 def _import_metagenome_list(meth, workspace, metagenome_list_id):
     """Import metagenome list object into workspace.

@@ -690,7 +690,6 @@ def _compare_fbas(meth, fba_id1, fba_id2):
     meth.advance("Starting...")
     
     return json.dumps({'ids': [fba_id1, fba_id2],"ws": meth.workspace_id})
-
 @method(name="Gapfill a Metabolic Model")
 def _gapfill_fba(meth, fba_model_id, media_id,source_model_id,int_sol, output_model_id):
     """Run Gapfilling on an metabolic model.  Gapfill attempts to identify the minimal number of reactions
@@ -734,7 +733,7 @@ def _gapfill_fba(meth, fba_model_id, media_id,source_model_id,int_sol, output_mo
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id;
 
-    fbaClient = fbaModelServices(service.URLS.fba,token=userToken)
+    fbaclient = fbaModelServices(url="http://140.221.85.73:4043", token=userToken)
     
     fba_formulation = {}
     if (media_id):
@@ -751,23 +750,27 @@ def _gapfill_fba(meth, fba_model_id, media_id,source_model_id,int_sol, output_mo
         'model_workspace' : workspaceName,
         'formulation' : gapfill_formulation,
         'workspace' : workspaceName,
+        'fastgapfill' : 1,
     }
+    
+    if(int_sol):
+        gapfill_params['integrate_solution'] = int_sol;
+        if (gapfill_params['integrate_solution'] == 'yes'):
+            gapfill_params['integrate_solution'] = 1;
+
     if(output_model_id):
         gapfill_params['out_model'] = output_model_id;
         
     if(source_model_id):
         gapfill_params['source_model'] = source_model_id;
         gapfill_params['source_model_ws'] = workspaceName;
-        
-    if(int_sol):
-        gapfill_params['integrate_solution'] = int_sol;
-
-    output = fbaClient.gapfill_model(gapfill_params);
+    
+    output = fbaclient.gapfill_model(gapfill_params);
 
     if output_model_id:
-        data = json.dumps({'id': output_model_id, 'ws': ws})
+        data = json.dumps({'id': output_model_id, 'ws': workspaceName})
     else:
-        data = json.dumps({'id': fba_model_id, 'ws': ws})        
+        data = json.dumps({'id': fba_model_id, 'ws': workspaceName})
 
     return data
 

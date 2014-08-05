@@ -83,12 +83,16 @@
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
         		tabStat.append(tableOver);
         		tableOver.append('<tr><td>Pan-genome object ID</td><td>'+self.options.name+'</td></tr>');
-        		tableOver.append('<tr><td>Orthologs</td><td><b>'+data.orthologs.length+'</b></td></tr>');
         		
         		var genomeStat = {};  // genome_ref -> [ortholog_count,{ortholog_id -> gene_count},genes_covered_by_orthologs]
+        		var orthologStat ={};  // ortholog_id -> {genome_ref -> gene_count(>0)}
+        		var genesInOrth = {};  // genome_ref/feature_id(from orthologs) -> 1
+        		var totalGenesInOrth = 0;
         		for (var i in data.orthologs) {
         			var orth = data.orthologs[i];
         			var orth_id = orth.id;
+        			if (!orthologStat[orth_id])
+        				orthologStat[orth_id] = {};
         			for (var j in orth.orthologs) {
         				var gene = orth.orthologs[j];
                 		var genomeRef = gene[2];
@@ -99,11 +103,42 @@
                 			genomeStat[genomeRef][0]++;
                 		}
                 		genomeStat[genomeRef][1][orth_id]++;
-                		genomeStat[genomeRef][2]++;
+                		if (orthologStat[orth_id][genomeRef]) {
+                			orthologStat[orth_id][genomeRef]++;
+                		} else {
+                			orthologStat[orth_id][genomeRef] = 1;
+                		}
+                		var geneKey = genomeRef + "/" + gene[0];
+                		if (!genesInOrth[geneKey]) {
+                			genesInOrth[geneKey] = 1;
+                			totalGenesInOrth++;
+                    		genomeStat[genomeRef][2]++;
+                		}
         			}
         		}
-        		
-        		for (var genomeRef in self.genomeNames) {
+        		var totalGenes = 0;
+        		var totalGenomes = 0;
+        		var genomeOrder = [];  // [[genome_ref, genome_name, genome_num]]
+        		for (var genomeRef in self.geneIndex) {
+        			totalGenomes++;
+        			for (var i in self.geneIndex[genomeRef])
+        				totalGenes++;
+        			genomeOrder.push([genomeRef, self.genomeNames[genomeRef], 0]);
+        		}
+        		genomeOrder.sort(function(a, b) {
+                    if (a[1] < b[1]) return -1;
+                    if (a[1] > b[1]) return 1;
+                    return 0;
+                });
+        		for (var i in genomeOrder) {
+        			genomeOrder[i][2] = parseInt('' + i) + 1;
+        		}
+        		tableOver.append('<tr><td>Total # of genomes</td><td><b>'+totalGenomes+'</b></td></tr>');
+        		tableOver.append('<tr><td>Total # of genes</td><td><b>'+totalGenes+'</b></td></tr>');
+        		tableOver.append('<tr><td>Total # of orthologs</td><td><b>'+data.orthologs.length+
+        				'</b> containing <b>'+totalGenesInOrth+'</b> genes</td></tr>');        		
+        		for (var genomePos in genomeOrder) {
+        			var genomeRef = genomeOrder[genomePos][0];
         			var genomeName = self.genomeNames[genomeRef];
         			var orthCount = 0;
     				var genesInOrth = 0;
@@ -119,6 +154,35 @@
             				genesInOrth+'</b> of them are covered by <b>'+orthCount+'</b> orthologs</td></tr>');
         		}
         		
+        		///////////////////////////////////// Shared orthologs ////////////////////////////////////////////
+        		var tabShared = $("<div/>");
+    			tabPane.kbaseTabs('addTab', {tab: 'Shared orthologs', content: tabShared, canDelete : false, show: false});
+        		var tableShared = $('<table class="table table-striped table-bordered" '+
+        				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'shared-table"/>');
+        		tabShared.append(tableShared);
+        		var header = "";
+        		for (var genomePos in genomeOrder) {
+            		var genomeNum = genomeOrder[genomePos][2];
+        			header += '<td width="40"><center><b>G' + genomeNum + '</b></center></td>';
+        		}
+        		tableShared.append('<tr>'+header+'<td/></tr>');
+        		for (var genomePos in genomeOrder) {
+        			var genomeRef = genomeOrder[genomePos][0];
+            		var row = "";
+            		for (var genomePos2 in genomeOrder) {
+            			var genomeRef2 = genomeOrder[genomePos2][0];
+            			var count = 0;
+            			for (var orth_id in orthologStat) {
+            				if (orthologStat[orth_id][genomeRef] && orthologStat[orth_id][genomeRef2])
+            					count++;
+            			}
+            			var color = genomeRef === genomeRef2 ? "#d2691e" : "black";
+            			row += '<td width="40"><font color="' + color + '">' + count + '</font></td>';
+            		}
+            		var genomeNum = genomeOrder[genomePos][2];
+            		tableShared.append('<tr>'+row+'<td><b>G'+genomeNum+'</b> - '+genomeOrder[genomePos][1]+'</td></tr>');
+        		}
+
         		///////////////////////////////////// Orthologs /////////////////////////////////////////////
         		var tableOrth = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
         				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');

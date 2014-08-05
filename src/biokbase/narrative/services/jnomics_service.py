@@ -1263,8 +1263,8 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     sorted_dt["name"] = result["name"]
     ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token)
     return to_JSON({"submitted" : sorted_dt["id"] })
-      
-@method(name="Render Heatmap")
+
+@method(name = "Render Heatmap")
 def gene_network(meth, hm=None, workspace_id=None):
     """This method creates a heatmap
 

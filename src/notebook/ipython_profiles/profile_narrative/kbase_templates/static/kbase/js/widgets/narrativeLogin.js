@@ -52,7 +52,7 @@
                     wsName = IPython.notebook.metadata.ws_name;
 
                 cmd += "\nos.environ['KB_WORKSPACE_ID'] = '" + wsName + "'" +
-                       "\nfrom biokbase.narrative.services import *" +  // timing is everything!
+//                       "\nfrom biokbase.narrative.services import *" +  // timing is everything!
                        "\nos.environ['KB_AUTH_TOKEN'] = '" + token + "'";
 
                 return cmd;

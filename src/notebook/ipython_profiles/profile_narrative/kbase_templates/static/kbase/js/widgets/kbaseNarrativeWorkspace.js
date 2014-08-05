@@ -691,13 +691,6 @@
          * @private
          */
         buildRunCommand: function(service, method, params) {
-            var cmd = "import biokbase.narrative.common.service as Service\n" +
-                      "method = Service.get_service('" + service + "').get_method('" + method + "')\n";
-
-                      // THIS SHOULD ONLY BE SET AT STARTUP BY THE MAIN JAVASCRIPT!!
-                      // "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
-                      // "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
-
             // very nice quote-escaper found here:
             // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
             // and
@@ -705,6 +698,16 @@
             var addSlashes = function(str) {
                 return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
             };
+
+            var escService = addSlashes(service);
+            var escMethod = addSlashes(method);
+            var cmd = "import biokbase.narrative.common.service as Service\n" +
+                      "method = Service.get_service('" + escService + "').get_method('" + escMethod + "')\n";
+
+                      // THIS SHOULD ONLY BE SET AT STARTUP BY THE MAIN JAVASCRIPT!!
+                      // "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
+                      // "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
+
 
             var paramList = params.map(
                 function(p) { 

@@ -8,6 +8,10 @@
 (function( $, undefined ) {
 
     $(function() {
+        var escapeParamString = function(str) {
+            return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+        };
+
         /* set the auth token by calling the kernel execute method on a function in
          * the magics module
          */
@@ -46,15 +50,14 @@
                 var cmd = "import os";
 
                 if (IPython.notebook.metadata && IPython.notebook.metadata.name) {
-                    cmd += "\nos.environ['KB_NARRATIVE'] = '" +
-                           IPython.notebook.metadata.name + "'"
+                    cmd += "\nos.environ['KB_NARRATIVE'] = '" + escapeParamString(IPython.notebook.metadata.name) + "'"
                 }
 
                 var wsName = "Unknown";
                 if (IPython.notebook.metadata && IPython.notebook.metadata.ws_name)
                     wsName = IPython.notebook.metadata.ws_name;
 
-                cmd += "\nos.environ['KB_WORKSPACE_ID'] = '" + wsName + "'" +
+                cmd += "\nos.environ['KB_WORKSPACE_ID'] = '" + escapeParamString(wsName) + "'" +
                        "\nos.environ['KB_AUTH_TOKEN'] = '" + token + "'";
 
                 return cmd;

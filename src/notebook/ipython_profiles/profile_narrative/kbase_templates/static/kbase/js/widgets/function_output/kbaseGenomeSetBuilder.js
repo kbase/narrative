@@ -1,4 +1,5 @@
 /**
+ * Output widget for creation/visualization/modification of set of genomes.
  * @author Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */

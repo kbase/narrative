@@ -1,3 +1,9 @@
+/**
+ * Output widget for visualization of genome annotation.
+ * @author Roman Sutormin <rsutormin@lbl.gov>
+ * @public
+ */
+
 (function( $, undefined ) {
     $.KBWidget({
         name: "GenomeAnnotation",

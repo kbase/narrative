@@ -1,5 +1,6 @@
 /**
- * @author Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>
+ * Output widget for visualization of tree object (species trees and gene trees).
+ * Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 

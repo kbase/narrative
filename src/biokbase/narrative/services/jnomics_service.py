@@ -1275,7 +1275,7 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     for k, v in sorted_dict:
         sorted_dt["row_ids"].append(result["row_ids"][k])
 
-        sorted_dt["data"].append(result["data"][k])
+        sorted_dt["data"].append([ math.log(m,2) if m != float(0) else m for m in result["data"][k]])
     retry = 0
     extids = fidstoextids(sorted_dt["row_ids"],retry)
     sorted_dt["column_ids"] = result["column_ids"]
@@ -1286,8 +1286,8 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     sorted_dt["name"] = result["name"]
     ws_saveobject(sorted_dt["id"],sorted_dt,dt_type,meth.workspace_id,meth.token)
     return to_JSON({"submitted" : sorted_dt["id"] })
-      
-@method(name="Render Heatmap")
+
+@method(name = "Render Heatmap")
 def gene_network(meth, hm=None, workspace_id=None):
     """This method creates a heatmap
 

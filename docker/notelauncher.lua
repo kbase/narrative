@@ -111,17 +111,20 @@ local function launch_notebook( name )
         local ThePort = string.format("%d/tcp", M.private_port)
 
         local log_file, occ = string.gsub(res.body.HostsPath, "hosts", "root/tmp/kbase-narrative.log")
-        local count = 5
+        local count = 10
         local ready = false
         while (count > 0 and not ready) do
             ngx.log(ngx.INFO, "Testing for presense of kbase-narrative log file.")
             local f = io.open(log_file, "r")
             if f ~= nil then 
+                ngx.log(ngx.INFO, "Found the log file.")
                 io.close(f) 
                 ready = true
+                break
+            else
+                ct = ct - 1
+                ngx.sleep(1)
             end
-            ct = ct - 1
-            ngx.sleep(2)
         end
         if not ready then
             local msg = "Time out starting container: " .. id

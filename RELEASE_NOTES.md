@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 8/5/2014
+__Changes__
+- Added a better fix to the "NoneType object has no attribute get_method" error
+- Updated Microbes services code, split services into 4 separate groups
+- Updates to Jnomics
+- Split picrust widget into qiime and picrust
+- Fixes to plant gene table size and heatmap rendering
+
 ### Release 8/4/2014
 __Changes__
 - Added MathJax.js directly into the repo to combat problems on the back end (this is a temporary fix - we need to install the backend MathJax locally somehow, or update the version)

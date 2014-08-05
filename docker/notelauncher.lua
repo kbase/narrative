@@ -112,13 +112,13 @@ local function launch_notebook( name )
 
         local log, occ = string.gsub(res.body.HostsPath, "hosts", "root/tmp/kbase-narrative.log")
         local count = 5
-        local ready = 0
-        while (count and not ready) do
+        local ready = false
+        while (count > 0 and not ready) do
             ngx.log(ngx.INFO, "Testing for presense of kbase-narrative log file.")
             local f = io.open(name, "r")
             if f ~= nil then 
                 io.close(f) 
-                ready = 1 
+                ready = true
             end
             ct = ct - 1
             ngx.sleep(2)

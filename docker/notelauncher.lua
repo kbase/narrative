@@ -109,7 +109,26 @@ local function launch_notebook( name )
       assert(res.status == 200, "Could not inspect new container: " .. id)
       local ports = res.body.NetworkSettings.Ports
       local ThePort = string.format("%d/tcp", M.private_port)
-      assert( ports[ThePort] ~= nil, string.format("Port binding for port %s not found!",ThePort))
+
+      local log, occ = string.gsub(res.body.HostsPath,"hosts","root/tmp/kbase-narrative.log")
+      local ct=5
+      local ready=0
+      while (ct and not ready) do
+         local f=io.open(name,"r")
+         if f ~= nil then 
+            io.close(f) 
+            ready = 1 
+         end
+         ct = ct - 1
+         ngx.sleep(2)
+      end
+      if not ready then
+         local msg = "Time out starting container: " .. id
+         ngx.log(ngx.ERR,msg)
+         error(msg)
+      end
+
+      assert(ports[ThePort] ~= nil, string.format("Port binding for port %s not found!",ThePort))
       return(string.format("%s:%d","127.0.0.1", ports[ThePort][1].HostPort))
    else
       local msg = "Failed to create container: " .. p.write(res)

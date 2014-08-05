@@ -213,7 +213,7 @@ def _abundanceProfile2annotationTable(meth, workspace, abundance_profile):
     if not abundance_profile:
         raise Exception("Metagenome List object name is not set.")
     workspace = _get_wsname(meth, workspace)
-    return json.dumps({'ws': workspace, 'id': abundance_profile})
+    return json.dumps({'ws': workspace, 'id': abundance_profile , 'header' : 'Hallo Wolfgang'})
 
 @method(name="Import Metagenome List")
 def _import_metagenome_list(meth, workspace, metagenome_list_id):

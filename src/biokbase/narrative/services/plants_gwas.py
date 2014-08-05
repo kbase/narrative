@@ -602,7 +602,7 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     :rtype: kbtypes.Unicode
     :output_widget: GeneTableWidget
     """
-    meth.stages = 3
+    meth.stages = 4
     meth.advance("Prepare Enrichment Test")
 
     oc = Ontology(url=URLS.ontology)
@@ -613,28 +613,14 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     cdmic = CDMI_API(URLS.cdmi)
     lfunc = cdmic.fids_to_functions(cds2l.values())
 
-    meth.advance("Execute Enrichment Test")
+    meth.advance("Annotate GO Term")
     ec = ec.replace(" ","")
     domain = domain.replace(" ","")
     ec_list = [ i for i in ec.split(',')]
     domain_list = [ i for i in domain.split(',')]
     ots = oc.get_goidlist(list(set(qid2cds.values())), domain_list, ec_list)
-    enr_list = oc.get_go_enrichment(list(set(qid2cds.values())), domain_list, ec_list, 'hypergeometric', 'GO')
-    enr_list = sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
-    header = ["GO ID", "Description", "Domain", "p-value"]
-    fields = []
-    go_enr_smry = ""
-    for i in range(len(enr_list)):
-      goen = enr_list[i]
-      if goen['pvalue'] > float(p_value) : continue
-      fields.append([goen['goID'], goen['goDesc'][0], goen['goDesc'][1], "{:6.4f}".format(goen['pvalue']) ])
-      if i < 3 :
-        go_enr_smry += goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0] + "\n"
-    go_enr_smry
-    data = {'table': [header] + fields}
-
-    meth.advance("Annotate GO Term")
     go_key = lambda go, i, ext: "go.{}.{:d}.{}".format(go, i, ext)
+    go2cds = {}
     for gid in fs['elements']:
       lid = qid2cds[gid]
       if 'data' in fs['elements'][gid]:
@@ -643,13 +629,36 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
       if lid in ots:
           go_enr_list = []
           for lcnt, go in enumerate(ots[lid].keys()):
+              if go not in go2cds: go2cds[go] = set()
+              go2cds[go].add(lid)
               for i, goen in enumerate(ots[lid][go]):
                   for ext in "domain", "ec", "desc":
                       fs['elements'][gid]['metadata'][go_key(go, i, ext)] = goen[ext]
                       fs['elements'][gid]['metadata'][go_key(go, i, ext)] = goen[ext]
 
+    meth.advance("Execute Enrichment Test")
+    enr_list = oc.get_go_enrichment(list(set(qid2cds.values())), domain_list, ec_list, 'hypergeometric', 'GO')
+    enr_list = sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
+    header = ["GO ID", "Description", "Domain", "p-value", "FeatureSet ID (# genes)"]
+    fields = []
+    objects = []
+    go_enr_smry = ""
+    for i in range(len(enr_list)):
+      goen = enr_list[i]
+      if goen['pvalue'] > float(p_value) : continue
+      cfs = genelist2fs(list(go2cds[goen['goID']]))
+      goid = goen['goID'].replace(":","")
+      fields.append([goen['goID'], goen['goDesc'][0], goen['goDesc'][1], "{:12.10f}".format(goen['pvalue']), "{}_to_{} ({})".format(out_id, goid,len(go2cds[goen['goID']])) ])
+      objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : cfs, 'name' : out_id + "_to_" + goid, 'meta' : {'original' : feature_set_id, 'domain' : domain, 'ec' : ec, 'GO_ID' :goen['goID']}})
+      if i < 3 :
+        go_enr_smry += goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0] + "\n"
+    go_enr_smry
+    data = {'table': [header] + fields}
+
+
     meth.advance("Saving output to Workspace")
-    ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'enr_summary' : go_enr_smry}}]})
+    objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'enr_summary' : go_enr_smry}})
+    ws.save_objects({'workspace' : meth.workspace_id, 'objects' :objects})
     return json.dumps(data)
 
 @method(name="FeatureSet to Networks")
@@ -732,7 +741,7 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
       nid2name[ne['entity_id']] = ne['name']
 
     pwy_enr_smry = ""
-    header = ["Pathway ID", "Name", "p-value", "genes/FeatureSet"]
+    header = ["Pathway ID", "Name", "p-value", "FeatureSet ID (# genes)"]
     fields = []
     objects = []
     for i in range(len(enr_list)):
@@ -741,12 +750,8 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
       cgenes = set(nc.get_gene_list(pwy_en[1]))
       cgenes = list(cgenes.intersection(qcdss))
       cfs = genelist2fs(cgenes)
-      if len(cgenes) > 3:
-        fields.append([pwy_en[1], nid2name[pwy_en[1]], pwy_en[0], out_id + "_to_" + pwy_en[1]])
-        objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : cfs, 'name' : out_id + "_to_" + pwy_en[1], 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'pwy_id' :pwy_en[1]}})
-      else:
-        ecgenes = [cfs['elements'][i]['data']['aliases'][0] for i in cgenes]
-        fields.append([pwy_en[1], nid2name[pwy_en[1]], pwy_en[0], ",".join(ecgenes)])
+      fields.append([pwy_en[1], nid2name[pwy_en[1]], "{:12.10f}".format(float(pwy_en[0])), out_id + "_to_" + pwy_en[1] + "({})".format(len(cgenes))])
+      objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : cfs, 'name' : out_id + "_to_" + pwy_en[1], 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'pwy_id' :pwy_en[1]}})
       if i < 3 :
         pwy_enr_smry += pwy_en[1]+"(" + "{:6.4f}".format(float(pwy_en[0])) + ")" + nid2name[pwy_en[1]] + "\n"
 

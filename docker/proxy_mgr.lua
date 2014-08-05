@@ -630,7 +630,7 @@ use_proxy = function(self)
 
     if target ~= nil then
         ngx.var.target = target
-        ngx.log( ngx.INFO, "session: " .. session_key .. " target: " .. ngx.var.target )
+        -- ngx.log( ngx.INFO, "session: " .. session_key .. " target: " .. ngx.var.target )
         local success,err,forcible = proxy_last:set(session_key,os.time())
         if not success then
             ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )

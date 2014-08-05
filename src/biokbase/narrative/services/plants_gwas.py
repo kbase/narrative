@@ -69,6 +69,127 @@ def _output_object(name):
 def _workspace_output(wsid):
     return json.dumps({'values': [["Workspace object", wsid]]})
 
+class Node:
+    nodes = []
+    edges = []
+    ugids = {}
+    igids = {}
+    gid2nt = {}
+    clst2genes = {}
+
+    def __init__(self, unodes = [], uedges=[]):
+      self._register_nodes(unodes)
+      self._register_edges(uedges)
+  
+    def get_node_id(self, node, nt = "GENE"):
+      if not node in self.ugids.keys() :
+          #print node + ":" + nt
+          self.ugids[node] = len(self.ugids)
+          self.nodes.append( {
+            'entity_id' : node,
+            'name' : node,
+            'user_annotations' : {},
+            'type' : nt,
+            'id' : 'kb|netnode.' + `self.ugids[node]`,
+            'properties' : {}
+          } )
+          self.igids['kb|netnode.' + `self.ugids[node]`] = node
+          self.gid2nt[node] = nt
+      return "kb|netnode." + `self.ugids[node]`
+
+    def get_node_id(self, node, eid, nt = "GENE"):
+      if not node in self.ugids.keys() :
+          #print node + ":" + nt
+          self.ugids[node] = len(self.ugids)
+          self.nodes.append( {
+            'entity_id' : node,
+            'name' : eid,
+            'user_annotations' : {},
+            'type' : nt,
+            'id' : 'kb|netnode.' + `self.ugids[node]`,
+            'properties' : {}
+          } )
+          self.igids['kb|netnode.' + `self.ugids[node]`] = node
+          self.gid2nt[node] = nt
+      return "kb|netnode." + `self.ugids[node]`
+
+    def add_edge(self, strength, ds_id, node1, nt1, node2, nt2, confidence):
+      #print node1 + "<->" + node2
+      self.edges.append( {
+          'name' : 'interacting gene pair',
+          'properties' : {},
+          'strength' : float(strength),
+          'dataset_id' : ds_id,
+          'directed' : 'false',
+          'user_annotations' : {},
+          'id' : 'kb|netedge.'+`len(self.edges)`,
+          'node_id1' : self.get_node_id(node1, nt1),
+          'node_id2' : self.get_node_id(node2, nt2),
+          'confidence' : float(confidence)
+      })
+      if(nt1 == 'CLUSTER'):
+        if not node1 in self.clstr2genes.keys() : self.clst2genes[node1] = {}
+        if(nt2 == 'GENE'):
+          self.clst2gene[node1][node2] = 1
+      else:
+        if(nt2 == 'CLUSTER'):
+          if not node2 in self.clst2genes.keys() : self.clst2genes[node2] = {}
+          self.clst2genes[node2][node1] = 1
+   
+    def add_edge(self, strength, ds_id, node1, nt1, node2, nt2, confidence, eid1, eid2):
+      #print node1 + "<->" + node2
+      self.edges.append( {
+          'name' : 'interacting gene pair',
+          'properties' : {},
+          'strength' : float(strength),
+          'dataset_id' : ds_id,
+          'directed' : 'false',
+          'user_annotations' : {},
+          'id' : 'kb|netedge.'+`len(self.edges)`,
+          'node_id1' : self.get_node_id(node1, eid1, nt1),
+          'node_id2' : self.get_node_id(node2, eid2, nt2),
+          'confidence' : float(confidence)
+      })
+      if(nt1 == 'CLUSTER'):
+        if not node1 in self.clstr2genes.keys() : self.clst2genes[node1] = {}
+        if(nt2 == 'GENE'):
+          self.clst2gene[node1][node2] = 1
+      else:
+        if(nt2 == 'CLUSTER'):
+          if not node2 in self.clst2genes.keys() : self.clst2genes[node2] = {}
+          self.clst2genes[node2][node1] = 1
+   
+    def _register_nodes(self, unodes):
+      self.nodes = unodes
+      self.ugids = {}
+      for node in self.nodes:
+        nnid = node['id']
+        nnid = nnid.replace("kb|netnode.","");
+        self.ugids[node['entity_id']] = nnid
+        self.igids[node['id']] = node['entity_id']
+        self.gid2nt[node['entity_id']] = node['type']
+
+    def _register_edges(self, uedges):
+      self.edges = uedges
+      for edge in self.edges:
+        node1 = self.igids[edge['node_id1']];
+        nt1  = self.gid2nt[node1];
+        node2 = self.igids[edge['node_id2']];
+        nt2  = self.gid2nt[node2];
+        if(nt1 == 'CLUSTER'):
+          if not node1 in self.clstr2genes.keys() : self.clst2genes[node1] = {}
+          if(nt2 == 'GENE'):
+            self.clst2genes[node1][node2] = 1
+        else:
+          if(nt2 == 'CLUSTER'):
+            if not node2 in self.clst2genes.keys() : self.clst2genes[node2] = {}
+            self.clst2genes[node2][node1] = 1
+        
+
+    def get_gene_list(self, cnode):
+      if(cnode in self.clst2genes.keys()) : return self.clst2genes[cnode].keys()
+      return []
+     
 
 
 def ids2cds(ql):
@@ -408,6 +529,35 @@ def gene_network2ws(meth, obj_id=None, out_id=None):
     meth.advance("Returning object")
     return _workspace_output(out_id)
 
+@method(name="FeatureSet table")
+def featureset_table(meth, obj_id=None):
+    """This method displays a FeatureSet gene list
+    along with functional annotation in a table.
+
+    :param obj_id: FeatureSet workspace object identifier.
+    :type obj_id: kbtypes.KBaseSearch.FeatureSet
+    :return: Rows for display
+    :rtype: kbtypes.Unicode
+    :output_widget: GeneTableWidget
+    """
+    meth.stages = 1
+    meth.advance("Retrieve genes from workspace")
+    ws = Workspace2(token=meth.token, wsid=meth.workspace_id)
+    fs = ws.get(obj_id)
+    if 'elements' not in fs: return {}
+    header = ["KBase ID", "Source gene ID", "Gene function"]
+    fs2 = genelist2fs(fs['elements'].keys())
+    fields = []
+    for gid in fs2['elements']:
+      if 'data' in fs2['elements'][gid]:
+        rec = fs2['elements'][gid]['data']
+        sid = ""
+        if rec['aliases'] and len(rec['aliases']) > 0: sid = rec['aliases'][0]
+        fields.append([rec['id'], sid, rec['function']])
+      
+    data = {'table': [header] + fields}
+    return json.dumps(data)
+
 @method(name="User genelist to FeatureSet")
 def genelist_to_featureset(meth, gene_ids=None, out_id=None):
     """This method converts user gene list to FeatureSet typed object.
@@ -442,9 +592,9 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     :type feature_set_id: kbtypes.KBaseSearch.FeatureSet
     :param p_value: p-value cutoff
     :type p_value: kbtypes.Unicode
-    :param ec: Evidence code list (comma separated, IEA, ...)
+    :param ec: Evidence code list (comma separated, IEA,ISS,IDA,IEP,IPI,RCA ..)
     :type ec:kbtypes.Unicode
-    :param domain: Domain list (comma separated, biological_process, ...)
+    :param domain: Domain list (comma separated, biological_process,molecular_function,cellular_component)
     :type domain: kbtypes.Unicode
     :param out_id: Output FeatureSet object identifier
     :type out_id: kbtypes.KBaseSearch.FeatureSet
@@ -452,7 +602,7 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     :rtype: kbtypes.Unicode
     :output_widget: GeneTableWidget
     """
-    meth.stages = 3
+    meth.stages = 4
     meth.advance("Prepare Enrichment Test")
 
     oc = Ontology(url=URLS.ontology)
@@ -463,28 +613,14 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
     cdmic = CDMI_API(URLS.cdmi)
     lfunc = cdmic.fids_to_functions(cds2l.values())
 
-    meth.advance("Execute Enrichment Test")
+    meth.advance("Annotate GO Term")
     ec = ec.replace(" ","")
     domain = domain.replace(" ","")
     ec_list = [ i for i in ec.split(',')]
     domain_list = [ i for i in domain.split(',')]
     ots = oc.get_goidlist(list(set(qid2cds.values())), domain_list, ec_list)
-    enr_list = oc.get_go_enrichment(list(set(qid2cds.values())), domain_list, ec_list, 'hypergeometric', 'GO')
-    enr_list = sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
-    header = ["GO ID", "Description", "Domain", "p-value"]
-    fields = []
-    go_enr_smry = ""
-    for i in range(len(enr_list)):
-      goen = enr_list[i]
-      if goen['pvalue'] > float(p_value) : continue
-      fields.append([goen['goID'], goen['goDesc'][0], goen['goDesc'][1], "{:6.4f}".format(goen['pvalue']) ])
-      if i < 3 :
-        go_enr_smry += goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0] + "\n"
-    go_enr_smry
-    data = {'table': [header] + fields}
-
-    meth.advance("Annotate GO Term")
     go_key = lambda go, i, ext: "go.{}.{:d}.{}".format(go, i, ext)
+    go2cds = {}
     for gid in fs['elements']:
       lid = qid2cds[gid]
       if 'data' in fs['elements'][gid]:
@@ -493,13 +629,36 @@ def featureset_go_anal(meth, feature_set_id=None, p_value=0.05, ec='IEA', domain
       if lid in ots:
           go_enr_list = []
           for lcnt, go in enumerate(ots[lid].keys()):
+              if go not in go2cds: go2cds[go] = set()
+              go2cds[go].add(lid)
               for i, goen in enumerate(ots[lid][go]):
                   for ext in "domain", "ec", "desc":
                       fs['elements'][gid]['metadata'][go_key(go, i, ext)] = goen[ext]
                       fs['elements'][gid]['metadata'][go_key(go, i, ext)] = goen[ext]
 
+    meth.advance("Execute Enrichment Test")
+    enr_list = oc.get_go_enrichment(list(set(qid2cds.values())), domain_list, ec_list, 'hypergeometric', 'GO')
+    enr_list = sorted(enr_list, key=itemgetter('pvalue'), reverse=False)
+    header = ["GO ID", "Description", "Domain", "p-value", "FeatureSet ID (# genes)"]
+    fields = []
+    objects = []
+    go_enr_smry = ""
+    for i in range(len(enr_list)):
+      goen = enr_list[i]
+      if goen['pvalue'] > float(p_value) : continue
+      cfs = genelist2fs(list(go2cds[goen['goID']]))
+      goid = goen['goID'].replace(":","")
+      fields.append([goen['goID'], goen['goDesc'][0], goen['goDesc'][1], "{:12.10f}".format(goen['pvalue']), "{}_to_{} ({})".format(out_id, goid,len(go2cds[goen['goID']])) ])
+      objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : cfs, 'name' : out_id + "_to_" + goid, 'meta' : {'original' : feature_set_id, 'domain' : domain, 'ec' : ec, 'GO_ID' :goen['goID']}})
+      if i < 3 :
+        go_enr_smry += goen['goID']+"(" + "{:6.4f}".format(goen['pvalue']) + ")" + goen['goDesc'][0] + "\n"
+    go_enr_smry
+    data = {'table': [header] + fields}
+
+
     meth.advance("Saving output to Workspace")
-    ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'enr_summary' : go_enr_smry}}]})
+    objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'enr_summary' : go_enr_smry}})
+    ws.save_objects({'workspace' : meth.workspace_id, 'objects' :objects})
     return json.dumps(data)
 
 @method(name="FeatureSet to Networks")
@@ -563,10 +722,17 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
     if  not ref_wsid : ref_wsid = meth.workspace_id
     ws2 = Workspace2(token=meth.token, wsid=ref_wsid)
     net = ws2.get(ref_network)
+
+    # checking user input
+    if 'edges' not in net or 'nodes' not in net or 'elements' not in fs: return "{}" 
+
     qid2cds = ids2cds(fs['elements'].keys())
+    # parse networks object
+    nc = Node(net['nodes'],net['edges']);
 
     meth.advance("Execute Enrichment Test")
-    enr_dict = oc.association_test(list(set(qid2cds.values())), ref_wsid, ref_network, '', 'hypergeometric', 'none', p_value)
+    qcdss = set(qid2cds.values())
+    enr_dict = oc.association_test(list(qcdss), ref_wsid, ref_network, '', 'hypergeometric', 'none', p_value)
     enr_list = sorted([(value,key) for (key,value) in enr_dict.items()])
 
 
@@ -575,19 +741,25 @@ def featureset_net_enr(meth, feature_set_id=None, p_value=None, ref_wsid="KBaseP
       nid2name[ne['entity_id']] = ne['name']
 
     pwy_enr_smry = ""
-    header = ["Pathway ID", "Name", "p-value"]
+    header = ["Pathway ID", "Name", "p-value", "FeatureSet ID (# genes)"]
     fields = []
+    objects = []
     for i in range(len(enr_list)):
       pwy_en = enr_list[i]
       if float(pwy_en[0]) > float(p_value) : continue
-      fields.append([pwy_en[1], nid2name[pwy_en[1]], pwy_en[0]])
+      cgenes = set(nc.get_gene_list(pwy_en[1]))
+      cgenes = list(cgenes.intersection(qcdss))
+      cfs = genelist2fs(cgenes)
+      fields.append([pwy_en[1], nid2name[pwy_en[1]], "{:12.10f}".format(float(pwy_en[0])), out_id + "_to_" + pwy_en[1] + "({})".format(len(cgenes))])
+      objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : cfs, 'name' : out_id + "_to_" + pwy_en[1], 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'pwy_id' :pwy_en[1]}})
       if i < 3 :
         pwy_enr_smry += pwy_en[1]+"(" + "{:6.4f}".format(float(pwy_en[0])) + ")" + nid2name[pwy_en[1]] + "\n"
 
     data = {'table': [header] + fields}
     meth.advance("Saving output to Workspace")
 
-    ws.save_objects({'workspace' : meth.workspace_id, 'objects' :[{'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'pwy_enr_summary' :pwy_enr_smry}}]})
+    objects.append({'type' : 'KBaseSearch.FeatureSet', 'data' : fs, 'name' : out_id, 'meta' : {'original' : feature_set_id, 'ref_wsid' : ref_wsid, 'ref_net' : ref_network, 'pwy_enr_summary' :pwy_enr_smry}})
+    ws.save_objects({'workspace' : meth.workspace_id, 'objects' :objects})
 
 
     meth.advance("Returning object")

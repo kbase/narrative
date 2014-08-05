@@ -122,7 +122,8 @@ local function launch_notebook( name )
                 ready = true
                 break
             else
-                ct = ct - 1
+                ngx.log(ngx.INFO, "No log file, waiting a second...")
+                count = count - 1
                 ngx.sleep(1)
             end
         end

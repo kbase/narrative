@@ -94,8 +94,8 @@
             //d3.text("assets/data/subsys.txt", function(text) {
             //d3.text("/static/subsys.txt", function(text) {
             d3.text("/functional-site/assets/data/subsys.txt", function(text) {
-
                 var data = d3.tsv.parseRows(text);
+                var totalGenesWithFunctionalRoles = 0;
 
                 for (i = 0; i < data.length; i++) {
                     var geneCount = 0;
@@ -108,6 +108,7 @@
                         //continue;
                     } else {
                         geneCount = subsysToGeneMap[data[i][3]].length;
+                        totalGenesWithFunctionalRoles += subsysToGeneMap[data[i][3]].length;
                     }
 
                     for (j = 0; j < ontologyDepth; j++) {
@@ -135,7 +136,6 @@
 
                                 if ( j === ontologyDepth - 1 && subsysToGeneMap[data[i][j]] !== undefined) {
                                     subsysToGeneMap[data[i][j]].forEach( function(f){
-
                                         var gene = { "name" : f, "size" : "" };
                                         node.children.push( gene );
                                     });
@@ -147,18 +147,23 @@
                     }
                 }
 
-            // Set maxCount to scale bars
-            for (k in Level1) {
-                self.maxCount = self.maxCount > Level1[k] ? self.maxCount : Level1[k];
-            }
+                if (totalGenesWithFunctionalRoles < 100) {
+                    //console.log("No Functional Categories assigned, you can added them using the Narrative");
+                    self.$elem.find("#mainview").append("No Functional Categories assigned, you can added them using the Narrative");
+                } else {
+                    // Set maxCount to scale bars
+                    for (k in Level1) {
+                        self.maxCount = self.maxCount > Level1[k] ? self.maxCount : Level1[k];
+                    }
 
-            $.when( 
-                self.SEEDTree.children.forEach(function(d) {
-                    self.collapse(d) }) 
-                )
-            .done(
-                    self.update( self.root = self.SEEDTree )
-                );
+                    $.when( 
+                        self.SEEDTree.children.forEach(function(d) {
+                            self.collapse(d) }) 
+                        )
+                    .done(
+                        self.update( self.root = self.SEEDTree )
+                        );
+                }
             
             }); 
         },
@@ -174,7 +179,7 @@
             var height = Math.max(500, nodes.length * self.barHeight + self.margin.top + self.margin.bottom);
             var i = self.i;
 
-            d3.select("svg").transition()
+            d3.selectAll("#mainview").select("svg").transition()
                 .duration(self.duration)
                 .attr("height", height);
 
@@ -188,11 +193,11 @@
             });
 
             // Update the nodes…
-            var node = self.svg.selectAll("g.node")
+            var node = self.svg.selectAll("g.KBSnode")
                 .data(nodes, function(d) { return d.id || (d.id = ++self.i); });
 
             var nodeEnter = node.enter().append("g")
-                .attr("class", "node")
+                .attr("class", "KBSnode")
                 .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
                 .style("opacity", 1e-6)
                 .on("mouseover", function(d) {
@@ -266,6 +271,13 @@
 
         // Toggle children on click.
         click: function(d) {
+
+        // open window with gene landing page
+        if (d.children === undefined || (d._children === null && d.children === null)) {
+        var winPop = window.open("/functional-site/#/genes/" + this.options.wsNameOrId + "/" + this.options.objNameOrId + "/" + d.name);
+        }
+        
+        // expand tree
             if (d.children) {
                 d._children = d.children;
                 d.children = null;
@@ -278,7 +290,8 @@
         },
 
         color: function(d) {
-            return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#fd8d3c";
+        //return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#fd8d3c";
+            return d._children ? "#c6dbef" : d.children ? "#3399ff" : "#ffffff";
         },
 
         collapse: function(d) {
@@ -317,7 +330,6 @@
             if (this.options.kbCache) {
                 prom = this.options.kbCache.req('ws', 'get_objects', [obj]);
             } else {
-                console.log("token: " + this.authToken);
                 prom = this.wsClient.get_objects([obj]);
             }
             //var prom = this.options.kbCache.req('ws', 'get_objects', [obj]);

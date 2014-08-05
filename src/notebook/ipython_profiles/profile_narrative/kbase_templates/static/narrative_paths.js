@@ -119,6 +119,7 @@
 				'Tiling_widget'                     : 'kbase/js/ui-common/src/widgets/mak/Tiling_widget',
 				'kbaseBarChartCard'                 : 'kbase/js/ui-common/src/widgets/mak/kbaseBarChartCard',
 				'kbaseHeatmapCard'                  : 'kbase/js/ui-common/src/widgets/mak/kbaseHeatmapCard',
+				'kbaseJSONReflector'                : 'kbase/js/ui-common/src/widgets/kbaseJSONReflector',
 				'kbaseLineChartCard'                : 'kbase/js/ui-common/src/widgets/mak/kbaseLineChartCard',
 				'kbaseMAKBiclusterCard'             : 'kbase/js/ui-common/src/widgets/mak/kbaseMAKBiclusterCard',
 				'kbaseMAKResultCard'                : 'kbase/js/ui-common/src/widgets/mak/kbaseMAKResultCard',

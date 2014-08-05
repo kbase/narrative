@@ -6,7 +6,7 @@
 -- Copyright 2013 The Regents of the University of California,
 --                Lawrence Berkeley National Laboratory
 --                United States Department of Energy
---          	 The DOE Systems Biology Knowledgebase (KBase)
+--               The DOE Systems Biology Knowledgebase (KBase)
 -- Made available under the KBase Open Source License
 --
 
@@ -34,29 +34,29 @@ M.syslog_src = '/dev/log'
 -- port 8888. Keyed on container name, value is IP:Port that can
 -- be fed into an nginx proxy target
 local function get_notebooks()
-   local ok, res = pcall(docker.client.containers,docker.client)
-   local portmap = {}
-   ngx.log( ngx.DEBUG, string.format("list containers result: %s",p.write(res.body)))
-   if ok then
-      for index,container in pairs(res.body) do
-	 -- we only care about containers matching repository_image and listening on the proper port
-	 first,last = string.find(container.Image,M.repository_image)
-	 if first == 1 then
-	    name = string.sub(container.Names[1],2,-1)
-	    portmap[name]={}
-	    for i, v in pairs(container.Ports) do
-	       if v.PrivatePort == M.private_port then
-		  portmap[name] = string.format("127.0.0.1:%u", v.PublicPort)
-	       end
-	    end
-	 end
-      end
-      return portmap
-   else
-      local msg = string.format("Failed to fetch list of containers: %s",p.write(res.body))
-      ngx.log(ngx.ERR,msg)
-      error(msg)
-   end
+    local ok, res = pcall(docker.client.containers,docker.client)
+    local portmap = {}
+    ngx.log( ngx.DEBUG, string.format("list containers result: %s",p.write(res.body)))
+    if ok then
+        for index,container in pairs(res.body) do
+            -- we only care about containers matching repository_image and listening on the proper port
+            first,last = string.find(container.Image,M.repository_image)
+            if first == 1 then
+                name = string.sub(container.Names[1],2,-1)
+                portmap[name]={}
+                for i, v in pairs(container.Ports) do
+                    if v.PrivatePort == M.private_port then
+                        portmap[name] = string.format("127.0.0.1:%u", v.PublicPort)
+                    end
+                end
+            end
+        end
+        return portmap
+    else
+        local msg = string.format("Failed to fetch list of containers: %s",p.write(res.body))
+        ngx.log(ngx.ERR,msg)
+        error(msg)
+    end
 end
 
 --
@@ -110,12 +110,12 @@ local function launch_notebook( name )
         local ports = res.body.NetworkSettings.Ports
         local ThePort = string.format("%d/tcp", M.private_port)
 
-        local log, occ = string.gsub(res.body.HostsPath, "hosts", "root/tmp/kbase-narrative.log")
+        local log_file, occ = string.gsub(res.body.HostsPath, "hosts", "root/tmp/kbase-narrative.log")
         local count = 5
         local ready = false
         while (count > 0 and not ready) do
             ngx.log(ngx.INFO, "Testing for presense of kbase-narrative log file.")
-            local f = io.open(name, "r")
+            local f = io.open(log_file, "r")
             if f ~= nil then 
                 io.close(f) 
                 ready = true

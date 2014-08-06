@@ -79,7 +79,7 @@ qiimeWF = """{
                "host" : "$shock",
                "node" : "$param",
                "filename" : "otu_picking_params_97.txt"
-		    },
+            },
             {"resource" : "string",
                "key" : "IDENTITY",
                "value" : "97"
@@ -411,14 +411,14 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     meth.advance("Retrieve Data from Workspace")
     #seq_obj = _get_ws(workspace, in_seq, CWS.profile)
     #seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
-	biom = _get_ws(workspace, in_name, CWS.profile)
+    biom = _get_ws(workspace, in_name, CWS.profile)
 
     try:
-	   shockid = biom['ID']
-	   biom = _get_shock_data(shockid)
-	except:
-		pass
-	_put_invo(in_biom, biom)
+       shockid = biom['ID']
+       biom = _get_shock_data(shockid)
+    except:
+       pass
+    _put_invo(in_biom, biom)
 
     _run_invo("echo '".biom."' > picrust_input.biom")
     stdout, stderr = _run_invo("mg-upload2shock %s picrust_input.biom"%(URLS.shock))

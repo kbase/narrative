@@ -1,6 +1,7 @@
 /**
- *  widget to display a pangenome object
- * 
+ * Ouput widget to display a pangenome object.
+ * @author Chris Henry <chrisshenry@gmail.com>, Roman Sutormin <rsutormin@lbl.gov>
+ * @public
  */
 
 (function( $, undefined ) {
@@ -84,45 +85,56 @@
         		tabStat.append(tableOver);
         		tableOver.append('<tr><td>Pan-genome object ID</td><td>'+self.options.name+'</td></tr>');
         		
-        		var genomeStat = {};  // genome_ref -> [ortholog_count,{ortholog_id -> gene_count},genes_covered_by_orthologs]
-        		var orthologStat ={};  // ortholog_id -> {genome_ref -> gene_count(>0)}
-        		var genesInOrth = {};  // genome_ref/feature_id(from orthologs) -> 1
+        		var genomeStat = {};  // genome_ref -> [ortholog_count,{ortholog_id -> count_of_genes_from_genome},genes_covered_by_homolog_fams, orphan_genes(1-member_orthologs)]
+        		var orthologStat = {};  // ortholog_id -> {genome_ref -> gene_count(>0)}
+        		var genesInHomFams = {};  // genome_ref/feature_id -> 0/1(depending_on_homology)
         		var totalGenesInOrth = 0;
+        		var totalOrthologs = 0;
+        		var totalHomFamilies = 0;
+        		var totalOrphanGenes = 0;
         		for (var i in data.orthologs) {
         			var orth = data.orthologs[i];
+        			totalOrthologs++;
         			var orth_id = orth.id;
+        			var orth_size = orth.orthologs.length;
+        			if (orth_size >= 2)
+        				totalHomFamilies++;
         			if (!orthologStat[orth_id])
-        				orthologStat[orth_id] = {};
+        				orthologStat[orth_id] = [orth_size, {}];
         			for (var j in orth.orthologs) {
         				var gene = orth.orthologs[j];
                 		var genomeRef = gene[2];
                 		if (!genomeStat[genomeRef])
-                			genomeStat[genomeRef] = [0, {}, 0];
+                			genomeStat[genomeRef] = [0, {}, 0, 0];
                 		if (!genomeStat[genomeRef][1][orth_id]) {
                 			genomeStat[genomeRef][1][orth_id] = 0;
-                			genomeStat[genomeRef][0]++;
+                			if (orth_size > 1) {
+                				genomeStat[genomeRef][0]++;
+                			} else {
+                				genomeStat[genomeRef][3]++;                				
+                			}
                 		}
                 		genomeStat[genomeRef][1][orth_id]++;
-                		if (orthologStat[orth_id][genomeRef]) {
-                			orthologStat[orth_id][genomeRef]++;
-                		} else {
-                			orthologStat[orth_id][genomeRef] = 1;
-                		}
+                		if (!orthologStat[orth_id][1][genomeRef]) 
+                			orthologStat[orth_id][1][genomeRef] = 0;
+                		orthologStat[orth_id][1][genomeRef]++;
                 		var geneKey = genomeRef + "/" + gene[0];
-                		if (!genesInOrth[geneKey]) {
-                			genesInOrth[geneKey] = 1;
-                			totalGenesInOrth++;
-                    		genomeStat[genomeRef][2]++;
+                		if (!genesInHomFams[geneKey]) {
+                			if (orth_size > 1) {
+                				genesInHomFams[geneKey] = 1;
+                				totalGenesInOrth++;
+                				genomeStat[genomeRef][2]++;
+                			} else {
+                				genesInHomFams[geneKey] = 0;
+                				totalOrphanGenes++;
+                			}
                 		}
         			}
         		}
-        		var totalGenes = 0;
         		var totalGenomes = 0;
         		var genomeOrder = [];  // [[genome_ref, genome_name, genome_num]]
         		for (var genomeRef in self.geneIndex) {
         			totalGenomes++;
-        			for (var i in self.geneIndex[genomeRef])
-        				totalGenes++;
         			genomeOrder.push([genomeRef, self.genomeNames[genomeRef], 0]);
         		}
         		genomeOrder.sort(function(a, b) {
@@ -134,29 +146,35 @@
         			genomeOrder[i][2] = parseInt('' + i) + 1;
         		}
         		tableOver.append('<tr><td>Total # of genomes</td><td><b>'+totalGenomes+'</b></td></tr>');
-        		tableOver.append('<tr><td>Total # of genes</td><td><b>'+totalGenes+'</b></td></tr>');
-        		tableOver.append('<tr><td>Total # of orthologs</td><td><b>'+data.orthologs.length+
-        				'</b> containing <b>'+totalGenesInOrth+'</b> genes</td></tr>');        		
+        		tableOver.append('<tr><td>Total # of proteins</td><td><b>'+(totalGenesInOrth+totalOrphanGenes)+'</b> '+
+        				'proteins, <b>'+totalGenesInOrth+'</b> are in homolog families, <b>'+totalOrphanGenes+'</b> '+
+        				'are in singleton families</td></tr>');
+        		tableOver.append('<tr><td>Total # of families</td><td><b>'+totalOrthologs+'</b> families, <b>'+
+        				totalHomFamilies+'</b> homolog families, <b>'+(totalOrthologs-totalHomFamilies)+'</b> '+
+        				'singleton families</td></tr>');        		
         		for (var genomePos in genomeOrder) {
         			var genomeRef = genomeOrder[genomePos][0];
         			var genomeName = self.genomeNames[genomeRef];
         			var orthCount = 0;
     				var genesInOrth = 0;
+    				var genesInSingle = 0;
         			if (genomeStat[genomeRef]) {
         				var stat = genomeStat[genomeRef];
         				orthCount = stat[0];
         				genesInOrth = stat[2];
+        				genesInSingle = stat[3];
         			}
         			var genesAll = 0;
         			for (var i in self.geneIndex[genomeRef])
         				genesAll++;
-            		tableOver.append('<tr><td>'+genomeName+'</td><td><b>'+genesAll+'</b> genes, <b>'+
-            				genesInOrth+'</b> of them are covered by <b>'+orthCount+'</b> orthologs</td></tr>');
+            		tableOver.append('<tr><td>'+genomeName+'</td><td><b>'+(genesInOrth+genesInSingle)+'</b> proteins, <b>'+
+            				genesInOrth+'</b> proteins are in <b>'+orthCount+'</b> homolog families, <b>'+
+            				genesInSingle+'</b> proteins are in singleton families</td></tr>');
         		}
         		
         		///////////////////////////////////// Shared orthologs ////////////////////////////////////////////
         		var tabShared = $("<div/>");
-    			tabPane.kbaseTabs('addTab', {tab: 'Shared orthologs', content: tabShared, canDelete : false, show: false});
+    			tabPane.kbaseTabs('addTab', {tab: 'Shared homolog families', content: tabShared, canDelete : false, show: false});
         		var tableShared = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'shared-table"/>');
         		tabShared.append(tableShared);
@@ -173,7 +191,9 @@
             			var genomeRef2 = genomeOrder[genomePos2][0];
             			var count = 0;
             			for (var orth_id in orthologStat) {
-            				if (orthologStat[orth_id][genomeRef] && orthologStat[orth_id][genomeRef2])
+            				if (orthologStat[orth_id][0] <= 1)
+            					continue;
+            				if (orthologStat[orth_id][1][genomeRef] && orthologStat[orth_id][1][genomeRef2])
             					count++;
             			}
             			var color = genomeRef === genomeRef2 ? "#d2691e" : "black";
@@ -188,28 +208,34 @@
         				'table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">');
         		var tabOrth = $("<div/>");
         		if (self.options.withExport) {
-        			tabOrth.append("<p><b>Please choose ortholog and push 'Export' "+
+        			tabOrth.append("<p><b>Please choose homolog family and push 'Export' "+
         						"button on opened ortholog tab.</b></p><br>");
         		}
         		tabOrth.append(tableOrth);
 
-    			tabPane.kbaseTabs('addTab', {tab: 'Orthologs', content: tabOrth, canDelete : false, show: !showOverview});
+    			tabPane.kbaseTabs('addTab', {tab: 'Protein families', content: tabOrth, canDelete : false, show: !showOverview});
 
+    			var orth_data = [];
+    			for (var i in data.orthologs) {
+    				var orth = data.orthologs[i];
+    				var id_text = '<a class="show-orthologs_'+self.pref+'" data-id="'+orth.id+'">'+orth.id+'</a>';
+    				var genome_count = 0;
+    				for (var genomeRef in orthologStat[orth.id][1]) {
+    					genome_count++;
+    				}
+    				orth_data.push({func: orth['function'], id: id_text, len: orth.orthologs.length, genomes: genome_count});
+    			}
+    			
         		var tableSettings = {
         				"sPaginationType": "full_numbers",
         				"iDisplayLength": 10,
-        				"aaData": data.orthologs,
+        				"aaData": orth_data,
         				"aaSorting": [[ 2, "desc" ], [0, "asc"]],
         				"aoColumns": [
-        				              { "sTitle": "Function", 'mData': 'function'},
-        				              { "sTitle": "ID", 'mData': function(d) {
-        				            	  return '<a class="show-orthologs_'+self.pref+'" data-id="'+d.id+'">'
-        				            	  +d.id+'</a>'
-        				              }},
-        				              /*{ "sTitle": "Type", 'mData': 'type'},*/
-        				              { "sTitle": "Gene Count", 'mData': function(d) {
-        				            	  return ''+d.orthologs.length
-        				              }}
+        				              { "sTitle": "Function", 'mData': 'func'},
+        				              { "sTitle": "ID", 'mData': 'id'},
+        				              { "sTitle": "Protein Count", 'mData': 'len'},
+        				              { "sTitle": "Genome Count", 'mData': 'genomes'}
         				              ],
         				              "oLanguage": {
         				            	  "sEmptyTable": "No objects in workspace",
@@ -262,16 +288,14 @@
         	}
         	var prom = this.kbws.get_object_subset(req);
         	$.when(prom).done(function(data) {
-        		//var data = data[0].data;
-        		//console.log(data);
         		for (var genomePos in genomeRefs) {
         			var ref = genomeRefs[genomePos];
         			self.genomeNames[ref] = data[genomePos].data.scientific_name;
         			self.genomeRefs[ref] = data[genomePos].info[7] + "/" + data[genomePos].info[1];
         			var geneIdToIndex = {};
         			for (var genePos in data[genomePos].data.features) {
-        				var geneId = data[genomePos].data.features[genePos].id;
-        				geneIdToIndex[geneId] = genePos;
+        				var gene = data[genomePos].data.features[genePos];
+        				geneIdToIndex[gene.id] = genePos;
         			}
         			self.geneIndex[ref] = geneIdToIndex;
         		}
@@ -343,7 +367,7 @@
         			            	  return '<a class="show-genomes_'+pref2+'" data-id="'+d.ref+'">'+
         			            	  '<span style="white-space: nowrap;">'+d.genome+'</span></a>'
         			              }},
-        			              { "sTitle": "Gene ID", 'mData': function(d) {
+        			              { "sTitle": "Feature ID", 'mData': function(d) {
         			            	  return '<a class="show-genes_'+pref2+'" data-id="'+d.ref+"/"+d.id+'">'+d.id+'</a>'
         			              }},
         			              { "sTitle": "Function", 'mData': 'func'},

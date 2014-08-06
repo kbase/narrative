@@ -11,6 +11,16 @@ __Changes__
 - Split picrust widget into qiime and picrust
 - Fixes to plant gene table size and heatmap rendering
 
+__Known Issues__
+- Changing Narrative name in the workspace doesn't propagate inside of the Narrative itself (likely won't fix)
+- R support is problematic
+- Many links to landing pages within the Narrative are broken
+- Sharing a Narrative with a running job might break
+- Loading a Narrative with a large amount of data in it might be slow
+- Services panel should be sorted/sortable
+- Narrative creator and current workspace should be visible in the top panel
+- Mathjax support is currently out of sync due to version drift
+
 ### Release 8/4/2014
 __Changes__
 - Added MathJax.js directly into the repo to combat problems on the back end (this is a temporary fix - we need to install the backend MathJax locally somehow, or update the version)

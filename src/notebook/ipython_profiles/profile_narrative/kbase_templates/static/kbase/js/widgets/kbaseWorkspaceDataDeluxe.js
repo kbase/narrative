@@ -34,7 +34,7 @@
             workspaceURL: "https://kbase.us/services/ws",
             wsBrowserURL: "/functional-site/#/ws/",
             landingPageURL: "/functional-site/#/",
-            uploaderURL: "http://kbase.us/services/docs/uploader/uploader.html",
+            uploaderURL: "//kbase.us/services/docs/uploader/uploader.html",
             container: null,
             wsId: null,
         },
@@ -256,6 +256,7 @@
                         {
                             tab : 'My Workspace Data',       //name of the tab
                             content : this.$myDataDiv,       //jquery object to stuff into the content
+                            active: true
                         },
                         {
                             tab : 'Narrative',

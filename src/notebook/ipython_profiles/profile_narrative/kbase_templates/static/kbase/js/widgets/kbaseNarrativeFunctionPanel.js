@@ -18,6 +18,7 @@
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             autopopulate: true,
         },
+        services: null,
 
         /**
          * This private method is automatically called when the widget is initialized.
@@ -89,8 +90,15 @@
                                       .append(this.$loadingPanel)
                                       .append(this.$errorPanel)));
 
+            $(document).on('hasFunction.Narrative', 
+                $.proxy(function(e, service, method, callback) {
+                    if (callback) {
+                        callback(this.hasFunction(service, method));
+                    }
+                }, this)
+            );
+
             $('body').append(this.$helpPanel);
-            this.refresh();
 
             if (this.options.autopopulate === true) {
                 this.refresh();
@@ -206,9 +214,12 @@
 
             var serviceAccordion = [];
 
+            this.services = {};
             for (var serviceName in serviceSet) {
                 totalServices++;
 
+                // make a little local hash to store in the element for quick lookup.
+                var localService = {};
                 var $methodList = $('<ul>');
                 var service = serviceSet[serviceName];
                 for (var i=0; i<service.methods.length; i++) {
@@ -216,6 +227,7 @@
                     var method = service.methods[i];
                     method['service'] = serviceName;
                     $methodList.append(this.buildFunction(method));
+                    localService[service.methods[i].title] = 1;
                 }
 
                 serviceAccordion.push({
@@ -223,6 +235,7 @@
                     'body' : $methodList
                 });
 
+                this.services[serviceName] = localService;
             }
 
             // sort by service title
@@ -230,10 +243,30 @@
                 return a.title.localeCompare(b.title);
             });
 
+            this.trigger('servicesUpdated.Narrative', [this.services]);
+
+            // Left here in case we want to use it again!
             // console.log("Total Services: " + totalServices);
             // console.log("Total Functions: " + totalFunctions);
 
             this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
+        },
+
+        /**
+         * @method
+         * A simple tester to see if a service.method call exists in the currently loaded set
+         * @param {string} service - the name of the service to test
+         * @param {string} method - the name of the method to test
+         * @return {boolean} true if the call exists, false otherwise
+         */
+        hasFunction: function(service, method) {
+            if (!this.services)
+                return true;
+
+            console.debug("looking up '" + service + "'.'" + method + "'");
+            if (this.services.hasOwnProperty(service))
+                return this.services[service].hasOwnProperty(method);
+            return false;
         },
 
         /**
@@ -253,12 +286,18 @@
             var $helpButton = $('<span>')
                               .addClass('glyphicon glyphicon-question-sign kb-function-help')
                               .css({'margin-top': '-5px'})
-                              .click(function(event) { event.preventDefault(); event.stopPropagation(); self.showHelpPopup(method, event); });
+                              .click(function(event) { 
+                                  event.preventDefault(); 
+                                  event.stopPropagation(); 
+                                  self.showHelpPopup(method, event); 
+                              });
 
             var $newFunction = $('<li>')
                                .append(method.title)
-                               .click(function(event) {self.trigger('function_clicked.Narrative', method); })
-                               .append($helpButton);
+                               .append($helpButton)
+                               .click(function(event) {
+                                   self.trigger('function_clicked.Narrative', method); 
+                               });
 
             return $newFunction;
         },

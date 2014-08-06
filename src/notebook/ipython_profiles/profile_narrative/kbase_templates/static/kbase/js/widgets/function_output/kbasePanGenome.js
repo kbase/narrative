@@ -29,6 +29,9 @@
             this._super(options);
             this.pref = this.genUUID();
             this.token = this.authToken();
+            this.geneIndex = {};
+            this.genomeNames = {};
+            this.genomeRefs = {};
         	var container = this.$elem;
         	container.empty();
         	container.append("<div><img src=\""+this.options.loadingImage+"\">&nbsp;&nbsp;loading pan-genome data...</div>");

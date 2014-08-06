@@ -25,13 +25,20 @@
         init: function(options) {
             this._super(options);
             this.pref = this.genUUID();
-            this.render(this);
+            this.render();
             return this;
         },
 
-        render: function(owner) {
+        render: function() {
         	if (this.options.loadExisting == 1) {
-        		var prom = kb.ws.get_objects([{workspace:this.options.wsName, name: this.options.genomeSetName}]);
+        		if (!this.authToken()) {
+        			this.$elem.empty();
+        			this.$elem.append("<div>[Error] You're not logged in</div>");
+                	return;
+        		}
+                var kbws = new Workspace(this.wsUrl, {'token': this.authToken()});
+        		var prom = kbws.get_objects([{workspace:this.options.wsName, name: this.options.genomeSetName}]);
+        		var self = this;
         		$.when(prom).done(function(data) {
                 	var data = data[0].data;
                 	var state = { descr: data.description };
@@ -46,13 +53,13 @@
                 			state[key] = refhash[data.elements[key]['ref']].label.split('/')[1];
                 		}
                 		console.log(state);
-                		owner.renderState(state);
+                		self.renderState(state);
                 	}).fail(function(e){
-                		this.$elem.append('<div class="alert alert-danger">'+
+                		self.$elem.append('<div class="alert alert-danger">'+
                                 e.error.message+'</div>')
             		});
             	}).fail(function(e){
-                	this.$elem.append('<div class="alert alert-danger">'+
+                	self.$elem.append('<div class="alert alert-danger">'+
                                 e.error.message+'</div>')
             	});
         	} else {
@@ -257,8 +264,17 @@
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
-        }
+        },
 
+        loggedInCallback: function(event, auth) {
+            this.render();
+            return this;
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.render();
+            return this;
+        }
     });
 
 })( jQuery );

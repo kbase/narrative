@@ -31,7 +31,7 @@ VERSION = (0, 0, 1)
 NAME = "Microbes Services"
 
 # Initialize
-init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
+init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION, invisible=True)
 
 @method(name="Simplified Assembly From Reads")
 def _assemble_contigs(meth, asm_input):

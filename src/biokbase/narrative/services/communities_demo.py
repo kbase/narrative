@@ -382,7 +382,7 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     
 
 @method(name="PICRUSt Predicted Abundance Profile")
-def _run_picrust(meth, workspace, in_seq, out_name):
+def _run_picrust(meth, workspace, in_biom, out_name):
     """Create a KEGG annotated functional abundance profile for 16S data in BIOM format using PICRUSt. The input OTUs are created by QIIME using a closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
 
     :param workspace: name of workspace, default is current

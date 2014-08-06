@@ -222,7 +222,13 @@
                     'title' : serviceName,
                     'body' : $methodList
                 });
+
             }
+
+            // sort by service title
+            serviceAccordion.sort(function(a, b) {
+                return a.title.localeCompare(b.title);
+            });
 
             // console.log("Total Services: " + totalServices);
             // console.log("Total Functions: " + totalFunctions);

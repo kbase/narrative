@@ -411,7 +411,7 @@ def _run_picrust(meth, workspace, in_biom, out_name):
     meth.advance("Retrieve Data from Workspace")
     #seq_obj = _get_ws(workspace, in_seq, CWS.profile)
     #seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
-    biom = _get_ws(workspace, in_name, CWS.profile)
+    biom = _get_ws(workspace, in_biom, CWS.profile)
 
     try:
        shockid = biom['ID']

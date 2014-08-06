@@ -529,7 +529,7 @@ def ws_obj2shock(ws, obj_id, advance=None, meth=None):
     return {'shock_ids': shock_ids, 'series': lseries,
             'samples': samples, 'gnid': genome_id}
 
-@method(name="Differential expression filter")
+@method(name="Differential Expression Filter")
 def filter_expr(meth, series_obj_id=None, filtering_method="anova",
                 num_genes=None, p_value="1.0"):
     """Filter expression table to differentially expressed genes

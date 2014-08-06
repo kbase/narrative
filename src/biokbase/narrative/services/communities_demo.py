@@ -108,8 +108,8 @@ picrustWF = """{
            "app_args" : [
               {"resource":"shock",
                  "host" : "$shock",
-               "node" : "$seq",
-               "filename" : "input.fas"
+                 "node" : "$biom_nid",
+                 "filename" : "input.biom"
                }
            ]
       }
@@ -388,9 +388,9 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_seq: object name of OTU table
-    :type in_seq: kbtypes.Communities.Profile
-    :ui_name in_seq: Input Sequence
+    :param in_biom: object name of OTU table
+    :type in_biom: kbtypes.Communities.Profile
+    :ui_name in_biom: Input BIOM
     :param out_name: object name of resulting BIOM profile
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
@@ -404,15 +404,31 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     meth.stages = 5
     meth.advance("Processing inputs")
     # validate
-    if not (in_seq and out_name):
+    if not (in_biom and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
-    seq_obj = _get_ws(workspace, in_seq, CWS.profile)
-    seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
+    #seq_obj = _get_ws(workspace, in_seq, CWS.profile)
+    #seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
+	biom = _get_ws(workspace, in_name, CWS.profile)
+
+    try:
+	   shockid = biom['ID']
+	   biom = _get_shock_data(shockid)
+	except:
+		pass
+	_put_invo(in_biom, biom)
+
+    _run_invo("echo '".biom."' > picrust_input.biom")
+    stdout, stderr = _run_invo("mg-upload2shock %s picrust_input.biom"%(URLS.shock))
+    if stderr:
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
+    biom_nid = json.loads(stdout)['id']
+
+
     wf_tmp = Template(picrustWF)
-    wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_obj['ID'])
+    wf_str = wf_tmp.substitute(shock=URLS.shock, biom_nid=biom_nid)
     
     meth.advance("Submiting "+method_name)
     ajob = _submit_awe(wf_str)
@@ -429,7 +445,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
     name, info = last_task['outputs'].items()[0]
     data = {'name': name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': _get_shock_data(info['node'])}
     _put_ws(workspace, out_name, CWS.profile, data=data)
-    text = "BIOM %s created for QIIME OTU picking of %s"%(out_name, in_seq)
+    text = "BIOM %s created for QIIME OTU picking of %s"%(out_name, in_biom)
     return json.dumps({'header': text})
 
 

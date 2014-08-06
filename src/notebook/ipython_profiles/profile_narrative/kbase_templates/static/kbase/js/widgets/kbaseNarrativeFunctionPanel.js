@@ -207,21 +207,28 @@
             var serviceAccordion = [];
 
             for (var serviceName in serviceSet) {
-                totalServices++;
 
+                var pre_functions = totalFunctions;
                 var $methodList = $('<ul>');
                 var service = serviceSet[serviceName];
-                for (var i=0; i<service.methods.length; i++) {
-                    totalFunctions++;
+                for (var i=0; i < service.methods.length; i++) {
                     var method = service.methods[i];
+                    // Skip methods that are not visible
+                    if (!method.visible) {
+                        continue;
+                    }
+                    totalFunctions++;
                     method['service'] = serviceName;
                     $methodList.append(this.buildFunction(method));
                 }
-
-                serviceAccordion.push({
-                    'title' : serviceName,
-                    'body' : $methodList
-                });
+                // Only add service if >0 methods.
+                if (totalFunctions > pre_functions) {
+                    serviceAccordion.push({
+                        'title': serviceName,
+                        'body': $methodList
+                    });
+                    totalServices++;
+                }
             }
 
             // console.log("Total Services: " + totalServices);

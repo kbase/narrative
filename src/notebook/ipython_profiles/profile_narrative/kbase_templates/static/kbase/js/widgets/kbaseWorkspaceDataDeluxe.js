@@ -255,7 +255,8 @@
                 {
                     tabs : [
                         {
-                            tab : 'My Workspace Data&nbsp;&nbsp;&nbsp;<span data-toggle="tooltip" class="glyphicon glyphicon-new-window ws-link"></span>',       //name of the tab
+                            tab: 'My Workspace Data',
+//                            tab : 'My Workspace Data&nbsp;&nbsp;&nbsp;<span data-toggle="tooltip" class="glyphicon glyphicon-new-window ws-link"></span>',       //name of the tab
                             content : this.$myDataDiv,       //jquery object to stuff into the content
                             active: true
                         },

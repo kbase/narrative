@@ -292,8 +292,24 @@
                                   self.showHelpPopup(method, event); 
                               });
 
+            /* this is for handling long function names.
+               long names will be cropped and have a tooltip 
+               with the full name */
+            var methodTitle = method.title;
+            var methodSpan = $('<span>');
+            if (methodTitle.length > 29) {
+                methodTitle = methodTitle.substring(0, 29) + "...";
+                methodSpan.append(methodTitle);
+                methodSpan.tooltip({
+                    title: method.title,
+                    placement: "bottom"
+                }); 
+            } else {
+                 methodSpan.append(methodTitle);
+            }
+            
             var $newFunction = $('<li>')
-                               .append(method.title)
+                               .append(methodSpan)
                                .append($helpButton)
                                .click(function(event) {
                                    self.trigger('function_clicked.Narrative', method); 

@@ -296,7 +296,7 @@ def prepareInputfiles(token,workspace=None,files=None,wstype=None):
     for nfile in files:
         filename = os.path.basename(nfile)
         try:
-            obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
+            obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename.strip(), 'type': wstype})
         except Exception as err:
             raise FileNotFound("File Not Found: {}".format(err))
         #return {"output" : str(status), "error": json_error}
@@ -654,7 +654,10 @@ def jnomics_calculate_variations(meth,workspace=None,Input_file=None,paired=None
 def jnomics_calculate_expression(meth, workspace = None,paired=None,
                                  Input_file_path=None,
                                  ref=None,src_id=None,outputfile=None):
-    """Calculate Expression
+    """Aligns the raw sequencing read (fastq) file (per sample) to the reference genome 
+       using the splice junction mapper Tophat and assembles the reads to transcripts using Cufflinks.
+       Input the RNASeq fastq files loaded from uploader and generate alignment files  and
+       gene expression files
 
     :param workspace : Name of workspace; default is current
     :type workspace : kbtypes.Unicode
@@ -663,10 +666,10 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     :type paired : kbtypes.Unicode
     :ui_name paired : Paired-End (?)
     :default paired : no
-    :param Input_file_path: Input the raw sequencing data
+    :param Input_file_path: Input the raw sequencing data (fastq)
     :type Input_file_path: kbtypes.Unicode
     :ui_name Input_file_path : Input files
-    :param ref: Reference Genome (kb_id)
+    :param ref: Reference Genome (kbase id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
     :param src_id: Source and Source Id
@@ -771,7 +774,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     @pipelineStep(None)
     def writeBamfile(client,previous_steps):
         tophatid  = idc.allocate_id_range(IDServerids.rnaseq_alignment,1)
-        tophatobjname = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_SampleAlignment"
+        #tophatobjname = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_SampleAlignment"
         #tophatobjname = IDServerids.rnaseq_alignment+"."+str(tophatid)
         filedata = shockfileload(auth,tophatobjname,cufflinks_in_path)
         objdata = { "name" : str(sample_id)+"_accepted_hits.bam" ,"paired" : paired , "created" :  strftime("%d %b %Y %H:%M:%S +0000", gmtime()) ,
@@ -830,7 +833,8 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
     cufflinks_out_path = os.path.join(Output_file_path,"cufflinks")
     cufflinks_output =  os.path.join(cufflinks_out_path,"transcripts.gtf")
     cufflinksobjname = str(sample_id)+'_transcripts.gtf'
-
+    tophatobjname = outputfile+"_"+str(uuid.uuid4().get_hex().upper()[0:6])+"_RNASeq_SampleAlignment"
+    
     stages= [Stage(runTophat,"Aligning Reads",pollGridJob),
              Stage(runCufflinks,"Assembling Transcripts",pollGridJob),
              Stage(writeBamfile,"Writing Alignment file",None),
@@ -840,7 +844,7 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
 
     ret = runPipeline(stages,meth,auth)
     if "output" in ret[-1] and "submitted"  in ret[-1]["output"]:
-           stat = {"submitted" : ret[-1]["output"]["submitted"]}
+           stat = {"submitted" : [ tophatobjname , ret[-1]["output"]["submitted"]]}
     else:
          stat = {"status" : "FAILED" , "error" : ret[-1]}
    
@@ -849,8 +853,10 @@ def jnomics_calculate_expression(meth, workspace = None,paired=None,
 @method(name = "Plot Gene Expression Histogram")
 def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
 
+    """Generates the histogram for an ExpressionSample.
+    x-axis  - Gene Expression level (FPKM )
+    y-axis  - Number of genes with a particular expression level
 
-    """Plot Gene Expression Histogram
     :param workspace: Name of workspace, default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
@@ -879,7 +885,7 @@ def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
     dt_type = WSTYPES.datatabletype
     idc = IDServerAPI(OTHERURLS.ids)
     try:
-        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': exptype})
+        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename.strip(), 'type': exptype})
     except Exception as e:
         pass
         #raise FileNotFound("File Not Found: {}".format(e))
@@ -892,7 +898,7 @@ def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
         lmax = round(max([v for k,v in hdict.items()]))
     hist_dt = histogram(hdict.values(),lmin,lmax,50)
     title = "Histogram  - " + exp_file
-    hist_json = {"title" :  title , "x_label" : "Gene Expression Level (FPKM)", "y_label" : "Num of Genes", "data" : hist_dt}
+    hist_json = {"title" :  title , "x_label" : "Gene Expression Level (FPKM)", "y_label" : "Number of Genes", "data" : hist_dt}
     #### hist_json is the json input for histogram #######
     #return to_JSON({"title" :  title , "x_label" : "Gene Expression Level ( FPKM )", "y_label" : "Num of Genes", "data" : hist_dt})
     sorted_dt = OrderedDict({ "id" : "", "name" : "","row_ids" : [] ,"column_ids" : [] ,"row_labels" : [] ,"column_labels" : [] , "data" : [] })
@@ -911,20 +917,22 @@ def generateHistogram(meth,workspace= None,exp_file=None,outputfile=None):
 @method(name = "Identify Differential Expression")
 def jnomics_differential_expression(meth,workspace= None,title=None, alignment_files=None,exp_files=None,
                                  ref=None,outputfile=None):
-    """Identify differential Expression
-    :param workspace: Name of workspace, default is current
+    """Merges the assembled transcripts together and calls Cuffdiff 
+    to identify differentially expressed genes in a RNA-Seq experiment
+
+    :param workspace: Name of the workspace, default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
     :param title : Experiment title
     :type title : kbtypes.Unicode
     :ui_name title : Experiment Name
-    :param alignment_files: Alignment files in .bam format
+    :param alignment_files: Alignment files
     :type alignment_files: kbtypes.Unicode
     :ui_name alignment_files : Alignment files
     :param exp_files: Gene Expression files
     :type exp_files: kbtypes.Unicode
     :ui_name exp_files : Gene Expressionfiles
-    :param ref : Reference Genome (kb_id)
+    :param ref : Reference Genome (kbase id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
     :param outputfile : Output File prefix
@@ -1024,7 +1032,7 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
     ret  = prepareInputfiles(meth.token,workspace,alignment_files,exptype)
 
     for nfile in expfiles:
-        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': nfile, 'type': exptype})
+        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': nfile.strip(), 'type': exptype})
         node_id =  obj['data']['shock_url']
         filename = str(obj['data']['id']).replace(".","_")+".gtf"
         objnames.append(filename)
@@ -1062,17 +1070,18 @@ def jnomics_differential_expression(meth,workspace= None,title=None, alignment_f
 
 @method(name = "Create Expression Series ")
 def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,design=None,summary=None,source_Id=None,src_date=None,outputfile=None):
-    """search a file
+    """Bundles the gene expression profiles of all the RNA-Seq samples to a RNA-Seq experiment.
+    Input the Expression Samples and details about the experiment to create a RNASeq series
 
-    :param workspace: Name of workspace; default is current
+    :param workspace: Name of the workspace; default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
-    :param exp_samples: Expression Sample ids (kb|sample.xxxx)
+    :param exp_samples: Expression Sample ids
     :type exp_samples : kbtypes.Unicode
     :ui_name exp_samples : Expression Samples
     :param ref: Reference genome
     :type ref : kbtypes.Unicode
-    :ui_name ref : Reference
+    :ui_name ref : Reference Genome (kbase id)
     :param title: Title
     :type title : kbtypes.Unicode
     :ui_name title : Experiment Title
@@ -1109,7 +1118,7 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
         workspace = meth.workspace_id
 
     def ws_getObject(workspace,expfile,exptype,token):
-        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': expfile, 'type': exptype})
+        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': expfile.strip(), 'type': exptype})
         return obj
 
     files = exp_samples.strip('\r\n').split(",")
@@ -1139,9 +1148,9 @@ def createExpSeries(meth,workspace= None,exp_samples=None,ref=None,title=None,de
 
 @method(name = "Generate Data Table ")
 def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outputfile=None):
-    """search a file
+    """It takes the Expression series id as input and builds a complete gene expression data table
 
-    :param workspace: Name of workspace; default is current
+    :param workspace: Name of the workspace; default is current
     :type workspace : kbtypes.Unicode
     :ui_name workspace : Workspace
     :param name: Datatable Name
@@ -1150,7 +1159,7 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outp
     :param exp_series: Expression Series Id
     :type exp_series : kbtypes.Unicode
     :ui_name exp_series : Expression Series ID
-    :param ref: Reference (kb_id)
+    :param ref: Reference Genome (kbase id)
     :type ref : kbtypes.Unicode
     :ui_name ref : Reference
     :param outputfile : Output File prefix
@@ -1189,7 +1198,7 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outp
     filename = os.path.basename(exp_series)
 
     try:
-        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename, 'type': wstype})
+        obj = ws.get_object({'auth': token, 'workspace': workspace, 'id': filename.strip(), 'type': wstype})
     except Exception as e:
         pass
         #raise FileNotFound("File Not Found: {}".format(e))
@@ -1224,7 +1233,7 @@ def createDataTable(meth,workspace= None,name=None,exp_series=None,ref=None,outp
     
 @method(name = "Filter Expression Data Table ")
 def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
-    """search a file
+    """It takes the complete data table as input and filters the significant differentially expressed genes
 
     :param workspace: Name of workspace; default is current
     :type workspace : kbtypes.Unicode
@@ -1238,6 +1247,7 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     :return: Workspace id
     :rtype: kbtypes.Unicode
     """
+
     meth.stages =  1
     meth.advance("filtering Expression DataTable")
 
@@ -1256,7 +1266,7 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
         workspace = meth.workspace_id
 
     try:
-        ret = ws.get_object({'auth': token, 'workspace': workspace, 'id': dtname, 'type': dt_type})
+        ret = ws.get_object({'auth': token, 'workspace': workspace, 'id': dtname.strip(), 'type': dt_type})
         result = ret['data']
     except Exception as e :
         pass
@@ -1288,22 +1298,20 @@ def filterDataTable(meth,workspace= None,dtname=None,outputfile=None):
     return to_JSON({"submitted" : sorted_dt["id"] })
       
 @method(name="Render Heatmap")
-def gene_network(meth, hm=None, workspace_id=None):
-    """This method creates a heatmap
-
+def gene_network(meth,workspace_id=None,hm=None):
+    """It takes the filtered expression data table and generates the heatmap 
+        
+        :param workspace_id: Name of the workspace; default is current
+        :type workspace_id: kbtypes.Unicode
+        :ui_name workspace_id : Workspace
         :param hm: Filtered Datatable
         :type hm: kbtypes.Unicode
         :ui_name hm : Filtered Datatable
-        :param workspace_id: Name of workspace; default is current
-        :type workspace_id: kbtypes.Unicode
-        :ui_name workspace_id : Workspace
         :return: Rows for display
         :rtype: kbtypes.Unicode
         :output_widget: kbaseHeatmap
         """
-    #:param workspace_id: Workspace name (use current if empty)
-    #:type workspace_id: kbtypes.Unicode
-        
+
     if not workspace_id:
         workspace_id = meth.workspace_id
 
@@ -1317,7 +1325,7 @@ def gene_network(meth, hm=None, workspace_id=None):
         ws = workspaceService(OTHERURLS.workspace)
         dt_type = WSTYPES.datatabletype
 
-        raw_data = ws.get_object({'auth': meth.token, 'workspace': workspace_id, 'id': hm, 'type': dt_type})
+        raw_data = ws.get_object({'auth': meth.token, 'workspace': workspace_id, 'id': hm.strip(), 'type': dt_type})
     else:
         raw_data = {}
     data = {'dataset': raw_data, 'height' : str(len(raw_data["data"]["row_labels"]) * 18) + "px"}

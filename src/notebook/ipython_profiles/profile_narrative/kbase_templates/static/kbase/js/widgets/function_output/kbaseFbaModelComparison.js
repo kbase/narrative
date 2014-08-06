@@ -50,10 +50,14 @@ $.KBWidget({
 
         var cmp = null;
         var error = false;
+    	var genome1id = null;
+    	var genome2id = null;
+    	var genome1name = null;
+    	var genome2name = null;
         fba.get_models({auth: self.token, workspaces: [self.ws_name, self.ws_name], models: [self.fba_model1_id, self.fba_model2_id] }, function(data) {
         	self.fba_model1 = data[0];
         	self.fba_model2 = data[1];
-        	if (cmp != null)
+        	if (cmp != null && genome1name != null && genome2name != null)
         		dataIsReady();
         }, function(data) {
         	if (!error)
@@ -64,8 +68,20 @@ $.KBWidget({
         
         kbws.get_objects([{ref: self.ws_name + "/" + self.proteome_cmp}], function(data) {
         	cmp = data[0].data;
-        	if (self.fba_model1 != null && self.fba_model2 != null)
-        		dataIsReady();
+        	kbws.get_object_subset([{ref: cmp.genome1ref, included: ["scientific_name"]}, 
+        	                        {ref: cmp.genome2ref, included: ["scientific_name"]}], function(data) {
+        		genome1id = data[0].info[1];
+        		genome2id = data[1].info[1];
+        		genome1name = data[0].data.scientific_name;
+        		genome2name = data[1].data.scientific_name;
+        		if (self.fba_model1 != null && self.fba_model2 != null)
+        			dataIsReady();
+            }, function(data) {
+            	if (!error)
+            		container.empty();
+            	error = true;
+        		container.append('<p>[Error] ' + data.error.message + '</p>');
+            });
         }, function(data) {
         	if (!error)
         		container.empty();
@@ -103,6 +119,10 @@ $.KBWidget({
             container.append(tab_pane)
         	var model1 = self.fba_model1;
         	var model2 = self.fba_model2;
+        	if (model1.genome_ref === cmp.genome2ref && model2.genome_ref === cmp.genome1ref) {
+            	var model2 = self.fba_model1;
+            	var model1 = self.fba_model2;
+        	}
         	var model1map = {};
         	var model2map = {};
         	var model1only = [];
@@ -132,11 +152,11 @@ $.KBWidget({
         		dataDict = formatRxnObjs(model1.reactions, model2map, stat);
         	}
         	prepare();
-        	if (stat[0]/10 > stat[1]) {
+        	/*if (stat[0]/10 > stat[1]) {
             	model1 = self.fba_model2;
             	model2 = self.fba_model1;
             	prepare();
-        	}
+        	}*/
             var tableSettings = {
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 5,
@@ -148,8 +168,8 @@ $.KBWidget({
         	//////////////////////////////////////////// Common tab /////////////////////////////////////////////
         	var headTable = $('#'+pref+'stat-table');
             headTable.append("" +
-            		"<tr><td>Reactions in genome1 (" + cmp.genome1id + ")</td><td><center>" + model1.reactions.length + "</center></td></tr>" +
-            		"<tr><td>Reactions in genome2 (" + cmp.genome2id + ")</td><td><center>" + model2.reactions.length + "</center></td></tr>" +
+            		"<tr><td>Reactions in genome1 (" + genome1name + ", " + genome1id + ")</td><td><center>" + model1.reactions.length + "</center></td></tr>" +
+            		"<tr><td>Reactions in genome2 (" + genome2name + ", " + genome2id + ")</td><td><center>" + model2.reactions.length + "</center></td></tr>" +
             		"<tr><td>Common reactions</td><td><center>" + stat[0] + "</center></td></tr>" +
             		"<tr><td>Reactions with same features</td><td><center>" + stat[1] + "</center></td></tr>");
             var keys = ["reaction", "definition", "features1", "features2", "name"];

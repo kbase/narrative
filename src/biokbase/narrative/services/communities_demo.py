@@ -212,8 +212,11 @@ def _abundanceProfile2annotationTable(meth, workspace, abundance_profile):
     meth.stages = 1
     if not abundance_profile:
         raise Exception("Metagenome List object name is not set.")
+    print "TEST DEBUG LINE"
+    print STDERR "TEST DEBUG LINE (STDERR)"    
     workspace = _get_wsname(meth, workspace)
-    return json.dumps({'ws': workspace, 'id': abundance_profile , 'header' : 'Hallo Wolfgang'})
+    _get_ws(workspace, abundance_profile, wtype):
+    return json.dumps({'ws': workspace, 'id': abundance_profile , 'header' : abundance_profile })
 
 @method(name="Import Metagenome List")
 def _import_metagenome_list(meth, workspace, metagenome_list_id):

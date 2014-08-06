@@ -529,7 +529,7 @@ def ws_obj2shock(ws, obj_id, advance=None, meth=None):
     return {'shock_ids': shock_ids, 'series': lseries,
             'samples': samples, 'gnid': genome_id}
 
-@method(name="Differential Expression Filter")
+@method(name="Filter Differentially Expressed Genes")
 def filter_expr(meth, series_obj_id=None, filtering_method="anova",
                 num_genes=None, p_value="1.0"):
     """Filter expression table to differentially expressed genes
@@ -566,7 +566,7 @@ def filter_expr(meth, series_obj_id=None, filtering_method="anova",
     return _workspace_output(series_obj_id+".fltrd")
 
 
-@method(name="Construct co-expression network and clusters")
+@method(name="Construct Co-expression Network and Clusters")
 def build_net_clust(meth, series_obj_id=None, net_method='simple', clust_method='hclust',
                     cut_off=None, num_module=None):
     """Construct co-expression network and a set of densely interconnected clusters in co-expression network based on
@@ -607,7 +607,7 @@ def build_net_clust(meth, series_obj_id=None, net_method='simple', clust_method=
     return _workspace_output('coex_by_' +series_obj_id)
 
 
-@method(name="Add ontology annotation for network genes")
+@method(name="Annotate Network Genes with Ontology Terms")
 def go_anno_net(meth, net_obj_id=None):
     """Add Gene Ontology annotation to network gene nodes
 
@@ -738,7 +738,7 @@ def annotate_nodes(net_object, ots=None, oan=None, funcs=None, funcs_org=None, e
 #            hr_nd['user_annotations']['go_enrichnment_annotation'] = ''.join(go_enr_list)
 
 
-@method(name="Annotate clusters with enriched ontology terms")
+@method(name="Annotate Clusters with Enriched Ontology Terms")
 def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
     """Identify Gene Ontology terms enriched in individual network clusters
 
@@ -818,7 +818,7 @@ def go_enrch_net(meth, net_obj_id=None, p_value=0.05, ec=None, domain=None):
     return json.dumps(data)
     #return _output_object(net_obj_id + ".cenr")
 
-@method(name="Construct subnetwork from user-selected clusters")
+@method(name="Construct Subnetwork from User Selected Clusters")
 def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
     """Construct subnetwork connecting genes in user-selected clusters
 
@@ -890,7 +890,7 @@ def const_subnet (meth, net_obj_id=None, cluster_id_list = None):
 #	return json.dumps({'token': meth.token, 'workspaceID': workspace_id, 'networkObjectID': obj_id })
 
 
-@method(name="Functional modules")
+@method(name="Display Functional Modules")
 def gene_network(meth, nto=None):
     """Display information for network clusters.
 

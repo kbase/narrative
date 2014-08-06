@@ -1,5 +1,6 @@
 /**
- * @author Bill Riehl <wjriehl@lbl.gov>
+ * Input widget for import NCBI genomes into workspace.
+ * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 

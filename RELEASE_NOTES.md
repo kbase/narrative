@@ -3,6 +3,45 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 8/5/2014
+__Changes__
+- Added a better fix to the "NoneType object has no attribute get_method" error
+- Updated Microbes services code, split services into 4 separate groups
+- Updates to Jnomics
+- Split picrust widget into qiime and picrust
+- Fixes to plant gene table size and heatmap rendering
+
+__Known Issues__
+- Changing Narrative name in the workspace doesn't propagate inside of the Narrative itself (likely won't fix)
+- R support is problematic
+- Many links to landing pages within the Narrative are broken
+- Sharing a Narrative with a running job might break
+- Loading a Narrative with a large amount of data in it might be slow
+- Services panel should be sorted/sortable
+- Narrative creator and current workspace should be visible in the top panel
+- Mathjax support is currently out of sync due to version drift
+
+### Release 8/4/2014
+__Changes__
+- Added MathJax.js directly into the repo to combat problems on the back end (this is a temporary fix - we need to install the backend MathJax locally somehow, or update the version)
+- Added a fix where if a call to globusonline fails, the Narrative doesn't initialize properly, leading to broken service panels.
+- Fixed a bug that caused some graphical widgets to time out while loading their script files.
+- Various updates to plants_gwas.py and jnomics.py
+
+### Release 8/1/2014
+__Changes__
+- Addressed issue with auth information getting overridden (leading to the 400 HTTP error)
+- Addressed problems that cause the 502 Bad Gateway error
+- Revised names and descriptions on some widgets
+- Added widget to build a genome set from a tree
+- Revised gapfilling and phenotype view widgets
+- Numerous widgets to GWAS and Plant-specific widgets and functionality
+
+__Known Issues__
+- Current version of jquery.datatables is finicky and can create popup errors. These can be safely ignored.
+- Changing Narrative name doesn't properly update Narrative object name in Workspace Browser and vice-versa.
+- R support is occasionally problematic.
+
 ### Release 7/30/2014
 __Changes__
 - Updated config to make landing page links relative to deployment site

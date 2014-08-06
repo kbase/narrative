@@ -1,4 +1,5 @@
 /**
+ * Output widget for creation/visualization/modification of set of genomes.
  * @author Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
@@ -9,6 +10,7 @@
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
+        	loadExisting: null,
         	wsName: null,
         	genomeSetName: null,
             loadingImage: "../images/ajax-loader.gif",
@@ -28,7 +30,41 @@
         },
 
         render: function() {
-        	this.renderState({});
+        	if (this.options.loadExisting == 1) {
+        		if (!this.authToken()) {
+        			this.$elem.empty();
+        			this.$elem.append("<div>[Error] You're not logged in</div>");
+                	return;
+        		}
+                var kbws = new Workspace(this.wsUrl, {'token': this.authToken()});
+        		var prom = kbws.get_objects([{workspace:this.options.wsName, name: this.options.genomeSetName}]);
+        		var self = this;
+        		$.when(prom).done(function(data) {
+                	var data = data[0].data;
+                	var state = { descr: data.description };
+                	var refs = [];
+                	for (var key in data.elements) {
+                		refs.push(data.elements[key]['ref']);
+                	}
+                	var oprom = kb.ui.translateRefs(refs);
+                	$.when(oprom).done(function(refhash) {
+                		var count = 0;
+                		for (var key in data.elements) {
+                			state[key] = refhash[data.elements[key]['ref']].label.split('/')[1];
+                		}
+                		console.log(state);
+                		self.renderState(state);
+                	}).fail(function(e){
+                		self.$elem.append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>')
+            		});
+            	}).fail(function(e){
+                	self.$elem.append('<div class="alert alert-danger">'+
+                                e.error.message+'</div>')
+            	});
+        	} else {
+        		this.renderState({});
+        	}
         },
         
         renderState: function(state) {
@@ -228,8 +264,17 @@
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
-        }
+        },
 
+        loggedInCallback: function(event, auth) {
+            this.render();
+            return this;
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.render();
+            return this;
+        }
     });
 
 })( jQuery );

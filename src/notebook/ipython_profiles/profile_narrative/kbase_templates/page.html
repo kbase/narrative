@@ -28,58 +28,226 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/narrative.css") }}" type="text/css" />
     <!--<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">-->
-    <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/3.2.1/css/font-awesome.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/js/ui-common/ext/font-awesome/4.1.0/css/font-awesome.min.css") }}" type="text/css" />
+
+    <!--<link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />-->
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
+
     <script src="{{ static_url("components/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
-    
     <script>
-      /**
-       * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
-       * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
-       * (to avoid having the same thing happen on page refreshes and such).
-       *
-       * This uses Bowser to detect the browser and version:
-       * https://github.com/ded/bowser
-       */
-      function checkBrowser() {
-        var browserCheckItem = 'kbBrowserCheck';
+        /**
+         * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
+         * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
+         * (to avoid having the same thing happen on page refreshes and such).
+         *
+         * This uses Bowser to detect the browser and version:
+         * https://github.com/ded/bowser
+         */
+        function checkBrowser() {
+            var redirectUrl = '//kbase.us/help/messages/unsupported-browser';
 
-        //Just return if we've done this already this session. Seeing the same popup more than once is obnoxious.
-        if (sessionStorage) {
-            if (sessionStorage.getItem(browserCheckItem))
-                return;
+            if (bowser.msie && bowser.version <= 9) {
+                var protocol = window.location.protocol;
+                window.location = protocol + redirectUrl;
+            }
         }
 
-        var alertPrefix = 'Unsupported browser detected!\n\n';
-        var alertSuggest = 'For a better experience, we recommend using recent versions of ' + 
-                           'Safari, Firefox, Chrome, or Internet Explorer.\n\n' +
-                           'Sorry for any inconvenience!';
-        var alertError = '';
-        if (bowser.msie && bowser.version <= 9) {
-            var alertError = 'You appear to be using Internet Explorer ' + 
-                             bowser.version + 
-                             '. Unfortunately, we don\'t support that web browser. Many ' +
-                             'functions will be unavailable or have compatibility problems.\n\n';
-        }
-
-        if (alertError) {
-            alert(alertPrefix + alertError + alertSuggest);
-        }
-
-        if (sessionStorage) {
-            sessionStorage.setItem(browserCheckItem, '1');
-        }
-      }
-
-      checkBrowser();
+        checkBrowser();
     </script>
 
-    <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
+
+
+<!--    <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script> -->
+    <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script>
+
     <script>
       require.config({
-          baseUrl: '{{static_url() }}',
+          baseUrl: '{{ static_url() }}',
+            //urlArgs: "bust=" + (new Date()).getTime(),
+            waitSeconds : 30,
+            paths : {
+                'jquery'      : 'kbase/js/ui-common/ext/jquery/jquery-1.10.2.min',
+                'jqueryui'    : 'kbase/js/ui-common/ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min',
+                'bootstrap'   : "kbase/js/ui-common/ext/bootstrap/3.1.1/js/bootstrap.min",
+                'd3'          : "kbase/js/ui-common/ext/d3/d3.v3.min",
+                'colorbrewer' : "kbase/js/ui-common/ext/colorbrewer/colorbrewer",
+                'handlebars'  : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
+                'CDMI_API'                          : 'kbase/js/ui-common/src/widgets/../js/CDMI_API',
+                'IdMapClient'                       : 'kbase/js/ui-common/src/widgets/../js/IdMapClient',
+                'KbaseNetworkServiceClient'         : 'kbase/js/ui-common/src/widgets/../js/KbaseNetworkServiceClient',
+                'MetaTool'                          : 'kbase/js/ui-common/src/widgets/../js/MetaTool',
+                'OntologyServiceClient'             : 'kbase/js/ui-common/src/widgets/../js/OntologyServiceClient',
+                'RGBColor'                          : 'kbase/js/ui-common/src/widgets/../js/RGBColor',
+                'geometry_point'                    : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',
+                'geometry_rectangle'                : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_rectangle',
+                'geometry_size'                     : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_size',
+                'Client'                            : 'kbase/js/ui-common/src/widgets/../js/workspaceService/Client',
+                'kbapplication'                     : 'kbase/js/ui-common/src/widgets/../kbapplication',
+                'kbwidget'                          : 'kbase/js/ui-common/src/widgets/../kbwidget',
+                'all'                               : 'kbase/js/ui-common/src/widgets/all',
+                'jim'                               : 'kbase/js/ui-common/src/widgets/jim',
+                'kbaseBambiMotifCard'               : 'kbase/js/ui-common/src/widgets/bambi/kbaseBambiMotifCard',
+                'kbaseBambiRawOutputCard'           : 'kbase/js/ui-common/src/widgets/bambi/kbaseBambiRawOutputCard',
+                'kbaseBambiRunParametersCard'       : 'kbase/js/ui-common/src/widgets/bambi/kbaseBambiRunParametersCard',
+                'kbaseBambiRunResultCard'           : 'kbase/js/ui-common/src/widgets/bambi/kbaseBambiRunResultCard',
+                'kbaseBioCpdTable'                  : 'kbase/js/ui-common/src/widgets/biochemistry/kbaseBioCpdTable',
+                'kbaseBioRxnTable'                  : 'kbase/js/ui-common/src/widgets/biochemistry/kbaseBioRxnTable',
+                'kbaseCpd'                          : 'kbase/js/ui-common/src/widgets/biochemistry/kbaseCpd',
+                'kbaseRxn'                          : 'kbase/js/ui-common/src/widgets/biochemistry/kbaseRxn',
+                'kbaseRxnModal'                     : 'kbase/js/ui-common/src/widgets/biochemistry/kbaseRxnModal',
+                'kbaseCmonkeyClusterCard'           : 'kbase/js/ui-common/src/widgets/cmonkey/kbaseCmonkeyClusterCard',
+                'kbaseCmonkeyMotifCard'             : 'kbase/js/ui-common/src/widgets/cmonkey/kbaseCmonkeyMotifCard',
+                'kbaseCmonkeyRunResultCard'         : 'kbase/js/ui-common/src/widgets/cmonkey/kbaseCmonkeyRunResultCard',
+                'kbaseFbaMeta'                      : 'kbase/js/ui-common/src/widgets/fbas/kbaseFbaMeta',
+                'kbaseFbaTabs'                      : 'kbase/js/ui-common/src/widgets/fbas/kbaseFbaTabs',
+                'kbaseFormulationForm'              : 'kbase/js/ui-common/src/widgets/fbas/kbaseFormulationForm',
+                'kbaseRunFba'                       : 'kbase/js/ui-common/src/widgets/fbas/kbaseRunFba',
+                'kbaseContigBrowser'                : 'kbase/js/ui-common/src/widgets/genomes/kbaseContigBrowser',
+                //'kbaseContigBrowserButtons'         : 'kbase/js/ui-common/src/widgets/genomes/kbaseContigBrowserButtons',
+                'kbaseGeneBiochemistry'             : 'kbase/js/ui-common/src/widgets/genomes/kbaseGeneBiochemistry',
+                'kbaseGeneDomains'                  : 'kbase/js/ui-common/src/widgets/genomes/kbaseGeneDomains',
+                'kbaseGeneInfo'                     : 'kbase/js/ui-common/src/widgets/genomes/kbaseGeneInfo',
+                'kbaseGeneInstanceInfo'             : 'kbase/js/ui-common/src/widgets/genomes/kbaseGeneInstanceInfo',
+                'kbaseGeneOperon'                   : 'kbase/js/ui-common/src/widgets/genomes/kbaseGeneOperon',
+                'kbaseGenomeOverview'               : 'kbase/js/ui-common/src/widgets/genomes/kbaseGenomeOverview',
+                'kbaseWikiDescription'              : 'kbase/js/ui-common/src/widgets/genomes/kbaseWikiDescription',
+                'kbaseGWASGeneListTable'            : 'kbase/js/ui-common/src/widgets/gwas/kbaseGWASGeneListTable',
+                'kbaseGWASPop'                      : 'kbase/js/ui-common/src/widgets/gwas/kbaseGWASPop',
+                'kbaseGWASPopMaps'                  : 'kbase/js/ui-common/src/widgets/gwas/kbaseGWASPopMaps',
+                'kbaseGWASPopTable'                 : 'kbase/js/ui-common/src/widgets/gwas/kbaseGWASPopTable',
+                'kbaseGWASTopVariations'            : 'kbase/js/ui-common/src/widgets/gwas/kbaseGWASTopVariations',
+                'kbaseGWASTopVariationsTable'       : 'kbase/js/ui-common/src/widgets/gwas/kbaseGWASTopVariationsTable',
+                'kbaseGWASTraitMaps'                : 'kbase/js/ui-common/src/widgets/gwas/kbaseGWASTraitMaps',
+                'kbaseGWASTraitTable'               : 'kbase/js/ui-common/src/widgets/gwas/kbaseGWASTraitTable',
+                'kbaseGWASVarTable'                 : 'kbase/js/ui-common/src/widgets/gwas/kbaseGWASVarTable',
+                'kbaseInferelatorHitsCard'          : 'kbase/js/ui-common/src/widgets/inferelator/kbaseInferelatorHitsCard',
+                'kbaseInferelatorRunResultCard'     : 'kbase/js/ui-common/src/widgets/inferelator/kbaseInferelatorRunResultCard',
+                'kbaseIrisTerminalDispatch'         : 'kbase/js/ui-common/src/widgets/iris/config/kbaseIrisTerminalDispatch',
+                'kbaseIrisTerminalDispatchAuth'     : 'kbase/js/ui-common/src/widgets/iris/config/kbaseIrisTerminalDispatchAuth',
+                'kbaseIrisTerminalDispatchEnv'      : 'kbase/js/ui-common/src/widgets/iris/config/kbaseIrisTerminalDispatchEnv',
+                'kbaseIrisTerminalDispatchFile'     : 'kbase/js/ui-common/src/widgets/iris/config/kbaseIrisTerminalDispatchFile',
+                'kbaseIrisTerminalDispatchHelp'     : 'kbase/js/ui-common/src/widgets/iris/config/kbaseIrisTerminalDispatchHelp',
+                'kbaseIrisTerminalDispatchHistory'  : 'kbase/js/ui-common/src/widgets/iris/config/kbaseIrisTerminalDispatchHistory',
+                'kbaseIrisTerminalDispatchScript'   : 'kbase/js/ui-common/src/widgets/iris/config/kbaseIrisTerminalDispatchScript',
+                'kbaseIrisTerminalDispatchTutorial' : 'kbase/js/ui-common/src/widgets/iris/config/kbaseIrisTerminalDispatchTutorial',
+                'iris'                              : 'kbase/js/ui-common/src/widgets/iris/iris',
+                'kbaseIrisCommands'                 : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisCommands',
+                'kbaseIrisConfig'                   : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisConfig',
+                'kbaseIrisContainerWidget'          : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisContainerWidget',
+                'kbaseIrisEchoWidget'               : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisEchoWidget',
+                'kbaseIrisFileBrowser'              : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisFileBrowser',
+                'kbaseIrisFileEditor'               : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisFileEditor',
+                'kbaseIrisGUIWidget'                : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisGUIWidget',
+                'kbaseIrisGrammar'                  : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisGrammar',
+                'kbaseIrisProcessList'              : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisProcessList',
+                'kbaseIrisTerminal'                 : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisTerminal',
+                'kbaseIrisTerminalWidget'           : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisTerminalWidget',
+                'kbaseIrisTextWidget'               : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisTextWidget',
+                'kbaseIrisTutorial'                 : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisTutorial',
+                'kbaseIrisWhatsNew'                 : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisWhatsNew',
+                'kbaseIrisWidget'                   : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisWidget',
+                'kbaseIrisWorkspace'                : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisWorkspace',
+                'jquery.kbase.ws-selector'          : 'kbase/js/ui-common/src/widgets/jquery.kbase.ws-selector',
+                'kbaseAccordion'                    : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
+                'kbaseAuthenticatedWidget'          : 'kbase/js/ui-common/src/widgets/kbaseAuthenticatedWidget',
+                'kbaseBox'                          : 'kbase/js/ui-common/src/widgets/kbaseBox',
+                'kbaseButtonControls'               : 'kbase/js/ui-common/src/widgets/kbaseButtonControls',
+                'kbaseCardLayoutManager'            : 'kbase/js/ui-common/src/widgets/kbaseCardLayoutManager',
+                'kbaseDataBrowser'                  : 'kbase/js/ui-common/src/widgets/kbaseDataBrowser',
+                'kbaseDeletePrompt'                 : 'kbase/js/ui-common/src/widgets/kbaseDeletePrompt',
+                'kbaseErrorPrompt'                  : 'kbase/js/ui-common/src/widgets/kbaseErrorPrompt',
+                'kbaseFormBuilder'                  : 'kbase/js/ui-common/src/widgets/kbaseFormBuilder',
+                'kbaseGeneTable'                    : 'kbase/js/ui-common/src/widgets/kbaseGeneTable',
+                'kbaseLogin'                        : 'kbase/js/ui-common/src/widgets/kbaseLogin',
+                'kbaseJSONReflector'                        : 'kbase/js/ui-common/src/widgets/kbaseJSONReflector',
+                'kbaseLoginFuncSite'                : 'kbase/js/ui-common/src/widgets/kbaseLoginFuncSite',
+                'kbaseModal'                        : 'kbase/js/ui-common/src/widgets/kbaseModal',
+                'kbasePanel'                        : 'kbase/js/ui-common/src/widgets/kbasePanel',
+                'kbasePrompt'                       : 'kbase/js/ui-common/src/widgets/kbasePrompt',
+                'kbaseSearchControls'               : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
+                'kbaseTable'                        : 'kbase/js/ui-common/src/widgets/kbaseTable',
+                'kbaseTabs'                         : 'kbase/js/ui-common/src/widgets/kbaseTabs',
+                'kbaseVisWidget'                    : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
+                'kbaseMAKBiclusterCard'             : 'kbase/js/ui-common/src/widgets/mak/kbaseMAKBiclusterCard',
+                'kbaseMAKResultCard'                : 'kbase/js/ui-common/src/widgets/mak/kbaseMAKResultCard',
+                'kbasePathways'                     : 'kbase/js/ui-common/src/widgets/maps/kbasePathways',
+                'kbaseMediaEditor'                  : 'kbase/js/ui-common/src/widgets/media/kbaseMediaEditor',
+                'kbaseMastHitsCard'                 : 'kbase/js/ui-common/src/widgets/meme/kbaseMastHitsCard',
+                'kbaseMastRunParametersCard'        : 'kbase/js/ui-common/src/widgets/meme/kbaseMastRunParametersCard',
+                'kbaseMastRunResultCard'            : 'kbase/js/ui-common/src/widgets/meme/kbaseMastRunResultCard',
+                'kbaseMemeMotifCard'                : 'kbase/js/ui-common/src/widgets/meme/kbaseMemeMotifCard',
+                'kbaseMemeRawOutputCard'            : 'kbase/js/ui-common/src/widgets/meme/kbaseMemeRawOutputCard',
+                'kbaseMemeRunParametersCard'        : 'kbase/js/ui-common/src/widgets/meme/kbaseMemeRunParametersCard',
+                'kbaseMemeRunResultCard'            : 'kbase/js/ui-common/src/widgets/meme/kbaseMemeRunResultCard',
+                'kbaseMemeTable'                    : 'kbase/js/ui-common/src/widgets/meme/kbaseMemeTable',
+                'kbaseTomtomHitsCard'               : 'kbase/js/ui-common/src/widgets/meme/kbaseTomtomHitsCard',
+                'kbaseTomtomRunParametersCard'      : 'kbase/js/ui-common/src/widgets/meme/kbaseTomtomRunParametersCard',
+                'kbaseTomtomRunResultCard'          : 'kbase/js/ui-common/src/widgets/meme/kbaseTomtomRunResultCard',
+                'logo'                              : 'kbase/js/ui-common/src/widgets/meme/logo',
+                'kbaseSeqSearch'                    : 'kbase/js/ui-common/src/widgets/misc/kbaseSeqSearch',
+                //'kbaseModelCore'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelCore',
+                'kbaseModelMeta'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelMeta',
+                'kbaseModelOpts'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelOpts',
+                'kbaseModelTable'                   : 'kbase/js/ui-common/src/widgets/models/kbaseModelTable',
+                //'kbaseModelTabs'                    : 'kbase/js/ui-common/src/widgets/models/kbaseModelTabs',
+                'force-directed'                    : 'kbase/js/ui-common/src/widgets/networks/force-directed',
+                'kbaseNetworkCard'                  : 'kbase/js/ui-common/src/widgets/networks/kbaseNetworkCard',
+                'kbasePPICard'                      : 'kbase/js/ui-common/src/widgets/networks/kbasePPICard',
+                'kbaseRegulomeCard'                 : 'kbase/js/ui-common/src/widgets/regprecise/kbaseRegulomeCard',
+                'kbaseRegulonCard'                  : 'kbase/js/ui-common/src/widgets/regprecise/kbaseRegulonCard',
+                'kbaseSpecFunctionCard'             : 'kbase/js/ui-common/src/widgets/spec/kbaseSpecFunctionCard',
+                'kbaseSpecModuleCard'               : 'kbase/js/ui-common/src/widgets/spec/kbaseSpecModuleCard',
+                'kbaseSpecStorageCard'              : 'kbase/js/ui-common/src/widgets/spec/kbaseSpecStorageCard',
+                'kbaseSpecTypeCard'                 : 'kbase/js/ui-common/src/widgets/spec/kbaseSpecTypeCard',
+                'kbaseBarchart'                     : 'kbase/js/ui-common/src/widgets/vis/kbaseBarchart',
+                'kbaseHistogram'                     : 'kbase/js/ui-common/src/widgets/vis/kbaseHistogram',
+                'kbaseChordchart'                   : 'kbase/js/ui-common/src/widgets/vis/kbaseChordchart',
+                'kbaseCircularHeatmap'              : 'kbase/js/ui-common/src/widgets/vis/kbaseCircularHeatmap',
+                'kbaseForcedNetwork'                : 'kbase/js/ui-common/src/widgets/vis/kbaseForcedNetwork',
+                'kbaseHeatmap'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseHeatmap',
+                'kbaseLineSerieschart'              : 'kbase/js/ui-common/src/widgets/vis/kbaseLineSerieschart',
+                'kbaseLinechart'                    : 'kbase/js/ui-common/src/widgets/vis/kbaseLinechart',
+                'kbasePiechart'                     : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
+                'kbaseScatterplot'                  : 'kbase/js/ui-common/src/widgets/vis/kbaseScatterplot',
+                'kbaseTreechart'                    : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
+                'kbaseVenndiagram'                  : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
+                'kbasePlantsNTO'                    : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePlantsNTO',
+                'kbasePlantsNetworkNarrative'       : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePlantsNetworkNarrative',
+                'kbasePlantsNetworkTable'           : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePlantsNetworkTable',
+                'vis'                               : 'kbase/js/ui-common/src/widgets/vis/vis',
+                'kbaseSimpleWSSelect'               : 'kbase/js/ui-common/src/widgets/workspaces/kbaseSimpleWSSelect',
+                'kbaseWSFbaTable'                   : 'kbase/js/ui-common/src/widgets/workspaces/kbaseWSFbaTable',
+                'kbaseWSHandler'                    : 'kbase/js/ui-common/src/widgets/workspaces/kbaseWSHandler',
+                'kbaseWSMediaTable'                 : 'kbase/js/ui-common/src/widgets/workspaces/kbaseWSMediaTable',
+                'kbaseWSModelTable'                 : 'kbase/js/ui-common/src/widgets/workspaces/kbaseWSModelTable',
+                'kbaseWSObjectTable'                : 'kbase/js/ui-common/src/widgets/workspaces/kbaseWSObjectTable',
+                'kbaseWSSelector'                   : 'kbase/js/ui-common/src/widgets/workspaces/kbaseWSSelector',
+              },
+          });
+
+      var kb_use_require = true;
+      var kb_norequire = function(deps, callback) {
+          callback(jQuery);
+      };
+      var kb_nodefine = function(module, deps, callback) {
+          callback(jQuery);
+      };
+      if (kb_use_require) {
+          kb_define = define;
+          kb_require = require;
+      }
+      else {
+          kb_define = kb_nodefine;
+          kb_require = kb_norequire;
+      }
+
+      kb_require(['narrative_paths'], function() {
+          kb_require(['jquery', 'CDMI_API', 'jim'],
+              function($, cdmi) {
+
+              }
+          );
       });
     </script>
     <script>
@@ -87,10 +255,10 @@
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      
+
       ga('create', 'UA-48256002-1', 'kbase.us');
       ga('send', 'pageview');
-      
+
     </script>
     {% block meta %}
     {% endblock %}
@@ -126,14 +294,14 @@
         <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>
       </ul> -->
 
-      <ul class="nav navbar-nav"> 
-     
+      <ul class="nav navbar-nav">
+
           <li class="active"><a href="/functional-site/#/narratives/">Narratives</a></li>
           <li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li>
           <li>
               <li><a href="/functional-site/#/search/?q=*">Search Data</a></li>
           </li>
-          <li><a target="_blank" href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>          
+          <li><a target="_blank" href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>
       </ul>
 
       <div id="signin-button" class="pull-right"></div>
@@ -180,20 +348,18 @@
 
 <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
-
 <script>
   var configJSON = $.parseJSON(
-                      $.ajax({ 
-                               url: "{{ static_url('kbase/config.json') }}", 
-                               async: false, 
+                      $.ajax({
+                               url: "{{ static_url('kbase/config.json') }}",
+                               async: false,
                                dataType: 'json'
                              }).responseText );
-  window.kbconfig = { urls : configJSON[configJSON['config']], 
+  window.kbconfig = { urls : configJSON[configJSON['config']],
                       version: configJSON['version'],
                       name: configJSON['name'] };
 </script>
 
-<!-- <script src="{{ static_url("components/bootstrap/bootstrap/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script> -->
 <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("base/js/namespace.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("base/js/page.js") }}" type="text/javascript" charset="utf-8"></script>

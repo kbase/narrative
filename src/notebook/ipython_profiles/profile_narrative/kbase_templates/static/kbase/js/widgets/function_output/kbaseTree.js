@@ -1,5 +1,6 @@
 /**
- * @author Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>
+ * Output widget for visualization of tree object (species trees and gene trees).
+ * Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 
@@ -115,13 +116,17 @@
             $.when(prom).done($.proxy(function(objArr) {
                 self.$elem.empty();
 
+                var canvasDivId = "knhx-canvas-div-" + self.pref;
                 self.canvasId = "knhx-canvas-" + self.pref;
-                self.$canvas = $('<div>')
+                self.$canvas = $('<div id="'+canvasDivId+'">')
                                .append($('<canvas id="' + self.canvasId + '">'));
+                
                 if (self.options.height) {
                     self.$canvas.css({'max-height':self.options.height, 'overflow':'scroll'});
                 }
                 self.$elem.append(self.$canvas);
+
+                watchForWidgetMaxWidthCorrection(canvasDivId);
 
             	if (!self.treeWsRef) {
             		var info = objArr[0].info;

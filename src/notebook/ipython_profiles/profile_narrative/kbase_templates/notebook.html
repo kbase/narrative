@@ -2,14 +2,12 @@
 
 {% block stylesheet %}
 
-    {% if mathjax_url %}
-        <script type="text/javascript" src="{{mathjax_url}}?config=TeX-AMS_HTML-full&delayStartupUntil=configured" charset="utf-8"></script>
-    {% endif %}
+    <script type="text/javascript" src="{{ static_url("components/mathjax/mathjax.js") }}" charset="utf-8"></script>
 
     <script type="text/javascript">
         // MathJax disabled, set as null to distingish from *missing* MathJax,
         // where it will be undefined, and should prompt a dialog later.
-        window.mathjax_url = "{{mathjax_url}}";
+        window.mathjax_url = "mathjax.js"; //{{ static_url("components/mathjax/mathjax.js") }}"; //"{{mathjax_url}}";
     </script>
 
     <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
@@ -22,7 +20,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/dataTables.bootstrap.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrap-fileupload.min.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/widgets.css") }}" type="text/css" />    
+    <link rel="stylesheet" href="{{ static_url("kbase/css/widgets.css") }}" type="text/css" />
 
     <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
 
@@ -63,14 +61,14 @@ class="notebook_app"
                                 <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">File</a>
                                     <ul class="dropdown-menu">
                                         <li id="new_notebook"><a href="#">New</a></li>
-                                        <li id="open_notebook"><a href="#">Open...</a></li> 
-                                         <hr/> 
+                                        <li id="open_notebook"><a href="#">Open...</a></li>
+                                         <hr/>
                                         <li class="divider"></li>
-                                        <li id="copy_notebook"><a href="#">Make a Copy...</a></li> 
+                                        <li id="copy_notebook"><a href="#">Make a Copy...</a></li>
                                         <li id="rename_notebook"><a href="#">Rename...</a></li>
                                         <li id="save_checkpoint"><a href="#">Save</a></li>
-                                        <li id="save_checkpoint"><a href="#">Save and Checkpoint</a></li> 
-                                         <hr/> 
+                                        <li id="save_checkpoint"><a href="#">Save and Checkpoint</a></li>
+                                         <hr/>
                                         <li class="divider"></li>
                                         <li id="restore_checkpoint" class="dropdown-submenu"><a href="#">Revert to Checkpoint</a>
                                           <ul class="dropdown-menu">
@@ -90,7 +88,7 @@ class="notebook_app"
                                         </li>
                                         <li class="divider"></li>
 
-                                        <li id="kill_and_exit"><a href="#" >Close and halt</a></li> 
+                                        <li id="kill_and_exit"><a href="#" >Close and halt</a></li>
                                     </ul>
                                 </li>
                                 <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit</a>
@@ -99,17 +97,17 @@ class="notebook_app"
                                         <li id="copy_cell"><a href="#">Copy Cell</a></li>
                                         <li id="paste_cell_above" class="disabled"><a href="#">Paste Cell Above</a></li>
                                         <li id="paste_cell_below" class="disabled"><a href="#">Paste Cell Below</a></li>
-                                        <li id="paste_cell_replace" class="disabled"><a href="#">Paste Cell &amp; Replace</a></li> 
+                                        <li id="paste_cell_replace" class="disabled"><a href="#">Paste Cell &amp; Replace</a></li>
                                         <li id="delete_cell"><a href="#">Delete Cell</a></li>
                                         <li id="undelete_cell" class="disabled"><a href="#">Undo Delete Cell</a></li>
                                         <li class="divider"></li>
                                         <li id="split_cell"><a href="#">Split Cell</a></li>
                                         <li id="merge_cell_above"><a href="#">Merge Cell Above</a></li>
-                                        <li id="merge_cell_below"><a href="#">Merge Cell Below</a></li> 
+                                        <li id="merge_cell_below"><a href="#">Merge Cell Below</a></li>
                                         <li class="divider"></li>
                                         <li id="move_cell_up"><a href="#">Move Cell Up</a></li>
                                         <li id="move_cell_down"><a href="#">Move Cell Down</a></li>
-                                        <li class="divider"></li> 
+                                        <li class="divider"></li>
                                         <li id="select_previous"><a href="#">Select Previous Cell</a></li>
                                         <li id="select_next"><a href="#">Select Next Cell</a></li>
                                     </ul>
@@ -124,7 +122,7 @@ class="notebook_app"
                                     <ul class="dropdown-menu">
                                         <li id="insert_cell_above"><a href="#">Insert Cell Above</a></li>
                                         <li id="insert_cell_below"><a href="#">Insert Cell Below</a></li>
-                                        <li id="insert_rickroll_cell_below"><a href="#">Insert Rickroll Widget Below</a></li> 
+                                        <li id="insert_rickroll_cell_below"><a href="#">Insert Rickroll Widget Below</a></li>
                                     </ul>
                                 </li>
                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Cell</a>
@@ -159,7 +157,7 @@ class="notebook_app"
                                             </ul>
                                         </li>
                                     </ul>
-                                </li> 
+                                </li>
                                 <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Kernel</a>
                                     <ul class="dropdown-menu">
                                         <li id="int_kernel"><a href="#">Interrupt</a></li>
@@ -179,7 +177,7 @@ class="notebook_app"
                                         <li><a href="http://matplotlib.sourceforge.net/" target="_blank">Matplotlib</a></li>
                                     </ul>
                                 </li>
-                            </ul> 
+                            </ul>
                             <div id="notification_area"></div> -->
                         </div>
                     </div>
@@ -224,7 +222,63 @@ class="notebook_app"
 
 {{super()}}
 
+<script>
+
+
+
+// $(function() {
+//   var original = $;
+
+//     require(['narrative_paths'], function() {
+//         console.log('yup');
+//         require(['CDMI_API'], function(cdmi) {
+//             console.log('got cdmi?');
+//         });
+
+//         require(['jquery', 'bootstrap'], function($) {
+//             $(function() {
+//                 console.log('got \'em all!');
+//             });
+//         });
+
+//         require(['jquery', 'vis'], function() {
+//             console.log('got vis!');
+//         });
+//     });
+
+
+//   // require(['kbvis/src/kbpaths'], function() {
+//   // // console.log('got paths');
+//   // // console.log(requirejs.s.contexts._.config);
+//   // // console.log(require.toUrl('kbaseLinechart' + '.js'));
+//   // // console.log(require.toUrl('vis' + '.js'));
+//   // // console.log(require.toUrl('d3' + '.js'));
+//   // // console.log(require.toUrl('bootstrap' + '.js'));
+//   // // console.log(require.toUrl('jqueryui' + '.js'));
+//   //   require(['jquery','vis'], function() {
+//   //     //console.log('got vis');
+//   //     var newJQ = $;
+//   //     $ = original;
+//   //     for (prop in newJQ.fn) {
+//   //       if (prop.match(/^kbase/)) {
+//   //         $[prop] = newJQ.fn[prop];
+//   //         $.fn[prop] = newJQ.fn[prop];
+//   //       }
+//   //     }
+//   //   /*console.log($.kbaseAccordion);
+//   //   console.log($.kbasePlantsNetworkNarrative);
+//   //   console.log($.kbaseBarchart);
+//   //   console.log($.kbaseLinechart);
+//   //   console.log('plants network narrative');
+//   //   console.log($.kbasePlantsNetworkNarrative);*/
+//   //   });
+//   // });
+// });
+
+</script>
+
 <script src="{{ static_url("kbase/js/jquery.dataTables.js") }}" type="text/javascript" charset="utf-8"></script>
+
 
 <!-- inserted KBase Javascript below -->
 <script src="{{ static_url("kbase/js/widgets/kbapi.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -237,6 +291,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/KBaseTrees.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/genomeComparisonClient.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgetMaxWidthCorrection.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs2.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -246,11 +301,12 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/kbaseDeletePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbaseContigBrowserButtons.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbasePhenotypeSet.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/genomes/kbasePanGenome.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- script src="{{ static_url("kbase/js/widgets/genomes/kbasePanGenome.js") }}" type="text/javascript" charset="utf-8"></script -->
 <script src="{{ static_url("components/d3/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/UserAndJobStateClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseTable.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeFunctionPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseNarrativeDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -262,10 +318,12 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseDefaultNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseBuildMediaInput.js") }}" type="text/javascript" charset="utf-8"></script>
+
 <script src="{{ static_url("kbase/js/widgets/function_input/rastGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <!-- function output JS widgets -->
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseExampleNarrativeOutput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseNarrativeError.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseAssembly.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -281,7 +339,6 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_output/kbasePhenotypeUploader.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbasePhenotypeSimulation.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeComparison.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseGeneTable.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseImageView.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseKeggMap.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseMGOverview.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -302,7 +359,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeSetBuilder.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseCompareFBAs.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseSEEDFunctions.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbasePanGenomeGeneSetExport.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbasePanGenome.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseMSA.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -314,41 +371,6 @@ class="notebook_app"
 <script src="{{ static_url("knhxtree/js/canvastext.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("knhxtree/js/knhx.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("knhxtree/js/easytree.js") }}" type="text/javascript" charset="utf-8"></script>
-
-<script>
-
-$(function() {
-
-  var original = $;
-  require(['kbvis/src/kbpaths'], function() {
-  /*console.log('got paths');
-  console.log(requirejs.s.contexts._.config);
-  console.log(require.toUrl('kbaseLinechart' + '.js'));
-  console.log(require.toUrl('vis' + '.js'));
-  console.log(require.toUrl('d3' + '.js'));
-  console.log(require.toUrl('bootstrap' + '.js'));
-  console.log(require.toUrl('jqueryui' + '.js'));*/
-    require(['jquery','vis'], function() {
-      //console.log('got vis');
-      var newJQ = $;
-      $ = original;
-      for (prop in newJQ.fn) {
-        if (prop.match(/^kbase/)) {
-          $[prop] = newJQ.fn[prop];
-          $.fn[prop] = newJQ.fn[prop];
-        }
-      }
-/*console.log($.kbaseAccordion);
-console.log($.kbasePlantsNetworkNarrative);
-console.log($.kbaseBarchart);
-console.log($.kbaseLinechart);
-console.log('plants network narrative');
-console.log($.kbasePlantsNetworkNarrative);*/
-    });
-  });
-});
-
-</script>
 
 <!-- Standard IPython Notebook Javascript -->
 
@@ -408,15 +430,5 @@ console.log($.kbasePlantsNetworkNarrative);*/
 <script src="{{ static_url("auth/js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
-
-<script> 
-$(function() {
-  $("#signin-button").kbaseLogin('session').user_id;
-  USER_TOKEN = $("#signin-button").kbaseLogin('session').token;
-  console.log('here is the token blah', USER_TOKEN)
-  kb = new KBCacheClient(USER_TOKEN)
-  console.log('here is kb', kb)
-})
-</script>
 
 {% endblock %}

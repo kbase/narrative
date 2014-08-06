@@ -1,5 +1,6 @@
 /**
- * @author Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>
+ * Output widget for visualization of Multiple Sequence Alignment.
+ * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 

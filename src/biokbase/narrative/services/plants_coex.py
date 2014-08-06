@@ -708,8 +708,9 @@ def annotate_nodes(net_object, ots=None, oan=None, funcs=None, funcs_org=None, e
         # try to annotate both locus and cds because some genomes have functions in CDS
         if lid in funcs and funcs[lid]:
             hr_nd['user_annotations']['functions'] = funcs[lid]
-        if not hr_nd['user_annotations']['functions'] and gids2cds[gid] in funcs_org and funcs_org[gids2cds[gid]]:
-            hr_nd['user_annotations']['functions'] = funcs_org[gids2cds[gid]]
+        if 'functions' not in hr_nd['user_annotations'] or not hr_nd['user_annotations']['functions']:
+          if cid in funcs_org:
+            hr_nd['user_annotations']['functions'] = funcs_org[cid]
         if cid in ots:
             go_enr_list = []
             for lcnt, go in enumerate(ots[cid].keys()):

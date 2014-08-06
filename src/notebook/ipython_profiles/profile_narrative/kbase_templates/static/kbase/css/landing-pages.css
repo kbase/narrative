@@ -628,5 +628,18 @@ div::-webkit-scrollbar-thumb {
     width: 100%;
 }
 
+.KBSnode rect {
+    cursor: pointer;
+    fill: #fff;
+    fill-opacity: .5;
+    stroke: #3182bd;
+    stroke-width: 1.5px;
+}
+
+.KBSnode text {
+    font: 80% sans-serif;
+    pointer-events: none;
+}
+
 
 

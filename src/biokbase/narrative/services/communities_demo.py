@@ -420,7 +420,7 @@ def _run_picrust(meth, workspace, in_seq, out_name):
        pass
     _put_invo(in_biom, biom)
 
-    _run_invo("echo '".biom."' > picrust_input.biom")
+    _run_invo("echo '" + biom + "' > picrust_input.biom")
     stdout, stderr = _run_invo("mg-upload2shock %s picrust_input.biom"%(URLS.shock))
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})

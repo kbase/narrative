@@ -412,6 +412,7 @@
         },
 
         exportFeatureSet: function(orth_id, target_obj_name, genes) {
+        	var self = this;
         	var elements = {};
         	var size = 0;
         	for (var i in genes) {
@@ -426,7 +427,8 @@
         	this.kbws.save_objects({workspace: this.options.ws, objects: 
         		[{type: "KBaseSearch.FeatureSet", name: target_obj_name, data: featureSet}]}, 
         		function(data) {
-        			alert("Feature set object containing " + size + " genes " +
+        			self.trigger('updateData.Narrative');
+        			self.showInfo("Feature set object containing " + size + " genes " +
         					"was successfuly exported");
         		},
         		function(err) {
@@ -456,8 +458,11 @@
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
+        },
+        
+        showInfo: function(message) {
+        	$('<div/>').kbasePrompt({title : 'Information', body : message}).openPrompt();
         }
-
     });
 
 })( jQuery );

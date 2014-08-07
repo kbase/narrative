@@ -61,8 +61,6 @@
              */
             this._super(options);
 
-            console.debug(options);
-
             /*
              * It is required to return this.
              */

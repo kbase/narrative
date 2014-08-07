@@ -296,9 +296,9 @@
                long names will be cropped and have a tooltip 
                with the full name */
             var methodTitle = method.title;
-            var methodSpan = $('<span>');
-            if (methodTitle.length > 29) {
-                methodTitle = methodTitle.substring(0, 29) + "...";
+            var methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
+            if (methodTitle.length > 31) {
+//                methodTitle = methodTitle.substring(0, 29) + "...";
                 methodSpan.append(methodTitle);
                 methodSpan.tooltip({
                     title: method.title,

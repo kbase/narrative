@@ -375,12 +375,7 @@
 <!-- End KBase Extensions -->
 
 <script src="{{ static_url("auth/js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
-<script>
-    $(function() {
-        var USER_TOKEN = $("#signin-button").kbaseLogin('session', 'token')
-        kb = new KBCacheClient(USER_TOKEN);
-    })
-</script> 
+
 
 {% block script %}
     {% if use_less %}

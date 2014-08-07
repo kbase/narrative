@@ -92,6 +92,7 @@
             // grab the token from the handler, since it isn't passed in with args
             var token = $("#signin-button").kbaseLogin('session', 'token');
             window.kb = new KBCacheClient(token);
+            kb = new KBCacheClient(token)
 
             // make sure the shell_channel is ready, otherwise sleep for .5 sec
             // and then try it. We use the ['kernel'] attribute deref in case

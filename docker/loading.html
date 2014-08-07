@@ -19,14 +19,13 @@
             console.log(narrUrl);
             var pokeNarrative = function(url) {
                 $.ajax({
-                    type: 'HEAD',
+                    type: 'GET',
                     url: url,
                     success: function(res) {
-                        console.log("success!");
-                        console.log(res);
+                        // on success, take us there!
+                        window.location.replace(url);
                     },
                     fail: function(err) {
-                        console.log("fail!");
                         console.log(err);
                         numTries++;
                     }

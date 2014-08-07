@@ -23,6 +23,7 @@
             var narrUrl = window.location.href.slice(window.location.href.indexOf('?') + 1);
             narrUrl = narrUrl.split('=')[1];
 
+            var interval = null;
             var pokeNarrative = function(url) {
                 $.ajax({
                     type: 'GET',
@@ -31,14 +32,21 @@
                         // on success, take us there!
                         window.location.replace(url);
                     },
-                    error: function(err) {
+                    error: function(error) {
+                        // look at error. if it's a 500, probably not allowed to see it (parse error and try)
+                        // otherwise, keep trying!
+                        if(error.status === 500) {
+                            if (interval)
+                                clearInterval(interval);
+                            $('#text').html('<br>Sorry, it looks like you don\'t have permission to view that Narrative.<br>If you see this error after coming through an outside link, <br>please try to access this Narrative through the main site <a href="/">here</a>.');
+                        }
                         numTries++;
                     },
                 });
             };
 
             if (narrUrl) {
-                var interval = setInterval( function() { 
+                interval = setInterval( function() { 
                     pokeNarrative(narrUrl); 
                     if (numTries > maxTries/2 && stateFlag === 0) {
                         $('#text').html('<br>Sorry, this is taking longer than expected.<br>Please be patient.');
@@ -47,10 +55,10 @@
                     if (numTries > maxTries && stateFlag === 1) {
                         $('#text').html('<br>Sorry, it appears an error occurred while setting up your narrative.<br>Please try again later, or look <a href="//kbase.us/user-support/report-issue/">Here</a> for some help!');
                         stateFlag++;
+                        clearInterval(interval);
                     }
                 }, retryTime );
             }
-
         })(jQuery);        
     </script>
 </html>

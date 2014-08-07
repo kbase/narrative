@@ -1,0 +1,40 @@
+<html>
+    <body>
+        <div style="text-align:center">
+            <img src="kbase_animated_logo.gif"></img>
+            <br>
+            Loading your Narrative. Please wait...
+        </div>
+    </body>
+
+    <script src="jquery-1.10.2.min.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+        (function( $, undefined ) {
+            var maxTries = 10;
+            var retryTime = 500; //ms
+            var numTries = 0;
+            var narrUrl = window.location.href.slice(window.location.href.indexOf('?') + 1);
+            narrUrl = narrUrl.split('=')[1];
+
+            console.log(narrUrl);
+            var pokeNarrative = function(url) {
+                $.ajax({
+                    type: 'HEAD',
+                    url: url,
+                    success: function(res) {
+                        console.log("success!");
+                        console.log(res);
+                    },
+                    fail: function(err) {
+                        console.log(err);
+                        numTries++;
+                    }
+                });
+            };
+
+            if (narrUrl)
+                pokeNarrative(narrUrl);
+
+        })(jQuery);        
+    </script>
+</html>

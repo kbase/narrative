@@ -508,11 +508,11 @@ $.KBWidget({
 	    self.geneJ = state.geneJ;
 	    self.dirJ = state.dirJ;
 	    self.cmp_ref = state.cmp_ref;
-    	if (self.scale == null)
-    		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
     	if (!self.cmp) {
     		self.render();
     	} else {
+        	if (self.scale == null)
+        		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
     		self.refreshImage();
     		self.refreshGenes();
     	}

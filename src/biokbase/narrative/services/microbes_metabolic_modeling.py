@@ -982,6 +982,36 @@ def _build_promconstraint(meth, genome_id, series_id, regulome_id):
     
     return json.dumps({'name': name, 'ws': workspaceName})
 
+@method(name="Generate SBML file")
+def _build_promconstraint(meth, model_id):
+    """Generates an SBML file for the specified model.
+        
+        :param fba_model_id: an FBA model id
+        :type fba_model_id: kbtypes.KBaseFBA.FBAModel
+        :ui_name fba_model_id: FBA Model ID
+        
+        :return: SBML File Downlaod
+        :rtype: kbtypes.Unicode
+        :output_widget: DownloadFileWidget
+        """
+    meth.stages = 2  # for reporting progress
+    meth.advance("Building model SBML file...")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id
+    fbaClient = fbaModelServices("http://140.221.85.73:4043",token=userToken)
+    
+    # create the model object
+    export_model_params = {
+        'model': model_id,
+        'workspace': workspaceName,
+        'format': "sbml"
+    }
+    
+    sbmlfile = fbaClient.export_fbamodel(export_model_params)
+
+    return json.dumps({'data': sbmlfile, 'name': model_id+'.sbml'})
+
 #
 #@method(name="Edit Data")
 #def _edit_data(meth, obj_name, type):

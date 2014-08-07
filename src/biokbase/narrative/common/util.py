@@ -68,7 +68,7 @@ class AweJob(object):
         self._meth = meth
         self._sname, self._rname = started, running
 
-    def run(self, jid, stage_fun=None, timeout=600):
+    def run(self, jid, stage_fun=None, timeout=3600):
         """Run synchronously, optionally invoking a callback at each completed stage, until
         all sub-jobs have completed.
 

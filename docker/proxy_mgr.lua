@@ -380,7 +380,7 @@ set_proxy = function(self)
         end
         if (new_flag) then
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-            local returnurl = string.format("%s://%s/%s", scheme, ngx.var.host, ngx.var.request_uri)
+            local returnurl = string.format("%s://%s%s", scheme, ngx.var.host, ngx.var.request_uri)
             return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(returnurl)))
         end
         ngx.say(json.encode( response ))
@@ -632,7 +632,7 @@ use_proxy = function(self)
         if target == nil then
             target = new_container(session_key)
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-            local returnurl = string.format("%s://%s/%s", scheme,ngx.var.host,ngx.var.request_uri)
+            local returnurl = string.format("%s://%s%s", scheme,ngx.var.host,ngx.var.request_uri)
             return ngx.redirect( string.format(M.load_redirect, ngx.escape_uri(returnurl)))
         end
     else

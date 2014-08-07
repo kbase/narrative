@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 8/7/2014
+__Changes__
+- Fixed links to landing pages linked to from the Narrative
+- Fixed problem with KBCacheClient not loading properly
+
+
 ### Release 8/6/2014
 __Changes__
 - Services panel is sorted by service name now

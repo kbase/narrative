@@ -91,7 +91,6 @@
 
             // grab the token from the handler, since it isn't passed in with args
             var token = $("#signin-button").kbaseLogin('session', 'token');
-            window.kb = new KBCacheClient(token);
 
             // make sure the shell_channel is ready, otherwise sleep for .5 sec
             // and then try it. We use the ['kernel'] attribute deref in case
@@ -115,6 +114,7 @@
              * So having it fail if no IPython.notebook is present is okay here.
              */
             login_callback: function(args) {
+                window.kb = new KBCacheClient(args.token);
                 if (IPython && IPython.notebook) {
                     setEnvironment();
                 } else {
@@ -143,6 +143,7 @@
              * of IPython).
              */
             prior_login_callback: function(args) {
+                window.kb = new KBCacheClient(args.token);
                 // Do actual login once the kernel is up - only an issue for prior_login
                 $([IPython.events]).one('status_started.Kernel', function() {
                     setTimeout( function() { setEnvironment(); }, 500 );

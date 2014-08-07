@@ -133,6 +133,7 @@ M.sweep_delay = 30
 -- out without redirect
 M.auth_redirect = "/?redirect=%s"
 
+M.load_redirect = "/loading.html?n=%s"
 --
 -- Function that runs a netstat and returns a table of foreign IP:PORT
 -- combinations and the number of observed ESTABLISHED connetions (at
@@ -308,6 +309,7 @@ set_proxy = function(self)
     local uri_key_rx = ngx.var.uri_base.."/("..key_regex ..")"
     local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
     local method = ngx.req.get_method()
+    local new_flag = false
     -- get the reaper functions into the run queue if not already
     check_marker()
     if method == "POST" then
@@ -346,6 +348,7 @@ set_proxy = function(self)
                     -- (real exception handling should be added here!)
                     ngx.log( ngx.NOTICE, "Inserting: " .. key .. " -> " .. val)
                     val = new_container(key)
+                    new_flag = true
                     if ngx.status == ngx.HTTP_INTERNAL_SERVER_ERROR then
                         response["msg"] = val
                         break
@@ -374,6 +377,11 @@ set_proxy = function(self)
                 ngx.status = ngx.HTTP_CREATED
                 response["msg"] = "Successfully added "..argc.." keys"
             end
+        end
+        if (new_flag) then
+            local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
+            local returnurl = string.format("%s://%s/%s", scheme, ngx.var.host, ngx.var.request_uri)
+            return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(returnurl)))
         end
         ngx.say(json.encode( response ))
     elseif method == "GET" then
@@ -584,8 +592,7 @@ new_container = function(session_id)
     if ok then
         ngx.log( ngx.INFO, "New instance at: " .. res)
         -- do a non-blocking sleep for 5 seconds to allow the instance to spin up
-
-        ngx.sleep(5)
+        -- ngx.sleep(5)
         local success,err,forcible = proxy_map:set(session_id,res)
         if not success then
             ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
@@ -607,6 +614,7 @@ end
 --
 use_proxy = function(self)
     local target, flags
+    local new_flag = false
     -- ngx.log( ngx.INFO, "In /narrative/ handler")
     -- get the reaper functions into the run queue if not already
     check_marker()
@@ -623,6 +631,9 @@ use_proxy = function(self)
         target = proxy_map:get(session_key)
         if target == nil then
             target = new_container(session_key)
+            local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
+            local returnurl = string.format("%s://%s/%s", scheme,ngx.var.host,ngx.var.request_uri)
+            return ngx.redirect( string.format(M.load_redirect, ngx.escape_uri(returnurl)))
         end
     else
         ngx.log(ngx.WARN,"No session_key found!")

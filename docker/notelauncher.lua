@@ -110,28 +110,28 @@ local function launch_notebook( name )
         local ports = res.body.NetworkSettings.Ports
         local ThePort = string.format("%d/tcp", M.private_port)
 
-        local log_file, occ = string.gsub(res.body.HostsPath, "hosts", "root/tmp/kbase-narrative.log")
-        local count = 10
-        local ready = false
-        while (count > 0 and not ready) do
-            ngx.log(ngx.INFO, "Testing for presense of kbase-narrative log file.")
-            local f = io.open(log_file, "r")
-            if f ~= nil then 
-                ngx.log(ngx.INFO, "Found the log file.")
-                io.close(f) 
-                ready = true
-                break
-            else
-                ngx.log(ngx.INFO, "No log file, waiting a second...")
-                count = count - 1
-                ngx.sleep(1)
-            end
-        end
-        if not ready then
-            local msg = "Time out starting container: " .. id
-            ngx.log(ngx.ERR,msg)
-            error(msg)
-        end
+        -- local log_file, occ = string.gsub(res.body.HostsPath, "hosts", "root/tmp/kbase-narrative.log")
+        -- local count = 10
+        -- local ready = false
+        -- while (count > 0 and not ready) do
+        --     ngx.log(ngx.INFO, "Testing for presense of kbase-narrative log file.")
+        --     local f = io.open(log_file, "r")
+        --     if f ~= nil then 
+        --         ngx.log(ngx.INFO, "Found the log file.")
+        --         io.close(f) 
+        --         ready = true
+        --         break
+        --     else
+        --         ngx.log(ngx.INFO, "No log file, waiting a second...")
+        --         count = count - 1
+        --         ngx.sleep(1)
+        --     end
+        -- end
+        -- if not ready then
+        --     local msg = "Time out starting container: " .. id
+        --     ngx.log(ngx.ERR,msg)
+        --     error(msg)
+        -- end
 
         assert(ports[ThePort] ~= nil, string.format("Port binding for port %s not found!",ThePort))
         return(string.format("%s:%d","127.0.0.1", ports[ThePort][1].HostPort))

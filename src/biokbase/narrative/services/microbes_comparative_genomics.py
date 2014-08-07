@@ -35,7 +35,7 @@ init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
 @method(name="Compute Pangenome")
 def _compute_pan_genome(meth, genome_set,pangenome_id):
-    """ Rapidly compute ortholog families for a set of phylogenetically close genomes
+    """ Rapidly compute gene families for a set of phylogenetically close genomes
 
     :param genome_set: a Genome Set to compute pangenome for
     :type genome_set: kbtypes.KBaseSearch.GenomeSet
@@ -96,9 +96,9 @@ def _view_pan_genome(meth, pan_genome_id):
     return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
 
 
-@method(name="Export orthologs from Pangenome")
+@method(name="Export gene sets from Pangenome")
 def _export_gene_set_pan_genome(meth, pan_genome_id):
-    """Export orthologs from Pangenome as external FeatureSet objects. [26] 
+    """Export gene sets from Pangenome as external FeatureSet objects. [26] 
     
     :param pan_genome_id: ID of pangenome object [26.1]
     :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome

@@ -645,7 +645,7 @@
             // object. Remove the clicky function and add a tooltip.
             var landingPage = this.options.defaultLandingPage + workspace + '/' + id;
             if (landingPageType) {
-                landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
+                landingPage = this.options.landingPageURL + landingPageType + '/' + encodeURIComponent(workspace) + '/' + encodeURIComponent(id);
             }
             detailsBtn.click(function(event) { window.open(landingPage); });
             detailsBtn.html("View Landing Page");

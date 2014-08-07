@@ -123,7 +123,7 @@ def _compare_genomes(meth, pangenome_id):
 
     :return: Uploaded Genome Comparison Data
     :rtype: kbtypes.KBaseGenomes.GenomeComparison
-    :output_widget: compgenomePa
+    :output_widget: kbaseGenomeComparisonViewer
     """
     meth.stages = 2
     meth.advance("Comparing all genomes in pangenome...")
@@ -137,7 +137,25 @@ def _compare_genomes(meth, pangenome_id):
                                 'pangenome_ws': ws,
                                 'workspace': ws })
     
-    return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
+    return json.dumps({'ws': meth.workspace_id, 'id':meta[1]})
+
+@method(name="View Genome Comparison")
+def _compare_genomes(meth, genomecomp_id):
+    """View genome comparison results.
+        
+        :param genomecomp_id: Genome comparison ID
+        :type genomecomp_id: kbtypes.KBaseGenomes.GenomeComparison
+        :ui_name genomecomp_id: Genome comparison ID
+        
+        :return: Uploaded Genome Comparison Data
+        :rtype: kbtypes.KBaseGenomes.GenomeComparison
+        :output_widget: kbaseGenomeComparisonViewer
+        """
+    meth.stages = 2
+    meth.advance("Opening genome comparison...")
+    token, ws = meth.token, meth.workspace_id;
+                               
+    return json.dumps({'ws': meth.workspace_id, 'id': genomecomp_id})
 
 @method(name="Compare Two Proteomes")
 def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):

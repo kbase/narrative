@@ -35,6 +35,7 @@
             wsBrowserURL: "/functional-site/#/ws/",
             landingPageURL: "/functional-site/#/",
             uploaderURL: "//kbase.us/services/docs/uploader/uploader.html",
+            defaultLandingPage: "/functional-site/#/ws/json/", // ws_name/obj_name
             container: null,
             wsId: null,
         },
@@ -124,7 +125,7 @@
                             this.landingPageMap = response;
                         }, this),
                         error: $.proxy(function(error) {
-                            this.dbg("Unable to get any landing page map! Landing pages unavailable...");
+                            this.dbg("Unable to get any landing page map! Landing pages mapping unavailable...");
                             this.landingPageMap = null;
                         }, this)
                     })
@@ -642,14 +643,15 @@
             detailsBtn.off('click');
             // If we don't havea a landingPageType (it's still null), then we don't have a landing page for that
             // object. Remove the clicky function and add a tooltip.
+            var landingPage = this.options.defaultLandingPage + workspace + '/' + id;
             if (landingPageType) {
-                var landingPage = this.options.landingPageURL + landingPageType + '/' + workspace + '/' + id;
-                detailsBtn.click(function(event) { window.open(landingPage); });
-                detailsBtn.html("View Landing Page");
+                landingPage = this.options.landingPageURL + landingPageType + '/' + encodeURIComponent(workspace) + '/' + encodeURIComponent(id);
             }
-            else {
-                detailsBtn.html("Landing Page Unavailable");
-            }
+            detailsBtn.click(function(event) { window.open(landingPage); });
+            detailsBtn.html("View Landing Page");
+            // else {
+            //     detailsBtn.html("Landing Page Unavailable");
+            // }
 
         },
 

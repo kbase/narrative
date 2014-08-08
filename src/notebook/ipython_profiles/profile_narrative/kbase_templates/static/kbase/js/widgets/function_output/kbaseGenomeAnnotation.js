@@ -79,11 +79,11 @@
             		////////////////////////////// Overview Tab //////////////////////////////
             		$('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
             				style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            		var overviewLabels = ['Id', 'Name', 'Domain', 'Genetic code', 'Source', "Source id", "GC", "Taxonomy", "Size"];
+            		var overviewLabels = ['Object ID', 'Data ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source id", "GC", "Taxonomy", "Size"];
             		var tax = gnm.taxonomy;
             		if (tax == null)
             			tax = '';
-            		var overviewData = [gnm.id, gnm.scientific_name, gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
+            		var overviewData = [self.ws_id, gnm.id, gnm.scientific_name, gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
             		var overviewTable = $('#'+pref+'overview-table');
             		for (var i=0; i<overviewData.length; i++) {
             			if (overviewLabels[i] === 'Taxonomy') {

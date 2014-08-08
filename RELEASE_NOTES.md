@@ -3,6 +3,21 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 8/7/2014
+__Changes__
+- Fixed links to landing pages linked to from the Narrative
+- Fixed problem with KBCacheClient not loading properly
+- Adjusted names of some functions (existing widgets might break!)
+- Fixed 502 Bad Gateway error on Narrative provisioning
+
+__Known Issues__
+- Loading page on Narrative provisioning sometimes loops too much in Safari
+- R support is problematic
+- Sharing a Narrative with a running job might break
+- Loading a Narrative with a large amount of data in it might be slow
+- Mathjax support is currently out of sync due to version drift
+
+
 ### Release 8/6/2014
 __Changes__
 - Services panel is sorted by service name now

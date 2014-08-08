@@ -3,6 +3,18 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 8/8/2014
+__Changes__
+- Fixed problems with loading page in Safari
+- Added genome comparison widget
+
+__Known Issues__
+- R support is problematic
+- Sharing a Narrative with a running job might break
+- Loading a Narrative with a large amount of data in it might be slow
+- Mathjax support is currently out of sync due to version drift
+
+
 ### Release 8/7/2014
 __Changes__
 - Fixed links to landing pages linked to from the Narrative

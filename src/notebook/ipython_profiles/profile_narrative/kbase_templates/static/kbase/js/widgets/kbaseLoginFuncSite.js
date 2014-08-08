@@ -1008,6 +1008,7 @@
                                 else {
                                     localStorage.removeItem('kbase_session');
                                     this.populateLoginInfo({});
+
                                     callback.call(this, {status : 0, message : data.error_msg});
 
                                     this.trigger('loggedInFailure', {status : 0, message : data.error_msg});
@@ -1030,6 +1031,10 @@
                                 if (errmsg == "error") {
                                     errmsg = "Error connecting to KBase login server";
                                 }
+                                else if (errmsg === "LoginFailure: Authentication failed.") {
+                                    errmsg = "Login Failed: your username/password is incorrect.";
+                                }
+
 
                                 this.populateLoginInfo({});
                                 callback.call(this,{ status : 0, message : errmsg })

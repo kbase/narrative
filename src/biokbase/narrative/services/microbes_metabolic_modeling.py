@@ -136,7 +136,7 @@ def _translate_model_to_new_genome(meth, fba_model_id, proteome_cmp, remove_noge
     	
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    fbaClient = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+    fbaClient = fbaModelServices(url = service.URLS.fba, token = token)
     translate_params = {
                          'protcomp' : proteome_cmp,
                          'model' : fba_model_id,
@@ -616,7 +616,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     meth.debug(json.dumps(fba_params))
 
     meth.advance("Running FBA")
-    fbaClient = fbaModelServices("http://140.221.85.73:4043",token=userToken)
+    fbaClient = fbaModelServices(url=service.URLS.fba,token=userToken)
     result_meta = fbaClient.runfba(fba_params)
     generated_fba_id = result_meta[0]
     
@@ -733,7 +733,7 @@ def _gapfill_fba(meth, fba_model_id, media_id,source_model_id,int_sol, output_mo
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id;
 
-    fbaclient = fbaModelServices(url="http://140.221.85.73:4043", token=userToken)
+    fbaclient = fbaModelServices(url=service.URLS.fba, token=userToken)
     
     fba_formulation = {}
     if (media_id):
@@ -966,7 +966,7 @@ def _build_promconstraint(meth, genome_id, series_id, regulome_id):
     
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id
-    fbaClient = fbaModelServices("http://140.221.85.73:4043",token=userToken)
+    fbaClient = fbaModelServices(url=service.URLS.fba,token=userToken)
     
     # create the model object
     build_pc_params = {
@@ -999,7 +999,7 @@ def _build_promconstraint(meth, model_id):
     
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id
-    fbaClient = fbaModelServices("http://140.221.85.73:4043",token=userToken)
+    fbaClient = fbaModelServices(url=service.URLS.fba,token=userToken)
     
     # create the model object
     export_model_params = {

@@ -73,7 +73,7 @@ def _compute_pan_genome(meth, genome_set,pangenome_id):
     if pangenome_id:
         pangenome_parameters['output_id']=pangenome_id
     
-    fbaclient = fbaModelServices(url="http://140.221.85.73:4043", token=usertoken)
+    fbaclient = fbaModelServices(url = service.URLS.fba, token=usertoken)
     meta = fbaclient.build_pangenome(pangenome_parameters)
     
     return json.dumps({'ws': workspace_id, 'name':meta[1]})
@@ -131,7 +131,7 @@ def _compare_genomes(meth, pangenome_id):
     #grab token and workspace info, setup the client
     token, ws = meth.token, meth.workspace_id;
     wss =[]
-    fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+    fba = fbaModelServices(url = service.URLS.fba, token = token)
 
     meta = fba.compare_genomes({'pangenome_id': pangenome_id, 
                                 'pangenome_ws': ws,

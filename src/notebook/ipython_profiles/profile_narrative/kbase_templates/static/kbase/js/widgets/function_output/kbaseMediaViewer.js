@@ -48,7 +48,7 @@
             var owner = metadata[5];
             var workspace = metadata[7];
             var mediaMeta = metadata[10];
-            var mediaName = mediaMeta['name'];
+            var mediaName = metadata[1];
             var numCompounds = mediaMeta['number_compounds'];
 
             var tableRow = function(a, b) {

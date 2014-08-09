@@ -67,7 +67,7 @@
         		tableOver.append('<tr><td>Creation</td><td>'+info[3]+'</td></tr>');
         		///////////////////////////////////// Genomes table ////////////////////////////////////////////    		
         		var tabGenomes = $("<div/>");
-    			tabPane.kbaseTabs('addTab', {tab: 'Genomes', content: tabGenomes, canDelete : false, show: true});
+    			tabPane.kbaseTabs('addTab', {tab: 'Genomes', content: tabGenomes, canDelete : false, show: false});
         		var tableGenomes = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'genome-table"/>');
         		tabGenomes.append(tableGenomes);
@@ -97,7 +97,7 @@
             	}
             	///////////////////////////////////// Functions table ////////////////////////////////////////////    		
         		var tabFunctions = $("<div/>");
-    			tabPane.kbaseTabs('addTab', {tab: 'Functions', content: tabFunctions, canDelete : false, show: true});
+    			tabPane.kbaseTabs('addTab', {tab: 'Functions', content: tabFunctions, canDelete : false, show: false});
         		var tableFunctions = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'function-table"/>');
         		tabFunctions.append(tableFunctions);
@@ -202,7 +202,7 @@
         			tabFamilies.append("<p><b>Please choose homolog family and push 'Export' "+
         						"button on opened ortholog tab.</b></p><br>");
         		}
-    			tabPane.kbaseTabs('addTab', {tab: 'Families', content: tabFamilies, canDelete : false, show: true});
+    			tabPane.kbaseTabs('addTab', {tab: 'Families', content: tabFamilies, canDelete : false, show: false});
         		var tableFamilies = $('<table class="table table-striped table-bordered" '+
         				'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'genome-table"/>');
         		tabFamilies.append(tableFamilies);

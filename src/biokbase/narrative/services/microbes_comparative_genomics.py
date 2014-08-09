@@ -126,7 +126,7 @@ def _compare_genomes(meth, pangenome_id):
     :output_widget: kbaseGenomeComparisonViewer
     """
     meth.stages = 2
-    meth.advance("Comparing all genomes in pangenome...")
+    meth.advance("Comparing all genomes in pangenome (1-2 minutes)...")
     
     #grab token and workspace info, setup the client
     token, ws = meth.token, meth.workspace_id;

@@ -110,7 +110,7 @@ $.KBWidget({
 
         // rxn flux table
         var dataDict = formatObjs(fba.reactionFluxes);
-        var labels = ["Id (compartment)","Reaction Equation", "Flux", "lower", "upper", "min", "max", "type"];
+        var labels = ["Id (compartment)","Reaction Equation", "Flux", "upper", "lower", "max", "min", "type"];
         var cols = getColumnsByLabelRxn(labels);
         var rxnTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});               
         rxnTableSettings.aoColumns = cols;
@@ -121,7 +121,7 @@ $.KBWidget({
         
         // cpd flux table
         var dataDict = formatCmpds(fba.compoundFluxes);
-        var labels = ["Id (compartment)","Compound Name", "Uptake Flux", "lower", "upper", "min", "max"];
+        var labels = ["Id (compartment)","Compound Name", "Uptake Flux", "upper", "lower", "max", "min"];
         var cols = getColumnsByLabel(labels);
         var cpdTableSettings = $.extend({}, tableSettings, {fnDrawCallback: events});
         cpdTableSettings.aoColumns = cols;

@@ -272,7 +272,7 @@
             //add the click event to open the workspace from the workspace link in the
             //'My Workspace Data' tab
             $that = this;
-            $("#data-tabs .ws-link").bind('click',
+            this.$dataPanel.find("#data-tabs .ws-link").bind('click',
                 function (e) {
                     var url = $that.options.wsBrowserURL + "/objtable/" + $that.wsId;
                     window.open(url,'_blank');
@@ -280,12 +280,19 @@
             );
 
             //add the tooltip to the workspace list
-            $("#data-tabs .ws-link").tooltip({
+            this.$dataPanel.find("#data-tabs .ws-link").tooltip({
                 title: "Open this workspace in a new window.",
                 placement: "bottom"
             });
 
-
+            this.$dataPanel.find('a').on('click', 
+                $.proxy(function() {
+                    setTimeout($.proxy(function() {
+                        this.$myDataDiv.kbaseNarrativeDataTable('poke');
+                        this.$narrativeDiv.kbaseNarrativeDataTable('poke');
+                    }, this), 0);
+                }, this)
+            );
             this.$myDataDiv.kbaseNarrativeDataTable({ noDataText: 'No data found! Click <a href="' + this.options.uploaderURL + '" target="_new">here</a> to upload.'});
             this.$narrativeDiv.kbaseNarrativeDataTable({ noDataText: 'No data used in this Narrative yet!'});
 
@@ -464,6 +471,8 @@
 
                     this.trigger('dataUpdated.Narrative');
                     this.showDataPanel();
+                    this.$myDataDiv.kbaseNarrativeDataTable('poke');
+                    this.$narrativeDiv.kbaseNarrativeDataTable('poke');
 
                 }, this), 
                 $.proxy(function(error) {

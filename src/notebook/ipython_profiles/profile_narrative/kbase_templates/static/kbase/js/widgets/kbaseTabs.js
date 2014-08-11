@@ -133,6 +133,7 @@
 
             var $that = this;   //thanks bootstrap! You suck!
 
+
             var $nav = $('<li></li>')
                 .css('white-space', 'nowrap')
                 .append(

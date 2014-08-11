@@ -50,8 +50,6 @@
         init: function(options) {
             this._super(options);
 
-            var self = this;
-
             this.ws_id = this.options.ws_id;
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
@@ -85,6 +83,14 @@
                 this)
             );
 
+            $(document).on('servicesUpdated.Narrative',
+                $.proxy(function(event, serviceSet) {
+                    console.log("listing services!");
+                    console.log(serviceSet);
+                },
+                this)
+            );
+
             $(document).on('narrativeDataQuery.Narrative', $.proxy(function(e, params, callback) {
                     var objList = this.getCurrentNarrativeData();
                     if (callback) {
@@ -97,9 +103,12 @@
             // When a user clicks on a function, this event gets fired with
             // method information. This builds a function cell out of that method
             // and inserts it in the right place.
-            $(document).on('function_clicked.Narrative', function(event, method) {
-                self.buildFunctionCell(method);
-            });
+            $(document).on('function_clicked.Narrative', 
+                $.proxy(function(event, method) {
+                    this.buildFunctionCell(method);
+                }, 
+                this)
+            );
 
 
             // Initialize the data table.
@@ -1169,6 +1178,11 @@
          * @returns this
          */
         render: function() {
+            var creator = IPython.notebook.metadata.creator;
+            if (creator) {// insert agnosticism here
+                $('.creator-stamp').text('Created by ' + creator);
+            }
+
             this.rebindActionButtons();
             this.hideGeneratedCodeCells();
             var cells = IPython.notebook.get_cells();

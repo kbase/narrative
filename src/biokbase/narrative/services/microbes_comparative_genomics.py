@@ -35,7 +35,7 @@ init_service(name=NAME, desc="Demo workflow microbes service", version=VERSION)
 
 @method(name="Compute Pangenome")
 def _compute_pan_genome(meth, genome_set,pangenome_id):
-    """ Rapidly compute ortholog families for a set of phylogenetically close genomes
+    """ Rapidly compute gene families for a set of phylogenetically close genomes
 
     :param genome_set: a Genome Set to compute pangenome for
     :type genome_set: kbtypes.KBaseSearch.GenomeSet
@@ -73,7 +73,7 @@ def _compute_pan_genome(meth, genome_set,pangenome_id):
     if pangenome_id:
         pangenome_parameters['output_id']=pangenome_id
     
-    fbaclient = fbaModelServices(url="http://140.221.85.73:4043", token=usertoken)
+    fbaclient = fbaModelServices(url = service.URLS.fba, token=usertoken)
     meta = fbaclient.build_pangenome(pangenome_parameters)
     
     return json.dumps({'ws': workspace_id, 'name':meta[1]})
@@ -96,9 +96,9 @@ def _view_pan_genome(meth, pan_genome_id):
     return json.dumps({'ws': meth.workspace_id, 'name': pan_genome_id})
 
 
-@method(name="Export orthologs from Pangenome")
+@method(name="Export gene sets from Pangenome")
 def _export_gene_set_pan_genome(meth, pan_genome_id):
-    """Export orthologs from Pangenome as external FeatureSet objects. [26] 
+    """Export gene sets from Pangenome as external FeatureSet objects. [26] 
     
     :param pan_genome_id: ID of pangenome object [26.1]
     :type pan_genome_id: kbtypes.KBaseGenomes.Pangenome
@@ -123,21 +123,39 @@ def _compare_genomes(meth, pangenome_id):
 
     :return: Uploaded Genome Comparison Data
     :rtype: kbtypes.KBaseGenomes.GenomeComparison
-    :output_widget: compgenomePa
+    :output_widget: kbaseGenomeComparisonViewer
     """
     meth.stages = 2
-    meth.advance("Comparing all genomes in pangenome...")
+    meth.advance("Comparing all genomes in pangenome (1-2 minutes)...")
     
     #grab token and workspace info, setup the client
     token, ws = meth.token, meth.workspace_id;
     wss =[]
-    fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+    fba = fbaModelServices(url = service.URLS.fba, token = token)
 
     meta = fba.compare_genomes({'pangenome_id': pangenome_id, 
                                 'pangenome_ws': ws,
                                 'workspace': ws })
     
-    return json.dumps({'workspace': meth.workspace_id, 'name':meta[1]})
+    return json.dumps({'ws': meth.workspace_id, 'id':meta[1]})
+
+@method(name="View Genome Comparison")
+def _compare_genomes(meth, genomecomp_id):
+    """View genome comparison results.
+        
+        :param genomecomp_id: Genome comparison ID
+        :type genomecomp_id: kbtypes.KBaseGenomes.GenomeComparison
+        :ui_name genomecomp_id: Genome comparison ID
+        
+        :return: Uploaded Genome Comparison Data
+        :rtype: kbtypes.KBaseGenomes.GenomeComparison
+        :output_widget: kbaseGenomeComparisonViewer
+        """
+    meth.stages = 2
+    meth.advance("Opening genome comparison...")
+    token, ws = meth.token, meth.workspace_id;
+                               
+    return json.dumps({'ws': meth.workspace_id, 'id': genomecomp_id})
 
 @method(name="Compare Two Proteomes")
 def _compare_proteomes(meth, genome1, genome2, out_proteome_cmp):

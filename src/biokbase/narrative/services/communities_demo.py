@@ -51,6 +51,7 @@ class URLS:
     awe = "http://140.221.67.184:8000"
     workspace = "https://kbase.us/services/ws"
     invocation = "https://kbase.us/services/invocation"
+    communities_base_url = "https://kbase.us/services/communities"
 
 #old: -i @input.fas -o ucr -p @otu_picking_params.txt -r /home/ubuntu/data/gg_13_5_otus/rep_set/97_otus.fasta
 
@@ -70,9 +71,9 @@ qiimeWF = """{
       "cmd" : {
          "name" : "app:QIIME.pick_closed_reference_otus.default",
          "app_args" : [
-            {"resource":"shock",
-               "host" : "$shock",
-               "node" : "$seq",
+            {"resource":"url",
+               "url" : "$url",
+               "uncompress":"gzip",
                "filename" : "input.fas"
             },
             {"resource" : "shock",
@@ -252,14 +253,17 @@ def _abundanceProfile2annotationTable(meth, workspace, abundance_profile):
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
     """
+
     meth.stages = 1
     if not abundance_profile:
         raise Exception("Metagenome List object name is not set.")
     print "TEST DEBUG LINE"
-    print STDERR "TEST DEBUG LINE (STDERR)"    
+    # print STDERR "TEST DEBUG LINE (STDERR)"
     workspace = _get_wsname(meth, workspace)
-    _get_ws(workspace, abundance_profile, wtype):
-    return json.dumps({'ws': workspace, 'id': abundance_profile , 'header' : abundance_profile })
+    profile = _get_ws(workspace, abundance_profile , CWS.profile)
+
+    meth.debug(profile)
+    return json.dumps({'ws': workspace, 'id': abundance_profile , 'header' : profile })
 
 @method(name="Import Metagenome List")
 def _import_metagenome_list(meth, workspace, metagenome_list_id):
@@ -430,29 +434,37 @@ def _run_picrust(meth, workspace, in_biom, out_name):
     if not (in_biom and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
-    
+
     meth.advance("Retrieve Data from Workspace")
     #seq_obj = _get_ws(workspace, in_seq, CWS.profile)
     #seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
     biom = _get_ws(workspace, in_biom, CWS.profile)
 
-    try:
-       shockid = biom['ID']
-       biom = _get_shock_data(shockid)
-    except:
-       pass
-    _put_invo(in_biom, biom)
+    meth.debug('Got ws object')
+    meth.debug( biom )
 
-    _run_invo("echo '" + biom + "' > picrust_input.biom")
+    # try:
+    #    shockid = biom['ID']
+    #    biom = _get_shock_data(shockid)
+    # except:
+    #    pass
+
+    # _put_invo(in_biom, biom)
+    meth.debug( "ws-get " + in_biom + " -w " + workspace + " > picrust_input.biom" )
+
+    _run_invo("ws-get " + in_biom + " -w " + workspace + " | mg-jsonviewer --value data --json > picrust_input.biom")
+    # _run_invo("echo '" + biom + "' > picrust_input.biom")
+    meth.debug("mg-upload2shock %s picrust_input.biom"%(URLS.shock) )
     stdout, stderr = _run_invo("mg-upload2shock %s picrust_input.biom"%(URLS.shock))
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     biom_nid = json.loads(stdout)['id']
 
+    meth.debug("Node ID: " + biom_nid )
 
     wf_tmp = Template(picrustWF)
     wf_str = wf_tmp.substitute(shock=URLS.shock, biom_nid=biom_nid)
-    
+    meth.debug( wf_str )
     meth.advance("Submiting "+method_name)
     ajob = _submit_awe(wf_str)
     if ajob['status'] != 200:
@@ -473,7 +485,7 @@ def _run_picrust(meth, workspace, in_biom, out_name):
 
 
 @method(name="QIIME OTU picking")
-def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
+def _run_qiime_otu_picking(meth, workspace, in_seq, in_metagenome , out_name):
     """Closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
         
         :param workspace: name of workspace, default is current
@@ -482,6 +494,9 @@ def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
         :param in_seq: object name of input sequence file
         :type in_seq: kbtypes.Communities.SequenceFile
         :ui_name in_seq: Input Sequence
+        :param in_metagenome: Metagenome object
+        :type in_metagenome: kbtypes.Communities.Metagenome
+        :ui_name in_metagenome: Input Metagenome
         :param out_name: object name of resulting BIOM profile
         :type out_name: kbtypes.Unicode
         :ui_name out_name: Output Name
@@ -495,13 +510,24 @@ def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
     meth.stages = 5
     meth.advance("Processing inputs")
     # validate
-    if not (in_seq and out_name):
+    if not ( (in_seq or in_metagenome) and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
-    seq_obj = _get_ws(workspace, in_seq, CWS.seq)
-    seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
+    
+    # empty download url 
+    seq_url = ''
+    if (in_seq) :
+        seq_obj = _get_ws(workspace, in_seq, CWS.seq)
+        seq_url = seq_obj['URL'] + '?download'
+    elif (in_metagenome) :
+        # construct download url
+        mg_obj = _get_ws(workspace, in_metagenome, CWS.mg)
+        if (1) :
+            seq_url = URLS.communities_base_url + "/download/" + mg_obj['ID'] + '?file=100.preprocessed.passed.fna.gz'  
+    else :
+        return json.dumps({'header': 'ERROR:\n Missing Input , please provide either sequence file object or metagnome object.'})
     _run_invo("echo 'pick_otus:enable_rev_strand_match True' > qiime.params")
     _run_invo("echo 'pick_otus:similarity 0.97' >> qiime.params")
     stdout, stderr = _run_invo("mg-upload2shock %s qiime.params"%(URLS.shock))
@@ -509,7 +535,7 @@ def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     param_nid = json.loads(stdout)['id']
     wf_tmp = Template(qiimeWF)
-    wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_obj['ID'], param=param_nid)
+    wf_str = wf_tmp.substitute(shock=URLS.shock, url=seq_url , param=param_nid)
     
     meth.advance("Submiting "+method_name)
     ajob = _submit_awe(wf_str)

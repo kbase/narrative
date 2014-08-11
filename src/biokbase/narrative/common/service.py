@@ -325,6 +325,8 @@ class Service(trt.HasTraits):
     desc = trt.Unicode()
     #: Version number of the service, see :class:`VersionNumber` for format
     version = kbtypes.VersionNumber()
+    #: Flag for making all service methods invisible to UI
+    invisible = trt.Bool(False)
 
     def __init__(self, **meta):
         """Initialize a Service instance.
@@ -357,6 +359,9 @@ class Service(trt.HasTraits):
         :raise: If method is None, anything raised by :class:`ServiceMethod` constructor
         """
         if not method:
+            # If the service isn't visible, pass that down into the method
+            if self.invisible:
+                kw['visible'] = False
             method = ServiceMethod(**kw)
         self.methods.append(method)
         return method
@@ -736,7 +741,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
 
 
     def __init__(self, status_class=LifecycleHistory, quiet=False,
-                 func=None, **meta):
+                 func=None, visible=True, **meta):
         """Constructor.
 
         :param status_class: Subclass of LifecycleObserver to instantiate
@@ -745,10 +750,12 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         :type status_class: type
         :param bool quiet: If True, don't add the printed output
         :param func: Function to auto-wrap, if present
+        :param visible: Whether this service is 'visible' to the UI
         :param meta: Other key/value pairs to set as traits of the method.
         """
         LifecycleSubject.__init__(self)
         self.name, self.full_name, self.run = "", "", None
+        self._visible = visible
         self._history = status_class(self)
         self.register(self._history)
         self._observers = []  # keep our own list of 'optional' observers
@@ -912,7 +919,8 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
             'input_widget': self.input_widget,
             'output_widget': self.output_widget,
             'params': [(p.name, p.get_metadata('ui_name'), str(p), p.get_metadata('desc')) for p in self.params],
-            'outputs': [(p.name, str(p), p.get_metadata('desc')) for p in self.outputs]
+            'outputs': [(p.name, str(p), p.get_metadata('desc')) for p in self.outputs],
+            'visible': self._visible
         }
         if formatted:
             return json.dumps(d, **kw)
@@ -939,6 +947,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
                                         'default': p.get_default_value()} for p in self.params},
                 'widgets': {'input': self.input_widget, 'output': self.output_widget },
             },
+            'visible': self._visible,
             'returns': {p.name: {'type': self.trt_2_jschema.get(p.info(), str(p)),
                                  'description': p.get_metadata('desc')} for p in self.outputs}
         }

@@ -176,6 +176,12 @@
             );
             this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right', container: 'body'});
         },
+
+        // quick fix to adjust column header width on refresh.
+        // should be called after it's rendered in the browser.
+        poke: function() {
+            this.$dataTable.fnAdjustColumnSizing();
+        }
     })
 
 })(jQuery);

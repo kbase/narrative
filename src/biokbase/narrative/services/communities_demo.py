@@ -1157,10 +1157,9 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
     :type top: kbtypes.Unicode
     :ui_name top: Top Annotations
     :default top: 10
-    :param order_by: metagenome position in profile to order rank abundace by
+    :param order_by: metagenome position in profile to order by, default is average
     :type order_by: kbtypes.Unicode
     :ui_name order_by: Order By
-    :default order_by: 1
     :return: Metagenome Rank Abundance Profile
     :rtype: kbtypes.Unicode
     :output_widget: GraphWidget
@@ -1179,8 +1178,6 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         use_name = 'no'
     if top == '':
         top = '10'
-    if order_by == '':
-        order_by = '1'
     if level in TAXA:
         annot = 'taxonomy'
         hpos  = TAXA.index(level)
@@ -1188,7 +1185,12 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         annot = 'ontology'
         hpos  = ONTOL.index(level)
     top = int(top)
-    order_by = int(order_by)
+    try:
+        order_by = int(order_by) - 1
+        if order_by < 1:
+            order_by = 1
+    except:
+        order_by = None
     
     meth.advance("Retrieve Data from Workspace")
     biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
@@ -1214,7 +1216,14 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
                 rmerge[name] = [x + y for x, y in zip(rmerge[name], matrix[r])]
             else:
                 rmerge[name] = matrix[r]
-    rsort = sorted(rmerge.items(), key=lambda x: x[1][order_by], reverse=True)
+    # sort by a metagenome or by average
+    rsort = []
+    if order_by:
+        rsort = sorted(rmerge.items(), key=lambda x: x[1][order_by], reverse=True)
+    else:
+        ravg  = dict([(k, sum(v)/float(len(v))) for (k, v) in rmerge.iteritems()])
+        asort = sorted(rmerge.items(), key=lambda x: x[1], reverse=True)
+        rsort = [(k, rmerge[k]) for (k, v) in asort]
     # barchart data
     data = []
     labels = []
@@ -1387,8 +1396,6 @@ def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
     # set defaults since unfilled options are empty strings
     if use_name == '':
         use_name = 'no'
-    if order == '':
-        order = 'yes'
     if label == '':
         label = 'no'
     

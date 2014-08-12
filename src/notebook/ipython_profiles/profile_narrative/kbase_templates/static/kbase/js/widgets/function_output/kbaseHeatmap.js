@@ -374,7 +374,7 @@
     	    }
 
     	    // get the initial distances between all nodes
-    	    var distances = standaloneHeatmap.distance(clusters);
+    	    var distances = HeatmapWidget.distance(clusters);
 
     	    // calculate clusters
     	    var min;
@@ -536,7 +536,7 @@
     	    // sort the clusterdata
     	    for (var i in clusterdata) {
     	    	if (clusterdata.hasOwnProperty(i) && ! isNaN(i)) {
-    	    	    clusterdata[i].sort(standaloneHeatmap.clustsort);
+    	    	    clusterdata[i].sort(HeatmapWidget.clustsort);
     	    	}
     	    }
 

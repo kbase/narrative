@@ -1221,7 +1221,7 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
     if order_by:
         rsort = sorted(rmerge.items(), key=lambda x: x[1][order_by], reverse=True)
     else:
-        ravg  = dict([(k, sum(v)/float(len(v))) for (k, v) in rmerge.iteritems()])
+        ravg  = dict( map(lambda (k,v): ( k, sum(v) / float(len(v)) ), rmerge.iteritems()) )
         asort = sorted(rmerge.items(), key=lambda x: x[1], reverse=True)
         rsort = [(k, rmerge[k]) for (k, v) in asort]
     # barchart data

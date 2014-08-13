@@ -418,7 +418,7 @@ class KBaseWSNotebookManager(NotebookManager):
         util.kbase_env.narrative = notebook_id
         # This is a no-op for now
         # return the checkpoint info
-        return { 'checkpoint_id' : checkpoint_id , 'last_modified' : chkpt_created}
+        return { 'checkpoint_id' : checkpoint_id , 'last_modified' : chkpt_created }
 
 
     def list_checkpoints(self, notebook_id):

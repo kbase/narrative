@@ -54,10 +54,12 @@
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
 
-            $([IPython.events]).on('notebook_loaded.Notebook', $.proxy(function() {
-                this.rebindActionButtons();
-                this.hideGeneratedCodeCells();
-            }), this);
+            $([IPython.events]).on('notebook_loaded.Notebook', 
+                $.proxy(function() {
+                    this.rebindActionButtons();
+                    this.hideGeneratedCodeCells();
+                }, this)
+            );
 
             $(document).on('workspaceUpdated.Narrative', 
                 $.proxy(function(e, ws_id) {
@@ -91,7 +93,8 @@
                 this)
             );
 
-            $(document).on('narrativeDataQuery.Narrative', $.proxy(function(e, params, callback) {
+            $(document).on('narrativeDataQuery.Narrative', 
+                $.proxy(function(e, params, callback) {
                     var objList = this.getCurrentNarrativeData();
                     if (callback) {
                         callback(objList);
@@ -110,9 +113,7 @@
                 this)
             );
 
-
             // Initialize the data table.
-
             this.render();
             return this;
         },
@@ -123,8 +124,6 @@
          * include a list of parameters and outputs.
          */
         buildFunctionCell: function(method) {
-//            console.debug("buildFunctionCell.start method:",method);
-
             var cell = IPython.notebook.insert_cell_below('markdown');
             // make this a function input cell, as opposed to an output cell
             this.setFunctionCell(cell, method);
@@ -431,6 +430,71 @@
         },
 
         /**
+         *
+         */
+        getCellDependencies: function(cell) {
+            if (!this.isFunctionCell(cell))
+                return;
+
+            // set up as a hash for quickie lookup time!
+            var ignoreTypes = {
+                'string' : 1,
+                'unicode' : 1,
+                'numeric' : 1,
+                'integer' : 1,
+                'list' : 1,
+                'a number' : 1
+            };
+            // get a 'handle' (really just the invocable name) of the input widget
+            var inputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
+            var paramValues = $(cell.element).find('#inputs')[inputWidget]('getParameters') || [];
+
+            var method = cell.metadata[this.KB_CELL]['method'];
+            var params = method.properties.parameters;
+
+            // paramValues and method.properties.parameters should be parallel, but check anyway.
+            // assume that those elements between the parameters list and method's params that
+
+            var deps = [];
+            var types = ['KBaseFBA.FBAModel'];
+            var typesHash = {'KBaseFBA.FBAModel' : 1};
+
+            // note - it's method.parameters.param##
+            for (var i=0; i<Object.keys(params).length; i++) {
+                var pid = 'param' + i;
+                var p = params[pid];  // this is the param object itself.
+
+                /* fields: default, description, type, ui_name */
+                var type = p.type;
+                if (!ignoreTypes[type.toLowerCase()] && paramValues[i]) {
+                    deps.push([type, paramValues[i]]);
+                    if (!typesHash[type]) {
+                        typesHash[type] = 1;
+                        types.push(type);
+                    }
+                }
+            }
+
+            // look up the deps in the data panel.
+            // Cheating for now - needs to be addressed elsewhere.
+            var objList = $('#kb-ws').kbaseWorkspaceDataDeluxe('getLoadedData', types);
+
+            var data = [];
+            // Man, now what. N^2 searching? What a drag.
+            for (var i=0; i<deps.length; i++) {
+                var type = deps[i][0];
+                for (var j=0; j<objList[type].length; j++) {
+                    if (objList[type][j][1] === deps[i][1]) {
+                        //data.push(objList[type][j]);
+                        data.push('ws.' + objList[type][j][6] + '.obj.' + objList[type][j][0]);
+                    }
+                }
+            }
+            console.log(data);
+
+        },
+
+        /**
          * Saves a cell's state into its metadata.
          * This includes marking that state with a timestamp.
          * We might need to add more stuff as well, but this is a start.
@@ -452,12 +516,12 @@
 
             if (this.isFunctionCell(cell)) {
                 widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
-                target = "#inputs";
+                target = '#inputs';
             }
             else if (this.isOutputCell(cell)) {
                 // do output widget stuff.
                 widget = cell.metadata[this.KB_CELL].widget;
-                target = "#output";
+                target = '#output';
             }
 
             try {
@@ -474,7 +538,7 @@
                 }
             }
             catch(error) {
-                this.dbg("Unable to save state for cell:");
+                this.dbg('Unable to save state for cell:');
                 this.dbg(cell);
             }
         },
@@ -596,6 +660,8 @@
                     // get the list of parameters and save the state in the cell's metadata
                     var paramList = $(cell.element).find("#inputs")[inputWidget]('getParameters');
                     self.saveCellState(cell);
+                    self.getCellDependencies(cell);
+
                     // var state = $(cell.element).find("#inputs")[inputWidget]('getState');
                     // cell.metadata[self.KB_CELL][self.KB_STATE] = state;
 
@@ -713,11 +779,6 @@
             var cmd = "import biokbase.narrative.common.service as Service\n" +
                       "method = Service.get_service('" + escService + "').get_method('" + escMethod + "')\n";
 
-                      // THIS SHOULD ONLY BE SET AT STARTUP BY THE MAIN JAVASCRIPT!!
-                      // "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
-                      // "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
-
-
             var paramList = params.map(
                 function(p) { 
                     return "'" + addSlashes(p) + "'"; 
@@ -808,7 +869,6 @@
                 this.createErrorCell(cell, JSON.stringify(errorBlob));
 
             }
-            console.debug("Done running the function", content);
             this.showCellProgress(cell, "DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
@@ -1250,14 +1310,6 @@
 
             var d = new Date(timestamp);
             var hours = format(d.getHours());
-            // var meridian = "am";
-            // if (hours >= 12) {
-            //     hours -= 12;
-            //     meridian = "pm";
-            // }
-            // if (hours === 0)
-            //     hours = 12;
-
             var minutes = format(d.getMinutes());
             var seconds = format(d.getSeconds());
             var month = d.getMonth()+1;

@@ -1264,9 +1264,9 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         'index': GRAPH-1,
         'data': data,
         'show_legend': True,
+        'title': '%s rank abundance'%(level) if annot else '',
         'x_labels': labels,
         'x_labels_rotation': '340',
-        'x_title': level,
         'height': 500,
         'type': 'column'
     }

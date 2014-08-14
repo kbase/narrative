@@ -1231,6 +1231,8 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
                 order_by = 1
         except:
             order_by = 0
+        if (order_by + 1) > len(biom['columns']):
+            order_by = 0
         rsort = sorted(rmerge.items(), key=lambda x: x[1][order_by], reverse=True)
     # barchart data
     data = []
@@ -1250,7 +1252,21 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
     meth.advance("Creating Profile")
     global GRAPH
     GRAPH += 1
-    return json.dumps({'index': GRAPH-1, 'data': data, 'show_legend': True, 'x_labels': labels, 'x_title': level, 'y_title': 'abundance', 'type': 'column'})
+    graphdata = {
+        'index': GRAPH-1,
+        'data': data,
+        'show_legend': True,
+        'x_labels': labels,
+        'x_labels_rotation': '325',
+        'x_title': level,
+        'type': 'column'
+    }
+    if (order_by == 'average') or (order_by == 'max'):
+        graphdata['y_title'] = 'abundance by %s value'(order_by)
+    else:
+        mg = biom['columns'][order_by]['name'] if use_name == 'yes' else biom['columns'][order_by]['id']
+        graphdata['y_title'] = 'abundance by metagenome %s'(mg)
+    return json.dumps(graphdata)
 
 @method(name="Boxplots from Abundance Profile")
 def _plot_boxplot(meth, workspace, in_name, use_name):

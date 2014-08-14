@@ -16,6 +16,7 @@ import urllib
 import urllib2
 import cStringIO
 import requests
+import biokbase.narrative.common.service as service
 from string import Template
 from collections import defaultdict
 # Local
@@ -23,6 +24,7 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 from biokbase.narrative.common import kbtypes
 #from biokbase.workspaceService.Client import workspaceService
 from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
+from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.shock import Client as shockService
 from biokbase.mglib import tab_to_matrix, sparse_to_dense
@@ -1543,6 +1545,176 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
 #     
 #     meth.advance("Building Overview")
 #     return json.dumps({'mgid': mgid})
+
+@method(name="Profile to OTU annotations")
+def _profile_to_otu_annotations(meth,profile_id,metaanno_id):
+    """Translates metagenome profile into an OTU annotation object for modeling.
+        
+        :param profile_id: ID of the metagenome profile
+        :type profile_id: kbtypes.Communities.ProfileTable
+        :ui_name profile_id: Metagenome Profile Table
+        
+        :param metaanno_id: name of OTU annotation object to be generated
+        :type metaanno_id: kbtypes.KBaseGenomes.MetagenomeAnnotation
+        :ui_name metaanno_id: Output OTU annotation object
+        
+        :output_widget: ValueListWidget
+        
+        :return: Output OTU annotation object
+        :rtype: kbtypes.Unicode
+        """
+    meth.stages = 2
+    meth.advance("Generating OTU annotations")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(url="https://kbase.us/services/KBaseFBAModeling", token=userToken)
+    wsClient = workspaceService(url="https://kbase.us/services/ws", token=userToken)
+    
+    output = wsClient.get_objects([{'ref':workspaceName+"/"+profile_id}]);
+    data = output[0]['data'];
+    text = data['data'];
+    
+    import_metaanno_params = {
+        'workspace': workspaceName,
+        'annotations': [],
+        'name': data['name']
+    };
+    
+    lines = text.split('\n');
+    for line in lines :
+        linearray = line.split('\t');
+        if len(linearray) >= 5:
+            temp = linearray[4];
+            linearray[4] = linearray[3];
+            linearray[3] = linearray[2];
+            linearray[2] = temp;
+            import_metaanno_params['annotations'].append(linearray);
+
+    if (metaanno_id) :
+        import_metaanno_params['metaanno_uid'] = metaanno_id;
+    else :
+        import_metaanno_params['metaanno_uid'] = data['name']+".metaanno";
+
+    model_meta = fbaClient.import_metagenome_annotation(import_metaanno_params);
+
+    output = wsClient.get_objects([{'ref':workspaceName+"/"+import_metaanno_params['metaanno_uid']}]);
+    otus = output[0]['data']['otus'];
+    newotus = sorted(otus, key=lambda k: k['ave_coverage']);
+    newotus.reverse();
+
+    output = {'values':[["OTU","Average coverage"]]};
+    for otu in newotus :
+        output['values'].append([otu['name'],otu['ave_coverage']]);
+
+    return json.dumps(output)
+
+@method(name="OTU annotations to Models")
+def _otu_annotations_to_models(meth,metaanno_id,max_otu_models,min_abundance,min_reactions):
+    """Constructs models for abundant OTUs in metagenome based on functions of reference genome hits.
+        
+        :param metaanno_id: name of OTU annotation object
+        :type metaanno_id: kbtypes.KBaseGenomes.MetagenomeAnnotation
+        :ui_name metaanno_id: OTU Annotation
+        
+        :param max_otu_models: maximum number of OTU models (default is 2)
+        :type max_otu_models: kbtypes.Unicode
+        :ui_name max_otu_models: Max OTU Models
+        
+        :param min_abundance: minimum abundance for OTU model  (default is 3)
+        :type min_abundance: kbtypes.Unicode
+        :ui_name min_abundance: Min Abundance
+        
+        :param min_reactions: minimum reactions for OTU model (default is 100)
+        :type min_reactions: kbtypes.Unicode
+        :ui_name min_reactions: Min Reactions
+        
+        :output_widget: ValueListWidget
+        
+        :return: Output OTU and tail models
+        :rtype: kbtypes.Unicode
+        """
+    
+    meth.stages = 2
+    meth.advance("Generating OTU models (5-10 minutes)")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(url="https://kbase.us/services/KBaseFBAModeling", token=userToken)
+    wsClient = workspaceService(url="https://kbase.us/services/ws", token=userToken)
+    
+    output = wsClient.get_objects([{'ref':workspaceName+"/"+metaanno_id}]);
+    otus = output[0]['data']['otus'];
+    model_ids = {'tail': metaanno_id+".tail.model"};
+    for otu in otus :
+        model_ids[otu['name']] = otu['name']+".model";
+    
+    build_otu_models_params = {
+        'workspace': workspaceName,
+        'metaanno_uid': metaanno_id,
+        'model_uids': model_ids,
+        'min_abundance': min_abundance,
+        'max_otu_models': max_otu_models,
+        'min_reactions': min_reactions
+    };
+    
+    model_metas = fbaClient.metagenome_to_fbamodels(build_otu_models_params);
+
+    finaloutput = {'values':[["Workspace","Models"]]};
+    for model in model_metas :
+        finaloutput['values'].append([model[7],model[1]]);
+
+    return json.dumps(finaloutput)
+
+@method(name="Merge to Community Model")
+def _merge_to_community_model(meth,model_ids,species_abundance,output_id):
+    """Constructs models for abundant OTUs in metagenome based on functions of reference genome hits.
+        
+        :param models_ids: list of species model ids (; seperated)
+        :type models_ids: kbtypes.Unicode
+        :ui_name models_ids: Model IDs
+        
+        :param species_abundance: list of species relative abundance (; separated)
+        :type species_abundance: kbtypes.Unicode
+        :ui_name species_abundance: Species abundance
+        
+        :param output_id: output ID of generated community model
+        :type output_id: kbtypes.Unicode
+        :ui_name output_id: Community Model Output ID
+        
+        :return: Community Model Data
+        :rtype: kbtypes.Model
+        :output_widget: kbaseModelTabs
+        """
+    
+    meth.stages = 2
+    meth.advance("Generating community model (5-10 minutes)")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(url="https://kbase.us/services/KBaseFBAModeling", token=userToken)
+    wsClient = workspaceService(url="https://kbase.us/services/ws", token=userToken)
+    
+    modelarray = model_ids.split(';');
+    abundancearray = species_abundance.split(';');
+    models = [];
+    count = 0;
+    for model in modelarray :
+        abund = 1;
+        if (abundancearray[count]) :
+            abund = abundancearray[count];
+        models.append([model,workspaceName,abund]);
+    
+    merge_models_params = {
+        'workspace': workspaceName,
+        'models': models,
+        'name': output_id,
+        'model_uid': output_id
+    };
+
+    model_meta = fbaClient.models_to_community_model(merge_models_params);
+
+    return json.dumps({'id': model_meta[1], 'ws': model_meta[7]})
 
 ec2ko = {
     "3.1.22.4": ["K01159"],

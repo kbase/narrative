@@ -1262,10 +1262,10 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         'type': 'column'
     }
     if (order_by == 'average') or (order_by == 'max'):
-        graphdata['y_title'] = 'abundance by %s value'(order_by)
+        graphdata['y_title'] = 'abundance by %s value'%(order_by)
     else:
         mg = biom['columns'][order_by]['name'] if use_name == 'yes' else biom['columns'][order_by]['id']
-        graphdata['y_title'] = 'abundance by metagenome %s'(mg)
+        graphdata['y_title'] = 'abundance by metagenome %s'%(mg)
     return json.dumps(graphdata)
 
 @method(name="Boxplots from Abundance Profile")

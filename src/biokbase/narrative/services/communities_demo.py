@@ -533,7 +533,7 @@ def _run_qiime_otu_picking(meth, workspace, in_seq, in_metagenome , out_name):
         # construct download url
         mg_obj = _get_ws(workspace, in_metagenome, CWS.mg)
         if (1) :
-            seq_url = URLS.communities_base_url + "/download/" + mg_obj['ID'] + '?file=100.preprocessed.passed.fna.gz'  
+            seq_url = URLS.communities_base_url + "/download/" + mg_obj['ID'] + '?file=100.preprocess.passed.fna.gz'  
     else :
         return json.dumps({'header': 'ERROR:\n Missing Input , please provide either sequence file object or metagnome object.'})
     _run_invo("echo 'pick_otus:enable_rev_strand_match True' > qiime.params")

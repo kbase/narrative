@@ -995,6 +995,8 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
         cmd += ' --order %d'%int(order)
         txt += " Rows were ordered by column %d."%int(order)
     stdout, stderr = _run_invo(cmd)
+    if stderr:
+        json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Storing in Workspace")
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': '', 'data': ''}
@@ -1066,6 +1068,8 @@ def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_en
     if stats.lower() == 'yes':
         cmd += ' --stats'
     stdout, stderr = _run_invo(cmd)
+    if stderr:
+        raise Exception('ERROR: %s'%stderr)
     
     meth.advance("Displaying Table")
     table = [[c for c in r.split('\t')] for r in stdout.rstrip().split('\n')]
@@ -1120,6 +1124,8 @@ def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
     if ab4:
         cmd += " "+ab4
     stdout, stderr = _run_invo(cmd)
+    if stderr:
+        json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Storing in Workspace")
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}

@@ -1157,9 +1157,10 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
     :type top: kbtypes.Unicode
     :ui_name top: Top Annotations
     :default top: 10
-    :param order_by: metagenome position in profile to order by, default is average
+    :param order_by: rank by either the position of metagenome in profile (integer) or 'average' or 'max' of metagenomes
     :type order_by: kbtypes.Unicode
     :ui_name order_by: Order By
+    :default order_by: average
     :return: Metagenome Rank Abundance Profile
     :rtype: kbtypes.Unicode
     :output_widget: GraphWidget
@@ -1178,6 +1179,8 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         use_name = 'no'
     if top == '':
         top = '10'
+    if order_by == '':
+        order_by = 'average'
     if level in TAXA:
         annot = 'taxonomy'
         hpos  = TAXA.index(level)
@@ -1185,12 +1188,6 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         annot = 'ontology'
         hpos  = ONTOL.index(level)
     top = int(top)
-    try:
-        order_by = int(order_by) - 1
-        if order_by < 1:
-            order_by = 1
-    except:
-        order_by = None
     
     meth.advance("Retrieve Data from Workspace")
     biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
@@ -1219,12 +1216,22 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
                 rmerge[name] = matrix[r]
     # sort by a metagenome or by average
     rsort = []
-    if order_by:
-        rsort = sorted(rmerge.items(), key=lambda x: x[1][order_by], reverse=True)
-    else:
+    if order_by == 'average':
         ravg  = dict( map(lambda (k,v): ( k, sum(v) / float(len(v)) ), rmerge.iteritems()) )
-        asort = sorted(rmerge.items(), key=lambda x: x[1], reverse=True)
+        asort = sorted(ravg.items(), key=lambda x: x[1], reverse=True)
         rsort = [(k, rmerge[k]) for (k, v) in asort]
+    elif order_by == 'max':
+        rmax  = dict( map(lambda (k,v): ( k, max(v) ), rmerge.iteritems()) )
+        msort = sorted(rmax.items(), key=lambda x: x[1], reverse=True)
+        rsort = [(k, rmerge[k]) for (k, v) in msort]
+    else:
+        try:
+            order_by = int(order_by) - 1
+            if order_by < 1:
+                order_by = 1
+        except:
+            order_by = 0
+        rsort = sorted(rmerge.items(), key=lambda x: x[1][order_by], reverse=True)
     # barchart data
     data = []
     labels = []
@@ -1412,9 +1419,9 @@ def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
         data['columns'] = map(lambda x: x['id'], biom['columns'])
     # rows
     for row in biom['rows']:
-        if 'taxonomy' in row['metadata']:
+        if ('metadata' in row) and ('taxonomy' in row['metadata']):
             data['rows'].append(row['metadata']['taxonomy'])
-        elif 'ontology' in row['metadata']:
+        elif ('metadata' in row) and ('ontology' in row['metadata']):
             data['rows'].append(row['metadata']['ontology'])
         else:
             data['rows'].append(row['id'])

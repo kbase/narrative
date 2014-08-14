@@ -47,6 +47,16 @@
         KB_CODE_CELL: 'kb_code',
         KB_STATE: 'widget_state',
 
+        // set up as a hash for quickie lookup time!
+        ignoredDataTypes = {
+            'string' : 1,
+            'unicode' : 1,
+            'numeric' : 1,
+            'integer' : 1,
+            'list' : 1,
+            'a number' : 1
+        },
+
         init: function(options) {
             this._super(options);
 
@@ -432,32 +442,26 @@
         /**
          *
          */
-        getCellDependencies: function(cell) {
+        getCellDependencies: function(cell, paramValues) {
             if (!this.isFunctionCell(cell))
                 return;
 
-            // set up as a hash for quickie lookup time!
-            var ignoreTypes = {
-                'string' : 1,
-                'unicode' : 1,
-                'numeric' : 1,
-                'integer' : 1,
-                'list' : 1,
-                'a number' : 1
-            };
+            var data = [];
             // get a 'handle' (really just the invocable name) of the input widget
             var inputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
-            var paramValues = $(cell.element).find('#inputs')[inputWidget]('getParameters') || [];
+            var params = cell.metadata[this.KB_CELL]['method'].properties.parameters;
 
-            var method = cell.metadata[this.KB_CELL]['method'];
-            var params = method.properties.parameters;
+            if (!paramValues) {
+                paramValues = $(cell.element).find('#inputs')[inputWidget]('getParameters') || [];
+            }
+
 
             // paramValues and method.properties.parameters should be parallel, but check anyway.
             // assume that those elements between the parameters list and method's params that
 
-            var deps = [];
-            var types = ['KBaseFBA.FBAModel'];
-            var typesHash = {'KBaseFBA.FBAModel' : 1};
+            var cellDeps = [];
+            var types = [];
+            var typesHash = {};
 
             // note - it's method.parameters.param##
             for (var i=0; i<Object.keys(params).length; i++) {
@@ -466,8 +470,8 @@
 
                 /* fields: default, description, type, ui_name */
                 var type = p.type;
-                if (!ignoreTypes[type.toLowerCase()] && paramValues[i]) {
-                    deps.push([type, paramValues[i]]);
+                if (!ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
+                    cellDeps.push([type, paramValues[i]]);
                     if (!typesHash[type]) {
                         typesHash[type] = 1;
                         types.push(type);
@@ -476,22 +480,26 @@
             }
 
             // look up the deps in the data panel.
-            // Cheating for now - needs to be addressed elsewhere.
+            // Cheating for now - needs to be a synchronous call, though! There's no reason for it not to be, if the data's already loaded!
             var objList = $('#kb-ws').kbaseWorkspaceDataDeluxe('getLoadedData', types);
 
-            var data = [];
             // Man, now what. N^2 searching? What a drag.
             for (var i=0; i<deps.length; i++) {
                 var type = deps[i][0];
+                var found = false;
                 for (var j=0; j<objList[type].length; j++) {
                     if (objList[type][j][1] === deps[i][1]) {
                         //data.push(objList[type][j]);
-                        data.push('ws.' + objList[type][j][6] + '.obj.' + objList[type][j][0]);
+                        data.push([type, 'ws.' + objList[type][j][6] + '.obj.' + objList[type][j][0]]);
+                        found = true;
+                        break;
                     }
                 }
+                if (!found) {
+                    data.push(deps[i]);
+                }
             }
-            console.log(data);
-
+            return data;
         },
 
         /**

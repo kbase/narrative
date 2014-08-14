@@ -1106,12 +1106,12 @@ def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
         return json.dumps({'header': 'ERROR:\nmissing required input abundance profiles'})
     
     meth.advance("Retrieve Data from Workspace")
-    _put_invo(in_name, _get_ws(workspace, ab1, CWS.profile))
-    _put_invo(in_name, _get_ws(workspace, ab2, CWS.profile))
+    _put_invo(ab1, _get_ws(workspace, ab1, CWS.profile))
+    _put_invo(ab2, _get_ws(workspace, ab2, CWS.profile))
     if ab3:
-        _put_invo(in_name, _get_ws(workspace, ab3, CWS.profile))
+        _put_invo(ab3, _get_ws(workspace, ab3, CWS.profile))
     if ab4:
-        _put_invo(in_name, _get_ws(workspace, ab4, CWS.profile))
+        _put_invo(ab4, _get_ws(workspace, ab4, CWS.profile))
     
     meth.advance("Merging Profiles")
     cmd = "mg-biom-merge %s %s"%(ab1, ab2)
@@ -1123,7 +1123,7 @@ def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
     
     meth.advance("Storing in Workspace")
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
-    text = "Abundance profiles %s"
+    text = "Abundance profiles %s"%(ab1)
     if ab3 and ab4:
         text += ", %s, %s, and %s"%(ab2, ab3, ab4)
     elif ab3:
@@ -1199,6 +1199,7 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         matrix = sparse_to_dense(biom['data'], biom['shape'][0], biom['shape'][1])
     else:
         matrix = biom['data']
+    matrix = [map(float, x) for x in matrix]
 
     meth.advance("Processing Abundance Profile")
     rmerge = {}
@@ -1418,10 +1419,12 @@ def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
         else:
             data['rows'].append(row['id'])
     # data
+    matrix = []
     if biom['matrix_type'] == 'sparse':
-        data['data'] = sparse_to_dense(biom['data'], biom['shape'][0], biom['shape'][1])
+        matrix = sparse_to_dense(biom['data'], biom['shape'][0], biom['shape'][1])
     else:
-        data['data'] = biom['data']
+        matrix = biom['data']
+    data['data'] = [map(float, x) for x in matrix]
     
     meth.advance("Creating Heatmap")
     global HEATM

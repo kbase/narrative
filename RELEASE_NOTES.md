@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Release 8/14/2014
+__Changes__
+- Added functionality to Communities services
+
 ### Release 8/8/2014
 __Changes__
 - Fixed problems with loading page in Safari

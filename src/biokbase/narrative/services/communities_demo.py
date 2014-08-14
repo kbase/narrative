@@ -1114,7 +1114,7 @@ def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
         _put_invo(ab4, _get_ws(workspace, ab4, CWS.profile))
     
     meth.advance("Merging Profiles")
-    cmd = "mg-biom-merge %s %s"%(ab1, ab2)
+    cmd = "mg-biom-merge --retain_dup_ids %s %s"%(ab1, ab2)
     if ab3:
         cmd += " "+ab3
     if ab4:

@@ -327,29 +327,29 @@
     	    }
     	},
 
-    	clustsort: function (a, b) {
-    	    return a.amin - b.amin;
-    	},
+        // clustsort: function (a, b) {
+        //     return a.amin - b.amin;
+        // },
     	
-    	distance: function (data) {
-    	    var distances = {};
-    	    for (var i=0;i<data.length;i++) {
-    		    distances[i] = {};
-    	    }
-    	    for (var i=0;i<data.length;i++) {
-    	    	for (var h=0;h<data.length;h++) {
-    	    	    if (i>=h) {
-    	    		    continue;
-    	    	    }
-    	    	    var dist = 0;
-    	    	    for (var j=0;j<data[i].data[0].length;j++) {
-    	    		    dist += Math.pow(data[i].data[0][j] - data[h].data[0][j], 2);
-    	    	    }
-    	    	    distances[i][h] = Math.pow(dist, 0.5);
-    	    	}
-    	    }	    
-    	    return distances;
-    	},
+        // distance: function (data) {
+        //     var distances = {};
+        //     for (var i=0;i<data.length;i++) {
+        //      distances[i] = {};
+        //     }
+        //     for (var i=0;i<data.length;i++) {
+        //      for (var h=0;h<data.length;h++) {
+        //          if (i>=h) {
+        //              continue;
+        //          }
+        //          var dist = 0;
+        //          for (var j=0;j<data[i].data[0].length;j++) {
+        //              dist += Math.pow(data[i].data[0][j] - data[h].data[0][j], 2);
+        //          }
+        //          distances[i][h] = Math.pow(dist, 0.5);
+        //      }
+        //     }
+        //     return distances;
+        // },
 
     	transpose: function (data) {
     	    var result = [];
@@ -374,8 +374,24 @@
     	    }
 
     	    // get the initial distances between all nodes
-    	    var distances = HeatmapWidget.distance(clusters);
-
+            // var distances = HeatmapWidget.distance(clusters);
+            var distances = {};
+            for (var i=0;i<clusters.length;i++) {
+                distances[i] = {};
+            }
+            for (var i=0;i<clusters.length;i++) {
+                for (var h=0;h<clusters.length;h++) {
+                    if (i>=h) {
+                        continue;
+                    }
+                    var dist = 0;
+                    for (var j=0;j<clusters[i].data[0].length;j++) {
+                        dist += Math.pow(clusters[i].data[0][j] - clusters[h].data[0][j], 2);
+                    }
+                    distances[i][h] = Math.pow(dist, 0.5);
+                }
+            }
+            
     	    // calculate clusters
     	    var min;
     	    var coords;
@@ -536,7 +552,9 @@
     	    // sort the clusterdata
     	    for (var i in clusterdata) {
     	    	if (clusterdata.hasOwnProperty(i) && ! isNaN(i)) {
-    	    	    clusterdata[i].sort(HeatmapWidget.clustsort);
+                    clusterdata[i].sort( function (a, b) {
+                        return a.amin - b.amin;
+                    });
     	    	}
     	    }
 

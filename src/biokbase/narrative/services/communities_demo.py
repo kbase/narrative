@@ -1557,7 +1557,7 @@ def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
     :param label: label rows 
     :type label: kbtypes.Unicode
     :ui_name label: Label
-    :default label: no
+    :default label: yes
     :return: Metagenome Abundance Profile Heatmap
     :rtype: kbtypes.Unicode
     :output_widget: DrilldownHeatmapWidget
@@ -1573,7 +1573,7 @@ def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
     if use_name == '':
         use_name = 'no'
     if label == '':
-        label = 'no'
+        label = 'yes'
     
     meth.advance("Retrieve Data from Workspace")
     biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )

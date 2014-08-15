@@ -137,16 +137,17 @@
         init: function(params) {
             var renderer = this;
     	    if (! window.hasOwnProperty('rendererGraph')) {
-    		    window.rendererGraph = [];
+    		    window.rendererGraph = {};
     	    }
-    	    var instance = {
-    	        settings: {},
-    		    index: params.index
-    		};
+    	    var index = (Math.random() + 1).toString(36).substring(5);
+            var instance = {
+                'settings': {},
+                'index': index
+            };
     	    jQuery.extend(true, instance, renderer);
     	    jQuery.extend(true, instance.settings, renderer.options, params);
-    	    window.rendererGraph.push(instance);
-    	    return instance.render(params.index);
+    	    window.rendererGraph[index] = instance;
+    	    return instance.render(index);
         },
         
         render: function (index) {

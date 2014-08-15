@@ -43,7 +43,7 @@
 
 (function($, undefined) {
     $.KBWidget({
-        name: 'HeatmapWidget',
+        name: 'DrilldownHeatmapWidget',
         version: '1.0.0',
         options: {
             'width': 200,
@@ -63,16 +63,17 @@
         init: function(params) {
             var renderer = this;
     	    if (! window.hasOwnProperty('rendererHeatmap')) {
-    		    window.rendererHeatmap = [];
+    		    window.rendererHeatmap = {};
     	    }
-    	    var instance = {
-    	        settings: {},
-    		    index: params.index
-    		};
+            var index = (Math.random() + 1).toString(36).substring(5);
+            var instance = {
+                'settings': {},
+                'index': index
+            };
     	    jQuery.extend(true, instance, renderer);
     	    jQuery.extend(true, instance.settings, renderer.options, params);
-    	    window.rendererHeatmap.push(instance);
-    	    return instance.render(params.index);
+    	    window.rendererGraph[index] = instance;
+    	    return instance.render(index);
         },
     	
     	render: function (index) {
@@ -374,7 +375,7 @@
     	    }
 
     	    // get the initial distances between all nodes
-            // var distances = HeatmapWidget.distance(clusters);
+            // var distances = DrilldownHeatmapWidget.distance(clusters);
             var distances = {};
             for (var i=0;i<clusters.length;i++) {
                 distances[i] = {};

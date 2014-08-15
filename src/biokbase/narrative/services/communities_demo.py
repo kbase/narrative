@@ -37,8 +37,6 @@ ec_re = re.compile(r'[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
 mg_re = re.compile(r'mgm[0-9]{7}\.[0-9]')
 TAXA  = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
 ONTOL = ['level1', 'level2', 'level3', 'function']
-GRAPH = 0
-HEATM = 0
 
 class CWS:
     data = 'Communities.Data-1.0'
@@ -1110,37 +1108,35 @@ def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
     # validate
     if not (ab1 and ab2):
         return json.dumps({'header': 'ERROR:\nmissing required input abundance profiles'})
+    profiles = [ab1, ab2]
+    if ab3:
+        profiles.append(ab3)
+    if ab4:
+        profiles.append(ab4)
     
     meth.advance("Retrieve Data from Workspace")
-    _put_invo(ab1, _get_ws(workspace, ab1, CWS.profile))
-    _put_invo(ab2, _get_ws(workspace, ab2, CWS.profile))
-    if ab3:
-        _put_invo(ab3, _get_ws(workspace, ab3, CWS.profile))
-    if ab4:
-        _put_invo(ab4, _get_ws(workspace, ab4, CWS.profile))
+    # get from ws
+    bioms = map(lambda x: json.loads(_get_ws(workspace, x, CWS.profile)), profiles)
+    for i, b in enumerate(bioms):
+        # update metadata
+        for c in b['columns']:
+            if 'metadata' not in c:
+                c['metadata'] = {}
+            if 'profile' not in c['metadata']:
+                c['metadata']['profile'] = {'data': {}}
+            c['metadata']['profile']['data']['collection'] = profiles[i]
+        # put in invo server
+        _put_invo(profiles[i], json.dumps(b))
     
     meth.advance("Merging Profiles")
-    cmd = "mg-biom-merge --retain_dup_ids %s %s"%(ab1, ab2)
-    if ab3:
-        cmd += " "+ab3
-    if ab4:
-        cmd += " "+ab4
+    cmd = "mg-biom-merge --retain_dup_ids %s"%(" ".join(profiles))
     stdout, stderr = _run_invo(cmd)
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Storing in Workspace")
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
-    text = "Abundance profiles %s"%(ab1)
-    if ab3 and ab4:
-        text += ", %s, %s, and %s"%(ab2, ab3, ab4)
-    elif ab3:
-        text += ", %s, and %s"%(ab2, ab3)
-    elif ab4:
-        text += ", %s, and %s"%(ab2, ab4)
-    else:
-        text += " and %s"%(ab2)
-    text += " merged into %s."%(out_name)
+    text = "Abundance profiles %s merged into %s."%(", ".join(profiles), out_name)
     _put_ws(workspace, out_name, CWS.profile, data=data)
     return json.dumps({'header': text})
 
@@ -1257,11 +1253,8 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         for i in range(len(row[1])):
             data[i]['data'].append(row[1][i])
     
-    meth.advance("Creating Profile")
-    global GRAPH
-    GRAPH += 1
+    meth.advance("Plotting Profile")
     graphdata = {
-        'index': GRAPH-1,
         'data': data,
         'show_legend': True,
         'title': '%s rank abundance'%(level) if annot else '',
@@ -1417,7 +1410,7 @@ def _plot_r_heatmap(meth, workspace, in_name, use_name, distance, cluster, order
 #     :default label: no
 #     :return: Metagenome Abundance Profile Heatmap
 #     :rtype: kbtypes.Unicode
-#     :output_widget: HeatmapWidget
+#     :output_widget: DrilldownHeatmapWidget
 #     """
 #     
 #     meth.stages = 4
@@ -1459,10 +1452,8 @@ def _plot_r_heatmap(meth, workspace, in_name, use_name, distance, cluster, order
 #     data['data'] = [map(float, x) for x in matrix]
 #     
 #     meth.advance("Creating Heatmap")
-#     global HEATM
-#     HEATM += 1
 #     lwidth = 250 if label == 'yes' else 0
-#     return json.dumps({'index': HEATM-1, 'data': data, 'legend_width': lwidth})
+#     return json.dumps({'data': data, 'legend_width': lwidth})
 
 @method(name="PCoA from Abundance Profile")
 def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):

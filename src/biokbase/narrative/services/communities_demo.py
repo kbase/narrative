@@ -1086,7 +1086,7 @@ def _add_metadata(meth, workspace, ids, in_name, key, value):
     workspace = _get_wsname(meth, workspace)
     if not (ids and in_name):
         return json.dumps({'header': 'ERROR:\nmissing input object names'})
-    if not (key and value)):
+    if not (key and value):
         return json.dumps({'header': 'ERROR:\nmissing metadata to add'})
 
     meth.advance("Retrieve Data from Workspace")

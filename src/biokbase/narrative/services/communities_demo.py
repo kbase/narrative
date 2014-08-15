@@ -1296,8 +1296,9 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         for i in range(len(row[1])):
             data[i]['data'].append(row[1][i])
     # colors
-    for c in _get_colors(len(data)):
-        data['fill'] = c
+    colors = _get_colors(len(data))
+    for i in range(len(data)):
+        data[i]['fill'] = colors[i]
     
     meth.advance("Plotting Profile")
     graphdata = {

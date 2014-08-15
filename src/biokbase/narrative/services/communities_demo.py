@@ -57,6 +57,40 @@ class URLS:
     invocation = "https://kbase.us/services/invocation"
     communities_base_url = "https://kbase.us/services/communities"
 
+base_colors = [
+	"#3366cc",
+	"#dc3912",
+	"#ff9900",
+	"#109618",
+	"#990099",
+	"#0099c6",
+	"#dd4477",
+	"#66aa00",
+	"#b82e2e",
+	"#316395",
+	"#994499",
+	"#22aa99",
+	"#aaaa11",
+	"#6633cc",
+	"#e67300",
+	"#8b0707",
+	"#651067",
+	"#329262",
+	"#5574a6",
+	"#3b3eac",
+	"#b77322",
+	"#16d620",
+	"#b91383",
+	"#f4359e",
+	"#9c5935",
+	"#a9c413",
+	"#2a778d",
+	"#668d1c",
+	"#bea413",
+	"#0c5922",
+	"#743411"
+]
+
 #old: -i @input.fas -o ucr -p @otu_picking_params.txt -r /home/ubuntu/data/gg_13_5_otus/rep_set/97_otus.fasta
 
 qiimeWF = """{
@@ -242,6 +276,15 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': data})
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
+
+def _get_colors(num):
+    if (not num) or (num == 0):
+	    return base_colors
+    num_colors = []
+    for i in range(num):
+        c_index = i % len(base_colors)
+        num_colors.append( base_colors[c_index] )
+    return num_colors
 
 @method(name="Abundance Profile 2 Annotation Table")
 def _abundanceProfile2annotationTable(meth, workspace, abundance_profile):
@@ -1252,6 +1295,9 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
         labels.append(row[0])
         for i in range(len(row[1])):
             data[i]['data'].append(row[1][i])
+    # colors
+    for c in _get_colors(len(data)):
+        data['fill'] = c
     
     meth.advance("Plotting Profile")
     graphdata = {

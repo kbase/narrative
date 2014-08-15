@@ -1069,7 +1069,7 @@ def _add_metadata(meth, workspace, ids, in_name, key, value):
     :ui_name ids: Metagenome List
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
-    :ui_name in_name: Input Name
+    :ui_name in_name: Profile Name
     :param key: name of metadata field to add
     :type key: kbtypes.Unicode
     :ui_name key: Label
@@ -1105,7 +1105,7 @@ def _add_metadata(meth, workspace, ids, in_name, key, value):
     
     meth.advance("Storing in Workspace")
     data = {'name': in_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': json.dumps(biom)}
-    text = "Added the value '%s' for %s in metadata of metagenomes %s in %s."%(value, key, ", ".join(ids), in_name)
+    text = "Added the value '%s' for %s in metadata of metagenomes %s in %s."%(value, key, ", ".join(mgid), in_name)
     _put_ws(workspace, in_name, CWS.profile, data=data)
     return json.dumps({'header': text})
 

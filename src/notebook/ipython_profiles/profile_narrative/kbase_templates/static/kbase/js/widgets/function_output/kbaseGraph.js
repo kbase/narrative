@@ -220,38 +220,7 @@
     			'#51A351', // green
     			'#F89406', // yellow
     			'#2F96B4', // lightblue
-    			'#bd2fa6', // purple
-    			"#3366cc",
-               	"#dc3912",
-               	"#ff9900",
-               	"#109618",
-               	"#990099",
-               	"#0099c6",
-               	"#dd4477",
-               	"#66aa00",
-               	"#b82e2e",
-               	"#316395",
-               	"#994499",
-               	"#22aa99",
-               	"#aaaa11",
-               	"#6633cc",
-               	"#e67300",
-               	"#8b0707",
-               	"#651067",
-               	"#329262",
-               	"#5574a6",
-               	"#3b3eac",
-               	"#b77322",
-               	"#16d620",
-               	"#b91383",
-               	"#f4359e",
-               	"#9c5935",
-               	"#a9c413",
-               	"#2a778d",
-               	"#668d1c",
-               	"#bea413",
-               	"#0c5922",
-               	"#743411"
+    			'#bd2fa6'  // purple
     		];
 
     	    var defs = svg.defs();
@@ -263,16 +232,13 @@
     		        }
     		    }
     	    }
-    	    
-    	    for (i=0; i<colors; i++) {
-    	        svg.linearGradient(defs, 'fade'+i.toString(), [[0, colors[i]], [1, colors[i]]]);
-	        }
-    	    //svg.linearGradient(defs, 'fadeRed', [[0, '#EE5F5B'], [1, '#BD362F']]); 
-    	    //svg.linearGradient(defs, 'fadeBlue', [[0, '#0088CC'], [1, '#0044CC']]); 
-    	    //svg.linearGradient(defs, 'fadeGreen', [[0, '#62C462'], [1, '#51A351']]);
-    	    //svg.linearGradient(defs, 'fadeYellow', [[0, '#FBB450'], [1, '#F89406']]);
-    	    //svg.linearGradient(defs, 'fadeLightblue', [[0, '#5BC0DE'], [1, '#2F96B4']]);
-    	    //svg.linearGradient(defs, 'fadePurple', [[0, '#ee5be0'], [1, '#bd2fa6']]);
+            
+    	    svg.linearGradient(defs, 'fadeRed', [[0, '#EE5F5B'], [1, '#BD362F']]); 
+    	    svg.linearGradient(defs, 'fadeBlue', [[0, '#0088CC'], [1, '#0044CC']]); 
+    	    svg.linearGradient(defs, 'fadeGreen', [[0, '#62C462'], [1, '#51A351']]);
+    	    svg.linearGradient(defs, 'fadeYellow', [[0, '#FBB450'], [1, '#F89406']]);
+    	    svg.linearGradient(defs, 'fadeLightblue', [[0, '#5BC0DE'], [1, '#2F96B4']]);
+    	    svg.linearGradient(defs, 'fadePurple', [[0, '#ee5be0'], [1, '#bd2fa6']]);
 
     	    svg.graph.shortAxisLabels = renderer.settings.short_axis_labels;
     	    svg.graph.normalizeStackedArea = renderer.settings.normalize_stacked_area;

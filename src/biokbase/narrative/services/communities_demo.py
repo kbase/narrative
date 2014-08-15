@@ -1057,7 +1057,110 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     _put_ws(workspace, out_name, wtype, data=data)
     return json.dumps({'header': txt})
 
-@method(name="View Abundance Profile")
+@method(name="Add Metadata to Abundance Profile")
+def _add_metadata(meth, workspace, ids, in_name, key, value):
+    """Add given key-value metadata to inputed abundace profile for inputed metagenome list.
+    
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param in_name: object name of Communities.Profile
+    :type in_name: kbtypes.Communities.Profile
+    :ui_name in_name: Input Name
+    :param ids: object name of Communities.Collection
+    :type ids: kbtypes.Communities.Collection
+    :ui_name ids: Metagenome List
+    :param key: name of metadata field to add
+    :type key: kbtypes.Unicode
+    :ui_name key: Label
+    :param value: value of metadata field to add
+    :type value: kbtypes.Unicode
+    :ui_name value: Value
+    :return: Metagenome Abundance Profile
+    :rtype: kbtypes.Unicode
+    :output_widget: ImageViewWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    workspace = _get_wsname(meth, workspace)
+    if not (ids and in_name):
+        return json.dumps({'header': 'ERROR:\nmissing input object names'})
+    if not (key and value)):
+        return json.dumps({'header': 'ERROR:\nmissing metadata to add'})
+
+    meth.advance("Retrieve Data from Workspace")
+    mgid = _get_ws(workspace, ids, CWS.coll)
+    biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
+    
+    meth.advance("Add Metadata to Profile")
+    for c in biom['columns']:
+        if c['id'] not in mgid:
+            continue
+        if 'metadata' not in c:
+            c['metadata'] = {}
+        if 'extra' not in c['metadata']:
+            c['metadata']['extra'] = {'data': {}}
+        c['metadata']['extra']['data'][key] = value
+    
+    meth.advance("Storing in Workspace")
+    data = {'name': in_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': json.dumps(biom)}
+    text = "Added the value '%s' for %s in metadata of metagenomes %s in %s."%(value, key, ", ".join(ids), in_name)
+    _put_ws(workspace, in_name, CWS.profile, data=data)
+    return json.dumps({'header': text})
+
+@method(name="View Abundance Profile Metadata")
+def _view_metadata(meth, workspace, in_name):
+    """View metadata from an abundance profile as a table
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param in_name: object name of Communities.Profile
+    :type in_name: kbtypes.Communities.Profile
+    :ui_name in_name: Input Name
+    :return: Metagenome Metadata Table
+    :rtype: kbtypes.Unicode
+    :output_widget: GeneTableWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    workspace = _get_wsname(meth, workspace)
+    
+    meth.advance("Retrieve Data from Workspace")
+    biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
+    
+    meth.advance("Manipulating Table")
+    rows = defaultdict(set)
+    # get metadata terms
+    for col in biom['columns']:
+        if ('metadata' in col) and col['metadata']:
+            for cat, data in col['metadata'].iteritems():
+                if ('data' in data) and data['data']:
+                    for key in data['data'].iterkeys():
+                        rows[cat].add(key)
+    # build namespace
+    head  = ['category', 'label'] + map(lambda x: x['id'], biom['columns'])
+    table = []
+    cats  = sorted(rows.keys())
+    for cat in cats:
+        for key in sorted(rows[cat]):
+            row = [cat, key] + (['null'] * len(biom['columns']))
+            table.append(row)
+    
+    meth.advance("Displaying Table")
+    # populate namespace
+    for r, row in enumerate(table):
+        for i in range(len(row[2:])):
+            try:
+                table[r][i+2] = biom['columns'][i]['metadata'][row[0]]['data'][row[1]]
+            except:
+                pass
+    table.insert(0, head)
+    return json.dumps({'table': table})
+
+@method(name="View Abundance Profile Values")
 def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_end, stats):
     """View a slice of a BIOM format abundance profile as a table
 
@@ -1165,9 +1268,9 @@ def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
         for c in b['columns']:
             if 'metadata' not in c:
                 c['metadata'] = {}
-            if 'profile' not in c['metadata']:
-                c['metadata']['profile'] = {'data': {}}
-            c['metadata']['profile']['data']['collection'] = profiles[i]
+            if 'extra' not in c['metadata']:
+                c['metadata']['extra'] = {'data': {}}
+            c['metadata']['extra']['data']['collection'] = profiles[i]
         # put in invo server
         _put_invo(profiles[i], json.dumps(b))
     

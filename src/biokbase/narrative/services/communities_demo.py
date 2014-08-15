@@ -1390,70 +1390,70 @@ def _plot_r_heatmap(meth, workspace, in_name, use_name, distance, cluster, order
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
-# @method(name="Interactive Heatmap from Abundance Profile")
-# def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
-#     """Generate an interactive heatmap-dendrogram from annotation abundance data.
-# 
-#     :param workspace: name of workspace, default is current
-#     :type workspace: kbtypes.Unicode
-#     :ui_name workspace: Workspace
-#     :param in_name: object name of Communities.Profile
-#     :type in_name: kbtypes.Communities.Profile
-#     :ui_name in_name: Input Name
-#     :param use_name: label by metagenome name and not ID
-#     :type use_name: kbtypes.Unicode
-#     :ui_name use_name: Label Name
-#     :default use_name: no
-#     :param label: label rows 
-#     :type label: kbtypes.Unicode
-#     :ui_name label: Label
-#     :default label: no
-#     :return: Metagenome Abundance Profile Heatmap
-#     :rtype: kbtypes.Unicode
-#     :output_widget: DrilldownHeatmapWidget
-#     """
-#     
-#     meth.stages = 4
-#     meth.advance("Processing inputs")
-#     # validate
-#     if not in_name:
-#         json.dumps({'header': 'ERROR:\nmissing input'})
-#     workspace = _get_wsname(meth, workspace)
-#     # set defaults since unfilled options are empty strings
-#     if use_name == '':
-#         use_name = 'no'
-#     if label == '':
-#         label = 'no'
-#     
-#     meth.advance("Retrieve Data from Workspace")
-#     biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
-#     
-#     meth.advance("Processing Abundance Profile")
-#     data = { 'columns': [], 'rows': [], 'data': [] }
-#     # columns
-#     if use_name == 'yes':
-#         data['columns'] = map(lambda x: x['name'], biom['columns'])
-#     else:
-#         data['columns'] = map(lambda x: x['id'], biom['columns'])
-#     # rows
-#     for row in biom['rows']:
-#         if ('metadata' in row) and ('taxonomy' in row['metadata']):
-#             data['rows'].append(row['metadata']['taxonomy'])
-#         elif ('metadata' in row) and ('ontology' in row['metadata']):
-#             data['rows'].append(row['metadata']['ontology'])
-#         else:
-#             data['rows'].append(row['id'])
-#     # data
-#     matrix = []
-#     if biom['matrix_type'] == 'sparse':
-#         matrix = sparse_to_dense(biom['data'], biom['shape'][0], biom['shape'][1])
-#     else:
-#         matrix = biom['data']
-#     data['data'] = [map(float, x) for x in matrix]
-#     
-#     meth.advance("Creating Heatmap")
-#     lwidth = 250 if label == 'yes' else 0
-#     return json.dumps({'data': data, 'legend_width': lwidth})
+@method(name="Interactive Heatmap from Abundance Profile")
+def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
+    """Generate an interactive heatmap-dendrogram from annotation abundance data.
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param in_name: object name of Communities.Profile
+    :type in_name: kbtypes.Communities.Profile
+    :ui_name in_name: Input Name
+    :param use_name: label by metagenome name and not ID
+    :type use_name: kbtypes.Unicode
+    :ui_name use_name: Label Name
+    :default use_name: no
+    :param label: label rows 
+    :type label: kbtypes.Unicode
+    :ui_name label: Label
+    :default label: no
+    :return: Metagenome Abundance Profile Heatmap
+    :rtype: kbtypes.Unicode
+    :output_widget: DrilldownHeatmapWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    # validate
+    if not in_name:
+        json.dumps({'header': 'ERROR:\nmissing input'})
+    workspace = _get_wsname(meth, workspace)
+    # set defaults since unfilled options are empty strings
+    if use_name == '':
+        use_name = 'no'
+    if label == '':
+        label = 'no'
+    
+    meth.advance("Retrieve Data from Workspace")
+    biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
+    
+    meth.advance("Processing Abundance Profile")
+    data = { 'columns': [], 'rows': [], 'data': [] }
+    # columns
+    if use_name == 'yes':
+        data['columns'] = map(lambda x: x['name'], biom['columns'])
+    else:
+        data['columns'] = map(lambda x: x['id'], biom['columns'])
+    # rows
+    for row in biom['rows']:
+        if ('metadata' in row) and ('taxonomy' in row['metadata']):
+            data['rows'].append(row['metadata']['taxonomy'])
+        elif ('metadata' in row) and ('ontology' in row['metadata']):
+            data['rows'].append(row['metadata']['ontology'])
+        else:
+            data['rows'].append(row['id'])
+    # data
+    matrix = []
+    if biom['matrix_type'] == 'sparse':
+        matrix = sparse_to_dense(biom['data'], biom['shape'][0], biom['shape'][1])
+    else:
+        matrix = biom['data']
+    data['data'] = [map(float, x) for x in matrix]
+    
+    meth.advance("Creating Heatmap")
+    lwidth = 250 if label == 'yes' else 0
+    return json.dumps({'data': data, 'legend_width': lwidth})
 
 @method(name="PCoA from Abundance Profile")
 def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
@@ -1516,26 +1516,26 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     leg_b64png = base64.b64encode(leg_rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': fig_b64png, 'legend': leg_b64png})
 
-# @method(name="View Metagenome")
-# def _view_mg(meth, mgid):
-#     """Overview of metagenome statistics, numeric and plotted.
-#     
-#     :param in_name: id of a metagenome
-#     :type in_name: kbtypes.Unicode
-#     :ui_name in_name: Metagenome ID
-#     :return: Metagenome Overview
-#     :rtype: kbtypes.Unicode
-#     :output_widget: MGOverviewWidget
-#     """
-#     
-#     meth.stages = 2
-#     meth.advance("Processing inputs")
-#     # validate
-#     if not (mgid and mg_re.match(mgid)):
-#         return json.dumps({'header': 'ERROR:\nInvalid metagenome ID'})
-#     
-#     meth.advance("Building Overview")
-#     return json.dumps({'mgid': mgid})
+@method(name="View Metagenome")
+def _view_mg(meth, mgid):
+    """Overview of metagenome statistics, numeric and plotted.
+    
+    :param in_name: id of a metagenome
+    :type in_name: kbtypes.Unicode
+    :ui_name in_name: Metagenome ID
+    :return: Metagenome Overview
+    :rtype: kbtypes.Unicode
+    :output_widget: MGOverviewWidget
+    """
+    
+    meth.stages = 2
+    meth.advance("Processing inputs")
+    # validate
+    if not (mgid and mg_re.match(mgid)):
+        return json.dumps({'header': 'ERROR:\nInvalid metagenome ID'})
+    
+    meth.advance("Building Overview")
+    return json.dumps({'mgid': mgid})
 
 @method(name="Profile to OTU annotations")
 def _profile_to_otu_annotations(meth,profile_id,metaanno_id):

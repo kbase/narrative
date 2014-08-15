@@ -72,7 +72,7 @@
             };
     	    jQuery.extend(true, instance, renderer);
     	    jQuery.extend(true, instance.settings, renderer.options, params);
-    	    window.rendererGraph[index] = instance;
+    	    window.rendererHeatmap[index] = instance;
     	    return instance.render(index);
         },
     	

@@ -1064,12 +1064,12 @@ def _add_metadata(meth, workspace, ids, in_name, key, value):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object name of Communities.Profile
-    :type in_name: kbtypes.Communities.Profile
-    :ui_name in_name: Input Name
     :param ids: object name of Communities.Collection
     :type ids: kbtypes.Communities.Collection
     :ui_name ids: Metagenome List
+    :param in_name: object name of Communities.Profile
+    :type in_name: kbtypes.Communities.Profile
+    :ui_name in_name: Input Name
     :param key: name of metadata field to add
     :type key: kbtypes.Unicode
     :ui_name key: Label

@@ -43,7 +43,7 @@
 
 (function($, undefined) {
     $.KBWidget({
-        name: 'HeatmapWidget',
+        name: 'DrilldownHeatmapWidget',
         version: '1.0.0',
         options: {
             'width': 200,
@@ -63,16 +63,17 @@
         init: function(params) {
             var renderer = this;
     	    if (! window.hasOwnProperty('rendererHeatmap')) {
-    		    window.rendererHeatmap = [];
+    		    window.rendererHeatmap = {};
     	    }
-    	    var instance = {
-    	        settings: {},
-    		    index: params.index
-    		};
+            var index = (Math.random() + 1).toString(36).substring(5);
+            var instance = {
+                'settings': {},
+                'index': index
+            };
     	    jQuery.extend(true, instance, renderer);
     	    jQuery.extend(true, instance.settings, renderer.options, params);
-    	    window.rendererHeatmap.push(instance);
-    	    return instance.render(params.index);
+    	    window.rendererHeatmap[index] = instance;
+    	    return instance.render(index);
         },
     	
     	render: function (index) {
@@ -374,7 +375,7 @@
     	    }
 
     	    // get the initial distances between all nodes
-            // var distances = HeatmapWidget.distance(clusters);
+            // var distances = DrilldownHeatmapWidget.distance(clusters);
             var distances = {};
             for (var i=0;i<clusters.length;i++) {
                 distances[i] = {};
@@ -464,7 +465,7 @@
     		    coord_a = parseInt(coord_a);
     		    coord_b = parseInt(coord_b);
 
-    	    	clusters.push({ points: [ coord_a, coord_b ], data: pdata, basepoints: bpoints, level: [ clusters[coord_a].level.max() + 1, clusters[coord_b].level.max() + 1 ] });
+    	    	clusters.push({ points: [ coord_a, coord_b ], data: pdata, basepoints: bpoints, level: [ Math.max.apply(Math, clusters[coord_a].level) + 1, Math.max.apply(Math, clusters[coord_b].level) + 1 ] });
 
     	    	var row_a = [];
     	    	for (var h=0;h<2;h++) {
@@ -534,8 +535,8 @@
     	    }
     	    for (var i=data.length; i<clusters.length; i++) {
     		    // get the level this cluster is at
-    		    var level = clusters[i].level.max() - 1;
-    		    clusterdata[level].push({a: clusters[clusters[i].points[0]].data.length, b:clusters[clusters[i].points[1]].data.length, amin: roworder[clusters[clusters[i].points[0]].basepoints.min() + 1] });
+    		    var level = Math.max.apply(Math, clusters[i].level) - 1;
+    		    clusterdata[level].push({a: clusters[clusters[i].points[0]].data.length, b:clusters[clusters[i].points[1]].data.length, amin: roworder[Math.min.apply(Math, clusters[clusters[i].points[0]].basepoints) + 1] });
                 
     		    // draw single lines until we reach the next root
     		    if (clusters[i].level[0] != clusters[i].level[1]) {
@@ -544,7 +545,7 @@
     			        n = 1;
     		        }
     		        for (var h=0;h<Math.abs(clusters[i].level[0] - clusters[i].level[1]);h++) {
-    			        clusterdata[level - (h+1)].push({ a: clusters[clusters[i].points[n]].data.length, amin: roworder[clusters[clusters[i].points[n]].basepoints.min() + 1] });
+    			        clusterdata[level - (h+1)].push({ a: clusters[clusters[i].points[n]].data.length, amin: roworder[Math.min.apply(Math,  clusters[clusters[i].points[n]].basepoints) + 1] });
     		        }
     		    }
     	    }

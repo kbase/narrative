@@ -137,16 +137,17 @@
         init: function(params) {
             var renderer = this;
     	    if (! window.hasOwnProperty('rendererGraph')) {
-    		    window.rendererGraph = [];
+    		    window.rendererGraph = {};
     	    }
-    	    var instance = {
-    	        settings: {},
-    		    index: params.index
-    		};
+    	    var index = (Math.random() + 1).toString(36).substring(5);
+            var instance = {
+                'settings': {},
+                'index': index
+            };
     	    jQuery.extend(true, instance, renderer);
     	    jQuery.extend(true, instance.settings, renderer.options, params);
-    	    window.rendererGraph.push(instance);
-    	    return instance.render(params.index);
+    	    window.rendererGraph[index] = instance;
+    	    return instance.render(index);
         },
         
         render: function (index) {
@@ -213,13 +214,14 @@
 
     	    var fills = [ 'url(#fadeBlue)', 'url(#fadeRed)', 'url(#fadeGreen)', 'url(#fadeYellow)', 'url(#fadeLightblue)', 'url(#fadePurple)' ];
 
-    	    var colors = [ '#0044CC', // blue
-    			   '#BD362F', // red
-    			   '#51A351', // green
-    			   '#F89406', // yellow
-    			   '#2F96B4', // lightblue
-    			   '#bd2fa6'  // purple 
-    			 ];
+    	    var colors = [
+    	        '#0044CC', // blue
+    			'#BD362F', // red
+    			'#51A351', // green
+    			'#F89406', // yellow
+    			'#2F96B4', // lightblue
+    			'#bd2fa6'  // purple
+    		];
 
     	    var defs = svg.defs();
     	    var max = 0;
@@ -230,7 +232,7 @@
     		        }
     		    }
     	    }
-    	    
+            
     	    svg.linearGradient(defs, 'fadeRed', [[0, '#EE5F5B'], [1, '#BD362F']]); 
     	    svg.linearGradient(defs, 'fadeBlue', [[0, '#0088CC'], [1, '#0044CC']]); 
     	    svg.linearGradient(defs, 'fadeGreen', [[0, '#62C462'], [1, '#51A351']]);

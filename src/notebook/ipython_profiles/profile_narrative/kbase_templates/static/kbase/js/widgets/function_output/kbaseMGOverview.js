@@ -30,7 +30,7 @@
             });
             
             // Create overview
-            var url = 'http://140.221.85.116/mgoverview.html?metagenome='+this.options.mgid;
+            var url = 'http://narrative.kbase.us/functional-site/communities/metagenome.html?metagenome='+this.options.mgid;
             var iframe = $('<iframe>')
                 .attr({'src': url})
                 .css({ 'width': '1285',

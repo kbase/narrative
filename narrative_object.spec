@@ -33,10 +33,22 @@
 	}
     ],
 }
-
+@author wjriehl
 */
 
 module KBaseNarrative {
+
+    /*
+     Reference to any input object. These can be of any type, but exist in the same workspace as this Narrative
+     @id ws *
+     */
+    typedef string inputObjRef;
+
+    /*
+     A single Dependency decorates the object reference with the type it's referencing - this allows for UI things to
+     be done more easily.
+     */
+    typedef tuple<string type, inputObjRef ref> Dependency;
 
     typedef structure {
         string description;
@@ -57,6 +69,7 @@ module KBaseNarrative {
         int nbformat_minor;
         list<Worksheet> worksheets;
         UnspecifiedObject metadata;
+        list<Dependency> dependencies;
     } Narrative;
 
 };

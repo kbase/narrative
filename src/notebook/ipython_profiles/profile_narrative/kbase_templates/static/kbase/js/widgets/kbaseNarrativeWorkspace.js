@@ -490,7 +490,7 @@
                 for (var j=0; j<objList[type].length; j++) {
                     if (objList[type][j][1] === deps[i][1]) {
                         //data.push(objList[type][j]);
-                        data.push([type, 'ws.' + objList[type][j][6] + '.obj.' + objList[type][j][0]]);
+                        data.push([type, objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][7]);
                         found = true;
                         break;
                     }

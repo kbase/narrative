@@ -10,7 +10,7 @@
  * dataUpdated.Narrative - when the loaded data table gets updated.
  * workspaceUpdated.Narrative - when the current workspace ID gets updated
  * @author Bill Riehl <wjriehl@lbl.gov>
- * @author Dan Gunger <dkgunter@lbl.gov>
+ * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  */
 (function( $, undefined ) {

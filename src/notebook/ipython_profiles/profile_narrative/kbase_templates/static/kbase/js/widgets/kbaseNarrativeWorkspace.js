@@ -48,7 +48,7 @@
         KB_STATE: 'widget_state',
 
         // set up as a hash for quickie lookup time!
-        ignoredDataTypes = {
+        ignoredDataTypes : {
             'string' : 1,
             'unicode' : 1,
             'numeric' : 1,
@@ -470,7 +470,7 @@
 
                 /* fields: default, description, type, ui_name */
                 var type = p.type;
-                if (!ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
+                if (!this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
                     cellDeps.push([type, paramValues[i]]);
                     if (!typesHash[type]) {
                         typesHash[type] = 1;
@@ -484,19 +484,19 @@
             var objList = $('#kb-ws').kbaseWorkspaceDataDeluxe('getLoadedData', types);
 
             // Man, now what. N^2 searching? What a drag.
-            for (var i=0; i<deps.length; i++) {
-                var type = deps[i][0];
+            for (var i=0; i<cellDeps.length; i++) {
+                var type = cellDeps[i][0];
                 var found = false;
                 for (var j=0; j<objList[type].length; j++) {
-                    if (objList[type][j][1] === deps[i][1]) {
+                    if (objList[type][j][1] === cellDeps[i][1]) {
                         //data.push(objList[type][j]);
-                        data.push([type, objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][7]);
+                        data.push([type, objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][4]]);
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    data.push(deps[i]);
+                    data.push(cellDeps[i]);
                 }
             }
             return data;
@@ -668,7 +668,8 @@
                     // get the list of parameters and save the state in the cell's metadata
                     var paramList = $(cell.element).find("#inputs")[inputWidget]('getParameters');
                     self.saveCellState(cell);
-                    self.getCellDependencies(cell);
+                    var dependencies = self.getCellDependencies(cell);
+                    console.log(dependencies);
 
                     // var state = $(cell.element).find("#inputs")[inputWidget]('getState');
                     // cell.metadata[self.KB_CELL][self.KB_STATE] = state;

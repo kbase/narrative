@@ -16,6 +16,7 @@ import urllib
 import urllib2
 import cStringIO
 import requests
+import biokbase.narrative.common.service as service
 from string import Template
 from collections import defaultdict
 # Local
@@ -23,6 +24,7 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 from biokbase.narrative.common import kbtypes
 #from biokbase.workspaceService.Client import workspaceService
 from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
+from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.shock import Client as shockService
 from biokbase.mglib import tab_to_matrix, sparse_to_dense
@@ -33,6 +35,8 @@ NAME = "Communities Services"
 default_ws = 'communitiesdemo:home'
 ec_re = re.compile(r'[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
 mg_re = re.compile(r'mgm[0-9]{7}\.[0-9]')
+TAXA  = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+ONTOL = ['level1', 'level2', 'level3', 'function']
 
 class CWS:
     data = 'Communities.Data-1.0'
@@ -51,6 +55,41 @@ class URLS:
     awe = "http://140.221.67.184:8000"
     workspace = "https://kbase.us/services/ws"
     invocation = "https://kbase.us/services/invocation"
+    communities_base_url = "https://kbase.us/services/communities"
+
+base_colors = [
+	"#3366cc",
+	"#dc3912",
+	"#ff9900",
+	"#109618",
+	"#990099",
+	"#0099c6",
+	"#dd4477",
+	"#66aa00",
+	"#b82e2e",
+	"#316395",
+	"#994499",
+	"#22aa99",
+	"#aaaa11",
+	"#6633cc",
+	"#e67300",
+	"#8b0707",
+	"#651067",
+	"#329262",
+	"#5574a6",
+	"#3b3eac",
+	"#b77322",
+	"#16d620",
+	"#b91383",
+	"#f4359e",
+	"#9c5935",
+	"#a9c413",
+	"#2a778d",
+	"#668d1c",
+	"#bea413",
+	"#0c5922",
+	"#743411"
+]
 
 #old: -i @input.fas -o ucr -p @otu_picking_params.txt -r /home/ubuntu/data/gg_13_5_otus/rep_set/97_otus.fasta
 
@@ -70,9 +109,9 @@ qiimeWF = """{
       "cmd" : {
          "name" : "app:QIIME.pick_closed_reference_otus.default",
          "app_args" : [
-            {"resource":"shock",
-               "host" : "$shock",
-               "node" : "$seq",
+            {"resource":"url",
+               "url" : "$url",
+               "uncompress":"gzip",
                "filename" : "input.fas"
             },
             {"resource" : "shock",
@@ -238,6 +277,41 @@ def _put_ws(wsname, name, wtype, data=None, ref=None):
     elif ref is not None:
         ws.save_object({'auth': token, 'workspace': wsname, 'id': name, 'type': wtype, 'data': ref})
 
+def _get_colors(num):
+    if (not num) or (num == 0):
+	    return base_colors
+    num_colors = []
+    for i in range(num):
+        c_index = i % len(base_colors)
+        num_colors.append( base_colors[c_index] )
+    return num_colors
+
+@method(name="Abundance Profile 2 Annotation Table")
+def _abundanceProfile2annotationTable(meth, workspace, abundance_profile):
+    """Transform a metagenomic abundance profile into an annotation table object. The annotation table can be used as input for metabolic modeling modeling.
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param abundance_profile: ID for input abundance profile
+    :type abundance_profile: kbtypes.Communities.Profile
+    :ui_name abundance_profile: Abundance Profile
+    :return: Annotation table
+    :rtype: kbtypes.Unicode
+    :output_widget: ImageViewWidget
+    """
+
+    meth.stages = 1
+    if not abundance_profile:
+        raise Exception("Metagenome List object name is not set.")
+    print "TEST DEBUG LINE"
+    # print STDERR "TEST DEBUG LINE (STDERR)"
+    workspace = _get_wsname(meth, workspace)
+    profile = _get_ws(workspace, abundance_profile , CWS.profile)
+
+    meth.debug(profile)
+    return json.dumps({'ws': workspace, 'id': abundance_profile , 'header' : profile })
+
 @method(name="Import Metagenome List")
 def _import_metagenome_list(meth, workspace, metagenome_list_id):
     """Import metagenome list object into workspace.
@@ -267,7 +341,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     :ui_name workspace: Workspace
     :param mgid: Communities.Metagenome object name
     :type mgid: kbtypes.Communities.Metagenome
-    :ui_name mgid: Metagenome ID
+    :ui_name mgid: Metagenome
     :param out_name: object name of annotation set table
     :type out_name: kbtypes.Unicode
     :ui_name out_name: Output Name
@@ -319,6 +393,8 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
         length = 15
     if rest == '':
         rest = 'no'
+    if (level not in TAXA) and (level not in ONTOL):
+        return json.dumps({'header': 'ERROR:\ninvalid value for Annotation Level'})
     
     meth.advance("Building annotation set from communitites API")
     mg = _get_ws(workspace, mgid, CWS.mg)
@@ -345,10 +421,10 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_seq1: object name of input sequence, fastq mate pair 1
+    :param in_seq1: Communities.SequenceFile object name, fastq mate pair 1
     :type in_seq1: kbtypes.Communities.SequenceFile
     :ui_name in_seq1: Input FASTQ Pair 1
-    :param in_seq2:  object name of input sequence, fastq mate pair 2
+    :param in_seq2:  Communities.SequenceFile object name, fastq mate pair 2
     :type in_seq2: kbtypes.Communities.SequenceFile
     :ui_name in_seq2: Input FASTQ Pair 2
     :param out_name: object name of resulting 16S sequences
@@ -407,29 +483,37 @@ def _run_picrust(meth, workspace, in_biom, out_name):
     if not (in_biom and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
-    
+
     meth.advance("Retrieve Data from Workspace")
     #seq_obj = _get_ws(workspace, in_seq, CWS.profile)
     #seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
     biom = _get_ws(workspace, in_biom, CWS.profile)
 
-    try:
-       shockid = biom['ID']
-       biom = _get_shock_data(shockid)
-    except:
-       pass
-    _put_invo(in_biom, biom)
+    meth.debug('Got ws object')
+    meth.debug( biom )
 
-    _run_invo("echo '" + biom + "' > picrust_input.biom")
+    # try:
+    #    shockid = biom['ID']
+    #    biom = _get_shock_data(shockid)
+    # except:
+    #    pass
+
+    # _put_invo(in_biom, biom)
+    meth.debug( "ws-get " + in_biom + " -w " + workspace + " > picrust_input.biom" )
+
+    _run_invo("ws-get " + in_biom + " -w " + workspace + " | mg-jsonviewer --value data --json > picrust_input.biom")
+    # _run_invo("echo '" + biom + "' > picrust_input.biom")
+    meth.debug("mg-upload2shock %s picrust_input.biom"%(URLS.shock) )
     stdout, stderr = _run_invo("mg-upload2shock %s picrust_input.biom"%(URLS.shock))
     if stderr:
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     biom_nid = json.loads(stdout)['id']
 
+    meth.debug("Node ID: " + biom_nid )
 
     wf_tmp = Template(picrustWF)
     wf_str = wf_tmp.substitute(shock=URLS.shock, biom_nid=biom_nid)
-    
+    meth.debug( wf_str )
     meth.advance("Submiting "+method_name)
     ajob = _submit_awe(wf_str)
     if ajob['status'] != 200:
@@ -450,7 +534,7 @@ def _run_picrust(meth, workspace, in_biom, out_name):
 
 
 @method(name="QIIME OTU picking")
-def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
+def _run_qiime_otu_picking(meth, workspace, in_seq, in_metagenome , out_name):
     """Closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
         
         :param workspace: name of workspace, default is current
@@ -459,6 +543,9 @@ def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
         :param in_seq: object name of input sequence file
         :type in_seq: kbtypes.Communities.SequenceFile
         :ui_name in_seq: Input Sequence
+        :param in_metagenome: Metagenome object
+        :type in_metagenome: kbtypes.Communities.Metagenome
+        :ui_name in_metagenome: Input Metagenome
         :param out_name: object name of resulting BIOM profile
         :type out_name: kbtypes.Unicode
         :ui_name out_name: Output Name
@@ -472,13 +559,24 @@ def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
     meth.stages = 5
     meth.advance("Processing inputs")
     # validate
-    if not (in_seq and out_name):
+    if not ( (in_seq or in_metagenome) and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
     workspace = _get_wsname(meth, workspace)
     
     meth.advance("Retrieve Data from Workspace")
-    seq_obj = _get_ws(workspace, in_seq, CWS.seq)
-    seq_url = seq_obj['URL']+'/node/'+seq_obj['ID']+'?download'
+    
+    # empty download url 
+    seq_url = ''
+    if (in_seq) :
+        seq_obj = _get_ws(workspace, in_seq, CWS.seq)
+        seq_url = seq_obj['URL'] + '?download'
+    elif (in_metagenome) :
+        # construct download url
+        mg_obj = _get_ws(workspace, in_metagenome, CWS.mg)
+        if (1) :
+            seq_url = URLS.communities_base_url + "/download/" + mg_obj['ID'] + '?file=100.preprocess.passed.fna.gz'  
+    else :
+        return json.dumps({'header': 'ERROR:\n Missing Input , please provide either sequence file object or metagnome object.'})
     _run_invo("echo 'pick_otus:enable_rev_strand_match True' > qiime.params")
     _run_invo("echo 'pick_otus:similarity 0.97' >> qiime.params")
     stdout, stderr = _run_invo("mg-upload2shock %s qiime.params"%(URLS.shock))
@@ -486,7 +584,7 @@ def _run_qiime_otu_picking(meth, workspace, in_seq, out_name):
         return json.dumps({'header': 'ERROR:\n%s'%stderr})
     param_nid = json.loads(stdout)['id']
     wf_tmp = Template(qiimeWF)
-    wf_str = wf_tmp.substitute(shock=URLS.shock, seq=seq_obj['ID'], param=param_nid)
+    wf_str = wf_tmp.substitute(shock=URLS.shock, url=seq_url , param=param_nid)
     
     meth.advance("Submiting "+method_name)
     ajob = _submit_awe(wf_str)
@@ -514,7 +612,7 @@ def _map_annot(meth, workspace, in_name, out_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object name of abundance profile BIOM
+    :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param out_name: object name of annotation set table
@@ -563,7 +661,7 @@ def _make_model(meth, workspace, in_name, out_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object name of annotation set table
+    :param in_name: object name of Communities.ProfileTable
     :type in_name: kbtypes.Communities.ProfileTable
     :ui_name in_name: Input Name
     :param out_name: object name of model
@@ -643,10 +741,10 @@ def _compare_model(meth, workspace, model1, model2):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param model1: object name of model 1
+    :param model1: object name of first KBaseFBA.FBAModel
     :type model1: kbtypes.KBaseFBA.FBAModel
     :ui_name model1: Model 1 Name
-    :param model2: object name of model 2
+    :param model2: object name of second KBaseFBA.FBAModel
     :type model2: kbtypes.KBaseFBA.FBAModel
     :ui_name model2: Model 2 Name
     :return: Metagenome Model Comparison
@@ -675,10 +773,10 @@ def _kegg_map(meth, workspace, input1, input2):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param input1: object name of model 1
+    :param input1: object name of first KBaseFBA.FBAModel
     :type input1: kbtypes.KBaseFBA.FBAModel
     :ui_name input1: Model 1 Name
-    :param input2: object name of model 2
+    :param input2: object name of second KBaseFBA.FBAModel
     :type input2: kbtypes.KBaseFBA.FBAModel
     :ui_name input2: Model 2 Name
     :return: KEGG Map
@@ -720,7 +818,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param ids: object name of metagenome list
+    :param ids: object name of Communities.Collection
     :type ids: kbtypes.Communities.Collection
     :ui_name ids: Metagenome List
     :param out_name: object name of abundance profile table
@@ -789,6 +887,12 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
         length = 15
     if norm == '':
         norm = 'yes'
+    if (annot != 'taxa') and (annot != 'functions'):
+        return json.dumps({'header': 'ERROR:\ninvalid value for Annotation Type'})
+    if (level not in TAXA) and (level not in ONTOL):
+        return json.dumps({'header': 'ERROR:\ninvalid value for Annotation Level'})
+    if int_level and (int_level not in TAXA) and (int_level not in ONTOL):
+        return json.dumps({'header': 'ERROR:\ninvalid value for Filter Level'})
     
     meth.advance("Retrieve Data from Workspace")
     id_list = _get_ws(workspace, ids, CWS.coll)
@@ -818,7 +922,7 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object name of abundance profile table
+    :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param out_name: object name of abundance profile table with significance
@@ -880,7 +984,7 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object name of abundance profile table
+    :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param out_name: object name of altered profile
@@ -934,6 +1038,8 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
         cmd += ' --order %d'%int(order)
         txt += " Rows were ordered by column %d."%int(order)
     stdout, stderr = _run_invo(cmd)
+    if stderr:
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
     
     meth.advance("Storing in Workspace")
     data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': '', 'data': ''}
@@ -951,14 +1057,117 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     _put_ws(workspace, out_name, wtype, data=data)
     return json.dumps({'header': txt})
 
-@method(name="View Abundance Profile")
+@method(name="Add Metadata to Abundance Profile")
+def _add_metadata(meth, workspace, ids, in_name, key, value):
+    """Add given key-value metadata to inputed abundace profile for inputed metagenome list.
+    
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param ids: object name of Communities.Collection
+    :type ids: kbtypes.Communities.Collection
+    :ui_name ids: Metagenome List
+    :param in_name: object name of Communities.Profile
+    :type in_name: kbtypes.Communities.Profile
+    :ui_name in_name: Profile Name
+    :param key: name of metadata field to add
+    :type key: kbtypes.Unicode
+    :ui_name key: Label
+    :param value: value of metadata field to add
+    :type value: kbtypes.Unicode
+    :ui_name value: Value
+    :return: Metagenome Abundance Profile
+    :rtype: kbtypes.Unicode
+    :output_widget: ImageViewWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    workspace = _get_wsname(meth, workspace)
+    if not (ids and in_name):
+        return json.dumps({'header': 'ERROR:\nmissing input object names'})
+    if not (key and value):
+        return json.dumps({'header': 'ERROR:\nmissing metadata to add'})
+
+    meth.advance("Retrieve Data from Workspace")
+    mgid = _get_ws(workspace, ids, CWS.coll)
+    biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
+    
+    meth.advance("Add Metadata to Profile")
+    for c in biom['columns']:
+        if c['id'] not in mgid:
+            continue
+        if 'metadata' not in c:
+            c['metadata'] = {}
+        if 'extra' not in c['metadata']:
+            c['metadata']['extra'] = {'data': {}}
+        c['metadata']['extra']['data'][key] = value
+    
+    meth.advance("Storing in Workspace")
+    data = {'name': in_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': json.dumps(biom)}
+    text = "Added the value '%s' for %s in metadata of metagenomes %s in %s."%(value, key, ", ".join(mgid), in_name)
+    _put_ws(workspace, in_name, CWS.profile, data=data)
+    return json.dumps({'header': text})
+
+@method(name="View Abundance Profile Metadata")
+def _view_metadata(meth, workspace, in_name):
+    """View metadata from an abundance profile as a table
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param in_name: object name of Communities.Profile
+    :type in_name: kbtypes.Communities.Profile
+    :ui_name in_name: Input Name
+    :return: Metagenome Metadata Table
+    :rtype: kbtypes.Unicode
+    :output_widget: GeneTableWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    workspace = _get_wsname(meth, workspace)
+    
+    meth.advance("Retrieve Data from Workspace")
+    biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
+    
+    meth.advance("Manipulating Table")
+    rows = defaultdict(set)
+    # get metadata terms
+    for col in biom['columns']:
+        if ('metadata' in col) and col['metadata']:
+            for cat, data in col['metadata'].iteritems():
+                if ('data' in data) and data['data']:
+                    for key in data['data'].iterkeys():
+                        rows[cat].add(key)
+    # build namespace
+    head  = ['category', 'label'] + map(lambda x: x['id'], biom['columns'])
+    table = []
+    cats  = sorted(rows.keys())
+    for cat in cats:
+        for key in sorted(rows[cat]):
+            row = [cat, key] + (['null'] * len(biom['columns']))
+            table.append(row)
+    
+    meth.advance("Displaying Table")
+    # populate namespace
+    for r, row in enumerate(table):
+        for i in range(len(row[2:])):
+            try:
+                table[r][i+2] = biom['columns'][i]['metadata'][row[0]]['data'][row[1]]
+            except:
+                pass
+    table.insert(0, head)
+    return json.dumps({'table': table})
+
+@method(name="View Abundance Profile Values")
 def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_end, stats):
     """View a slice of a BIOM format abundance profile as a table
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object name of abundance profile table
+    :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param row_start: row position to start table with, default is first
@@ -1005,10 +1214,211 @@ def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_en
     if stats.lower() == 'yes':
         cmd += ' --stats'
     stdout, stderr = _run_invo(cmd)
+    if stderr:
+        raise Exception('ERROR: %s'%stderr)
     
     meth.advance("Displaying Table")
     table = [[c for c in r.split('\t')] for r in stdout.rstrip().split('\n')]
     return json.dumps({'table': table})
+
+@method(name="Merge Abundance Profiles")
+def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
+    """Merge two or more BIOM format abundance profiles
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param ab1: object name of Communities.Profile required
+    :type ab1: kbtypes.Communities.Profile
+    :ui_name ab1: First Profile
+    :param ab2: object name of Communities.Profile, required
+    :type ab2: kbtypes.Communities.Profile
+    :ui_name ab2: Second Profile
+    :param ab3: object name of Communities.Profile, optional
+    :type ab3: kbtypes.Communities.Profile
+    :ui_name ab3: Third Profile
+    :param ab4: object name of Communities.Profile, optional
+    :type ab4: kbtypes.Communities.Profile
+    :ui_name ab4: Fourth Profile
+    :param out_name: object name of merged abundance profile table
+    :type out_name: kbtypes.Unicode
+    :ui_name out_name: Output Name
+    :return: Metagenome Abundance Profile Info
+    :rtype: kbtypes.Unicode
+    :output_widget: ImageViewWidget
+    """
+
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    workspace = _get_wsname(meth, workspace)
+    # validate
+    if not (ab1 and ab2):
+        return json.dumps({'header': 'ERROR:\nmissing required input abundance profiles'})
+    profiles = [ab1, ab2]
+    if ab3:
+        profiles.append(ab3)
+    if ab4:
+        profiles.append(ab4)
+    
+    meth.advance("Retrieve Data from Workspace")
+    # get from ws
+    bioms = map(lambda x: json.loads(_get_ws(workspace, x, CWS.profile)), profiles)
+    for i, b in enumerate(bioms):
+        # update metadata
+        for c in b['columns']:
+            if 'metadata' not in c:
+                c['metadata'] = {}
+            if 'extra' not in c['metadata']:
+                c['metadata']['extra'] = {'data': {}}
+            c['metadata']['extra']['data']['collection'] = profiles[i]
+        # put in invo server
+        _put_invo(profiles[i], json.dumps(b))
+    
+    meth.advance("Merging Profiles")
+    cmd = "mg-biom-merge --retain_dup_ids %s"%(" ".join(profiles))
+    stdout, stderr = _run_invo(cmd)
+    if stderr:
+        return json.dumps({'header': 'ERROR:\n%s'%stderr})
+    
+    meth.advance("Storing in Workspace")
+    data = {'name': out_name, 'created': time.strftime("%Y-%m-%d %H:%M:%S"), 'type': 'biom', 'data': stdout}
+    text = "Abundance profiles %s merged into %s."%(", ".join(profiles), out_name)
+    _put_ws(workspace, out_name, CWS.profile, data=data)
+    return json.dumps({'header': text})
+
+@method(name="Rank Abundance from Abundance Profile")
+def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
+    """Generate rank abundance profile from annotation abundance data.
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param in_name: object name of Communities.Profile
+    :type in_name: kbtypes.Communities.Profile
+    :ui_name in_name: Input Name
+    :param level: annotation hierarchical level to retrieve abundances for
+    :type level: kbtypes.Unicode
+    :ui_name level: Annotation Level
+    :param use_name: label by metagenome name and not ID
+    :type use_name: kbtypes.Unicode
+    :ui_name use_name: Label Name
+    :default use_name: no
+    :param top: produce profile for top N abundant annotations
+    :type top: kbtypes.Unicode
+    :ui_name top: Top Annotations
+    :default top: 10
+    :param order_by: rank by either the position of metagenome in profile (integer) or 'average' or 'max' of metagenomes
+    :type order_by: kbtypes.Unicode
+    :ui_name order_by: Order By
+    :default order_by: average
+    :return: Metagenome Rank Abundance Profile
+    :rtype: kbtypes.Unicode
+    :output_widget: GraphWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    # validate
+    if not in_name:
+        json.dumps({'header': 'ERROR:\nmissing input'})
+    workspace = _get_wsname(meth, workspace)
+    # set defaults since unfilled options are empty strings
+    annot = None
+    hpos  = -1
+    if use_name == '':
+        use_name = 'no'
+    if top == '':
+        top = '10'
+    if order_by == '':
+        order_by = 'average'
+    if level in TAXA:
+        annot = 'taxonomy'
+        hpos  = TAXA.index(level)
+    elif level in ONTOL:
+        annot = 'ontology'
+        hpos  = ONTOL.index(level)
+    top = int(top)
+    
+    meth.advance("Retrieve Data from Workspace")
+    biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
+    matrix = []
+    if biom['matrix_type'] == 'sparse':
+        matrix = sparse_to_dense(biom['data'], biom['shape'][0], biom['shape'][1])
+    else:
+        matrix = biom['data']
+    matrix = [map(float, x) for x in matrix]
+
+    meth.advance("Processing Abundance Profile")
+    rmerge = {}
+    # just graph matrix as is
+    if not annot:
+        for r, row in enumerate(biom['rows']):
+            rmerge[row['id']] = matrix[r]
+    # merge up hierarchy
+    else:
+        if (annot not in biom['rows'][0]['metadata']) and (len(biom['rows'][0]['metadata'][annot]) < (hpos+1)):
+            return json.dumps({'header': 'ERROR:\ninvalid Abundace Profile for Annotation Level'})
+        for r, row in enumerate(biom['rows']):
+            name = row['metadata'][annot][hpos]
+            if name in rmerge:
+                rmerge[name] = [x + y for x, y in zip(rmerge[name], matrix[r])]
+            else:
+                rmerge[name] = matrix[r]
+    # sort by a metagenome or by average
+    rsort = []
+    if order_by == 'average':
+        ravg  = dict( map(lambda (k,v): ( k, sum(v) / float(len(v)) ), rmerge.iteritems()) )
+        asort = sorted(ravg.items(), key=lambda x: x[1], reverse=True)
+        rsort = [(k, rmerge[k]) for (k, v) in asort]
+    elif order_by == 'max':
+        rmax  = dict( map(lambda (k,v): ( k, max(v) ), rmerge.iteritems()) )
+        msort = sorted(rmax.items(), key=lambda x: x[1], reverse=True)
+        rsort = [(k, rmerge[k]) for (k, v) in msort]
+    else:
+        try:
+            order_by = int(order_by) - 1
+            if order_by < 1:
+                order_by = 1
+        except:
+            order_by = 0
+        if (order_by + 1) > len(biom['columns']):
+            order_by = 0
+        rsort = sorted(rmerge.items(), key=lambda x: x[1][order_by], reverse=True)
+    # barchart data
+    data = []
+    labels = []
+    # names
+    for col in biom['columns']:
+        if use_name == 'yes':
+            data.append({'name': col['name'], 'data': []})
+        else:
+            data.append({'name': col['id'], 'data': []})
+    # values
+    for row in rsort[:top]:
+        labels.append(row[0])
+        for i in range(len(row[1])):
+            data[i]['data'].append(row[1][i])
+    # colors
+    colors = _get_colors(len(data))
+    for i in range(len(data)):
+        data[i]['fill'] = colors[i]
+    
+    meth.advance("Plotting Profile")
+    graphdata = {
+        'data': data,
+        'show_legend': True,
+        'title': '%s rank abundance'%(level) if annot else '',
+        'x_labels': labels,
+        'x_labels_rotation': '340',
+        'height': 500,
+        'type': 'column'
+    }
+    if (order_by == 'average') or (order_by == 'max'):
+        graphdata['y_title'] = 'abundance by %s value'%(order_by)
+    else:
+        mg = biom['columns'][order_by]['name'] if use_name == 'yes' else biom['columns'][order_by]['id']
+        graphdata['y_title'] = 'abundance by metagenome %s'%(mg)
+    return json.dumps(graphdata)
 
 @method(name="Boxplots from Abundance Profile")
 def _plot_boxplot(meth, workspace, in_name, use_name):
@@ -1017,14 +1427,14 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object name of abundance profile table
+    :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param use_name: label by metagenome name and not ID
     :type use_name: kbtypes.Unicode
     :ui_name use_name: Label Name
     :default use_name: no
-    :return: Metagenome Abundance Profile Significance Info
+    :return: Metagenome Abundance Profile Boxplot
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
     """
@@ -1057,13 +1467,13 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})
 
 @method(name="Heatmap from Abundance Profile")
-def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, label):
+def _plot_r_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, label):
     """Generate a heatmap-dendrogram from annotation abundance data.
 
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object name of abundance profile table
+    :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param use_name: label by metagenome name and not ID
@@ -1086,7 +1496,7 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     :type label: kbtypes.Unicode
     :ui_name label: Label
     :default label: no
-    :return: Metagenome Abundance Profile Significance Info
+    :return: Metagenome Abundance Profile Heatmap
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
     """
@@ -1130,6 +1540,71 @@ def _plot_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, 
     b64png = base64.b64encode(rawpng)
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
+@method(name="Interactive Heatmap from Abundance Profile")
+def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
+    """Generate an interactive heatmap-dendrogram from annotation abundance data.
+
+    :param workspace: name of workspace, default is current
+    :type workspace: kbtypes.Unicode
+    :ui_name workspace: Workspace
+    :param in_name: object name of Communities.Profile
+    :type in_name: kbtypes.Communities.Profile
+    :ui_name in_name: Input Name
+    :param use_name: label by metagenome name and not ID
+    :type use_name: kbtypes.Unicode
+    :ui_name use_name: Label Name
+    :default use_name: no
+    :param label: label rows 
+    :type label: kbtypes.Unicode
+    :ui_name label: Label
+    :default label: yes
+    :return: Metagenome Abundance Profile Heatmap
+    :rtype: kbtypes.Unicode
+    :output_widget: DrilldownHeatmapWidget
+    """
+    
+    meth.stages = 4
+    meth.advance("Processing inputs")
+    # validate
+    if not in_name:
+        json.dumps({'header': 'ERROR:\nmissing input'})
+    workspace = _get_wsname(meth, workspace)
+    # set defaults since unfilled options are empty strings
+    if use_name == '':
+        use_name = 'no'
+    if label == '':
+        label = 'yes'
+    
+    meth.advance("Retrieve Data from Workspace")
+    biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
+    
+    meth.advance("Processing Abundance Profile")
+    data = { 'columns': [], 'rows': [], 'data': [] }
+    # columns
+    if use_name == 'yes':
+        data['columns'] = map(lambda x: x['name'], biom['columns'])
+    else:
+        data['columns'] = map(lambda x: x['id'], biom['columns'])
+    # rows
+    for row in biom['rows']:
+        if ('metadata' in row) and ('taxonomy' in row['metadata']):
+            data['rows'].append(row['metadata']['taxonomy'])
+        elif ('metadata' in row) and ('ontology' in row['metadata']):
+            data['rows'].append(row['metadata']['ontology'])
+        else:
+            data['rows'].append(row['id'])
+    # data
+    matrix = []
+    if biom['matrix_type'] == 'sparse':
+        matrix = sparse_to_dense(biom['data'], biom['shape'][0], biom['shape'][1])
+    else:
+        matrix = biom['data']
+    data['data'] = [map(float, x) for x in matrix]
+    
+    meth.advance("Creating Heatmap")
+    lwidth = 250 if label == 'yes' else 0
+    return json.dumps({'data': data, 'legend_width': lwidth})
+
 @method(name="PCoA from Abundance Profile")
 def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     """Generate a PCoA from annotation abundance data.
@@ -1137,7 +1612,7 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     :param workspace: name of workspace, default is current
     :type workspace: kbtypes.Unicode
     :ui_name workspace: Workspace
-    :param in_name: object name of abundance profile table
+    :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
     :param metadata: metadata field to group metagenomes by
@@ -1151,7 +1626,7 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     :type three: kbtypes.Unicode
     :ui_name three: 3D
     :default three: no
-    :return: Metagenome Abundance Profile Significance Info
+    :return: Metagenome Abundance Profile PCoA
     :rtype: kbtypes.Unicode
     :output_widget: ImageViewWidget
     """
@@ -1211,6 +1686,176 @@ def _view_mg(meth, mgid):
     
     meth.advance("Building Overview")
     return json.dumps({'mgid': mgid})
+
+@method(name="Profile to OTU annotations")
+def _profile_to_otu_annotations(meth,profile_id,metaanno_id):
+    """Translates metagenome profile into an OTU annotation object for modeling.
+        
+        :param profile_id: ID of the metagenome profile
+        :type profile_id: kbtypes.Communities.ProfileTable
+        :ui_name profile_id: Metagenome Profile Table
+        
+        :param metaanno_id: name of OTU annotation object to be generated
+        :type metaanno_id: kbtypes.KBaseGenomes.MetagenomeAnnotation
+        :ui_name metaanno_id: Output OTU annotation object
+        
+        :output_widget: ValueListWidget
+        
+        :return: Output OTU annotation object
+        :rtype: kbtypes.Unicode
+        """
+    meth.stages = 2
+    meth.advance("Generating OTU annotations")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(url="https://kbase.us/services/KBaseFBAModeling", token=userToken)
+    wsClient = workspaceService(url="https://kbase.us/services/ws", token=userToken)
+    
+    output = wsClient.get_objects([{'ref':workspaceName+"/"+profile_id}]);
+    data = output[0]['data'];
+    text = data['data'];
+    
+    import_metaanno_params = {
+        'workspace': workspaceName,
+        'annotations': [],
+        'name': data['name']
+    };
+    
+    lines = text.split('\n');
+    for line in lines :
+        linearray = line.split('\t');
+        if len(linearray) >= 5:
+            temp = linearray[4];
+            linearray[4] = linearray[3];
+            linearray[3] = linearray[2];
+            linearray[2] = temp;
+            import_metaanno_params['annotations'].append(linearray);
+
+    if (metaanno_id) :
+        import_metaanno_params['metaanno_uid'] = metaanno_id;
+    else :
+        import_metaanno_params['metaanno_uid'] = data['name']+".metaanno";
+
+    model_meta = fbaClient.import_metagenome_annotation(import_metaanno_params);
+
+    output = wsClient.get_objects([{'ref':workspaceName+"/"+import_metaanno_params['metaanno_uid']}]);
+    otus = output[0]['data']['otus'];
+    newotus = sorted(otus, key=lambda k: k['ave_coverage']);
+    newotus.reverse();
+
+    output = {'values':[["OTU","Average coverage"]]};
+    for otu in newotus :
+        output['values'].append([otu['name'],otu['ave_coverage']]);
+
+    return json.dumps(output)
+
+@method(name="OTU annotations to Models")
+def _otu_annotations_to_models(meth,metaanno_id,max_otu_models,min_abundance,min_reactions):
+    """Constructs models for abundant OTUs in metagenome based on functions of reference genome hits.
+        
+        :param metaanno_id: name of OTU annotation object
+        :type metaanno_id: kbtypes.KBaseGenomes.MetagenomeAnnotation
+        :ui_name metaanno_id: OTU Annotation
+        
+        :param max_otu_models: maximum number of OTU models (default is 2)
+        :type max_otu_models: kbtypes.Unicode
+        :ui_name max_otu_models: Max OTU Models
+        
+        :param min_abundance: minimum abundance for OTU model  (default is 3)
+        :type min_abundance: kbtypes.Unicode
+        :ui_name min_abundance: Min Abundance
+        
+        :param min_reactions: minimum reactions for OTU model (default is 100)
+        :type min_reactions: kbtypes.Unicode
+        :ui_name min_reactions: Min Reactions
+        
+        :output_widget: ValueListWidget
+        
+        :return: Output OTU and tail models
+        :rtype: kbtypes.Unicode
+        """
+    
+    meth.stages = 2
+    meth.advance("Generating OTU models (5-10 minutes)")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(url="https://kbase.us/services/KBaseFBAModeling", token=userToken)
+    wsClient = workspaceService(url="https://kbase.us/services/ws", token=userToken)
+    
+    output = wsClient.get_objects([{'ref':workspaceName+"/"+metaanno_id}]);
+    otus = output[0]['data']['otus'];
+    model_ids = {'tail': metaanno_id+".tail.model"};
+    for otu in otus :
+        model_ids[otu['name']] = otu['name']+".model";
+    
+    build_otu_models_params = {
+        'workspace': workspaceName,
+        'metaanno_uid': metaanno_id,
+        'model_uids': model_ids,
+        'min_abundance': min_abundance,
+        'max_otu_models': max_otu_models,
+        'min_reactions': min_reactions
+    };
+    
+    model_metas = fbaClient.metagenome_to_fbamodels(build_otu_models_params);
+
+    finaloutput = {'values':[["Workspace","Models"]]};
+    for model in model_metas :
+        finaloutput['values'].append([model[7],model[1]]);
+
+    return json.dumps(finaloutput)
+
+@method(name="Merge to Community Model")
+def _merge_to_community_model(meth,model_ids,species_abundance,output_id):
+    """Constructs models for abundant OTUs in metagenome based on functions of reference genome hits.
+        
+        :param models_ids: list of species model ids (; seperated)
+        :type models_ids: kbtypes.Unicode
+        :ui_name models_ids: Model IDs
+        
+        :param species_abundance: list of species relative abundance (; separated)
+        :type species_abundance: kbtypes.Unicode
+        :ui_name species_abundance: Species abundance
+        
+        :param output_id: output ID of generated community model
+        :type output_id: kbtypes.Unicode
+        :ui_name output_id: Community Model Output ID
+        
+        :return: Community Model Data
+        :rtype: kbtypes.Model
+        :output_widget: kbaseModelTabs
+        """
+    
+    meth.stages = 2
+    meth.advance("Generating community model (5-10 minutes)")
+    
+    #grab token and workspace info, setup the client
+    userToken, workspaceName = meth.token, meth.workspace_id;
+    fbaClient = fbaModelServices(url="https://kbase.us/services/KBaseFBAModeling", token=userToken)
+    wsClient = workspaceService(url="https://kbase.us/services/ws", token=userToken)
+    
+    modelarray = model_ids.split(';');
+    abundancearray = species_abundance.split(';');
+    models = [];
+    count = 0;
+    for model in modelarray :
+        abund = 1;
+        if (abundancearray[count]) :
+            abund = abundancearray[count];
+        models.append([model,workspaceName,abund]);
+    
+    merge_models_params = {
+        'workspace': workspaceName,
+        'models': models,
+        'name': output_id,
+        'model_uid': output_id
+    };
+
+    model_meta = fbaClient.models_to_community_model(merge_models_params);
+
+    return json.dumps({'id': model_meta[1], 'ws': model_meta[7]})
 
 ec2ko = {
     "3.1.22.4": ["K01159"],

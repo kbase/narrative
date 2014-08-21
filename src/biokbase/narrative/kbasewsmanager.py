@@ -236,20 +236,24 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def read_notebook_object(self, notebook_id):
         """Get the Notebook representation of a notebook by notebook_id."""
+
         self.log.debug("reading Narrative %s." % notebook_id)
         wsclient = self.wsclient()
         user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
         if user_id is None:
             raise web.HTTPError(400, u'Missing user identity from kbase_session object')
         try:
-            wsobj = ws_util.get_wsobj( self.wsclient(), notebook_id, self.ws_type)
+            wsobj = ws_util.get_wsobj(self.wsclient(), notebook_id, self.ws_type)
         except ws_util.BadWorkspaceID, e:
             raise web.HTTPError(500, u'Narrative %s not found: %s' % (notebook_id, e))
         jsonnb = json.dumps(wsobj['data'])
+
         #self.log.debug("jsonnb = %s" % jsonnb)
         nb = current.reads(jsonnb, u'json')
+
         # Set the notebook metadata workspace to the workspace this came from
         nb.metadata.ws_name = wsobj['metadata']['workspace']
+
         last_modified = dateutil.parser.parse(wsobj['metadata']['save_date'])
         self.log.debug("Narrative successfully read" )
         # Stash last read NB in env
@@ -319,7 +323,7 @@ class KBaseWSNotebookManager(NotebookManager):
         # Verify that our own home workspace exists, note that we aren't doing this
         # as a general thing for other workspaces
         wsclient = self.wsclient()
-        (homews, homews_id) = ws_util.check_homews( wsclient, user_id)
+        (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
         # Carry over some of the metadata stuff from ShockNBManager
         try:
             if not hasattr(nb.metadata, 'ws_name'):
@@ -332,6 +336,7 @@ class KBaseWSNotebookManager(NotebookManager):
                 nb.metadata.description = ''
             nb.metadata.data_dependencies = self.extract_data_dependencies(nb)
             nb.metadata.format = self.node_format
+            nb.dependencies = nb.metadata.data_dependencies
 
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
@@ -341,14 +346,15 @@ class KBaseWSNotebookManager(NotebookManager):
             # optionally, user metadata
             #
             # requires ONE AND ONLY ONE of objid (existing object id, number) or name (string)
-            wsobj = { 'type' : self.ws_type,
+            wsobj = { 
+                      'type' : self.ws_type,
                       'data' : nb,
                       'provenance' : [],
                       'meta' : nb.metadata.copy(),
                     }
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
-            wsobj['meta']['data_dependencies'] = json.dumps( wsobj['meta']['data_dependencies'])
+            wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
 
             # If we're given a notebook id, try to parse it for the save parameters
             if notebook_id:

@@ -40,7 +40,7 @@ module KBaseNarrative {
 
     /*
      Reference to any Workspace object that the Narrative is dependent on. These can be of any type.
-     @id ws *
+     @id ws
      */
     typedef string dependency;
 

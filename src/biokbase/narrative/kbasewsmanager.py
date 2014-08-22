@@ -334,7 +334,9 @@ class KBaseWSNotebookManager(NotebookManager):
                 nb.metadata.type = self.ws_type
             if not hasattr(nb.metadata, 'description'):
                 nb.metadata.description = ''
-            nb.metadata.data_dependencies = self.extract_data_dependencies(nb)
+#            nb.metadata.data_dependencies = self.extract_data_dependencies(nb)
+            if not hasattr(nb.metadata, 'data_dependencies'):
+                nb.metadata.data_dependencies = []
             nb.metadata.format = self.node_format
             nb.dependencies = nb.metadata.data_dependencies
 

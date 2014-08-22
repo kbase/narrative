@@ -90,6 +90,7 @@
                         if (!this.inputsRendered)
                             this.loadAllRecentCellStates();
                         this.inputsRendered = true;
+                        this.updateNarrativeDependencies();
                     }
                 },
                 this)

@@ -1,6 +1,6 @@
 """
 Code to proxy logs from the narrative, over a socket, to a DB.
-The proxy will have root permissions so it can read protected
+The proxy will tend to have root permissions so it can read protected
 configuration files.
 """
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
@@ -161,6 +161,8 @@ class DBConfiguration(Configuration):
         elif p in self._obj:
             del self._obj[p]  # just delete unused password
 
+
+    ## Expose configuration values as class properties
 
     @property
     def db_host(self):

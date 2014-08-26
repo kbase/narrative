@@ -24,6 +24,7 @@ from biokbase.InvocationService.Client import \
     InvocationService as InvocationClient
 import biokbase.narrative.upload_handler
 from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.common.log_proxy import EVENT_MSG_SEP
 
 # Logging
 _log = logging.getLogger(__name__)
@@ -56,8 +57,10 @@ workdir = "/tmp/narrative"
 def user_msg(s):
     """Show a message to the user.
     Adds a newline.
+    Also logs it for posterity.
     """
-    _log.debug("user_msg len={:d}".format(len(s)))
+    _log.debug("user_msg{}len={:d}".format(
+               EVENT_MSG_SEP, len(s)))
     sys.stderr.write(s + "\n")
 
 

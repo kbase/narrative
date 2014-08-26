@@ -20,6 +20,7 @@ import logging
 import os
 import re
 import socket
+import time
 # Local
 from .util import kbase_env
 from . import log_proxy
@@ -30,7 +31,6 @@ KBASE_TMP_DIR = "/tmp"
 KBASE_TMP_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative.log")
 
 ## Functions
-
 
 def get_logger(name=""):
     """Get a given KBase log obj.
@@ -51,9 +51,20 @@ def get_logger(name=""):
     else:
         log = logging.getLogger("biokbase." + name)
 
-    adapter = logging.LoggerAdapter(log, _get_meta())
-    return log
+    adapter = LogAdapter(log, _get_meta())
 
+    return adapter
+
+class LogAdapter(logging.LoggerAdapter):
+    """
+    Add some extra methods to the stock LoggerAdapter
+    """
+    def __init__(self, log, extra):
+        logging.LoggerAdapter.__init__(self, log, extra)
+        self.handlers = log.handlers
+        self.addHandler = log.addHandler
+        self.setLevel = log.setLevel
+        self.isEnabledFor = log.isEnabledFor
 
 def _get_meta():
     meta, empty = {}, '?'
@@ -125,9 +136,11 @@ def init_handlers():
         sock.connect((proxy_config.host, proxy_config.port))
     except socket.error:
         has_local_forwarder = False
+        _log.debug("init_handlers local_forwarder=false")
     # If connection succeeds, add a logging.handler
     if has_local_forwarder:
-        sock_handler = logging.handlers.Sockethandler(proxy_config.host,
+        _log.debug("init_handlers local_forwarder=true")
+        sock_handler = logging.handlers.SocketHandler(proxy_config.host,
                                                       proxy_config.port)
         _log.addHandler(sock_handler)
 

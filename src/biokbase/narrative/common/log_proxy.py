@@ -8,6 +8,8 @@ __date__ = '8/22/14'
 
 import argparse
 import asyncore
+from datetime import datetime
+from dateutil.tz import tzlocal
 import logging
 import pymongo
 import pickle
@@ -19,6 +21,9 @@ import sys
 import yaml
 
 _log = None #  global logger
+
+# Constants
+EVENT_MSG_SEP = ';'  # separates event name from msg in log
 
 # Handle ^C and other signals
 m_fwd = None
@@ -69,7 +74,7 @@ class Configuration(object):
 
 class ProxyConfiguration(Configuration):
     DEFAULT_HOST = 'localhost'
-    DEFAULT_PORT = 8888
+    DEFAULT_PORT = 8899
 
     def __init__(self):
         Configuration.__init__(self, None)
@@ -196,7 +201,7 @@ class LogForwarder(asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            #print 'Incoming connection from %s' % repr(addr)
+            _log.info('Accepted connection from {}'.format(addr))
             LogStreamForwarder(sock, self._coll)
 
     @staticmethod
@@ -220,6 +225,20 @@ class LogForwarder(asyncore.dispatcher):
 
 
 class LogStreamForwarder(asyncore.dispatcher):
+    KVP_EXPR = re.compile(r"""
+        (?:
+            \s*                        # leading whitespace
+            ([0-9a-zA-Z_.\-]+)         # Name
+            =
+            (?:                        # Value:
+              ([^"\s]+) |              # - simple value
+              "((?:[^"] | (?<=\\)")*)" # - quoted string
+            )
+            \s*
+        ) |
+        ([^= ]+)                        # Text w/o key=value
+        """, flags=re.X)
+
     def __init__(self, sock, collection):
         asyncore.dispatcher.__init__(self, sock)
         self._coll = collection
@@ -233,24 +252,97 @@ class LogStreamForwarder(asyncore.dispatcher):
             return
         # Parse data
         size = struct.unpack('>L', self._hdr)[0]
-        self._hdr = ''
         if size > 65536:
             _log.error("Log message size ({:d}) > 64K, possibly corrupt header"
-                      .format(size))
+                       ": <{}>"
+                      .format(size, self._hdr))
+            self._hdr = ''
             return
-        print("read {:d} bytes".format(size))
+        self._hdr = ''
         chunk = self.recv(size)
         while len(chunk) < size:
             chunk = chunk + self.recv(size - len(chunk))
-        obj = pickle.loads(chunk)
+        record = pickle.loads(chunk)
+
+        if _log.isEnabledFor(logging.DEBUG):
+            _log.debug("Got record: {}".format(record))
+
+        self._extract_info(record)
+        self._strip_logging_junk(record)
+        self._fix_types(record)
 
         # Add dict to DB
-        self._coll.insert(obj)
+        self._coll.insert(record)
 
+    def _extract_info(self, record):
+        """
+        Dissect the 'message' contents to extract event name and any
+        embedded key-value pairs.
+
+        :param record: Object to modify in-place
+        """
+        message = record.get('message', None)
+        if message is None:
+            return  # Stop!
+        # Split out event name
+        event, msg = message.split(EVENT_MSG_SEP, 1)
+        # Parse kvp's
+        text = []
+        for n, v, vq, txt in self.KVP_EXPR.findall(msg):
+            if n:
+                if vq:
+                    v = vq.replace('\\"', '"')
+                # add this KVP to output dict
+                record[n] = v
+            else:
+                text.append(txt)
+        # Anything not parsed goes back into message
+        record['message'] = ' '.join(text)
+        # Event gets its own field, too
+        record['event'] = event
+
+    @staticmethod
+    def _strip_logging_junk(record):
+        """
+        Get rid of unneeded fields from logging library.
+
+        :param record: Raw record, modified in-place
+        """
+        # not needed at all
+        for k in ('msg', 'threadName', 'thread', 'pathname',
+                  'levelno', 'asctime', 'relativeCreated'):
+            del record[k]
+        # junk for service writes
+        if record['filename'] == 'service.py':
+            for k in 'processName', 'module', 'lineno', 'funcName':
+                del record[k]
+        # remove exception stuff if empty
+        if record['exc_info'] is None:
+            for k in 'exc_info', 'exc_text':
+                del record[k]
+        # remove args if empty
+        if not record['args']:
+            del record['args']
+
+    @staticmethod
+    def _fix_types(record):
+        """
+        Fix types, mainly of fields that were parsed out of the message.
+        :param record: Record, modified in-place
+        """
+        # duration
+        if 'dur' in record:
+            record['dur'] = float(record['dur'])
+        # convert created to datetime type (converted on insert by pymongo)
+        dt = datetime.fromtimestamp(record['created'], tzlocal())
+        record['created_date'] = dt
+        record['created_tz'] = dt.tzname()
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--config", dest="conf", help="Config file")
+    parser.add_argument("-v", "--verbose", dest="vb", action="count",
+                        default=0, help="Increase verbosity")
     args = parser.parse_args()
     return args
 
@@ -262,8 +354,12 @@ def main(args):
         signal.signal(signo, on_signal)
 
     _log = logging.getLogger("log_proxy")
-    _log.addHandler(logging.StreamHandler())
-    _log.setLevel(logging.INFO)
+    _hnd = logging.StreamHandler()
+    _hnd.setFormatter(logging.Formatter(
+        "%(levelname)-8s  %(asctime)s %(message)s"))
+    _log.addHandler(_hnd)
+    level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]
+    _log.setLevel(level)
 
     try:
         config = DBConfiguration(args.conf)
@@ -271,12 +367,22 @@ def main(args):
         _log.critical("Configuration failed: {}".format(err))
         return 1
 
-    _log.info("Create forwarder")
-    m_fwd = LogForwarder(config)
+    try:
+        m_fwd = LogForwarder(config)
+    except pymongo.errors.ConnectionFailure as err:
+        _log.fatal("Could not connect to MongoDB server at '{}:{:d}': {}"
+                   .format(config.db_host, config.db_port, err))
+        return 2
 
-    _log.info("Start forwarding loop")
+    pconfig = ProxyConfiguration()
+    _log.info("Listening on {}:{:d}".format(pconfig.host, pconfig.port))
+
+    _log.info("Connected to MongoDB server at {}:{:d}"
+              .format(config.db_host, config.db_port))
+
+    _log.debug("Start main loop")
     asyncore.loop()
-    _log.info("Stop forwarding loop")
+    _log.debug("Stop main loop")
 
     return 0
 

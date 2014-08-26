@@ -22,6 +22,7 @@ import IPython.utils.traitlets as trt
 from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes, kblogging
+from biokbase.narrative.common.log_proxy import EVENT_MSG_SEP
 
 # Init logging.
 _log = logging.getLogger(__name__)
@@ -57,6 +58,9 @@ from url_config import URLS
 #     #fba = "http://140.221.84.183:7036"
 #     fba = "https://kbase.us/services/KBaseFBAModeling"
 #     genomeCmp = "http://140.221.85.57:8283/jsonrpc"
+
+def _logdbg(msg):
+    open("/tmp/kb-logdebug", "a").write("{}\n".format(msg))
 
 ## Exceptions
 
@@ -675,7 +679,8 @@ class LifecycleLogger(LifecycleObserver):
         # replace newlines with softer dividers
         msg = msg.replace("\n\n", "\n").replace("\n", " // ").replace("\r", "")
         # log the whole tamale
-        self._log.log(level, "{} {}".format(event, msg))
+        _logdbg("Log at level {:d} event={}".format(level, event))
+        self._log.log(level, "{}{}{}".format(event, EVENT_MSG_SEP, msg))
 
     def started(self, params):
         # note: quote params so the logging can handle spaces inside them

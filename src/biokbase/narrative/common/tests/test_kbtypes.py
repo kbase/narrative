@@ -49,8 +49,10 @@ class TestKbaseTypes(unittest.TestCase):
     def test_name(self):
         """Test type name.
         """
-        g = KBaseGenomes.Genome.v1_0()
+        g = KBaseGenome1()
         self.assertEqual(str(g), 'KBaseGenomes.Genome-1.0')
+        g = KBaseGenome3()
+        self.assertEqual(str(g), 'KBaseGenomes.Genome-3.0')
 
     def test_version(self):
         """Test Version type.

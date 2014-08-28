@@ -1,7 +1,7 @@
 """
 Test log proxy and kblogging
 """
-__author__ = 'Dan Gunter'
+__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 
 import os
 import signal
@@ -16,6 +16,7 @@ from biokbase.narrative.common import log_proxy as proxy
 class MainTestCase(unittest.TestCase):
     # name of var lines up with cmdline arg 'dest', don't change
     conf = "/tmp/kbase_logforward.conf"
+    vb = 0
 
     def setUp(self):
         self._config(['db: test', 'collection: kblog'])
@@ -28,20 +29,18 @@ class MainTestCase(unittest.TestCase):
     def test_run_proxy(self):
         pid = os.fork()
         if pid == 0:
-            print("Run child")
-            r = proxy.main(self)
-            print("Child is done with status {:d}".format(r))
-            raise unittest.SkipTest("forked child")
+            #print("Run child")
+            proxy.main(self)
         else:
             time.sleep(1)
-            print("Wait for child to start")
+            #print("Wait for child to start")
             # let it start
             time.sleep(4)
             # send it a HUP to stop it
-            print("Send child ({:d}) a HUP".format(pid))
+            #print("Send child ({:d}) a HUP".format(pid))
             os.kill(pid, signal.SIGHUP)
             # wait for it to stop
-            print("Wait for child ({:d}) to stop".format(pid))
+            #print("Wait for child ({:d}) to stop".format(pid))
             cpid, r = os.waitpid(pid, 0)
             self.assertEqual(r, 0,
                              "Non-zero exit status ({:d}) from proxy".format(r))

@@ -19,6 +19,8 @@ import socket
 import struct
 import sys
 import yaml
+# Local
+from biokbase.narrative.common.util import parse_kvp
 
 _log = None #  global logger
 
@@ -227,20 +229,6 @@ class LogForwarder(asyncore.dispatcher):
 
 
 class LogStreamForwarder(asyncore.dispatcher):
-    KVP_EXPR = re.compile(r"""
-        (?:
-            \s*                        # leading whitespace
-            ([0-9a-zA-Z_.\-]+)         # Name
-            =
-            (?:                        # Value:
-              ([^"\s]+) |              # - simple value
-              "((?:[^"] | (?<=\\)")*)" # - quoted string
-            )
-            \s*
-        ) |
-        ([^= ]+)                        # Text w/o key=value
-        """, flags=re.X)
-
     def __init__(self, sock, collection):
         asyncore.dispatcher.__init__(self, sock)
         self._coll = collection
@@ -288,18 +276,10 @@ class LogStreamForwarder(asyncore.dispatcher):
             return  # Stop!
         # Split out event name
         event, msg = message.split(EVENT_MSG_SEP, 1)
-        # Parse kvp's
-        text = []
-        for n, v, vq, txt in self.KVP_EXPR.findall(msg):
-            if n:
-                if vq:
-                    v = vq.replace('\\"', '"')
-                # add this KVP to output dict
-                record[n] = v
-            else:
-                text.append(txt)
+        # Break into key=value pairs
+        text = parse_kvp(msg, record)
         # Anything not parsed goes back into message
-        record['message'] = ' '.join(text)
+        record['message'] = text
         # Event gets its own field, too
         record['event'] = event
 

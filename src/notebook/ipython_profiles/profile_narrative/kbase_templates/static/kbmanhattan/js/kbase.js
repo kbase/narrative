@@ -5734,7 +5734,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             var media = options.id;
             var ws = options.ws;
             var title = options.title ? options.title : "Set formulation";
-            var fba = new fbaModelServices("http://140.221.85.73:4043/");
+            var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
             var kbws = new workspaceService("https://kbase.us/services/ws/");
             var container = $('<div id="kbase-formulation-form" class="panel panel-default">                                <div class="panel-heading">                                    <h4 class="panel-title">' + title + '</h4>                                </div>                                <div class="panel-body"></div>                           </div>');
             self.$elem.append(container);
@@ -5871,7 +5871,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             var ws = options.ws;
             var id = options.id;
             var formulation = options.formulation;
-            var fba = new fbaModelServices("http://140.221.85.73:4043/");
+            var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
             var kbws = new workspaceService("https://kbase.us/services/ws/");
             var container = $('<div id="kbase-run-fba">');
             var body = $('<div class="fba-run-info"><b>Model:</b> ' + id + "<br><br></div>");
@@ -6815,7 +6815,7 @@ $.fn.workspaceSelector = function(workspaces, state) {
             var token = options.auth;
             var media = options.id;
             var ws = options.ws;
-            var fba = new fbaModelServices("http://140.221.85.73:4043");
+            var fba = new fbaModelServices("https://kbase.us/services/fba_model_services/");
             var kbws = new workspaceService("https://kbase.us/services/ws/");
             var panel = self.$elem.kbasePanel({
                 title: "Media Info",

@@ -272,7 +272,7 @@ class KBaseWSNotebookManager(NotebookManager):
         We create an array of type:value pairs from the params and return that
         """
         # set of types that we ignore
-        ignore = set(['string','Unicode','Numeric','Integer','List'])
+        ignore = set(['string','Unicode','Numeric','Integer','List','a number'])
         deps = set()
         # What default workspace are we going to use?
         ws = os.environ.get('KB_WORKSPACE_ID',nb.metadata.ws_name)
@@ -282,7 +282,7 @@ class KBaseWSNotebookManager(NotebookManager):
                     allparams = cell['metadata']['kb-cell']['method']['properties']['parameters']
                 except KeyError:
                     continue
-                params = [ param for param in allparams.keys() if allparams[param]['type'] not in ignore]
+                params = [param for param in allparams.keys() if allparams[param]['type'] not in ignore]
                 try:
                     paramvals = cell['metadata']['kb-cell']['widget_state'][0]['state']
                 except KeyError:
@@ -294,9 +294,9 @@ class KBaseWSNotebookManager(NotebookManager):
                         if (self.ws_regex.match(paramval) or
                             self.ws_regex2.match(paramval) or
                             self.kbid_regex.match(paramval)):
-                            dep = "%s %s" % ( allparams[param]['type'], paramval)
+                            dep = "%s %s" % (allparams[param]['type'], paramval)
                         else:
-                            dep = "%s %s" % ( allparams[param]['type'], paramval)
+                            dep = "%s %s" % (allparams[param]['type'], paramval)
                         deps.add(dep)
                     except KeyError:
                         continue
@@ -418,7 +418,7 @@ class KBaseWSNotebookManager(NotebookManager):
         util.kbase_env.narrative = notebook_id
         # This is a no-op for now
         # return the checkpoint info
-        return { 'checkpoint_id' : checkpoint_id , 'last_modified' : chkpt_created}
+        return { 'checkpoint_id' : checkpoint_id , 'last_modified' : chkpt_created }
 
 
     def list_checkpoints(self, notebook_id):

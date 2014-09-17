@@ -11,6 +11,7 @@ import asyncore
 from datetime import datetime
 from dateutil.tz import tzlocal
 import logging
+import os
 import pymongo
 import pickle
 import re
@@ -83,11 +84,11 @@ class ProxyConfiguration(Configuration):
 
     @property
     def host(self):
-        return self.DEFAULT_HOST
+        return self._obj.get('host', self.DEFAULT_HOST)
 
     @property
     def port(self):
-        return self.DEFAULT_PORT
+        return self._obj.get('port', self.DEFAULT_PORT)
 
 
 class DBConfiguration(Configuration):
@@ -190,6 +191,23 @@ class DBConfiguration(Configuration):
     def collection(self):
         return self._obj['collection']
 
+    @classmethod
+    def get_sample(cls):
+        """Get a sample configuration.
+        """
+        fields = [
+            '# proxy listen host and port',
+            'host: {}'.format(ProxyConfiguration.DEFAULT_HOST),
+            'port: {}'.format(ProxyConfiguration.DEFAULT_PORT),
+            '# mongodb server host and port',
+            'db_host: {}'.format(cls.DEFAULT_DB_HOST),
+            'db_port: {}'.format(cls.DEFAULT_DB_PORT),
+            '# mongodb server user/pass and database',
+            'user: joeschmoe',
+            'password: letmein',
+            'db: mymongodb'
+        ]
+        return '\n'.join(fields)
 
 class LogForwarder(asyncore.dispatcher):
     def __init__(self, config):
@@ -328,8 +346,15 @@ class LogStreamForwarder(asyncore.dispatcher):
         record['created_tz'] = dt.tzname()
 
 def parse_args():
+    program_name = os.path.basename(sys.argv[0])
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--config", dest="conf", help="Config file")
+    parser.add_argument("-f", "--config", dest="conf", metavar="FILE",
+                        help="Config file. To create a new config file,"
+                             "try running: {} -S > my_file.conf"
+                             .format(program_name))
+    parser.add_argument("-S", "--sample-config", dest="smpcfg",
+                        action="store_true",
+                        help="Print a sample config file and exit")
     parser.add_argument("-v", "--verbose", dest="vb", action="count",
                         default=0, help="Increase verbosity")
     args = parser.parse_args()
@@ -338,6 +363,10 @@ def parse_args():
 
 def main(args):
     global m_fwd, _log
+
+    if args.smpcfg:
+        print(DBConfiguration.get_sample())
+        return 0
 
     for signo in CATCH_SIGNALS:
         signal.signal(signo, on_signal)
@@ -363,7 +392,7 @@ def main(args):
                    .format(config.db_host, config.db_port, err))
         return 2
 
-    pconfig = ProxyConfiguration()
+    pconfig = ProxyConfiguration(args.conf)
     _log.info("Listening on {}:{:d}".format(pconfig.host, pconfig.port))
 
     _log.info("Connected to MongoDB server at {}:{:d}"

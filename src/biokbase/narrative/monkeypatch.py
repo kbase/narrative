@@ -20,6 +20,9 @@ import IPython.html.services.notebooks.handlers
 import IPython
 import biokbase.auth
 import tornado
+from biokbase.narrative.common.kblogging import get_logger, log_event
+
+g_log = get_logger("biokbase.narrative")
 
 def monkeypatch_method(cls):
     """
@@ -64,8 +67,12 @@ def do_patching( c ):
     auth_cookie_name = "kbase_narr_session"
     backup_cookie = "kbase_session"
 
-    if c.NotebookApp.get('kbase_auth',False):
-        IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.notebook.handlers.NamedNotebookHandler.get() in process {}".format(os.getpid()))
+    if c.NotebookApp.get('kbase_auth', False):
+        IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html."
+                                                 "notebook.handlers."
+                                                 "NamedNotebookHandler.get() "
+                                                 "in process {}"
+                                                 .format(os.getpid()))
 
         cookierx = re.compile('([^ =|]+)=([^\|]*)')
         def parsecookie(cookie):
@@ -81,8 +88,8 @@ def do_patching( c ):
             """
             cookierx = re.compile('([^ =|]+)=([^\|]*)')
             """ Parser for Jim Thomason's login widget cookies """
-            sess = { k : v.replace('EQUALSSIGN','=').replace('PIPESIGN','|')
-                     for k,v in cookierx.findall(urllib.unquote(cookie)) }
+            sess = {k: v.replace('EQUALSSIGN','=').replace('PIPESIGN','|')
+                    for k, v in cookierx.findall(urllib.unquote(cookie)) }
             IPython.html.base.handlers.app_log.debug("user_id = " + sess.get('token','None'))
             IPython.html.base.handlers.app_log.debug("token = " + sess.get('token','None'))
             setattr(handler, 'kbase_session', sess)
@@ -91,27 +98,27 @@ def do_patching( c ):
 
         IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.notebook.handlers.NamedNotebookHandler.get() in process {}".format(os.getpid()))
         old_get = IPython.html.notebook.handlers.NamedNotebookHandler.get
-
         @monkeypatch_method(IPython.html.notebook.handlers.NamedNotebookHandler)
-        def get(self,notebook_id):
+        def get(self, notebook_id):
             IPython.html.base.handlers.app_log.debug("notebook_id = " + notebook_id)
-            if auth_cookie_name in self.cookies and hasattr(self,'notebook_manager'):
-                IPython.html.base.handlers.app_log.debug("kbase_session = " + self.cookies[auth_cookie_name].value)
-                cookie_pusher(self.cookies[auth_cookie_name].value, getattr(self,'notebook_manager'))
-            elif backup_cookie in self.cookies and hasattr(self, 'notebook_manager'):
-                IPython.html.base.handlers.app_log.debug("kbase_session = " + self.cookies[backup_cookie].value)
-                cookie_pusher(self.cookies[backup_cookie].value, getattr(self,'notebook_manager'))
-
-            return old_get(self,notebook_id)
+            for name in auth_cookie_name, backup_cookie:
+                if name not in self.cookies:
+                    continue
+                session = self.cookies[name].value
+                IPython.html.base.handlers.app_log.debug("kbase_session = " + session)
+                session_obj = parsecookie(session)
+                user = session_obj['user_id']
+                log_event(g_log, 'open', {'narr': notebook_id, 'user': user})
+            return old_get(self, notebook_id)
 
         IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.services.notebooks.handlers.NotebookRootHandler.get() in process {}".format(os.getpid()))
         old_get1 = IPython.html.services.notebooks.handlers.NotebookRootHandler.get
         @monkeypatch_method(IPython.html.services.notebooks.handlers.NotebookRootHandler)
         def get(self):
             if auth_cookie_name in self.cookies:
-                cookie_pusher( self.cookies[auth_cookie_name].value,getattr(self,'notebook_manager'))
+                cookie_pusher(self.cookies[auth_cookie_name].value, getattr(self, 'notebook_manager'))
             elif backup_cookie in self.cookies:
-                cookie_pusher( self.cookies[backup_cookie].value,getattr(self,'notebook_manager'))
+                cookie_pusher(self.cookies[backup_cookie].value, getattr(self, 'notebook_manager'))
             return old_get1(self)
 
     IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html.base.handlers.RequestHandler.write_error() in process {}".format(os.getpid()))

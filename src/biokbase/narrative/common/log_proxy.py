@@ -257,9 +257,13 @@ class LogStreamForwarder(asyncore.dispatcher):
         if _log.isEnabledFor(logging.DEBUG):
             _log.debug("Got record: {}".format(record))
 
-        self._extract_info(record)
-        self._strip_logging_junk(record)
-        self._fix_types(record)
+        try:
+            self._extract_info(record)
+            self._strip_logging_junk(record)
+            self._fix_types(record)
+        except ValueError as err:
+            _log.error("Bad input to 'handle_read': {}".format(err))
+            return
 
         # Add dict to DB
         self._coll.insert(record)
@@ -275,7 +279,10 @@ class LogStreamForwarder(asyncore.dispatcher):
         if message is None:
             return  # Stop!
         # Split out event name
-        event, msg = message.split(EVENT_MSG_SEP, 1)
+        try:
+            event, msg = message.split(EVENT_MSG_SEP, 1)
+        except ValueError:
+            raise ValueError("Cannot split event/msg in '{}'".format(message))
         # Break into key=value pairs
         text = parse_kvp(msg, record)
         # Anything not parsed goes back into message

@@ -17,10 +17,10 @@ __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 __date__ = '2014-07-31'
 
 import logging
+from logging.handlers import SocketHandler
 import os
 import re
 import socket
-import time
 # Local
 from .util import kbase_env
 from . import log_proxy
@@ -55,6 +55,12 @@ def get_logger(name=""):
 
     return adapter
 
+def log_event(log, event, mapping):
+    """Log an event and a mapping.
+    """
+    kvp = " ".join(["{}={}".format(k, v) for k, v in mapping.iteritems()])
+    log.info("{}{}{}".format(event, log_proxy.EVENT_MSG_SEP, kvp))
+
 class LogAdapter(logging.LoggerAdapter):
     """
     Add some extra methods to the stock LoggerAdapter
@@ -63,6 +69,7 @@ class LogAdapter(logging.LoggerAdapter):
         logging.LoggerAdapter.__init__(self, log, extra)
         self.handlers = log.handlers
         self.addHandler = log.addHandler
+        self.removeHandler = log.removeHandler
         self.setLevel = log.setLevel
         self.isEnabledFor = log.isEnabledFor
 
@@ -99,8 +106,7 @@ class MetaFormatter(logging.Formatter):
         """
         logging.Formatter.__init__(
             self,
-            "%(levelname)s %(asctime)s %(name)s user=%(user)s "
-            "narr=%(narr)s %(message)s")
+            "%(levelname)s %(asctime)s %(name)s %(message)s")
 
     def format(self, record):
         """
@@ -140,9 +146,18 @@ def init_handlers():
     # If connection succeeds, add a logging.handler
     if has_local_forwarder:
         _log.debug("init_handlers local_forwarder=true")
-        sock_handler = logging.handlers.SocketHandler(proxy_config.host,
-                                                      proxy_config.port)
+        sock_handler = SocketHandler(proxy_config.host,
+                                     proxy_config.port)
         _log.addHandler(sock_handler)
+    else:
+        _log.debug("init_handlers local_forwarder=false")
+
+def reset_handlers():
+    """Remove & re-add all handlers.
+    """
+    while _log.handlers:
+        _log.removeHandler(_log.handlers.pop())
+    init_handlers()
 
 ## Run the rest of this on import
 

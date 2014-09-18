@@ -10,8 +10,6 @@
         options: {
             color: "black",
         },
-//	fbaURL: "https://kbase.us/services/KBaseFBAModeling",
-//	fbaURL: 'http://140.221.85.73:4043',
 	
 	job_id: 0,
         arURL: null,
@@ -33,7 +31,7 @@
             //self.arURL = 'http://140.221.84.121:8000/'
 	    self.ws_url = options.ws_url
 	    self.ws_name = options.ws_name
-	    self.fba_url = 'http://140.221.85.73:4043'
+	    self.fba_url = "http://kbase.us/services/KBaseFBAModeling/"
             var arRequest = {
                 "data_id": null,
 		"kbase_assembly_input": options.kbase_assembly_input,
@@ -518,8 +516,8 @@
 
 				    console.log(cname);
 
-				    var fba = new fbaModelServices(fba_url, {'token': token});
-				    fba.fasta_to_ContigSet({'fasta': shock_id, 
+				    //var fba = new fbaModelServices(fba_url, {'token': token});
+				    kb.fba.fasta_to_ContigSet({'fasta': shock_id, 
 							    'workspace': ws_name, 
 							    'uid': cname, 
 							    'name': cname, 

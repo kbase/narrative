@@ -434,7 +434,7 @@ def _translate_model_to_new_genome(meth, fba_model_id, proteome_cmp, remove_noge
     	
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    fbaClient = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+    fbaClient = fbaModelServices(service.URLS.fba, token = token)
     translate_params = {
                          'protcomp' : proteome_cmp,
                          'model' : fba_model_id,
@@ -650,7 +650,7 @@ def _compute_pan_genome(meth, genome_set,pangenome_id):
     if pangenome_id:
         pangenome_parameters['output_id']=pangenome_id
     
-    fbaclient = fbaModelServices(url="http://140.221.85.73:4043", token=usertoken)
+    fbaclient = fbaModelServices(service.URLS.fba, token=usertoken)
     meta = fbaclient.build_pangenome(pangenome_parameters)
     
     return json.dumps({'ws': workspace_id, 'name':meta[1]})
@@ -745,7 +745,7 @@ def _compare_genomes(meth, pangenome_id):
     #grab token and workspace info, setup the client
     token, ws = meth.token, meth.workspace_id;
     wss =[]
-    fba = fbaModelServices(url = "http://140.221.85.73:4043", token = token)
+    fba = fbaModelServices(service.URLS.fba, token = token)
 
     meta = fba.compare_genomes({'pangenome_id': pangenome_id, 
                                 'pangenome_ws': ws,
@@ -1096,7 +1096,7 @@ def _run_fba(meth, fba_model_id, media_id, fba_result_id, geneko, rxnko, default
     meth.debug(json.dumps(fba_params))
 
     meth.advance("Running FBA")
-    fbaClient = fbaModelServices("http://140.221.85.73:4043",token=userToken)
+    fbaClient = fbaModelServices(service.URLS.fba,token=userToken)
     result_meta = fbaClient.runfba(fba_params)
     generated_fba_id = result_meta[0]
     
@@ -1215,7 +1215,7 @@ def _gapfill_fba(meth, fba_model_id, media_id,source_model_id,int_sol, output_mo
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id;
 
-    fbaclient = fbaModelServices(url="http://140.221.85.73:4043", token=userToken)
+    fbaclient = fbaModelServices(service.URLS.fba, token=userToken)
     
     fba_formulation = {}
     if (media_id):
@@ -1684,7 +1684,7 @@ def _build_promconstraint(meth, genome_id, series_id, regulome_id):
     
     #grab token and workspace info, setup the client
     userToken, workspaceName = meth.token, meth.workspace_id
-    fbaClient = fbaModelServices("http://140.221.85.73:4043",token=userToken)
+    fbaClient = fbaModelServices(service.URLS.fba,token=userToken)
     
     # create the model object
     build_pc_params = {

@@ -227,7 +227,168 @@
     }
     
     jQuery.extend(SVGWrapper.prototype, {
-	
+
+	/*
+	  high level graphics
+	*/
+
+	/* Draw a donut slice.
+	   @param center (int) radius of the full circle
+	   @param inner (int) radius of the inner circle of the current slice
+	   @param outer (int) radius of the outer circle of the current slice
+	   @param startAngle (int) angle of the start of the slice (in degrees)
+	   @param endAngle (int) angle of the end of the slice (in degrees)
+	   @param settings (object) any key/value pairs for the SVG element
+	   @return (element) the new shape node */
+	donutslice: function(params) {
+	    var center = params.center;
+	    var inner = params.inner;
+	    var outer = params.outer;
+	    var startAngle = params.startAngle;
+	    var endAngle = params.endAngle;
+	    var settings = params.settings;
+
+	    var r1 = ((outer - 1) / 2);
+	    var r2 = ((inner - 1) / 2);
+
+	    var startAngleRad = Math.PI*startAngle/180;
+	    var endAngleRad = Math.PI*endAngle/180;
+
+	    var x1inner = parseInt(center + r2*Math.cos(startAngleRad));
+	    var y1inner = parseInt(center + r2*Math.sin(startAngleRad));
+
+	    var x2inner = parseInt(center + r2*Math.cos(endAngleRad));
+	    var y2inner = parseInt(center + r2*Math.sin(endAngleRad));
+
+	    var x1outer = parseInt(center + r1*Math.cos(startAngleRad));
+	    var y1outer = parseInt(center + r1*Math.sin(startAngleRad));
+
+	    var x2outer = parseInt(center + r1*Math.cos(endAngleRad));
+	    var y2outer = parseInt(center + r1*Math.sin(endAngleRad));
+
+	    r1 = parseInt(r1);
+	    r2 = parseInt(r2);
+
+	    var path = "M"+x1inner+","+y1inner+"  L"+x1outer+","+y1outer+"  A"+r1+","+r1+" 0 0,1 "+x2outer+","+y2outer+" L"+x2inner+","+y2inner+"  A"+r2+","+r2+" 0 0,0 "+x1inner+","+y1inner;
+
+	    return this.path(path, settings);
+	},
+
+	axis: function(params) {
+	    var start = params.start; // start pixel of the axis in the SVG
+	    var end = params.end; // end pixel of the axis in the SVG
+	    var shift = params.shift; // shift from left (vertical) or top (horizontal) of the axis
+	    var min = params.min == null ? 0 : params.min; // minimum value of the scale
+	    var max = params.max == null ? 100 : params.max; // maximum value of the scale
+
+	    var showLabels = params.showLabels == null ? true : false;
+	    var labels = params.labels; // array of labels if the labels should not be the value
+	    var labelRotation = params.labelRotation == null ? 0 : params.labelRotation; // degrees the labels should be rotated
+	    var labelFontSize = params.labelFontSize == null ? 12 : params.labelFontSize;
+	    var labelFontWeight = params.labelFontWeight == null ? 100 : params.labelFontWeight;
+	    var labelFontFamily = params.labelFontFamily == null ? "Helvetica" : params.labelFontFamily;
+
+	    var minorTicks = params.minorTicks == null ? 4 : params.minorTicks; // number of minor ticks between major ticks
+	    var minorTickLength = params.minorTickLength == null ? 5 : params.minorTickLength;
+	    var majorTickLength = params.majorTickLength == null ? 10 : params.majorTickLenght;
+	    var minorTickShift = params.minorTickShift == null ? 0 : params.minorTickShift;
+	    var majorTickShift = params.majorTickShift == null ? 0 : params.majorTickShift;
+	    var majorTicks = params.majorTicks == null ? 10 : params.majorTicks; // number of major ticks on the axis
+	    var scale = params.scale == null ? "linear" : params.scale;
+	    var direction = params.direction == null ? "horizontal" : params.direction;
+
+	    var length = end - start;
+
+	    // create group
+	    var g = this.group();
+
+	    // create baseline
+	    var x1 = direction == "horizontal" ? start : shift;
+	    var y1 = direction == "horizontal" ? shift : start;
+	    var x2 = direction == "horizontal" ? end : shift;
+	    var y2 = direction == "horizontal" ? shift : end;
+	    this.line(g, x1, y1, x2, y2, { stroke: "black", strokeWidth: 1 });
+
+	    // create ticks
+	    var tickpos = start;
+	    x1 = direction == "horizontal" ? tickpos : shift + majorTickShift;
+	    y1 = direction == "horizontal" ? shift + majorTickShift : tickpos;
+	    x2 = direction == "horizontal" ? tickpos : shift + majorTickShift - majorTickLength;
+	    y2 = direction == "horizontal" ? shift + majorTickShift + majorTickLength : tickpos;
+	    var x1m = direction == "horizontal" ? tickpos : shift + minorTickShift;
+	    var y1m = direction == "horizontal" ? shift + minorTickShift : tickpos;
+	    var x2m = direction == "horizontal" ? tickpos : shift + minorTickShift - minorTickLength;
+	    var y2m = direction == "horizontal" ? shift + minorTickShift + minorTickLength : tickpos;
+
+	    var majorTickSpace = Math.floor(length / majorTicks);
+	    var minorTickSpace = Math.floor(majorTickSpace / (minorTicks + 1));
+	    
+	    for (var i=0; i<=majorTicks; i++) {
+		this.line(g, x1, y1, x2, y2, { stroke: "black", strokeWidth: 1 });
+		if (showLabels) {
+		    var text = (min + ((direction == "horizontal" ? i : majorTicks - i) * ((max - min) / majorTicks))).formatString();
+		    if (labels && labels.length) {
+			text = labels[i];
+		    }
+		    var lx = x1 + (direction == "horizontal" ? 0 : (-1 * (majorTickLength + majorTickShift) - 1));
+		    var ly = y1 + parseInt(labelFontSize / (direction == "horizontal" ? 1 : 3)) + (direction == "horizontal" ?  (majorTickLength + majorTickShift + 1) : 0);
+		    this.text(g, lx, ly, text, { textAnchor: (direction == "horizontal" ? (labelRotation == null ? "middle" : "end") : "end"), fontSize: labelFontSize+'px', stroke: "black", fontWeight: labelFontWeight, fontFamily: labelFontFamily, transform: (labelRotation == null ? "" : "rotate(-"+labelRotation+","+lx+","+ly+")") });
+		}
+		if (majorTicks != i) {
+		    for (var h=0; h<minorTicks; h++) {
+			if (direction == 'horizontal') {
+			    x1m += minorTickSpace;
+			    x2m += minorTickSpace;
+			} else {
+			    y1m += minorTickSpace;
+			    y2m += minorTickSpace;
+			}
+			this.line(g, x1m, y1m, x2m, y2m, { stroke: "black", strokeWidth: 1 });
+		    }
+		}
+		if (direction == 'horizontal') {
+		    x1 += majorTickSpace;
+		    x2 += majorTickSpace;
+		} else {
+		    y1 += majorTickSpace;
+		    y2 += majorTickSpace;
+		}
+		if (direction == 'horizontal') {
+		    x1m = x1;
+		    x2m = x2;
+		} else {
+		    y1m = y1;
+		    y2m = y2;
+		}
+	    }
+	    
+	    return g;
+	},
+
+	legend: function(params) {
+	    var top = params.top == null ? 0 : params.top;
+	    var left = params.left == null ? 0 : params.left;
+	    var labels = params.labels;
+	    var colors = params.colors;
+	    var fontSize = params.fontSize == null ? 12 : params.fontSize;
+	    var fontWeight = params.fontWeight == null ? "normal" : params.fontWeight;
+	    var fontFamily = params.fontFamily == null ? "Helvetica" : params.fontFamily;
+	    var labelSpacing = params.labelSpacing == null ? 10 : params.labelSpacing;
+
+	    var g = this.group();
+	    for (var i=0; i<labels.length; i++) {
+		this.rect(g, left, top, fontSize, fontSize, { stroke: "white", strokeWidth: 0, fill: colors[i] });
+		this.text(g, left + fontSize + fontSize, top + fontSize - 2, labels[i], { stroke: "black", fontSize: fontSize, fontFamily: fontFamily, fontWeight: fontWeight });
+		top += fontSize + labelSpacing;
+	    }
+
+	    return g;
+	},
+
+	/*
+	  end of high level graphics
+	 */
+
 	/* Retrieve the width of the SVG object. */
 	_width: function() {
 	    return (this._container ? this._container.clientWidth : this._svg.width);
@@ -4054,4 +4215,468 @@
     }
     
     function sortByNumber(a,b){ return a-b; }
+
+    // Enable animation for all of these SVG numeric attributes -
+    // named as svg-* or svg* (with first character upper case)
+    jQuery.each(['x', 'y', 'width', 'height', 'rx', 'ry', 'cx', 'cy', 'r', 'x1', 'y1', 'x2', 'y2',
+		 'stroke-width', 'strokeWidth', 'opacity', 'fill-opacity', 'fillOpacity',
+		 'stroke-opacity', 'strokeOpacity', 'stroke-dashoffset', 'strokeDashOffset',
+		 'font-size', 'fontSize', 'font-weight', 'fontWeight',
+		 'letter-spacing', 'letterSpacing', 'word-spacing', 'wordSpacing'],
+		function(i, attrName) {
+		    var ccName = attrName.charAt(0).toUpperCase() + attrName.substr(1);
+		    if (jQuery.cssProps) {
+			jQuery.cssProps['svg' + ccName] = jQuery.cssProps['svg-' + attrName] = attrName;
+		    }
+		    jQuery.fx.step['svg' + ccName] = jQuery.fx.step['svg-' + attrName] = function(fx) {
+			var realAttrName = jQuery.svg._attrNames[attrName] || attrName;
+			var attr = fx.elem.attributes.getNamedItem(realAttrName);
+			if (!fx.set) {
+			    fx.start = (attr ? parseFloat(attr.nodeValue) : 0);
+			    var offset = (jQuery.fn.jquery >= '1.6' ? '' :
+					  fx.options.curAnim['svg' + ccName] || fx.options.curAnim['svg-' + attrName]);
+			    if (/^[+-]=/.exec(offset)) {
+				fx.end = fx.start + parseFloat(offset.replace(/=/, ''));
+			    }
+			    jQuery(fx.elem).css(realAttrName, '');
+			    fx.set = true;
+			}
+			var value = (fx.pos * (fx.end - fx.start) + fx.start) + (fx.unit == '%' ? '%' : '');
+			(attr ? attr.nodeValue = value : fx.elem.setAttribute(realAttrName, value));
+		    };
+		}
+	       );
+
+    // Enable animation for the SVG strokeDashArray attribute
+    jQuery.fx.step['svgStrokeDashArray'] = jQuery.fx.step['svg-strokeDashArray'] =
+	jQuery.fx.step['svgStroke-dasharray'] = jQuery.fx.step['svg-stroke-dasharray'] = function(fx) {
+	    var attr = fx.elem.attributes.getNamedItem('stroke-dasharray');
+	    if (!fx.set) {
+		fx.start = parseDashArray(attr ? attr.nodeValue : '');
+		var offset = (jQuery.fn.jquery >= '1.6' ? fx.end :
+			      fx.options.curAnim['svgStrokeDashArray'] || fx.options.curAnim['svg-strokeDashArray'] ||
+			      fx.options.curAnim['svgStroke-dasharray'] || fx.options.curAnim['svg-stroke-dasharray']);
+		fx.end = parseDashArray(offset);
+		if (/^[+-]=/.exec(offset)) {
+		    offset = offset.split(/[, ]+/);
+		    if (offset.length % 2 == 1) { // Must have an even number
+			var len = offset.length;
+			for (var i = 0; i < len; i++) { // So repeat
+			    offset.push(offset[i]);
+			}
+		    }
+		    for (var i = 0; i < offset.length; i++) {
+			if (/^[+-]=/.exec(offset[i])) {
+			    fx.end[i] = fx.start[i] + parseFloat(offset[i].replace(/=/, ''));
+			}
+		    }
+		}
+		fx.set = true;
+	    }
+	    var value = jQuery.map(fx.start, function(n, i) {
+		return (fx.pos * (fx.end[i] - n) + n);
+	    }).join(',');
+	    (attr ? attr.nodeValue = value : fx.elem.setAttribute('stroke-dasharray', value));
+	};
+
+    /* Parse a strokeDashArray definition: dash, gap, ...
+       @param  value  (string) the definition
+       @return  (number[2n]) the extracted values */
+    function parseDashArray(value) {
+	var dashArray = value.split(/[, ]+/);
+	for (var i = 0; i < dashArray.length; i++) {
+	    dashArray[i] = parseFloat(dashArray[i]);
+	    if (isNaN(dashArray[i])) {
+		dashArray[i] = 0;
+	    }
+	}
+	if (dashArray.length % 2 == 1) { // Must have an even number
+	    var len = dashArray.length;
+	    for (var i = 0; i < len; i++) { // So repeat
+		dashArray.push(dashArray[i]);
+	    }
+	}
+	return dashArray;
+    }
+
+    // Enable animation for the SVG viewBox attribute
+    jQuery.fx.step['svgViewBox'] = jQuery.fx.step['svg-viewBox'] = function(fx) {
+	var attr = fx.elem.attributes.getNamedItem('viewBox');
+	if (!fx.set) {
+	    fx.start = parseViewBox(attr ? attr.nodeValue : '');
+	    var offset = (jQuery.fn.jquery >= '1.6' ? fx.end :
+			  fx.options.curAnim['svgViewBox'] || fx.options.curAnim['svg-viewBox']);
+	    fx.end = parseViewBox(offset);
+	    if (/^[+-]=/.exec(offset)) {
+		offset = offset.split(/[, ]+/);
+		while (offset.length < 4) {
+		    offset.push('0');
+		}
+		for (var i = 0; i < 4; i++) {
+		    if (/^[+-]=/.exec(offset[i])) {
+			fx.end[i] = fx.start[i] + parseFloat(offset[i].replace(/=/, ''));
+		    }
+		}
+	    }
+	    fx.set = true;
+	}
+	var value = jQuery.map(fx.start, function(n, i) {
+	    return (fx.pos * (fx.end[i] - n) + n);
+	}).join(' ');
+	(attr ? attr.nodeValue = value : fx.elem.setAttribute('viewBox', value));
+    };
+
+    /* Parse a viewBox definition: x, y, width, height.
+       @param  value  (string) the definition
+       @return  (number[4]) the extracted values */
+    function parseViewBox(value) {
+	var viewBox = value.split(/[, ]+/);
+	for (var i = 0; i < viewBox.length; i++) {
+	    viewBox[i] = parseFloat(viewBox[i]);
+	    if (isNaN(viewBox[i])) {
+		viewBox[i] = 0;
+	    }
+	}
+	while (viewBox.length < 4) {
+	    viewBox.push(0);
+	}
+	return viewBox;
+    }
+
+    // Enable animation for the SVG transform attribute
+    jQuery.fx.step['svgTransform'] = jQuery.fx.step['svg-transform'] = function(fx) {
+	var attr = fx.elem.attributes.getNamedItem('transform');
+	if (!fx.set) {
+	    fx.start = parseTransform(attr ? attr.nodeValue : '');
+	    fx.end = parseTransform(fx.end, fx.start);
+	    fx.set = true;
+	}
+	var transform = '';
+	for (var i = 0; i < fx.end.order.length; i++) {
+	    switch (fx.end.order.charAt(i)) {
+	    case 't':
+		transform += ' translate(' +
+		    (fx.pos * (fx.end.translateX - fx.start.translateX) + fx.start.translateX) + ',' +
+		    (fx.pos * (fx.end.translateY - fx.start.translateY) + fx.start.translateY) + ')';
+		break;
+	    case 's':
+		transform += ' scale(' +
+		    (fx.pos * (fx.end.scaleX - fx.start.scaleX) + fx.start.scaleX) + ',' +
+		    (fx.pos * (fx.end.scaleY - fx.start.scaleY) + fx.start.scaleY) + ')';
+		break;
+	    case 'r':
+		transform += ' rotate(' +
+		    (fx.pos * (fx.end.rotateA - fx.start.rotateA) + fx.start.rotateA) + ',' +
+		    (fx.pos * (fx.end.rotateX - fx.start.rotateX) + fx.start.rotateX) + ',' +
+		    (fx.pos * (fx.end.rotateY - fx.start.rotateY) + fx.start.rotateY) + ')';
+		break;
+	    case 'x':
+		transform += ' skewX(' +
+		    (fx.pos * (fx.end.skewX - fx.start.skewX) + fx.start.skewX) + ')';
+	    case 'y':
+		transform += ' skewY(' +
+		    (fx.pos * (fx.end.skewY - fx.start.skewY) + fx.start.skewY) + ')';
+		break;
+	    case 'm':
+		var matrix = '';
+		for (var j = 0; j < 6; j++) {
+		    matrix += ',' + (fx.pos * (fx.end.matrix[j] - fx.start.matrix[j]) + fx.start.matrix[j]);
+		}				
+		transform += ' matrix(' + matrix.substr(1) + ')';
+		break;
+	    }
+	}
+	(attr ? attr.nodeValue = transform : fx.elem.setAttribute('transform', transform));
+    };
+
+    /* Decode a transform string and extract component values.
+       @param  value     (string) the transform string to parse
+       @param  original  (object) the settings from the original node
+       @return  (object) the combined transformation attributes */
+    function parseTransform(value, original) {
+	value = value || '';
+	if (typeof value == 'object') {
+	    value = value.nodeValue;
+	}
+	var transform = jQuery.extend({translateX: 0, translateY: 0, scaleX: 0, scaleY: 0,
+				       rotateA: 0, rotateX: 0, rotateY: 0, skewX: 0, skewY: 0,
+				       matrix: [0, 0, 0, 0, 0, 0]}, original || {});
+	transform.order = '';
+	var pattern = /([a-zA-Z]+)\(\s*([+-]?[\d\.]+)\s*(?:[\s,]\s*([+-]?[\d\.]+)\s*(?:[\s,]\s*([+-]?[\d\.]+)\s*(?:[\s,]\s*([+-]?[\d\.]+)\s*[\s,]\s*([+-]?[\d\.]+)\s*[\s,]\s*([+-]?[\d\.]+)\s*)?)?)?\)/g;
+	var result = pattern.exec(value);
+	while (result) {
+	    switch (result[1]) {
+	    case 'translate':
+		transform.order += 't';
+		transform.translateX = parseFloat(result[2]);
+		transform.translateY = (result[3] ? parseFloat(result[3]) : 0);
+		break;
+	    case 'scale':
+		transform.order += 's';
+		transform.scaleX = parseFloat(result[2]);
+		transform.scaleY = (result[3] ? parseFloat(result[3]) : transform.scaleX);
+		break;
+	    case 'rotate':
+		transform.order += 'r';
+		transform.rotateA = parseFloat(result[2]);
+		transform.rotateX = (result[3] ? parseFloat(result[3]) : 0);
+		transform.rotateY = (result[4] ? parseFloat(result[4]) : 0);
+		break;
+	    case 'skewX':
+		transform.order += 'x';
+		transform.skewX = parseFloat(result[2]);
+		break;
+	    case 'skewY':
+		transform.order += 'y';
+		transform.skewY = parseFloat(result[2]);
+		break;
+	    case 'matrix':
+		transform.order += 'm';
+		transform.matrix = [parseFloat(result[2]), parseFloat(result[3]),
+				    parseFloat(result[4]), parseFloat(result[5]),
+				    parseFloat(result[6]), parseFloat(result[7])];
+		break;
+	    }
+	    result = pattern.exec(value);
+	}
+	if (transform.order == 'm' && Math.abs(transform.matrix[0]) == Math.abs(transform.matrix[3]) &&
+	    transform.matrix[1] != 0 && Math.abs(transform.matrix[1]) == Math.abs(transform.matrix[2])) {
+	    // Simple rotate about origin and translate
+	    var angle = Math.acos(transform.matrix[0]) * 180 / Math.PI;
+	    angle = (transform.matrix[1] < 0 ? 360 - angle : angle);
+	    transform.order = 'rt';
+	    transform.rotateA = angle;
+	    transform.rotateX = transform.rotateY = 0;
+	    transform.translateX = transform.matrix[4];
+	    transform.translateY = transform.matrix[5];
+	}
+	return transform;
+    }
+
+    // Enable animation for all of these SVG colour properties - based on jquery.color.js
+    jQuery.each(['fill', 'stroke'],
+		function(i, attrName) {
+		    var ccName = attrName.charAt(0).toUpperCase() + attrName.substr(1);
+		    jQuery.fx.step['svg' + ccName] = jQuery.fx.step['svg-' + attrName] = function(fx) {
+			if (!fx.set) {
+			    fx.start = jQuery.svg._getColour(fx.elem, attrName);
+			    var toNone = (fx.end == 'none');
+			    fx.end = (toNone ? jQuery.svg._getColour(fx.elem.parentNode, attrName) : jQuery.svg._getRGB(fx.end));
+			    fx.end[3] = toNone;
+			    jQuery(fx.elem).css(attrName, '');
+			    fx.set = true;
+			}
+			var attr = fx.elem.attributes.getNamedItem(attrName);
+			var colour = 'rgb(' + [
+			    Math.min(Math.max(parseInt((fx.pos * (fx.end[0] - fx.start[0])) + fx.start[0], 10), 0), 255),
+			    Math.min(Math.max(parseInt((fx.pos * (fx.end[1] - fx.start[1])) + fx.start[1], 10), 0), 255),
+			    Math.min(Math.max(parseInt((fx.pos * (fx.end[2] - fx.start[2])) + fx.start[2], 10), 0), 255)
+			].join(',') + ')';
+			colour = (fx.end[3] && fx.state == 1 ? 'none' : colour);
+			(attr ? attr.nodeValue = colour : fx.elem.setAttribute(attrName, colour));
+		    }
+		}
+	       );
+
+    /* Find this attribute value somewhere up the node hierarchy.
+       @param  elem  (element) the starting element to find the attribute
+       @param  attr  (string) the attribute name
+       @return  (number[3]) RGB components for the attribute colour */
+    jQuery.svg._getColour = function(elem, attr) {
+	elem = jQuery(elem);
+	var colour;
+	do {
+	    colour = elem.attr(attr) || elem.css(attr);
+	    // Keep going until we find an element that has colour, or exit SVG
+	    if ((colour != '' && colour != 'none') || elem.hasClass(jQuery.svg.markerClassName)) {
+		break; 
+	    }
+	} while (elem = elem.parent());
+	return jQuery.svg._getRGB(colour);
+    };
+
+    /* Parse strings looking for common colour formats.
+       @param  colour  (string) colour description to parse
+       @return  (number[3]) RGB components of this colour */
+    jQuery.svg._getRGB = function(colour) {
+	var result;
+	// Check if we're already dealing with an array of colors
+	if (colour && colour.constructor == Array) {
+	    return (colour.length == 3 || colour.length == 4 ? colour : colours['none']);
+	}
+	// Look for rgb(num,num,num)
+	if (result = /^rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)jQuery/.exec(colour)) {
+	    return [parseInt(result[1], 10), parseInt(result[2], 10), parseInt(result[3], 10)];
+	}
+	// Look for rgb(num%,num%,num%)
+	if (result = /^rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)jQuery/.exec(colour)) {
+	    return [parseFloat(result[1]) * 2.55, parseFloat(result[2]) * 2.55,
+		    parseFloat(result[3]) * 2.55];
+	}
+	// Look for #a0b1c2
+	if (result = /^#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})jQuery/.exec(colour)) {
+	    return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
+	}
+	// Look for #abc
+	if (result = /^#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])jQuery/.exec(colour)) {
+	    return [parseInt(result[1] + result[1], 16), parseInt(result[2] + result[2], 16),
+		    parseInt(result[3] + result[3], 16)];
+	}
+	// Otherwise, we're most likely dealing with a named color
+	return colours[jQuery.trim(colour).toLowerCase()] || colours['none'];
+    };
+
+    // The SVG named colours
+    var colours = {
+	'':						[255, 255, 255, 1],
+	none:					[255, 255, 255, 1],
+	aliceblue:				[240, 248, 255],
+	antiquewhite:			[250, 235, 215],
+	aqua:					[0, 255, 255],
+	aquamarine:				[127, 255, 212],
+	azure:					[240, 255, 255],
+	beige:					[245, 245, 220],
+	bisque:					[255, 228, 196],
+	black:					[0, 0, 0],
+	blanchedalmond:			[255, 235, 205],
+	blue:					[0, 0, 255],
+	blueviolet:				[138, 43, 226],
+	brown:					[165, 42, 42],
+	burlywood:				[222, 184, 135],
+	cadetblue:				[95, 158, 160],
+	chartreuse:				[127, 255, 0],
+	chocolate:				[210, 105, 30],
+	coral:					[255, 127, 80],
+	cornflowerblue:			[100, 149, 237],
+	cornsilk:				[255, 248, 220],
+	crimson:				[220, 20, 60],
+	cyan:					[0, 255, 255],
+	darkblue:				[0, 0, 139],
+	darkcyan:				[0, 139, 139],
+	darkgoldenrod:			[184, 134, 11],
+	darkgray:				[169, 169, 169],
+	darkgreen:				[0, 100, 0],
+	darkgrey:				[169, 169, 169],
+	darkkhaki:				[189, 183, 107],
+	darkmagenta:			[139, 0, 139],
+	darkolivegreen:			[85, 107, 47],
+	darkorange:				[255, 140, 0],
+	darkorchid:				[153, 50, 204],
+	darkred:				[139, 0, 0],
+	darksalmon:				[233, 150, 122],
+	darkseagreen:			[143, 188, 143],
+	darkslateblue:			[72, 61, 139],
+	darkslategray:			[47, 79, 79],
+	darkslategrey:			[47, 79, 79],
+	darkturquoise:			[0, 206, 209],
+	darkviolet:				[148, 0, 211],
+	deeppink:				[255, 20, 147],
+	deepskyblue:			[0, 191, 255],
+	dimgray:				[105, 105, 105],
+	dimgrey:				[105, 105, 105],
+	dodgerblue:				[30, 144, 255],
+	firebrick:				[178, 34, 34],
+	floralwhite:			[255, 250, 240],
+	forestgreen:			[34, 139, 34],
+	fuchsia:				[255, 0, 255],
+	gainsboro:				[220, 220, 220],
+	ghostwhite:				[248, 248, 255],
+	gold:					[255, 215, 0],
+	goldenrod:				[218, 165, 32],
+	gray:					[128, 128, 128],
+	grey:					[128, 128, 128],
+	green:					[0, 128, 0],
+	greenyellow:			[173, 255, 47],
+	honeydew:				[240, 255, 240],
+	hotpink:				[255, 105, 180],
+	indianred:				[205, 92, 92],
+	indigo:					[75, 0, 130],
+	ivory:					[255, 255, 240],
+	khaki:					[240, 230, 140],
+	lavender:				[230, 230, 250],
+	lavenderblush:			[255, 240, 245],
+	lawngreen:				[124, 252, 0],
+	lemonchiffon:			[255, 250, 205],
+	lightblue:				[173, 216, 230],
+	lightcoral:				[240, 128, 128],
+	lightcyan:				[224, 255, 255],
+	lightgoldenrodyellow:	[250, 250, 210],
+	lightgray:				[211, 211, 211],
+	lightgreen:				[144, 238, 144],
+	lightgrey:				[211, 211, 211],
+	lightpink:				[255, 182, 193],
+	lightsalmon:			[255, 160, 122],
+	lightseagreen:			[32, 178, 170],
+	lightskyblue:			[135, 206, 250],
+	lightslategray:			[119, 136, 153],
+	lightslategrey:			[119, 136, 153],
+	lightsteelblue:			[176, 196, 222],
+	lightyellow:			[255, 255, 224],
+	lime:					[0, 255, 0],
+	limegreen:				[50, 205, 50],
+	linen:					[250, 240, 230],
+	magenta:				[255, 0, 255],
+	maroon:					[128, 0, 0],
+	mediumaquamarine:		[102, 205, 170],
+	mediumblue:				[0, 0, 205],
+	mediumorchid:			[186, 85, 211],
+	mediumpurple:			[147, 112, 219],
+	mediumseagreen:			[60, 179, 113],
+	mediumslateblue:		[123, 104, 238],
+	mediumspringgreen:		[0, 250, 154],
+	mediumturquoise:		[72, 209, 204],
+	mediumvioletred:		[199, 21, 133],
+	midnightblue:			[25, 25, 112],
+	mintcream:				[245, 255, 250],
+	mistyrose:				[255, 228, 225],
+	moccasin:				[255, 228, 181],
+	navajowhite:			[255, 222, 173],
+	navy:					[0, 0, 128],
+	oldlace:				[253, 245, 230],
+	olive:					[128, 128, 0],
+	olivedrab:				[107, 142, 35],
+	orange:					[255, 165, 0],
+	orangered:				[255, 69, 0],
+	orchid:					[218, 112, 214],
+	palegoldenrod:			[238, 232, 170],
+	palegreen:				[152, 251, 152],
+	paleturquoise:			[175, 238, 238],
+	palevioletred:			[219, 112, 147],
+	papayawhip:				[255, 239, 213],
+	peachpuff:				[255, 218, 185],
+	peru:					[205, 133, 63],
+	pink:					[255, 192, 203],
+	plum:					[221, 160, 221],
+	powderblue:				[176, 224, 230],
+	purple:					[128, 0, 128],
+	red:					[255, 0, 0],
+	rosybrown:				[188, 143, 143],
+	royalblue:				[65, 105, 225],
+	saddlebrown:			[139, 69, 19],
+	salmon:					[250, 128, 114],
+	sandybrown:				[244, 164, 96],
+	seagreen:				[46, 139, 87],
+	seashell:				[255, 245, 238],
+	sienna:					[160, 82, 45],
+	silver:					[192, 192, 192],
+	skyblue:				[135, 206, 235],
+	slateblue:				[106, 90, 205],
+	slategray:				[112, 128, 144],
+	slategrey:				[112, 128, 144],
+	snow:					[255, 250, 250],
+	springgreen:			[0, 255, 127],
+	steelblue:				[70, 130, 180],
+	tan:					[210, 180, 140],
+	teal:					[0, 128, 128],
+	thistle:				[216, 191, 216],
+	tomato:					[255, 99, 71],
+	turquoise:				[64, 224, 208],
+	violet:					[238, 130, 238],
+	wheat:					[245, 222, 179],
+	white:					[255, 255, 255],
+	whitesmoke:				[245, 245, 245],
+	yellow:					[255, 255, 0],
+	yellowgreen:			[154, 205, 50]
+    };
+
 })(window);

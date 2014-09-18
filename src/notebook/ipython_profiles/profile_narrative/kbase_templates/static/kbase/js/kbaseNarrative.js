@@ -41,7 +41,7 @@ narrative.init = function() {
         IPython.notebook.set_autosave_interval(0);
 
         if (workspaceId) {
-            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objtable/' + workspaceId);
+            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + workspaceId);
             dataWidget.setWorkspace(workspaceId);
         }
 

@@ -23,7 +23,7 @@ import yaml
 # Local
 from biokbase.narrative.common.util import parse_kvp
 
-_log = None #  global logger
+g_log = None #  global logger
 
 # Constants
 EVENT_MSG_SEP = ';'  # separates event name from msg in log
@@ -34,9 +34,9 @@ CATCH_SIGNALS = (signal.SIGHUP, signal.SIGINT, signal.SIGUSR1,
                  signal.SIGUSR2)
 
 def on_signal(signo, frame):
-    _log.warn("Caught signal {:d}".format(signo))
+    g_log.warn("Caught signal {:d}".format(signo))
     if signo in CATCH_SIGNALS:
-        _log.warn("Stop on signal {:d}".format(signo))
+        g_log.warn("Stop on signal {:d}".format(signo))
         m_fwd.close()
 
 
@@ -223,7 +223,7 @@ class LogForwarder(asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            _log.info('Accepted connection from {}'.format(addr))
+            g_log.info('Accepted connection from {}'.format(addr))
             LogStreamForwarder(sock, self._coll)
 
     @staticmethod
@@ -261,7 +261,7 @@ class LogStreamForwarder(asyncore.dispatcher):
         # Parse data
         size = struct.unpack('>L', self._hdr)[0]
         if size > 65536:
-            _log.error("Log message size ({:d}) > 64K, possibly corrupt header"
+            g_log.error("Log message size ({:d}) > 64K, possibly corrupt header"
                        ": <{}>"
                       .format(size, self._hdr))
             self._hdr = ''
@@ -272,15 +272,15 @@ class LogStreamForwarder(asyncore.dispatcher):
             chunk = chunk + self.recv(size - len(chunk))
         record = pickle.loads(chunk)
 
-        if _log.isEnabledFor(logging.DEBUG):
-            _log.debug("Got record: {}".format(record))
+        if g_log.isEnabledFor(logging.DEBUG):
+            g_log.debug("Got record: {}".format(record))
 
         try:
             self._extract_info(record)
             self._strip_logging_junk(record)
             self._fix_types(record)
         except ValueError as err:
-            _log.error("Bad input to 'handle_read': {}".format(err))
+            g_log.error("Bad input to 'handle_read': {}".format(err))
             return
 
         # Add dict to DB
@@ -362,7 +362,7 @@ def parse_args():
 
 
 def main(args):
-    global m_fwd, _log
+    global m_fwd, g_log
 
     if args.smpcfg:
         print(DBConfiguration.get_sample())
@@ -371,40 +371,40 @@ def main(args):
     for signo in CATCH_SIGNALS:
         signal.signal(signo, on_signal)
 
-    _log = logging.getLogger("log_proxy")
+    g_log = logging.getLogger("log_proxy")
     _hnd = logging.StreamHandler()
     _hnd.setFormatter(logging.Formatter(
         "%(levelname)-8s  %(asctime)s %(message)s"))
-    _log.addHandler(_hnd)
+    g_log.addHandler(_hnd)
     level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]
-    _log.setLevel(level)
+    g_log.setLevel(level)
 
     try:
         config = DBConfiguration(args.conf)
     except (IOError, ValueError, KeyError) as err:
-        _log.critical("Database configuration failed: {}".format(err))
+        g_log.critical("Database configuration failed: {}".format(err))
         return 1
 
     try:
         pconfig = ProxyConfiguration(args.conf)
     except (IOError, ValueError, KeyError) as err:
-        _log.critical("Proxy configuration failed: {}".format(err))
+        g_log.critical("Proxy configuration failed: {}".format(err))
         return 2
 
     try:
         m_fwd = LogForwarder(config, pconfig)
     except pymongo.errors.ConnectionFailure as err:
-        _log.fatal("Could not connect to MongoDB server at '{}:{:d}': {}"
+        g_log.fatal("Could not connect to MongoDB server at '{}:{:d}': {}"
                    .format(config.db_host, config.db_port, err))
         return 3
 
-    _log.info("Listening on {}:{:d}".format(pconfig.host, pconfig.port))
-    _log.info("Connected to MongoDB server at {}:{:d}"
+    g_log.info("Listening on {}:{:d}".format(pconfig.host, pconfig.port))
+    g_log.info("Connected to MongoDB server at {}:{:d}"
               .format(config.db_host, config.db_port))
 
-    _log.debug("Start main loop")
+    g_log.debug("Start main loop")
     asyncore.loop()
-    _log.debug("Stop main loop")
+    g_log.debug("Stop main loop")
 
     return 0
 

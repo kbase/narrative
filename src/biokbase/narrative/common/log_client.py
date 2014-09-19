@@ -17,7 +17,7 @@ from biokbase.narrative.common.kblogging import get_logger, reset_handlers
 from biokbase.narrative.common import log_proxy as proxy
 
 logging.basicConfig()
-_log = logging.getLogger()
+g_log = logging.getLogger()
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -39,15 +39,15 @@ class ProxyArgs:
 
 def main(args):
     level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]
-    _log.setLevel(level)
+    g_log.setLevel(level)
 
-    _log.info("Here we go")
+    g_log.info("Here we go")
 
     if args.start_proxy:
         cfg = 'db: test\ncollection: kblog\n'
         with open(ProxyArgs.conf, "w") as f:
             f.write(cfg)
-        _log.info("Starting log proxy with config:\n{}".format(cfg))
+        g_log.info("Starting log proxy with config:\n{}".format(cfg))
         pid = os.fork()
         if pid == 0:
             ProxyArgs.vb = args.vb
@@ -55,14 +55,14 @@ def main(args):
         else:
             time.sleep(2)
             reset_handlers()
-            _log.info("Sending log message")
+            g_log.info("Sending log message")
             kblog = get_logger("test")
             kblog.info("{}{}{}".format(args.event, proxy.EVENT_MSG_SEP,
                                        args.message))
             time.sleep(1)
-            _log.debug("Killing {:d}".format(pid))
+            g_log.debug("Killing {:d}".format(pid))
             os.kill(pid, signal.SIGKILL)
-            _log.info("Waiting for {:d} to stop".format(pid))
+            g_log.info("Waiting for {:d} to stop".format(pid))
             os.waitpid(pid, 0)
 
     return 0

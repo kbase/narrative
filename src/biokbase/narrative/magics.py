@@ -27,7 +27,7 @@ from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.log_proxy import EVENT_MSG_SEP
 
 # Logging
-_log = logging.getLogger(__name__)
+g_log = logging.getLogger(__name__)
 
 # Module variables for maintaining KBase Notebook state
 user_id = None
@@ -59,7 +59,7 @@ def user_msg(s):
     Adds a newline.
     Also logs it for posterity.
     """
-    _log.debug("user_msg{}len={:d}".format(
+    g_log.debug("user_msg{}len={:d}".format(
                EVENT_MSG_SEP, len(s)))
     sys.stderr.write(s + "\n")
 
@@ -300,7 +300,7 @@ class kbasemagics(Magics):
                 else:
                     return "".join(res[0])
         except Exception, e:
-            _log.error("inv_run_line msg={}".format(e))
+            g_log.error("inv_run_line msg={}".format(e))
             user_msg("Error: %s" % str(e))
             return None
         # return res[0]

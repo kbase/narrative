@@ -7,7 +7,7 @@ import biokbase
 import biokbase.workspaceServiceDeluxe
 
 
-_log = logging.getLogger(__name__)
+g_log = logging.getLogger(__name__)
 
 # regex for parsing out workspace_id and object_id from
 # a "ws.{workspace}.{object}" string
@@ -188,7 +188,7 @@ def get_user_id(wsclient):
     try:
         token = wsclient._headers.get('AUTHORIZATION', None)
         if token is None:
-            _log.error("auth.error No 'AUTHORIZATION' key found "
+            g_log.error("auth.error No 'AUTHORIZATION' key found "
                        "in client headers: '{}'"
                        .format(wsclient._headers))
             return None
@@ -198,7 +198,7 @@ def get_user_id(wsclient):
         else:
             return None
     except Exception, e:
-        _log.error("Cannot get userid: {}".format(e))
+        g_log.error("Cannot get userid: {}".format(e))
         raise e
 
 

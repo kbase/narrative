@@ -114,7 +114,7 @@ class IDServerids:
     dt_type = 'kb|dataTable'
 
 # Init logging.
-_log = logging.getLogger(__name__)
+g_log = logging.getLogger(__name__)
 
 init_service(name = NAME, desc="Variation and Expression service", version = VERSION)
 

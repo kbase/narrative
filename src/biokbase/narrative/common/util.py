@@ -29,22 +29,42 @@ class _KBaseEnv(object):
     """
     env_auth_token = "KB_AUTH_TOKEN"
     env_narrative = "KB_NARRATIVE"
+    env_session = "KB_SESSION"
+
+    @staticmethod
+    def _getenv(name):
+        return os.getenv(name, "")
+
+    @staticmethod
+    def _setenv(name, value):
+        if value:
+            os.environ[name] = value
+        elif name in os.environ:
+            del os.environ[name]
 
     @property
     def auth_token(self):
-        return os.getenv(self.env_auth_token, "")
+        return self._getenv(self.env_auth_token)
 
     @auth_token.setter
     def auth_token(self, value):
-        os.environ[self.env_auth_token] = value
+        self._setenv(self.env_auth_token, value)
 
     @property
     def narrative(self):
-        return os.getenv(self.env_narrative, "")
+        return self._getenv(self.env_narrative)
 
     @narrative.setter
     def narrative(self, value):
-        os.environ[self.env_narrative] = value
+        self._setenv(self.env_narrative, value)
+
+    @property
+    def session(self):
+        return self._getenv(self.env_session)
+
+    @session.setter
+    def session(self, value):
+        self._setenv(self.env_session, value)
 
 # Single instance
 kbase_env = _KBaseEnv()
@@ -288,7 +308,7 @@ class Workspace2(WS2):
         :raise: WorkspaceException, if command fails
         """
         if not self.has_wsid:
-            _log.error("No workspace set")
+            #_log.error("No workspace set")
             return None
         params = self._make_oid_params(objid, ver=instance)
         try:
@@ -358,9 +378,11 @@ class Workspace2(WS2):
                 result[m.encode(self.encoding)] = types
             except ServerError as err:
                 if "Module wasn't uploaded" in str(err):
-                    _log.warn("list_types: module '{}' not uploaded".format(m))
+                    pass
+                    #_log.warn("list_types: module '{}' not uploaded".format(m))
                 else:
-                    _log.error("list_types: server.error={}".format(err))
+                    #_log.error("list_types: server.error={}".format(err))
+                    pass
                 continue
         return result.values()[0] if module else result
 

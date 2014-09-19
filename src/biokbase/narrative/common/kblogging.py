@@ -21,6 +21,8 @@ from logging.handlers import SocketHandler
 import os
 import re
 import socket
+# IPython
+import IPython
 # Local
 from .util import kbase_env
 from . import log_proxy
@@ -77,27 +79,26 @@ class LogAdapter(logging.LoggerAdapter):
         self.isEnabledFor = log.isEnabledFor
 
 def _get_meta():
-    meta, empty = {}, '?'
+    meta = {}
 
-    # User
-    result, token = empty, kbase_env.auth_token
+
+    # Auth values
+    token = kbase_env.auth_token
+
     if token:
+        # User
         m = re.search('un=([^|]+)', token)
         if m is not None:
-            result = m.group(1)
-    meta['user'] = result
-
-    # Notebook name
-    result = kbase_env.narrative or empty
-    meta['narr'] = result
+            meta['user'] = m.group(1)
 
     # Session id
-    result, token = empty, kbase_env.auth_token
-    if token:
-        m = re.search('tokenid=([^|]+)', token)
-        if m is not None:
-            result = m.group(1)
-    meta['session_id'] = result
+    sess = kbase_env.session
+    if sess:
+        meta['session_id'] = sess
+
+    # Notebook name
+    if kbase_env.narrative:
+        meta['narr'] = kbase_env.narrative
 
     return meta
 
@@ -127,14 +128,14 @@ def init_handlers():
     """
     # Turn on debugging by setting environment variable KBASE_DEBUG.
     if os.environ.get("KBASE_DEBUG", None):
-        _log.setLevel(logging.DEBUG)
+        g_log.setLevel(logging.DEBUG)
     else:
-        _log.setLevel(logging.INFO)
+        g_log.setLevel(logging.INFO)
 
     # Add log handler and assoc. formatter for metadata
     hndlr = logging.FileHandler(KBASE_TMP_LOGFILE)
     hndlr.setFormatter(MetaFormatter())
-    _log.addHandler(hndlr)
+    g_log.addHandler(hndlr)
 
     # If local forwarder is available, add that one too
     has_local_forwarder = True
@@ -146,28 +147,28 @@ def init_handlers():
         sock.connect((proxy_config.host, proxy_config.port))
     except socket.error:
         has_local_forwarder = False
-        _log.debug("init_handlers local_forwarder=false")
+        g_log.debug("init_handlers local_forwarder=false")
     # If connection succeeds, add a logging.handler
     if has_local_forwarder:
-        _log.debug("init_handlers local_forwarder=true")
+        g_log.debug("init_handlers local_forwarder=true")
         sock_handler = SocketHandler(proxy_config.host,
                                      proxy_config.port)
-        _log.addHandler(sock_handler)
+        g_log.addHandler(sock_handler)
     else:
-        _log.debug("init_handlers local_forwarder=false")
+        g_log.debug("init_handlers local_forwarder=false")
 
 def reset_handlers():
     """Remove & re-add all handlers.
     """
-    while _log.handlers:
-        _log.removeHandler(_log.handlers.pop())
+    while g_log.handlers:
+        g_log.removeHandler(g_log.handlers.pop())
     init_handlers()
 
 ## Run the rest of this on import
 
 # Get root log obj.
-_log = get_logger()
+g_log = get_logger()
 
 # If no handlers, initialize them
-if not _log.handlers:
+if not g_log.handlers:
     init_handlers()

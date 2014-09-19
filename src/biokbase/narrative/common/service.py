@@ -25,7 +25,7 @@ from biokbase.narrative.common import kbtypes, kblogging
 from biokbase.narrative.common.log_proxy import EVENT_MSG_SEP
 
 # Init logging.
-_log = logging.getLogger(__name__)
+g_log = logging.getLogger(__name__)
 
 ## Globals
 

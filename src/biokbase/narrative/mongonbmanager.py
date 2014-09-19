@@ -39,7 +39,7 @@ from IPython.utils.traitlets import Unicode, Dict, Bool, List, TraitError
 # To log narrative itself
 from biokbase.narrative.common import kblogging
 
-_log = kblogging.get_logger("narrative.base")
+g_log = kblogging.get_logger("narrative.base")
 
 
 

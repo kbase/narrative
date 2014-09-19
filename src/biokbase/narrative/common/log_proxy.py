@@ -79,8 +79,8 @@ class ProxyConfiguration(Configuration):
     DEFAULT_HOST = 'localhost'
     DEFAULT_PORT = 8899
 
-    def __init__(self):
-        Configuration.__init__(self, None)
+    def __init__(self, conf):
+        Configuration.__init__(self, conf)
 
     @property
     def host(self):
@@ -205,17 +205,17 @@ class DBConfiguration(Configuration):
             '# mongodb server user/pass and database',
             'user: joeschmoe',
             'password: letmein',
-            'db: mymongodb'
+            'db: mymongodb',
+            'collection: kbaselogs'
         ]
         return '\n'.join(fields)
 
 class LogForwarder(asyncore.dispatcher):
-    def __init__(self, config):
+    def __init__(self, config, pconfig):
         asyncore.dispatcher.__init__(self)
         self._coll = self.connect_mongo(config)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
-        pconfig = ProxyConfiguration()
         self.bind((pconfig.host, pconfig.port))
         self.listen(5)
 
@@ -382,19 +382,23 @@ def main(args):
     try:
         config = DBConfiguration(args.conf)
     except (IOError, ValueError, KeyError) as err:
-        _log.critical("Configuration failed: {}".format(err))
+        _log.critical("Database configuration failed: {}".format(err))
         return 1
 
     try:
-        m_fwd = LogForwarder(config)
+        pconfig = ProxyConfiguration(args.conf)
+    except (IOError, ValueError, KeyError) as err:
+        _log.critical("Proxy configuration failed: {}".format(err))
+        return 2
+
+    try:
+        m_fwd = LogForwarder(config, pconfig)
     except pymongo.errors.ConnectionFailure as err:
         _log.fatal("Could not connect to MongoDB server at '{}:{:d}': {}"
                    .format(config.db_host, config.db_port, err))
-        return 2
+        return 3
 
-    pconfig = ProxyConfiguration(args.conf)
     _log.info("Listening on {}:{:d}".format(pconfig.host, pconfig.port))
-
     _log.info("Connected to MongoDB server at {}:{:d}"
               .format(config.db_host, config.db_port))
 

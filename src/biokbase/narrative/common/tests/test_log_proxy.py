@@ -9,7 +9,6 @@ import sys
 import time
 import unittest
 
-from biokbase.narrative.common import kblogging as kbl
 from biokbase.narrative.common import log_proxy as proxy
 
 
@@ -17,6 +16,7 @@ class MainTestCase(unittest.TestCase):
     # name of var lines up with cmdline arg 'dest', don't change
     conf = "/tmp/kbase_logforward.conf"
     vb = 0
+    smpcfg = "sample"
 
     def setUp(self):
         self._config(['db: test', 'collection: kblog'])

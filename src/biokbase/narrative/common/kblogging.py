@@ -30,6 +30,9 @@ from . import log_proxy
 KBASE_TMP_DIR = "/tmp"
 KBASE_TMP_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative.log")
 
+# env var with location of proxy config file
+KBASE_PROXY_ENV = 'KB_PROXY_CONFIG'
+
 ## Functions
 
 def get_logger(name=""):
@@ -135,7 +138,8 @@ def init_handlers():
 
     # If local forwarder is available, add that one too
     has_local_forwarder = True
-    proxy_config = log_proxy.ProxyConfiguration()
+    config_file = os.environ.get(KBASE_PROXY_ENV, None)
+    proxy_config = log_proxy.ProxyConfiguration(config_file)
     # Attempt a connection
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

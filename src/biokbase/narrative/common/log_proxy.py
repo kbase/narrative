@@ -22,6 +22,7 @@ import sys
 import yaml
 # Local
 from biokbase.narrative.common.util import parse_kvp
+from biokbase.narrative.common.url_config import URLS
 
 g_log = None #  global logger
 
@@ -90,6 +91,10 @@ class ProxyConfiguration(Configuration):
     def port(self):
         return self._obj.get('port', self.DEFAULT_PORT)
 
+class ProxyConfigurationWrapper(ProxyConfiguration):
+    def __init__(self, urls):
+        self._obj['host'] = urls.log_proxy_host
+        self._obj['port'] = urls.log_proxy_port
 
 class DBConfiguration(Configuration):
     """
@@ -385,11 +390,12 @@ def main(args):
         g_log.critical("Database configuration failed: {}".format(err))
         return 1
 
-    try:
-        pconfig = ProxyConfiguration(args.conf)
-    except (IOError, ValueError, KeyError) as err:
-        g_log.critical("Proxy configuration failed: {}".format(err))
-        return 2
+    pconfig = ProxyConfigurationWrapper(URLS)
+    #try:
+    #    pconfig = ProxyConfiguration(args.conf)
+    #except (IOError, ValueError, KeyError) as err:
+    #    g_log.critical("Proxy configuration failed: {}".format(err))
+    #    return 2
 
     try:
         m_fwd = LogForwarder(config, pconfig)

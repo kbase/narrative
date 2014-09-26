@@ -77,7 +77,7 @@ class Configuration(object):
 
 class ProxyConfiguration(Configuration):
     DEFAULT_HOST = 'localhost'
-    DEFAULT_PORT = 8899
+    DEFAULT_PORT = 32001
 
     def __init__(self, conf):
         Configuration.__init__(self, conf)

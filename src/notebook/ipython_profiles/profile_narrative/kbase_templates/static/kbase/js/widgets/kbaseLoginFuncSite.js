@@ -64,6 +64,7 @@
         },
 
         cookieName : 'kbase_session',
+        narrCookieName : 'kbase_narr_session',
 
         get_kbase_cookie : function (field) {
 
@@ -981,6 +982,7 @@
                                                            '|token=' + data.token.replace(/=/g, 'EQUALSSIGN').replace(/\|/g, 'PIPESIGN');
                                         $.cookie(this.cookieName, cookieString, { path: '/', domain: 'kbase.us', expires: 60 });
                                         $.cookie(this.cookieName, cookieString, { path: '/', expires: 60 });
+                                        $.cookie(this.narrCookieName, cookieString, { path: '/', domain: 'kbase.us', expires: 60 });
                                     }
 
 
@@ -1006,6 +1008,7 @@
                                 else {
                                     localStorage.removeItem('kbase_session');
                                     this.populateLoginInfo({});
+
                                     callback.call(this, {status : 0, message : data.error_msg});
 
                                     this.trigger('loggedInFailure', {status : 0, message : data.error_msg});
@@ -1028,6 +1031,10 @@
                                 if (errmsg == "error") {
                                     errmsg = "Error connecting to KBase login server";
                                 }
+                                else if (errmsg === "LoginFailure: Authentication failed.") {
+                                    errmsg = "Login Failed: your username/password is incorrect.";
+                                }
+
 
                                 this.populateLoginInfo({});
                                 callback.call(this,{ status : 0, message : errmsg })
@@ -1060,8 +1067,9 @@
             }
 
             localStorage.removeItem('kbase_session');
-            $.removeCookie('kbase_session', { path: '/' });
+            $.removeCookie(this.cookieName, { path: '/' });
             $.removeCookie(this.cookieName, { path: '/', domain: 'kbase.us' });
+            $.removeCookie(this.narrCookieName, { path: '/', domain: 'kbase.us' });
 
             // the rest of this is just housekeeping.
 

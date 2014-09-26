@@ -1,5 +1,6 @@
 /**
- * @author Bill Riehl <wjriehl@lbl.gov>, Roman Sutormin <rsutormin@lbl.gov>
+ * Output widget for visualization of tree object (species trees and gene trees).
+ * Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 
@@ -14,7 +15,6 @@
             treeObjVer: null,
             jobID: null,
             kbCache: null,
-            treeServiceURL: "http://dev19.berkeley.kbase.us:7047",
             workspaceURL: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
             loadingImage: "static/kbase/images/ajax-loader.gif",
             ujsServiceURL: "https://kbase.us/services/userandjobstate/",
@@ -51,7 +51,6 @@
 
         render: function() {
         	this.wsClient = new Workspace(this.options.workspaceURL, {token: this.token});
-            this.treeClient = new Tree(this.options.treeServiceURL, {token: this.token});
             this.loading(false);
             if (this.treeWsRef || this.options.jobID == null) {
             	this.loadTree();
@@ -117,13 +116,17 @@
             $.when(prom).done($.proxy(function(objArr) {
                 self.$elem.empty();
 
+                var canvasDivId = "knhx-canvas-div-" + self.pref;
                 self.canvasId = "knhx-canvas-" + self.pref;
-                self.$canvas = $('<div>')
+                self.$canvas = $('<div id="'+canvasDivId+'">')
                                .append($('<canvas id="' + self.canvasId + '">'));
+                
                 if (self.options.height) {
                     self.$canvas.css({'max-height':self.options.height, 'overflow':'scroll'});
                 }
                 self.$elem.append(self.$canvas);
+
+                watchForWidgetMaxWidthCorrection(canvasDivId);
 
             	if (!self.treeWsRef) {
             		var info = objArr[0].info;
@@ -133,20 +136,31 @@
 
                 var refToInfoMap = {};
                 var objIdentityList = [];
-                for (var key in tree.ws_refs) {
-                	objIdentityList.push({ref: tree.ws_refs[key]['g'][0]});
-                }
-                $.when(self.wsClient.get_object_info(objIdentityList)).done(function(data) {
-                	for (var i in data) {
-                		var objInfo = data[i];
-                		refToInfoMap[objIdentityList[i].ref] = objInfo;
+                if (tree.ws_refs) {
+                	for (var key in tree.ws_refs) {
+                		objIdentityList.push({ref: tree.ws_refs[key]['g'][0]});
                 	}
-                }).fail(function(err) {
-            		console.log("Error getting genomes info:");
-            		console.log(err);
-            	});
-
+                }
+                if (objIdentityList.length > 0) {
+                	$.when(self.wsClient.get_object_info(objIdentityList)).done(function(data) {
+                		for (var i in data) {
+                			var objInfo = data[i];
+                			refToInfoMap[objIdentityList[i].ref] = objInfo;
+                		}
+                	}).fail(function(err) {
+                		console.log("Error getting genomes info:");
+                		console.log(err);
+                	});
+                }
                 new EasyTree(self.canvasId, tree.tree, tree.default_node_labels, function(node) {
+                	if ((!tree.ws_refs) || (!tree.ws_refs[node.id])) {
+                		var node_name = tree.default_node_labels[node.id];
+                		if (node_name.indexOf('/') > 0) {  // Gene label
+                    		var url = "/functional-site/#/genes/" + self.options.workspaceID + "/" + node_name;
+                            window.open(url, '_blank');
+                		}
+                		return;
+                	}
                 	var ref = tree.ws_refs[node.id]['g'][0];
                 	var objInfo = refToInfoMap[ref];
                 	if (objInfo) {

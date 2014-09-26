@@ -48,19 +48,29 @@
         KB_CODE_CELL: 'kb_code',
         KB_STATE: 'widget_state',
 
+        // set up as a hash for quickie lookup time!
+        ignoredDataTypes: {
+            'string' : 1,
+            'unicode' : 1,
+            'numeric' : 1,
+            'integer' : 1,
+            'list' : 1,
+            'a number' : 1
+        },
+
         init: function(options) {
             this._super(options);
-
-            var self = this;
 
             this.ws_id = this.options.ws_id;
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
 
-            $([IPython.events]).on('notebook_loaded.Notebook', $.proxy(function() {
-                this.rebindActionButtons();
-                this.hideGeneratedCodeCells();
-            }, this));
+            $([IPython.events]).on('notebook_loaded.Notebook', 
+                $.proxy(function() {
+                    this.rebindActionButtons();
+                    this.hideGeneratedCodeCells();
+                }, this)
+            );
 
             $(document).on('workspaceUpdated.Narrative', 
                 $.proxy(function(e, ws_id) {
@@ -86,7 +96,16 @@
                 this)
             );
 
-            $(document).on('narrativeDataQuery.Narrative', $.proxy(function(e, params, callback) {
+            $(document).on('servicesUpdated.Narrative',
+                $.proxy(function(event, serviceSet) {
+                    console.log("listing services!");
+                    console.log(serviceSet);
+                },
+                this)
+            );
+
+            $(document).on('narrativeDataQuery.Narrative', 
+                $.proxy(function(e, params, callback) {
                     var objList = this.getCurrentNarrativeData();
                     if (callback) {
                         callback(objList);
@@ -98,13 +117,14 @@
             // When a user clicks on a function, this event gets fired with
             // method information. This builds a function cell out of that method
             // and inserts it in the right place.
-            $(document).on('function_clicked.Narrative', function(event, method) {
-                self.buildFunctionCell(method);
-            });
-
+            $(document).on('function_clicked.Narrative', 
+                $.proxy(function(event, method) {
+                    this.buildFunctionCell(method);
+                }, 
+                this)
+            );
 
             // Initialize the data table.
-
             this.render();
             return this;
         },
@@ -115,8 +135,6 @@
          * include a list of parameters and outputs.
          */
         buildFunctionCell: function(method) {
-//            console.debug("buildFunctionCell.start method:",method);
-
             var cell = IPython.notebook.insert_cell_below('markdown');
             // make this a function input cell, as opposed to an output cell
             this.setFunctionCell(cell, method);
@@ -423,6 +441,71 @@
         },
 
         /**
+         *
+         */
+        getCellDependencies: function(cell, paramValues) {
+            if (!this.isFunctionCell(cell))
+                return;
+
+            var data = [];
+            // get a 'handle' (really just the invocable name) of the input widget
+            var inputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
+            var params = cell.metadata[this.KB_CELL]['method'].properties.parameters;
+
+            if (!paramValues) {
+                paramValues = $(cell.element).find('#inputs')[inputWidget]('getParameters') || [];
+            }
+
+
+            // paramValues and method.properties.parameters should be parallel, but check anyway.
+            // assume that those elements between the parameters list and method's params that
+
+            var cellDeps = [];
+            var types = [];
+            var typesHash = {};
+
+            // note - it's method.parameters.param##
+            for (var i=0; i<Object.keys(params).length; i++) {
+                var pid = 'param' + i;
+                var p = params[pid];  // this is the param object itself.
+
+                /* fields: default, description, type, ui_name */
+                var type = p.type;
+                if (!this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
+                    cellDeps.push([type, paramValues[i]]);
+                    if (!typesHash[type]) {
+                        typesHash[type] = 1;
+                        types.push(type);
+                    }
+                }
+            }
+
+            // look up the deps in the data panel.
+            // Cheating for now - needs to be a synchronous call, though! There's no reason for it not to be, if the data's already loaded!
+            var objList = $('#kb-ws').kbaseWorkspaceDataDeluxe('getLoadedData', types);
+
+            // Man, now what. N^2 searching? What a drag.
+            for (var i=0; i<cellDeps.length; i++) {
+                var type = cellDeps[i][0];
+                var found = false;
+                if (objList[type] && objList[type].length > 0) {
+                    for (var j=0; j<objList[type].length; j++) {
+                        if (objList[type][j][1] === cellDeps[i][1]) {
+                            //data.push(objList[type][j]);
+                            data.push([type, 'ws.' + objList[type][j][6] + '.obj.' + objList[type][j][0]]);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found) {
+                    data.push(cellDeps[i]);
+                }
+            }
+            return data;
+        },
+
+        /**
          * Saves a cell's state into its metadata.
          * This includes marking that state with a timestamp.
          * We might need to add more stuff as well, but this is a start.
@@ -444,12 +527,12 @@
 
             if (this.isFunctionCell(cell)) {
                 widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
-                target = "#inputs";
+                target = '#inputs';
             }
             else if (this.isOutputCell(cell)) {
                 // do output widget stuff.
                 widget = cell.metadata[this.KB_CELL].widget;
-                target = "#output";
+                target = '#output';
             }
 
             try {
@@ -466,7 +549,7 @@
                 }
             }
             catch(error) {
-                this.dbg("Unable to save state for cell:");
+                this.dbg('Unable to save state for cell:');
                 this.dbg(cell);
             }
         },
@@ -588,6 +671,8 @@
                     // get the list of parameters and save the state in the cell's metadata
                     var paramList = $(cell.element).find("#inputs")[inputWidget]('getParameters');
                     self.saveCellState(cell);
+                    self.getCellDependencies(cell);
+
                     // var state = $(cell.element).find("#inputs")[inputWidget]('getState');
                     // cell.metadata[self.KB_CELL][self.KB_STATE] = state;
 
@@ -692,14 +777,24 @@
          * @private
          */
         buildRunCommand: function(service, method, params) {
+            // very nice quote-escaper found here:
+            // http://stackoverflow.com/questions/770523/escaping-strings-in-javascript
+            // and
+            // http://phpjs.org/functions/addslashes/
+            var addSlashes = function(str) {
+                return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+            };
+
+            var escService = addSlashes(service);
+            var escMethod = addSlashes(method);
             var cmd = "import biokbase.narrative.common.service as Service\n" +
-                      "method = Service.get_service('" + service + "').get_method('" + method + "')\n";
+                      "method = Service.get_service('" + escService + "').get_method('" + escMethod + "')\n";
 
-                      // THIS SHOULD ONLY BE SET AT STARTUP BY THE MAIN JAVASCRIPT!!
-                      // "import os; os.environ['KB_WORKSPACE_ID'] = '" + this.ws_id + "'\n" +
-                      // "os.environ['KB_AUTH_TOKEN'] = '" + this.ws_auth + "'\n";
-
-            var paramList = params.map(function(p) { return "'" + p + "'"; });
+            var paramList = params.map(
+                function(p) { 
+                    return "'" + addSlashes(p) + "'"; 
+                }
+            );
             cmd += "method(" + paramList + ")";
 
             return cmd;
@@ -749,7 +844,42 @@
          * @private
          */
         handleExecuteReply: function (cell, content) {
-//            console.debug("Done running the function", content);
+            // this.dbg('[handleExecuteReply]');
+            // // this.dbg(content);
+
+            // this.dbg(cell);
+            /* This catches and displays any errors that don't get piped through
+             * the back-end service.py mechanism.
+             * Any code that makes it that far gets reported through the output
+             * mechanism and ends here with an 'ok' message.
+             */
+            if (content.status === 'error') {
+                var errorBlob = {
+                    msg : content.evalue,
+                    type : content.ename,
+                };
+
+                if (cell && cell.metadata && cell.metadata['kb-cell'] &&
+                    cell.metadata['kb-cell'].method)
+                    errorBlob.method_name = cell.metadata['kb-cell'].method.title;
+
+                var removeVt = function(line) {
+                    return line.replace(/\[\d+(;\d+)?m/g, '');
+                };
+
+                var errTb = content.traceback.map(function(line) {
+                    return {
+                        filename: null,
+                        function: null,
+                        line: null,
+                        text: removeVt(line)
+                    };
+                });
+
+                errorBlob.traceback = errTb;
+                this.createErrorCell(cell, JSON.stringify(errorBlob));
+
+            }
             this.showCellProgress(cell, "DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
             $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
@@ -1153,6 +1283,11 @@
          * @returns this
          */
         render: function() {
+            var creator = IPython.notebook.metadata.creator;
+            if (creator) {// insert agnosticism here
+                $('.creator-stamp').text('Created by ' + creator);
+            }
+
             this.rebindActionButtons();
             this.hideGeneratedCodeCells();
             var cells = IPython.notebook.get_cells();
@@ -1220,14 +1355,6 @@
 
             var d = new Date(timestamp);
             var hours = format(d.getHours());
-            // var meridian = "am";
-            // if (hours >= 12) {
-            //     hours -= 12;
-            //     meridian = "pm";
-            // }
-            // if (hours === 0)
-            //     hours = 12;
-
             var minutes = format(d.getMinutes());
             var seconds = format(d.getSeconds());
             var month = d.getMonth()+1;

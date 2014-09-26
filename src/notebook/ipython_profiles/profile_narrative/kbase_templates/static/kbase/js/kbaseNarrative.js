@@ -6,6 +6,7 @@
  */
 "use strict";
 
+
 var narrative = {};
 narrative.init = function() {
     var token = null;
@@ -32,7 +33,8 @@ narrative.init = function() {
      * Go ahead and fill in the rest of the Javascript stuff.
      */
     $([IPython.events]).one('status_started.Kernel', function() {
-        IPython.notebook.set_autosave_interval(0);
+        // NAR-271 - Firefox needs to be told where the top of the page is. :P
+        window.scrollTo(0,0);
 
         var workspaceId = null;
         if (IPython && IPython.notebook && IPython.notebook.metadata) {
@@ -40,7 +42,7 @@ narrative.init = function() {
         }
 
         if (workspaceId) {
-            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objtable/' + workspaceId);
+            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + workspaceId);
             dataWidget.setWorkspace(workspaceId);
         }
 

@@ -2,7 +2,7 @@
     "config" : "dev",
 
     "dev": {
-        "cdmi" : "http://kbase.us/services/cdmi_api/",
+        "cdmi" : "https://kbase.us/services/cdmi_api/",
         "fba" : "http://kbase.us/services/fba_model_services/",
         "glamm" : "http://140.221.84.217:7040/glamm/#",
         "invocation" : "https://kbase.us/services/invocation",
@@ -23,7 +23,7 @@
     },
 
     "prod": {
-        "fba" : "http://kbase.us/services/fba_model_services/",
+        "fba" : "https://kbase.us/services/fba_model_services/",
         "invocation" : "https://kbase.us/services/invocation",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
         "protein_info" : "https://kbase.us/services/protein_info_service",
@@ -32,13 +32,13 @@
         "uploader" : "http://kbase.us/services/docs/uploader/uploader.html",
         "user_and_job_state" : "https://kbase.us/services/userandjobstate",
         "workspace" : "https://kbase.us/services/ws",
-        "ws_browser" : "https://demo.kbase.us/functional-site/#/ws",
-        "landing_pages" : "http://demo.kbase.us/functional-site/#/",
+        "ws_browser" : "https://narrative.kbase.us/functional-site/#/ws",
+        "landing_pages" : "/functional-site/#/",
         "login" : "https://kbase.us/services/authorization/Sessions/Login",
         "genomeCmp" : "https://kbase.us/services/genome_comparison/jsonrpc",
         "trees" : "https://kbase.us/services/trees"
     },
 
     "name" : "KBase Narrative",
-    "version" : "v. alpha, 7/29/2014"
+    "version" : "v. alpha, 9/25/2014"
 }

@@ -1,5 +1,6 @@
 /**
- * @author Bill Riehl <wjriehl@lbl.gov>
+ * Input widget for import NCBI genomes into workspace.
+ * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 
@@ -213,7 +214,7 @@
             var $input = $($(this.$elem).find("[name=" + pid + "]"));
             var self = this;
             
-            var request = $.getJSON('/static/kbase/js/widgets/function_input/ncbi_genome2ftp.json');            
+            var request = $.getJSON('static/kbase/js/widgets/function_input/ncbi_genome2ftp.json');            
             
             //kbws.list_referencing_objects([objectIdentity], function(data) {
             $.when(request).done(function(data) {

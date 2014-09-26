@@ -1,16 +1,13 @@
 """
 Some helper functions for workspace stuff
 """
-#-----------------------------------------------------------------------------
-# Imports
-#-----------------------------------------------------------------------------
-
-import datetime
-import dateutil.parser
-import json
+import logging
 import re
 import biokbase
 import biokbase.workspaceServiceDeluxe
+
+
+_log = logging.getLogger(__name__)
 
 # regex for parsing out workspace_id and object_id from
 # a "ws.{workspace}.{object}" string
@@ -49,7 +46,7 @@ ws_narrative_type = 'KBaseNarrative.Narrative'
 # object name for project tag
 ws_tag = { 'project' : '_project' }
 
-def get_wsobj_meta( wsclient, objtype=ws_narrative_type, ws_id=None ):
+def get_wsobj_meta(wsclient, objtype=ws_narrative_type, ws_id=None):
     """
     Takes an initialized workspace client. Defaults to searching for
     Narrative types in any workspace that the token has at least read access to.
@@ -62,12 +59,12 @@ def get_wsobj_meta( wsclient, objtype=ws_narrative_type, ws_id=None ):
     keyed on the list_ws_obj_field list above.
     """
     if ws_id is None:
-        res = wsclient.list_objects( { 'type' : objtype,
-                                       'includeMetadata' : 1} )
+        res = wsclient.list_objects({ 'type' : objtype,
+                                      'includeMetadata' : 1})
     else:
-        res = wsclient.list_objects( { 'type' : objtype,
-                                       'includeMetadata' : 1,
-                                       'ids' : [ws_id]} )
+        res = wsclient.list_objects({ 'type' : objtype,
+                                      'includeMetadata' : 1,
+                                      'ids' : [ws_id] })
     my_narratives = {}
     for obj in res:
         my_narratives["ws.%s.obj.%s" % (obj[obj_field['wsid']],obj[obj_field['objid']])] = dict(zip(list_objects_fields,obj))
@@ -79,31 +76,32 @@ def get_wsid( wsclient, workspace):
     When given a workspace name, returns the numeric ws_id
     """
     try:
-        ws_meta = wsclient.get_workspace_info( { 'workspace' : workspace});
+        ws_meta = wsclient.get_workspace_info({ 'workspace' : workspace });
     except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         if e.message.find('not found') >= 0 or e.message.find('No workspace with name') >= 0:
-            return( None)
+            return(None)
         else:
             raise e
     return( ws_meta[0])
 
-def get_wsobj( wsclient, ws_id, objtype=None):
+def get_wsobj(wsclient, ws_id, objtype=None):
     """
     This is just a wrapper for the workspace get_objects call.
 
     Takes an initialized workspace client and a workspace ID
     of the form "ws.{ws_id}.obj.{object id}" and returns the following:
-    { 'data' : {actual data contained in the object},
+    { 
+      'data' : {actual data contained in the object},
       'metadata' : { a dictionary version of the object metadata },
       ... all the fields that are normally returned in a ws ObjectData type
-      }
+    }
 
     if type is not specified then an extra lookup for object metadata
     is required, this can be shortcut by passing in the object type
     """
     match = ws_regex.match( ws_id)
     if not match:
-        raise BadWorkspaceID( "%s does not match workspace ID format ws.{workspace id}.obj.{object id}" % ws_id)
+        raise BadWorkspaceID("%s does not match workspace ID format ws.{workspace id}.obj.{object id}" % ws_id)
     ws = match.group(1)
     objid = match.group(2)
     objs = wsclient.get_objects( [dict( wsid=ws, objid=objid)])
@@ -121,8 +119,8 @@ def delete_wsobj(wsclient, wsid, objid):
     returns true on success, false otherwise
     """
     try:
-        wsclient.delete_objects( [ { 'wsid' : wsid,
-                                     'objid' : objid}])
+        wsclient.delete_objects( [{ 'wsid' : wsid,
+                                    'objid' : objid }] )
     except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         raise e
         # return False
@@ -140,19 +138,31 @@ def delete_wsobj(wsclient, wsid, objid):
 #                  boolean hidden;
 # } ObjectSaveData;
 
-def put_wsobj( wsclient, ws_id, obj):
+def rename_wsobj(wsclient, identity, new_name):
+    """
+    Given an object's identity, change that object's name.
+    """
     try:
-        ws_meta = wsclient.save_objects( { 'id' : ws_id,
-                                           'objects' : [obj]})
+        obj_info = wsclient.rename_object({ 'obj' : identity,
+                                            'new_name' : new_name })
+    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
+        raise e
+
+    return dict(zip(list_objects_fields, obj_info))
+
+def put_wsobj(wsclient, ws_id, obj):
+    try:
+        ws_meta = wsclient.save_objects({ 'id' : ws_id,
+                                          'objects' : [obj] })
     except:
         raise
     return dict(zip(list_objects_fields,ws_meta[0]))
 
 # Tag a workspace as a project, if there is an error, let it propagate up
-def check_project_tag( wsclient, ws_id):
+def check_project_tag(wsclient, ws_id):
     try:
         tag = wsclient.get_object_info( [{ 'wsid' : ws_id,
-                                           'name' : ws_tag['project']}],
+                                           'name' : ws_tag['project'] }],
                                         0);
     except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
@@ -169,22 +179,30 @@ def check_project_tag( wsclient, ws_id):
             raise e
     return True
 
+
 def get_user_id(wsclient):
-    """
-    Grab the userid from the token in the wsclient object
-    This is a pretty brittle way to do things, and will need to be changed eventually
+    """Grab the userid from the token in the wsclient object
+    This is a pretty brittle way to do things, and will need to be
+    changed, eventually.
     """
     try:
-        token = wsclient._headers.get('AUTHORIZATION',None)
+        token = wsclient._headers.get('AUTHORIZATION', None)
+        if token is None:
+            _log.error("auth.error No 'AUTHORIZATION' key found "
+                       "in client headers: '{}'"
+                       .format(wsclient._headers))
+            return None
         match = user_id_regex.match(token)
         if match:
             return match.group(1)
         else:
             return None
     except Exception, e:
+        _log.error("Cannot get userid: {}".format(e))
         raise e
 
-def check_homews( wsclient, user_id = None):
+
+def check_homews(wsclient, user_id = None):
     """
     Helper routine to make sure that the user's home workspace is built. Putting it here
     so that when/if it changes we only have a single place to change things.
@@ -205,9 +223,9 @@ def check_homews( wsclient, user_id = None):
     except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found') >= 0 or e.message.find('No workspace with name') >= 0:
-            ws_meta = wsclient.create_workspace( { 'workspace' : homews,
-                                                   'globalread' : 'n',
-                                                   'description' : 'User home workspace'})
+            ws_meta = wsclient.create_workspace({ 'workspace' : homews,
+                                                  'globalread' : 'n',
+                                                  'description' : 'User home workspace'})
         elif e.message.find('deleted') >= 0:
             wsclient.undelete_workspace( { 'workspace' : homews})
             ws_meta = wsclient.get_workspace_info( workspace_identity)

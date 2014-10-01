@@ -99,8 +99,7 @@ class KBaseWSNotebookManager(NotebookManager):
         """Verify that we can connect to the configured WS instance"""
         super(NotebookManager, self).__init__(**kwargs)
         if not self.kbasews_uri:
-            raise web.HTTPError(412,
-                                u"Missing KBase workspace service endpoint URI.")
+            raise web.HTTPError(412, u"Missing KBase workspace service endpoint URI.")
         # Verify that we can fetch list of types back to make sure the
         # configured uri is good
         try:
@@ -122,6 +121,7 @@ class KBaseWSNotebookManager(NotebookManager):
         return Workspace(self.kbasews_uri)
 
     def _clean_id(self, id):
+        """Clean any whitespace out of the given id"""
         return self.wsid_regex.sub('', id.replace(' ', '_'))
             
     def list_notebooks(self):
@@ -138,8 +138,8 @@ class KBaseWSNotebookManager(NotebookManager):
             ws_id: "%s/%s" % (all[ws_id]['workspace'],all[ws_id]['meta'].get('name',"undefined"))
             for ws_id in all.keys()
         }
-        self.rev_mapping = { self.mapping[ws_id] : ws_id for ws_id in self.mapping.keys() }
-        data = [ dict(notebook_id = it[0], name = it[1]) for it in self.mapping.items()]
+        self.rev_mapping = {self.mapping[ws_id] : ws_id for ws_id in self.mapping.keys()}
+        data = [dict(notebook_id = it[0], name = it[1]) for it in self.mapping.items()]
         data = sorted(data, key=lambda item: item['name'])
         return data
 
@@ -154,9 +154,10 @@ class KBaseWSNotebookManager(NotebookManager):
         # as a general thing for other workspaces
         wsclient = self.wsclient()
         user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
-        (homews, homews_id) = ws_util.check_homews( wsclient, user_id)
+        (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
         new_name = normalize('NFC', u"Untitled %s" % (datetime.datetime.now().strftime("%y%m%d_%H%M%S")))
         new_name = self._clean_id(new_name)
+
         # Carry over some of the metadata stuff from ShockNBManager
         try:
             nb.metadata.ws_name = os.environ.get('KB_WORKSPACE_ID', homews)
@@ -169,17 +170,19 @@ class KBaseWSNotebookManager(NotebookManager):
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
         try:
-            wsobj = { 'type' : self.ws_type,
+            wsobj = { 
+                      'type' : self.ws_type,
                       'data' : nb,
                       'provenance' : [],
                       'meta' : nb.metadata.copy(),
+                      'dependencies' : []
                     }
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
-            wsobj['meta']['data_dependencies'] = json.dumps( wsobj['meta']['data_dependencies'])
+            wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
             wsid = homews_id
             self.log.debug("calling ws_util.put_wsobj")
-            res = ws_util.put_wsobj( wsclient, wsid, wsobj)
+            res = ws_util.put_wsobj(wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
         except Exception as e:
             raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))

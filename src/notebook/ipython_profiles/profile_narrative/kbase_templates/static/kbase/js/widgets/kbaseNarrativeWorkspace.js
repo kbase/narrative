@@ -487,12 +487,14 @@
             for (var i=0; i<cellDeps.length; i++) {
                 var type = cellDeps[i][0];
                 var found = false;
-                for (var j=0; j<objList[type].length; j++) {
-                    if (objList[type][j][1] === cellDeps[i][1]) {
-                        //data.push(objList[type][j]);
-                        data.push([type, 'ws.' + objList[type][j][6] + '.obj.' + objList[type][j][0]]);
-                        found = true;
-                        break;
+                if (objList[type] && objList[type].length > 0) {
+                    for (var j=0; j<objList[type].length; j++) {
+                        if (objList[type][j][1] === cellDeps[i][1]) {
+                            //data.push(objList[type][j]);
+                            data.push([type, 'ws.' + objList[type][j][6] + '.obj.' + objList[type][j][0]]);
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 if (!found) {

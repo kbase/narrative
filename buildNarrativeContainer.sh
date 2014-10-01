@@ -4,7 +4,7 @@ DS=$( date +%Y%m%d%H )
 
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
-NAR_BASE="base1.0"
+NAR_BASE="base2.0"
 
 # For everything else to flow right, the container needs to be built from one level above the narrative directory.
 # It needs these files, so temporarily copy them outside.

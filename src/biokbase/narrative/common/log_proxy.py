@@ -93,6 +93,7 @@ class ProxyConfiguration(Configuration):
 
 class ProxyConfigurationWrapper(ProxyConfiguration):
     def __init__(self, urls):
+        ProxyConfiguration.__init__(self, None)
         self._obj['host'] = urls.log_proxy_host
         self._obj['port'] = urls.log_proxy_port
 

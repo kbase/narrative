@@ -4,8 +4,7 @@ Some helper functions for workspace stuff
 import logging
 import re
 import biokbase
-import biokbase.workspaceServiceDeluxe
-import biokbase.auth
+import biokbase.workspace
 
 
 _log = logging.getLogger(__name__)
@@ -122,7 +121,7 @@ def delete_wsobj(wsclient, wsid, objid):
     try:
         wsclient.delete_objects( [{ 'wsid' : wsid,
                                     'objid' : objid }] )
-    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
+    except biokbase.workspace.client.ServerError, e:
         raise e
         # return False
     return True
@@ -146,7 +145,7 @@ def rename_wsobj(wsclient, identity, new_name):
     try:
         obj_info = wsclient.rename_object({ 'obj' : identity,
                                             'new_name' : new_name })
-    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
+    except biokbase.workspace.client.ServerError, e:
         raise e
 
     return dict(zip(list_objects_fields, obj_info))
@@ -165,7 +164,7 @@ def check_project_tag(wsclient, ws_id):
         tag = wsclient.get_object_info( [{ 'wsid' : ws_id,
                                            'name' : ws_tag['project'] }],
                                         0);
-    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
+    except biokbase.workspace.client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found') >= 0 or e.message.find('No object with name') >= 0:
             obj_save_data = { 'name' : ws_tag['project'],
@@ -221,7 +220,7 @@ def check_homews(wsclient, user_id = None):
         homews = "%s:home" % user_id
         workspace_identity = { 'workspace' : homews }
         ws_meta = wsclient.get_workspace_info( workspace_identity)
-    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
+    except biokbase.workspace.client.ServerError, e:
         # If it is a not found error, create it, otherwise reraise
         if e.message.find('not found') >= 0 or e.message.find('No workspace with name') >= 0:
             ws_meta = wsclient.create_workspace({ 'workspace' : homews,

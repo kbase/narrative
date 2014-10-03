@@ -22,8 +22,7 @@ from collections import defaultdict
 # Local
 from biokbase.narrative.common.service import init_service, method, finalize_service
 from biokbase.narrative.common import kbtypes
-#from biokbase.workspaceService.Client import workspaceService
-from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
+from biokbase.workspace.client import Workspace as workspaceService
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.shock import Client as shockService

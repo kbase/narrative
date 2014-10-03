@@ -492,10 +492,15 @@
             // Man, now what. N^2 searching? What a drag.
             for (var i=0; i<cellDeps.length; i++) {
                 var type = cellDeps[i][0];
-                for (var j=0; j<objList[type].length; j++) {
-                    if (objList[type][j][1] === cellDeps[i][1]) {
-                        data.push(objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][4]);
-                        break;
+                var found = false;
+                if (objList[type] && objList[type].length > 0) {
+                    for (var j=0; j<objList[type].length; j++) {
+                        if (objList[type][j][1] === cellDeps[i][1]) {
+                            //data.push(objList[type][j]);
+                            data.push([type, 'ws.' + objList[type][j][6] + '.obj.' + objList[type][j][0]]);
+                            found = true;
+                            break;
+                        }
                     }
                 }
             }

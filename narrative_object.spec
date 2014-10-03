@@ -51,6 +51,18 @@ Here is an trivial example narrative doc that contains a single empty code cell
     # The Narrative component
     dependencies: [ ]
 }
+
+The most minimal Narrative object available. This is useful, for example, as a template:
+
+{
+    {
+        nbformat: 3
+        nbformat_minor: 0,
+        metadata: { },
+        worksheets: [ ]
+    },
+    dependencies: [ ]
+}
 @author wjriehl
 */
 
@@ -111,4 +123,3 @@ module KBaseNarrative {
     } Narrative;
 
 };
-

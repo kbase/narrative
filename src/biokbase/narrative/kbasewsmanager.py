@@ -11,7 +11,7 @@ Copyright (C) 2013 The Regents of the University of California
 Department of  Energy contract-operators of the Lawrence Berkeley National Laboratory
 1 Cyclotron Road, Berkeley,  CA 94720 
 
-Copyright (C) 2013  The KBase Project
+Copyright (C) 2013 The KBase Project
 
 Distributed unspecified open source license as of 9/27/2013  
 
@@ -37,7 +37,9 @@ import biokbase.narrative.ws_util as ws_util
 from biokbase.workspaceServiceDeluxe.Client import Workspace
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common import util
+import biokbase.auth
 
+t = biokbase.auth.Token()
 
 #-----------------------------------------------------------------------------
 # Classes
@@ -69,15 +71,25 @@ class KBaseWSNotebookManager(NotebookManager):
 
     Notebooks are identified with workspace identifiers of the format
     {workspace_name}.{object_name}
-    """
-    kbasews_uri = Unicode(service.URLS.workspace, config=True,
-                          help='Workspace service endpoint URI')
 
-    ipynb_type = Unicode(u'ipynb')
+    Object format:
+    (New)
+    {
+        'dependencies' : List of workspace refs,
+        'notebook' : {
+            <mostly, the IPython notebook object>,
+            'metadata' : 
+        }
+    }
+
+    """
+    kbasews_uri = Unicode(service.URLS.workspace, config=True, help='Workspace service endpoint URI')
+
+    ipynb_type = Unicode('ipynb')
     allowed_formats = List([u'json'])
     node_format = ipynb_type
-    ws_type = Unicode(ws_util.ws_narrative_type, config=True,
-                      help='Type to store narratives within workspace service')
+    ws_type = Unicode(ws_util.ws_narrative_type, config=True, help='Type to store narratives within workspace service')
+
     # regex for parsing out workspace_id and object_id from
     # a "ws.{workspace}.{object}" string
     ws_regex = re.compile('^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
@@ -100,19 +112,31 @@ class KBaseWSNotebookManager(NotebookManager):
         super(NotebookManager, self).__init__(**kwargs)
         if not self.kbasews_uri:
             raise web.HTTPError(412, u"Missing KBase workspace service endpoint URI.")
-        # Verify that we can fetch list of types back to make sure the
-        # configured uri is good
+
+        # Verify we can poke the Workspace service at that URI by just checking its
+        # version
         try:
             wsclient = self.wsclient()
-            self.all_modules = wsclient.list_modules({})
+            wsclient.ver()
         except Exception as e:
             raise web.HTTPError(500, u"Unable to connect to workspace service"
                                      u" at %s: %s " % (self.kbasews_uri, e))
+        
+        # Map Narrative ids to notebook names
         mapping = Dict()
-        # Map notebook names to notebook_ids
+        # Map notebook names to Narrative ids
         rev_mapping = Dict()
         # Setup empty hash for session object
         self.kbase_session = {}
+
+    def get_userid(self):
+        """Return the current user id (if logged in), or None
+        """
+        t = biokbase.auth.Token()
+        if (t is not None):
+            return self.kbase_session.get('user_id', t.user_id)
+        else:
+            return self.kbase_session.get('user_id', None)
 
     def wsclient(self):
         """Return a workspace client object for the workspace
@@ -129,10 +153,10 @@ class KBaseWSNotebookManager(NotebookManager):
         For the ID field, we use "{ws_id}.{obj_id}"
         The obj_id field is sanitized version of document.ipynb.metadata.name
         """
-        self.log.debug("listing Narratives.")
+        self.log.debug("Listing Narratives")
         self.log.debug("kbase_session = %s" % str(self.kbase_session))
         wsclient = self.wsclient()
-        all = ws_util.get_wsobj_meta( wsclient)
+        all = ws_util.get_wsobj_meta(wsclient)
 
         self.mapping = {
             ws_id: "%s/%s" % (all[ws_id]['workspace'],all[ws_id]['meta'].get('name',"undefined"))
@@ -148,17 +172,25 @@ class KBaseWSNotebookManager(NotebookManager):
         Create an empty notebook and push it into the workspace without an object_id
         or name, so that the WSS generates a new object ID for us. Then return
         that.
+
+        This will likely only be called as a developer tool from http://<base url>/narrative
+        or from starting up locally.
         """
-        nb = current.new_notebook()
+        wsclient = self.wsclient()
+        user_id = self.get_userid()
+
         # Verify that our own home workspace exists, note that we aren't doing this
         # as a general thing for other workspaces
-        wsclient = self.wsclient()
-        user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
+        #
+        # This is needed for running locally - a workspace is required.
         (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
+
+        # Have IPython create a new, empty notebook
+        nb = current.new_notebook()
         new_name = normalize('NFC', u"Untitled %s" % (datetime.datetime.now().strftime("%y%m%d_%H%M%S")))
         new_name = self._clean_id(new_name)
 
-        # Carry over some of the metadata stuff from ShockNBManager
+        # Add in basic metadata to the ipynb object
         try:
             nb.metadata.ws_name = os.environ.get('KB_WORKSPACE_ID', homews)
             nb.metadata.creator = user_id
@@ -197,7 +229,7 @@ class KBaseWSNotebookManager(NotebookManager):
         """Delete a notebook's id in the mapping."""
         self.log.debug("delete_notebook_id(%s)"%(notebook_id))
         wsclient = self.wsclient()
-        user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
+        user_id = self.get_userid()
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine valid user identity!')
         name = self.mapping[notebook_id]
@@ -206,7 +238,7 @@ class KBaseWSNotebookManager(NotebookManager):
     def notebook_exists(self, notebook_id):
         """Does a notebook exist?"""
         wsclient = self.wsclient()
-        user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
+        user_id = self.get_userid()
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine valid user identity!')
         exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
@@ -242,7 +274,7 @@ class KBaseWSNotebookManager(NotebookManager):
 
         self.log.debug("reading Narrative %s." % notebook_id)
         wsclient = self.wsclient()
-        user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
+        user_id = self.get_userid()
         if user_id is None:
             raise web.HTTPError(400, u'Missing user identity from kbase_session object')
         try:
@@ -313,8 +345,7 @@ class KBaseWSNotebookManager(NotebookManager):
         """Save an existing notebook object by notebook_id."""
         self.log.debug("writing Narrative %s." % notebook_id)
         wsclient = self.wsclient()
-        user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
-
+        user_id = self.get_userid()
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine user identity from '
                                      u'session information')
@@ -404,7 +435,7 @@ class KBaseWSNotebookManager(NotebookManager):
         """Delete notebook by notebook_id."""
         self.log.debug("deleting Narrative %s" % notebook_id)
         wsclient = self.wsclient()
-        user_id = self.kbase_session.get('user_id', ws_util.get_user_id(wsclient))
+        user_id = self.get_userid()
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine user identity from session information')
         if notebook_id is None:
@@ -450,13 +481,11 @@ class KBaseWSNotebookManager(NotebookManager):
         pass
 
     def log_info(self):
-        #self.log.info("Serving notebooks from MongoDB URI %s" %self.mongodb_uri)
-        #self.log.info("Serving notebooks from MongoDB db %s" %self.mongodb_database)
-        #self.log.info("Serving notebooks from MongoDB collection %s" %self.mongodb_collection)
+        self.log.info("Service Narratives from the KBase Workspace service")
         pass
 
     def info_string(self):
-        return "Workspace Notebook Service with workspace endpoint at %s" % self.kbasews_uri
+        return "Workspace Narrative Service with workspace endpoint at %s" % self.kbasews_uri
 
 #
 # This is code that patches the regular expressions used in the default routes
@@ -481,12 +510,12 @@ def handler_route_replace(handlers,oldre,newre):
 # Patch the url regex to match our workspace identifiers
 import IPython.html.base.handlers
 
-tgt_handlers = ( 'IPython.html.notebook.handlers',
-                 'IPython.html.services.notebooks.handlers' )
+tgt_handlers = ('IPython.html.notebook.handlers',
+                'IPython.html.services.notebooks.handlers')
 for handlerstr in tgt_handlers:
     IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
     handler = importlib.import_module(handlerstr)
-    handler_route_replace( handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')
+    handler_route_replace(handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')
 
 # Load the plupload handler
 import upload_handler

@@ -62,7 +62,7 @@ nexusconfig = { 'cache' : { 'class': 'biokbase.nexus.token_utils.InMemoryCache',
                 'client' : None,
                 'client_secret' : None}
 # Compile a regex for parsing out user_id's from tokens
-token_userid = re.compile( '(?<=^un=)\w+')
+token_userid = re.compile('(?<=^un=)\w+')
 
 def LoadConfig():
     """

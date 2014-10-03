@@ -34,7 +34,7 @@ from IPython.utils.traitlets import Unicode, Dict, Bool, List, TraitError
 from IPython.utils import tz
 # Local
 import biokbase.narrative.ws_util as ws_util
-from biokbase.workspaceServiceDeluxe.Client import Workspace
+from biokbase.workspace.client import Workspace
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common import util
 

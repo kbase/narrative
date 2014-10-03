@@ -17,8 +17,7 @@ import sys
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import init_service, method, finalize_service
-#from biokbase.workspaceService.Client import workspaceService
-from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
+from biokbase.workspace.client import Workspace as workspaceService
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.fbaModelServices.Client import fbaModelServices
 from biokbase.GenomeComparison.Client import GenomeComparison

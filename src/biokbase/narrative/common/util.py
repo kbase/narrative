@@ -11,8 +11,8 @@ import re
 import requests
 from setuptools import Command
 import time
-from biokbase.workspaceServiceDeluxe.Client import Workspace as WS2
-from biokbase.workspaceServiceDeluxe.Client import ServerError, URLError
+from biokbase.workspace.client import Workspace as WS2
+from biokbase.workspace.client import ServerError, URLError
 
 
 class _KBaseEnv(object):

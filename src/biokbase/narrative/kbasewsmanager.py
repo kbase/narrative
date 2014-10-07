@@ -39,8 +39,6 @@ import biokbase.narrative.common.service as service
 from biokbase.narrative.common import util
 import biokbase.auth
 
-t = biokbase.auth.Token()
-
 #-----------------------------------------------------------------------------
 # Classes
 #-----------------------------------------------------------------------------

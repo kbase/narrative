@@ -421,7 +421,6 @@ class KBaseWSNotebookManager(NotebookManager):
                 wsobj['name'] = new_name
 
             self.log.debug("calling ws_util.put_wsobj")
-            print json.dumps(wsobj)
             res = ws_util.put_wsobj(wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
 

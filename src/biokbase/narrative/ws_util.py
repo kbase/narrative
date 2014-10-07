@@ -232,7 +232,7 @@ def check_homews(wsclient, user_id = None):
         else:
             raise e
     if ws_meta:
-        check_project_tag( wsclient, ws_meta[0])
+        # check_project_tag(wsclient, ws_meta[0])
         # return the textual name and the numeric ws_id
         return ws_meta[1],ws_meta[0]
     else:

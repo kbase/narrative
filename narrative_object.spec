@@ -76,13 +76,6 @@ module KBaseNarrative {
     typedef string dependency;
 
     /*
-    Metadata currently consists of just a simple description string.
-    */
-    typedef structure {
-        string description;
-    } Metadata;
-
-    /*
     A Notebook Cell is specified by a string declaring its type, and an unspecified
     metadata field. That metadata object contains state and runtime information that
     might not always have the same format, but is required.
@@ -101,25 +94,34 @@ module KBaseNarrative {
     } Worksheet;
 
     /*
-    This represents the IPython Notebook as a KBase typed object.
-    Any additional fields are embedded into the Narrative object that encapsulates
-    this Notebook.
+    A set of (mostly optional) metadata that needs to be included as part of the 
+    Narrative object. The data_dependencies list is required, but can be empty.
+    @optional creator
+    @optional format
+    @optional name
+    @optional type
+    @optional ws_name
+    */
+    typedef structure {
+        string description;
+        list<dependency> data_dependencies;
+        string creator;
+        string format;
+        string name;
+        string type;
+        string ws_name;
+    } Metadata;
+
+    /*
+    This represents the IPython Notebook translated into a KBase Narrative typed object.
+    For the IPython-savvy, all of the KBase-specific additions are included as 
+    modifications to the metadata fields of the Narrative (was Notebook), Worksheet,
+    or Cell objects.
     */
     typedef structure {
         int nbformat;
         int nbformat_minor;
         list<Worksheet> worksheets;
-        UnspecifiedObject metadata;
-    } Notebook;
-
-    /*
-    The Narrative typed object effectively wraps the IPython Notebook with other
-    KBase requirements. Currently, this is only a list of data references, but 
-    may grow over time.
-    */
-    typedef structure {
-        Notebook notebook;
-        list<dependency> dependencies;
+        Metadata metadata;
     } Narrative;
-
 };

@@ -207,11 +207,7 @@ class KBaseWSNotebookManager(NotebookManager):
                       'data' : nb,
                       'provenance' : [],
                       'meta' : nb.metadata.copy(),
-                      'dependencies' : []
                     }
-            # We flatten the data_dependencies array into a json string so that the
-            # workspace service will accept it
-            wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
             wsid = homews_id
             self.log.debug("calling ws_util.put_wsobj")
             res = ws_util.put_wsobj(wsclient, wsid, wsobj)
@@ -224,11 +220,9 @@ class KBaseWSNotebookManager(NotebookManager):
         util.kbase_env.narrative = id
         return id
 
-
     def delete_notebook_id(self, notebook_id):
         """Delete a notebook's id in the mapping."""
         self.log.debug("delete_notebook_id(%s)"%(notebook_id))
-        wsclient = self.wsclient()
         user_id = self.get_userid()
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine valid user identity!')
@@ -236,11 +230,15 @@ class KBaseWSNotebookManager(NotebookManager):
         super(KBaseWSNotebookManager, self).delete_notebook_id(notebook_id)
 
     def notebook_exists(self, notebook_id):
-        """Does a notebook exist?"""
-        wsclient = self.wsclient()
+        """Does a Narrative with notebook_id exist?
+
+        Returns True if a Narrative with id notebook_id (format = ws.XXX.obj.YYY) exists,
+        and returns False otherwise.
+        """
         user_id = self.get_userid()
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine valid user identity!')
+        # Look for it in the currently loaded map
         exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
         self.log.debug("notebook_exists(%s) = %s"%(notebook_id,exists))
         if not exists:
@@ -251,8 +249,7 @@ class KBaseWSNotebookManager(NotebookManager):
             if not m:
                 return False
             self.log.debug("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
-            objmeta = ws_util.get_wsobj_meta( self.wsclient(), ws_id=m.group('wsid'))
-            self.log.debug("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
+            objmeta = ws_util.get_wsobj_meta(self.wsclient(), ws_id=m.group('wsid'))
             if notebook_id in objmeta:
                 self.mapping[notebook_id] = notebook_id
                 return True
@@ -262,18 +259,28 @@ class KBaseWSNotebookManager(NotebookManager):
     
     def get_name(self, notebook_id):
         """get a notebook name, raising 404 if not found"""
+        self.log.debug("Checking for name of Narrative %s")
         try:
             name = self.mapping[notebook_id]
+            self.log.debug("get_name(%s) = %s" % (notebook_id, name))
         except KeyError:
             raise web.HTTPError(404, u'Narrative does not exist: %s' % notebook_id)
-        self.log.debug("get_name(%s) = %s"%(notebook_id, name))
         return name
 
     def read_notebook_object(self, notebook_id):
-        """Get the Notebook representation of a notebook by notebook_id."""
+        """Get the Notebook representation of a notebook by notebook_id.
 
-        self.log.debug("reading Narrative %s." % notebook_id)
-        wsclient = self.wsclient()
+        There are now new and legacy versions of Narratives that need to be handled.
+        The old version just included the Notebook object as the Narrative object, 
+        with an optional Metadata field.
+
+        The new version has a slightly more structured Metadata field, with a
+        required data_dependencies array.
+
+        This really shouldn't affect reading the object much, but should be kept
+        in mind.
+        """
+        self.log.debug("Reading Narrative %s." % notebook_id)
         user_id = self.get_userid()
         if user_id is None:
             raise web.HTTPError(400, u'Missing user identity from kbase_session object')
@@ -281,9 +288,13 @@ class KBaseWSNotebookManager(NotebookManager):
             wsobj = ws_util.get_wsobj(self.wsclient(), notebook_id, self.ws_type)
         except ws_util.BadWorkspaceID, e:
             raise web.HTTPError(500, u'Narrative %s not found: %s' % (notebook_id, e))
-        jsonnb = json.dumps(wsobj['data'])
 
-        #self.log.debug("jsonnb = %s" % jsonnb)
+        if 'notebook' in wsobj['data']:
+            #
+            jsonnb = json.dumps['data']['notebook']
+        else:
+            jsonnb = json.dumps(wsobj['data'])
+
         nb = current.reads(jsonnb, u'json')
 
         # Set the notebook metadata workspace to the workspace this came from
@@ -391,6 +402,7 @@ class KBaseWSNotebookManager(NotebookManager):
                     }
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
+            # (not anymore! now it's an explicit field in the notebook metadata --WJR, 10/6/2014)
             wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
 
             # If we're given a notebook id, try to parse it for the save parameters
@@ -417,7 +429,6 @@ class KBaseWSNotebookManager(NotebookManager):
 
             # Now that we've saved the object, if its Narrative name (new_name) has changed,
             # update that in the Workspace
-
             if (res['name'] != new_name):
                 identity = { 'wsid' : res['wsid'], 'objid' : res['objid'] }
                 res = ws_util.rename_wsobj(wsclient, identity, new_name)
@@ -446,7 +457,7 @@ class KBaseWSNotebookManager(NotebookManager):
             res = ws_util.delete_wsobj(wsclient, m.group('wsid'),m.group('objid'))
             self.log.debug("delete object result: %s" % res)
         else:
-            raise ws_util.BadWorkspaceID( notebook_id)
+            raise ws_util.BadWorkspaceID(notebook_id)
         self.delete_notebook_id(notebook_id)
 
     # public checkpoint API

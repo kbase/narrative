@@ -398,10 +398,10 @@
             $('#menubar-container').css({'left': '10px'});
             // Disable text fields
             console.debug("readonly: Disable text fields");
-            $(".kb-cell-params input").attr('disabled', 'disabled');
-            // Disable internal buttons too
+            $(".cell input").attr('disabled', 'disabled');
+            // Disable buttons
             console.debug("readonly: Disable internal buttons");
-            $(".kb-cell-params button").attr('disabled', 'disabled');
+            $(".cell button").hide(); //attr('disabled', 'disabled');
             // Hide save/checkpoint status
             $('#autosave_status').text("(read-only)");
             $('#checkpoint_status').hide();
@@ -419,6 +419,8 @@
                         'margin-left': '5em'});
             e = $('#menubar').append(button);
             this.bindCopyButton($('#' + narr_copy_id));
+            console.debug("Fading back in after activating RO mode");
+            $('#main-container').show();
         },
 
         /**

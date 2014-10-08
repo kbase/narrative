@@ -20,9 +20,12 @@ narrative.init = function() {
         versionStr = window.kbconfig.name + '<br>' + window.kbconfig.version;
     $('.version-stamp').empty().html(versionStr);
 
-    var dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
-    dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+    /*
+     * Before we get everything loading, just grey out the whole %^! page
+     */
+     $('#main-container').hide();
 
+    var dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();    
     var functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
     functionWidget.refreshAJAX();
 

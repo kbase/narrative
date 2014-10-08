@@ -191,14 +191,23 @@
          * Test if this narrative is in a workspace that this user is not
          * able to modify.
          */
-        isReadonlyWorkspace: function (ws_client, ws_name) {
-            var info = ws_client.get_workspace_info({'name': ws_name});
-            var perms = info.user_permission;
-            var ro = (perms != 'a' && perms != 'w');
-            console.info("WS(" + ws_name + ") read-only: " + ro);
-            return ro;
+        isReadonlyWorkspace: function (ws_client, ws_name, callback) {
+            var workspace_id = {workspace: ws_name};
+            ws_client.get_workspace_info(workspace_id,
+                // success callback
+                $.proxy(function(info) {
+                    var perms = info[6];
+                    console.debug("workspace perms = ",perms);
+                    ro = (perms != 'a' && perms != 'w');
+                    console.info("WS(" + ws_name + ") read-only: " + ro);
+                    callback(ro);
+                }, this),
+                // error callback
+                $.proxy(function(obj) {
+                    console.debug("isReadonlyWorkspace: error!", obj);
+                    callback(false);
+                }, this));
         },
-
 
         /**
          * @method createStructure
@@ -454,15 +463,19 @@
             console.debug("kbWS.refresh.start");
             if (this.wsClient && this.wsId) {
                 console.debug("kbWS.refresh.test-for-readonly");
-                if (this.isReadonlyWorkspace(this.wsClient, this.wsId)) {
-                    // hide in readonly mode
-                    this.deactivateDataPanel();
-                    // tell parent to hide as well
-                    this.narrWs.activateReadonlyMode();
-                    console.debug("kbWS.refresh.end msg=readonly");
-                    return;
-                }
-                console.debug("kbWS.refresh msg=not-readonly");
+                this.isReadonlyWorkspace(this.wsClient, this.wsId, 
+                    $.proxy(function(ro) {
+                        if (ro) {
+                            console.debug("kbWS.refresh.test-for-readonly RO");
+                            // hide in readonly mode
+                            this.deactivateDataPanel();
+                            // tell parent to hide as well
+                            this.narrWs.activateReadonlyMode();
+                        }
+                        else {
+                            console.debug("kbWS.refresh.test-for-readonly R/W");
+                        }
+                    }, this));
             }
 
             if (!this.wsClient) {

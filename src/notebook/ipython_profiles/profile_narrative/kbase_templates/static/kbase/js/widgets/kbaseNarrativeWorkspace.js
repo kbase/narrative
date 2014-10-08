@@ -157,9 +157,16 @@
                 var inputDiv = "<div id='inputs'></div>";
 
                 // These are the 'delete' and 'run' buttons for the cell
-                var buttons = "<div class='buttons pull-right'>" + //style='margin-top:10px'>" +
-                                  "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default btn-sm'>Delete</button> " +
-                                  "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary btn-sm'>Run</button>" + 
+                var button_content;
+                if (this.readonly) {
+                    button_content = "";
+                }
+                else {
+                    button_content = "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default btn-sm'>Delete</button> " +
+                                     "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary btn-sm'>Run</button>";
+                                     //style='margin-top:10px'>" +
+                }
+                var buttons = "<div class='buttons pull-right'>" + button_content +
                               "</div>";
 
                 // The progress bar remains hidden until invoked by running the cell
@@ -369,6 +376,56 @@
                 $(cell.element).find(".buttons [id*=run]").off('click');
                 $(cell.element).find(".buttons [id*=run]").click(this.bindRunButton());
             }
+        },
+
+        /**
+         * Set narrative into read-only mode.
+         */
+        activateReadonlyMode: function() {
+            // Hide delete and run buttons
+            cells = IPython.notebook.get_cells();
+            cells.forEach(function(cell) {
+               ['delete', 'run'].forEach(function (e) {
+                    $(this.element).find(".buttons [id*=" + e + "]").hide();
+                }, cell);
+            });
+            // Delete left-side panel!
+            $('#left-column').detach(); //hide();
+            // Hide IPython toolbar
+            $('#maintoolbar').hide();
+            // Move content panels to the left
+            $('#ipython-main-app').css({'left': '10px'});
+            $('#menubar-container').css({'left': '10px'});
+            // Disable text fields
+            console.debug("readonly: Disable text fields");
+            $(".kb-cell-params input").attr('disabled', 'disabled');
+            // Disable internal buttons too
+            console.debug("readonly: Disable internal buttons");
+            $(".kb-cell-params button").attr('disabled', 'disabled');
+            // Hide save/checkpoint status
+            $('#autosave_status').text("(read-only)");
+            $('#checkpoint_status').hide();
+            // Add 'Copy' button after narrative title
+            var narr_copy_id = "narr-copy";
+            var button = $('<button type="button" ' +
+                           'class="btn btn-success" ' +
+                           'id="'  + narr_copy_id + '">' + 
+                           'Copy' +
+                           '</button>');
+            button.css({'line-height': '1em',
+                        'margin-top': '-15px',
+                        'margin-left': '5em'});
+            e = $('#menubar').append(button);
+            this.bindCopyButton($('#' + narr_copy_id));
+        },
+
+        /**
+         * Bind the 'Copy narrative' button to 
+         * a function that copies the narrative.
+         */
+        bindCopyButton: function(element) {
+            // XXX: Do something
+            return;
         },
 
         /**

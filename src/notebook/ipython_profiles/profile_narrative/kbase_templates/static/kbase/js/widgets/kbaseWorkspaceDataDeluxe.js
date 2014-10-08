@@ -26,6 +26,7 @@
         $errorMessage: null,
         $loading: null,
         isLoggedIn: false,
+        narrWs: null, /* see setNarrWS */
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
@@ -46,6 +47,7 @@
 
         init: function(options) {
             this._super(options);
+
             if (this.options.wsId)
                 this.wsId = options.wsId;
 
@@ -170,7 +172,33 @@
 
         setWorkspace: function(wsId) {
             this.wsId = wsId;
+            this.refresh();
         },
+
+        /**
+         * Set the narrative workspace (parent) into the data widget
+         * so it can call back to it about information discovered
+         * from the workspace, e.g. permissions to objects in the
+         * narrative for read-only mode.
+         *
+         * @param obj kbaseNarrativeWorkspace instance
+         */
+        setNarrWs: function(obj) {
+            this.narrWs = obj;
+        },
+
+        /**
+         * Test if this narrative is in a workspace that this user is not
+         * able to modify.
+         */
+        isReadonlyWorkspace: function (ws_client, ws_name) {
+            var info = ws_client.get_workspace_info({'name': ws_name});
+            var perms = info.user_permission;
+            var ro = (perms != 'a' && perms != 'w');
+            console.info("WS(" + ws_name + ") read-only: " + ro);
+            return ro;
+        },
+
 
         /**
          * @method createStructure
@@ -423,20 +451,34 @@
          * @public
          */
         refresh: function() {
+            console.debug("kbWS.refresh.start");
+            if (this.wsClient && this.wsId) {
+                console.debug("kbWS.refresh.test-for-readonly");
+                if (this.isReadonlyWorkspace(this.wsClient, this.wsId)) {
+                    // hide in readonly mode
+                    this.deactivateDataPanel();
+                    // tell parent to hide as well
+                    this.narrWs.activateReadonlyMode();
+                    console.debug("kbWS.refresh.end msg=readonly");
+                    return;
+                }
+                console.debug("kbWS.refresh msg=not-readonly");
+            }
+
             if (!this.wsClient) {
                 this.showLoadingMessage("Unable to load workspace data!<br>No user credentials found!");
+                console.debug("kbWS.refresh.end msg=no-client");
                 return;
             }
             else if (!this.wsId) {
-                return; // silent for testing.
+                console.debug("kbWS.refresh.end msg=no-wsId");
             }
 
             this.showLoadingMessage("Loading workspace data...");
             // Fetch data from the current workspace.
-            this.wsClient.list_objects( 
-                {
+            this.wsClient.list_objects({
                     workspaces : [this.wsId],
-                }, 
+                },
                 $.proxy(function(list) {
                     // first, go through the list and pull out Narrative objects.
                     // otherwise it's a little recursive. Including a Narrative within its narrative 
@@ -780,6 +822,19 @@
         showDataPanel: function() {
             this.$loadingPanel.hide();
             this.$errorPanel.hide();
+            this.$dataPanel.show();
+        },
+
+        /**
+         * Shows data panel, but does not allow clicks on it.
+         *
+         * @param error
+         */
+        deactivateDataPanel: function() {
+            this.$loadingPanel.find('#message').empty();
+            this.$loadingPanel.hide();
+            this.$errorPanel.hide();
+            //this.$dataPanel.find('a').off();
             this.$dataPanel.show();
         },
 

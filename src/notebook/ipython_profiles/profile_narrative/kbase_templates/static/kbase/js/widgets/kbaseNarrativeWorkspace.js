@@ -409,9 +409,11 @@
             var narr_copy_id = "narr-copy";
             var button = $('<button type="button" ' +
                            'class="btn btn-success" ' +
-                           'id="'  + narr_copy_id + '">' + 
-                           'Copy' +
-                           '</button>');
+                           'id="'  + narr_copy_id + '" ' +
+                           'data-toggle="tooltip" ' +
+                           'title="Copy this narrative to a workspace ' +
+                           'where you can modify and run it" ' +
+                           '>Copy</button>');
             button.css({'line-height': '1em',
                         'margin-top': '-15px',
                         'margin-left': '5em'});

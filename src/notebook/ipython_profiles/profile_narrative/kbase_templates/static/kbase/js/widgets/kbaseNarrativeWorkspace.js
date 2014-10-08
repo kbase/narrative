@@ -401,7 +401,7 @@
             $(".cell input").attr('disabled', 'disabled');
             // Disable buttons
             console.debug("readonly: Disable internal buttons");
-            $(".cell button").hide(); //attr('disabled', 'disabled');
+            $(".cell button").hide();  //attr('disabled', 'disabled');
             // Hide save/checkpoint status
             $('#autosave_status').text("(read-only)");
             $('#checkpoint_status').hide();

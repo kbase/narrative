@@ -304,51 +304,51 @@ class KBaseWSNotebookManager(NotebookManager):
         util.kbase_env.narrative = notebook_id
         return last_modified, nb
 
-    def extract_data_dependencies(self, nb):
-        """
-        This is an internal method that parses out the cells in the notebook nb
-        and returns an array of type:value parameters based on the form input
-        specification and the values entered by the user.
+    # def extract_data_dependencies(self, nb):
+    #     """
+    #     This is an internal method that parses out the cells in the notebook nb
+    #     and returns an array of type:value parameters based on the form input
+    #     specification and the values entered by the user.
 
-        I the cell metadata, we look under:
-        kb-cell.method.properties.parameters.paramN.type
+    #     I the cell metadata, we look under:
+    #     kb-cell.method.properties.parameters.paramN.type
 
-        for anything that isn't a string or numeric, and we combine that type with
-        the corresponding value found under 
-        kb-cell.widget_state[0].state.paramN
+    #     for anything that isn't a string or numeric, and we combine that type with
+    #     the corresponding value found under 
+    #     kb-cell.widget_state[0].state.paramN
 
-        We create an array of type:value pairs from the params and return that
-        """
-        # set of types that we ignore
-        ignore = set(['string','Unicode','Numeric','Integer','List','a number'])
-        deps = set()
-        # What default workspace are we going to use?
-        ws = os.environ.get('KB_WORKSPACE_ID',nb.metadata.ws_name)
-        for wksheet in nb.get('worksheets'):
-            for cell in wksheet.get('cells'):
-                try:
-                    allparams = cell['metadata']['kb-cell']['method']['properties']['parameters']
-                except KeyError:
-                    continue
-                params = [param for param in allparams.keys() if allparams[param]['type'] not in ignore]
-                try:
-                    paramvals = cell['metadata']['kb-cell']['widget_state'][0]['state']
-                except KeyError:
-                    continue
-                for param in params:
-                    try:
-                        paramval = paramvals[param]
-                        # Is this a fully qualified workspace name?
-                        if (self.ws_regex.match(paramval) or
-                            self.ws_regex2.match(paramval) or
-                            self.kbid_regex.match(paramval)):
-                            dep = "%s %s" % (allparams[param]['type'], paramval)
-                        else:
-                            dep = "%s %s" % (allparams[param]['type'], paramval)
-                        deps.add(dep)
-                    except KeyError:
-                        continue
-        return list(deps)
+    #     We create an array of type:value pairs from the params and return that
+    #     """
+    #     # set of types that we ignore
+    #     ignore = set(['string','Unicode','Numeric','Integer','List','a number'])
+    #     deps = set()
+    #     # What default workspace are we going to use?
+    #     ws = os.environ.get('KB_WORKSPACE_ID',nb.metadata.ws_name)
+    #     for wksheet in nb.get('worksheets'):
+    #         for cell in wksheet.get('cells'):
+    #             try:
+    #                 allparams = cell['metadata']['kb-cell']['method']['properties']['parameters']
+    #             except KeyError:
+    #                 continue
+    #             params = [param for param in allparams.keys() if allparams[param]['type'] not in ignore]
+    #             try:
+    #                 paramvals = cell['metadata']['kb-cell']['widget_state'][0]['state']
+    #             except KeyError:
+    #                 continue
+    #             for param in params:
+    #                 try:
+    #                     paramval = paramvals[param]
+    #                     # Is this a fully qualified workspace name?
+    #                     if (self.ws_regex.match(paramval) or
+    #                         self.ws_regex2.match(paramval) or
+    #                         self.kbid_regex.match(paramval)):
+    #                         dep = "%s %s" % (allparams[param]['type'], paramval)
+    #                     else:
+    #                         dep = "%s %s" % (allparams[param]['type'], paramval)
+    #                     deps.add(dep)
+    #                 except KeyError:
+    #                     continue
+    #     return list(deps)
 
     def write_notebook_object(self, nb, notebook_id=None):
         """Save an existing notebook object by notebook_id."""
@@ -377,12 +377,11 @@ class KBaseWSNotebookManager(NotebookManager):
                 nb.metadata.type = self.ws_type
             if not hasattr(nb.metadata, 'description'):
                 nb.metadata.description = ''
-            # These are now stores on the front end explicitly as a list of object references
-            # nb.metadata.data_dependencies = self.extract_data_dependencies(nb)
+            # These are now stored on the front end explicitly as a list of object references
+            # This gets auto-updated on the front end, and is easier to manage.
             if not hasattr(nb.metadata, 'data_dependencies'):
                 nb.metadata.data_dependencies = list()
             nb.metadata.format = self.node_format
-            nb.dependencies = nb.metadata.data_dependencies
 
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
@@ -400,7 +399,6 @@ class KBaseWSNotebookManager(NotebookManager):
                     }
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
-            # (not anymore! now it's an explicit field in the notebook metadata --WJR, 10/6/2014)
             wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
 
             # If we're given a notebook id, try to parse it for the save parameters

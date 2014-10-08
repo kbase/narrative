@@ -87,10 +87,14 @@
                         // to track when some event occurred.
                         // So, dirty bit it is.
                         this.refreshFunctionInputs(!this.inputsRendered);
-                        if (!this.inputsRendered)
+                        if (!this.inputsRendered) {
                             this.loadAllRecentCellStates();
+                            this.updateNarrativeDependencies();
+                            // temp hack until I think of something better.
+                            this.trigger('updateNarrativeDataTab.Narrative');
+                        }
+
                         this.inputsRendered = true;
-                        this.updateNarrativeDependencies();
                     }
                 },
                 this)
@@ -99,13 +103,12 @@
             $(document).on('servicesUpdated.Narrative',
                 $.proxy(function(event, serviceSet) {
                     console.log("listing services!");
-                    console.log(serviceSet);
                 },
                 this)
             );
 
             $(document).on('narrativeDataQuery.Narrative', 
-                $.proxy(function(e, params, callback) {
+                $.proxy(function(e, callback) {
                     var objList = this.getNarrativeDependencies();
                     if (callback) {
                         callback(objList);
@@ -1294,6 +1297,8 @@
                 this.checkCellMetadata(cells[i]);
             }
             this.loadAllRecentCellStates();
+            // Check for older version of data dependencies
+            // update them if necessary.
             this.trigger('updateData.Narrative');
             return this;
         },

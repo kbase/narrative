@@ -103,6 +103,13 @@
                 this)
             );
 
+            $(document).on(
+                'updateNarrativeDataTab.Narrative', $.proxy(function(e) {
+                    this.refreshNarrativeTab();
+                },
+                this)
+            );
+
             /**
              * Get the landing page map.
              * First, try getting it from /functional-site/landing_page_map.json.

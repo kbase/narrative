@@ -48,7 +48,7 @@
         KB_STATE: 'widget_state',
 
         // set up as a hash for quickie lookup time!
-        ignoredDataTypes: {
+        ignoredDataTypes : {
             'string' : 1,
             'unicode' : 1,
             'numeric' : 1,
@@ -87,8 +87,13 @@
                         // to track when some event occurred.
                         // So, dirty bit it is.
                         this.refreshFunctionInputs(!this.inputsRendered);
-                        if (!this.inputsRendered)
+                        if (!this.inputsRendered) {
                             this.loadAllRecentCellStates();
+                            this.updateNarrativeDependencies();
+                            // temp hack until I think of something better.
+                            this.trigger('updateNarrativeDataTab.Narrative');
+                        }
+
                         this.inputsRendered = true;
                     }
                 },
@@ -98,14 +103,13 @@
             $(document).on('servicesUpdated.Narrative',
                 $.proxy(function(event, serviceSet) {
                     console.log("listing services!");
-                    console.log(serviceSet);
                 },
                 this)
             );
 
             $(document).on('narrativeDataQuery.Narrative', 
-                $.proxy(function(e, params, callback) {
-                    var objList = this.getCurrentNarrativeData();
+                $.proxy(function(e, callback) {
+                    var objList = this.getNarrativeDependencies();
                     if (callback) {
                         callback(objList);
                     }
@@ -440,7 +444,14 @@
         },
 
         /**
-         *
+         * @method
+         * Returns a list of Workspace object dependencies for a single cell.
+         * These dependencies are returned as workspace object references of the format:
+         * X/Y/Z
+         * X = workspace number
+         * Y = object number
+         * Z = version number
+         * @private
          */
         getCellDependencies: function(cell, paramValues) {
             if (!this.isFunctionCell(cell))
@@ -455,10 +466,8 @@
                 paramValues = $(cell.element).find('#inputs')[inputWidget]('getParameters') || [];
             }
 
-
             // paramValues and method.properties.parameters should be parallel, but check anyway.
             // assume that those elements between the parameters list and method's params that
-
             var cellDeps = [];
             var types = [];
             var typesHash = {};
@@ -490,18 +499,46 @@
                 if (objList[type] && objList[type].length > 0) {
                     for (var j=0; j<objList[type].length; j++) {
                         if (objList[type][j][1] === cellDeps[i][1]) {
-                            //data.push(objList[type][j]);
-                            data.push([type, 'ws.' + objList[type][j][6] + '.obj.' + objList[type][j][0]]);
+                            data.push(objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][4]);
                             found = true;
                             break;
                         }
                     }
                 }
-                if (!found) {
-                    data.push(cellDeps[i]);
-                }
             }
             return data;
+        },
+
+        /**
+         * @method
+         * @return a list containing all dependencies as WS references.
+         * @public
+         */
+        getNarrativeDependencies: function() {
+            var cells = IPython.notebook.get_cells();
+            var deps = {};
+            // For each cell in the Notebook
+            $.each(cells, $.proxy(function(idx, cell) {
+                // Get its dependencies (it'll skip non-input cells)
+                if (this.isFunctionCell(cell)) {
+                    var cellDeps = this.getCellDependencies(cell);
+                    // Shove them in the Object as properties to uniquify them.
+                    for (var i=0; i<cellDeps.length; i++) {
+                        deps[cellDeps[i]] = 1;
+                    }
+                }
+            }, this));
+            // Return the final, unique list (cleaner than looping over every returned hit)
+            return Object.keys(deps);
+        },
+
+        /**
+         * @method
+         * @private
+         */
+        updateNarrativeDependencies: function() {
+            var deps = this.getNarrativeDependencies();
+            IPython.notebook.metadata.data_dependencies = deps;
         },
 
         /**
@@ -670,7 +707,7 @@
                     // get the list of parameters and save the state in the cell's metadata
                     var paramList = $(cell.element).find("#inputs")[inputWidget]('getParameters');
                     self.saveCellState(cell);
-                    self.getCellDependencies(cell);
+                    self.updateNarrativeDependencies();
 
                     // var state = $(cell.element).find("#inputs")[inputWidget]('getState');
                     // cell.metadata[self.KB_CELL][self.KB_STATE] = state;
@@ -1260,6 +1297,8 @@
                 this.checkCellMetadata(cells[i]);
             }
             this.loadAllRecentCellStates();
+            // Check for older version of data dependencies
+            // update them if necessary.
             this.trigger('updateData.Narrative');
             return this;
         },

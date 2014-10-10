@@ -11,17 +11,17 @@ _log = logging.getLogger(__name__)
 
 # regex for parsing out workspace_id and object_id from
 # a "ws.{workspace}.{object}" string
-ws_regex = re.compile( '^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
+ws_regex = re.compile('^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
 
 # regex for parsing out a user_id from a token
-user_id_regex = re.compile( '^un=(?P<user_id>\w+)\|')
+user_id_regex = re.compile('^un=(?P<user_id>\w+)\|')
 
 # Exception for a malformed workspace ID see regex above
-class BadWorkspaceID( Exception ):
+class BadWorkspaceID(Exception):
     pass
 
 # Exception for a workspace object not found see regex above
-class BadWorkspaceID( Exception ):
+class BadWorkspaceID(Exception):
     pass
 
 
@@ -33,8 +33,8 @@ list_ws_obj_fields = ['id','type','moddate','instance','command',
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
 # objects, and has a different field list
-list_objects_fields = [ 'objid','name','type','save_date','ver','saved_by','wsid','workspace',
-                        'chsum','size','meta']
+list_objects_fields = ['objid', 'name', 'type', 'save_date', 'ver', 'saved_by',
+                       'wsid', 'workspace', 'chsum', 'size', 'meta']
 obj_field = dict(zip(list_objects_fields,range(len(list_objects_fields))))
 
 # object type for a project tag object
@@ -44,7 +44,7 @@ ws_tag_type = 'KBaseNarrative.Metadata'
 ws_narrative_type = 'KBaseNarrative.Narrative'
 
 # object name for project tag
-ws_tag = { 'project' : '_project' }
+ws_tag = {'project' : '_project'}
 
 def get_wsobj_meta(wsclient, objtype=ws_narrative_type, ws_id=None):
     """
@@ -59,25 +59,25 @@ def get_wsobj_meta(wsclient, objtype=ws_narrative_type, ws_id=None):
     keyed on the list_ws_obj_field list above.
     """
     if ws_id is None:
-        res = wsclient.list_objects({ 'type' : objtype,
-                                      'includeMetadata' : 1})
+        res = wsclient.list_objects({'type' : objtype,
+                                     'includeMetadata' : 1})
     else:
-        res = wsclient.list_objects({ 'type' : objtype,
-                                      'includeMetadata' : 1,
-                                      'ids' : [ws_id] })
+        res = wsclient.list_objects({'type' : objtype,
+                                     'includeMetadata' : 1,
+                                     'ids' : [ws_id] })
     my_narratives = {}
     for obj in res:
         my_narratives["ws.%s.obj.%s" % (obj[obj_field['wsid']],obj[obj_field['objid']])] = dict(zip(list_objects_fields,obj))
     return my_narratives
 
 
-def get_wsid( wsclient, workspace):
+def get_wsid(wsclient, workspace):
     """
     When given a workspace name, returns the numeric ws_id
     """
     try:
-        ws_meta = wsclient.get_workspace_info({ 'workspace' : workspace });
-    except biokbase.workspace.client.ServerError, e:
+        ws_meta = wsclient.get_workspace_info({'workspace' : workspace});
+    except biokbase.workspaceServiceDeluxe.Client.ServerError, e:
         if e.message.find('not found') >= 0 or e.message.find('No workspace with name') >= 0:
             return(None)
         else:
@@ -104,7 +104,7 @@ def get_wsobj(wsclient, ws_id, objtype=None):
         raise BadWorkspaceID("%s does not match workspace ID format ws.{workspace id}.obj.{object id}" % ws_id)
     ws = match.group(1)
     objid = match.group(2)
-    objs = wsclient.get_objects( [dict( wsid=ws, objid=objid)])
+    objs = wsclient.get_objects([dict( wsid=ws, objid=objid)])
     if len(objs) < 1:
         raise BadWorkspaceID( "%s could not be found" % ws_id)
     elif len(objs) > 1:
@@ -232,7 +232,7 @@ def check_homews(wsclient, user_id = None):
         else:
             raise e
     if ws_meta:
-        check_project_tag( wsclient, ws_meta[0])
+        # check_project_tag(wsclient, ws_meta[0])
         # return the textual name and the numeric ws_id
         return ws_meta[1],ws_meta[0]
     else:

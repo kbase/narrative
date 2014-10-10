@@ -10,7 +10,7 @@
  * dataUpdated.Narrative - when the loaded data table gets updated.
  * workspaceUpdated.Narrative - when the current workspace ID gets updated
  * @author Bill Riehl <wjriehl@lbl.gov>
- * @author Dan Gunger <dkgunter@lbl.gov>
+ * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  */
 (function( $, undefined ) {
@@ -100,6 +100,13 @@
                 'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
                     this.showInfoModal(workspace, id);
                 }, 
+                this)
+            );
+
+            $(document).on(
+                'updateNarrativeDataTab.Narrative', $.proxy(function(e) {
+                    this.refreshNarrativeTab();
+                },
                 this)
             );
 
@@ -432,6 +439,12 @@
             }
 
             this.showLoadingMessage("Loading workspace data...");
+
+            this.refreshWorkspaceTab();
+            this.refreshNarrativeTab();
+        },
+
+        refreshWorkspaceTab: function() {
             // Fetch data from the current workspace.
             this.wsClient.list_objects( 
                 {
@@ -479,13 +492,19 @@
                     this.showError(error);
                 }, this)
             );
+        },
 
-
+        refreshNarrativeTab: function() {
             // Fetch dependent data from the narrative
-            // XXX: this should be pushed in from the main narrative javascript! Maybe later.
+            // The main Narrative javascript keeps the IPython.notebook.metadata.data_dependencies up to date.
+            // So grab our list of deps from there!
+
+            // XXX: Currently a mashup of old and new. Update to only the new later.
             if (IPython.notebook) {
                 var narrData = IPython.notebook.metadata.data_dependencies;
                 var dataList = {};
+                var lookupList = [];
+
                 if (narrData) {
                     // format things to be how we want them.
                     $.each(narrData, $.proxy(function(idx, val) {
@@ -495,36 +514,68 @@
                         var ws = "";
                         var name = "";
 
-                        // if there's a forward slash, it'll be ws/name
-                        if (val[1].indexOf('/') !== -1) {
-                            var arr = val[1].split('/');
-                            ws = arr[0];
-                            name = arr[1];
+                        if (val.length === 1) {
+                            lookupList.push(val[0]);
                         }
-                        else if (/ws\.(\d+)\.obj\.(\d+)/.exec(val[1])) {
-                            var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(val[1]);
-                            if (qualId.length === 3) {
-                                ws = qualId[1];
-                                name = qualId[2];
-                            }
-                        }
-                        // otherwise-otherwise, it'll be just name, and we provide the workspace
-                        else {
-                            ws = this.wsId;
-                            name = val[1];
-                        }
-                        if (!dataList[type])
-                            dataList[type] = [];
 
-                        // Workaround for dealing with the occasional blank name.
-                        if (name) {
-                            name = name.trim();
-                            if (name.length > 0)
-                                dataList[type].push([ws, name, type]);
+                        else {
+                            // if there's a forward slash, it'll be ws/name
+                            if (val[1].indexOf('/') !== -1) {
+                                var arr = val[1].split('/');
+                                ws = arr[0];
+                                name = arr[1];
+                            }
+                            else if (/ws\.(\d+)\.obj\.(\d+)/.exec(val[1])) {
+                                var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(val[1]);
+                                if (qualId.length === 3) {
+                                    ws = qualId[1];
+                                    name = qualId[2];
+                                }
+                            }
+                            // otherwise-otherwise, it'll be just name, and we provide the workspace
+                            else {
+                                ws = this.wsId;
+                                name = val[1];
+                            }
+                            if (!dataList[type])
+                                dataList[type] = [];
+
+                            // Workaround for dealing with the occasional blank name.
+                            if (name) {
+                                name = name.trim();
+                                if (name.length > 0)
+                                    dataList[type].push([ws, name, type]);
+                            }
                         }
                     }, this));
                 }
-                this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
+
+                // XXX: part of the hack above.
+                // lookupList is a list of object refs to be fetched from the workspace.
+                if (lookupList.length > 0) {
+                    var idList = [];
+                    // Make the ObjectIdentity list to pass to the workspace client
+                    for (var i=0; i<lookupList.length; i++) {
+                        idList.push({'ref': lookupList[i]});
+                    }
+                    // Fetch the info
+                    this.wsClient.get_object_info(idList, 0, $.proxy(
+                        function(objInfo) {
+                            var dataList = {};
+                            // Parse out the info we want to put in the data table.
+                            for (var i=0; i<objInfo.length; i++) {
+                                if (!dataList[objInfo[i][2]])
+                                    dataList[objInfo[i][2]] = [];
+                                dataList[objInfo[i][2]].push([objInfo[i][6], objInfo[i][1], objInfo[i][2]]);
+                            }
+                            // ...and put it there!
+                            this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
+                        }, this)
+                    );
+                }
+                else {
+                    this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
+                }
             }
         },
 

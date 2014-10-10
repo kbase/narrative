@@ -209,7 +209,7 @@
             //                                   .addClass('glyphicon glyphicon-refresh')));
 
             var $refreshBtn = $('<button>')
-                              .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
+                              .addClass('btn btn-xs btn-default')
                               .click($.proxy(function(event) { this.refresh(); }, this))
                               .append($('<span>')
                                       .addClass('glyphicon glyphicon-refresh'));
@@ -241,6 +241,7 @@
                                .hide();
 
             this.addButton($refreshBtn);
+            this.addButton($('<button class="btn btn-xs btn-default"><span class="glyphicon glyphicon-flash"></span>'));
 
             this.body().append($('<div>')
                                .addClass('kb-narr-panel-body')

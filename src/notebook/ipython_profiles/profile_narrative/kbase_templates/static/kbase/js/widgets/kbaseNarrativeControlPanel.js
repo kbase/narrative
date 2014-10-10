@@ -71,7 +71,10 @@
 
             this.$headerDiv = $('<div>');
 
-            this.$buttonPanel = $('<div>');
+            this.$buttonPanel = $('<span>')
+                                .addClass('btn-toolbar pull-right')
+                                .attr('role', 'toolbar')
+                                .css({'margin-top' : '-4px'});
 
             this.$elem.append($('<div>')
                               .addClass('panel panel-primary')
@@ -79,12 +82,11 @@
                                       .addClass('panel-heading')
                                       .append($('<div>')
                                               .addClass('panel-title')
-                                              .css({'text-align': 'center'})
-                                              .append(this.options.title)                              
+                                              .css({'margin-left': '-8px', 'margin-right' : '-8px'})
                                               .append($('<button>')
-                                                  .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
-                                                  .css({'margin-top': '-4px',
-                                                        'left': '9px'})
+                                                  .addClass('btn btn-xs btn-default')
+                                                  .css({'margin-right' : '4px', 'margin-top' : '-4px'})
+                                                  //       'left' : '9px'})
                                                   .click($.proxy(function(event) {
                                                       if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
                                                           $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-right');
@@ -96,7 +98,9 @@
                                                       }
                                                   }, this))
                                                   .append($('<span>')
-                                                          .addClass('glyphicon glyphicon-chevron-down')))))
+                                                          .addClass('glyphicon glyphicon-chevron-down')))
+                                                  .append(this.options.title)
+                                                  .append(this.$buttonPanel)))
                               .append($('<div>')
                                       .addClass('panel-body kb-narr-panel-body')
                                       .append(this.$bodyDiv)));
@@ -108,7 +112,7 @@
          * @public
          */
         addButton: function(btn) {
-
+            this.$buttonPanel.append(btn);
         },
 
         /**

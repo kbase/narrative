@@ -150,6 +150,10 @@ class KBaseWSNotebookManager(NotebookManager):
         """List all notebooks in WSS
         For the ID field, we use "{ws_id}.{obj_id}"
         The obj_id field is sanitized version of document.ipynb.metadata.name
+
+        Returns a list of dicts with two keys: 'name' and 'notebook_id'. 'name'
+        should be of the format 'workspace name/Narrative name' and id should have 
+        the format 'ws.###.obj.###'
         """
         self.log.debug("Listing Narratives")
         self.log.debug("kbase_session = %s" % str(self.kbase_session))
@@ -181,7 +185,10 @@ class KBaseWSNotebookManager(NotebookManager):
         # as a general thing for other workspaces
         #
         # This is needed for running locally - a workspace is required.
-        (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
+        try:
+            (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
+        except Exception as e:
+            raise web.HTTPError(401, u'User must be logged in to access their workspaces')
 
         # Have IPython create a new, empty notebook
         nb = current.new_notebook()
@@ -207,6 +214,7 @@ class KBaseWSNotebookManager(NotebookManager):
                       'meta' : nb.metadata.copy(),
                     }
             wsid = homews_id
+            wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
             self.log.debug("calling ws_util.put_wsobj")
             res = ws_util.put_wsobj(wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
@@ -216,6 +224,8 @@ class KBaseWSNotebookManager(NotebookManager):
         id = "ws.%s.obj.%s" % (res['wsid'], res['objid'])
         # Stash new narrative ID in environment
         util.kbase_env.narrative = id
+        # update the mapping
+        self.list_notebooks()
         return id
 
     def delete_notebook_id(self, notebook_id):
@@ -224,8 +234,9 @@ class KBaseWSNotebookManager(NotebookManager):
         user_id = self.get_userid()
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine valid user identity!')
-        name = self.mapping[notebook_id]
-        super(KBaseWSNotebookManager, self).delete_notebook_id(notebook_id)
+        if notebook_id in self.mapping:
+            name = self.mapping[notebook_id]
+            super(KBaseWSNotebookManager, self).delete_notebook_id(notebook_id)
 
     def notebook_exists(self, notebook_id):
         """Does a Narrative with notebook_id exist?
@@ -258,6 +269,7 @@ class KBaseWSNotebookManager(NotebookManager):
     def get_name(self, notebook_id):
         """get a notebook name, raising 404 if not found"""
         self.log.debug("Checking for name of Narrative %s")
+        self.list_notebooks()
         try:
             name = self.mapping[notebook_id]
             self.log.debug("get_name(%s) = %s" % (notebook_id, name))
@@ -458,7 +470,7 @@ class KBaseWSNotebookManager(NotebookManager):
     # public checkpoint API
     # The workspace service handles versioning and has every ancient version stored
     # in it - support for that will be handled by a workspace browser tool, and
-    # note the narrative
+    # not the narrative
     def create_checkpoint(self, notebook_id):
         """Create a checkpoint from the current state of a notebook"""
         # only the one checkpoint ID:

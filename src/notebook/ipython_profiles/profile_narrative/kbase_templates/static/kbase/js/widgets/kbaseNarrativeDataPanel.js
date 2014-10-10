@@ -16,7 +16,7 @@
 (function( $, undefined ) {
 
     $.KBWidget({
-        name: "kbaseWorkspaceDataDeluxe", 
+        name: "kbaseNarrativeDataPanel", 
         parent: "kbaseNarrativeControlPanel",
         version: "1.0.0",
         wsClient: null,

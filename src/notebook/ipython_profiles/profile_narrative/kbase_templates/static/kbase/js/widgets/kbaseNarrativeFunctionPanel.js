@@ -82,21 +82,6 @@
                               .append(this.$loadingPanel)
                               .append(this.$errorPanel));
 
-
-            // this.$elem.append($('<div>')
-            //                   .addClass('panel panel-primary')
-            //                   .append($('<div>')
-            //                           .addClass('panel-heading')
-            //                           .append($('<div>')
-            //                                   .addClass('panel-title')
-            //                                   .css({'text-align': 'center'})
-            //                                   .append('Services')))
-            //                   .append($('<div>')
-            //                           .addClass('panel-body kb-narr-panel-body')
-            //                           .append(this.$functionPanel)
-            //                           .append(this.$loadingPanel)
-            //                           .append(this.$errorPanel)));
-
             $(document).on('hasFunction.Narrative', 
                 $.proxy(function(e, service, method, callback) {
                     if (callback) {

@@ -19,11 +19,7 @@ narrative.init = function() {
         versionStr = window.kbconfig.name + '<br>' + window.kbconfig.version;
     $('.version-stamp').empty().html(versionStr);
 
-//    var $dataPanel = $('#kb-ws').kbaseNarrativeControlPanel({ title: 'Data' });
-//    var $dataWidget = $dataPanel.body().kbaseWorkspaceDataDeluxe();
-//    $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
-
-    var $dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
+    var $dataWidget = $('#kb-ws').kbaseNarrativeDataPanel();
     $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
     var $functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });

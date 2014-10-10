@@ -490,7 +490,7 @@
 
             // look up the deps in the data panel.
             // Cheating for now - needs to be a synchronous call, though! There's no reason for it not to be, if the data's already loaded!
-            var objList = $('#kb-ws').kbaseWorkspaceDataDeluxe('getLoadedData', types);
+            var objList = $('#kb-ws').kbaseNarrativeDataPanel('getLoadedData', types);
 
             // Man, now what. N^2 searching? What a drag.
             for (var i=0; i<cellDeps.length; i++) {

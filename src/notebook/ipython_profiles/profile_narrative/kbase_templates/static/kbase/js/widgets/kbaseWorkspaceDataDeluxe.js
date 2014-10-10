@@ -198,15 +198,21 @@
              */
 
             // header bar.
-            var $headerDiv = $('<div>')
-                              .append('Data')
-                              .append($('<button>')
-                                      .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
-                                      .css({'margin-top': '-4px',
-                                            'margin-right': '4px'})
-                                      .click($.proxy(function(event) { this.refresh(); }, this))
-                                      .append($('<span>')
-                                              .addClass('glyphicon glyphicon-refresh')));
+            // var $headerDiv = $('<div>')
+            //                   .append('Data')
+            //                   .append($('<button>')
+            //                           .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
+            //                           .css({'margin-top': '-4px',
+            //                                 'margin-right': '4px'})
+            //                           .click($.proxy(function(event) { this.refresh(); }, this))
+            //                           .append($('<span>')
+            //                                   .addClass('glyphicon glyphicon-refresh')));
+
+            var $refreshBtn = $('<button>')
+                              .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
+                              .click($.proxy(function(event) { this.refresh(); }, this))
+                              .append($('<span>')
+                                      .addClass('glyphicon glyphicon-refresh'));
 
             // encapsulating data panel - all the data-related stuff goes in here.
             // this way, it can all be hidden easily.
@@ -234,11 +240,13 @@
                                .addClass('kb-error')
                                .hide();
 
-            this.$bodyDiv.append($('<div>')
-                                 .addClass('kb-narr-panel-body')
-                                 .append(this.$dataPanel)
-                                 .append(this.$loadingPanel)
-                                 .append(this.$errorPanel));
+            this.addButton($refreshBtn);
+
+            this.body().append($('<div>')
+                               .addClass('kb-narr-panel-body')
+                               .append(this.$dataPanel)
+                               .append(this.$loadingPanel)
+                               .append(this.$errorPanel));
 
             // this.$elem.append($('<div>')
             //                   .addClass('panel panel-primary kb-data-main-panel')

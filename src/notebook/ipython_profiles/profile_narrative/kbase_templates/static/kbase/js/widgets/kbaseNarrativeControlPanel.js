@@ -69,6 +69,10 @@
             // Make a main body panel for everything to sit inside.
             this.$bodyDiv = $('<div>');
 
+            this.$headerDiv = $('<div>');
+
+            this.$buttonPanel = $('<div>');
+
             this.$elem.append($('<div>')
                               .addClass('panel panel-primary')
                               .append($('<div>')

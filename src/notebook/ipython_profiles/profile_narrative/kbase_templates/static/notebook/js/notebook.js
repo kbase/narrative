@@ -1630,7 +1630,7 @@ var IPython = (function (IPython) {
     Notebook.prototype.save_notebook = function () {
         // We may want to move the name/id/nbformat logic inside toJSON?
 
-        $('#kb-ws').kbaseNarrativeWorkspace('saveAllCellStates');
+        $('#notebook_panel').kbaseNarrativeWorkspace('saveAllCellStates');
 
         var data = this.toJSON();
         data.metadata.name = this.notebook_name;

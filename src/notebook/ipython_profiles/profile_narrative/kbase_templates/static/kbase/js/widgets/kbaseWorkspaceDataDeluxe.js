@@ -17,7 +17,7 @@
 
     $.KBWidget({
         name: "kbaseWorkspaceDataDeluxe", 
-        parent: "kbaseAuthenticatedWidget",
+        parent: "kbaseNarrativeControlPanel",
         version: "1.0.0",
         wsClient: null,
         table: null,
@@ -29,6 +29,7 @@
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
+            title: 'Data',
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "https://kbase.us/services/ws",
@@ -233,19 +234,25 @@
                                .addClass('kb-error')
                                .hide();
 
-            this.$elem.append($('<div>')
-                              .addClass('panel panel-primary kb-data-main-panel')
-                              .append($('<div>')
-                                      .addClass('panel-heading')
-                                      .append($('<div>')
-                                              .addClass('panel-title')
-                                              .css({'text-align': 'center'})
-                                              .append($headerDiv)))
-                              .append($('<div>')
-                                      .addClass('panel-body kb-narr-panel-body')
-                                      .append(this.$dataPanel)
-                                      .append(this.$loadingPanel)
-                                      .append(this.$errorPanel)));
+            this.$bodyDiv.append($('<div>')
+                                 .addClass('kb-narr-panel-body')
+                                 .append(this.$dataPanel)
+                                 .append(this.$loadingPanel)
+                                 .append(this.$errorPanel));
+
+            // this.$elem.append($('<div>')
+            //                   .addClass('panel panel-primary kb-data-main-panel')
+            //                   .append($('<div>')
+            //                           .addClass('panel-heading')
+            //                           .append($('<div>')
+            //                                   .addClass('panel-title')
+            //                                   .css({'text-align': 'center'})
+            //                                   .append($headerDiv)))
+            //                   .append($('<div>')
+            //                           .addClass('panel-body kb-narr-panel-body')
+            //                           .append(this.$dataPanel)
+            //                           .append(this.$loadingPanel)
+            //                           .append(this.$errorPanel)));
             
 
 

@@ -4,6 +4,8 @@
  * the title of the panel, adds a list of buttons on the panel, and gives the
  * option to minimize or restore the panel.
  *
+ * This is a base class widget for any sidebar widgets that want its behavior.
+ * Those sidebars should just include a title option. 
  * Usage: 
  * $('#my-element').kbaseNarrativeControlPanel({ 
  *     title : 'My Controls', 
@@ -17,7 +19,7 @@
  (function($, undefined){
     $.KBWidget({
         name: 'kbaseNarrativeControlPanel', 
-        parent: 'kbaseWidget',
+        parent: 'kbaseAuthenticatedWidget',
         version: '0.0.1',
         options: {
             title: 'Control',

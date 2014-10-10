@@ -12,11 +12,12 @@
 (function( $, undefined ) {
     $.KBWidget({
         name: 'kbaseNarrativeFunctionPanel', 
-        parent: 'kbaseWidget',
+        parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             autopopulate: true,
+            title: 'Methods',
         },
         services: null,
 
@@ -75,20 +76,26 @@
                               .hide()
                               .click(function(event) { self.$helpPanel.hide(); });
 
+            this.$bodyDiv.append($('<div>')
+                              .addClass('kb-narr-panel-body')
+                              .append(this.$functionPanel)
+                              .append(this.$loadingPanel)
+                              .append(this.$errorPanel));
 
-            this.$elem.append($('<div>')
-                              .addClass('panel panel-primary')
-                              .append($('<div>')
-                                      .addClass('panel-heading')
-                                      .append($('<div>')
-                                              .addClass('panel-title')
-                                              .css({'text-align': 'center'})
-                                              .append('Services')))
-                              .append($('<div>')
-                                      .addClass('panel-body kb-narr-panel-body')
-                                      .append(this.$functionPanel)
-                                      .append(this.$loadingPanel)
-                                      .append(this.$errorPanel)));
+
+            // this.$elem.append($('<div>')
+            //                   .addClass('panel panel-primary')
+            //                   .append($('<div>')
+            //                           .addClass('panel-heading')
+            //                           .append($('<div>')
+            //                                   .addClass('panel-title')
+            //                                   .css({'text-align': 'center'})
+            //                                   .append('Services')))
+            //                   .append($('<div>')
+            //                           .addClass('panel-body kb-narr-panel-body')
+            //                           .append(this.$functionPanel)
+            //                           .append(this.$loadingPanel)
+            //                           .append(this.$errorPanel)));
 
             $(document).on('hasFunction.Narrative', 
                 $.proxy(function(e, service, method, callback) {

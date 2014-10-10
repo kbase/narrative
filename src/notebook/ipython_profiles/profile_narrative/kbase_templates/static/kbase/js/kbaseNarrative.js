@@ -19,12 +19,14 @@ narrative.init = function() {
         versionStr = window.kbconfig.name + '<br>' + window.kbconfig.version;
     $('.version-stamp').empty().html(versionStr);
 
-    var dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
-    dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+//    var $dataPanel = $('#kb-ws').kbaseNarrativeControlPanel({ title: 'Data' });
+//    var $dataWidget = $dataPanel.body().kbaseWorkspaceDataDeluxe();
+//    $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
-    var $functionPanel = $('#kb-function-panel').kbaseNarrativeControlPanel({ title: 'Methods' });
-    var $functionWidget = $functionPanel.body().kbaseNarrativeFunctionPanel({ autopopulate: false });
-//    var functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
+    var $dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
+    $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+
+    var $functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
     $functionWidget.refreshAJAX();
 
     /*
@@ -44,7 +46,7 @@ narrative.init = function() {
 
         if (workspaceId) {
             $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + workspaceId);
-            dataWidget.setWorkspace(workspaceId);
+            $dataWidget.setWorkspace(workspaceId);
         }
 
         // Should be renamed.... eventually?

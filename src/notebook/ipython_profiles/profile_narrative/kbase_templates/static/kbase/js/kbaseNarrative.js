@@ -22,8 +22,10 @@ narrative.init = function() {
     var dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
     dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
-    var functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
-    functionWidget.refreshAJAX();
+    var $functionPanel = $('#kb-function-panel').kbaseNarrativeControlPanel({ title: 'Methods' });
+    var $functionWidget = $functionPanel.body().kbaseNarrativeFunctionPanel({ autopopulate: false });
+//    var functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
+    $functionWidget.refreshAJAX();
 
     /*
      * Once everything else is loaded and the Kernel is idle,

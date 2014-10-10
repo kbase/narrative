@@ -241,7 +241,6 @@
                                .hide();
 
             this.addButton($refreshBtn);
-            this.addButton($('<button class="btn btn-xs btn-default"><span class="glyphicon glyphicon-flash"></span>'));
 
             this.body().append($('<div>')
                                .addClass('kb-narr-panel-body')

@@ -23,7 +23,7 @@ narrative.init = function() {
     $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
     var $functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
-    $functionWidget.refreshAJAX();
+    $functionWidget.refreshFromService();
 
     /*
      * Once everything else is loaded and the Kernel is idle,

@@ -98,9 +98,25 @@
 
             return this;
         },
+
+        refreshFromService: function() {
+            this.showLoadingMessage("Loading KBase Methods from service...");
+
+            var methClient = new NarrativeMethodStore('http://dev19.berkeley.kbase.us/narrative_method_store');
+            methClient.list_categories({'load_methods': 1}, 
+                $.proxy(function(categories) {
+                    console.log("got categories!");
+                    console.log(categories);
+                }, this),
+
+                $.proxy(function(error) {
+                    this.showError(error);
+                }, this)
+            );
+        },
         
         refreshAJAX: function() {
-            this.showLoadingMessage("Loading available KBase Services...");
+            this.showLoadingMessage("Loading available KBase Methods...");
 
             var prom = $.getJSON('static/kbase/services.json', $.proxy(
                 function(serviceSet) {

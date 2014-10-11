@@ -18,6 +18,7 @@
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             autopopulate: true,
             title: 'Methods',
+            methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
         },
         services: null,
 
@@ -50,6 +51,9 @@
              * panel-body, make sure the right one is being shown at the start,
              * and off we go.
              */
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+            }
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
@@ -102,7 +106,7 @@
         refreshFromService: function() {
             this.showLoadingMessage("Loading KBase Methods from service...");
 
-            var methClient = new NarrativeMethodStore('http://dev19.berkeley.kbase.us/narrative_method_store');
+            var methClient = new NarrativeMethodStore(this.options.methodStoreURL);
             methClient.list_categories({'load_methods': 1}, 
                 $.proxy(function(categories) {
                     console.log("got categories!");

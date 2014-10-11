@@ -109,8 +109,9 @@
             var methClient = new NarrativeMethodStore(this.options.methodStoreURL);
             methClient.list_categories({'load_methods': 1}, 
                 $.proxy(function(categories) {
-                    console.log("got categories!");
                     console.log(categories);
+                    this.parseMethodsFromService(categories[0], categories[1]);
+                    this.showFunctionPanel();
                 }, this),
 
                 $.proxy(function(error) {
@@ -118,6 +119,92 @@
                 }, this)
             );
         },
+
+        /**
+         * To do: handle category subsetting.
+         * E.g.:
+         * microbes
+         * --> microbes annotation
+         *     --> Annotate Genome
+         */
+        parseMethodsFromService: function(catSet, methSet) {
+            // add the methods to their categories.
+            for (var method in methSet) {
+                parentList = methSet[method].categories;
+                for (var i=0; i<parentList.length; i++) {
+                    if (catSet[parentList[i]]) {
+                        if (!catSet[parentList[i]].methods) {
+                            catSet[parentList[i]].methods = [];
+                        }
+                        catSet[parentList[i]].methods.push(methSet[method]);
+                    }
+                }
+            }
+            // Make a method button for each method.
+            var accordionCats = [];
+            for (var cat in catSet) {
+                if (catSet[cat].methods.length == 0)
+                    continue;
+                var accordion = {
+                    title : catSet[cat].name,
+                };
+                var $methodList = $('<ul>');
+                for (var i=0; i<catSet[cat].methods.length; i++) {
+                    $methodList.append(this.buildMethod(catSet[cat].methods[i]));
+                }
+                accordion['body'] = $methodList;
+                accordionCats.push(accordion);
+            }
+            this.services = catSet;
+            this.trigger('servicesUpdated.Narrative', [this.services]);
+
+            // Left here in case we want to use it again!
+            // console.log("Total Services: " + totalServices);
+            // console.log("Total Functions: " + totalFunctions);
+            // sort by service title
+            accordionCats.sort(function(a, b) {
+                return a.title.localeCompare(b.title);
+            });
+
+            this.$functionPanel.kbaseAccordion( { elements : accordionCats } );
+        },
+
+        buildMethod: function(method) {
+            var $helpButton = $('<span>')
+                              .addClass('glyphicon glyphicon-question-sign kb-function-help')
+                              .css({'margin-top': '-5px'})
+                              .click($.proxy(function(event) { 
+                                  event.preventDefault(); 
+                                  event.stopPropagation(); 
+                                  this.showHelpPopup(method, event); 
+                              }, this));
+
+            /* this is for handling long function names.
+               long names will be cropped and have a tooltip 
+               with the full name */
+            var methodTitle = method.name;
+            var methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
+            if (methodTitle.length > 31) {
+//                methodTitle = methodTitle.substring(0, 29) + "...";
+                methodSpan.append(methodTitle);
+                methodSpan.tooltip({
+                    title: method.name,
+                    placement: "bottom"
+                }); 
+            } else {
+                 methodSpan.append(methodTitle);
+            }
+            
+            var $newFunction = $('<li>')
+                               .append(methodSpan)
+                               .append($helpButton)
+                               .click(function(event) {
+                                   this.trigger('function_clicked.Narrative', method); 
+                               });
+
+            return $newFunction;
+        },
+
         
         refreshAJAX: function() {
             this.showLoadingMessage("Loading available KBase Methods...");
@@ -253,7 +340,6 @@
                     });
                     totalServices++;
                 }
-
                 this.services[serviceName] = localService;
             }
 
@@ -382,8 +468,8 @@
         showHelpPopup: function(method, event) {
             this.$helpPanel.css({'left':event.pageX, 'top':event.pageY})
             this.$helpPanel.empty();
-            this.$helpPanel.append($('<h1>').append(method.title + ' Help'))
-                           .append(method.description)
+            this.$helpPanel.append($('<h1>').append(method.name + ' Help'))
+                           .append(method.tooltip)
                            .append($('<h2>').append('Click to hide'));
             this.$helpPanel.show();
         },

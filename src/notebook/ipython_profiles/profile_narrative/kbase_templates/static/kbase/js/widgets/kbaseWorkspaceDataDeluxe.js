@@ -196,7 +196,7 @@
             ws_client.get_workspace_info(workspace_id,
                 // success callback
                 $.proxy(function(info) {
-                    var perms = info[6];
+                    var perms = info[5];
                     console.debug("workspace perms = ",perms);
                     ro = (perms != 'a' && perms != 'w');
                     console.info("WS(" + ws_name + ") read-only: " + ro);
@@ -466,15 +466,15 @@
                 this.isReadonlyWorkspace(this.wsClient, this.wsId, 
                     $.proxy(function(ro) {
                         if (ro) {
-                            console.debug("kbWS.refresh.test-for-readonly RO");
                             // hide in readonly mode
                             this.deactivateDataPanel();
                             // tell parent to hide as well
                             this.narrWs.activateReadonlyMode();
                         }
                         else {
-                            console.debug("kbWS.refresh.test-for-readonly R/W");
+                            this.narrWs.activateReadwriteMode();
                         }
+                        $('#main-container').show();
                     }, this));
             }
 

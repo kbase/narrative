@@ -182,14 +182,14 @@
                 var methodId = cellId + "-method-details";
                 var buttonLabel = "...";
                 var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
-                var methodInfo = "<div class='kb-func-desc'>" +
-                                   "<h1><b>" + method.title + "</b></h1>" +
+                var methodInfo = "<span class='kb-func-desc'>" +
+                                   "<h1 style='display:inline'><b>" + method.title + "</b></h1>" +
                                    "<span class='pull-right kb-func-timestamp' id='last-run'></span>" +
                                    "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
                                       " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
                                     "<div><h2 class='collapse' id='" + methodId + "'>" +
                                       methodDesc + "</h2></div>" +
-                                 "</div>";
+                                 "</span>";
 
                 // Bringing it all together...
                 cellContent = "<div class='panel kb-func-panel kb-cell-run' id='" + cellId + "'>" +
@@ -208,6 +208,7 @@
                               "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
                                this.safeJSONStringify(method) + "'});" +
                               "</script>";
+                console.debug("created input cell '", methodDesc, "', id = ", cellId);
             }
             else {
                 cellContent = "Error - the selected method is invalid.";
@@ -382,6 +383,7 @@
          * Set narrative into read-only mode.
          */
         activateReadonlyMode: function() {
+            console.debug("activate read-only mode");
             // Hide delete and run buttons
             cells = IPython.notebook.get_cells();
             cells.forEach(function(cell) {
@@ -389,22 +391,43 @@
                     $(this.element).find(".buttons [id*=" + e + "]").hide();
                 }, cell);
             });
+
             // Delete left-side panel!
             $('#left-column').detach(); //hide();
+
             // Hide IPython toolbar
             $('#maintoolbar').hide();
+
             // Move content panels to the left
             $('#ipython-main-app').css({'left': '10px'});
             $('#menubar-container').css({'left': '10px'});
+
             // Disable text fields
             console.debug("readonly: Disable text fields");
             $(".cell input").attr('disabled', 'disabled');
+
             // Disable buttons
             console.debug("readonly: Disable internal buttons");
             $(".cell button").hide();  //attr('disabled', 'disabled');
+
             // Hide save/checkpoint status
             $('#autosave_status').text("(read-only)");
             $('#checkpoint_status').hide();
+
+            // Remove h1 from input titles
+            $('div.kb-func-desc h1').each(function(idx) {
+                var title = $(this).text();
+                $(this).parent().prepend('<span>' + title + '</span>');
+                $(this).remove();
+            });
+
+            // Add label before input titles
+            $('.kb-func-panel .panel-heading .kb-func-desc').prepend(
+                '<span class="label label-info" style="margin-right: 8px;">' +
+                'Input' +
+                '</span>');
+
+
             // Add 'Copy' button after narrative title
             var narr_copy_id = "narr-copy";
             var button = $('<button type="button" ' +
@@ -419,18 +442,50 @@
                         'margin-left': '5em'});
             e = $('#menubar').append(button);
             this.bindCopyButton($('#' + narr_copy_id));
-            console.debug("Fading back in after activating RO mode");
-            $('#main-container').show();
         },
+
+        /**
+         * Activate "normal" R/W mode
+         */
+         activateReadwriteMode: function() {
+            console.debug("activate read-write mode");
+         },
 
         /**
          * Bind the 'Copy narrative' button to 
          * a function that copies the narrative.
          */
         bindCopyButton: function(element) {
-            // XXX: Do something
+            var oid = this.getNarrId();
+            element.click(function() {
+                console.debug("Make a copy for narr. obj = ", oid);
+                // XXX: Complete and utter FAKE!
+                // XXX: Just jump to a hardcoded read/write narrative based on the input one
+                var copy_id_map = {
+                    'ws.2590.obj.8': 'ws.2615.obj.8', // comparative genomics
+                };
+                var copy_id = copy_id_map[oid];
+                if (copy_id !== undefined) {
+                    // Open new narrative
+                    var oldpath = window.location.pathname;
+                    var parts = oldpath.split('/');
+                    parts.pop(); // pop off old id
+                    parts.push(copy_id); // add new one
+                    var newpath = parts.join('/'); // rejoin as a path
+                    var newurl = window.location.protocol + '//' + window.location.host + newpath;
+                    console.debug("Moving to new URL: ", newurl);
+                    window.location.replace(newurl);
+                }
+            });
             return;
         },
+
+        /**
+         * Object identifier of current narrative, extracted from page URL.
+         */
+         getNarrId: function() {
+            return window.location.pathname.split('/').pop();
+         },
 
         /**
          * Once the notebook is loaded, all code cells with generated code
@@ -1148,9 +1203,10 @@
             else
                 widgetInvoker = this.defaultOutputWidget + "({'data' : " + result.data + "});";
 
-            var header = '<span class="kb-out-desc"><b>' + 
+            var header = '<span class="label label-info">Output</span>' +
+                            '<span class="kb-out-desc"><b>' + 
                             (methodName ? methodName : 'Unknown method') + 
-                            '</b> - Output</span><span class="pull-right kb-func-timestamp">' + 
+                            '</b></span><span class="pull-right kb-func-timestamp">' + 
                             this.readableTimestamp(this.getTimestamp()) +
                             '</span>' + 
                          '';

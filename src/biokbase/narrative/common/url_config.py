@@ -18,6 +18,8 @@ except:
         "invocation" : "https://kbase.us/services/invocation",
         "fba" : "https://kbase.us/services/KBaseFBAModeling",
         "genomeCmp" : "https://kbase.us/services/genome_comparison/jsonrpc",
-        "trees" : "https://kbase.us/services/trees"
+        "trees" : "https://kbase.us/services/trees",
+        "log_proxy_port" : 32001,
+        "log_proxy_host" : "172.17.42.1"
     }
     URLS = Struct(**url_dict)

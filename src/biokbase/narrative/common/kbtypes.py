@@ -152,6 +152,7 @@ class VariationDataset(JsonTraits):
 
 ######### Microbes Narrative ###########
 
+## ?? why aren't these KBaseGenome.v1, KBaseGenome.v3?
 # Override __str__ to get a fully qualified type name.
 class KBaseGenome1(tls.Unicode, TypeMeta):
     info_text = "KBaseGenomes.Genome-1.0"

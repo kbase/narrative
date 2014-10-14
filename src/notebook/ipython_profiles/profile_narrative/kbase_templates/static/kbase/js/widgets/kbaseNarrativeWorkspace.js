@@ -34,6 +34,7 @@
         defaultOutputWidget: "kbaseDefaultNarrativeOutput",
         defaultInputWidget: "kbaseDefaultNarrativeInput",
         errorWidget: "kbaseNarrativeError",
+        connectable: {},
 
         inputsRendered: false,
         maxSavedStates: 2,      // limit the states saved to 2 for now.
@@ -383,6 +384,8 @@
          * Set narrative into read-only mode.
          */
         activateReadonlyMode: function() {
+            var self = this;
+
             console.debug("activate read-only mode");
             // Hide delete and run buttons
             cells = IPython.notebook.get_cells();
@@ -414,19 +417,58 @@
             $('#autosave_status').text("(read-only)");
             $('#checkpoint_status').hide();
 
+            var input_titles = [];
+
             // Remove h1 from input titles
             $('div.kb-func-desc h1').each(function(idx) {
                 var title = $(this).text();
-                $(this).parent().prepend('<span>' + title + '</span>');
+                var title_span = $('<span>' + title + '</span>');
+                var desc = $(this).parent();
+                desc.prepend(title_span);
                 $(this).remove();
+                input_titles.push([title, desc]);
+                desc.prepend(
+                    '<span class="label label-info" style="margin-right: 8px;" ' +
+                    ' id="kb-input-' + idx + '">' +
+                    'Input' +
+                    '</span>');
             });
 
             // Add label before input titles
-            $('.kb-func-panel .panel-heading .kb-func-desc').prepend(
-                '<span class="label label-info" style="margin-right: 8px;">' +
-                'Input' +
-                '</span>');
+            // $('.kb-func-panel .panel-heading .kb-func-desc').prepend(
+            //     '<span class="label label-info" style="margin-right: 8px;">' +
+            //     ' id="kb-input-' + idx +
+            //     'Input' +
+            //     '</span>');
 
+            // Remove trailing ' - Output' junk from output titles
+            // and add label before them.
+            // If a matching input title can be found, store in 'connectable'
+            var matched_input = 0;
+            var connectable = {};
+            $('.kb-cell-output').each(function(idx) {
+                var desc = $(this).find('.kb-out-desc');
+                var title_full = desc.text();
+                var otitle = title_full.replace(/\s*-\s*Output/,'');
+                if (title_full != otitle) {
+                    desc.text(otitle); // replace
+                }
+                var title_span = $('<span class="label label-primary" style="margin-right: 8px;"' +
+                    ' id="kb-output-' + idx + '">' +
+                'Output' +
+                '</span>')
+                desc.prepend(title_span);
+                // Look for matching input
+                for (var i=matched_input; i < input_titles.length; i++) {
+                    var ititle = input_titles[i][0];
+                    //console.debug('input title="'+ ititle + '" output title="' + otitle + '"');
+                    if (ititle == otitle) {
+                        matched_input = i + 1;
+                        connectable[i] = idx;
+                        break;
+                    }
+                }
+            });
 
             // Add 'Copy' button after narrative title
             var narr_copy_id = "narr-copy";
@@ -442,6 +484,48 @@
                         'margin-left': '5em'});
             e = $('#menubar').append(button);
             this.bindCopyButton($('#' + narr_copy_id));
+
+            this.connectable = connectable;
+        },
+
+        /**
+         * Connect two elements with a 'line'.
+         *
+         * Args:
+         *   p - Top element
+         *   q - Bottom element
+         *   g - Left gutter width, in pixels
+         *   w - Line width, in pixels
+         *   container - Containing element for line
+         *   line_class - CSS class for line elements (for coloring)
+         */
+        connect: function(p, q, g, w, container, line_class) {
+            var pc = $(p).position();
+            var qc = $(q).position();
+            console.debug("connect ", pc, " to ", qc);
+            var py = pc.top + (p.height() - w) / 2.0;
+            var qy = qc.top + (q.height() - w) / 2.0;
+            var coords = [{
+                left: g,
+                top: py,
+                width: (pc.left - g),
+                height: w
+            }, {
+                left: g,
+                top: py + w,
+                width: w,
+                height: qy - py
+            }, {
+                left: g,
+                top: qy,
+                width: qc.left - g,
+                height: w
+            }];
+            for (var i = 0; i < 3; i += 1) {
+                var $elt = $('<div>').addClass(line_class).attr('id', 'kb-line' + i);
+                $elt.css(coords[i]);
+                container.append($elt);
+            }
         },
 
         /**
@@ -1378,7 +1462,23 @@
             }
             this.loadAllRecentCellStates();
             this.trigger('updateData.Narrative');
+
             return this;
+        },
+
+        /*
+         * Show input/output cell connections.
+         */
+         show_connections: function() {
+            var self = this;
+            console.debug("show_connections.start");
+            _.each(_.pairs(this.connectable), function(pair) {
+                var e1 = $('#kb-input-' + pair[0]);
+                var e2 = $('#kb-output-' + pair[1]);
+                self.connect(e1, e2, 20, 2,
+                    $('#notebook-container'), 'kb-line');
+            });
+            console.debug("show_connections.end");
         },
 
         /**

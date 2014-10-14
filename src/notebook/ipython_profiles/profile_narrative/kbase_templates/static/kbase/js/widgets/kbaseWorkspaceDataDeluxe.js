@@ -475,6 +475,8 @@
                             this.narrWs.activateReadwriteMode();
                         }
                         $('#main-container').show();
+                        // now show connections-- once it works!
+                        // this.narrWs.show_connections();
                     }, this));
             }
 

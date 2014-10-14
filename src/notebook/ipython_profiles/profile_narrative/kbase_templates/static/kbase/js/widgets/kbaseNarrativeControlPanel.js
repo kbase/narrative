@@ -24,7 +24,7 @@
         options: {
             title: 'Control',
             collapsible: true,
-
+            maxHeight: '400px'
         },
 
         /**
@@ -83,18 +83,19 @@
                                       .append($('<div>')
                                               .addClass('panel-title')
                                               .css({'margin-left': '-8px', 'margin-right' : '-8px'})
-                                              .append($('<button>')
-                                                  .addClass('btn btn-xs btn-default')
-                                                  .css({'margin-right' : '4px', 'margin-top' : '-4px'})
-                                                  //       'left' : '9px'})
+                                              .append($('<span>')
+                                                  .addClass('kb-narr-panel-toggle')
                                                   .click($.proxy(function(event) {
+                                                      event.preventDefault();
                                                       if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
-                                                          $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-right');
-                                                          this.$elem.find('.kb-narr-panel-body').hide();
+                                                          $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down')
+                                                                                           .addClass('glyphicon-chevron-right');
+                                                          this.$bodyDiv.parent().slideUp(400);
                                                       }
                                                       else {
-                                                          $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down');
-                                                          this.$elem.find('.kb-narr-panel-body').show();
+                                                          $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right')
+                                                                                           .addClass('glyphicon-chevron-down');
+                                                          this.$bodyDiv.parent().slideDown(400);
                                                       }
                                                   }, this))
                                                   .append($('<span>')
@@ -103,6 +104,10 @@
                                                   .append(this.$buttonPanel)))
                               .append($('<div>')
                                       .addClass('panel-body kb-narr-panel-body')
+                                      .css({ 
+                                          'max-height' : this.options.maxHeight,
+                                          'overflow-y' : 'auto'
+                                      })
                                       .append(this.$bodyDiv)));
         },
 

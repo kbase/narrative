@@ -100,12 +100,15 @@
                 this)
             );
 
-            $(document).on('servicesUpdated.Narrative',
-                $.proxy(function(event, serviceSet) {
-                    console.log("listing services!");
-                },
-                this)
-            );
+            // unused for now.
+            // maybe update to modify vis of KBase widgets.
+            // but nuking for the moment.
+            // $(document).on('servicesUpdated.Narrative',
+            //     $.proxy(function(event, serviceSet) {
+            //         console.log("listing services!");
+            //     },
+            //     this)
+            // );
 
             $(document).on('narrativeDataQuery.Narrative', 
                 $.proxy(function(e, callback) {

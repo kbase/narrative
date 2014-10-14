@@ -55,27 +55,24 @@
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
 
-// <div class="input-group">
-//       <input type="text" class="form-control">
-//       <span class="input-group-btn">
-//         <button class="btn btn-default" type="button">Go!</button>
-//       </span>
-//     </div><!-- /input-group -->
             this.$searchDiv = $('<div>')
-                              .addClass('input-group');
+                              .addClass('input-group')
+                              .css({'margin-bottom' : '3px'})
 
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
                                 .change($.proxy(function(e) { console.log('changed text!'); }, this));
-            var $clearSearchAddon = $('<span>')
-                                    .addClass('input-group-btn')
-                                    .append($('<button>')
-                                            .addClass('btn btn-default')
-                                            .attr('type', 'button')
-                                            .append($('<span>')
-                                                    .addClass('glyphicon glyphicon-remove'))
-                                            .click($.proxy(function(event) { this.$searchInput.val(''); }, this)));
-            this.$searchDiv.append(this.$searchInput).append($clearSearchAddon);
+            var $clearSearchBtn = $('<span>')
+                                  .addClass('input-group-btn')
+                                  .append($('<button>')
+                                          .addClass('btn btn-default')
+                                          .css({'border-left' : 'none'})
+                                          .attr('type', 'button')
+                                          .append($('<span>')
+                                                  .addClass('glyphicon glyphicon-remove'))
+                                          .click($.proxy(function(event) { this.$searchInput.val(''); }, this)));
+            this.$searchDiv.append(this.$searchInput)
+                           .append($clearSearchBtn);
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
@@ -119,6 +116,13 @@
 
             $('body').append(this.$helpPanel);
 
+            if (!NarrativeMethodStore) {
+                this.showError('Unable to connect to KBase Method Store!');
+                return this;
+            }
+
+            this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
+
             if (this.options.autopopulate === true) {
                 this.refresh();
             }
@@ -129,35 +133,7 @@
         refreshFromService: function() {
             this.showLoadingMessage("Loading KBase Methods from service...");
 
-            var methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-
-            methClient.list_methods_spec({},
-                $.proxy(function(specs) {
-                    console.log('specs!');
-                    console.log(specs);
-                    // for (var i=0; i<specs.length; i++) {
-                    //     if (specs[i].parameters.length > 0) {
-                    //         // console.log("spec " + specs[i].id + " has parameters:");
-                    //         // console.log(specs[i].parrameters);
-                    //     }
-                    // }
-                }, this),
-                $.proxy(function(error) {
-                    this.showError(error);
-                }, this)
-            );
-
-            methClient.list_methods_full_info({},
-                $.proxy(function(methods) {
-                    console.log('methods!');
-                    console.log(methods);
-                }, this),
-                $.proxy(function(error) {
-                    this.showError(error);
-                }, this)
-            );
-
-            methClient.list_categories({'load_methods': 1}, 
+            this.methClient.list_categories({'load_methods': 1}, 
                 $.proxy(function(categories) {
                     console.log(categories);
                     this.parseMethodsFromService(categories[0], categories[1]);
@@ -191,7 +167,7 @@
                 }
             }
             // Make a method button for each method.
-            var accordionCats = [];
+            var accordionList = [];
             for (var cat in catSet) {
                 if (catSet[cat].methods.length == 0)
                     continue;
@@ -203,7 +179,7 @@
                     $methodList.append(this.buildMethod(catSet[cat].methods[i]));
                 }
                 accordion['body'] = $methodList;
-                accordionCats.push(accordion);
+                accordionList.push(accordion);
             }
             this.services = catSet;
             this.trigger('servicesUpdated.Narrative', [this.services]);
@@ -212,11 +188,11 @@
             // console.log("Total Services: " + totalServices);
             // console.log("Total Functions: " + totalFunctions);
             // sort by service title
-            accordionCats.sort(function(a, b) {
+            accordionList.sort(function(a, b) {
                 return a.title.localeCompare(b.title);
             });
 
-            this.$functionPanel.kbaseAccordion( { elements : accordionCats } );
+            this.$functionPanel.kbaseAccordion( { elements : accordionList } );
         },
 
         /**
@@ -234,14 +210,14 @@
             var $helpButton = $('<span>')
                               .addClass('glyphicon glyphicon-question-sign kb-function-help')
                               .css({'margin-top': '-5px'})
-                              .click($.proxy(function(event) { 
-                                  event.preventDefault(); 
-                                  event.stopPropagation(); 
-                                  this.showHelpPopup(method, event); 
+                              .click($.proxy(function(event) {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  this.showTooltip(method, event);
                               }, this));
 
             /* this is for handling long function names.
-               long names will be cropped and have a tooltip 
+               long names will be cropped and have a tooltip
                with the full name */
             var methodTitle = method.name;
             var methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
@@ -255,16 +231,43 @@
                  methodSpan.append(methodTitle);
             }
             
-            var $newFunction = $('<li>')
-                               .append(methodSpan)
-                               .append($helpButton)
-                               .click(function(event) {
-                                   this.trigger('function_clicked.Narrative', method); 
-                               });
-
-            return $newFunction;
+            var $newMethod = $('<li>')
+                             .append(methodSpan)
+                             .append($helpButton)
+                             .click($.proxy(function(event) {
+                                 this.methClient.get_method_spec({ 'ids' : [method.id] },
+                                     $.proxy(function(spec) {
+                                         console.log('spec!');
+                                         console.log(spec);
+                                         this.trigger('methodClicked.Narrative', spec[0]);
+                                     }, this),
+                                     $.proxy(function(error) {
+                                         this.showError(error);
+                                     }, this)
+                                 );
+                             }, this));
+            return $newMethod;
         },
 
+        /**
+         * Shows a popup panel with a description of the clicked method.
+         * @param {object} method - the method containing a title and 
+         * description for populating the popup.
+         * @private
+         */
+        showTooltip: function(method, event) {
+            this.$helpPanel.css({
+                               'left':event.pageX, 
+                               'top':event.pageY
+                           })
+                           .empty()
+                           .append($('<h1>').append(method.name))
+                           .append('v' + method.ver + '<br>')
+                           .append(method.tooltip)
+                           .append($('<h2>')
+                           .append('Click to hide'))
+                           .show();
+        },
 
         /**
          * @method
@@ -318,21 +321,6 @@
                                         .append($funcButton)
                                         .append($helpButton)
                                      );
-        },
-
-        /**
-         * Shows a popup panel with a description of the clicked method.
-         * @param {object} method - the method containing a title and 
-         * description for populating the popup.
-         * @private
-         */
-        showHelpPopup: function(method, event) {
-            this.$helpPanel.css({'left':event.pageX, 'top':event.pageY})
-            this.$helpPanel.empty();
-            this.$helpPanel.append($('<h1>').append(method.name + ' Help'))
-                           .append(method.tooltip)
-                           .append($('<h2>').append('Click to hide'));
-            this.$helpPanel.show();
         },
 
         /**
@@ -604,6 +592,21 @@
                                });
 
             return $newFunction;
+        },
+
+        /**
+         * Shows a popup panel with a description of the clicked method.
+         * @param {object} method - the method containing a title and 
+         * description for populating the popup.
+         * @private
+         */
+        showHelpPopup: function(method, event) {
+            this.$helpPanel.css({'left':event.pageX, 'top':event.pageY})
+            this.$helpPanel.empty();
+            this.$helpPanel.append($('<h1>').append(method.name + ' Help'))
+                           .append(method.tooltip)
+                           .append($('<h2>').append('Click to hide'));
+            this.$helpPanel.show();
         },
     });
 })( jQuery );

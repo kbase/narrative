@@ -123,10 +123,17 @@
             // When a user clicks on a function, this event gets fired with
             // method information. This builds a function cell out of that method
             // and inserts it in the right place.
-            $(document).on('function_clicked.Narrative', 
+            $(document).on('function_clicked.Narrative',
                 $.proxy(function(event, method) {
                     this.buildFunctionCell(method);
                 }, 
+                this)
+            );
+
+            $(document).on('methodClicked.Narrative',
+                $.proxy(function(event, method) {
+                    this.buildMethodCell(method);
+                },
                 this)
             );
 
@@ -135,6 +142,39 @@
             return this;
         },
         
+        /**
+         * @method buildMethodCell
+         * @param {Object} method -
+         * @public
+         */
+        buildMethodCell: function(method) {
+            var cell = IPython.notebook.insert_cell_below('markdown');
+            // make this a function input cell, as opposed to an output cell
+            this.setMethodCell(cell, method);
+
+            // THIS IS WRONG! FIX THIS LATER!
+            // But it should work for now... nothing broke up to this point, right?
+            var cellIndex = IPython.notebook.ncells() - 1;
+            var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
+
+            // The various components are HTML STRINGS, not jQuery objects.
+            // This is because the cell expects a text input, not a jQuery input.
+            // Yeah, I know it's ugly, but that's how it goes.
+            var cellContent = "<div id='" + cellId + "'></div>" +
+                              "\n<script>" +
+                              "$('#" + cellId + "').kbaseNarrativeCell({'method' : '" + this.safeJSONStringify(method) + "'});" +
+//                              "$('#" + cellId + "').kbaseNarrativeCell({'method' : 'test'});" +
+                              "</script>";
+
+            cell.set_text(cellContent);
+            cell.rendered = false;
+            cell.render();
+
+            // restore the input widget's state.
+            // this.removeCellEditFunction(cell);
+            // this.bindActionButtons(cell);
+        },
+
         /**
          * @method buildFunctionCell
          * @param {Object} method - the JSON schema version of the method to invoke. This will
@@ -275,7 +315,10 @@
          * @return {string} JSON string
          */
         safeJSONStringify: function(method) {
-            var esc = function(s) { return s.replace(/'/g, "&apos;").replace(/"/g, "&quot;"); };
+            var esc = function(s) { 
+                return s.replace(/'/g, "&apos;")
+                        .replace(/"/g, "&quot;");
+            };
             return JSON.stringify(method, function(key, value) {
                 return (typeof(value) == "string" && (key == "description" || key == "title")) ?
                     esc(value) : value;
@@ -408,6 +451,17 @@
 
             cell.metadata[this.KB_CELL] = cellInfo;
         },
+
+        setMethodCell: function(cell, method) {
+            var cellInfo = {}
+            cellInfo[this.KB_TYPE] = this.KB_FUNCTION_CELL;
+            cellInfo['method'] = method;
+            cellInfo[this.KB_STATE] = [];
+            cellInfo['widget'] = method.widgets.input || this.defaultInputWidget;
+
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
+
 
         // Function output cell type.
         isOutputCell: function(cell) {

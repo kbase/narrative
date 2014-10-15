@@ -137,6 +137,13 @@
                 this)
             );
 
+            $(document).on('deleteCell.Narrative',
+                $.proxy(function(event, index) {
+                    this.deleteCell(index);
+                },
+                this)
+            );
+
             // Initialize the data table.
             this.render();
             return this;
@@ -171,7 +178,7 @@
             cell.render();
 
             // restore the input widget's state.
-            // this.removeCellEditFunction(cell);
+            this.removeCellEditFunction(cell);
             // this.bindActionButtons(cell);
         },
 
@@ -775,6 +782,14 @@
                     $(cell.element).find("#last-run").html("Last run: " + self.readableTimestamp(self.getTimestamp()));
                 }
             );
+        },
+
+        /**
+         * @method deleteCell
+         * @private
+         */
+        deleteCell: function(index) {
+            IPython.notebook.delete_cell(index);
         },
 
         /**

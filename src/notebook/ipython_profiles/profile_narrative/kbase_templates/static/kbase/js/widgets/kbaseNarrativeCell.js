@@ -20,9 +20,6 @@
             this.options.method = this.options.method.replace(/\n/g, '');
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
-            // expects the method as a JSON string
-            // if (this.options.method)
-            //     this.options.method = JSON.parse(this.options.method);
 
             this.render();
             return this;
@@ -39,23 +36,37 @@
             var $inputDiv = $('<div>').append('inputs!');
 
             // These are the 'delete' and 'run' buttons for the cell
-            var $runButton = $('<button>')
+            this.$runButton = $('<button>')
                              .attr('id', this.cellId + '-run')
                              .attr('type', 'button')
                              .attr('value', 'Run')
                              .addClass('btn btn-primary btn-sm')
                              .append('Run');
-            var $deleteButton = $('<button>')
+            this.$runButton.click(
+                $.proxy(function(event) {
+                    console.log("run cell")
+                    console.log(IPython.notebook.get_selected_cell());
+                    this.trigger('runCell.Narrative');
+                }, this)
+            );
+
+
+            this.$deleteButton = $('<button>')
                                 .attr('id', this.cellId + '-delete')
                                 .attr('type', 'button')
                                 .attr('value', 'Delete')
                                 .addClass('btn btn-default btn-sm')
                                 .append('Delete');
+            this.$deleteButton.click(
+                $.proxy(function(event) {
+                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
+                }, this)
+            );
 
             var $buttons = $('<div>')
                            .addClass('buttons pull-right')
-                           .append($deleteButton)
-                           .append($runButton);
+                           .append(this.$deleteButton)
+                           .append(this.$runButton);
 
 
             var $progressBar = $('<div>')
@@ -134,7 +145,7 @@
                                      .append($progressBar)
                                      .append($buttons));
 
-            this.$elem.append($cellPanel)
+            this.$elem.append($cellPanel);
 
                 // // Bringing it all together...
                 // cellContent = "<div class='panel kb-func-panel kb-cell-run' id='" + cellId + "'>" +

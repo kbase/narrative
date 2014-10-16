@@ -135,7 +135,6 @@
 
             this.methClient.list_categories({'load_methods': 1}, 
                 $.proxy(function(categories) {
-                    console.log(categories);
                     this.parseMethodsFromService(categories[0], categories[1]);
                     this.showFunctionPanel();
                 }, this),
@@ -171,6 +170,7 @@
             for (var cat in catSet) {
                 if (catSet[cat].methods.length == 0)
                     continue;
+                catSet[cat].methods.sort(function(a, b) { return a.name.localeCompare(b.name); });
                 var accordion = {
                     title : catSet[cat].name,
                 };
@@ -235,11 +235,8 @@
                              .append(methodSpan)
                              .append($helpButton)
                              .click($.proxy(function(event) {
-                                console.log(method);
                                  this.methClient.get_method_spec({ 'ids' : [method.id] },
                                      $.proxy(function(spec) {
-                                         console.log('spec!');
-                                         console.log(spec);
                                          this.trigger('methodClicked.Narrative', spec[0]);
                                      }, this),
                                      $.proxy(function(error) {

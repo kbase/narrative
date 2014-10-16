@@ -20,14 +20,12 @@
             this.options.method = this.options.method.replace(/\n/g, '');
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
-
+            this.defaultInputWidget = 'kbaseNarrativeMethodInput';
             this.render();
             return this;
         },
 
         render: function() {
-            var inputWidget = this.defaultInputWidget;
-
             console.log('method!');
             console.log(this.method);
             if (this.method.widgets.input)
@@ -127,7 +125,7 @@
 
             var inputWidgetName = this.method.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
-                inputWidgetName = 'kbaseNarrativeMethodInput';
+                inputWidgetName = this.defaultInputWidget;
 
             this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
         },

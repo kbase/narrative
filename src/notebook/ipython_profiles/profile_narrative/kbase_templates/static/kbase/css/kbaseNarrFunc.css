@@ -151,6 +151,13 @@
     overflow-x : scroll;
 }
 
+.kb-function-dim {
+    background-color: #444 !important;
+    color: #999;
+}
+
+
+
 /* ------------------------------------------------- */
 /* IPython cells */
 
@@ -329,6 +336,5 @@
     background-image: none;
     padding: 5px 10px;
 }
-
 
 

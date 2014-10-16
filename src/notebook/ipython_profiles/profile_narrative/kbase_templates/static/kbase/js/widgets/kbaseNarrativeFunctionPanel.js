@@ -61,7 +61,12 @@
 
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
-                                .change($.proxy(function(e) { console.log('changed text!'); }, this));
+                                .on('input', 
+                                    $.proxy(function(e) { 
+                                        console.log('changed text: ' + this.$searchInput.val());
+                                        this.visualFilter(this.textFilter, this.$searchInput.val());
+                                    }, this)
+                                );
             var $clearSearchBtn = $('<span>')
                                   .addClass('input-group-btn')
                                   .append($('<button>')
@@ -70,7 +75,12 @@
                                           .attr('type', 'button')
                                           .append($('<span>')
                                                   .addClass('glyphicon glyphicon-remove'))
-                                          .click($.proxy(function(event) { this.$searchInput.val(''); }, this)));
+                                          .click(
+                                            $.proxy(function(event) { 
+                                                this.$searchInput.val(''); 
+                                                this.$searchInput.trigger('input'); 
+                                            }, this)
+                                          ));
             this.$searchDiv.append(this.$searchInput)
                            .append($clearSearchBtn);
 
@@ -176,7 +186,8 @@
                 };
                 var $methodList = $('<ul>');
                 for (var i=0; i<catSet[cat].methods.length; i++) {
-                    $methodList.append(this.buildMethod(catSet[cat].methods[i]));
+                    catSet[cat].methods[i].$elem = this.buildMethod(catSet[cat].methods[i]);
+                    $methodList.append(catSet[cat].methods[i].$elem);
                 }
                 accordion['body'] = $methodList;
                 accordionList.push(accordion);
@@ -386,6 +397,46 @@
             this.$loadingPanel.hide();
             this.$errorPanel.show();
         },
+
+        textFilter: function(pattern, method) {
+            var lcName = method.name.toLowerCase();
+            return lcName.indexOf(pattern.toLowerCase()) > -1;
+        },
+
+        /**
+         * For each method, run it through filterFn. If it returns something truthy,
+         * it passes, if it returns something faily, it fails.
+         *
+         * If it passes, do nothing. If it fails, dim it out.
+         *
+         * So we need a handle on the functions. No big.
+         */
+        visualFilter: function(filterFn, fnInput) {
+            console.log('filtering!');
+            for (var catName in this.services) {
+                var cat = this.services[catName];
+                for (var i=0; i<cat.methods.length; i++) {
+                    if (!filterFn(fnInput, cat.methods[i])) {
+                        cat.methods[i].$elem.addClass('kb-function-dim');
+                    }
+                    else {
+                        cat.methods[i].$elem.removeClass('kb-function-dim');
+                    }
+                }
+            }
+            console.log('done!');
+        },
+
+
+
+
+
+
+
+
+
+
+
 
 
 

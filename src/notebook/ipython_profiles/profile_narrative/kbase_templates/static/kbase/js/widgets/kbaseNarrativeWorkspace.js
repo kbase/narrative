@@ -894,7 +894,10 @@
                 if (cellType) {
                     this.removeCellEditFunction(cell);
                     if (this.isFunctionCell(cell)) { 
-                        this.bindActionButtons(cell);
+                        // added to only update the built-in non-widgetized function cells
+                        if (cell.metadata[this.KB_CELL].method.properties) { // cheat to see if it's an old one!
+                            this.bindActionButtons(cell);
+                        }
                     }
                 }
             }

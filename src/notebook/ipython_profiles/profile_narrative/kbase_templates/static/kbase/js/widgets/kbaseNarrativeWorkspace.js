@@ -544,7 +544,54 @@
         },
 
         getMethodCellDependencies: function(cell, paramValues) {
-            return [];
+            if (!this.isFunctionCell(cell))
+                return;
+            paramValues = $(cell.element).find('div[id^=kb-cell-]').kbaseNarrativeCell('getParameters') || [];
+            var params = cell.metadata[this.KB_CELL].method.parameters;
+
+            var data = [];
+
+            // paramValues and method.properties.parameters should be parallel, but check anyway.
+            // assume that those elements between the parameters list and method's params that
+            var cellDeps = [];
+            var types = [];
+            var typesHash = {};
+
+            // note - it's method.parameters.param##
+            for (var i=0; i<params.length; i++) {
+                var p = params[i];
+
+                /* fields: default, description, type, ui_name */
+                var type = p.text_options.valid_ws_types[0];
+                if (!this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
+                    cellDeps.push([type, paramValues[i]]);
+                    if (!typesHash[type]) {
+                        typesHash[type] = 1;
+                        types.push(type);
+                    }
+                }
+            }
+
+            // look up the deps in the data panel.
+            // Cheating for now - needs to be a synchronous call, though! There's no reason for it not to be, if the data's already loaded!
+            var objList = $('#kb-ws').kbaseNarrativeDataPanel('getLoadedData', types);
+
+            // Man, now what. N^2 searching? What a drag.
+            for (var i=0; i<cellDeps.length; i++) {
+                var type = cellDeps[i][0];
+                var found = false;
+                if (objList[type] && objList[type].length > 0) {
+                    for (var j=0; j<objList[type].length; j++) {
+                        if (objList[type][j][1] === cellDeps[i][1]) {
+                            data.push(objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][4]);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            return data;
+
         },
 
         /**
@@ -562,6 +609,7 @@
                 return;
 
             var data = [];
+            var target = '#inputs';
             // get a 'handle' (really just the invocable name) of the input widget
             var inputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
             var params = cell.metadata[this.KB_CELL]['method'].properties.parameters;

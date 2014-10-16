@@ -48,7 +48,7 @@
                     this.trigger('runCell.Narrative', { 
                         cell: IPython.notebook.get_selected_cell(),
                         method: this.method,
-                        parameters: this.getParameters(),
+                        parameters: this.getParameters()
                     });
                 }, this)
             );

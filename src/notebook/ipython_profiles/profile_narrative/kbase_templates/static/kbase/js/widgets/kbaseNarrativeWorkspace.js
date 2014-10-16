@@ -179,7 +179,6 @@
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
                               "$('#" + cellId + "').kbaseNarrativeCell({'method' : '" + this.safeJSONStringify(method) + "'});" +
-//                              "$('#" + cellId + "').kbaseNarrativeCell({'method' : 'test'});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -196,6 +195,20 @@
                 // do some erroring later.
                 return;
             }
+            this.saveCellState(data.cell);
+//            this.updateNarrativeDependencies();
+            var self = this;
+            var callbacks = {
+                'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
+                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content); },
+                'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
+                'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
+                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
+            };
+
+            var code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
+            $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
+            IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
 
         /**
@@ -364,17 +377,24 @@
                     var cell = cells[i];
                     if (this.isFunctionCell(cell)) {
                         var method = cell.metadata[this.KB_CELL].method;
-                        var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
+                        var inputWidget = this.defaultInputWidget;
+                        // legacy cells.
+                        if (method.properties) {
+                            var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
 
-                        if (fullRender) {
-                            cell.rendered = false;
-                            cell.render();
+                            if (fullRender) {
+                                cell.rendered = false;
+                                cell.render();
 
-                            this.loadRecentCellState(cell);
-                            this.bindActionButtons(cell);
+                                this.loadRecentCellState(cell);
+                                this.bindActionButtons(cell);
+                            }
+                            else {
+                                $(cell.element).find("#inputs")[inputWidget]('refresh');
+                            }
                         }
                         else {
-                            $(cell.element).find("#inputs")[inputWidget]('refresh');
+                            $(cell.element).find("div[id^=kb-cell-]").kbaseNarrativeCell('refresh');
                         }
                     }
                 }
@@ -523,6 +543,10 @@
                    cell.metadata[this.KB_CELL][this.KB_TYPE] === type;
         },
 
+        getMethodCellDependencies: function(cell, paramValues) {
+            return [];
+        },
+
         /**
          * @method
          * Returns a list of Workspace object dependencies for a single cell.
@@ -601,7 +625,13 @@
             $.each(cells, $.proxy(function(idx, cell) {
                 // Get its dependencies (it'll skip non-input cells)
                 if (this.isFunctionCell(cell)) {
-                    var cellDeps = this.getCellDependencies(cell);
+                    var cellDeps = [];
+                    if (cell.metadata[this.KB_CELL].method.properties) {
+                        cellDeps = this.getCellDependencies(cell);
+                    }
+                    else {
+                        cellDeps = this.getMethodCellDependencies(cell);
+                    }
                     // Shove them in the Object as properties to uniquify them.
                     for (var i=0; i<cellDeps.length; i++) {
                         deps[cellDeps[i]] = 1;
@@ -642,8 +672,16 @@
             var widget;
 
             if (this.isFunctionCell(cell)) {
-                widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
-                target = '#inputs';
+                var method = cell.metadata[this.KB_CELL].method;
+                // older way
+                if (method.properties) {
+                    widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
+                    target = '#inputs';
+                }
+                else {
+                    widget = 'kbaseNarrativeCell';
+                    target = 'div[id^=kb-cell-]';
+                }
             }
             else if (this.isOutputCell(cell)) {
                 // do output widget stuff.
@@ -685,8 +723,16 @@
 
                 // if it's labeled as a function cell do that.
                 if (this.isFunctionCell(cell)) {
-                    widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
-                    target = "#inputs";
+                    var method = cell.metadata[this.KB_CELL].method;
+                    // older way
+                    if (method.properties) {
+                        widget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
+                        target = '#inputs';
+                    }
+                    else {
+                        widget = 'kbaseNarrativeCell';
+                        target = 'div[id^=kb-cell-]';
+                    }
                 }
                 // if it's labeled as an output cell do that.
                 else if (this.isOutputCell(cell)) {

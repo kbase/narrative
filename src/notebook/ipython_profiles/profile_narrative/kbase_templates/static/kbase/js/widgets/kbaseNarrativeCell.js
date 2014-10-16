@@ -33,7 +33,7 @@
             if (this.method.widgets.input)
                 inputWidget = this.method.widgets.input;
 
-            var $inputDiv = $('<div>').append('inputs!');
+            this.$inputDiv = $('<div>');
 
             // These are the 'delete' and 'run' buttons for the cell
             this.$runButton = $('<button>')
@@ -44,12 +44,14 @@
                              .append('Run');
             this.$runButton.click(
                 $.proxy(function(event) {
-                    console.log("run cell")
-                    console.log(IPython.notebook.get_selected_cell());
-                    this.trigger('runCell.Narrative');
+                    event.preventDefault();
+                    this.trigger('runCell.Narrative', { 
+                        cell: IPython.notebook.get_selected_cell(),
+                        method: this.method,
+                        parameters: this.getParameters(),
+                    });
                 }, this)
             );
-
 
             this.$deleteButton = $('<button>')
                                 .attr('id', this.cellId + '-delete')
@@ -59,6 +61,7 @@
                                 .append('Delete');
             this.$deleteButton.click(
                 $.proxy(function(event) {
+                    event.preventDefault();
                     this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
                 }, this)
             );
@@ -85,15 +88,6 @@
                                        .append($('<p>')
                                                .addClass('text-success')));
 
-                // // The progress bar remains hidden until invoked by running the cell
-                // var progressBar = "<div id='kb-func-progress' class='pull-left' style='display:none;'>" +
-                //                     "<div class='progress progress-striped active kb-cell-progressbar'>" +
-                //                         "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
-                //                         "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
-                //                     "</div>" +
-                //                     "<p class='text-success'/>" +
-                //                   "</div>";
-
             var methodId = this.options.cellId + '-method-details';
             var buttonLabel = '...';
             var methodDesc = this.method.info.tooltip;
@@ -114,22 +108,6 @@
                                       .addClass('collapse')
                                       .append(methodDesc));
 
-
-
-
-                // // Associate method title with description via BS3 collapsing
-                // var methodId = cellId + "-method-details";
-                // var buttonLabel = "...";
-                // var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
-                // var methodInfo = "<div class='kb-func-desc'>" +
-                //                    "<h1><b>" + method.title + "</b></h1>" +
-                //                    "<span class='pull-right kb-func-timestamp' id='last-run'></span>" +
-                //                    "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
-                //                       " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
-                //                     "<div><h2 class='collapse' id='" + methodId + "'>" +
-                //                       methodDesc + "</h2></div>" +
-                //                  "</div>";
-
             var $cellPanel = $('<div>')
                              .addClass('panel kb-func-panel kb-cell-run')
                              .attr('id', this.options.cellId)
@@ -138,7 +116,7 @@
                                      .append($methodInfo))
                              .append($('<div>')
                                      .addClass('panel-body')
-                                     .append($inputDiv))
+                                     .append(this.$inputDiv))
                              .append($('<div>')
                                      .addClass('panel-footer')
                                      .css({'overflow' : 'hidden'})
@@ -147,40 +125,27 @@
 
             this.$elem.append($cellPanel);
 
-                // // Bringing it all together...
-                // cellContent = "<div class='panel kb-func-panel kb-cell-run' id='" + cellId + "'>" +
-                //                   "<div class='panel-heading'>" +
-                //                       methodInfo +
-                //                   "</div>" +
-                //                   "<div class='panel-body'>" +
-                //                       inputDiv +
-                //                   "</div>" +
-                //                   "<div class='panel-footer' style='overflow:hidden'>" +
-                //                       progressBar +
-                //                       buttons +
-                //                   "</div>" +
-                //               "</div>" +
-                //               "\n<script>" + 
-                //               "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
-                //                this.safeJSONStringify(method) + "'});" +
-                //               "</script>";
+            var inputWidgetName = this.method.widgets.input;
+            if (!inputWidgetName || inputWidgetName === 'null')
+                inputWidgetName = 'kbaseNarrativeMethodInput';
+
+            this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
         },
 
         getParameters: function() {
-            return [ "returning parameter list" ];
+            return this.$inputWidget.getParameters();
         },
 
         getState: function() {
-            return {};
+            return this.$inputWidget.getState();
         },
 
         loadState: function(state) {
-            if (!state)
-                return;
+            return this.$inputWidget.loadState(state);
         },
 
         refresh: function() {
-
+            this.$inputWidget.refresh();
         },
 
 

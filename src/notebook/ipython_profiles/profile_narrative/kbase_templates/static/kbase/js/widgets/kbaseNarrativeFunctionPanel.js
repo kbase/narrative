@@ -235,6 +235,7 @@
                              .append(methodSpan)
                              .append($helpButton)
                              .click($.proxy(function(event) {
+                                console.log(method);
                                  this.methClient.get_method_spec({ 'ids' : [method.id] },
                                      $.proxy(function(spec) {
                                          console.log('spec!');

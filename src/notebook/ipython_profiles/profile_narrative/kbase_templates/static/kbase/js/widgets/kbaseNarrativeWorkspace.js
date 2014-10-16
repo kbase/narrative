@@ -144,6 +144,15 @@
                 this)
             );
 
+            $(document).on('runCell.Narrative',
+                $.proxy(function(event, data) {
+                    console.log('running cell');
+                    console.log(data);
+                    this.runMethodCell(data);
+                },
+                this)
+            );
+
             // Initialize the data table.
             this.render();
             return this;
@@ -180,6 +189,13 @@
             // restore the input widget's state.
             this.removeCellEditFunction(cell);
             // this.bindActionButtons(cell);
+        },
+
+        runMethodCell: function(data) {
+            if (!data || !data.cell || !data.method || !data.parameters) {
+                // do some erroring later.
+                return;
+            }
         },
 
         /**

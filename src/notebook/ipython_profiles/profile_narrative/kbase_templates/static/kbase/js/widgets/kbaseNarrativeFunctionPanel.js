@@ -12,11 +12,13 @@
 (function( $, undefined ) {
     $.KBWidget({
         name: 'kbaseNarrativeFunctionPanel', 
-        parent: 'kbaseWidget',
+        parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             autopopulate: true,
+            title: 'Methods',
+            methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
         },
         services: null,
 
@@ -49,10 +51,43 @@
              * panel-body, make sure the right one is being shown at the start,
              * and off we go.
              */
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+            }
+
+            this.$searchDiv = $('<div>')
+                              .addClass('input-group')
+                              .css({'margin-bottom' : '3px'})
+
+            this.$searchInput = $('<input type="text">')
+                                .addClass('form-control')
+                                .on('input', 
+                                    $.proxy(function(e) { 
+                                        console.log('changed text: ' + this.$searchInput.val());
+                                        this.visualFilter(this.textFilter, this.$searchInput.val());
+                                    }, this)
+                                );
+            var $clearSearchBtn = $('<span>')
+                                  .addClass('input-group-btn')
+                                  .append($('<button>')
+                                          .addClass('btn btn-default')
+                                          .css({'border-left' : 'none'})
+                                          .attr('type', 'button')
+                                          .append($('<span>')
+                                                  .addClass('glyphicon glyphicon-remove'))
+                                          .click(
+                                            $.proxy(function(event) { 
+                                                this.$searchInput.val(''); 
+                                                this.$searchInput.trigger('input'); 
+                                            }, this)
+                                          ));
+            this.$searchDiv.append(this.$searchInput)
+                           .append($clearSearchBtn);
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
-                                  .addClass('kb-function-body');
+                                  .addClass('kb-function-body')
+                                  .append(this.$searchDiv);
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -75,20 +110,11 @@
                               .hide()
                               .click(function(event) { self.$helpPanel.hide(); });
 
-
-            this.$elem.append($('<div>')
-                              .addClass('panel panel-primary')
-                              .append($('<div>')
-                                      .addClass('panel-heading')
-                                      .append($('<div>')
-                                              .addClass('panel-title')
-                                              .css({'text-align': 'center'})
-                                              .append('Services')))
-                              .append($('<div>')
-                                      .addClass('panel-body kb-narr-panel-body')
-                                      .append(this.$functionPanel)
-                                      .append(this.$loadingPanel)
-                                      .append(this.$errorPanel)));
+            this.$bodyDiv.append($('<div>')
+                              .addClass('kb-narr-panel-body')
+                              .append(this.$functionPanel)
+                              .append(this.$loadingPanel)
+                              .append(this.$errorPanel));
 
             $(document).on('hasFunction.Narrative', 
                 $.proxy(function(e, service, method, callback) {
@@ -100,15 +126,325 @@
 
             $('body').append(this.$helpPanel);
 
+            if (!NarrativeMethodStore) {
+                this.showError('Unable to connect to KBase Method Store!');
+                return this;
+            }
+
+            this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
+
             if (this.options.autopopulate === true) {
                 this.refresh();
             }
 
             return this;
         },
-        
+
+        refreshFromService: function() {
+            this.showLoadingMessage("Loading KBase Methods from service...");
+
+            this.methClient.list_categories({'load_methods': 1}, 
+                $.proxy(function(categories) {
+                    this.parseMethodsFromService(categories[0], categories[1]);
+                    this.showFunctionPanel();
+                }, this),
+
+                $.proxy(function(error) {
+                    this.showError(error);
+                }, this)
+            );
+        },
+
+        /**
+         * To do: handle category subsetting.
+         * E.g.:
+         * microbes
+         * --> microbes annotation
+         *     --> Annotate Genome
+         */
+        parseMethodsFromService: function(catSet, methSet) {
+            // add the methods to their categories.
+            for (var method in methSet) {
+                parentList = methSet[method].categories;
+                for (var i=0; i<parentList.length; i++) {
+                    if (catSet[parentList[i]]) {
+                        if (!catSet[parentList[i]].methods) {
+                            catSet[parentList[i]].methods = [];
+                        }
+                        catSet[parentList[i]].methods.push(methSet[method]);
+                    }
+                }
+            }
+            // Make a method button for each method.
+            var accordionList = [];
+            for (var cat in catSet) {
+                if (catSet[cat].methods.length == 0)
+                    continue;
+                catSet[cat].methods.sort(function(a, b) { return a.name.localeCompare(b.name); });
+                var accordion = {
+                    title : catSet[cat].name,
+                };
+                var $methodList = $('<ul>');
+                for (var i=0; i<catSet[cat].methods.length; i++) {
+                    catSet[cat].methods[i].$elem = this.buildMethod(catSet[cat].methods[i]);
+                    $methodList.append(catSet[cat].methods[i].$elem);
+                }
+                accordion['body'] = $methodList;
+                accordionList.push(accordion);
+            }
+            this.services = catSet;
+            this.trigger('servicesUpdated.Narrative', [this.services]);
+
+            // Left here in case we want to use it again!
+            // console.log("Total Services: " + totalServices);
+            // console.log("Total Functions: " + totalFunctions);
+            // sort by service title
+            accordionList.sort(function(a, b) {
+                return a.title.localeCompare(b.title);
+            });
+
+            this.$functionPanel.kbaseAccordion( { elements : accordionList } );
+        },
+
+        /**
+         * Creates and returns a list item containing info about the given narrative function.
+         * Clicking the function anywhere outside the help (?) button will trigger a 
+         * function_clicked.Narrative event. Clicking the help (?) button will trigger a 
+         * function_help.Narrative event.
+         * 
+         * Both events have the relevant data passed along with them for use by the responding
+         * element.
+         * @param {object} method - the method object returned from the kernel.
+         * @private
+         */
+        buildMethod: function(method) {
+            var $helpButton = $('<span>')
+                              .addClass('glyphicon glyphicon-question-sign kb-function-help')
+                              .css({'margin-top': '-5px'})
+                              .click($.proxy(function(event) {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  this.showTooltip(method, event);
+                              }, this));
+
+            /* this is for handling long function names.
+               long names will be cropped and have a tooltip
+               with the full name */
+            var methodTitle = method.name;
+            var methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
+            if (methodTitle.length > 31) {
+                methodSpan.append(methodTitle);
+                methodSpan.tooltip({
+                    title: method.name,
+                    placement: "bottom"
+                }); 
+            } else {
+                 methodSpan.append(methodTitle);
+            }
+            
+            var $newMethod = $('<li>')
+                             .append(methodSpan)
+                             .append($helpButton)
+                             .click($.proxy(function(event) {
+                                 this.methClient.get_method_spec({ 'ids' : [method.id] },
+                                     $.proxy(function(spec) {
+                                         this.trigger('methodClicked.Narrative', spec[0]);
+                                     }, this),
+                                     $.proxy(function(error) {
+                                         this.showError(error);
+                                     }, this)
+                                 );
+                             }, this));
+            return $newMethod;
+        },
+
+        /**
+         * Shows a popup panel with a description of the clicked method.
+         * @param {object} method - the method containing a title and 
+         * description for populating the popup.
+         * @private
+         */
+        showTooltip: function(method, event) {
+            this.$helpPanel.css({
+                               'left':event.pageX, 
+                               'top':event.pageY
+                           })
+                           .empty()
+                           .append($('<h1>').append(method.name))
+                           .append('v' + method.ver + '<br>')
+                           .append(method.tooltip)
+                           .append($('<h2>')
+                           .append('Click to hide'))
+                           .show();
+        },
+
+        /**
+         * @method
+         * A simple tester to see if a service.method call exists in the currently loaded set
+         * @param {string} service - the name of the service to test
+         * @param {string} method - the name of the method to test
+         * @return {boolean} true if the call exists, false otherwise
+         */
+        hasFunction: function(service, method) {
+            if (!this.services)
+                return true;
+
+            console.debug("looking up '" + service + "'.'" + method + "'");
+            if (this.services.hasOwnProperty(service))
+                return this.services[service].hasOwnProperty(method);
+            return false;
+        },
+
+
+        /**
+         * Creates a new function field in the functions list.
+         * This 'function' is represented as a DOM element. It has a name (styled as
+         * a button, or something buttonish) and a help button. 
+         *
+         * Clicking the function button triggers a function_clicked.Narrative event,
+         * and clicking the help button triggers a function_help.Narrative event.
+         * 
+         * Both of these events have the relevant data passed along with them for
+         * population by the responding element.
+         *
+         * @param {object} method - the method object returned from the kernel.
+         * @private
+         */
+        addFunction: function(method) {
+            var self = this;
+            var $funcButton = $('<button>')
+                              .attr('type', 'button')
+                              .addClass('btn btn-default')
+                              .append(method.title)
+                              .click(function(event) { self.trigger('function_clicked.Narrative', method); });
+
+            var $helpButton = $('<span>')
+                              .addClass('glyphicon glyphicon-question-sign')
+                              .css({'float': 'right', 
+                                    'cursor': 'pointer',
+                                    'font-size': '14pt',
+                                    'color': '#0064b6'})
+                              .click(function(event) { self.showHelpPopup(method); });
+
+            this.$functionList.append($('<li>')
+                                        .append($funcButton)
+                                        .append($helpButton)
+                                     );
+        },
+
+        /**
+         * Shows a loading spinner or message on top of the panel.
+         * @private
+         */
+        showLoadingMessage: function(message) {
+            this.$loadingPanel.find('#message').empty();
+            if (message) 
+                this.$loadingPanel.find('#message').html(message);
+            this.$functionPanel.hide();
+            this.$errorPanel.hide();
+            this.$loadingPanel.show();
+        },
+
+        /**
+         * Shows the main function panel, hiding all others.
+         * @private
+         */
+        showFunctionPanel: function() {
+            this.$errorPanel.hide();
+            this.$loadingPanel.hide();
+            this.$functionPanel.show();
+        },
+
+        /**
+         * Shows an error text message on top of the panel. All other pieces are hidden.
+         * @param {string} error - the text of the error message
+         * @private
+         */
+        showError: function(error) {
+            var $errorHeader = $('<div>')
+                               .addClass('alert alert-danger')
+                               .append('<b>Sorry, an error occurred while loading KBase functions.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20function%20loading%20error">help@kbase.us</a> with the information below.');
+
+            this.$errorPanel.empty();
+            this.$errorPanel.append($errorHeader);
+
+            // If it's a string, just dump the string.
+            if (typeof error === 'string') {
+                this.$errorPanel.append($('<div>').append(error));
+            }
+
+            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            else if (typeof error === 'object') {
+                var $details = $('<div>');
+                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
+                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
+
+                var $tracebackDiv = $('<div>')
+                                 .addClass('kb-function-error-traceback');
+                for (var i=0; i<error.traceback.length; i++) {
+                    $tracebackDiv.append(error.traceback[i] + "<br>");
+                }
+
+                var $tracebackPanel = $('<div>');
+                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
+
+                this.$errorPanel.append($details)
+                                .append($tracebackPanel);
+                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+            }
+
+            this.$functionPanel.hide();
+            this.$loadingPanel.hide();
+            this.$errorPanel.show();
+        },
+
+        textFilter: function(pattern, method) {
+            var lcName = method.name.toLowerCase();
+            return lcName.indexOf(pattern.toLowerCase()) > -1;
+        },
+
+        /**
+         * For each method, run it through filterFn. If it returns something truthy,
+         * it passes, if it returns something faily, it fails.
+         *
+         * If it passes, do nothing. If it fails, dim it out.
+         *
+         * So we need a handle on the functions. No big.
+         */
+        visualFilter: function(filterFn, fnInput) {
+            console.log('filtering!');
+            for (var catName in this.services) {
+                var cat = this.services[catName];
+                for (var i=0; i<cat.methods.length; i++) {
+                    if (!filterFn(fnInput, cat.methods[i])) {
+                        cat.methods[i].$elem.addClass('kb-function-dim');
+                    }
+                    else {
+                        cat.methods[i].$elem.removeClass('kb-function-dim');
+                    }
+                }
+            }
+            console.log('done!');
+        },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /***************************************************************/
+        /* OLD DEPRECATED METHODS NOT IN USE WITH METHOD STORE SERVICE */
+        /***************************************************************/
         refreshAJAX: function() {
-            this.showLoadingMessage("Loading available KBase Services...");
+            this.showLoadingMessage("Loading available KBase Methods...");
 
             var prom = $.getJSON('static/kbase/services.json', $.proxy(
                 function(serviceSet) {
@@ -241,7 +577,6 @@
                     });
                     totalServices++;
                 }
-
                 this.services[serviceName] = localService;
             }
 
@@ -257,23 +592,6 @@
             // console.log("Total Functions: " + totalFunctions);
 
             this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
-        },
-
-        /**
-         * @method
-         * A simple tester to see if a service.method call exists in the currently loaded set
-         * @param {string} service - the name of the service to test
-         * @param {string} method - the name of the method to test
-         * @return {boolean} true if the call exists, false otherwise
-         */
-        hasFunction: function(service, method) {
-            if (!this.services)
-                return true;
-
-            console.debug("looking up '" + service + "'.'" + method + "'");
-            if (this.services.hasOwnProperty(service))
-                return this.services[service].hasOwnProperty(method);
-            return false;
         },
 
         /**
@@ -326,42 +644,6 @@
         },
 
         /**
-         * Creates a new function field in the functions list.
-         * This 'function' is represented as a DOM element. It has a name (styled as
-         * a button, or something buttonish) and a help button. 
-         *
-         * Clicking the function button triggers a function_clicked.Narrative event,
-         * and clicking the help button triggers a function_help.Narrative event.
-         * 
-         * Both of these events have the relevant data passed along with them for
-         * population by the responding element.
-         *
-         * @param {object} method - the method object returned from the kernel.
-         * @private
-         */
-        addFunction: function(method) {
-            var self = this;
-            var $funcButton = $('<button>')
-                              .attr('type', 'button')
-                              .addClass('btn btn-default')
-                              .append(method.title)
-                              .click(function(event) { self.trigger('function_clicked.Narrative', method); });
-
-            var $helpButton = $('<span>')
-                              .addClass('glyphicon glyphicon-question-sign')
-                              .css({'float': 'right', 
-                                    'cursor': 'pointer',
-                                    'font-size': '14pt',
-                                    'color': '#0064b6'})
-                              .click(function(event) { self.showHelpPopup(method); });
-
-            this.$functionList.append($('<li>')
-                                        .append($funcButton)
-                                        .append($helpButton)
-                                     );
-        },
-
-        /**
          * Shows a popup panel with a description of the clicked method.
          * @param {object} method - the method containing a title and 
          * description for populating the popup.
@@ -370,77 +652,10 @@
         showHelpPopup: function(method, event) {
             this.$helpPanel.css({'left':event.pageX, 'top':event.pageY})
             this.$helpPanel.empty();
-            this.$helpPanel.append($('<h1>').append(method.title + ' Help'))
-                           .append(method.description)
+            this.$helpPanel.append($('<h1>').append(method.name + ' Help'))
+                           .append(method.tooltip)
                            .append($('<h2>').append('Click to hide'));
             this.$helpPanel.show();
         },
-
-        /**
-         * Shows a loading spinner or message on top of the panel.
-         * @private
-         */
-        showLoadingMessage: function(message) {
-            this.$loadingPanel.find('#message').empty();
-            if (message) 
-                this.$loadingPanel.find('#message').html(message);
-            this.$functionPanel.hide();
-            this.$errorPanel.hide();
-            this.$loadingPanel.show();
-        },
-
-        /**
-         * Shows the main function panel, hiding all others.
-         * @private
-         */
-        showFunctionPanel: function() {
-            this.$errorPanel.hide();
-            this.$loadingPanel.hide();
-            this.$functionPanel.show();
-        },
-
-        /**
-         * Shows an error text message on top of the panel. All other pieces are hidden.
-         * @param {string} error - the text of the error message
-         * @private
-         */
-        showError: function(error) {
-            var $errorHeader = $('<div>')
-                               .addClass('alert alert-danger')
-                               .append('<b>Sorry, an error occurred while loading KBase functions.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20function%20loading%20error">help@kbase.us</a> with the information below.');
-
-            this.$errorPanel.empty();
-            this.$errorPanel.append($errorHeader);
-
-            // If it's a string, just dump the string.
-            if (typeof error === 'string') {
-                this.$errorPanel.append($('<div>').append(error));
-            }
-
-            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
-            else if (typeof error === 'object') {
-                var $details = $('<div>');
-                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
-                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
-
-                var $tracebackDiv = $('<div>')
-                                 .addClass('kb-function-error-traceback');
-                for (var i=0; i<error.traceback.length; i++) {
-                    $tracebackDiv.append(error.traceback[i] + "<br>");
-                }
-
-                var $tracebackPanel = $('<div>');
-                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
-
-                this.$errorPanel.append($details)
-                                .append($tracebackPanel);
-                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
-            }
-
-            this.$functionPanel.hide();
-            this.$loadingPanel.hide();
-            this.$errorPanel.show();
-        },
     });
-
 })( jQuery );

@@ -16,6 +16,16 @@
     padding:3px;
 }
 
+.kb-narr-panel-toggle {
+    margin-right: 4px;
+    margin-top: -4px; 
+    cursor: pointer;
+    color: #ddd;
+    -webkit-user-select: none; /* Chrome/Safari */        
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+ */
+}
+
 /* Container for func list */
 .kb-function-body {
     height: 45%;
@@ -140,6 +150,13 @@
     max-width : 250px;
     overflow-x : scroll;
 }
+
+.kb-function-dim {
+    background-color: #444 !important;
+    color: #999;
+}
+
+
 
 /* ------------------------------------------------- */
 /* IPython cells */
@@ -319,6 +336,5 @@
     background-image: none;
     padding: 5px 10px;
 }
-
 
 

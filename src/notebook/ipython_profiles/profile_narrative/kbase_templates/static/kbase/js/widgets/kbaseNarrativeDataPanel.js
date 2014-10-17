@@ -16,8 +16,8 @@
 (function( $, undefined ) {
 
     $.KBWidget({
-        name: "kbaseWorkspaceDataDeluxe", 
-        parent: "kbaseAuthenticatedWidget",
+        name: "kbaseNarrativeDataPanel", 
+        parent: "kbaseNarrativeControlPanel",
         version: "1.0.0",
         wsClient: null,
         table: null,
@@ -29,6 +29,7 @@
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
+            title: 'Data',
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "https://kbase.us/services/ws",
@@ -197,15 +198,21 @@
              */
 
             // header bar.
-            var $headerDiv = $('<div>')
-                              .append('Data')
-                              .append($('<button>')
-                                      .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
-                                      .css({'margin-top': '-4px',
-                                            'margin-right': '4px'})
-                                      .click($.proxy(function(event) { this.refresh(); }, this))
-                                      .append($('<span>')
-                                              .addClass('glyphicon glyphicon-refresh')));
+            // var $headerDiv = $('<div>')
+            //                   .append('Data')
+            //                   .append($('<button>')
+            //                           .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
+            //                           .css({'margin-top': '-4px',
+            //                                 'margin-right': '4px'})
+            //                           .click($.proxy(function(event) { this.refresh(); }, this))
+            //                           .append($('<span>')
+            //                                   .addClass('glyphicon glyphicon-refresh')));
+
+            var $refreshBtn = $('<button>')
+                              .addClass('btn btn-xs btn-default')
+                              .click($.proxy(function(event) { this.refresh(); }, this))
+                              .append($('<span>')
+                                      .addClass('glyphicon glyphicon-refresh'));
 
             // encapsulating data panel - all the data-related stuff goes in here.
             // this way, it can all be hidden easily.
@@ -233,19 +240,27 @@
                                .addClass('kb-error')
                                .hide();
 
-            this.$elem.append($('<div>')
-                              .addClass('panel panel-primary kb-data-main-panel')
-                              .append($('<div>')
-                                      .addClass('panel-heading')
-                                      .append($('<div>')
-                                              .addClass('panel-title')
-                                              .css({'text-align': 'center'})
-                                              .append($headerDiv)))
-                              .append($('<div>')
-                                      .addClass('panel-body kb-narr-panel-body')
-                                      .append(this.$dataPanel)
-                                      .append(this.$loadingPanel)
-                                      .append(this.$errorPanel)));
+            this.addButton($refreshBtn);
+
+            this.body().append($('<div>')
+                               .addClass('kb-narr-panel-body')
+                               .append(this.$dataPanel)
+                               .append(this.$loadingPanel)
+                               .append(this.$errorPanel));
+
+            // this.$elem.append($('<div>')
+            //                   .addClass('panel panel-primary kb-data-main-panel')
+            //                   .append($('<div>')
+            //                           .addClass('panel-heading')
+            //                           .append($('<div>')
+            //                                   .addClass('panel-title')
+            //                                   .css({'text-align': 'center'})
+            //                                   .append($headerDiv)))
+            //                   .append($('<div>')
+            //                           .addClass('panel-body kb-narr-panel-body')
+            //                           .append(this.$dataPanel)
+            //                           .append(this.$loadingPanel)
+            //                           .append(this.$errorPanel)));
             
 
 

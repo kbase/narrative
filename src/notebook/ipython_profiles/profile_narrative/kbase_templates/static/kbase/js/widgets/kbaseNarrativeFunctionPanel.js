@@ -261,7 +261,7 @@
                 $newMethod.addClass('kb-function-error')
                           .append($errButton)
                           .click($.proxy(function(event) {
-                              $errButton.trigger('click', event);
+                              this.showErrorTooltip(method, event);
                           }, this));
             }
             else {

@@ -179,6 +179,7 @@
             // Make a method button for each method.
             var accordionList = [];
             for (var cat in catSet) {
+                console.log(catSet[cat]);
                 if (catSet[cat].methods.length == 0)
                     continue;
                 catSet[cat].methods.sort(function(a, b) { return a.name.localeCompare(b.name); });
@@ -187,6 +188,7 @@
                 };
                 var $methodList = $('<ul>');
                 for (var i=0; i<catSet[cat].methods.length; i++) {
+
                     catSet[cat].methods[i].$elem = this.buildMethod(catSet[cat].methods[i]);
                     $methodList.append(catSet[cat].methods[i].$elem);
                 }
@@ -228,6 +230,15 @@
                                   this.showTooltip(method, event);
                               }, this));
 
+            var $errButton = $('<span>')
+                             .addClass('glyphicon glyphicon-warning-sign kb-function-help')
+                             .css({'margin-top' : '-5px'})
+                             .click($.proxy(function(event) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                this.showErrorTooltip(method, event);
+                             }, this));
+
             /* this is for handling long function names.
                long names will be cropped and have a tooltip
                with the full name */
@@ -244,18 +255,29 @@
             }
             
             var $newMethod = $('<li>')
-                             .append(methodSpan)
-                             .append($helpButton)
-                             .click($.proxy(function(event) {
-                                 this.methClient.get_method_spec({ 'ids' : [method.id] },
-                                     $.proxy(function(spec) {
-                                         this.trigger('methodClicked.Narrative', spec[0]);
-                                     }, this),
-                                     $.proxy(function(error) {
-                                         this.showError(error);
-                                     }, this)
-                                 );
-                             }, this));
+                             .append(methodSpan);
+
+            if (method.loading_error) {
+                $newMethod.append($errButton)
+                          .click($.proxy(function(event) {
+                              $errButton.trigger('click', event);
+                          }, this));
+            }
+            else {
+                $newMethod.append($helpButton)
+                          .click($.proxy(function(event) {
+                              // needs to move to controller.
+                              console.log(method);
+                              this.methClient.get_method_spec({ 'ids' : [method.id] },
+                                  $.proxy(function(spec) {
+                                      this.trigger('methodClicked.Narrative', spec[0]);
+                                  }, this),
+                                  $.proxy(function(error) {
+                                      this.showError(error);
+                                  }, this)
+                              );
+                          }, this));
+            }
             return $newMethod;
         },
 
@@ -274,8 +296,20 @@
                            .append($('<h1>').append(method.name))
                            .append('v' + method.ver + '<br>')
                            .append(method.tooltip)
-                           .append($('<h2>')
-                           .append('Click to hide'))
+                           .append($('<h2>').append('Click to hide'))
+                           .show();
+        },
+
+        showErrorTooltip: function(method, event) {
+            this.$helpPanel.css({
+                                'left': event.pageX,
+                                'top': event.pageY
+                           })
+                           .empty()
+                           .append($('<h1>').append(method.name))
+                           .append('v' + method.ver + '<br>')
+                           .append('This function has an error and cannot currently be used.')
+                           .append($('<h2>').append('Click to hide'))
                            .show();
         },
 

@@ -206,7 +206,17 @@
                 'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
             };
 
-            var code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
+            var code = '';
+            if (data.method.behavior.python_class && data.method.behavior.python_function) {
+                code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
+            }
+            else if (data.method.behavior.kb_service_method && data.method.behavior.kb_service_name) {
+                code = this.buildGenericRunCommand(data);
+            }
+            else {
+                // something else!
+                // error for now. at some point. or something.
+            }
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
@@ -986,6 +996,15 @@
                 $(cell.element).find('#kb-func-progress').css({'display': 'block'});
                 nb.kernel.execute(code, callbacks, {silent: true});
             };
+        },
+
+        buildGenericRunCommand: function(data) {
+            var methodJSON = this.safeJSONStringify(data.method);
+            var paramsJSON = this.safeJSONStringify(data.parameters);
+
+            return "import biokbase.narrative.common.service as Service\n" +
+                   "method = Service.get_service('generic_service').get_method('method_call')\n" +
+                   "method('" + methodJSON + "', '" + paramsJSON + "')";
         },
 
         /**

@@ -61,6 +61,7 @@
 
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
+                                .attr('Placeholder', 'Search methods')
                                 .on('input', 
                                     $.proxy(function(e) { 
                                         console.log('changed text: ' + this.$searchInput.val());

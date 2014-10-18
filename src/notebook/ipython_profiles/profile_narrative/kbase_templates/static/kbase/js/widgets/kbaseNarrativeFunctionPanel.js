@@ -243,22 +243,23 @@
                long names will be cropped and have a tooltip
                with the full name */
             var methodTitle = method.name;
-            var methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
+            var $methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
             if (methodTitle.length > 31) {
-                methodSpan.append(methodTitle);
-                methodSpan.tooltip({
+                $methodSpan.append(methodTitle);
+                $methodSpan.tooltip({
                     title: method.name,
                     placement: "bottom"
                 }); 
             } else {
-                 methodSpan.append(methodTitle);
+                 $methodSpan.append(methodTitle);
             }
             
             var $newMethod = $('<li>')
-                             .append(methodSpan);
+                             .append($methodSpan);
 
             if (method.loading_error) {
-                $newMethod.append($errButton)
+                $newMethod.addClass('kb-function-error')
+                          .append($errButton)
                           .click($.proxy(function(event) {
                               $errButton.trigger('click', event);
                           }, this));

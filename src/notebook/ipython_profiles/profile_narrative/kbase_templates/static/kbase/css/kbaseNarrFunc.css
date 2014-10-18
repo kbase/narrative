@@ -77,6 +77,12 @@
     text-decoration: none;
 }
 
+.kb-function-error {
+    background-color: #f2dede !important;
+    color: #b94a48;
+    border-color: #eed3d7 !important;
+}
+
 /* Help on a function */
 .kb-function-help {
     padding: 0 3px;

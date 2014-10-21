@@ -24,8 +24,6 @@ from biokbase.narrative.common.service import init_service, method, finalize_ser
 # Other KBase
 from biokbase.GWAS.Client import GWAS
 from biokbase.CoExpression.Client import CoExpression
-#from biokbase.workspaceService.Client import workspaceService
-#from biokbase.workspaceServiceDeluxe.Client import Workspace
 from biokbase.cdmi.client import CDMI_API,CDMI_EntityAPI
 from biokbase.OntologyService.Client import Ontology
 from biokbase.IdMap.Client import IdMap

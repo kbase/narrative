@@ -9,7 +9,8 @@ init-install:
 	@cat /dev/null > ${log}
 
 ipython-install:
-	@if [ ! -e ipython ]; then \
+	#@if [ ! -e ipython ]; then
+	@if [ 1 ]; then \
 		printf "Cloning IPython branch ${ipython_branch}\n"; \
 		git clone https://github.com/ipython/ipython.git -b ${ipython_branch}; \
 		printf "Installing IPython branch $ipython_branch, log in ${log}\n"; \

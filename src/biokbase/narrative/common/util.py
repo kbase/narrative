@@ -11,9 +11,8 @@ import re
 import requests
 from setuptools import Command
 import time
-from biokbase.workspaceService.Client import workspaceService as WS1
-from biokbase.workspaceServiceDeluxe.Client import Workspace as WS2
-from biokbase.workspaceServiceDeluxe.Client import ServerError, URLError
+from biokbase.workspace.client import Workspace as WS2
+from biokbase.workspace.client import ServerError, URLError
 
 
 class _KBaseEnv(object):
@@ -29,22 +28,42 @@ class _KBaseEnv(object):
     """
     env_auth_token = "KB_AUTH_TOKEN"
     env_narrative = "KB_NARRATIVE"
+    env_session = "KB_SESSION"
+
+    @staticmethod
+    def _getenv(name):
+        return os.getenv(name, "")
+
+    @staticmethod
+    def _setenv(name, value):
+        if value:
+            os.environ[name] = value
+        elif name in os.environ:
+            del os.environ[name]
 
     @property
     def auth_token(self):
-        return os.getenv(self.env_auth_token, "")
+        return self._getenv(self.env_auth_token)
 
     @auth_token.setter
     def auth_token(self, value):
-        os.environ[self.env_auth_token] = value
+        self._setenv(self.env_auth_token, value)
 
     @property
     def narrative(self):
-        return os.getenv(self.env_narrative, "")
+        return self._getenv(self.env_narrative)
 
     @narrative.setter
     def narrative(self, value):
-        os.environ[self.env_narrative] = value
+        self._setenv(self.env_narrative, value)
+
+    @property
+    def session(self):
+        return self._getenv(self.env_session)
+
+    @session.setter
+    def session(self, value):
+        self._setenv(self.env_session, value)
 
 # Single instance
 kbase_env = _KBaseEnv()
@@ -129,39 +148,6 @@ class WorkspaceException(Exception):
         oper = "{}({})".format(command, fmt_params)
         msg = "Workspace.{o}: {e}".format(o=oper, e=err)
         Exception.__init__(self, msg)
-
-
-class Workspace(WS1):
-    """Simple wrapper for KBase workspace-1 service.
-    """
-    def __init__(self, url=None, token=None, name=None):
-        WS1.__init__(self, url=url, token=token)
-        self._ws_name = name
-
-    def get(self, objid, objtype, instance=None, as_json=True):
-        # set common parameters
-        params = {
-            'id': objid,
-            'type': objtype,
-            'workspace': self._ws_name
-        }
-        # if instance isn't given, figure out most recent one
-        # XXX: this is dumb -- better way to do this?!
-        if instance is None:
-            params['asHash'] = False
-            try:
-                result = self.object_history(params)
-            except Exception as err:
-                raise WorkspaceException("object_history", params, err)
-            instance = len(result) - 1
-        # get selected instance
-        params.update({'asJSON': as_json, 'instance': instance})
-        try:
-            obj = self.get_object(params)
-        except Exception as err:
-            raise WorkspaceException("get_object", params, err)
-        # return the object
-        return obj
 
 
 class Workspace2(WS2):
@@ -288,7 +274,7 @@ class Workspace2(WS2):
         :raise: WorkspaceException, if command fails
         """
         if not self.has_wsid:
-            _log.error("No workspace set")
+            #_log.error("No workspace set")
             return None
         params = self._make_oid_params(objid, ver=instance)
         try:
@@ -358,9 +344,11 @@ class Workspace2(WS2):
                 result[m.encode(self.encoding)] = types
             except ServerError as err:
                 if "Module wasn't uploaded" in str(err):
-                    _log.warn("list_types: module '{}' not uploaded".format(m))
+                    pass
+                    #_log.warn("list_types: module '{}' not uploaded".format(m))
                 else:
-                    _log.error("list_types: server.error={}".format(err))
+                    #_log.error("list_types: server.error={}".format(err))
+                    pass
                 continue
         return result.values()[0] if module else result
 
@@ -384,3 +372,39 @@ class BuildDocumentation(Command):
         doc = top + self.doc_dir
         os.chdir(doc)
         os.system("make html")
+
+## Key=value pair parser
+
+KVP_EXPR = re.compile(r"""
+    (?:
+        \s*                        # leading whitespace
+        ([0-9a-zA-Z_.\-]+)         # Name
+        =
+        (?:                        # Value:
+          ([^"\s]+) |              # - simple value
+          "((?:[^"] | (?<=\\)")*)" # - quoted string
+        )
+        \s*
+    ) |
+    ([^= ]+)                        # Text w/o key=value
+    """, flags=re.X)
+
+def parse_kvp(msg, record, text_sep=' '):
+    """
+    Parse key-value pairs, adding to record in-place.
+
+    :param msg: Input string
+    :param record: In/out dict
+    :param text_sep: Separator for output text pieces
+    :return: All non-KVP as a string, joined by `text_sep`
+    """
+    text = []
+    for n, v, vq, txt in KVP_EXPR.findall(msg):
+        if n:
+            if vq:
+                v = vq.replace('\\"', '"')
+            # add this KVP to output dict
+            record[n] = v
+        else:
+            text.append(txt)
+    return text_sep.join(text)

@@ -29,7 +29,7 @@ from biokbase.Jnomics.jnomics_api import JnomicsData, JnomicsCompute
 from biokbase.Jnomics.jnomics_api.ttypes import Authentication, JnomicsThriftException
 from biokbase.Jnomics.jnomics_api.ttypes import JnomicsThriftJobStatus, JnomicsThriftJobID , JnomicsThriftHandle
 
-from biokbase.workspaceServiceDeluxe.Client import Workspace as workspaceService
+from biokbase.workspace.client import Workspace as workspaceService
 from biokbase.InvocationService.Client import InvocationService
 from biokbase.idserver.client import IDServerAPI
 from biokbase.shock import Client as shockService
@@ -114,7 +114,7 @@ class IDServerids:
     dt_type = 'kb|dataTable'
 
 # Init logging.
-_log = logging.getLogger(__name__)
+g_log = logging.getLogger(__name__)
 
 init_service(name = NAME, desc="Variation and Expression service", version = VERSION)
 

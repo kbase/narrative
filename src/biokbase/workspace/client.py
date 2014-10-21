@@ -152,6 +152,41 @@ class Workspace(object):
         if self.timeout < 1:
             raise ValueError('Timeout value must be at least 1 second')
 
+    def ver(self):
+
+        arg_hash = {'method': 'Workspace.ver',
+                    'params': [],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
     def create_workspace(self, params):
 
         arg_hash = {'method': 'Workspace.create_workspace',
@@ -184,6 +219,41 @@ class Workspace(object):
 
         if 'result' in resp:
             return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def alter_workspace_metadata(self, params):
+
+        arg_hash = {'method': 'Workspace.alter_workspace_metadata',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            pass  # nothing to return
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
@@ -607,6 +677,41 @@ class Workspace(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
+    def get_object_provenance(self, object_ids):
+
+        arg_hash = {'method': 'Workspace.get_object_provenance',
+                    'params': [object_ids],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
     def get_objects(self, object_ids):
 
         arg_hash = {'method': 'Workspace.get_objects',
@@ -681,6 +786,111 @@ class Workspace(object):
 
         arg_hash = {'method': 'Workspace.get_object_history',
                     'params': [object],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def list_referencing_objects(self, object_ids):
+
+        arg_hash = {'method': 'Workspace.list_referencing_objects',
+                    'params': [object_ids],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def list_referencing_object_counts(self, object_ids):
+
+        arg_hash = {'method': 'Workspace.list_referencing_object_counts',
+                    'params': [object_ids],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def get_referenced_objects(self, ref_chains):
+
+        arg_hash = {'method': 'Workspace.get_referenced_objects',
+                    'params': [ref_chains],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -891,6 +1101,41 @@ class Workspace(object):
 
         arg_hash = {'method': 'Workspace.get_object_info',
                     'params': [object_ids, includeMetadata],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def get_object_info_new(self, params):
+
+        arg_hash = {'method': 'Workspace.get_object_info_new',
+                    'params': [params],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -1657,10 +1902,185 @@ class Workspace(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
+    def get_all_type_info(self, mod):
+
+        arg_hash = {'method': 'Workspace.get_all_type_info',
+                    'params': [mod],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
     def get_func_info(self, func):
 
         arg_hash = {'method': 'Workspace.get_func_info',
                     'params': [func],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def get_all_func_info(self, mod):
+
+        arg_hash = {'method': 'Workspace.get_all_func_info',
+                    'params': [mod],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def grant_module_ownership(self, params):
+
+        arg_hash = {'method': 'Workspace.grant_module_ownership',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            pass  # nothing to return
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def remove_module_ownership(self, params):
+
+        arg_hash = {'method': 'Workspace.remove_module_ownership',
+                    'params': [params],
+                    'version': '1.1',
+                    'id': str(random.random())[2:]
+                    }
+
+        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
+        try:
+            request = urllib2.Request(self.url, body, self._headers)
+            ret = urllib2.urlopen(request, timeout=self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b)
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            # this should never happen... but if it does
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    # h.read() will return '' in the calling code.
+                    raise se
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' +
+                           ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            pass  # nothing to return
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def list_all_types(self, params):
+
+        arg_hash = {'method': 'Workspace.list_all_types',
+                    'params': [params],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }

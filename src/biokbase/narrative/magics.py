@@ -24,9 +24,10 @@ from biokbase.InvocationService.Client import \
     InvocationService as InvocationClient
 import biokbase.narrative.upload_handler
 from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.common.log_proxy import EVENT_MSG_SEP
 
 # Logging
-_log = logging.getLogger(__name__)
+g_log = logging.getLogger(__name__)
 
 # Module variables for maintaining KBase Notebook state
 user_id = None
@@ -56,8 +57,10 @@ workdir = "/tmp/narrative"
 def user_msg(s):
     """Show a message to the user.
     Adds a newline.
+    Also logs it for posterity.
     """
-    _log.debug("user_msg len={:d}".format(len(s)))
+    g_log.debug("user_msg{}len={:d}".format(
+               EVENT_MSG_SEP, len(s)))
     sys.stderr.write(s + "\n")
 
 
@@ -128,7 +131,7 @@ class kbasemagics(Magics):
         by any libraries that have implemented that support.
         """
         try:
-            (user, password) = line.split()
+            (user, password) = line.strip().split()
         except ValueError:
             user = line
             password = None
@@ -136,20 +139,21 @@ class kbasemagics(Magics):
         # display(Javascript("IPython.notebook.kernel.execute( 'biokbase.narrative.have_browser = 1')"))
         if user_id is not None:
             user_msg("Already logged in as {}. "
-                         "Please kblogout first if you want to re-login"
-                         .format(user_id))
+                     "Please kblogout first if you want to re-login"
+                     .format(user_id))
         elif user is None:
             user_msg("kblogin requires at least a username")
         else:
             try:
+                # XXX: SSH_AGENT NOT WORKING, so it's been deprecated
                 # try to login with only user_id in case there is
                 # an ssh_agent running
-                t = biokbase.auth.Token(user_id=user)
-                if t.token is None:
-                    if password is None:
-                        password = getpass.getpass("Please enter the KBase "
-                                                   "password for '%s': " % user)
-                    t = biokbase.auth.Token(user_id=user, password=password)
+                # t = biokbase.auth.Token(user_id=user)
+                # if t.token is None:
+                if password is None:
+                    password = getpass.getpass("Please enter the KBase "
+                                               "password for '%s': " % user)
+                t = biokbase.auth.Token(user_id=user, password=password)
                 if t.token:
                     set_token(t.token)
                 else:
@@ -297,7 +301,7 @@ class kbasemagics(Magics):
                 else:
                     return "".join(res[0])
         except Exception, e:
-            _log.error("inv_run_line msg={}".format(e))
+            g_log.error("inv_run_line msg={}".format(e))
             user_msg("Error: %s" % str(e))
             return None
         # return res[0]

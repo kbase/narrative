@@ -22,11 +22,6 @@ Distributed unspecified open source license as of 8/14/2013
 
 import datetime
 import dateutil.parser
-import io
-import os
-import glob
-import shutil
-import json
 from bson.json_util import dumps
 
 from unicodedata import normalize
@@ -36,10 +31,17 @@ from pymongo import MongoClient
 from pymongo.read_preferences import ReadPreference
 
 from IPython.html.services.notebooks.nbmanager import NotebookManager
-from IPython.config.configurable import LoggingConfigurable
+#from IPython.config.configurable import LoggingConfigurable
 from IPython.nbformat import current
 from IPython.utils.traitlets import Unicode, Dict, Bool, List, TraitError
-from IPython.utils import tz
+#from IPython.utils import tz
+
+# To log narrative itself
+from biokbase.narrative.common import kblogging
+
+g_log = kblogging.get_logger("narrative.base")
+
+
 
 #-----------------------------------------------------------------------------
 # Classes
@@ -69,7 +71,9 @@ class MongoNotebookManager(NotebookManager):
 
     def __init__(self, **kwargs):
         """Verify that we can connect to the MongoDB instance"""
-        super( MongoNotebookManager, self).__init__(**kwargs)
+        super(MongoNotebookManager, self).__init__(**kwargs)
+
+
         if not self.mongodb_uri:
             raise web.HTTPError(412, u"Missing MongoDB connection URI.")
         if not self.mongodb_database:
@@ -77,17 +81,17 @@ class MongoNotebookManager(NotebookManager):
         if not self.mongodb_collection:
             raise web.HTTPError(412, u"Missing MongoDB collection.")
         try:
-            self.mclient = MongoClient( self.mongodb_uri, read_preference = ReadPreference.PRIMARY_PREFERRED)
+            self.mclient = MongoClient(self.mongodb_uri,
+                                       read_preference=ReadPreference.PRIMARY_PREFERRED)
             self.db = self.mclient[self.mongodb_database]
             self.collection = self.db[self.mongodb_collection]
         except Exception as e:
-            raise web.HTTPError( 500, u"Unable to connect to MongoDB service at %s: %s " % (self.mongodb_uri, e))
+            raise web.HTTPError(500, u"Unable to connect to MongoDB service at %s: %s " % (self.mongodb_uri, e))
         # setup a mapping dict for MongoDB/notebook_id <-> Notebook name
         mapping = Dict()
         # Map notebook names to notebook_ids
         rev_mapping = Dict()
-    
-            
+
     def list_notebooks(self):
         """List all notebooks in MongoDB.
         The _id field used by MongoDB is a UUID like the notebook_id, so
@@ -133,12 +137,11 @@ class MongoNotebookManager(NotebookManager):
 
     def read_notebook_object(self, notebook_id):
         """Get the Notebook representation of a notebook by notebook_id."""
-
-        doc = self.collection.find_one( { '_id' : notebook_id })
+        doc = self.collection.find_one({'_id': notebook_id})
         if doc is None:
             raise web.HTTPError(500, u'Notebook % not found' % notebook_id)
         # Convert from MongoDB doc to plain JSON and then conver to notebook format
-        jsonnb = dumps( doc['ipynb'] )
+        jsonnb = dumps(doc['ipynb'] )
         nb = current.reads( jsonnb, u'json')
         last_modified = dateutil.parser.parse(doc['created'])
         return last_modified, nb

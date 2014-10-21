@@ -166,10 +166,12 @@
 			for (var j = 0; j < 2; j++) {
 			    var file_row = '';
 			    handle = 'handle_' + String(j+1)
-			    var fname = info.paired_end_libs[i][handle].file_name
-                            file_row += '<tr><td>' + fname + '</td>';
-                            file_row += '</tr>'
-			    tbl.append(file_row)
+			    if (info.paired_end_libs[i][handle] != undefined) {
+				var fname = info.paired_end_libs[i][handle].file_name
+				file_row += '<tr><td>' + fname + '</td>';
+				file_row += '</tr>'
+				tbl.append(file_row)
+			    }
 			}
 			tables.append(tbl)
 		    }

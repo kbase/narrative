@@ -128,7 +128,10 @@
          * @public
          */
         addButtonList: function(btnList) {
-
+            this.$buttonPanel.empty();
+            for (var i=0; i<btnList.length; i++) {
+                this.addButton(btnList[i]);
+            }
         },
 
         /**

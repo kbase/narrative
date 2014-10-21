@@ -26,8 +26,6 @@
         },
 
         render: function() {
-            console.log('method!');
-            console.log(this.method);
             if (this.method.widgets.input)
                 inputWidget = this.method.widgets.input;
 

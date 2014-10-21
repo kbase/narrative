@@ -31,8 +31,6 @@
         render: function() {
             // figure out all types from the method
             var method = this.options.method;
-            console.log('kbaseNarrativeMethodInput.method');
-            console.log(method);
             var params = method.parameters;
 
             var inputDiv = "<div class='kb-cell-params'><table class='table'>";

@@ -69,6 +69,7 @@ def _method_call(meth, method_spec_json, param_values_json):
     """
     workspace = os.environ['KB_WORKSPACE_ID']
     token = os.environ['KB_AUTH_TOKEN']
+    narrSysProps = {'workspace': workspace, 'token': token}
     method_spec = json.loads(method_spec_json)
     parameters = method_spec['parameters']
     behavior = method_spec['behavior']
@@ -77,49 +78,86 @@ def _method_call(meth, method_spec_json, param_values_json):
     methodName = behavior['kb_service_method']
     if serviceName:
         methodName = serviceName + '.' + methodName
-    paramsMapping = behavior['kb_service_parameters_mapping']
-    workspaceMapping = behavior['kb_service_workspace_name_mapping']
+    inputMapping = behavior['kb_service_input_mapping']
+    outputMapping = behavior['kb_service_output_mapping']
     paramValues = json.loads(param_values_json)
     
-    input = []
+    input = {}
     for paramPos in range(0, len(parameters)):
         param = parameters[paramPos]
         paramId = param['id']
         paramValue = paramValues[paramPos]
-        paramMapping = paramsMapping[paramId]
-        build_args(paramId, paramValue, paramMapping, workspace, input)
+        input[paramId] = paramValue
     
-    build_args(None, workspace, workspaceMapping, None, input)
+    rpcArgs = []
+    for mapping in inputMapping:
+        paramValue = None
+        if 'input_parameter' in mapping:
+            paramId = mapping['input_parameter']
+            paramValue = input[paramId]
+        elif 'constant_value' in mapping:
+            paramValue = mapping['constant_value']
+        elif 'narrative_system_variable' in mapping:
+            sysProp = mapping['narrative_system_variable']
+            paramValue = narrSysProps[sysProp]
+        if paramValue is None:
+            raise ValueError("Value is not defined in input mapping: " + mapping)
+        build_args(paramValue, mapping, workspace, rpcArgs)
+    
+    #build_args(None, workspace, workspaceMapping, None, rpcArgs)
     
     genericClient = GenericService(url = url, token = token)
-    output = genericClient.call_method(methodName, input)
+    output = genericClient.call_method(methodName, rpcArgs)
     
-    return json.dumps({'ws_name': workspace, 'method_spec': method_spec, 'input': input, 'output': output})
+    outArgs = []
+    for mapping in outputMapping:
+        paramValue = None
+        if 'input_parameter' in mapping:
+            paramId = mapping['input_parameter']
+            paramValue = input[paramId]
+        elif 'constant_value' in mapping:
+            paramValue = mapping['constant_value']
+        elif 'narrative_system_variable' in mapping:
+            sysProp = mapping['narrative_system_variable']
+            paramValue = narrSysProps[sysProp]
+        elif 'service_method_output_path' in mapping:
+            paramValue = output
+        if paramValue is None:
+            raise ValueError("Value is not defined in input mapping: " + mapping)
+        build_args(paramValue, mapping, workspace, outArgs)
+
+    return json.dumps(outArgs[0])
 
 
 # Finalize (registers service)
 finalize_service()
 
-def build_args(paramId, paramValue, paramMapping, workspace, input):
+def get_sub_path(object, path, pos):
+    if pos >= len(path):
+        return object
+    if isinstance(object, list):
+        listPos = int(path[pos])
+        return get_sub_path(object[listPos], path, pos + 1)
+    return get_sub_path(object[path[pos]], path, pos + 1)
+
+def build_args(paramValue, paramMapping, workspace, args):
     targetPos = 0
-    targetProp = paramId
+    targetProp = None
     targetTrans = "none"
-    if paramMapping is not None:
-        if 'target_argument_position' in paramMapping and paramMapping['target_argument_position'] is not None:
-            targetPos = paramMapping['target_argument_position']
-        targetProp = None
-        if 'target_property' in paramMapping and paramMapping['target_property'] is not None:
-            targetProp = paramMapping['target_property']
-        if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
-            targetTrans = paramMapping['target_type_transform']
+    if 'target_argument_position' in paramMapping and paramMapping['target_argument_position'] is not None:
+        targetPos = paramMapping['target_argument_position']
+    if 'target_property' in paramMapping and paramMapping['target_property'] is not None:
+        targetProp = paramMapping['target_property']
+    if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
+        targetTrans = paramMapping['target_type_transform']
     if targetTrans == "ref":
         paramValue = workspace + '/' + paramValue
-    while len(input) <= targetPos:
-        input.append({})
+    while len(args) <= targetPos:
+        args.append({})
     if (targetProp is None):
-        input[targetPos] = paramValue
+        args[targetPos] = paramValue
     else:
-        item = input[targetPos]
+        item = args[targetPos]
         item[targetProp] = paramValue
 
 

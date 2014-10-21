@@ -92,6 +92,7 @@ def _method_call(meth, method_spec_json, param_values_json):
     rpcArgs = []
     for mapping in inputMapping:
         paramValue = None
+        paramId = None
         if 'input_parameter' in mapping:
             paramId = mapping['input_parameter']
             paramValue = input[paramId]
@@ -100,6 +101,10 @@ def _method_call(meth, method_spec_json, param_values_json):
         elif 'narrative_system_variable' in mapping:
             sysProp = mapping['narrative_system_variable']
             paramValue = narrSysProps[sysProp]
+        if 'generated_value' in mapping and (paramValue is None or len(str(paramValue).strip()) == 0):
+            paramValue = generate_value(mapping['generated_value'])
+            if paramId is not None:
+                input[paramId] = paramValue
         if paramValue is None:
             raise ValueError("Value is not defined in input mapping: " + mapping)
         build_args(paramValue, mapping, workspace, rpcArgs)
@@ -131,6 +136,17 @@ def _method_call(meth, method_spec_json, param_values_json):
 
 # Finalize (registers service)
 finalize_service()
+
+def generate_value(generProps):
+    symbols = 8
+    if 'symbols' in generProps:
+        symbols = int(generProps['symbols'])
+    ret = ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(symbols)])
+    if 'prefix' in generProps:
+        ret = str(generProps['prefix']) + ret;
+    if 'suffix' in generProps:
+        ret = ret + str(generProps['suffix']);
+    return ret
 
 def get_sub_path(object, path, pos):
     if pos >= len(path):

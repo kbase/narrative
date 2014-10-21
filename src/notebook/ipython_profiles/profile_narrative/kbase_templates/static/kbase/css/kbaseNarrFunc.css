@@ -160,8 +160,29 @@
 .kb-function-dim {
     background-color: #444 !important;
     color: #999;
+    border-color: #000 !important;
 }
 
+.kb-function-dim .panel-heading {
+    background-color: #444 !important;
+    border-color: #000 !important;
+}
+
+.kb-function-cat-dim {
+    background-color: #ddd !important;
+    border-color: #ddd !important;    
+}
+
+.kb-function-cat-dim .panel-heading {
+    background-color: #ddd !important;
+    border-color: #ddd !important;    
+}
+
+.kb-function-toggle {
+    color: #0088cc;
+    font-style: italic;
+    cursor: pointer;
+}
 
 
 /* ------------------------------------------------- */

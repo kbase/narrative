@@ -64,10 +64,24 @@
                                 .attr('Placeholder', 'Search methods')
                                 .on('input', 
                                     $.proxy(function(e) { 
-                                        console.log('changed text: ' + this.$searchInput.val());
                                         this.visualFilter(this.textFilter, this.$searchInput.val());
                                     }, this)
                                 );
+            this.$numHiddenSpan = $('<span>0</span>');
+            this.$showHideSpan = $('<span>show</span>');
+            this.$toggleHiddenDiv = $('<div>')
+                                    .append(this.$showHideSpan)
+                                    .append(' ')
+                                    .append(this.$numHiddenSpan)
+                                    .append(' filtered')
+                                    .addClass('kb-function-toggle')
+                                    .hide()
+                                    .click($.proxy(function(e) {
+                                        var curText = this.$showHideSpan.text();
+                                        this.toggleHiddenMethods(curText === 'show');
+                                        this.$showHideSpan.text(curText === 'show' ? 'hide' : 'show');
+                                    }, this));
+
             var $clearSearchBtn = $('<span>')
                                   .addClass('input-group-btn')
                                   .append($('<button>')
@@ -88,7 +102,8 @@
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body')
-                                  .append(this.$searchDiv);
+                                  .append(this.$searchDiv)
+                                  .append(this.$toggleHiddenDiv);
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -179,7 +194,6 @@
             // Make a method button for each method.
             var accordionList = [];
             for (var cat in catSet) {
-                console.log(catSet[cat]);
                 if (catSet[cat].methods.length == 0)
                     continue;
                 catSet[cat].methods.sort(function(a, b) { return a.name.localeCompare(b.name); });
@@ -198,15 +212,14 @@
             this.services = catSet;
             this.trigger('servicesUpdated.Narrative', [this.services]);
 
-            // Left here in case we want to use it again!
-            // console.log("Total Services: " + totalServices);
-            // console.log("Total Functions: " + totalFunctions);
-            // sort by service title
+            // sort by category name
             accordionList.sort(function(a, b) {
                 return a.title.localeCompare(b.title);
             });
 
-            this.$functionPanel.kbaseAccordion( { elements : accordionList } );
+            var accElements = this.buildAccordion(accordionList);
+            this.$functionPanel.append(accElements[0]);
+            this.accordionElements = accElements[1];
         },
 
         /**
@@ -268,7 +281,6 @@
                 $newMethod.append($helpButton)
                           .click($.proxy(function(event) {
                               // needs to move to controller.
-                              console.log(method);
                               this.methClient.get_method_spec({ 'ids' : [method.id] },
                                   $.proxy(function(spec) {
                                       this.trigger('methodClicked.Narrative', spec[0]);
@@ -434,6 +446,96 @@
             this.$errorPanel.show();
         },
 
+        /**
+         * @method
+         * Temp function borrowed from kbaseAccordion.js, so we can have access to the internal
+         * accordion bits that get generated. Maybe it'll change more!
+         */
+        buildAccordion : function (elements) {
+            var fontSize = '100%';
+
+            var $block =
+                $('<div></div>')
+                    .addClass('accordion')
+                    .css('font-size', fontSize)
+                    .attr('id', 'accordion');
+
+            var topElements = [];
+
+            $.each(
+                elements,
+                $.proxy(
+                    function (idx, val) {
+                        var $topElem = 
+                            $('<div></div>')
+                                .addClass('panel panel-default')
+                                .css('margin-bottom', '2px')
+                                .append(
+                                    $('<div></div>')
+                                        .addClass('panel-heading')
+                                        .css('padding', '0px')
+                                        .append(
+                                            $('<i></i>')
+                                                .css('margin-right', '5px')
+                                                .css('margin-left', '3px')
+                                                .addClass('fa fa-chevron-right')
+                                                .addClass('pull-left')
+                                                .css('height', '22px')
+                                                .css('line-height', '22px')
+                                                .css('color', 'gray')
+                                        )
+                                        .append(
+                                            $('<a></a>')
+                                                .css('padding', '0px')
+                                                .attr('href', '#')
+                                                .attr('title', val.title)
+                                                .css('height', '22px')
+                                                .css('line-height', '22px')
+
+                                                .append(val.title)
+                                        )
+                                        .bind(
+                                            'click',
+                                                function(e) {
+                                                    e.preventDefault();
+                                                    var $opened = $(this).closest('.panel').find('.in');
+                                                    var $target = $(this).next();
+
+                                                    if ($opened != undefined) {
+                                                        $opened.collapse('hide');
+                                                        var $i = $opened.parent().first().find('i');
+                                                        $i.removeClass('fa fa-chevron-down');
+                                                        $i.addClass('fa fa-chevron-right');
+                                                    }
+
+                                                    if ($target.get(0) != $opened.get(0)) {
+                                                        $target.collapse('show');
+                                                        var $i = $(this).parent().find('i');
+                                                        $i.removeClass('fa fa-chevron-right');
+                                                        $i.addClass('fa fa-chevron-down');
+                                                    }
+
+                                                }
+                                            )
+                                )
+                                .append(
+                                    $('<div></div>')
+                                        .addClass('panel-body collapse')
+                                        .css('padding-top', '9px')
+                                        .css('padding-bottom', '9px')
+                                        .append(val.body)
+                                    );
+                        topElements[val.title] = $topElem;
+                        $block.append($topElem);
+                    },
+                    this
+                )
+            );
+            this._rewireIds($block, this);
+
+            return [$block, topElements];
+        },
+
         textFilter: function(pattern, method) {
             var lcName = method.name.toLowerCase();
             return lcName.indexOf(pattern.toLowerCase()) > -1;
@@ -448,19 +550,76 @@
          * So we need a handle on the functions. No big.
          */
         visualFilter: function(filterFn, fnInput) {
-            console.log('filtering!');
-            for (var catName in this.services) {
-                var cat = this.services[catName];
+            var numHidden = 0;
+            for (var catId in this.services) {
+                var cat = this.services[catId];
+                var numPass = 0;
                 for (var i=0; i<cat.methods.length; i++) {
                     if (!filterFn(fnInput, cat.methods[i])) {
+                        cat.methods[i].$elem.hide();
                         cat.methods[i].$elem.addClass('kb-function-dim');
+                        numHidden++;
                     }
                     else {
                         cat.methods[i].$elem.removeClass('kb-function-dim');
+                        cat.methods[i].$elem.show();
+                        numPass++;
                     }
                 }
+                if (numPass === 0) {
+                    this.accordionElements[cat.name].addClass('kb-function-dim');
+                    this.accordionElements[cat.name].removeAttr('kb-has-hidden');
+                    this.accordionElements[cat.name].removeClass('kb-function-cat-dim');
+                }
+                else if (numPass < cat.methods.length) {
+                    this.accordionElements[cat.name].attr('kb-has-hidden', '1');
+                    this.accordionElements[cat.name].removeClass('kb-function-dim');
+                }
+                else {
+                    this.accordionElements[cat.name].removeClass('kb-function-dim kb-function-cat-dim');
+                    this.accordionElements[cat.name].removeAttr('kb-has-hidden');
+                }
             }
-            console.log('done!');
+            if (numHidden > 0) {
+                this.$numHiddenSpan.text(numHidden);
+                this.$toggleHiddenDiv.show();
+                this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
+            }
+            else {
+                this.$toggleHiddenDiv.hide();
+                this.toggleHiddenMethods(1);
+            }
+        },
+
+        toggleHiddenMethods: function(show) {
+            /* 2 cases
+             * show is truthy -> show()
+             * show is falsy -> hide()
+             */
+
+            // if show, show 'em all, and trigger the class for the kb-has-hidden attribute
+            if (show) {
+                this.$functionPanel.find('.panel-default').show();
+                this.$functionPanel.find('.kb-data-obj-name').parent().show();
+                this.$functionPanel.find('[kb-has-hidden]').addClass('kb-function-cat-dim');
+            }
+            // otherwise, remove the kb-function-cat-dim class from everything, and
+            // show only those that do not have kb-function-dim, and hide the rest
+            else {
+                this.$functionPanel.find('.panel-default').removeClass('kb-function-cat-dim');
+                this.$functionPanel.find('.kb-function-dim').hide();
+                this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
+                this.$functionPanel.find('li:not(.kb-function-dim)').show();
+                // for (var catId in this.services) {
+                //     var catName = this.services[catId].name;
+                //     var $elem = this.accordionElements[catName];
+                //     $elem.removeClass('kb-function-cat-dim');
+                //     if ($elem.hasClass('kb-function-dim'))
+                //         $elem.hide();
+                //     else
+                //         $elem.show();
+                // }
+            }
         },
 
 

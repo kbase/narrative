@@ -398,7 +398,6 @@ class KBaseWSNotebookManager(NotebookManager):
             # This gets auto-updated on the front end, and is easier to manage.
             if not hasattr(nb.metadata, 'data_dependencies'):
                 nb.metadata.data_dependencies = list()
-            nb.metadata.data_dependencies = self.extract_data_dependencies(nb)
             if not hasattr(nb.metadata, 'job_ids'):
                 nb.metadata.job_ids = list()
             nb.metadata.format = self.node_format
@@ -420,6 +419,7 @@ class KBaseWSNotebookManager(NotebookManager):
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
             wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
+            wsobj['meta']['job_ids'] = json.dumps(wsobj['meta']['job_ids'])
 
             # If we're given a notebook id, try to parse it for the save parameters
             if notebook_id:

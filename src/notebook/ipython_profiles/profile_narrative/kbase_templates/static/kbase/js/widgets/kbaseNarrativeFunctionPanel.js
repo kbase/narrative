@@ -89,7 +89,7 @@
                                           .css({'border-left' : 'none'})
                                           .attr('type', 'button')
                                           .append($('<span>')
-                                                  .addClass('glyphicon glyphicon-remove'))
+                                                  .append('X'))
                                           .click(
                                             $.proxy(function(event) { 
                                                 this.$searchInput.val(''); 

@@ -187,7 +187,6 @@
 
             // restore the input widget's state.
             this.removeCellEditFunction(cell);
-            // this.bindActionButtons(cell);
         },
 
         runMethodCell: function(data) {

@@ -82,9 +82,9 @@
                                                .attr('aria-valuenow', '0')
                                                .attr('aria-valuemin', '0')
                                                .attr('aria-valuemax', '100')
-                                               .css({'width' : '0%'}))
-                                       .append($('<p>')
-                                               .addClass('text-success')));
+                                               .css({'width' : '0%'})))
+                               .append($('<p>')
+                                       .addClass('text-success'));
 
             var methodId = this.options.cellId + '-method-details';
             var buttonLabel = '...';

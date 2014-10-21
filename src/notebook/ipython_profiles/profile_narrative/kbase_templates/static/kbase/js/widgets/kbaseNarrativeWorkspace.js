@@ -187,6 +187,7 @@
 
             // restore the input widget's state.
             this.removeCellEditFunction(cell);
+            // this.bindActionButtons(cell);
         },
 
         runMethodCell: function(data) {
@@ -1307,25 +1308,35 @@
                 return;
             }
 
-            var widget = result.widget || this.defaultOutputWidget;
+            var method = cell.metadata[this.KB_CELL].method;
+            var widget = result.widget;
+            if (!widget) {
+                if (method.widgets && method.widgets.output) {
+                    widget = method.widgets.output;
+                }
+                else {
+                    widget = this.defaultOutputWidget;
+                }
+            }
 
             var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
 
             // kinda ugly, but concise. grab the method. if it's not falsy, fetch the title from it.
             // worst case, it'll still be falsy, and we can deal with it in the header line.
-            var methodName = cell.metadata[this.KB_CELL].method;
-            if (methodName)
-                methodName = methodName.title;
+            // look for either 'title' or 'name' to be backward compatible.
+            var methodName = method.title;
+            if (!method.title && method.info && method.info.name)
+                methodName = method.info.name;
 
             var uuid = this.uuidgen();
             var outCellId = 'kb-cell-out-' + uuid;
 
             // set up the widget line
-            var widgetInvoker = "";
-            if (result.widget && result.widget.length > 0)
-                widgetInvoker = result.widget + "(" + result.data + ");";
+            var widgetInvoker = widget;
+            if (widget !== this.defaultOutputWidget)
+                widgetInvoker += '(' + result.data + ');';
             else
-                widgetInvoker = this.defaultOutputWidget + "({'data' : " + result.data + "});";
+                widgetInvoker += "({'data' : " + result.data + "});";
 
             var header = '<span class="kb-out-desc"><b>' + 
                             (methodName ? methodName : 'Unknown method') + 

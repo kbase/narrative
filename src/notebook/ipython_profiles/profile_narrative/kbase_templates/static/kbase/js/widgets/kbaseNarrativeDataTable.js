@@ -1,5 +1,5 @@
 /**
- * A decompartmentalized data table widget, factored out of the kbaseWorkspaceDataDeluxe widget.
+ * A decompartmentalized data table widget, factored out of the kbaseNarrativeDataPanel widget.
  * This is just a fancy datatables object that shows a single column (data id), with clickable buttons
  * that will trigger a dataInfoClicked.Narrative event.
  * It also has a Select element that allows the user to filter on object type, similar to the 

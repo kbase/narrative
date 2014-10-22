@@ -19,11 +19,11 @@ narrative.init = function() {
         versionStr = window.kbconfig.name + '<br>' + window.kbconfig.version;
     $('.version-stamp').empty().html(versionStr);
 
-    var dataWidget = $('#kb-ws').kbaseWorkspaceDataDeluxe();
-    dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+    var $dataWidget = $('#kb-ws').kbaseNarrativeDataPanel();
+    $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
-    var functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
-    functionWidget.refreshAJAX();
+    var $functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
+    $functionWidget.refreshFromService();
 
     var jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
     jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
@@ -43,7 +43,7 @@ narrative.init = function() {
 
         if (workspaceId) {
             $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + workspaceId);
-            dataWidget.setWorkspace(workspaceId);
+            $dataWidget.setWorkspace(workspaceId);
         }
 
         // Should be renamed.... eventually?

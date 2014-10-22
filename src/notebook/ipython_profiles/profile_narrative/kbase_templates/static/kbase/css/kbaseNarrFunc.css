@@ -16,6 +16,16 @@
     padding:3px;
 }
 
+.kb-narr-panel-toggle {
+    margin-right: 4px;
+    margin-top: -4px; 
+    cursor: pointer;
+    color: #ddd;
+    -webkit-user-select: none; /* Chrome/Safari */        
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+ */
+}
+
 /* Container for func list */
 .kb-function-body {
     height: 45%;
@@ -65,6 +75,12 @@
 }
 .kb-function-body a:hover {
     text-decoration: none;
+}
+
+.kb-function-error {
+    background-color: #f2dede !important;
+    color: #b94a48;
+    border-color: #eed3d7 !important;
 }
 
 /* Help on a function */
@@ -140,6 +156,34 @@
     max-width : 250px;
     overflow-x : scroll;
 }
+
+.kb-function-dim {
+    background-color: #444 !important;
+    color: #999;
+    border-color: #000 !important;
+}
+
+.kb-function-dim .panel-heading {
+    background-color: #444 !important;
+    border-color: #000 !important;
+}
+
+.kb-function-cat-dim {
+    background-color: #ddd !important;
+    border-color: #ddd !important;    
+}
+
+.kb-function-cat-dim .panel-heading {
+    background-color: #ddd !important;
+    border-color: #ddd !important;    
+}
+
+.kb-function-toggle {
+    color: #0088cc;
+    font-style: italic;
+    cursor: pointer;
+}
+
 
 /* ------------------------------------------------- */
 /* IPython cells */
@@ -352,7 +396,6 @@
 .kb-jobs-item:last-child {
     border-bottom: none;
 }
-
 
 
 

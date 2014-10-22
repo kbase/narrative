@@ -27,10 +27,8 @@
     <link rel="stylesheet" href="{{ static_url("custom/custom.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/narrative.css") }}" type="text/css" />
-    <!--<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">-->
     <link rel="stylesheet" href="{{ static_url("kbase/js/ui-common/ext/font-awesome/4.1.0/css/font-awesome.min.css") }}" type="text/css" />
 
-    <!--<link rel="stylesheet" href="{{ static_url("kbvis/ext/font-awesome/4.0.3/css/font-awesome.css") }}" type="text/css" />-->
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
 
@@ -56,12 +54,7 @@
 
         checkBrowser();
     </script>
-
-
-
-<!--    <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script> -->
     <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script>
-
     <script>
       require.config({
           baseUrl: '{{ static_url() }}',
@@ -340,29 +333,25 @@
 {% endblock %}
 </div>
 
-        <div id="app" class="wrapper" ui-view></div>
-
-        </div> <!-- end wrap, this pushes the footer down -->
-        <!--    <div id="footer">
-              <div class="disclaimer">This site is for demonstration purposes only.</div>
-            </div> -->
+<div id="app" class="wrapper" ui-view></div>
+</div> <!-- end wrap, this pushes the footer down -->
 
 <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script>
-  var configJSON = $.parseJSON(
-                      $.ajax({
-                               url: "{{ static_url('kbase/config.json') }}",
-                               async: false,
-                               dataType: 'json'
-                             }).responseText );
-  window.kbconfig = { urls : configJSON[configJSON['config']],
-                      version: configJSON['version'],
-                      name: configJSON['name'] };
+    var configJSON = $.parseJSON($.ajax({
+        url: "{{ static_url('kbase/config.json') }}", 
+        async: false, 
+        dataType: 'json'
+    }).responseText);
+    window.kbconfig = { urls : configJSON[configJSON['config']],
+                        version: configJSON['version'],
+                        name: configJSON['name'] };
 </script>
-<script src="{{ static_url("kbase/js/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/fbaModelServices.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/userandjobstate.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/api/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/api/fbaModelServices.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/api/userandjobstate.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/api/NarrativeMethodStore.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbapi.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>

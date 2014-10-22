@@ -1,5 +1,5 @@
 {
-    "config" : "dev",
+    "config" : "prod",
 
     "dev": {
         "cdmi" : "https://kbase.us/services/cdmi_api/",
@@ -22,7 +22,8 @@
         "user_and_job_state" : "http://140.221.67.185:7083",
         "narrative_job_proxy" : "http://140.221.67.185:7068",
         "trees" : "http://140.221.67.152:7047",
-        "awe" : "http://140.221.67.185:7080"
+        "awe" : "http://140.221.67.185:7080",
+        "narrative_method_store" : "http://dev19.berkeley.kbase.us/narrative_method_store/rpc"
     },
 
     "prod": {
@@ -43,7 +44,8 @@
         "log_proxy_port": 32001,
         "log_proxy_host": "172.17.42.1",
         "narrative_job_proxy" : "http://140.221.67.185:7068",
-        "awe" : "http://140.221.67.185:7080"
+        "awe" : "http://140.221.67.185:7080",
+        "narrative_method_store" : "https://kbase.us/services/narrative_method_store/rpc"
     },
 
     "name" : "KBase Narrative",

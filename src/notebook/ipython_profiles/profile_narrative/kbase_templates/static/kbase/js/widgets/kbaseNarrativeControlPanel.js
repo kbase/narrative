@@ -66,6 +66,8 @@
              * and off we go.
              */
 
+
+            console.log('kbaseNarrativeControlPanel : ' + this.options.title);
             // Make a main body panel for everything to sit inside.
             this.$bodyDiv = $('<div>');
 
@@ -77,7 +79,7 @@
                                 .css({'margin-top' : '-4px'});
 
             this.$elem.append($('<div>')
-                              .addClass('panel panel-primary')
+                              .addClass('panel panel-primary kb-narr-side-panel')
                               .append($('<div>')
                                       .addClass('panel-heading')
                                       .append($('<div>')

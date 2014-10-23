@@ -25,8 +25,10 @@ narrative.init = function() {
     var $functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
     $functionWidget.refreshFromService();
 
-    var jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
-    jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+    var $jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
+    $jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+    
+    var $appsWidget = $('#kb-apps-panel').kbaseNarrativeAppsPanel({ autopopulate: false });
 
     /*
      * Once everything else is loaded and the Kernel is idle,
@@ -53,6 +55,6 @@ narrative.init = function() {
         });
 
         // still needs to wait ~500ms for some godawful reason.
-        setTimeout( function() { jobsWidget.refresh(); }, 500);
+       setTimeout( function() { $jobsWidget.refresh(); }, 500);
     });
 };

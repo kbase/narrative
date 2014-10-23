@@ -3,12 +3,13 @@
 (function( $, undefined ) {
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
-        parent: 'kbaseWidget',
-        version: '1.0.0',
+        parent: 'kbaseNarrativeControlPanel',
+        version: '0.0.1',
         options: {
             loadingImage: 'static/kbase/images/ajax-loader.gif',
+            autopopulate: true,
+            title: 'Jobs',
         },
-
         init: function(options) {
             this._super(options);
 
@@ -38,6 +39,13 @@
              * panel-body, make sure the right one is being shown at the start,
              * and off we go.
              */
+
+            var $refreshBtn = $('<button>')
+                              .addClass('btn btn-xs btn-default')
+                              .click($.proxy(function(event) { this.refresh(); }, this))
+                              .append($('<span>')
+                                      .addClass('glyphicon glyphicon-refresh'));
+
             var $headerDiv = $('<div>')
                               .append('Jobs')
                               .append($('<button>')
@@ -65,19 +73,25 @@
                                .addClass('kb-error')
                                .hide();
 
-            this.$elem.append($('<div>')
-                              .addClass('panel panel-primary kb-data-main-panel')
-                              .append($('<div>')
-                                      .addClass('panel-heading')
-                                      .append($('<div>')
-                                              .addClass('panel-title')
-                                              .css({'text-align': 'center'})
-                                              .append($headerDiv)))
-                              .append($('<div>')
-                                      .addClass('panel-body kb-narr-panel-body')
-                                      .append(this.$jobsPanel)
-                                      .append(this.$loadingPanel)
-                                      .append(this.$errorPanel)));
+            this.addButton($refreshBtn);
+
+            this.body().append(this.$jobsPanel)
+                       .append(this.$loadingPanel)
+                       .append(this.$errorPanel);
+
+            // this.body().append($('<div>')
+            //                   .addClass('panel panel-primary kb-data-main-panel')
+            //                   .append($('<div>')
+            //                           .addClass('panel-heading')
+            //                           .append($('<div>')
+            //                                   .addClass('panel-title')
+            //                                   .css({'text-align': 'center'})
+            //                                   .append($headerDiv)))
+            //                   .append($('<div>')
+            //                           .addClass('panel-body kb-narr-panel-body')
+            //                           .append(this.$jobsPanel)
+            //                           .append(this.$loadingPanel)
+            //                           .append(this.$errorPanel)));
 
             this.refresh();
 
@@ -88,13 +102,13 @@
             return this;
         },
 
-        render: function() {
-            if (this.options.jobInfo) {
-                this.refresh(this.options.jobInfo);
-            }
-            else
-                this.$elem.html('Job Watching!');
-        },
+        // render: function() {
+        //     if (this.options.jobInfo) {
+        //         this.refresh(this.options.jobInfo);
+        //     }
+        //     else
+        //         this.$elem.html('Job Watching!');
+        // },
 
         /**
          * Shows a loading spinner or message on top of the panel.

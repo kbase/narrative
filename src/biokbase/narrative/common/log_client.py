@@ -41,7 +41,7 @@ def main(args):
     level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]
     g_log.setLevel(level)
 
-    g_log.info("Here we go")
+    g_log.info("init.start")
 
     if args.start_proxy:
         cfg = 'db: test\ncollection: kblog\n'

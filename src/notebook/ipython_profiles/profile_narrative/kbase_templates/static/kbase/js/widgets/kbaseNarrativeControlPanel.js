@@ -76,7 +76,7 @@
             this.$buttonPanel = $('<span>')
                                 .addClass('btn-toolbar pull-right')
                                 .attr('role', 'toolbar')
-                                .css({'margin-top' : '-4px'});
+                                .css({'margin-top' : '-2px'});
 
             this.$elem.append($('<div>')
                               .addClass('panel panel-primary kb-narr-side-panel')

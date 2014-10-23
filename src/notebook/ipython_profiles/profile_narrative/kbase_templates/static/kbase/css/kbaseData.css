@@ -20,11 +20,11 @@ div[class="tooltip-inner"] {
 }
 
 #kb-ws {
-    background-color: #fff;
+/*    background-color: #fff;
     width: 100%;
     padding-bottom: 5px;
-    /*height: 425px !important;*/
-}
+    height: 425px !important;
+*/}
 
 #data-tabs {
     height: 375px !important;

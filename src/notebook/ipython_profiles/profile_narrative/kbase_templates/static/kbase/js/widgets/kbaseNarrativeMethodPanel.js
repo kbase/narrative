@@ -11,7 +11,7 @@
  */
 (function( $, undefined ) {
     $.KBWidget({
-        name: 'kbaseNarrativeFunctionPanel', 
+        name: 'kbaseNarrativeMethodPanel', 
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {

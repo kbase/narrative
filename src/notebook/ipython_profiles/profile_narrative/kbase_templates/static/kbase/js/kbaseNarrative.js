@@ -22,7 +22,7 @@ narrative.init = function() {
     var $dataWidget = $('#kb-ws').kbaseNarrativeDataPanel();
     $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
-    var $functionWidget = $('#kb-function-panel').kbaseNarrativeFunctionPanel({ autopopulate: false });
+    var $functionWidget = $('#kb-function-panel').kbaseNarrativeMethodPanel({ autopopulate: false });
     $functionWidget.refreshFromService();
 
     var $jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });

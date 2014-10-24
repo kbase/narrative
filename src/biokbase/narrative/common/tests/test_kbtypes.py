@@ -9,12 +9,10 @@ import argparse
 import StringIO
 import os
 from biokbase.narrative.common import kbtypes
+from IPython.utils.traitlets import HasTraits
 
-## helper values
-
-class VersionedThing(object):
-    def __init__(self, version=None):
-        self.version = kbtypes.VersionNumber(version)
+class HasVersion(HasTraits):
+    ver = kbtypes.VersionNumber('0.0.0')
 
 class TestKbaseTypes(unittest.TestCase):
     """Test basic behavior of KBase types.
@@ -54,16 +52,17 @@ class TestKbaseTypes(unittest.TestCase):
         g = kbtypes.KBaseGenome3()
         self.assertEqual(str(g), 'KBaseGenomes.Genome-3.0')
 
-    def test_version(self):
-        """Test Version type.
-        """
-        v = kbtypes.VersionNumber()
-        self.failUnlessEqual(v.get_default_value(), (0, 0, 0))
+    def test_version_bad(self):
         for bad_input in ("Mr. Robinson", "a.b.c", "1-2-3", "0.1.-1", (0, 1, -1)):
             msg = "bad input {} passed validation".format(bad_input)
-            self.shouldRaise(kbtypes.KBTypeError, msg, lambda x: VersionedThing(version=x), bad_input)
-        for good_input, value in (("0.1.1", (0, 1, '1')), ("13.14.97", (13, 14, '97')),):
-            self.assertEqual(value, VersionedThing(version=good_input).version)
+            self.shouldRaise(kbtypes.KBTypeError, msg,
+                             HasVersion, ver=bad_input)
+
+    def test_version_good(self):
+        for good_input, value in (("0.1.1", ('0', '1', '1')),
+                                  ("13.14.97", ('13', '14', '97')),
+                                  ("2.7.7-a+foo", ('2', '7', '7-a+foo'))):
+            self.assertEqual(value, HasVersion(ver=good_input).ver)
 
     def shouldRaise(self, exc, msg, fn, *arg, **kwargs):
         try:

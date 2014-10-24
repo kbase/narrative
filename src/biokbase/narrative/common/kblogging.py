@@ -6,9 +6,13 @@ Other biokbase modules can use the logging like this:
     from biokbase.narrative.common.kblogging import get_logger
     _log = get_logger(__name__)
 
-Log messages are free-form, *but* the MongoDB handler will break any
-parts of the message in the form '<key>=<value>' into their own fields
-in the MongoDB record.
+Log messages can be free-form, *but* the desired format is:
+
+    Event_name;Key1=value1 Key2=Value2 (..etc..)
+
+In this format the "Event_name" is taken as the canonical name of what event in the
+system this is logging and the Key/value pairs are parsed into a mapping.
+Any non-key/value text will be combined into a single text field.
 
 Logging to MongoDB will be enabled, via proxy, if the proxy is
 running on the pre-configured host/port

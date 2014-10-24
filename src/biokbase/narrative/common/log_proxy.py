@@ -268,8 +268,7 @@ class LogStreamForwarder(asyncore.dispatcher):
         size = struct.unpack('>L', self._hdr)[0]
         if size > 65536:
             g_log.error("Log message size ({:d}) > 64K, possibly corrupt header"
-                       ": <{}>"
-                      .format(size, self._hdr))
+                        ": <{}>".format(size, self._hdr))
             self._hdr = ''
             return
         self._hdr = ''
@@ -282,74 +281,94 @@ class LogStreamForwarder(asyncore.dispatcher):
             g_log.debug("Got record: {}".format(record))
 
         try:
-            self._extract_info(record)
-            self._strip_logging_junk(record)
-            self._fix_types(record)
+            kbrec = KBaseLogRecord(record, strict=True)
         except ValueError as err:
             g_log.error("Bad input to 'handle_read': {}".format(err))
             return
 
         # Add dict to DB
-        self._coll.insert(record)
+        self._coll.insert(kbrec.record)
 
-    def _extract_info(self, record):
+class KBaseLogRecord(object):
+    """Convert logged record (dict) to object that we can store in a DB.
+    """
+    def __init__(self, record, strict=False):
+        """Process input record. Results are stored in `record` attribute.
+
+        Anything should parse unless `strict` is passed in, which is still
+        pretty lenient but requires the "event;message" format.
+
+        :param record: Input record which is *modified in-place*
+        :type record: dict
         """
-        Dissect the 'message' contents to extract event name and any
+        self.strict = strict
+        self.record = record
+        try:
+            self._extract_info()
+            self._strip_logging_junk()
+            self._fix_types()
+        except ValueError:
+            self.record = None
+            raise
+
+    def _extract_info(self):
+        """Dissect the 'message' contents to extract event name and any
         embedded key-value pairs.
-
-        :param record: Object to modify in-place
         """
-        message = record.get('message', None)
+        rec = self.record  # alias
+        message = rec.get('message', None)
         if message is None:
             return  # Stop!
         # Split out event name
         try:
             event, msg = message.split(EVENT_MSG_SEP, 1)
         except ValueError:
-            raise ValueError("Cannot split event/msg in '{}'".format(message))
+            event, msg = 'event', message  # assign generic event name
+            if self.strict:
+                raise ValueError("Cannot split event/msg in '{}'"
+                                 .format(message))
         # Break into key=value pairs
-        text = parse_kvp(msg, record)
+        text = parse_kvp(msg, rec)
         # Anything not parsed goes back into message
-        record['message'] = text
+        rec['message'] = text
         # Event gets its own field, too
-        record['event'] = event
+        rec['event'] = event
 
-    @staticmethod
-    def _strip_logging_junk(record):
-        """
-        Get rid of unneeded fields from logging library.
-
-        :param record: Raw record, modified in-place
-        """
+    def _strip_logging_junk(self):
+        """Get rid of unneeded fields from logging library."""
+        rec = self.record  # alias
         # not needed at all
         for k in ('msg', 'threadName', 'thread', 'pathname',
                   'levelno', 'asctime', 'relativeCreated'):
-            del record[k]
+            if k in rec:
+                del rec[k]
         # junk for service writes
-        if record['filename'] == 'service.py':
+        if rec.get('filename', '') == 'service.py':
             for k in 'processName', 'module', 'lineno', 'funcName':
-                del record[k]
+                if k in rec:
+                    del rec[k]
         # remove exception stuff if empty
-        if record['exc_info'] is None:
+        if rec.get('exc_info', None) is None:
             for k in 'exc_info', 'exc_text':
-                del record[k]
+                if k in rec:
+                    del rec[k]
         # remove args if empty
-        if not record['args']:
-            del record['args']
+        if 'args' in rec:
+            if not rec['args']:
+                del rec['args']
+        elif self.strict:
+            raise ValueError("missing 'args'")
 
-    @staticmethod
-    def _fix_types(record):
-        """
-        Fix types, mainly of fields that were parsed out of the message.
-        :param record: Record, modified in-place
-        """
+    def _fix_types(self):
+        """Fix types, mainly of fields that were parsed out of the message."""
+        rec = self.record  # alias
         # duration
-        if 'dur' in record:
-            record['dur'] = float(record['dur'])
+        if 'dur' in rec:
+            rec['dur'] = float(rec['dur'])
         # convert created to datetime type (converted on insert by pymongo)
-        dt = datetime.fromtimestamp(record['created'], tzlocal())
-        record['created_date'] = dt
-        record['created_tz'] = dt.tzname()
+        dt = datetime.fromtimestamp(rec.get('created', 0), tzlocal())
+        rec['created_date'] = dt
+        rec['created_tz'] = dt.tzname()
 
 def parse_args():
     program_name = os.path.basename(sys.argv[0])

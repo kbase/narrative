@@ -23,10 +23,10 @@
                 // Very simple callback function that dumps its message to console.
                 // This only gets run at page-reload, and is good for checking errors.
                 var kernelCallback = function(type, content, etc) {
-                    console.log('KERNEL CALLBACK : "' + type + '"');
-                    console.log(content);
-                    if (etc)
-                        console.log(etc);
+                    // console.log('KERNEL CALLBACK : "' + type + '"');
+                    // console.log(content);
+                    // if (etc)
+                    //     console.log(etc);
                 };
 
                 var callbacks = {

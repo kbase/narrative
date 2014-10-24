@@ -131,7 +131,7 @@ class kbasemagics(Magics):
         by any libraries that have implemented that support.
         """
         try:
-            (user, password) = line.split()
+            (user, password) = line.strip().split()
         except ValueError:
             user = line
             password = None
@@ -139,20 +139,21 @@ class kbasemagics(Magics):
         # display(Javascript("IPython.notebook.kernel.execute( 'biokbase.narrative.have_browser = 1')"))
         if user_id is not None:
             user_msg("Already logged in as {}. "
-                         "Please kblogout first if you want to re-login"
-                         .format(user_id))
+                     "Please kblogout first if you want to re-login"
+                     .format(user_id))
         elif user is None:
             user_msg("kblogin requires at least a username")
         else:
             try:
+                # XXX: SSH_AGENT NOT WORKING, so it's been deprecated
                 # try to login with only user_id in case there is
                 # an ssh_agent running
-                t = biokbase.auth.Token(user_id=user)
-                if t.token is None:
-                    if password is None:
-                        password = getpass.getpass("Please enter the KBase "
-                                                   "password for '%s': " % user)
-                    t = biokbase.auth.Token(user_id=user, password=password)
+                # t = biokbase.auth.Token(user_id=user)
+                # if t.token is None:
+                if password is None:
+                    password = getpass.getpass("Please enter the KBase "
+                                               "password for '%s': " % user)
+                t = biokbase.auth.Token(user_id=user, password=password)
                 if t.token:
                     set_token(t.token)
                 else:

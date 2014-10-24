@@ -55,9 +55,9 @@
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
 
-            this.$searchDiv = $('<div>')
-                              .addClass('input-group')
-                              .css({'margin-bottom' : '3px'})
+            var $searchDiv = $('<div>')
+                             .addClass('input-group')
+                             .css({'margin-bottom' : '3px'})
 
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
@@ -96,13 +96,13 @@
                                                 this.$searchInput.trigger('input'); 
                                             }, this)
                                           ));
-            this.$searchDiv.append(this.$searchInput)
-                           .append($clearSearchBtn);
+            $searchDiv.append(this.$searchInput)
+                      .append($clearSearchBtn);
 
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body')
-                                  .append(this.$searchDiv)
+                                  .append($searchDiv)
                                   .append(this.$toggleHiddenDiv);
 
             // The 'loading' panel should just have a spinning gif in it.
@@ -120,12 +120,7 @@
 
             // The help element should be outside of the panel itself, so it can be manipulated separately.
             // It should hide itself when clicked.
-            var self = this;
-            this.$helpPanel = $('<div>')
-                              .addClass('kb-function-help-popup alert alert-info')
-                              .hide()
-                              .click(function(event) { self.$helpPanel.hide(); });
-
+            this.initMethodTooltip();
             this.$bodyDiv.append($('<div>')
                               .addClass('kb-narr-panel-body')
                               .append(this.$functionPanel)
@@ -140,7 +135,7 @@
                 }, this)
             );
 
-            $('body').append(this.$helpPanel);
+            $('body').append(this.help.$helpPanel);
 
             if (!NarrativeMethodStore) {
                 this.showError('Unable to connect to KBase Method Store!');
@@ -154,6 +149,27 @@
             }
 
             return this;
+        },
+
+        initMethodTooltip: function() {
+            this.help = {};
+
+            this.help.$helpPanel = $('<div>')
+                              .addClass('kb-function-help-popup alert alert-info')
+                              .hide()
+                              .click($.proxy(function(event) { self.$helpPanel.hide(); }, this));
+            this.help.$helpTitle = $('<div>');
+            this.help.$helpVersion = $('<div>');
+            this.help.$helpBody = $('<div>');
+            this.help.$helpLinkout = $('<a>')
+                                .attr('href', this.methodHelpLink)
+                                .append('Link out');
+
+            this.help.$helpPanel.append(this.help.$helpTitle)
+                                .append(this.help.$helpVersion)
+                                .append(this.help.$helpBody)
+                                .append(this.help.$helpLinkout)
+                                .append($('<h2>').append('Click to hide'));
         },
 
         refreshFromService: function() {
@@ -301,7 +317,7 @@
          * @private
          */
         showTooltip: function(method, event) {
-            this.$helpPanel.css({
+            this.help.$helpPanel.css({
                                'left':event.pageX, 
                                'top':event.pageY
                            })
@@ -314,7 +330,7 @@
         },
 
         showErrorTooltip: function(method, event) {
-            this.$helpPanel.css({
+            this.help.$helpPanel.css({
                                 'left': event.pageX,
                                 'top': event.pageY
                            })
@@ -454,77 +470,65 @@
         buildAccordion : function (elements) {
             var fontSize = '100%';
 
-            var $block =
-                $('<div></div>')
-                    .addClass('accordion')
-                    .css('font-size', fontSize)
-                    .attr('id', 'accordion');
+            var $block = $('<div></div>')
+                         .addClass('accordion')
+                         .css('font-size', fontSize)
+                         .attr('id', 'accordion');
 
             var topElements = [];
 
-            $.each(
-                elements,
+            $.each(elements,
                 $.proxy(
                     function (idx, val) {
                         var $topElem = 
                             $('<div></div>')
-                                .addClass('panel panel-default')
-                                .css('margin-bottom', '2px')
-                                .append(
-                                    $('<div></div>')
-                                        .addClass('panel-heading')
-                                        .css('padding', '0px')
-                                        .append(
-                                            $('<i></i>')
-                                                .css('margin-right', '5px')
-                                                .css('margin-left', '3px')
-                                                .addClass('fa fa-chevron-right')
-                                                .addClass('pull-left')
-                                                .css('height', '22px')
-                                                .css('line-height', '22px')
-                                                .css('color', 'gray')
-                                        )
-                                        .append(
-                                            $('<a></a>')
-                                                .css('padding', '0px')
-                                                .attr('href', '#')
-                                                .attr('title', val.title)
-                                                .css('height', '22px')
-                                                .css('line-height', '22px')
+                            .addClass('panel panel-default')
+                            .css('margin-bottom', '2px')
+                            .append($('<div></div>')
+                                    .addClass('panel-heading')
+                                    .css('padding', '0px')
+                                    .append($('<i></i>')
+                                            .css('margin-right', '5px')
+                                            .css('margin-left', '3px')
+                                            .addClass('fa fa-chevron-right')
+                                            .addClass('pull-left')
+                                            .css('height', '22px')
+                                            .css('line-height', '22px')
+                                            .css('color', 'gray'))
+                                    .append($('<a></a>')
+                                            .css('padding', '0px')
+                                            .attr('href', '#')
+                                            .attr('title', val.title)
+                                            .css('height', '22px')
+                                            .css('line-height', '22px')
+                                            .append(val.title))
+                                    .bind('click',
+                                        function(e) {
+                                            e.preventDefault();
+                                            var $opened = $(this).closest('.panel').find('.in');
+                                            var $target = $(this).next();
 
-                                                .append(val.title)
-                                        )
-                                        .bind(
-                                            'click',
-                                                function(e) {
-                                                    e.preventDefault();
-                                                    var $opened = $(this).closest('.panel').find('.in');
-                                                    var $target = $(this).next();
+                                            if ($opened != undefined) {
+                                                $opened.collapse('hide');
+                                                var $i = $opened.parent().first().find('i');
+                                                $i.removeClass('fa fa-chevron-down');
+                                                $i.addClass('fa fa-chevron-right');
+                                            }
 
-                                                    if ($opened != undefined) {
-                                                        $opened.collapse('hide');
-                                                        var $i = $opened.parent().first().find('i');
-                                                        $i.removeClass('fa fa-chevron-down');
-                                                        $i.addClass('fa fa-chevron-right');
-                                                    }
-
-                                                    if ($target.get(0) != $opened.get(0)) {
-                                                        $target.collapse('show');
-                                                        var $i = $(this).parent().find('i');
-                                                        $i.removeClass('fa fa-chevron-right');
-                                                        $i.addClass('fa fa-chevron-down');
-                                                    }
-
-                                                }
-                                            )
-                                )
-                                .append(
-                                    $('<div></div>')
-                                        .addClass('panel-body collapse')
-                                        .css('padding-top', '9px')
-                                        .css('padding-bottom', '9px')
-                                        .append(val.body)
-                                    );
+                                            if ($target.get(0) != $opened.get(0)) {
+                                                $target.collapse('show');
+                                                var $i = $(this).parent().find('i');
+                                                $i.removeClass('fa fa-chevron-right');
+                                                $i.addClass('fa fa-chevron-down');
+                                            }
+                                        }
+                                    )
+                            )
+                            .append($('<div></div>')
+                                    .addClass('panel-body collapse')
+                                    .css('padding-top', '9px')
+                                    .css('padding-bottom', '9px')
+                                    .append(val.body));
                         topElements[val.title] = $topElem;
                         $block.append($topElem);
                     },
@@ -610,15 +614,6 @@
                 this.$functionPanel.find('.kb-function-dim').hide();
                 this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
                 this.$functionPanel.find('li:not(.kb-function-dim)').show();
-                // for (var catId in this.services) {
-                //     var catName = this.services[catId].name;
-                //     var $elem = this.accordionElements[catName];
-                //     $elem.removeClass('kb-function-cat-dim');
-                //     if ($elem.hasClass('kb-function-dim'))
-                //         $elem.hide();
-                //     else
-                //         $elem.show();
-                // }
             }
         },
 
@@ -638,219 +633,219 @@
         /***************************************************************/
         /* OLD DEPRECATED METHODS NOT IN USE WITH METHOD STORE SERVICE */
         /***************************************************************/
-        refreshAJAX: function() {
-            this.showLoadingMessage("Loading available KBase Methods...");
+//         refreshAJAX: function() {
+//             this.showLoadingMessage("Loading available KBase Methods...");
 
-            var prom = $.getJSON('static/kbase/services.json', $.proxy(
-                function(serviceSet) {
-                    this.populateFunctionList(serviceSet);
-                    this.showFunctionPanel();
-                }, this)
-            );
+//             var prom = $.getJSON('static/kbase/services.json', $.proxy(
+//                 function(serviceSet) {
+//                     this.populateFunctionList(serviceSet);
+//                     this.showFunctionPanel();
+//                 }, this)
+//             );
 
-            prom.fail($.proxy(function(error) {
-                    this.showLoadingMessage("Unable to load from cache, waiting on kernel...");
+//             prom.fail($.proxy(function(error) {
+//                     this.showLoadingMessage("Unable to load from cache, waiting on kernel...");
 
-                    $([IPython.events]).one('status_started.Kernel', $.proxy(function() {
-                        console.log("Pausing for 500 ms before requesting service info from kernel");
-                        setTimeout( $.proxy(function() { this.refresh(); }, this), 500 );
-                    }, this));
-                }, this)
-            );
-        },
+//                     $([IPython.events]).one('status_started.Kernel', $.proxy(function() {
+//                         console.log("Pausing for 500 ms before requesting service info from kernel");
+//                         setTimeout( $.proxy(function() { this.refresh(); }, this), 500 );
+//                     }, this));
+//                 }, this)
+//             );
+//         },
 
-        /**
-         * Refreshes the list of loaded functions.
-         * This makes a kernel call, fetches the list of functions as an object,
-         * pulls out necessary fields, and constructs the function list from them.
-         * @private
-         */
-        refresh: function(msg) {
-            if (!IPython || !IPython.notebook || !IPython.notebook.kernel)
-                return;
+//         /**
+//          * Refreshes the list of loaded functions.
+//          * This makes a kernel call, fetches the list of functions as an object,
+//          * pulls out necessary fields, and constructs the function list from them.
+//          * @private
+//          */
+//         refresh: function(msg) {
+//             if (!IPython || !IPython.notebook || !IPython.notebook.kernel)
+//                 return;
 
-            if (!msg)
-                msg = "Loading available KBase Services...";
-            this.showLoadingMessage(msg);
+//             if (!msg)
+//                 msg = "Loading available KBase Services...";
+//             this.showLoadingMessage(msg);
 
-            // Command to load and fetch all functions from the kernel
-            var fetchFunctionsCommand = 'import biokbase.narrative.common.service_root as root\n' + 
-                                        'print root.service.get_all_services(as_json_schema=True)\n';
+//             // Command to load and fetch all functions from the kernel
+//             var fetchFunctionsCommand = 'import biokbase.narrative.common.service_root as root\n' + 
+//                                         'print root.service.get_all_services(as_json_schema=True)\n';
 
-            var callbacks = {
-                'output' : $.proxy(function(msgType, content) { 
-                    this.parseKernelResponse(msgType, content); 
-                    this.showFunctionPanel();
-                }, this),
-                'execute_reply' : $.proxy(function(content) { 
-                    this.handleCallback("execute_reply", content); 
-                }, this),
-                'clear_output' : $.proxy(function(content) { 
-                    this.handleCallback("clear_output", content); 
-                }, this),
-                'set_next_input' : $.proxy(function(content) { 
-                    this.handleCallback("set_next_input", content); 
-                }, this),
-                'input_request' : $.proxy(function(content) { 
-                    this.handleCallback("input_request", content); 
-                }, this),
-            };
+//             var callbacks = {
+//                 'output' : $.proxy(function(msgType, content) { 
+//                     this.parseKernelResponse(msgType, content); 
+//                     this.showFunctionPanel();
+//                 }, this),
+//                 'execute_reply' : $.proxy(function(content) { 
+//                     this.handleCallback("execute_reply", content); 
+//                 }, this),
+//                 'clear_output' : $.proxy(function(content) { 
+//                     this.handleCallback("clear_output", content); 
+//                 }, this),
+//                 'set_next_input' : $.proxy(function(content) { 
+//                     this.handleCallback("set_next_input", content); 
+//                 }, this),
+//                 'input_request' : $.proxy(function(content) { 
+//                     this.handleCallback("input_request", content); 
+//                 }, this),
+//             };
 
-            var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
-        },
+//             var msgid = IPython.notebook.kernel.execute(fetchFunctionsCommand, callbacks, {silent: true});
+//         },
 
-        handleCallback: function(call, content) {
-            if (content.status === "error") {
-                this.showError(content);
-            }
-            else {
-                console.debug("kbaseNarrativeFunctionPanel." + call);
-                console.debug(content);
-            }
-        },
+//         handleCallback: function(call, content) {
+//             if (content.status === "error") {
+//                 this.showError(content);
+//             }
+//             else {
+//                 console.debug("kbaseNarrativeFunctionPanel." + call);
+//                 console.debug(content);
+//             }
+//         },
 
-        /**
-         * Parses the text response from the kernel. If this response is not a "stream" type,
-         * then an error is raised and execution stops.
-         * @param {string} msgType - a string representing the type of message being propagated
-         * @param {object} content - the content of the message
-         * @private
-         */
-        parseKernelResponse: function(msgType, content) {
-            // if it's not a datastream, display some kind of error, and return.
-            // this.dbg("kbaseNarrativeFunctionPanel.parseKernelResponse");
-            // this.dbg(content);
+//         /**
+//          * Parses the text response from the kernel. If this response is not a "stream" type,
+//          * then an error is raised and execution stops.
+//          * @param {string} msgType - a string representing the type of message being propagated
+//          * @param {object} content - the content of the message
+//          * @private
+//          */
+//         parseKernelResponse: function(msgType, content) {
+//             // if it's not a datastream, display some kind of error, and return.
+//             // this.dbg("kbaseNarrativeFunctionPanel.parseKernelResponse");
+//             // this.dbg(content);
 
-            if (msgType != 'stream') {
-                this.showError('Sorry, an error occurred while loading the function list.');
-                return;
-            }
-            var buffer = content.data;
-            if (buffer.length > 0) {
-                var serviceSet = JSON.parse(buffer);
-                this.populateFunctionList(serviceSet);
-            }
-            this.$loadingPanel.hide();
-        },
+//             if (msgType != 'stream') {
+//                 this.showError('Sorry, an error occurred while loading the function list.');
+//                 return;
+//             }
+//             var buffer = content.data;
+//             if (buffer.length > 0) {
+//                 var serviceSet = JSON.parse(buffer);
+//                 this.populateFunctionList(serviceSet);
+//             }
+//             this.$loadingPanel.hide();
+//         },
 
-        /**
-         * Populates the list of functions with clickable elements and hints/help popups.
-         * @param {object} serviceSet - the object representing the set of loaded services
-         * and their functions.
-         * @private
-         */
-        populateFunctionList: function(serviceSet) {
-            var totalFunctions = 0;
-            var totalServices = 0;
+//         /**
+//          * Populates the list of functions with clickable elements and hints/help popups.
+//          * @param {object} serviceSet - the object representing the set of loaded services
+//          * and their functions.
+//          * @private
+//          */
+//         populateFunctionList: function(serviceSet) {
+//             var totalFunctions = 0;
+//             var totalServices = 0;
 
-            var serviceAccordion = [];
+//             var serviceAccordion = [];
 
-            this.services = {};
-            for (var serviceName in serviceSet) {
+//             this.services = {};
+//             for (var serviceName in serviceSet) {
 
-                // make a little local hash to store in the element for quick lookup.
-                var localService = {};
-                var pre_functions = totalFunctions;
-                var $methodList = $('<ul>');
-                var service = serviceSet[serviceName];
-                for (var i=0; i < service.methods.length; i++) {
-                    var method = service.methods[i];
-                    // Skip methods that are not visible
-                    if (!method.visible) {
-                        continue;
-                    }
-                    totalFunctions++;
-                    method['service'] = serviceName;
-                    $methodList.append(this.buildFunction(method));
-                    localService[service.methods[i].title] = 1;
-                }
-                // Only add service if >0 methods.
-                if (totalFunctions > pre_functions) {
-                    serviceAccordion.push({
-                        'title': serviceName,
-                        'body': $methodList
-                    });
-                    totalServices++;
-                }
-                this.services[serviceName] = localService;
-            }
+//                 // make a little local hash to store in the element for quick lookup.
+//                 var localService = {};
+//                 var pre_functions = totalFunctions;
+//                 var $methodList = $('<ul>');
+//                 var service = serviceSet[serviceName];
+//                 for (var i=0; i < service.methods.length; i++) {
+//                     var method = service.methods[i];
+//                     // Skip methods that are not visible
+//                     if (!method.visible) {
+//                         continue;
+//                     }
+//                     totalFunctions++;
+//                     method['service'] = serviceName;
+//                     $methodList.append(this.buildFunction(method));
+//                     localService[service.methods[i].title] = 1;
+//                 }
+//                 // Only add service if >0 methods.
+//                 if (totalFunctions > pre_functions) {
+//                     serviceAccordion.push({
+//                         'title': serviceName,
+//                         'body': $methodList
+//                     });
+//                     totalServices++;
+//                 }
+//                 this.services[serviceName] = localService;
+//             }
 
-            // sort by service title
-            serviceAccordion.sort(function(a, b) {
-                return a.title.localeCompare(b.title);
-            });
+//             // sort by service title
+//             serviceAccordion.sort(function(a, b) {
+//                 return a.title.localeCompare(b.title);
+//             });
 
-            this.trigger('servicesUpdated.Narrative', [this.services]);
+//             this.trigger('servicesUpdated.Narrative', [this.services]);
 
-            // Left here in case we want to use it again!
-            // console.log("Total Services: " + totalServices);
-            // console.log("Total Functions: " + totalFunctions);
+//             // Left here in case we want to use it again!
+//             // console.log("Total Services: " + totalServices);
+//             // console.log("Total Functions: " + totalFunctions);
 
-            this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
-        },
+//             this.$elem.find('.kb-function-body').kbaseAccordion( { elements : serviceAccordion } );
+//         },
 
-        /**
-         * Creates and returns a list item containing info about the given narrative function.
-         * Clicking the function anywhere outside the help (?) button will trigger a 
-         * function_clicked.Narrative event. Clicking the help (?) button will trigger a 
-         * function_help.Narrative event.
-         * 
-         * Both events have the relevant data passed along with them for use by the responding
-         * element.
-         * @param {object} method - the method object returned from the kernel.
-         * @private
-         */
-        buildFunction: function(method) {
-            var self = this;
+//         /**
+//          * Creates and returns a list item containing info about the given narrative function.
+//          * Clicking the function anywhere outside the help (?) button will trigger a 
+//          * function_clicked.Narrative event. Clicking the help (?) button will trigger a 
+//          * function_help.Narrative event.
+//          * 
+//          * Both events have the relevant data passed along with them for use by the responding
+//          * element.
+//          * @param {object} method - the method object returned from the kernel.
+//          * @private
+//          */
+//         buildFunction: function(method) {
+//             var self = this;
 
-            var $helpButton = $('<span>')
-                              .addClass('glyphicon glyphicon-question-sign kb-function-help')
-                              .css({'margin-top': '-5px'})
-                              .click(function(event) { 
-                                  event.preventDefault(); 
-                                  event.stopPropagation(); 
-                                  self.showHelpPopup(method, event); 
-                              });
+//             var $helpButton = $('<span>')
+//                               .addClass('glyphicon glyphicon-question-sign kb-function-help')
+//                               .css({'margin-top': '-5px'})
+//                               .click(function(event) { 
+//                                   event.preventDefault(); 
+//                                   event.stopPropagation(); 
+//                                   self.showHelpPopup(method, event); 
+//                               });
 
-            /* this is for handling long function names.
-               long names will be cropped and have a tooltip 
-               with the full name */
-            var methodTitle = method.title;
-            var methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
-            if (methodTitle.length > 31) {
-//                methodTitle = methodTitle.substring(0, 29) + "...";
-                methodSpan.append(methodTitle);
-                methodSpan.tooltip({
-                    title: method.title,
-                    placement: "bottom"
-                }); 
-            } else {
-                 methodSpan.append(methodTitle);
-            }
+//             /* this is for handling long function names.
+//                long names will be cropped and have a tooltip 
+//                with the full name */
+//             var methodTitle = method.title;
+//             var methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
+//             if (methodTitle.length > 31) {
+// //                methodTitle = methodTitle.substring(0, 29) + "...";
+//                 methodSpan.append(methodTitle);
+//                 methodSpan.tooltip({
+//                     title: method.title,
+//                     placement: "bottom"
+//                 }); 
+//             } else {
+//                  methodSpan.append(methodTitle);
+//             }
             
-            var $newFunction = $('<li>')
-                               .append(methodSpan)
-                               .append($helpButton)
-                               .click(function(event) {
-                                   self.trigger('function_clicked.Narrative', method); 
-                               });
+//             var $newFunction = $('<li>')
+//                                .append(methodSpan)
+//                                .append($helpButton)
+//                                .click(function(event) {
+//                                    self.trigger('function_clicked.Narrative', method); 
+//                                });
 
-            return $newFunction;
-        },
+//             return $newFunction;
+//         },
 
-        /**
-         * Shows a popup panel with a description of the clicked method.
-         * @param {object} method - the method containing a title and 
-         * description for populating the popup.
-         * @private
-         */
-        showHelpPopup: function(method, event) {
-            this.$helpPanel.css({'left':event.pageX, 'top':event.pageY})
-            this.$helpPanel.empty();
-            this.$helpPanel.append($('<h1>').append(method.name + ' Help'))
-                           .append(method.tooltip)
-                           .append($('<h2>').append('Click to hide'));
-            this.$helpPanel.show();
-        },
+//         /**
+//          * Shows a popup panel with a description of the clicked method.
+//          * @param {object} method - the method containing a title and 
+//          * description for populating the popup.
+//          * @private
+//          */
+//         showHelpPopup: function(method, event) {
+//             this.$helpPanel.css({'left':event.pageX, 'top':event.pageY})
+//             this.$helpPanel.empty();
+//             this.$helpPanel.append($('<h1>').append(method.name + ' Help'))
+//                            .append(method.tooltip)
+//                            .append($('<h2>').append('Click to hide'));
+//             this.$helpPanel.show();
+//         },
     });
 })( jQuery );

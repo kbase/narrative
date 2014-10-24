@@ -64,15 +64,12 @@ def _kbase_log_name(name):
     return "biokbase." + name
 
 def log_event(log, event, mapping):
-    """Log an event and a mapping.
-    """
+    """Log an event and a mapping."""
     kvp = " ".join(["{}={}".format(k, v) for k, v in mapping.iteritems()])
     log.info("{}{}{}".format(event, log_proxy.EVENT_MSG_SEP, kvp))
 
 class LogAdapter(logging.LoggerAdapter):
-    """
-    Add some extra methods to the stock LoggerAdapter
-    """
+    """Add some extra methods to the stock LoggerAdapter."""
     def __init__(self, log, extra):
         logging.LoggerAdapter.__init__(self, log, extra)
         self.handlers = log.handlers
@@ -129,17 +126,13 @@ def _get_meta():
 
 class MetaFormatter(logging.Formatter):
     def __init__(self):
-        """
-        Format with metadata in the mix.
-        """
+        """Format with metadata in the mix."""
         logging.Formatter.__init__(
             self,
             "%(levelname)s %(asctime)s %(name)s %(message)s")
 
     def format(self, record):
-        """
-        Add KB_* environment values at format time.
-        """
+        """Add KB_* environment values at format time."""
         s = logging.Formatter.format(self, record)
         return "{} [{}]".format(s, ' '.join(["{}={}".format(k, v)
                                              for k, v in os.environ.items()
@@ -204,9 +197,7 @@ class BufferedSocketHandler(handlers.SocketHandler):
 
 
 def init_handlers():
-    """
-    Initialize and add the log handlers.
-    """
+    """Initialize and add the log handlers."""
     # Turn on debugging by setting environment variable KBASE_DEBUG.
     if os.environ.get("KBASE_DEBUG", None):
         g_log.setLevel(logging.DEBUG)
@@ -228,8 +219,7 @@ def get_proxy_config():
     return log_proxy.ProxyConfiguration(config_file)
 
 def reset_handlers():
-    """Remove & re-add all handlers.
-    """
+    """Remove & re-add all handlers."""
     while g_log.handlers:
         g_log.removeHandler(g_log.handlers.pop())
     init_handlers()

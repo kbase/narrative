@@ -70,5 +70,22 @@ class MainTestCase(unittest.TestCase):
         self._config(['db: test', 'collection: kblog', 'user: joe'])
         self.assertRaises(KeyError, proxy.DBConfiguration, self.conf)
 
+class LogRecordTest(unittest.TestCase):
+    def test_basic(self):
+        for input in {}, {"message": "hello"}:
+            kbrec = proxy.KBaseLogRecord(input)
+        kbrec = proxy.KBaseLogRecord({"message": "greeting;Hello=World"})
+        self.assertEqual(kbrec.record['event'], 'greeting')
+        self.assertEqual(kbrec.record['Hello'], 'World')
+
+    def test_strict(self):
+        for inp in ({"xanthium": 12},
+                    {12: "xanthium"},
+                    {"message": "Hello=World;greeting"}):
+            kbrec = proxy.KBaseLogRecord(inp)
+            self.assertRaises(ValueError,
+                              proxy.KBaseLogRecord,
+                              inp, strict=True)
+
 if __name__ == '__main__':
     unittest.main()

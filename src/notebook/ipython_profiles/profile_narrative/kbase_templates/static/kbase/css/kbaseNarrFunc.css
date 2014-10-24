@@ -102,7 +102,7 @@
     left: 300px;
     z-index: 99;
     cursor: pointer;
-    width: 250px;    
+    max-width: 300px;    
 }
 
 .kb-function-help-popup h1 {
@@ -121,6 +121,30 @@
     font-style: italic;
     text-align: right;
     font-weight: 100;
+}
+
+.kb-function-help-popup .header {
+    background-color: #fff;
+    color: #3076A2;
+    font-weight: bold;
+    font-size: 120%;
+    margin: 0;
+    padding: 0;
+}
+
+.kb-function-help-popup a {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.kb-function-help-popup .version {
+    font-size: 80%;
+    color: #666;
+}
+
+.kb-function-help-popup .body {
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 #kb-function-help {

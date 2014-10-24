@@ -19,6 +19,7 @@
             autopopulate: true,
             title: 'Methods',
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
+            methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
         services: null,
 
@@ -122,10 +123,10 @@
             // It should hide itself when clicked.
             this.initMethodTooltip();
             this.$bodyDiv.append($('<div>')
-                              .addClass('kb-narr-panel-body')
-                              .append(this.$functionPanel)
-                              .append(this.$loadingPanel)
-                              .append(this.$errorPanel));
+                                 .addClass('kb-narr-panel-body')
+                                 .append(this.$functionPanel)
+                                 .append(this.$loadingPanel)
+                                 .append(this.$errorPanel));
 
             $(document).on('hasFunction.Narrative', 
                 $.proxy(function(e, service, method, callback) {
@@ -134,8 +135,6 @@
                     }
                 }, this)
             );
-
-            $('body').append(this.help.$helpPanel);
 
             if (!NarrativeMethodStore) {
                 this.showError('Unable to connect to KBase Method Store!');
@@ -155,21 +154,57 @@
             this.help = {};
 
             this.help.$helpPanel = $('<div>')
-                              .addClass('kb-function-help-popup alert alert-info')
-                              .hide()
-                              .click($.proxy(function(event) { self.$helpPanel.hide(); }, this));
+                                   .addClass('kb-function-help-popup alert alert-info')
+                                   .hide()
+                                   .click($.proxy(function(event) { this.help.$helpPanel.hide(); }, this));
             this.help.$helpTitle = $('<div>');
-            this.help.$helpVersion = $('<div>');
-            this.help.$helpBody = $('<div>');
-            this.help.$helpLinkout = $('<a>')
-                                .attr('href', this.methodHelpLink)
-                                .append('Link out');
+            this.help.$helpVersion = $('<span>')
+                                   .addClass('version');
 
-            this.help.$helpPanel.append(this.help.$helpTitle)
-                                .append(this.help.$helpVersion)
+            var $helpHeader = $('<div>')
+                              .addClass('header')
+                              .append(this.help.$helpTitle)
+                              .append(this.help.$helpVersion);
+
+            this.help.$helpBody = $('<div>')
+                                  .addClass('body');
+            this.help.$helpLinkout = $('<a>')
+                                     .attr('href', this.options.methodHelpLink)
+                                     .attr('target', '_blank')
+                                     .append('More...');
+
+            this.help.$helpPanel.append($helpHeader)
                                 .append(this.help.$helpBody)
-                                .append(this.help.$helpLinkout)
+                                .append($('<div>').append(this.help.$helpLinkout))
                                 .append($('<h2>').append('Click to hide'));
+            $('body').append(this.help.$helpPanel);
+
+        },
+
+        /**
+         * Shows a popup panel with a description of the clicked method.
+         * @param {object} method - the method containing a title and 
+         * description for populating the popup.
+         * @private
+         */
+        showTooltip: function(method, event) {
+            this.help.$helpTitle.text(method.name);
+            this.help.$helpVersion.text('v' + method.ver);
+            this.help.$helpBody.text(method.tooltip);
+            this.help.$helpLinkout.attr('href', this.options.methodHelpLink + method.id);
+            this.help.$helpPanel.css({
+                                       'left':event.pageX, 
+                                       'top':event.pageY
+                                     })
+                                .show();
+        },
+
+        showErrorTooltip: function(method, event) {
+            this.showTooltip({
+                'name' : method.name,
+                'ver' : method.ver,
+                'tooltip' : 'This function has an error and cannot currently be used.'
+            }, event);
         },
 
         refreshFromService: function() {
@@ -308,38 +343,6 @@
                           }, this));
             }
             return $newMethod;
-        },
-
-        /**
-         * Shows a popup panel with a description of the clicked method.
-         * @param {object} method - the method containing a title and 
-         * description for populating the popup.
-         * @private
-         */
-        showTooltip: function(method, event) {
-            this.help.$helpPanel.css({
-                               'left':event.pageX, 
-                               'top':event.pageY
-                           })
-                           .empty()
-                           .append($('<h1>').append(method.name))
-                           .append('v' + method.ver + '<br>')
-                           .append(method.tooltip)
-                           .append($('<h2>').append('Click to hide'))
-                           .show();
-        },
-
-        showErrorTooltip: function(method, event) {
-            this.help.$helpPanel.css({
-                                'left': event.pageX,
-                                'top': event.pageY
-                           })
-                           .empty()
-                           .append($('<h1>').append(method.name))
-                           .append('v' + method.ver + '<br>')
-                           .append('This function has an error and cannot currently be used.')
-                           .append($('<h2>').append('Click to hide'))
-                           .show();
         },
 
         /**

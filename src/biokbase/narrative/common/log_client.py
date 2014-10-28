@@ -69,6 +69,9 @@ def main(args):
     else:
         send_message(args.event, args.message)
 
+    # Wait for message to get sent from buffer
+    time.sleep(1)
+
     return 0
 
 if __name__ == '__main__':

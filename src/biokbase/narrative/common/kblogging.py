@@ -38,7 +38,16 @@ KBASE_TMP_DIR = "/tmp"
 KBASE_TMP_LOGFILE = os.path.join(KBASE_TMP_DIR, "kbase-narrative.log")
 
 # env var with location of proxy config file
-KBASE_PROXY_ENV = 'KB_PROXY_CONFIG'
+KBASE_PROXY_ENV = 'KBASE_PROXY_CONFIG'
+
+## Internal logging
+
+_log = logging.getLogger("kblogging")
+_h = logging.StreamHandler()
+_h.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s %(name)s: %(message)s"))
+_log.addHandler(_h)
+lvl = logging.DEBUG if os.environ.get('KBASE_DEBUG', False) else logging.WARN
+_log.setLevel(lvl)
 
 ## Functions
 
@@ -148,6 +157,7 @@ class BufferedSocketHandler(handlers.SocketHandler):
     """
     def __init__(self, *args):
         handlers.SocketHandler.__init__(self, *args)
+        _log.debug("Created SocketHandler with args = {}".format(args))
         self.buf = collections.deque([], 100)
         self.buf_lock = threading.Lock()
         # start thread to send data from buffer
@@ -179,6 +189,8 @@ class BufferedSocketHandler(handlers.SocketHandler):
                 time.sleep(0.1)
 
     def emit(self, record):
+        if _log.isEnabledFor(logging.DEBUG):
+            _log.debug("Emit 1 record")
         self.buf_lock.acquire()
         try:
             self.buf.append(record)
@@ -194,9 +206,11 @@ class BufferedSocketHandler(handlers.SocketHandler):
             success = True
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except Exception as err:
+            _log.debug("Emit record to socket failed: {}".format(err))
             self.handleError(record)
-        #print("@@ emit success = {}".format(success))
+        if success and _log.isEnabledFor(logging.DEBUG):
+            _log.debug("Record sent to socket")
         return success
 
 
@@ -220,6 +234,11 @@ def init_handlers():
 
 def get_proxy_config():
     config_file = os.environ.get(KBASE_PROXY_ENV, None)
+    if config_file:
+        _log.info("Configuring KBase logging from file '{}'".format(config_file))
+    else:
+        _log.info("Configuring KBase logging from defaults ({} is empty, or not found)"
+                  .format(KBASE_PROXY_ENV))
     return log_proxy.ProxyConfiguration(config_file)
 
 def reset_handlers():

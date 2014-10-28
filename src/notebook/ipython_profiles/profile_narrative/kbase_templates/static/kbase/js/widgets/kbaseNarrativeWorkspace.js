@@ -254,7 +254,7 @@
                 $.proxy(function(appSpec) {
                     console.log('got app spec');
                     console.log(appSpec);
-                    this.setAppCell(cell, appSpec);
+                    this.setAppCell(cell, appSpec[0]);
                     var cellIndex = IPython.notebook.ncells() - 1;
                     var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
 
@@ -263,7 +263,7 @@
                     // Yeah, I know it's ugly, but that's how it goes.
                     var cellContent = "<div id='" + cellId + "'></div>" +
                                       "\n<script>" +
-                                      "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec) + "'});" +
+                                      "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "'});" +
                                       "</script>";
 
                     cell.set_text(cellContent);
@@ -293,7 +293,7 @@
                 'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
             }
 
-            var code = this.buildRunAppCommand(data.appSpec, data.parameters);
+            var code = this.buildAppCommand(data.appSpec, data.parameters);
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
 
@@ -1333,7 +1333,10 @@
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
-                    this.createOutputCell(cell, result);
+                    if (cell.metadata[this.KB_CELL].method)
+                        this.createOutputCell(cell, result);
+                    else
+                        this.createAppOutputCell(cell, result);
                 }
             }
         },
@@ -1416,6 +1419,46 @@
             this.trigger('updateData.Narrative');
         },
 
+        createAppOutputCell: function(cell, result) {
+            if (typeof result === 'string')
+                result = JSON.parse(result);
+
+            if (!result.embed || result.data === null || result.data === undefined) {
+                return;
+            }
+
+            var app = cell.metadata[this.KB_CELL].app;
+            var appName = app.info.name || 'KBase App';
+            var widget = this.defaultOutputWidget;
+
+            var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
+            var uuid = this.uuidgen();
+            var outCellId = 'kb-cell-out-' + uuid;
+
+            // set up the widget line
+            var widgetInvoker = widget + "({'data' : " + result.data + "});";
+            var header = '<span class="kb-out-desc"><b>' + 
+                            (appName ? appName : 'Unknown method') + 
+                            '</b> - Output</span><span class="pull-right kb-func-timestamp">' + 
+                            this.readableTimestamp(this.getTimestamp()) +
+                            '</span>' + 
+                         '';
+
+            var cellText = '<div class="kb-cell-output" id="' + outCellId + '">' +
+                                '<div class="panel panel-default">' + 
+                                    '<div class="panel-heading">' + header + '</div>' +
+                                    '<div class="panel-body"><div id="output"></div></div>' +
+                                '</div>' +
+                           '</div>\n' +
+                           '<script>' +
+                           '$("#' + outCellId + ' > div > div > div#output").' + widgetInvoker +
+                           '</script>';
+
+            outputCell.set_text(cellText);
+            outputCell.rendered = false; // force a render
+            outputCell.render();            
+        },
+
         /**
          * Result is an object with this structure:
          * cell = the invoking function cell.
@@ -1439,6 +1482,15 @@
                 return;
             }
 
+            /**
+             * 2 cases here:
+             * cell.metadata['kb-cell'].method exists:
+             * it either has widgets.output (new cell)
+             * or it doesn't, and that comes from result.widget (old cell)
+             *
+             * cell.metadata[kb-cell].app exists:
+             * use default output for now
+             */
             var method = cell.metadata[this.KB_CELL].method;
             var widget = result.widget;
             if (!widget) {

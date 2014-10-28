@@ -560,6 +560,9 @@
             var numHidden = 0;
             for (var catId in this.services) {
                 var cat = this.services[catId];
+                if (!cat.methods || cat.methods.length === 0)
+                    continue;
+                
                 var numPass = 0;
                 for (var i=0; i<cat.methods.length; i++) {
                     if (!filterFn(fnInput, cat.methods[i])) {

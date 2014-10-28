@@ -157,13 +157,17 @@
                                    .addClass('kb-function-help-popup alert alert-info')
                                    .hide()
                                    .click($.proxy(function(event) { this.help.$helpPanel.hide(); }, this));
-            this.help.$helpTitle = $('<div>');
+            this.help.$helpTitle = $('<span>');
             this.help.$helpVersion = $('<span>')
                                    .addClass('version');
 
             var $helpHeader = $('<div>')
-                              .addClass('header')
-                              .append(this.help.$helpTitle)
+                              //.addClass('header')
+                              .append(
+                                    $('<h1>')
+                                      .css("display","inline")
+                                      .css("padding-right","8px")
+                                        .append(this.help.$helpTitle))
                               .append(this.help.$helpVersion);
 
             this.help.$helpBody = $('<div>')
@@ -190,7 +194,7 @@
         showTooltip: function(method, event) {
             this.help.$helpTitle.text(method.name);
             this.help.$helpVersion.text('v' + method.ver);
-            this.help.$helpBody.text(method.tooltip);
+            this.help.$helpBody.html(method.tooltip);
             this.help.$helpLinkout.attr('href', this.options.methodHelpLink + method.id);
             this.help.$helpPanel.css({
                                        'left':event.pageX, 
@@ -203,7 +207,8 @@
             this.showTooltip({
                 'name' : method.name,
                 'ver' : method.ver,
-                'tooltip' : 'This function has an error and cannot currently be used.'
+                'id' : method.id,
+                'tooltip' : "This method has an internal error and cannot currently be used.<br><br>The detailed error message is:<br>"+method.loading_error
             }, event);
         },
 

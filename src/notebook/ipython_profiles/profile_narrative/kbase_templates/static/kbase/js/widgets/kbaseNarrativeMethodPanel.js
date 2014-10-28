@@ -245,7 +245,7 @@
             // Make a method button for each method.
             var accordionList = [];
             for (var cat in catSet) {
-                if (catSet[cat].methods.length == 0)
+                if (!catSet[cat].methods || catSet[cat].methods.length == 0)
                     continue;
                 catSet[cat].methods.sort(function(a, b) { return a.name.localeCompare(b.name); });
                 var accordion = {

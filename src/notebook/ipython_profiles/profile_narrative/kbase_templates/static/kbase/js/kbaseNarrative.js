@@ -28,8 +28,7 @@ narrative.init = function() {
     var $jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
     $jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
     
-    var $appsWidget = $('#kb-apps-panel').kbaseNarrativeAppsPanel({ autopopulate: false });
-
+    var $appsWidget = $('#kb-apps-panel').kbaseNarrativeAppsPanel({ autopopulate: true });
     /*
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.

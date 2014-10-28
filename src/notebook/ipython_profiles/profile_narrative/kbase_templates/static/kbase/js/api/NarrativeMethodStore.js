@@ -18,7 +18,7 @@ function NarrativeMethodStore(url, auth, auth_cb) {
     }
 
     if (typeof(_url) != "string" || _url.length == 0) {
-        _url = "https://kbase.us/services/narrative_method_store/";
+        _url = "https://kbase.us/services/narrative_method_store/rpc";
     }
     var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
     var _auth_cb = auth_cb;
@@ -36,12 +36,22 @@ function NarrativeMethodStore(url, auth, auth_cb) {
 
     this.list_categories = function (params, _callback, _errorCallback) {
     return json_call_ajax("NarrativeMethodStore.list_categories",
-        [params], 2, _callback, _errorCallback);
+        [params], 3, _callback, _errorCallback);
 };
 
     this.list_categories_async = function (params, _callback, _error_callback) {
         deprecationWarning();
-        return json_call_ajax("NarrativeMethodStore.list_categories", [params], 2, _callback, _error_callback);
+        return json_call_ajax("NarrativeMethodStore.list_categories", [params], 3, _callback, _error_callback);
+    };
+
+    this.get_category = function (params, _callback, _errorCallback) {
+    return json_call_ajax("NarrativeMethodStore.get_category",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.get_category_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("NarrativeMethodStore.get_category", [params], 1, _callback, _error_callback);
     };
 
     this.list_methods = function (params, _callback, _errorCallback) {
@@ -84,6 +94,46 @@ function NarrativeMethodStore(url, auth, auth_cb) {
         return json_call_ajax("NarrativeMethodStore.list_method_ids_and_names", [], 1, _callback, _error_callback);
     };
 
+    this.list_apps = function (params, _callback, _errorCallback) {
+    return json_call_ajax("NarrativeMethodStore.list_apps",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.list_apps_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("NarrativeMethodStore.list_apps", [params], 1, _callback, _error_callback);
+    };
+
+    this.list_apps_full_info = function (params, _callback, _errorCallback) {
+    return json_call_ajax("NarrativeMethodStore.list_apps_full_info",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.list_apps_full_info_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("NarrativeMethodStore.list_apps_full_info", [params], 1, _callback, _error_callback);
+    };
+
+    this.list_apps_spec = function (params, _callback, _errorCallback) {
+    return json_call_ajax("NarrativeMethodStore.list_apps_spec",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.list_apps_spec_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("NarrativeMethodStore.list_apps_spec", [params], 1, _callback, _error_callback);
+    };
+
+    this.list_app_ids_and_names = function (_callback, _errorCallback) {
+    return json_call_ajax("NarrativeMethodStore.list_app_ids_and_names",
+        [], 1, _callback, _errorCallback);
+};
+
+    this.list_app_ids_and_names_async = function (_callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("NarrativeMethodStore.list_app_ids_and_names", [], 1, _callback, _error_callback);
+    };
+
     this.get_method_brief_info = function (params, _callback, _errorCallback) {
     return json_call_ajax("NarrativeMethodStore.get_method_brief_info",
         [params], 1, _callback, _errorCallback);
@@ -112,6 +162,36 @@ function NarrativeMethodStore(url, auth, auth_cb) {
     this.get_method_spec_async = function (params, _callback, _error_callback) {
         deprecationWarning();
         return json_call_ajax("NarrativeMethodStore.get_method_spec", [params], 1, _callback, _error_callback);
+    };
+
+    this.get_app_brief_info = function (params, _callback, _errorCallback) {
+    return json_call_ajax("NarrativeMethodStore.get_app_brief_info",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.get_app_brief_info_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("NarrativeMethodStore.get_app_brief_info", [params], 1, _callback, _error_callback);
+    };
+
+    this.get_app_full_info = function (params, _callback, _errorCallback) {
+    return json_call_ajax("NarrativeMethodStore.get_app_full_info",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.get_app_full_info_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("NarrativeMethodStore.get_app_full_info", [params], 1, _callback, _error_callback);
+    };
+
+    this.get_app_spec = function (params, _callback, _errorCallback) {
+    return json_call_ajax("NarrativeMethodStore.get_app_spec",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.get_app_spec_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("NarrativeMethodStore.get_app_spec", [params], 1, _callback, _error_callback);
     };
  
 

@@ -138,6 +138,13 @@
                 this)
             );
 
+            $(document).on('appClicked.Narrative',
+                $.proxy(function(event, appInfo) {
+                    this.buildAppCell(method);
+                },
+                this)
+            );
+
             $(document).on('deleteCell.Narrative',
                 $.proxy(function(event, index) {
                     this.deleteCell(index);
@@ -220,6 +227,10 @@
             }
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
+        },
+
+        buildAppCell: function(appInfo) {
+
         },
 
         /**
@@ -574,7 +585,7 @@
 
                 /* fields: default, description, type, ui_name */
                 var type = p.text_options.valid_ws_types[0];
-                if (!this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
+                if (type && !this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
                     cellDeps.push([type, paramValues[i]]);
                     if (!typesHash[type]) {
                         typesHash[type] = 1;

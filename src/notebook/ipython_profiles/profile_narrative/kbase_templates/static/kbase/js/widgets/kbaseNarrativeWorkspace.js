@@ -160,9 +160,16 @@
 
             $(document).on('runCell.Narrative',
                 $.proxy(function(event, data) {
-                    console.log('running cell');
-                    console.log(data);
                     this.runMethodCell(data);
+                },
+                this)
+            );
+
+            $(document).on('runApp.Narrative',
+                $.proxy(function(event, data) {
+                    console.log('running app');
+                    console.log(data);
+                    this.runAppCell(data);
                 },
                 this)
             );
@@ -268,6 +275,35 @@
 
                 }, this)
             );
+        },
+
+        runAppCell: function(data) {
+            if (!data || !data.cell || !data.appSpec || !data.parameters) {
+                // error out.
+                return;
+            }
+            this.saveCellState(data.cell);
+            this.updateNarrativeDependencies();
+            var self = this;
+            var callbacks = {
+                'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
+                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content); },
+                'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
+                'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
+                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
+            }
+
+            var code = this.buildRunAppCommand(data.appSpec, data.parameters);
+            IPython.notebook.kernel.execute(code, callbacks, {silent: true});
+        },
+
+        buildAppCommand: function(appSpec, parameters) {
+            var appSpecJSON = this.safeJSONStringify(appSpec);
+            var paramsJSON = this.safeJSONStringify(parameters);
+
+            return "import biokbase.narrative.common.service as Service\n" +
+                   "method = Service.get_service('app_service').get_method('app_call')\n" +
+                   "method('" + appSpecJSON + "', '" + paramsJSON + "')";
         },
 
         /**

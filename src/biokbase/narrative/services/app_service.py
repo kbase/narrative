@@ -30,6 +30,15 @@ init_service(name=NAME, desc="KBase App Calls", version=VERSION)
 @method(name="app_call")
 def _app_call(meth, app_spec_json, param_values_json):
     """Makes a call to the app service
+
+    :param app_spec_json: The App Spec
+    :type app_spec_json: kbtypes.Unicode
+    :ui_name app_spec_json: The App Spec
+    :param param_values_json: Param values
+    :type param_values_json: kbtypes.Unicode
+    :ui_name param_values_json: Param values
+    :rtype: kbtypes.Unicode
+    :return: running job info
     """
     token, workspaceName = meth.token, meth.workspace_id
 

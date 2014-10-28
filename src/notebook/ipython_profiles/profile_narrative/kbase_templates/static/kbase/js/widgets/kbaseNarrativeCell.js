@@ -1,6 +1,12 @@
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
+ * This is a generalized class for an input cell that sits in an IPython markdown cell.
+ * It handles all of its rendering here (no longer in HTML in markdown), and invokes
+ * an input widget passed to it.
+ *
+ * This expects a method object passed to it, and expects that object to have the new
+ * format from the narrative_method_store service.
  */
 
 (function( $, undefined ) {
@@ -14,6 +20,14 @@
         },
         IGNORE_VERSION: true,
 
+        /**
+         * @private
+         * @method
+         * Initialization is done by the KBase widget architecture itself.
+         * This requires and assumes that a method and cellId are both present
+         * as options
+         * TODO: add checks and failures for this.
+         */
         init: function(options) {
             this._super(options);
 
@@ -25,6 +39,9 @@
             return this;
         },
 
+        /**
+         * Renders this cell and its contained input widget.
+         */
         render: function() {
             if (this.method.widgets.input)
                 inputWidget = this.method.widgets.input;
@@ -128,18 +145,36 @@
             this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
         },
 
+        /**
+         * @method
+         * Returns parameters from the contained input widget
+         * @public
+         */
         getParameters: function() {
             return this.$inputWidget.getParameters();
         },
 
+        /**
+         * @method
+         * Returns the state as reported by the contained input widget.
+         * @public
+         */
         getState: function() {
             return this.$inputWidget.getState();
         },
 
+        /**
+         * @method
+         * Passes along the state to its contained input widget.
+         * @public
+         */
         loadState: function(state) {
             return this.$inputWidget.loadState(state);
         },
 
+        /**
+         * Refreshes the input widget according to its own method.
+         */
         refresh: function() {
             this.$inputWidget.refresh();
         },

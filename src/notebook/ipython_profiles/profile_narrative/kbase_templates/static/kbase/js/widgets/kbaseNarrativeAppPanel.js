@@ -119,17 +119,22 @@
             }
             else {
                 $newApp.append($helpButton)
-                          .click($.proxy(function(event) {
-                              // needs to move to controller.
-                              this.methClient.get_app_spec({ 'ids' : [app.id] },
-                                  $.proxy(function(spec) {
-                                      this.trigger('appClicked.Narrative', spec[0]);
-                                  }, this),
-                                  $.proxy(function(error) {
-                                      this.showError(error);
-                                  }, this)
-                              );
-                          }, this));
+                       .click(
+                           $.proxy(function(event) {
+                               this.trigger('appClicked.Narrative', app);
+                           }, this));
+                // $newApp.append($helpButton)
+                //           .click($.proxy(function(event) {
+                //               // needs to move to controller.
+                //               this.methClient.get_app_spec({ 'ids' : [app.id] },
+                //                   $.proxy(function(spec) {
+                //                       this.trigger('appClicked.Narrative', spec[0]);
+                //                   }, this),
+                //                   $.proxy(function(error) {
+                //                       this.showError(error);
+                //                   }, this)
+                //               );
+                //           }, this));
             }
             return $newApp;            
         },

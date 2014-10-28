@@ -20,20 +20,21 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "kbaseNarrativeWorkspace", 
-        parent: "kbaseWidget",
-        version: "1.0.0",
+        name: 'kbaseNarrativeWorkspace',
+        parent: 'kbaseWidget',
+        version: '1.0.0',
         options: {
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: 'static/kbase/images/ajax-loader.gif',
             tableElem: null,
             controlsElem: null,
             ws_id: null,
+            methodStoreURL: 'https://kbase.us/services/narrative_method_store',
         },
         ws_client: null,
         ws_id: null,
-        defaultOutputWidget: "kbaseDefaultNarrativeOutput",
-        defaultInputWidget: "kbaseDefaultNarrativeInput",
-        errorWidget: "kbaseNarrativeError",
+        defaultOutputWidget: 'kbaseDefaultNarrativeOutput',
+        defaultInputWidget: 'kbaseDefaultNarrativeInput',
+        errorWidget: 'kbaseNarrativeError',
 
         inputsRendered: false,
         maxSavedStates: 2,      // limit the states saved to 2 for now.
@@ -42,6 +43,7 @@
         // constant strings.
         KB_CELL: 'kb-cell',
         KB_TYPE: 'type',
+        KB_APP_CELL: 'kb_app',
         KB_FUNCTION_CELL: 'function_input',
         KB_OUTPUT_CELL: 'function_output',
         KB_ERROR_CELL: 'kb_error',
@@ -60,11 +62,15 @@
 
         init: function(options) {
             this._super(options);
-
             this.ws_id = this.options.ws_id;
+
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+            }
+            this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
+
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
-
             $([IPython.events]).on('notebook_loaded.Notebook', 
                 $.proxy(function() {
                     this.rebindActionButtons();
@@ -140,7 +146,7 @@
 
             $(document).on('appClicked.Narrative',
                 $.proxy(function(event, appInfo) {
-                    this.buildAppCell(method);
+                    this.buildAppCell(appInfo);
                 },
                 this)
             );
@@ -195,7 +201,6 @@
 
             // restore the input widget's state.
             this.removeCellEditFunction(cell);
-            // this.bindActionButtons(cell);
         },
 
         runMethodCell: function(data) {
@@ -204,7 +209,7 @@
                 return;
             }
             this.saveCellState(data.cell);
-//            this.updateNarrativeDependencies();
+            this.updateNarrativeDependencies();
             var self = this;
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
@@ -230,7 +235,39 @@
         },
 
         buildAppCell: function(appInfo) {
+            var cell = IPython.notebook.insert_cell_below('markdown');
+            this.removeCellEditFunction(cell);
 
+            var tempContent = '<img src="' + this.options.loadingImage + '">';
+            cell.set_text(tempContent);
+            cell.rendered = false;
+            cell.render();
+
+            this.methClient.get_app_spec({'ids': [appInfo.id]}, 
+                $.proxy(function(appSpec) {
+                    console.log('got app spec');
+                    console.log(appSpec);
+                    this.setAppCell(cell, appSpec);
+                    var cellIndex = IPython.notebook.ncells() - 1;
+                    var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
+
+                    // The various components are HTML STRINGS, not jQuery objects.
+                    // This is because the cell expects a text input, not a jQuery input.
+                    // Yeah, I know it's ugly, but that's how it goes.
+                    var cellContent = "<div id='" + cellId + "'></div>" +
+                                      "\n<script>" +
+                                      "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec) + "'});" +
+                                      "</script>";
+
+                    cell.set_text(cellContent);
+                    cell.rendered = false;
+                    cell.render();
+
+                }, this),
+                $.proxy(function(error) {
+
+                }, this)
+            );
         },
 
         /**
@@ -507,8 +544,12 @@
             return this.checkCellType(cell, this.KB_FUNCTION_CELL);
         },
 
+        isAppCell: function(cell) {
+            return this.checkCellType(cell, this.KB_APP_CELL);
+        },
+
         setFunctionCell: function(cell, method) {
-            var cellInfo = {}
+            var cellInfo = {};
             cellInfo[this.KB_TYPE] = this.KB_FUNCTION_CELL;
             cellInfo['method'] = method;
             cellInfo[this.KB_STATE] = [];
@@ -518,7 +559,7 @@
         },
 
         setMethodCell: function(cell, method) {
-            var cellInfo = {}
+            var cellInfo = {};
             cellInfo[this.KB_TYPE] = this.KB_FUNCTION_CELL;
             cellInfo['method'] = method;
             cellInfo[this.KB_STATE] = [];
@@ -527,6 +568,14 @@
             cell.metadata[this.KB_CELL] = cellInfo;
         },
 
+        setAppCell: function(cell, appInfo) {
+            var cellInfo = {};
+            cellInfo[this.KB_TYPE] = this.KB_APP_CELL;
+            cellInfo['app'] = appInfo;
+            cellInfo[this.KB_STATE] = [];
+
+            cell.metadata[this.KB_CELL] = cellInfo;
+        },
 
         // Function output cell type.
         isOutputCell: function(cell) {

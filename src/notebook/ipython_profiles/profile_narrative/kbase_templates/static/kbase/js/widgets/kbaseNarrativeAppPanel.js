@@ -8,6 +8,7 @@
             autopopulate: true,
             title: 'Apps',
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store/rpc',
+            appHelpLink: '/functional-site/#/narrativestore/app/',
         },
 
         init: function(options) {
@@ -47,6 +48,9 @@
                                  .append(this.$loadingPanel)
                                  .append(this.$errorPanel));
 
+            // Add the tooltip panel
+            this.initMethodTooltip();
+            
             if (this.options.autopopulate === true) {
                 this.refresh();
             }
@@ -89,7 +93,7 @@
                              .click($.proxy(function(event) {
                                 event.preventDefault();
                                 event.stopPropagation();
-                                this.showErrorTooltip(app, event);
+                                self.showErrorTooltip(app, event);
                              }, this));
 
             /* this is for handling long function names.
@@ -138,6 +142,72 @@
             }
             return $newApp;            
         },
+        
+        initMethodTooltip: function() {
+            this.help = {};
+
+            this.help.$helpPanel = $('<div>')
+                                   .addClass('kb-function-help-popup alert alert-info')
+                                   .hide()
+                                   .click($.proxy(function(event) { this.help.$helpPanel.hide(); }, this));
+            this.help.$helpTitle = $('<span>');
+            this.help.$helpVersion = $('<span>')
+                                   .addClass('version');
+
+            var $helpHeader = $('<div>')
+                              //.addClass('header')
+                              .append(
+                                    $('<h1>')
+                                      .css("display","inline")
+                                      .css("padding-right","8px")
+                                        .append(this.help.$helpTitle))
+                              .append(this.help.$helpVersion);
+
+            this.help.$helpBody = $('<div>')
+                                  .addClass('body');
+                                  
+            /* No app page yet, so for now we don't add this element - also need to uncomment the link in the showTooltip function
+            this.help.$helpLinkout = $('<a>')
+                                     .attr('href', this.options.methodHelpLink)
+                                     .attr('target', '_blank')
+                                     .append('More...'); */
+
+            this.help.$helpPanel.append($helpHeader)
+                                .append(this.help.$helpBody)
+                                .append($('<div>').append(this.help.$helpLinkout))
+                                .append($('<h2>').append('Click to hide'));
+            $('body').append(this.help.$helpPanel);
+
+        },
+        
+        
+        /**
+         * Shows a popup panel with a description of the clicked method.
+         * @param {object} method - the method containing a title and 
+         * description for populating the popup.
+         * @private
+         */
+        showTooltip: function(app, event) {
+            this.help.$helpTitle.text(app.name);
+            this.help.$helpVersion.text('v' + app.ver);
+            this.help.$helpBody.html(app.tooltip);
+            //this.help.$helpLinkout.attr('href', this.options.appHelpLink + app.id);
+            this.help.$helpPanel.css({
+                                       'left':event.pageX, 
+                                       'top':event.pageY
+                                     })
+                                .show();
+        },
+
+        showErrorTooltip: function(app, event) {
+            this.showTooltip({
+                'name' : app.name,
+                'ver' : app.ver,
+                'id' : app.id,
+                'tooltip' : "This App has an internal error and cannot currently be used.<br><br>The detailed error message is:<br>"+app.loading_error
+            }, event);
+        },
+        
 
         /**
          * Shows a loading spinner or message on top of the panel.

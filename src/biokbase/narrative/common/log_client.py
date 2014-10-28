@@ -37,6 +37,11 @@ class ProxyArgs:
     conf = "/tmp/kbase_logforward.conf"
     vb = 0
 
+def send_message(event, message):
+    g_log.info("Sending log message")
+    kblog = get_logger("test")
+    kblog.info("{}{}{}".format(event, proxy.EVENT_MSG_SEP, message))
+
 def main(args):
     level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]
     g_log.setLevel(level)
@@ -55,15 +60,17 @@ def main(args):
         else:
             time.sleep(2)
             reset_handlers()
-            g_log.info("Sending log message")
-            kblog = get_logger("test")
-            kblog.info("{}{}{}".format(args.event, proxy.EVENT_MSG_SEP,
-                                       args.message))
+            send_message(args.event, args.message)
             time.sleep(1)
             g_log.debug("Killing {:d}".format(pid))
             os.kill(pid, signal.SIGKILL)
             g_log.info("Waiting for {:d} to stop".format(pid))
             os.waitpid(pid, 0)
+    else:
+        send_message(args.event, args.message)
+
+    # Wait for message to get sent from buffer
+    time.sleep(1)
 
     return 0
 

@@ -65,9 +65,6 @@
              * panel-body, make sure the right one is being shown at the start,
              * and off we go.
              */
-
-
-            console.log('kbaseNarrativeControlPanel : ' + this.options.title);
             // Make a main body panel for everything to sit inside.
             this.$bodyDiv = $('<div>');
 

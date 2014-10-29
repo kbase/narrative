@@ -17,8 +17,11 @@
         options: {
             app: null,
             cellId: null,
+            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            methodStoreURL: 'https://kbase.us/services/narrative_method_store',
         },
         IGNORE_VERSION: true,
+        defaultInputWidget: 'kbaseNarrativeMethodInput',
 
         /**
          * @private
@@ -26,37 +29,131 @@
          * Initialization is done by the KBase widget architecture itself.
          * This requires and assumes that an app spec and cellId are both present.
          * TODO: add checks and failures for this.
+         *
+         * This renders by calling fetchMethodInfo, which grabs all the specs
+         * for the intermediate steps, then renders the whole mess and 
+         * refreshes to update with jobs and results and such.
+         *
          */
         init: function(options) {
             this._super(options);
 
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+            }
+            this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
+
             this.options.appSpec = this.options.appSpec.replace(/\n/g, '');
             this.appSpec = JSON.parse(this.options.appSpec);
             this.cellId = this.options.cellId;
-            this.defaultInputWidget = 'kbaseNarrativeMethodInput';
-            this.render();
+
+            this.$elem.append($('<img src="' + this.options.loadingImage + '">'))
+                      .append($('<div>Loading App Info...</div>'));
+
+            this.fetchMethodInfo();
             return this;
+        },
+
+        fetchMethodInfo: function() {
+            if (!this.appSpec.steps || this.appSpec.steps.length === 0) {
+                this.showError('App "' + this.appSpec.info.name + '" has no steps!');
+            }
+            // get the list of method ids
+            var methodIds = [];
+            for (var i=0; i<this.appSpec.steps.length; i++) {
+                methodIds.push(this.appSpec.steps[i].method_id);
+            }
+            this.methClient.get_method_spec({'ids' : methodIds},
+                $.proxy(function(specs) {
+                    this.render(specs);
+                }, this),
+                $.proxy(function(error) {
+                    this.showError(error);
+                }, this)
+            );
+        },
+
+        showError: function(error) {
+            var $errorHeader = $('<div>')
+                               .addClass('alert alert-danger')
+                               .append('<b>Sorry, an error occurred while loading your KBase App.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%App%20loading%20error">help@kbase.us</a> with the information below.');
+            var $errorPanel = $('<div>');
+            $errorPanel.append($errorHeader);
+
+            // If it's a string, just dump the string.
+            if (typeof error === 'string') {
+                $errorPanel.append($('<div>').append(error));
+            }
+
+            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            else if (typeof error === 'object') {
+                var $details = $('<div>');
+                $details.append($('<div>')
+                                .append('<b>Type:</b> ' + error.ename))
+                        .append($('<div>')
+                                .append('<b>Value:</b> ' + error.evalue));
+
+                var $tracebackDiv = $('<div>')
+                                    .addClass('kb-function-error-traceback');
+                for (var i=0; i<error.traceback.length; i++) {
+                    $tracebackDiv.append(error.traceback[i] + "<br>");
+                }
+
+                var $tracebackPanel = $('<div>');
+                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
+
+                $errorPanel.append($details)
+                           .append($tracebackPanel);
+                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+            }
+            this.$elem.empty().append($errorPanel);
         },
 
         /**
          * Renders this cell and its contained input widget.
          */
-        render: function() {
-            this.$elem.append($('<div>Your app goes *here*</div>'));
+        render: function(stepSpecs) {
+            var $runButton = $('<button>')
+                              .attr('type', 'button')
+                              .attr('value', 'Run')
+                              .addClass('btn btn-success btn-sm')
+                              .append('Run')
+                              .click(
+                                  $.proxy(function(event) {
+                                      event.preventDefault();
+                                      this.trigger('runApp.Narrative', { 
+                                          cell: IPython.notebook.get_selected_cell(),
+                                          appSpec: this.appSpec,
+                                          parameters: this.getParameters()
+                                      });
+                                  }, this)
+                              );
 
-            this.$runButton = $('<button>RUN!</button>');
-            this.$runButton.click(
-                $.proxy(function(event) {
-                    event.preventDefault();
-                    this.trigger('runApp.Narrative', { 
-                        cell: IPython.notebook.get_selected_cell(),
-                        appSpec: this.appSpec,
-                        parameters: this.getParameters()
-                    });
-                }, this)
-            );
+            var $appInfo = this.appSpec.info.name;
+            this.$methodPanel = $('<div>')
+                                .addClass('kb-app-steps');
+            for (var i=0; i<stepSpecs.length; i++) {
+                this.$methodPanel.append('<div>' + stepSpecs[i].info.name + '</div>');
+            }
 
-            this.$elem.append(this.$runButton);
+            var $buttons = $('<div>')
+                           .addClass('buttons pull-right')
+                           .append($runButton);
+
+            var $cellPanel = $('<div>')
+                             .addClass('panel kb-app-panel kb-cell-run')
+                             .append($('<div>')
+                                     .addClass('panel-heading')
+                                     .append($appInfo))
+                             .append($('<div>')
+                                     .addClass('panel-body')
+                                     .append(this.$methodPanel))
+                             .append($('<div>')
+                                     .addClass('panel-footer')
+                                     .css({'overflow' : 'hidden'})
+                                     .append($buttons));
+
+            this.$elem.empty().append($cellPanel);
 
             // if (this.method.widgets.input)
             //     inputWidget = this.method.widgets.input;

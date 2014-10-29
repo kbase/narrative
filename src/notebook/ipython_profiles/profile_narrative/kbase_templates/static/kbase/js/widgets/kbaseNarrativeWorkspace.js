@@ -263,7 +263,7 @@
                     // Yeah, I know it's ugly, but that's how it goes.
                     var cellContent = "<div id='" + cellId + "'></div>" +
                                       "\n<script>" +
-                                      "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "'});" +
+                                      "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "', 'cellId' : '" + cellId + "'});" +
                                       "</script>";
 
                     cell.set_text(cellContent);

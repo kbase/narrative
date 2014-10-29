@@ -19,6 +19,7 @@ import signal
 import socket
 import struct
 import sys
+import time
 import yaml
 # Local
 from biokbase.narrative.common.util import parse_kvp
@@ -39,6 +40,8 @@ def on_signal(signo, frame):
     if signo in CATCH_SIGNALS:
         g_log.warn("Stop on signal {:d}".format(signo))
         m_fwd.close()
+        time.sleep(2)
+        sys.exit(1)
 
 
 class DBAuthError(Exception):

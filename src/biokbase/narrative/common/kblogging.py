@@ -239,7 +239,8 @@ def get_proxy_config():
     else:
         _log.info("Configuring KBase logging from defaults ({} is empty, or not found)"
                   .format(KBASE_PROXY_ENV))
-    return log_proxy.ProxyConfiguration(config_file)
+#    return log_proxy.ProxyConfiguration(config_file)
+    return log_proxy.ProxyConfigurationWrapper(config_file)
 
 def reset_handlers():
     """Remove & re-add all handlers."""

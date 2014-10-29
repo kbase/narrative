@@ -92,10 +92,10 @@ class ProxyConfiguration(Configuration):
         return self._obj.get('port', self.DEFAULT_PORT)
 
 class ProxyConfigurationWrapper(ProxyConfiguration):
-    def __init__(self, urls):
-        ProxyConfiguration.__init__(self, None)
-        self._obj['host'] = urls.log_proxy_host
-        self._obj['port'] = urls.log_proxy_port
+    def __init__(self, conf):
+        ProxyConfiguration.__init__(self, conf)
+        self._obj['host'] = URLS.log_proxy_host
+        self._obj['port'] = URLS.log_proxy_port
 
 class DBConfiguration(Configuration):
     """

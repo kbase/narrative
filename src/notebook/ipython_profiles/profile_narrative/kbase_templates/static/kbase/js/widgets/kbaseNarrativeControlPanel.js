@@ -86,24 +86,26 @@
                                               .addClass('panel-title')
                                               .css({'margin-left': '-8px', 'margin-right' : '-8px'})
                                               .append($('<span>')
-                                                  .addClass('kb-narr-panel-toggle')
-                                                  .click($.proxy(function(event) {
-                                                      event.preventDefault();
-                                                      if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
-                                                          $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down')
-                                                                                           .addClass('glyphicon-chevron-right');
-                                                          this.$bodyDiv.parent().slideUp(400);
-                                                      }
-                                                      else {
-                                                          $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right')
-                                                                                           .addClass('glyphicon-chevron-down');
-                                                          this.$bodyDiv.parent().slideDown(400);
-                                                      }
-                                                  }, this))
-                                                  .append($('<span>')
-                                                          .addClass('glyphicon glyphicon-chevron-down')))
-                                                  .append(this.options.title)
-                                                  .append(this.$buttonPanel)))
+                                                      .css({'cursor' : 'pointer'})
+                                                      .click(
+                                                          $.proxy(function(event) {
+                                                              event.preventDefault();
+                                                              if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
+                                                                  $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down')
+                                                                                                   .addClass('glyphicon-chevron-right');
+                                                                  this.$bodyDiv.parent().slideUp(400);
+                                                              }
+                                                              else {
+                                                                  $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right')
+                                                                                                   .addClass('glyphicon-chevron-down');
+                                                                  this.$bodyDiv.parent().slideDown(400);
+                                                              }
+                                                          }, this)
+                                                      )
+                                                      .append($('<span>')
+                                                              .addClass('glyphicon glyphicon-chevron-down kb-narr-panel-toggle'))
+                                                      .append(this.options.title))
+                                                      .append(this.$buttonPanel)))
                               .append($('<div>')
                                       .addClass('panel-body kb-narr-panel-body')
                                       .css({ 

@@ -449,3 +449,10 @@
     margin-top: 6px;
 }
 
+.kb-app-panel-description {
+    font-family: 'Roboto';
+    font-size: 12pt;
+    line-height: 15px;
+    color: #2E618D;
+    margin: 3px;
+}

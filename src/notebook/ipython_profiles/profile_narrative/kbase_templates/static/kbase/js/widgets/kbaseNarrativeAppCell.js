@@ -81,10 +81,12 @@
         },
 
         showError: function(error) {
+            console.error(error);
             var $errorHeader = $('<div>')
                                .addClass('alert alert-danger')
                                .append('<b>Sorry, an error occurred while loading your KBase App.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%App%20loading%20error">help@kbase.us</a> with the information below.');
-            var $errorPanel = $('<div>');
+            var $errorPanel = $('<div>')
+                                .addClass('panel kb-app-panel');
             $errorPanel.append($errorHeader);
 
             // If it's a string, just dump the string.
@@ -96,18 +98,22 @@
             else if (typeof error === 'object') {
                 var $details = $('<div>');
                 $details.append($('<div>')
-                                .append('<b>Type:</b> ' + error.ename))
-                        .append($('<div>')
-                                .append('<b>Value:</b> ' + error.evalue));
+                                .append('<b>Error:</b> ' + error.error.message+ '<br><br>'));
 
                 var $tracebackDiv = $('<div>')
                                     .addClass('kb-function-error-traceback');
-                for (var i=0; i<error.traceback.length; i++) {
-                    $tracebackDiv.append(error.traceback[i] + "<br>");
+                //if (error.traceback) {
+                //    for (var i=0; i<error.traceback.length; i++) {
+                //        $tracebackDiv.append(error.traceback[i] + "<br>");
+                //    }
+                //}
+                if (error.error) {
+                    error.error.error.replace(/\n/g, "<br>");
+                    $tracebackDiv.append(error.error.error + "<br>");
                 }
 
                 var $tracebackPanel = $('<div>');
-                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
+                var tracebackAccordion = [{'title' : 'Detailed Error Trace', 'body' : $tracebackDiv}];
 
                 $errorPanel.append($details)
                            .append($tracebackPanel);
@@ -151,11 +157,18 @@
                            .addClass('buttons pull-right')
                            .append($runButton);
 
+            
+            console.log(this.appSpec);
+            var $appDescriptionDiv = $("<div>")
+                                        .addClass('kb-app-panel-description')
+                                        .append(this.appSpec.info.subtitle);
+            
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
                              .append($('<div>')
                                      .addClass('panel-heading app-panel-heading')
-                                     .append("<h1><b>"+$appInfo+"</b></h1>"))
+                                     .append("<h1><b>"+$appInfo+"</b></h1>")
+                                     .append($appDescriptionDiv))
                              .append($('<div>')
                                      .addClass('panel-body')
                                      .append(this.$methodPanel))
@@ -275,6 +288,7 @@
             
             var $stepPanel = $("<div>");
             var $inputWidgetDiv = $("<div>");
+            
             
             var methodId = stepSpec.info.id + '-step-details-'+'uuid-should-go-here';
             var buttonLabel = 'step details';

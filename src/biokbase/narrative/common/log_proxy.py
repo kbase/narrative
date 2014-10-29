@@ -94,8 +94,9 @@ class ProxyConfiguration(Configuration):
 class ProxyConfigurationWrapper(ProxyConfiguration):
     def __init__(self, conf):
         ProxyConfiguration.__init__(self, conf)
-        self._obj['host'] = URLS.log_proxy_host
-        self._obj['port'] = URLS.log_proxy_port
+        if conf is None:
+            self._obj['host'] = URLS.log_proxy_host
+            self._obj['port'] = URLS.log_proxy_port
 
 class DBConfiguration(Configuration):
     """
@@ -374,6 +375,7 @@ def parse_args():
     program_name = os.path.basename(sys.argv[0])
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--config", dest="conf", metavar="FILE",
+                        default='',
                         help="Config file. To create a new config file,"
                              "try running: {} -S > my_file.conf"
                              .format(program_name))
@@ -410,12 +412,11 @@ def main(args):
         g_log.critical("Database configuration failed: {}".format(err))
         return 1
 
-    pconfig = ProxyConfigurationWrapper(URLS)
-    #try:
-    #    pconfig = ProxyConfiguration(args.conf)
-    #except (IOError, ValueError, KeyError) as err:
-    #    g_log.critical("Proxy configuration failed: {}".format(err))
-    #    return 2
+    try:
+       pconfig = ProxyConfiguration(args.conf)
+    except (IOError, ValueError, KeyError) as err:
+       g_log.critical("Proxy configuration failed: {}".format(err))
+       return 2
 
     try:
         m_fwd = LogForwarder(config, pconfig)

@@ -58,7 +58,7 @@ def main(args):
     return 0
 
 def parse_args():
-    conf = os.environ.get("KBASE_PROXY_CONFIG", "/etc/kbase/narrative-log-proxy.conf")
+    conf = os.environ.get("KBASE_PROXY_CONFIG", "narrative-log-proxy.conf")
     p = argparse.ArgumentParser(description=__doc__.strip())
     p.add_argument("-c", "--conf", dest='conf', default=conf,
                    help="Configuration file (default=%(default)s)")

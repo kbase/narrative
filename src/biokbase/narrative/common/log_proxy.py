@@ -340,14 +340,10 @@ class KBaseLogRecord(object):
         rec = self.record  # alias
         # not needed at all
         for k in ('msg', 'threadName', 'thread', 'pathname',
-                  'levelno', 'asctime', 'relativeCreated'):
+                  'levelno', 'asctime', 'relativeCreated',
+                  'processName', 'process', 'module', 'lineno', 'funcName'):
             if k in rec:
                 del rec[k]
-        # junk for service writes
-        if rec.get('filename', '') == 'service.py':
-            for k in 'processName', 'module', 'lineno', 'funcName':
-                if k in rec:
-                    del rec[k]
         # remove exception stuff if empty
         if rec.get('exc_info', None) is None:
             for k in 'exc_info', 'exc_text':

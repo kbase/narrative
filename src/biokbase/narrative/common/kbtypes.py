@@ -49,6 +49,7 @@ class VersionNumber(TraitType):
     """A trait for a (major, minor, patch) version tuple
     See http://semver.org/
     """
+    default_value = (0, 0, 0)
     version = ()
 
     def info(self):
@@ -58,7 +59,7 @@ class VersionNumber(TraitType):
         rx = 'v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.((?:0|[1-9][0-9]*)(?:-' \
              '[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?)'
         if not isinstance(value, basestring):
-            value = '.'.join(str(value))  # convert to string
+            value = '.'.join([str(v) for v in value[:3]])  # convert to string
         r = re.match(rx, value)
         if not r:
             self.error(obj, value)

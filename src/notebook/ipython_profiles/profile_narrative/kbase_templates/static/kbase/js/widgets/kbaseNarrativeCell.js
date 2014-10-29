@@ -19,6 +19,8 @@
             cellId: null,
         },
         IGNORE_VERSION: true,
+        defaultInputWidget: 'kbaseNarrativeMethodInput',
+
 
         /**
          * @private
@@ -34,7 +36,6 @@
             this.options.method = this.options.method.replace(/\n/g, '');
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
-            this.defaultInputWidget = 'kbaseNarrativeMethodInput';
             this.render();
             return this;
         },
@@ -43,9 +44,6 @@
          * Renders this cell and its contained input widget.
          */
         render: function() {
-            if (this.method.widgets.input)
-                inputWidget = this.method.widgets.input;
-
             this.$inputDiv = $('<div>');
 
             // These are the 'delete' and 'run' buttons for the cell

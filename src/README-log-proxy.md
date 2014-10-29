@@ -1,4 +1,44 @@
-# How to test/start the narrative logging
+# The narrative logging proxy
+
+The narrative logging proxy was created to deal with security and networking issues for the Docker containers used for the KBase Narrative IPython Notebook backend (which is a mouthful, but basically is a web server that provides a bi-directional pipe to a Python interpreter). We want to log data to a remote location, like a MongoDB or Splunk server, from within the Docker container. However, within the Docker container we don't want to store the credentials needed to access the database. In addition, we don't want the management overhead and hassle of making socket connections to the Internet from within each Docker container.
+
+So, what the logging proxy really does is run a simple server that listens on a socket for Python logging messages (in the format sent by the standard logging module's SocketHandler class), and forward them to the remote destination of choice.
+
+The rest of this README describes the configuration and various tasks with the proxy.
+
+## Code
+
+The code for the narrative logging proxy is in the biokbase.narrative.common package:
+
+* log_proxy.py - Implement the proxy
+* kblogging.py - This is the client library for the narratives to do their logging
+* _
+
+## Configuration
+
+For the most part, the logging proxy is configured from a single YAML file.
+
+* File location: /etc/kbase/narrative-log-proxy.conf
+* File format: YAML
+* Sample:
+
+        # proxy listen host and port
+        host: 172.17.42.1
+        port: 32001
+        # mongodb server user/pass and database
+        db_host: db3.chicago.kbase.us
+        db_port: 27017
+        user: narlog
+        password: "put-password-here"
+        db: mongoDBName
+        collection: mongoCollectionName
+
+In addition, some environment variables have special meaning:
+
+* KBASE_DEBUG=1 - Turn on a high level
+* KBASE_PROXY_CONFIG=/etc/kbase/narrative-log-proxy.conf - Config file location, for clients
+
+## Update, test, or restart the proxy
 
 * Get to narrative-dev
 

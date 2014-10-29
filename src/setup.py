@@ -1,6 +1,7 @@
 """
 Installer for KBase narrative Python libraries
 """
+import glob
 import re
 import sys
 import ez_setup
@@ -25,7 +26,7 @@ setup(
     install_requires=[s.strip() for s in open("requirements.txt")],
     extras_require={},
     package_data={"": ["*.json"]},
-    scripts=["scripts/kb-log-proxy"],
+    scripts=glob.glob("scripts/kb-*"),
     author="Steve Chan, Dan Gunter, William Riehl",
     author_email="sychan@lbl.gov, dkgunter@lbl.gov, wjriehl@lbl.gov",
     maintainer="Dan Gunter",

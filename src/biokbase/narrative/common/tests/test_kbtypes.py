@@ -14,6 +14,14 @@ from IPython.utils.traitlets import HasTraits
 class HasVersion(HasTraits):
     ver = kbtypes.VersionNumber('0.0.0')
 
+def skipUnlessCreds(fn):
+    def wrapper(*a, **k):
+        if 'KBASE_CREDS' in os.environ:
+            return fn(*a, **k)
+        else:
+            raise unittest.SkipTest("Environment doesn't have KBASE_CREDS=<user>:<pass>")
+    return wrapper
+
 class TestKbaseTypes(unittest.TestCase):
     """Test basic behavior of KBase types.
     """
@@ -73,22 +81,18 @@ class TestKbaseTypes(unittest.TestCase):
         except exc:
             pass
 
+    @skipUnlessCreds
     def test_get_types(self):
         """Regenerator.get_types
         """
-        if self.user is None:
-            return
-
         r = kbtypes.Regenerator(self.args)
         t = self._get_types(r)
         self.assert_(t)
 
+    @skipUnlessCreds
     def test_multiple_versions(self):
         """Test multiple versions of the same type.
         """
-        if self.user is None:
-            return
-
         r = kbtypes.Regenerator(self.args)
         t = self._get_types(r)
 

@@ -5,45 +5,50 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "kbaseNarrativeInput",
+        name: "kbaseNarrativeParameterInput",
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
-            method: null,
+            parsedParameterSpec: null
         },
         IGNORE_VERSION: true,
 
+        $mainPanel:null,
+        spec:null,
+        
         init: function(options) {
             this._super(options);
 
-            // expects the method as a JSON string
-            if (this.options.method)
-                this.options.method = JSON.parse(this.options.method);
+            this.spec = options.parsedParameterSpec;
+            
+            this.$mainPanel = $("<div>");
+            this.$elem.append(this.$mainPanel);
+            this.render();
             
             return this;
         },
-
-        getParameters: function() {
-            return [ "returning parameter list" ];
+        
+        render: function() {
+            this.$mainPanel.append("A parameter is not being displayed correctly.");
+            console.error("Incorrect Parameter Spec:");
+            console.error(this.spec);
         },
         
         getState: function() {
-            return {};
+            return this.getParameterValue();
         },
 
         loadState: function(state) {
             if (!state)
                 return;
+            this.setParameterValue(state);
         },
-
+        
         refresh: function() {
 
         },
 
-        /*  NEW METHODS TO HANDLE NEW APP BEHAVIOR AND METHOD/APP SPECS */
-        
-        
         /*
          * This is called when this method is run to allow you to check if the parameters
          * that the user has entered is correct.  You need to return an object that indicates
@@ -52,21 +57,21 @@
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function() {
-           return { isValid: true, errormssgs: [] }; 
+           return { isValid: false, errormssgs: ["A parameter is not specified properly."] }; 
         },
         
         /*
          * Necessary for Apps to disable editing parameters that are automatically filled
          * from a previous step.  Returns nothing.
          */
-        disableParameterEditing: function(parameterId) {
+        disableParameterEditing: function() {
             
         },
         
         /*
          * Allows those parameters to be renabled, which may be an option for advanced users.
          */
-        enableParameterEditing: function(parameterId) {
+        enableParameterEditing: function() {
             
         },
         
@@ -74,7 +79,7 @@
          * An App (or a narrative that needs to auto populate certain fields) needs to set
          * specific parameter values based on the App spec, so we need a way to do this.
          */
-        setParameterValue: function(parameterId, value) {
+        setParameterValue: function(value) {
             
         },
         
@@ -83,26 +88,10 @@
          * values may be strings, numbers, objects, or lists, but must match what is declared
          * in the method spec.  If the parameter is not valid.
          */
-        getParameterValue: function(parameterId) {
-            return null;
+        getParameterValue: function() {
+            return "";
         },
         
-        
-        /*
-         * When we actually run the method, we need all the parameter inputs.  This should return
-         * an array of objects, where each object has 'id' and 'value' defined giving the parameter ID
-         * and parameter value.
-         */
-        getAllParameterValues: function() {
-            /*  should be in the form:
-             *      [
-             *          { id: 'param1', value: 'MyGenome' },
-             *          ...
-             *      ]
-             *  
-             */
-            return [ ];
-        }
         
     });
 

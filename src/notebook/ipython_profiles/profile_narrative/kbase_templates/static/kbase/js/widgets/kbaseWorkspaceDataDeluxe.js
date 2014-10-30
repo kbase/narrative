@@ -1,6 +1,9 @@
 /**
  * Widget to display a table of data objects from a kbase workspace.
  *
+ * TODO: Re-enable "readonly" mode by following instructions in isReadonlyWorkspace()
+ *       (dan g. 10/30/2014)
+ *
  * Options:
  *    wsId - the name of the workspace to show in this widget
  *    loadingImage - an image to show in the middle of the widget while loading data
@@ -197,15 +200,21 @@
         /**
          * Test if this narrative is in a workspace that this user is not
          * able to modify.
+         *
+         * XXX: 
+         * XXX: DISABLED! To re-enable see TODO: comment below
+         * XXX:
          */
         isReadonlyWorkspace: function (ws_client, ws_name, callback) {
             var workspace_id = {workspace: ws_name};
             ws_client.get_workspace_info(workspace_id,
                 // success callback
                 $.proxy(function(info) {
-                    var perms = info[5];
-                    console.debug("workspace perms = ",perms);
-                    ro = (perms != 'a' && perms != 'w');
+                    var ro = false;
+                    // TODO: re-enable by uncommenting the next 3 lines
+                    // var perms = info[5];
+                    // console.debug("workspace perms = ",perms);
+                    // ro = (perms != 'a' && perms != 'w');
                     console.info("WS(" + ws_name + ") read-only: " + ro);
                     callback(ro);
                 }, this),

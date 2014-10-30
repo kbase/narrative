@@ -109,7 +109,7 @@ def _method_call(meth, method_spec_json, param_values_json):
             raise ValueError("Value is not defined in input mapping: " + mapping)
         build_args(paramValue, mapping, workspace, rpcArgs)
     
-    #build_args(None, workspace, workspaceMapping, None, rpcArgs)
+    #raise ValueError("Debug: " + url + ", " + methodName)
     
     genericClient = GenericService(url = url, token = token)
     output = genericClient.call_method(methodName, rpcArgs)
@@ -166,8 +166,7 @@ def build_args(paramValue, paramMapping, workspace, args):
         targetProp = paramMapping['target_property']
     if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
         targetTrans = paramMapping['target_type_transform']
-    if targetTrans == "ref":
-        paramValue = workspace + '/' + paramValue
+    paramValue = transform_value(paramValue, workspace, targetTrans)
     while len(args) <= targetPos:
         args.append({})
     if (targetProp is None):
@@ -176,6 +175,19 @@ def build_args(paramValue, paramMapping, workspace, args):
         item = args[targetPos]
         item[targetProp] = paramValue
 
+def transform_value(paramValue, workspace, targetTrans):
+    if targetTrans == "ref":
+        return workspace + '/' + paramValue
+    if targetTrans == "int":
+        if paramValue is None or len(str(paramValue).strip()) == 0:
+            return None
+        return int(paramValue) 
+    if targetTrans.startswith("list<") and targetTrans.endswith(">"):
+        innerTrans = targetTrans[5:-1]
+        return [transform_value(paramValue, workspace, innerTrans)]
+    if targetTrans == "none":
+        return paramValue
+    raise ValueError("Transformation type is not supported: " + targetTrans)
 
 def _get_token(user_id, password,
                auth_svc='https://nexus.api.globusonline.org/goauth/token?' +

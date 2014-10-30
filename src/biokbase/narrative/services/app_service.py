@@ -14,6 +14,7 @@ import IPython.utils.traitlets as trt
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import *
+from biokbase.narrative_method_store.client import NarrativeMethodStore
 
 ## Globals
 
@@ -41,14 +42,28 @@ def _app_call(meth, app_spec_json, param_values_json):
     :return: running job info
     """
     token, workspaceName = meth.token, meth.workspace_id
+    
+    appSpec = json.loads(app_spec_json)
+    paramValues = json.loads(param_values_json)
 
+    methodIds = []
+    for step in appSpec['steps']:
+        methodId = step['method_id']
+        methodIds.append(methodId)
+    nmsClient = NarrativeMethodStore(service.URLS.narrative_method_store)
+    
+    methSpecs = nmsClient.get_method_spec({'ids' : methodIds})
+    
+    methIdToSpec = {}
+    for methSpec in methSpecs:
+        methIdToSpec[methSpec['info']['id']] = methSpec
     # Insert translation and app calling code here
 
     # assuming we get a job ID out of this, do the following:
     job_id = '12345'
     # meth.register_job(job_id)
 
-    return json.dumps({ 'job_id' : job_id })
+    return json.dumps({ 'job_id' : job_id, 'app_spec' : appSpec, 'methods' : methIdToSpec})
 
 
 # Finalize (registers service)

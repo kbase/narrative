@@ -19,10 +19,17 @@
             cellId: null,
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             methodStoreURL: 'https://kbase.us/services/narrative_method_store',
+            
+            appHelpLink: '/functional-site/#/narrativestore/app/',
+            methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
 
+        inputWidgets: null,
+        inputDivs: null,
+        
+        
         /**
          * @private
          * @method
@@ -48,7 +55,7 @@
             this.cellId = this.options.cellId;
 
             this.$elem.append($('<img src="' + this.options.loadingImage + '">'))
-                      .append($('<div>Loading App Info...</div>'));
+                      .append($('<div>Loading App...</div>'));
 
             this.fetchMethodInfo();
             return this;
@@ -74,10 +81,12 @@
         },
 
         showError: function(error) {
+            console.error(error);
             var $errorHeader = $('<div>')
                                .addClass('alert alert-danger')
                                .append('<b>Sorry, an error occurred while loading your KBase App.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%App%20loading%20error">help@kbase.us</a> with the information below.');
-            var $errorPanel = $('<div>');
+            var $errorPanel = $('<div>')
+                                .addClass('panel kb-app-panel');
             $errorPanel.append($errorHeader);
 
             // If it's a string, just dump the string.
@@ -89,18 +98,22 @@
             else if (typeof error === 'object') {
                 var $details = $('<div>');
                 $details.append($('<div>')
-                                .append('<b>Type:</b> ' + error.ename))
-                        .append($('<div>')
-                                .append('<b>Value:</b> ' + error.evalue));
+                                .append('<b>Error:</b> ' + error.error.message+ '<br><br>'));
 
                 var $tracebackDiv = $('<div>')
                                     .addClass('kb-function-error-traceback');
-                for (var i=0; i<error.traceback.length; i++) {
-                    $tracebackDiv.append(error.traceback[i] + "<br>");
+                //if (error.traceback) {
+                //    for (var i=0; i<error.traceback.length; i++) {
+                //        $tracebackDiv.append(error.traceback[i] + "<br>");
+                //    }
+                //}
+                if (error.error) {
+                    error.error.error.replace(/\n/g, "<br>");
+                    $tracebackDiv.append(error.error.error + "<br>");
                 }
 
                 var $tracebackPanel = $('<div>');
-                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
+                var tracebackAccordion = [{'title' : 'Detailed Error Trace', 'body' : $tracebackDiv}];
 
                 $errorPanel.append($details)
                            .append($tracebackPanel);
@@ -132,19 +145,30 @@
             var $appInfo = this.appSpec.info.name;
             this.$methodPanel = $('<div>')
                                 .addClass('kb-app-steps');
+            var stepHeaderText = "Step ";
+            this.inputWidgets = [];
+            this.inputDivs = [];
             for (var i=0; i<stepSpecs.length; i++) {
-                this.$methodPanel.append('<div>' + stepSpecs[i].info.name + '</div>');
+                var $stepPanel = this.renderStepDiv(stepSpecs[i], stepHeaderText + (i+1)+": ");
+                this.$methodPanel.append($stepPanel);
             }
 
             var $buttons = $('<div>')
                            .addClass('buttons pull-right')
                            .append($runButton);
 
+            
+            console.log(this.appSpec);
+            var $appDescriptionDiv = $("<div>")
+                                        .addClass('kb-app-panel-description')
+                                        .append(this.appSpec.info.subtitle);
+            
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
                              .append($('<div>')
-                                     .addClass('panel-heading')
-                                     .append($appInfo))
+                                     .addClass('panel-heading app-panel-heading')
+                                     .append("<h1><b>"+$appInfo+"</b></h1>")
+                                     .append($appDescriptionDiv))
                              .append($('<div>')
                                      .addClass('panel-body')
                                      .append(this.$methodPanel))
@@ -257,6 +281,68 @@
             // this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
         },
 
+        // given a method spec, returns a jquery div that is rendered but not added yet to the dom
+        // stepSpec - the spec from the narrative method store
+        // stepHeading - something to show in front of the method title, e.g. Step 1, Step 2 ...
+        renderStepDiv: function (stepSpec, stepHeading) {
+            
+            var $stepPanel = $("<div>");
+            var $inputWidgetDiv = $("<div>");
+            
+            
+            var methodId = stepSpec.info.id + '-step-details-'+'uuid-should-go-here';
+            var buttonLabel = 'step details';
+            var methodDesc = stepSpec.info.subtitle;
+            var $methodInfo = $('<div>')
+                              .addClass('kb-func-desc')
+                              .append('<h1><b>' + stepHeading +'</b>'+ stepSpec.info.name + '</h1>')
+                              //.append($('<span>')
+                              //        .addClass('pull-right kb-func-timestamp')
+                              //        .attr('id', 'last-run'))
+                              //        .append("some time")
+                              .append($('<button>')
+                                      .addClass('btn btn-default btn-xs')
+                                      .attr('type', 'button')
+                                      .attr('data-toggle', 'collapse')
+                                      .attr('data-target', '#' + methodId)
+                                      .append(buttonLabel))
+                              .append($('<div>')
+                                      .attr('id', methodId)
+                                      .addClass('collapse')
+                                      .append($('<h2>')
+                                         .append(methodDesc +
+                                                 ' <a href="'+ this.options.methodHelpLink + stepSpec.info.id +
+                                                        '" target="_blank">More documentation...</a>')));
+
+            var $cellPanel = $('<div>')
+                             .addClass('panel kb-func-panel kb-app-func-panel kb-cell-run')
+                             //.attr('id', this.options.cellId)
+                             .append($('<div>')
+                                     .addClass('panel-heading')
+                                     .append($methodInfo))
+                             .append($('<div>')
+                                     .addClass('panel-body')
+                                     .append($inputWidgetDiv))
+
+            $stepPanel.append($cellPanel);
+
+            var inputWidgetName = stepSpec.widgets.input;
+            if (!inputWidgetName || inputWidgetName === 'null') {
+                inputWidgetName = this.defaultInputWidget;
+            }
+
+            // todo, update input widget so that we don't have to stringify
+            var inputWidget = $inputWidgetDiv[inputWidgetName]({ method: JSON.stringify(stepSpec) });
+            
+            this.inputWidgets.push(inputWidget);
+            this.inputDivs.push($inputWidgetDiv);
+                
+            return $stepPanel;
+        },
+        
+        
+        
+        
         /**
          * @method
          * Returns parameters from the contained input widget

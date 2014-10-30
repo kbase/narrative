@@ -424,3 +424,35 @@
 
 
 
+/** App styling */
+
+.kb-app-panel {
+    border: 15px solid #dddddd;
+}
+
+.app-panel-heading {
+    padding-top: 20px;
+}
+
+.app-panel-heading h1 {
+    font-family: 'Roboto';
+    font-weight: bold;
+    font-size: 16pt;
+    line-height: 15px;
+    color: #2E618D;
+    margin: 3px;
+    opacity: inherit;
+    display: inline;
+}
+
+.kb-app-func-panel {
+    margin-top: 6px;
+}
+
+.kb-app-panel-description {
+    font-family: 'Roboto';
+    font-size: 12pt;
+    line-height: 15px;
+    color: #2E618D;
+    margin: 3px;
+}

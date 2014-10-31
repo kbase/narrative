@@ -261,7 +261,7 @@
                     // The various components are HTML STRINGS, not jQuery objects.
                     // This is because the cell expects a text input, not a jQuery input.
                     // Yeah, I know it's ugly, but that's how it goes.
-                    var cellContent = "<div id='" + cellId + "'>hello</div>" +
+                    var cellContent = "<div id='" + cellId + "'></div>" +
                                       "\n<script>" +
                                       "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "', 'cellId' : '" + cellId + "'});" +
                                       "</script>";

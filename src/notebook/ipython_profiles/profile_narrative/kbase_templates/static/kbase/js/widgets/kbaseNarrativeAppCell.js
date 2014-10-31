@@ -378,7 +378,7 @@
          */
         loadState: function(state) {
             
-            console.log("getting state");
+            console.log("loading state");
             console.log(state);
             if (!state) {
                 return;
@@ -387,7 +387,7 @@
                 for(var i=0; i<this.inputSteps.length; i++) {
                     var id = this.inputSteps[i].id;
                     if (state.hasOwnProperty(id)) {
-                        this.inputSteps[i].widget.loadState(this.inputSteps[id]);
+                        this.inputSteps[i].widget.loadState(state[id]);
                     }
                 }
             }

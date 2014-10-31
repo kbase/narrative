@@ -17,6 +17,7 @@
 
             this.render();
             this.refresh();
+            console.log(this.getState());
             return this;
         },
 

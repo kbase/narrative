@@ -22,7 +22,7 @@
         render: function() {
             var self = this;
             //console.log(this.spec);
-            spec = self.spec;
+            var spec = self.spec;
             
             // check if we need to allow multiple values
             var allow_multiple = false;
@@ -39,7 +39,7 @@
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] + "'" : "";
                 var form_id = spec.id;
                 
-                var input='<input class="form-control" style="width: 95%" name="' + spec.id + '" placeholder="' + defaultValue + '"' +
+                var input='<input class="form-control" style="width: 95%" id="' + spec.id + '" placeholder="' + defaultValue + '"' +
                         ' value="" type="text"></input>';
                 
                 var $row = $('<div>').addClass("row").css({"margin":"10px"});
@@ -208,7 +208,7 @@
             
             // todo: handle case where this is a multiple ...
             
-            $(this.$elem).find(this.spec.id).filter(":input").val(value);
+            this.$elem.find("#"+this.spec.id).val(value);
             
             
             //.each(function(key, field) {
@@ -224,11 +224,10 @@
          * in the method spec.  If the parameter is not valid.
          */
         getParameterValue: function() {
+            var value = this.$elem.find("#"+this.spec.id).val();
             
-            
-            
-            var state = $(this.$elem).find(this.spec.id).filter(":input").val();
-            return state;
+            // todo: handle case where this is a multiple ...
+            return value;
         },
         
         

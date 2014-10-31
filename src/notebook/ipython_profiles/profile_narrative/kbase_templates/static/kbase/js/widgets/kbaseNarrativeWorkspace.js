@@ -825,7 +825,7 @@
          */
         saveCellState: function(cell) {
             // ignore it if it isn't a KBase cell with a widget state to save.
-            if (!this.isFunctionCell(cell) && !this.isOutputCell(cell))
+            if (!this.isFunctionCell(cell) && !this.isOutputCell(cell) && !this.isAppCell(cell))
                 return;
 
             var target;
@@ -847,6 +847,10 @@
                 // do output widget stuff.
                 widget = cell.metadata[this.KB_CELL].widget;
                 target = '#output';
+            }
+            else if (this.isAppCell(cell)) {
+                widget = 'kbaseNarrativeAppCell';
+                target = 'div[id^=kb-cell-]';
             }
 
             try {

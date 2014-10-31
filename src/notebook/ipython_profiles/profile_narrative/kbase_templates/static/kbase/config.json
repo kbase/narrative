@@ -23,7 +23,8 @@
         "narrative_job_proxy" : "http://140.221.67.185:7068",
         "trees" : "http://140.221.67.152:7047",
         "awe" : "http://140.221.67.185:7080",
-        "narrative_method_store" : "http://dev19.berkeley.kbase.us/narrative_method_store/rpc"
+        "narrative_method_store" : "http://dev19.berkeley.kbase.us/narrative_method_store/rpc",
+        "job_service" : "http://140.221.67.204:8200/"
     },
 
     "prod": {
@@ -45,7 +46,8 @@
         "log_proxy_host": "172.17.42.1",
         "narrative_job_proxy" : "http://140.221.67.185:7068",
         "awe" : "http://140.221.67.185:7080",
-        "narrative_method_store" : "http://dev19.berkeley.kbase.us/narrative_method_store/rpc"
+        "narrative_method_store" : "http://dev19.berkeley.kbase.us/narrative_method_store/rpc",
+        "job_service" : "http://140.221.67.204:8200/"
     },
 
     "name" : "KBase Narrative",

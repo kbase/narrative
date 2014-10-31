@@ -904,6 +904,10 @@
                     widget = cell.metadata[this.KB_CELL].widget;
                     target = "#output";
                 }
+                else if (this.isAppCell(cell)) {
+                    widget = 'kbaseNarrativeAppCell';
+                    target = 'div[id^=kb-cell-]';
+                }
                 // it might not be either! if we don't have both a target and widget, don't do anything!
                 if (target && widget) {
                     try {
@@ -969,7 +973,7 @@
          */
         getRecentState: function(cell) {
             var state;
-            if (this.isFunctionCell(cell) || this.isOutputCell(cell)) {
+            if (this.isFunctionCell(cell) || this.isOutputCell(cell) || this.isAppCell(cell)) {
                 var stateList = cell.metadata[this.KB_CELL][this.KB_STATE];
                 if (Object.prototype.toString.call(stateList) === "[object Array]")
                     state = stateList[0];

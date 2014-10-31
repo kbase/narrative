@@ -76,8 +76,6 @@ def _method_call(meth, method_spec_json, param_values_json):
     rpcArgs = []
     prepare_generic_method_input(token, workspace, methodSpec, paramValues, input, rpcArgs);
     
-    #raise ValueError("Debug: " + url + ", " + methodName)
-    
     behavior = methodSpec['behavior']
     url = behavior['kb_service_url']
     serviceName = behavior['kb_service_name']
@@ -87,7 +85,7 @@ def _method_call(meth, method_spec_json, param_values_json):
     genericClient = GenericService(url = url, token = token)
     output = genericClient.call_method(methodName, rpcArgs)
     
-    methodOut = prepare_generic_method_output(token, method, methodSpec, input, output)
+    methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, output)
 
     return json.dumps(methodOut)
 
@@ -144,7 +142,7 @@ def prepare_generic_method_output(token, workspace, methodSpec, input, output):
         if paramValue is None:
             raise ValueError("Value is not defined in input mapping: " + mapping)
         build_args(paramValue, mapping, workspace, outArgs)
-    return outArgs[0];
+    return outArgs[0]
 
 def not_defined(paramValue):
     return paramValue is None or len(str(paramValue).strip()) == 0
@@ -173,7 +171,7 @@ def build_args(paramValue, paramMapping, workspace, args):
     targetProp = None
     targetTrans = "none"
     if 'target_argument_position' in paramMapping and paramMapping['target_argument_position'] is not None:
-        targetPos = paramMapping['target_argument_position']
+        targetPos = int(paramMapping['target_argument_position'])
     if 'target_property' in paramMapping and paramMapping['target_property'] is not None:
         targetProp = paramMapping['target_property']
     if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
@@ -181,7 +179,7 @@ def build_args(paramValue, paramMapping, workspace, args):
     paramValue = transform_value(paramValue, workspace, targetTrans)
     while len(args) <= targetPos:
         args.append({})
-    if (targetProp is None):
+    if targetProp is None:
         args[targetPos] = paramValue
     else:
         item = args[targetPos]

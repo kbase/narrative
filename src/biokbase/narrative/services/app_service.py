@@ -66,7 +66,7 @@ def _app_call(meth, app_spec_json, param_values_json):
             methodName = behavior['kb_service_method']
             if serviceName:
                 methodName = serviceName + '.' + methodName
-            generic = {'service_url' : behavior['url'], 'method_name' : methodName}
+            generic = {'service_url' : behavior['kb_service_url'], 'method_name' : methodName}
             step['type'] = 'generic'
             step['input_values'] = rpcArgs
             step['generic'] = generic

@@ -42,7 +42,6 @@
                 var input='<input class="form-control" style="width: 95%" name="' + spec.id + '" placeholder="' + defaultValue + '"' +
                         ' value="" type="text"></input>';
                 
-                
                 var $row = $('<div>').addClass("row").css({"margin":"10px"});
                 
                 $row.append($('<div>').addClass("col-md-2").css({"vertical-align":"middle", "text-align":"right"})

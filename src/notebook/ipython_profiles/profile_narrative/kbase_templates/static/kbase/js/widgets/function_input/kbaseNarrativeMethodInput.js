@@ -37,7 +37,7 @@
             var params = method.parameters;
 
             var $inputParameterContainer = $('<div>');
-            
+            console.log('here');
             var $optionsDiv = $('<div>');
             var $advancedOptionsDiv = $('<div>').append("<b>advanced options:</b>");
             
@@ -48,6 +48,7 @@
                 //this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
                 // check what kind of parameter here.
                 if (paramSpec.field_type === "text") {
+                    console.log("adding step "+i);
                     $stepDiv["kbaseNarrativeParameterTextInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
                 } else {
                     // this is what we should do:  this.getErrorDiv()
@@ -256,25 +257,6 @@
         
         
         /* input types */
-        
-        /*
-         * render the parameter spec; this should be refactored to be OO code instead of a big
-         * if/else, but I don't know the right way to do js OO -mike
-         *
-         * should return the jquery element of the parameter spec div
-         */
-        renderParameterDiv : function(parameterSpec) {
-            var p = $('<div>');
-            
-            
-            
-            
-            return p;
-        },
-        
-        
-        
-        
         
         
         genUUID: function() {

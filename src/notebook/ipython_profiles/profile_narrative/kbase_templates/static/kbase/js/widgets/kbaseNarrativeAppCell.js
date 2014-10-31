@@ -45,6 +45,7 @@
         init: function(options) {
             this._super(options);
 
+            console.log('creating app cell');
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
@@ -288,7 +289,6 @@
             
             var $stepPanel = $("<div>");
             var $inputWidgetDiv = $("<div>");
-            
             
             var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
             var buttonLabel = 'step details';

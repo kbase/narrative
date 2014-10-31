@@ -1,14 +1,14 @@
+
+## Deploying the Narrative on a fresh developer’s server instance with Docker provisioning
+
 Last updated: Dan Gunter <dkgunter@lbl.gov> 7/18/2014
+
 Bill Riehl <wjriehl@lbl.gov> 7/15/2014
-
-# Deploying the Narrative on a fresh developer’s server instance with Docker provisioning
-
-Bill Riehl <wjriehl@lbl.gov>  
-Keith Keller <kkeller@lbl.gov>  
+Keith Keller <kkeller@lbl.gov>
 Dan Gunter <dkgunter@lbl.gov>
 (based on a document written by Steve Chan, emeritus)
 
-**The Narrative Interface has 3 main components:**  
+**The Narrative Interface has 3 main components:**
 
 1.  A front end with Nginx 1.3.13+ and some supporting Lua libraries. These implement a dynamic proxy and the provisioning logic that spins up/down docker containers.
 2.  A server running Docker to host the containers

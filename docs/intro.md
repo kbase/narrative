@@ -2,9 +2,6 @@ Last updated: Dan Gunter <dkgunter@lbl.gov> 7/31/2014
 
 To report bugs, login using your KBase developer user/pass at: https://atlassian.kbase.us
 
-Introduction
-============
-
 This is the IPython based Narrative Interface repository.
 All relevant code lives under the src/directory. A virtualenv based installer
 and standard KBase Makefile targets are in the works (still!). But a Docker-based

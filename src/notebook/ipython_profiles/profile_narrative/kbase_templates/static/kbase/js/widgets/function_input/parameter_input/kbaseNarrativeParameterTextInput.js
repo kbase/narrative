@@ -21,8 +21,8 @@
         
         render: function() {
             var self = this;
+            //console.log(this.spec);
             spec = self.spec;
-            console.log(this.spec);
             
             // check if we need to allow multiple values
             var allow_multiple = false;
@@ -78,7 +78,97 @@
         
         
         refresh: function() {
-
+            //var method = this.options.method;
+            //var params = method.parameters;
+            //var lookupTypes = [];
+            //var tempObj = {};
+            //for (var i=0; i<params.length; i++) {
+            //    var p = params[i];
+            //    if (p.text_options.valid_ws_types.length > 0) {
+            //        if (!tempObj.hasOwnProperty(p.text_options.valid_ws_types[0])) {
+            //            lookupTypes.push(p.text_options.valid_ws_types[0]);
+            //            tempObj[p.text_options.valid_ws_types[0]] = 1;
+            //        } 
+            //    }
+            //}
+            //
+            //this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
+            //    function(objects) {
+            //        // we know from each parameter what each input type is.
+            //        // we also know how many of each type there is.
+            //        // so, iterate over all parameters and fulfill cases as below.
+            //
+            //        for (var i=0; i<params.length; i++) {
+            //            var p = params[i];
+            //
+            //            // we're refreshing, not rendering, so assume that there's an
+            //            // input with name = pid present.
+            //            var $input = $($(this.$elem).find("[name=" + p.id + "]"));
+            //            var objList = [];
+            //
+            //            /*
+            //             * New sorting - by date, then alphabetically within dates.
+            //             */
+            //            var types = p.text_options.valid_ws_types;
+            //            for (var j=0; j<types.length; j++) {
+            //                if (objects[types[j]] && objects[types[j]].length > 0) {
+            //                    objList = objList.concat(objects[types[j]]);
+            //                }
+            //            }
+            //            objList.sort(function(a, b) {
+            //                if (a[3] > b[3]) return -1;
+            //                if (a[3] < b[3]) return 1;
+            //                if (a[1] < b[1]) return -1;
+            //                if (a[1] > b[1]) return 1;
+            //                return 0;
+            //            });
+            //
+            //            /* down to cases:
+            //             * 1. (simple) objList is empty, $input doesn't have a list attribute.
+            //             * -- don't do anything.
+            //             * 2. objList is empty, $input has a list attribute.
+            //             * -- no more data exists, so remove that list attribute and the associated datalist element
+            //             * 3. objList is not empty, $input doesn't have a list attribute.
+            //             * -- data exists, new datalist needs to be added and linked.
+            //             * 4. objList is not empty, $input has a list attribute.
+            //             * -- datalist needs to be cleared and updated.
+            //             */
+            //
+            //            // case 1 - no data, input is unchanged
+            //
+            //            // case 2 - no data, need to clear input
+            //            var datalistID = $input.attr('list');
+            //            if (objList.length == 0 && datalistID) {
+            //                $(this.$elem.find("#" + datalistID)).remove();
+            //                $input.removeAttr('list');
+            //                $input.val("");
+            //            }
+            //
+            //            // case 3 - data, need new datalist
+            //            // case 4 - data, need to update existing datalist
+            //            else if (objList.length > 0) {
+            //                var $datalist;
+            //                if (!datalistID) {
+            //                    datalistID = this.genUUID();
+            //                    $input.attr('list', datalistID);
+            //                    $datalist = $('<datalist>')
+            //                                .attr('id', datalistID);
+            //                    $input.after($datalist);
+            //                }
+            //                else {
+            //                    $datalist = $(this.$elem.find("#" + datalistID));
+            //                }
+            //                $datalist.empty();
+            //                for (var j=0; j<objList.length; j++) {
+            //                    $datalist.append($('<option>')
+            //                                     .attr('value', objList[j][1])
+            //                                     .append(objList[j][1]));
+            //                }
+            //            }
+            //        }
+            //    },
+            //    this
+            //)]);
         },
 
         /*  NEW METHODS TO HANDLE NEW APP BEHAVIOR AND METHOD/APP SPECS */
@@ -116,6 +206,16 @@
          */
         setParameterValue: function(value) {
             
+            // todo: handle case where this is a multiple ...
+            
+            $(this.$elem).find(this.spec.id).filter(":input").val(value);
+            
+            
+            //.each(function(key, field) {
+		//if (field.value.trim() !== "") {
+		//    state['readParams'].push(field.value);
+		//}
+            //});
         },
         
         /*
@@ -124,7 +224,11 @@
          * in the method spec.  If the parameter is not valid.
          */
         getParameterValue: function() {
-            return "";
+            
+            
+            
+            var state = $(this.$elem).find(this.spec.id).filter(":input").val();
+            return state;
         },
         
         

@@ -26,8 +26,7 @@
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
 
-        inputWidgets: null,
-        inputDivs: null,
+        inputSteps: null,
         
         
         /**
@@ -147,8 +146,8 @@
             this.$methodPanel = $('<div>')
                                 .addClass('kb-app-steps');
             var stepHeaderText = "Step ";
-            this.inputWidgets = [];
-            this.inputDivs = [];
+            this.inputSteps = [];
+            var inputStep = {};
             for (var i=0; i<stepSpecs.length; i++) {
                 var $stepPanel = this.renderStepDiv(stepSpecs[i], stepHeaderText + (i+1)+": ");
                 this.$methodPanel.append($stepPanel);
@@ -334,8 +333,7 @@
             // todo, update input widget so that we don't have to stringify
             var inputWidget = $inputWidgetDiv[inputWidgetName]({ method: JSON.stringify(stepSpec) });
             
-            this.inputWidgets.push(inputWidget);
-            this.inputDivs.push($inputWidgetDiv);
+            this.inputSteps.push({id:stepSpec.info.id ,widget:inputWidget, $div:$inputWidgetDiv});
                 
             return $stepPanel;
         },
@@ -359,7 +357,18 @@
          * @public
          */
         getState: function() {
-            return this.$inputWidget.getState();
+            var state = {};
+
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    var id = this.inputSteps[i].id;
+                    state[id] = this.inputSteps[i].widget.getState();
+                }
+            }
+
+            console.log("getting state");
+            console.log(state);
+            return state;
         },
 
         /**
@@ -368,7 +377,21 @@
          * @public
          */
         loadState: function(state) {
-            return this.$inputWidget.loadState(state);
+            
+            console.log("getting state");
+            console.log(state);
+            if (!state) {
+                return;
+            }
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    var id = this.inputSteps[i].id;
+                    if (state.hasOwnProperty(id)) {
+                        this.inputSteps[i].widget.loadState(this.inputSteps[id]);
+                    }
+                }
+            }
+            return;
         },
 
         /**

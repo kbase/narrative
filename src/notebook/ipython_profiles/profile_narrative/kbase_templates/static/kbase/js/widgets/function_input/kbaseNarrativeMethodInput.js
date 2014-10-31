@@ -22,6 +22,9 @@
 
         useSelect2: true,
 
+        
+        parameterInputWidgets: [],
+        
         /**
          * Builds the input div for a function cell, based on the given method object.
          * @param {Object} method - the method being constructed around.
@@ -33,7 +36,47 @@
             var method = this.options.method;
             var params = method.parameters;
 
-            var inputDiv = "<div class='kb-cell-params'><table class='table'>";
+            var $inputParameterContainer = $('<div>');
+            console.log('here');
+            var $optionsDiv = $('<div>');
+            var $advancedOptionsDiv = $('<div>').append("<b>advanced options:</b>");
+            
+            for (var i=0; i<params.length; i++) {
+                var paramSpec = params[i];
+                var $stepDiv = $('<div>');
+                
+                //this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
+                // check what kind of parameter here.
+                if (paramSpec.field_type === "text") {
+                    console.log("adding step "+i);
+                    $stepDiv["kbaseNarrativeParameterTextInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                } else {
+                    // this is what we should do:  this.getErrorDiv()
+                    $stepDiv.append('<span class="label label-danger">Parameter '+paramSpec.id+
+                                    ' not displaying properly, invalid parameter type: "'+paramSpec.field_type+'"</span>');
+                }
+                
+                // If it is an advanced option, then we must place it in the correct div
+                var isAdvanced = false;
+                if (paramSpec.advanced) {
+                    if (paramSpec.advanced === true || paramSpec.advanced === 1) {
+                        isAdvanced = true;
+                    }
+                }
+                if (isAdvanced) {
+                    $advancedOptionsDiv.append($stepDiv);
+                } else {
+                    $optionsDiv.append($stepDiv);
+                }
+            }
+            
+            $inputParameterContainer.append($optionsDiv);
+            $inputParameterContainer.append($advancedOptionsDiv);
+            
+            this.$elem.append($inputParameterContainer);
+            
+            
+            /*var inputDiv = "<div class='kb-cell-params'><table class='table'>";
             for (var i=0; i<params.length; i++) {
                 var p = params[i];
 
@@ -50,7 +93,7 @@
                             "</tr>";
             }
             inputDiv += "</table></div>";
-            this.$elem.append(inputDiv);
+            this.$elem.append(inputDiv);*/
         },
 
         /**
@@ -211,14 +254,17 @@
                 this
             )]);
         },
-
+        
+        
+        /* input types */
+        
+        
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
         }
-
     });
 
 })( jQuery );

@@ -45,6 +45,7 @@
         init: function(options) {
             this._super(options);
 
+            console.log('creating app cell');
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
@@ -289,8 +290,7 @@
             var $stepPanel = $("<div>");
             var $inputWidgetDiv = $("<div>");
             
-            
-            var methodId = stepSpec.info.id + '-step-details-'+'uuid-should-go-here';
+            var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
             var buttonLabel = 'step details';
             var methodDesc = stepSpec.info.subtitle;
             var $methodInfo = $('<div>')
@@ -377,6 +377,13 @@
         refresh: function() {
             this.$inputWidget.refresh();
         },
+        
+        genUUID: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);
+            });
+        }
 
 
     });

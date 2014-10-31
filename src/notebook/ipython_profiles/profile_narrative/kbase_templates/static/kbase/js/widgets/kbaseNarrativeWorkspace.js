@@ -261,11 +261,11 @@
                     // The various components are HTML STRINGS, not jQuery objects.
                     // This is because the cell expects a text input, not a jQuery input.
                     // Yeah, I know it's ugly, but that's how it goes.
-                    var cellContent = "<div id='" + cellId + "'></div>" +
+                    var cellContent = "<div id='" + cellId + "'>hello</div>" +
                                       "\n<script>" +
                                       "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "', 'cellId' : '" + cellId + "'});" +
                                       "</script>";
-
+                    console.log(cellContent);
                     cell.set_text(cellContent);
                     cell.rendered = false;
                     cell.render();
@@ -442,6 +442,9 @@
          * Escape chars like single quotes in descriptions and titles,
          * before rendering as a JSON string.
          *
+         *
+         *  THIS IS NOT SAFE BECAUSE THERE ARE HARD CODED KEYS THAT ARE CHECKED!!!! -mike
+         *
          * @post This does not modify the input object.
          * @return {string} JSON string
          */
@@ -451,7 +454,9 @@
                         .replace(/"/g, "&quot;");
             };
             return JSON.stringify(method, function(key, value) {
-                return (typeof(value) == "string" && (key == "description" || key == "title")) ?
+                // this seems not safe, since we can have many keys in the spec that are not these... -mike
+                return (typeof(value) == "string" &&
+                        (key == "description" || key == "title" || key=="header" || key=="tooltip" || key=="name" || key=="subtitle")) ?
                     esc(value) : value;
             });
         },

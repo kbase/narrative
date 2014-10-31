@@ -67,54 +67,68 @@ def _method_call(meth, method_spec_json, param_values_json):
     :return: Service method response
     :rtype: kbtypes.Unicode
     """
-    workspace = os.environ['KB_WORKSPACE_ID']
     token = os.environ['KB_AUTH_TOKEN']
-    narrSysProps = {'workspace': workspace, 'token': token}
-    method_spec = json.loads(method_spec_json)
-    parameters = method_spec['parameters']
-    behavior = method_spec['behavior']
+    workspace = os.environ['KB_WORKSPACE_ID']
+    methodSpec = json.loads(method_spec_json)
+    paramValues = json.loads(param_values_json)    
+
+    input = {}
+    rpcArgs = []
+    prepare_generic_method_input(token, workspace, methodSpec, paramValues, input, rpcArgs);
+    
+    #raise ValueError("Debug: " + url + ", " + methodName)
+    
+    behavior = methodSpec['behavior']
     url = behavior['kb_service_url']
     serviceName = behavior['kb_service_name']
     methodName = behavior['kb_service_method']
     if serviceName:
         methodName = serviceName + '.' + methodName
-    inputMapping = behavior['kb_service_input_mapping']
-    outputMapping = behavior['kb_service_output_mapping']
-    paramValues = json.loads(param_values_json)
+    genericClient = GenericService(url = url, token = token)
+    output = genericClient.call_method(methodName, rpcArgs)
     
-    input = {}
+    methodOut = prepare_generic_method_output(token, method, methodSpec, input, output)
+
+    return json.dumps(methodOut)
+
+
+# Finalize (registers service)
+finalize_service()
+
+def prepare_generic_method_input(token, workspace, methodSpec, paramValues, input, rpcArgs):
+    narrSysProps = {'workspace': workspace, 'token': token}
+    parameters = methodSpec['parameters']
+    inputMapping = methodSpec['behavior']['kb_service_input_mapping']
+    
     for paramPos in range(0, len(parameters)):
         param = parameters[paramPos]
         paramId = param['id']
         paramValue = paramValues[paramPos]
         input[paramId] = paramValue
     
-    rpcArgs = []
     for mapping in inputMapping:
         paramValue = None
         paramId = None
         if 'input_parameter' in mapping:
             paramId = mapping['input_parameter']
             paramValue = input[paramId]
-        elif 'constant_value' in mapping:
-            paramValue = mapping['constant_value']
         elif 'narrative_system_variable' in mapping:
             sysProp = mapping['narrative_system_variable']
             paramValue = narrSysProps[sysProp]
-        if 'generated_value' in mapping and (paramValue is None or len(str(paramValue).strip()) == 0):
+        if 'constant_value' in mapping and not_defined(paramValue):
+            paramValue = mapping['constant_value']
+        if 'generated_value' in mapping and not_defined(paramValue):
             paramValue = generate_value(mapping['generated_value'])
             if paramId is not None:
                 input[paramId] = paramValue
         if paramValue is None:
             raise ValueError("Value is not defined in input mapping: " + mapping)
         build_args(paramValue, mapping, workspace, rpcArgs)
-    
-    #build_args(None, workspace, workspaceMapping, None, rpcArgs)
-    
-    genericClient = GenericService(url = url, token = token)
-    output = genericClient.call_method(methodName, rpcArgs)
-    
+
+def prepare_generic_method_output(token, workspace, methodSpec, input, output):
+    narrSysProps = {'workspace': workspace, 'token': token}
     outArgs = []
+    outputMapping = methodSpec['behavior']['kb_service_output_mapping']
     for mapping in outputMapping:
         paramValue = None
         if 'input_parameter' in mapping:
@@ -130,12 +144,10 @@ def _method_call(meth, method_spec_json, param_values_json):
         if paramValue is None:
             raise ValueError("Value is not defined in input mapping: " + mapping)
         build_args(paramValue, mapping, workspace, outArgs)
+    return outArgs[0];
 
-    return json.dumps(outArgs[0])
-
-
-# Finalize (registers service)
-finalize_service()
+def not_defined(paramValue):
+    return paramValue is None or len(str(paramValue).strip()) == 0
 
 def generate_value(generProps):
     symbols = 8
@@ -166,8 +178,7 @@ def build_args(paramValue, paramMapping, workspace, args):
         targetProp = paramMapping['target_property']
     if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
         targetTrans = paramMapping['target_type_transform']
-    if targetTrans == "ref":
-        paramValue = workspace + '/' + paramValue
+    paramValue = transform_value(paramValue, workspace, targetTrans)
     while len(args) <= targetPos:
         args.append({})
     if (targetProp is None):
@@ -176,6 +187,19 @@ def build_args(paramValue, paramMapping, workspace, args):
         item = args[targetPos]
         item[targetProp] = paramValue
 
+def transform_value(paramValue, workspace, targetTrans):
+    if targetTrans == "ref":
+        return workspace + '/' + paramValue
+    if targetTrans == "int":
+        if paramValue is None or len(str(paramValue).strip()) == 0:
+            return None
+        return int(paramValue) 
+    if targetTrans.startswith("list<") and targetTrans.endswith(">"):
+        innerTrans = targetTrans[5:-1]
+        return [transform_value(paramValue, workspace, innerTrans)]
+    if targetTrans == "none":
+        return paramValue
+    raise ValueError("Transformation type is not supported: " + targetTrans)
 
 def _get_token(user_id, password,
                auth_svc='https://nexus.api.globusonline.org/goauth/token?' +

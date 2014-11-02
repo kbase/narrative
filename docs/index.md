@@ -1,34 +1,31 @@
+# Contents
 
-[Introduction][]
-[Deployment][]
-[Developer notes][]
-[Biokbase notes][]
-[Docker notes][]
-[Logging][]
-[Source][]
+* [Introduction][]
+* [Deployment][]
+* [Docker notes][]
+* [Logging][]
+* [Source][]
 
 # Introduction
+[Contents][]
 {{intro.md}}
 
 # Deployment
+[Contents][]
 
 {{deployment.md}}
 
-# Developer notes
-
-{{developer.md}}
-
-
-# Biokbase notes
-{{biokbase.md}}
 
 # Docker notes
+[Contents][]
 {{docker.md}}
 
 # Logging
+[Contents][]
 {{logging.md}}
 
 # Source
+[Contents][]
 
 {{src.md}}
 {{src2.md}}

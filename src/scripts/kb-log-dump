@@ -1,0 +1,164 @@
+#!/usr/bin/env python
+"""
+Dump log info from MongoDB
+"""
+import argparse
+import logging
+import os
+import sqlite3
+import sys
+import time
+#
+import pymongo
+import yaml
+
+logging.basicConfig()
+_log = logging.getLogger("kb-log-dump")
+
+def error(msg):
+    _log.error(msg)
+
+def connect_mongo(conf):
+    try:
+        info = yaml.load(open(conf))
+        for key in 'db_host', 'db_port', 'db', 'user', 'password':
+            if not key in info:
+                error(
+                    "Configuration file is missing value for '{}'".format(key))
+                return -1
+    except IOError as err:
+        error("Cannot open configuration file '{}': {}".format(conf, err))
+        return -1
+    except yaml.error.YAMLError as err:
+        error("Cannot parse configuration file as YAML")
+        return -1
+
+    try:
+        db = pymongo.MongoClient(info["db_host"], info["db_port"])[info["db"]]
+    except pymongo.errors.PyMongoError as err:
+        error("Cannot connect to MongoDB '{}' at {}:{}".format(
+            info["db"], info["db_host"], info["db_port"]))
+        return -1
+    if not db.authenticate(info["user"], info["password"]):
+        error("Could not authenticate to MongoDB '{}' at {}:{}".format(
+            info["db"], info["db_host"], info["db_port"]))
+    c = db[info["collection"]]
+    return c
+
+class DB(object):
+    DUPLICATES_MAX = 10
+
+    def __init__(self, fname, table_name):
+        self._table = table_name
+        try:
+            sq = sqlite3.connect(fname)
+        except sqlite3.OperationalError:
+            raise ValueError("Bad DB filename '{}'".format(fname))
+        sq.execute(self._create_table_stmt())
+        self._sq = sq
+        self._insert_stmt = 'INSERT INTO {table_name} ({columns}) ' \
+                            'VALUES ({{values}})'.format(
+            table_name=self._table, columns=','.join(self._columns))
+        self._duplicates, self._disable_insert = 0, False
+
+    def _create_table_stmt(self):
+        # TODO: Add event column for function vs. open
+        stmt = "CREATE TABLE IF NOT EXISTS {table_name} ({columns})"
+        # sync this with 'fields' in main()
+        self._columns = ['date', 'ts', 'narr', 'user', 'name', 'dur', 'session_id']
+        constraints = ['CONSTRAINT c1 UNIQUE (ts, session_id)']
+        return stmt.format(table_name=self._table,
+                           columns=','.join(self._columns + constraints))
+
+    def add(self, rec):
+        """Add record to sqlite3 db.
+        """
+        if self._disable_insert:
+            return
+        cursor = self._sq.cursor()
+        values = [rec[c] for c in self._columns]
+        ivalues = []
+        for v in values:
+            if isinstance(v, float):
+                ivalues.append('{:f}'.format(v))
+            else:
+                ivalues.append('"' + v + '"')
+        stmt = self._insert_stmt.format(values=','.join(ivalues))
+        #print("ADD: {}".format(stmt))
+        try:
+            cursor.execute(stmt)
+        except sqlite3.IntegrityError as err:
+            _log.warn("Duplicate record=({}) msg='{}'".format(
+                ','.join(ivalues), err))
+            self._duplicates += 1
+            if self._duplicates > self.DUPLICATES_MAX:
+                _log.error("Duplicate record limit ({:d}) reached."
+                           " All further inserts will be ignored."
+                           .format(self.DUPLICATES_MAX))
+                self._disable_insert = True
+        cursor.close()
+
+    def close(self):
+        self._sq.commit()
+        self._sq.close()
+
+def main(args):
+    c = connect_mongo(args.conf)
+    sq = DB(args.sq_file, args.sq_table)
+
+    spec = {'created': {'$gte': args.daterange[0],
+                        '$lte': args.daterange[1]}}
+    # when updating this value, also update DB._create_stmt()
+    fields = ('event', 'created', 'narr', 'user', 'name', 'dur', 'session_id')
+    recs, first = c.find(spec=spec, fields=fields), True
+    for rec in recs:
+        # TODO: Also handle narrative 'open' events
+        if rec['event'] != 'func.end':
+            continue
+        first = False
+        ts = rec['created']
+        localdate = time.strftime('%Y-%m-%d', time.localtime(ts))
+        rec.update({'date': localdate, 'ts': '{:f}'.format(ts)})
+        sq.add(rec)
+    if first:
+        print("No records found")
+    else:
+        sq.close()
+    return 0
+
+def date_range(s):
+    """Parse a string with a date range and return a tuple of
+    floating-point seconds since the epoch.
+
+    :raises: ValueError, for bad input formats
+    """
+    dates = s.split(':')
+    if len(dates) != 2:
+        raise ValueError("Date range not in format '<date1>:<date2>'")
+    result = []
+    for date in dates:
+        try:
+            epoch_sec = time.mktime(time.strptime(date, '%Y-%m-%d'))
+        except ValueError:
+            raise ValueError("Date '{}' not in format 'YYYY-MM-DD'".format(date))
+        result.append(epoch_sec)
+    return tuple(result)
+
+def parse_args():
+    conf = os.environ.get("KBASE_PROXY_CONFIG", "narrative-log-proxy.conf")
+    p = argparse.ArgumentParser(description=__doc__.strip())
+    p.add_argument("-c", "--conf", dest='conf', default=conf,
+                   help="Configuration file (default=%(default)s)")
+    p.add_argument("-d", "--dates", dest='daterange', type=date_range,
+                   default='1970-01-01:2099-12-31',
+                   help="Date range, in format YYYY-MM-DD:YYYY-MM-DD"
+                        " (default=%(default)s). Uses local timezones")
+    p.add_argument("-f", "--sqlite-file", dest='sq_file',
+                   default="logs.db", help="sqlite3 file (default=%(default)s)")
+    p.add_argument("-t", "--sqlite-table", dest='sq_table', default="narrative",
+                   help="sqlite3 table (default=%(default)s")
+    args = p.parse_args()
+    return args
+
+if __name__ == '__main__':
+    sys.exit(main(parse_args()))

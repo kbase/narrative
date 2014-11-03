@@ -45,7 +45,6 @@
         init: function(options) {
             this._super(options);
 
-            console.log('creating app cell');
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
@@ -103,11 +102,6 @@
 
                 var $tracebackDiv = $('<div>')
                                     .addClass('kb-function-error-traceback');
-                //if (error.traceback) {
-                //    for (var i=0; i<error.traceback.length; i++) {
-                //        $tracebackDiv.append(error.traceback[i] + "<br>");
-                //    }
-                //}
                 if (error.error) {
                     error.error.error.replace(/\n/g, "<br>");
                     $tracebackDiv.append(error.error.error + "<br>");
@@ -127,6 +121,8 @@
          * Renders this cell and its contained input widget.
          */
         render: function(stepSpecs) {
+            this.methodSpecs = {};
+
             var self = this;
             var $runButton = $('<button>')
                               .attr('type', 'button')
@@ -145,6 +141,7 @@
                                       this.trigger('runApp.Narrative', { 
                                           cell: IPython.notebook.get_selected_cell(),
                                           appSpec: this.appSpec,
+                                          methodSpecs: this.methodSpecs,
                                           parameters: this.getParameters()
                                       });
                                   }, this)
@@ -160,6 +157,7 @@
             for (var i=0; i<stepSpecs.length; i++) {
                 var $stepPanel = this.renderStepDiv(this.appSpec.steps[i].step_id, stepSpecs[i], stepHeaderText + (i+1)+": ");
                 this.$methodPanel.append($stepPanel);
+                this.methodSpecs[stepSpecs[i].info.id] = stepSpecs[i];
             }
 
             var $buttons = $('<div>')
@@ -402,7 +400,7 @@
          * DO NOT USE!!  use getAllParameterValues instead from now on...
          */
         getParameters: function() {
-            return [];
+            return this.getAllParameterValues();
         },
         
         

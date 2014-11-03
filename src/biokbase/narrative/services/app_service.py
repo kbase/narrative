@@ -32,12 +32,15 @@ NAME = "app_service"
 init_service(name=NAME, desc="KBase App Calls", version=VERSION)
 
 @method(name="app_call")
-def _app_call(meth, app_spec_json, param_values_json):
+def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     """Makes a call to the app service
 
     :param app_spec_json: The App Spec
     :type app_spec_json: kbtypes.Unicode
     :ui_name app_spec_json: The App Spec
+    :param method_specs_json: The Method Specs
+    :type method_specs_json: kbtypes.Unicode
+    :ui_name method_specs_json: The Method Specs
     :param param_values_json: Param values
     :type param_values_json: kbtypes.Unicode
     :ui_name param_values_json: Param values

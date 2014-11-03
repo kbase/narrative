@@ -278,7 +278,7 @@
         },
 
         runAppCell: function(data) {
-            if (!data || !data.cell || !data.appSpec || !data.parameters) {
+            if (!data || !data.cell || !data.appSpec || !data.methodSpecs || !data.parameters) {
                 // error out.
                 return;
             }
@@ -293,17 +293,18 @@
                 'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
             }
 
-            var code = this.buildAppCommand(data.appSpec, data.parameters);
+            var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
 
-        buildAppCommand: function(appSpec, parameters) {
+        buildAppCommand: function(appSpec, methodSpecs, parameters) {
             var appSpecJSON = this.safeJSONStringify(appSpec);
+            var methodSpecJSON = this.safeJSONStringify(methodSpecs);
             var paramsJSON = this.safeJSONStringify(parameters);
 
             return "import biokbase.narrative.common.service as Service\n" +
                    "method = Service.get_service('app_service').get_method('app_call')\n" +
-                   "method('" + appSpecJSON + "', '" + paramsJSON + "')";
+                   "method('" + appSpecJSON + "', '" + methodSpecJSON + "', '" + paramsJSON + "')";
         },
 
         /**

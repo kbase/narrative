@@ -58,7 +58,7 @@
 
             // Make a function panel for everything to sit inside.
             this.$jobsPanel = $('<div>')
-                                  .addClass('kb-function-body');
+                              .addClass('kb-function-body');
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -79,20 +79,6 @@
                        .append(this.$loadingPanel)
                        .append(this.$errorPanel);
 
-            // this.body().append($('<div>')
-            //                   .addClass('panel panel-primary kb-data-main-panel')
-            //                   .append($('<div>')
-            //                           .addClass('panel-heading')
-            //                           .append($('<div>')
-            //                                   .addClass('panel-title')
-            //                                   .css({'text-align': 'center'})
-            //                                   .append($headerDiv)))
-            //                   .append($('<div>')
-            //                           .addClass('panel-body kb-narr-panel-body')
-            //                           .append(this.$jobsPanel)
-            //                           .append(this.$loadingPanel)
-            //                           .append(this.$errorPanel)));
-
             this.refresh();
 
             if (this.options.autopopulate === true) {
@@ -101,14 +87,6 @@
 
             return this;
         },
-
-        // render: function() {
-        //     if (this.options.jobInfo) {
-        //         this.refresh(this.options.jobInfo);
-        //     }
-        //     else
-        //         this.$elem.html('Job Watching!');
-        // },
 
         /**
          * Shows a loading spinner or message on top of the panel.
@@ -155,17 +133,23 @@
          * @method
          */
         refresh: function() {
+            // If none of the base IPython stuff shows up, then it's not inited yet.
+            // Just return silently.
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || 
                 !IPython.notebook.metadata)
                 return;
 
-            if (!IPython.notebook.metadata.job_ids) {
+            // If we don't have any job ids, or it's length is zero, just show a 
+            // message and return.
+            if (!IPython.notebook.metadata.job_ids || IPython.notebook.metadata.job_ids.length === 0) {
                 this.showMessage('No running jobs!');
                 return;
             }
 
             this.showLoadingMessage('Loading running jobs...');
 
+            // Get a unique list of jobs
+            // XXX - this'll change to method vs. app jobs, soonish.
             var narrJobs = IPython.notebook.metadata.job_ids;
             var uniqueJobs = {};
             var jobList = [];
@@ -205,8 +189,7 @@
                 }, this),
             };
 
-            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: false});            
-
+            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: false});
         },
 
         parseKernelResponse: function(msgType, content) {
@@ -440,17 +423,6 @@
             this.$loadingPanel.hide();
             this.$errorPanel.show();
         },
-
-
-
-
-
-
-
-
-
-
-
 
         parseStage: function(stage) {
             if (stage.toLowerCase() === 'error') {

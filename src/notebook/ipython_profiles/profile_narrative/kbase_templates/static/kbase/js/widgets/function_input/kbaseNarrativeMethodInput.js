@@ -21,8 +21,11 @@
             return this;
         },
 
-        // list of objects in the form {id:"param_id", widget: ... }
+        // list of objects in the form {id:"param_id", widget: ... } to ensure we preserve
+        // parameter ordering
         parameters: null,
+        // maps parameter id to widget for fast lookup of widget
+        parameterIdLookup : {},
         
         /**
          * Builds the input div for a function cell, based on the given method object.
@@ -40,6 +43,7 @@
             var $advancedOptionsDiv = $('<div>')
             
             this.parameters = [];
+            this.parameterIdLookup = {};
             var hasAdvancedOption = false;
             for (var i=0; i<params.length; i++) {
                 var paramSpec = params[i];
@@ -49,6 +53,7 @@
                 if (paramSpec.field_type === "text") {
                     var textInputWidget = $stepDiv["kbaseNarrativeParameterTextInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
                     this.parameters.push({id:paramSpec.id, widget:textInputWidget});
+                    this.parameterIdLookup[paramSpec.id] = textInputWidget;
                 } else {
                     // this is what we should do:  this.getErrorDiv()
                     $stepDiv.append('<span class="label label-danger">Parameter '+paramSpec.id+
@@ -150,18 +155,133 @@
          * information, those fields get refreshed without altering any other inputs.
          */
         refresh: function() {
-            
             if (this.parameters) {
                 for(var i=0; i<this.parameters.length; i++) {
                     this.parameters[i].widget.refresh();
                 }
             }
-            
-
         },
         
         
-        /* input types */
+        /*
+         * This is called when this method is run to allow you to check if the parameters
+         * that the user has entered is correct.  You need to return an object that indicates
+         * if the input is valid, or if not, if there are any error messages.  When this is
+         * called, you should visually indicate which parameters are invalid by marking them
+         * red (see kbaseNarrativeMethodInput for default styles).
+         */
+        isValid: function() {
+            var isValidRet = { isValid:true, errormssgs: [] };
+            if (this.parameters) {
+                for(var i=0; i<this.parameters.length; i++) {
+                    var parameterStatus = this.parameters[i].widget.isValid();
+                    if (!parameterStatus.isValid) {
+                        isValidRet.isValid = false;
+                        for(var e = 0; e<parameterStatus.errormssgs.length; e++) {
+                            isValidRet.errormssgs.push(parameterStatus.errormssgs[e]);
+                        }
+                    }
+                }
+            }
+            return isValidRet; 
+        },
+        
+        /*
+         * Necessary for Apps to disable editing parameters that are automatically filled
+         * from a previous step.  Returns nothing.
+         */
+        disableParameterEditing: function(parameterId) {
+            if (this.parameterIdLookup) {
+                var widget = this.parameterIdLookup[parameterId];
+                if (widget) {
+                    if (typeof widget.disableParameterEditing === 'function') {
+                        widget.disableParameterEditing();
+                    }
+                }
+            }
+        },
+        
+        /*
+         * Allows those parameters to be renabled, which may be an option for advanced users.
+         */
+        enableParameterEditing: function(parameterId) {
+            if (this.parameterIdLookup) {
+                var widget = this.parameterIdLookup[parameterId];
+                if (widget) {
+                    if (typeof widget.enableParameterEditing === 'function') {
+                        widget.enableParameterEditing();
+                    }
+                }
+            }
+        },
+        
+        /*
+         * An App (or a narrative that needs to auto populate certain fields) needs to set
+         * specific parameter values based on the App spec, so we need a way to do this.
+         */
+        setParameterValue: function(parameterId, value) {
+            if (this.parameterIdLookup) {
+                var widget = this.parameterIdLookup[parameterId];
+                if (widget) {
+                    if (typeof widget.setParameterValue(value) === 'function') {
+                        widget.setParameterValue(value);
+                    }
+                }
+            }
+        },
+        
+        /*
+         * We need to be able to retrieve any parameter value from this method.  Valid parameter
+         * values may be strings, numbers, objects, or lists, but must match what is declared
+         * in the method spec.  If the parameter is not valid.
+         */
+        getParameterValue: function(parameterId) {
+            var value = null;
+            if (this.parameterIdLookup) {
+                var widget = this.parameterIdLookup[parameterId];
+                if (widget) {
+                    value = widget.getParameterValue();
+                }
+            }
+            return value;
+        },
+        
+        
+        /*
+         * When we actually run the method, we need all the parameter inputs.  This should return
+         * an array of objects, where each object has 'id' and 'value' defined giving the parameter ID
+         * and parameter value.
+         */
+        getAllParameterValues: function() {
+            /*  should be in the form:
+             *      [
+             *          { id: 'param1', value: 'MyGenome' },
+             *          ...
+             *      ]
+             *  
+             */
+            var values = [];
+            if (this.parameters) {
+                for(var i=0; i<this.parameters.length; i++) {
+                    var value = this.parameters[i].widget.getParameterValue();
+                    values.push( { id:this.parameters[i].id, value:value } );
+                }
+            }
+            return values;
+        },
+        
+        /**
+         * allows an app or other higher-level function to attach a listener on a a parameter
+         * so that when it changes, something else can be updated.
+         */
+        addInputListener: function(parameterId, onChangeFunc) {
+            if (this.parameterIdLookup) {
+                var widget = this.parameterIdLookup[parameterId];
+                if (widget) {
+                    value = widget.addInputListener(onChangeFunc);
+                }
+            }
+        },
         
         
         genUUID: function() {

@@ -139,7 +139,6 @@
                                       var v = self.getAllParameterValues();
                                       console.log("All Values:");
                                       console.log(v);
-                                      return;
                                       
                                       // end debug ...
                                       event.preventDefault();

@@ -39,18 +39,19 @@
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] + "'" : "";
                 var form_id = spec.id;
                 
-                var input='<input class="form-control" style="width: 95%" id="' + spec.id + '" placeholder="' + defaultValue + '"' +
+                var input='<input class="form-control" style="width: 100%" id="' + spec.id + '" placeholder="' + defaultValue + '"' +
                         ' value="" type="text"></input>';
                 
-                var $row = $('<div>').addClass("row").css({"margin":"10px"});
+                var $row = $('<div>').addClass("row kb-method-parameter-row")
+                                .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
                 
-                $row.append($('<div>').addClass("col-md-2").css({"vertical-align":"middle", "text-align":"right"})
-                                .append("<b>"+spec.ui_name+"</b>"));
+                $row.append($('<div>').addClass("col-md-2").addClass("kb-method-parameter-name")
+                                .append(spec.ui_name));
                 
-                $row.append($('<div>').addClass("col-md-4")
+                $row.append($('<div>').addClass("col-md-4").addClass("kb-method-parameter-input")
                                 .append(input));
                 
-                $row.append($('<div>').addClass("col-md-6")
+                $row.append($('<div>').addClass("col-md-6").addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint));
                 
                 self.$mainPanel.append($row);
@@ -221,7 +222,6 @@
             // and if not we must do something special   ...
             
             this.$elem.find("#"+this.spec.id).val(value);
-            
             
             //.each(function(key, field) {
 		//if (field.value.trim() !== "") {

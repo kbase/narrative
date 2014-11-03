@@ -423,6 +423,29 @@
 
 
 
+/** new method parameter styling **/
+
+.kb-method-parameter-row {
+   margin:2px;
+   padding:5px;
+}
+/* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
+.kb-method-parameter-row-hover {
+   background:#eee;
+}
+/* not sure how to get text in these divs to valign middle... */
+.kb-method-parameter-name {
+   font-family: 'OxygenBold', sans-serif;
+   font-weight: bold;
+   text-align:right;
+}
+.kb-method-parameter-input {
+}
+.kb-method-parameter-hint {
+   color: #777;
+   text-align:left;
+}
+
 
 /** App styling */
 

@@ -166,16 +166,23 @@
 
             
             console.log(this.appSpec);
-            var $appDescriptionDiv = $("<div>")
+            var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
                                         .append(this.appSpec.info.subtitle);
+            
+            var $appHeaderDiv = $("<div>")
+                                        .addClass('kb-app-panel-header')
+                                        .append(this.appSpec.info.header);
             
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
                              .append($('<div>')
                                      .addClass('panel-heading app-panel-heading')
                                      .append("<h1><b>"+$appInfo+"</b></h1>")
-                                     .append($appDescriptionDiv))
+                                     .append($appSubtitleDiv))
+                             .append($('<div>')
+                                     .addClass('panel-body')
+                                     .append($appHeaderDiv))
                              .append($('<div>')
                                      .addClass('panel-body')
                                      .append(this.$methodPanel))
@@ -188,113 +195,11 @@
             //now we link the step parameters together that are linked
             this.linkStepsTogether();
             
-            
+            // then we show the result
             this.$elem.empty().append($cellPanel);
-
             
-            
-            
-            
-            // if (this.method.widgets.input)
-            //     inputWidget = this.method.widgets.input;
-
-            // this.$inputDiv = $('<div>');
-
-            // // These are the 'delete' and 'run' buttons for the cell
-            // this.$runButton = $('<button>')
-            //                  .attr('id', this.cellId + '-run')
-            //                  .attr('type', 'button')
-            //                  .attr('value', 'Run')
-            //                  .addClass('btn btn-primary btn-sm')
-            //                  .append('Run');
-            // this.$runButton.click(
-            //     $.proxy(function(event) {
-            //         event.preventDefault();
-            //         this.trigger('runCell.Narrative', { 
-            //             cell: IPython.notebook.get_selected_cell(),
-            //             method: this.method,
-            //             parameters: this.getParameters()
-            //         });
-            //     }, this)
-            // );
-
-            // this.$deleteButton = $('<button>')
-            //                     .attr('id', this.cellId + '-delete')
-            //                     .attr('type', 'button')
-            //                     .attr('value', 'Delete')
-            //                     .addClass('btn btn-default btn-sm')
-            //                     .append('Delete');
-            // this.$deleteButton.click(
-            //     $.proxy(function(event) {
-            //         event.preventDefault();
-            //         this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-            //     }, this)
-            // );
-
-            // var $buttons = $('<div>')
-            //                .addClass('buttons pull-right')
-            //                .append(this.$deleteButton)
-            //                .append(this.$runButton);
-
-
-            // var $progressBar = $('<div>')
-            //                    .attr('id', 'kb-func-progress')
-            //                    .addClass('pull-left')
-            //                    .css({'display' : 'none'})
-            //                    .append($('<div>')
-            //                            .addClass('progress progress-striped active kb-cell-progressbar')
-            //                            .append($('<div>')
-            //                                    .addClass('progress-bar progress-bar-success')
-            //                                    .attr('role', 'progressbar')
-            //                                    .attr('aria-valuenow', '0')
-            //                                    .attr('aria-valuemin', '0')
-            //                                    .attr('aria-valuemax', '100')
-            //                                    .css({'width' : '0%'})))
-            //                    .append($('<p>')
-            //                            .addClass('text-success'));
-
-            // var methodId = this.options.cellId + '-method-details';
-            // var buttonLabel = '...';
-            // var methodDesc = this.method.info.tooltip;
-            // var $methodInfo = $('<div>')
-            //                   .addClass('kb-func-desc')
-            //                   .append('<h1><b>' + this.method.info.name + '</b></h1>')
-            //                   .append($('<span>')
-            //                           .addClass('pull-right kb-func-timestamp')
-            //                           .attr('id', 'last-run'))
-            //                   .append($('<button>')
-            //                           .addClass('btn btn-default btn-xs')
-            //                           .attr('type', 'button')
-            //                           .attr('data-toggle', 'collapse')
-            //                           .attr('data-target', '#' + methodId)
-            //                           .append(buttonLabel))
-            //                   .append($('<h2>')
-            //                           .attr('id', methodId)
-            //                           .addClass('collapse')
-            //                           .append(methodDesc));
-
-            // var $cellPanel = $('<div>')
-            //                  .addClass('panel kb-func-panel kb-cell-run')
-            //                  .attr('id', this.options.cellId)
-            //                  .append($('<div>')
-            //                          .addClass('panel-heading')
-            //                          .append($methodInfo))
-            //                  .append($('<div>')
-            //                          .addClass('panel-body')
-            //                          .append(this.$inputDiv))
-            //                  .append($('<div>')
-            //                          .addClass('panel-footer')
-            //                          .css({'overflow' : 'hidden'})
-            //                          .append($progressBar)
-            //                          .append($buttons));
-
-            // this.$elem.append($cellPanel);
-
-            // var inputWidgetName = this.method.widgets.input;
-            // if (!inputWidgetName || inputWidgetName === 'null')
-            //     inputWidgetName = this.defaultInputWidget;
-
-            // this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
+            // finally, we refresh so that our drop down or other boxes can be populated
+            this.refresh();
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom
@@ -469,9 +374,9 @@
          */
         refresh: function() {
             if (this.inputSteps) {
+                //alert('app refreshing, in kbaseNarrativeAppCell');
                 for(var i=0; i<this.inputSteps.length; i++) {
                     inputSteps[i].widget.refresh();
-                    alert('app refreshing, in kbaseNarrativeAppCell');
                 }
             }
         },

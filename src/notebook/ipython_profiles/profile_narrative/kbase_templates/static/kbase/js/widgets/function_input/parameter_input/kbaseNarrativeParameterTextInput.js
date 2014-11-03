@@ -190,6 +190,10 @@
          * from a previous step.  Returns nothing.
          */
         disableParameterEditing: function() {
+            // disable the input
+            this.$elem.find("#"+this.spec.id).prop('disabled','true');
+            // stylize the row div
+            // todo ...
             
         },
         
@@ -197,7 +201,14 @@
          * Allows those parameters to be renabled, which may be an option for advanced users.
          */
         enableParameterEditing: function() {
-            
+            // enable the input
+            this.$elem.find("#"+this.spec.id).prop('disabled','false');
+            // remove disabled styles from the row div
+            // todo ...
+        },
+        
+        addInputListener: function(onChangeFunc) {
+            this.$elem.find("#"+this.spec.id).on("input",onChangeFunc);
         },
         
         /*
@@ -206,7 +217,8 @@
          */
         setParameterValue: function(value) {
             
-            // todo: handle case where this is a multiple ...
+            // todo: handle case where this is a multiple, we need to check if value array matches number of elements,
+            // and if not we must do something special   ...
             
             this.$elem.find("#"+this.spec.id).val(value);
             
@@ -221,12 +233,10 @@
         /*
          * We need to be able to retrieve any parameter value from this method.  Valid parameter
          * values may be strings, numbers, objects, or lists, but must match what is declared
-         * in the method spec.  If the parameter is not valid.
+         * in the method spec.
          */
         getParameterValue: function() {
             var value = this.$elem.find("#"+this.spec.id).val();
-            
-            // todo: handle case where this is a multiple ...
             return value;
         },
         

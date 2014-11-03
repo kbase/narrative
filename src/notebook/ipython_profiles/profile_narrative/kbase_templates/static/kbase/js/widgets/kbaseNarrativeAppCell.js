@@ -27,6 +27,7 @@
         defaultInputWidget: 'kbaseNarrativeMethodInput',
 
         inputSteps: null,
+        inputStepLookup: null,
         
         
         /**
@@ -126,6 +127,7 @@
          * Renders this cell and its contained input widget.
          */
         render: function(stepSpecs) {
+            var self = this;
             var $runButton = $('<button>')
                               .attr('type', 'button')
                               .attr('value', 'Run')
@@ -133,6 +135,12 @@
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
+                                      // debug ...
+                                      var v = self.getAllParameterValues();
+                                      console.log("All Values:");
+                                      console.log(v);
+                                      
+                                      // end debug ...
                                       event.preventDefault();
                                       this.trigger('runApp.Narrative', { 
                                           cell: IPython.notebook.get_selected_cell(),
@@ -147,9 +155,10 @@
                                 .addClass('kb-app-steps');
             var stepHeaderText = "Step ";
             this.inputSteps = [];
+            this.inputStepLookup = {};
             var inputStep = {};
             for (var i=0; i<stepSpecs.length; i++) {
-                var $stepPanel = this.renderStepDiv(stepSpecs[i], stepHeaderText + (i+1)+": ");
+                var $stepPanel = this.renderStepDiv(this.appSpec.steps[i].step_id, stepSpecs[i], stepHeaderText + (i+1)+": ");
                 this.$methodPanel.append($stepPanel);
             }
 
@@ -177,8 +186,17 @@
                                      .css({'overflow' : 'hidden'})
                                      .append($buttons));
 
+
+            //now we link the step parameters together that are linked
+            this.linkStepsTogether();
+            
+            
             this.$elem.empty().append($cellPanel);
 
+            
+            
+            
+            
             // if (this.method.widgets.input)
             //     inputWidget = this.method.widgets.input;
 
@@ -284,7 +302,7 @@
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom
         // stepSpec - the spec from the narrative method store
         // stepHeading - something to show in front of the method title, e.g. Step 1, Step 2 ...
-        renderStepDiv: function (stepSpec, stepHeading) {
+        renderStepDiv: function (stepId, stepSpec, stepHeading) {
             
             var $stepPanel = $("<div>");
             var $inputWidgetDiv = $("<div>");
@@ -332,23 +350,84 @@
 
             // todo, update input widget so that we don't have to stringify
             var inputWidget = $inputWidgetDiv[inputWidgetName]({ method: JSON.stringify(stepSpec) });
-            
-            this.inputSteps.push({id:stepSpec.info.id ,widget:inputWidget, $div:$inputWidgetDiv});
-                
+            this.inputSteps.push({id:stepId ,methodId: stepSpec.info.id, widget:inputWidget, $div:$inputWidgetDiv});
+            this.inputStepLookup[stepId] = inputWidget;
             return $stepPanel;
+        },
+        
+        linkStepsTogether: function() {
+            var self = this;
+            if(this.appSpec && this.inputSteps) {
+                console.log("linking");
+                console.log(this.appSpec);
+                var steps = this.appSpec.steps;
+                for(var s=0; s<steps.length; s++) {
+                    var input_mapping = steps[s].input_mapping;
+                    for(var m=0; m<input_mapping.length; m++) {
+                        if (input_mapping[m].is_from_input) { // should be 1 for true, 0 for false
+                            // first disable the input box
+                            this.inputStepLookup[steps[s].step_id].disableParameterEditing(input_mapping[m].to);
+                            // connect the values
+                            if(this.inputStepLookup[input_mapping[m].step_source]) {
+                                var step_target = this.inputStepLookup[steps[s].step_id];
+                                var step_source = this.inputStepLookup[input_mapping[m].step_source];
+                                var from = input_mapping[m].from;
+                                var to = input_mapping[m].to;
+                                // set the value to the original value
+                                step_target.setParameterValue(to, step_source.getParameterValue(from));
+                                // make sure the value changes every time the source input changes
+                                this.inputStepLookup[input_mapping[m].step_source].addInputListener(
+                                    from,
+                                    function() {
+                                        step_target.setParameterValue(to, step_source.getParameterValue(from));
+                                    }
+                                );
+                            } else {
+                                console.error("invalid input mapping in spec for "+steps[s].step_id+", from step does not exist.");
+                                console.error(this.appSpec);
+                            }
+                        }
+                    }
+                }
+            }
+            return;
         },
         
         
         
         
+        
+        
         /**
-         * @method
-         * Returns parameters from the contained input widget
-         * @public
+         * DO NOT USE!!  use getAllParameterValues instead from now on...
          */
         getParameters: function() {
             return [];
-//            return this.$inputWidget.getParameters();
+        },
+        
+        
+        /**
+         * returns structure that preserves method/parameter ordering in original spec
+         * [
+         *   { stepId: id, values = [
+         *          {id: paramid, value: v},
+         *          ...
+         *      ]
+         *   },
+         *   ...
+         * ]
+         */
+        getAllParameterValues: function() {
+            var allValues = [];
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    var stepId = this.inputSteps[i].id;
+                    var methodId = this.inputSteps[i].methodId;
+                    var values = this.inputSteps[i].widget.getAllParameterValues();
+                    allValues.push({stepId:stepId, methodId:methodId, values:values});
+                }
+            }
+            return allValues;
         },
 
         /**
@@ -358,16 +437,12 @@
          */
         getState: function() {
             var state = {};
-
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
                     var id = this.inputSteps[i].id;
                     state[id] = this.inputSteps[i].widget.getState();
                 }
             }
-
-            console.log("getting state");
-            console.log(state);
             return state;
         },
 
@@ -377,9 +452,6 @@
          * @public
          */
         loadState: function(state) {
-            
-            console.log("loading state");
-            console.log(state);
             if (!state) {
                 return;
             }
@@ -398,7 +470,12 @@
          * Refreshes the input widget according to its own method.
          */
         refresh: function() {
-            this.$inputWidget.refresh();
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    inputSteps[i].widget.refresh();
+                    alert('app refreshing, in kbaseNarrativeAppCell');
+                }
+            }
         },
         
         genUUID: function() {

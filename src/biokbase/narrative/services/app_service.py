@@ -54,7 +54,8 @@ def _app_call(meth, app_spec_json, param_values_json):
     steps = []
     app = { 'steps' : steps }
     for stepSpec in appSpec['steps']:
-        methodSpec = methIdToSpec[stepSpec['method_id']]
+        methodId = stepSpec['method_id']
+        methodSpec = methIdToSpec[methodId]
         behavior = methodSpec['behavior']
         methodInputValues = extract_param_values(paramValues, appSpec, methodSpec)
         step = { 'step_id' : stepSpec['step_id'] }
@@ -70,10 +71,32 @@ def _app_call(meth, app_spec_json, param_values_json):
             step['type'] = 'generic'
             step['input_values'] = rpcArgs
             step['generic'] = generic
+            if 'job_id_output_field' in methodSpec:
+                jobIdField = methodSpec['job_id_output_field']
+                rpcJobIdField = None
+                jobIdFieldFound = False
+                for mapping in behavior['kb_service_output_mapping']:
+                    if mapping['target_property'] == jobIdField:
+                        jobIdFieldFound = True
+                        rpcOutPath = mapping['service_method_output_path']
+                        if rpcOutPath is not None:
+                            if len(rpcOutPath) > 1:
+                                raise ValueError("Unsupported path to job id field in RPC method output for method [" + methodId + "]: " + json.dumps(rpcOutPath))
+                            if len(rpcOutPath) == 1:
+                                rpcJobIdField = rpcOutPath[0]
+                if not jobIdFieldFound:
+                    raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
+                step['is_long_running'] = 1
+                if rpcJobIdField is not None:
+                    step['job_id_output_field'] = rpcJobIdField                                   
         else:
             step['type'] = 'python'
             step['input_values'] = methodInputValues
             step['python'] = {'python_class' : behavior['python_class'], 'method_name' : behavior['python_function']}
+            if 'job_id_output_field' in methodSpec:
+                jobIdField = methodSpec['job_id_output_field']
+                step['is_long_running'] = 1
+                step['job_id_output_field'] = jobIdField
         steps.append(step)
     
     njsClient = NJSMock(url = service.URLS.job_service, token = token)

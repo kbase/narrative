@@ -514,6 +514,18 @@ class LifecycleSubject(object):
             job_manager.register_job(job_id)
             self._event('register_job', job_id)
 
+    def register_app(self, app_id):
+        """Register a new long-running app process.
+        """
+        global job_manager
+        if app_id is not None:
+            if job_manager is None:
+                job_manager = KBjobManager()
+
+            self._event('debug', app_id)
+            job_manager.register_job(app_id)
+            self._event('register_app', app_id)
+
     # get/set 'stage' property
     
     @property
@@ -578,6 +590,10 @@ class LifecycleObserver(object):
 
     def register_job(self, job_id):
         """Register a long-running job"""
+        pass
+
+    def register_app(self, app_id):
+        """Register a an app job that's composed of several subjobs"""
         pass
 
 
@@ -688,6 +704,9 @@ class LifecyclePrinter(LifecycleObserver):
     def register_job(self, job_id):
         self._write('J' + job_id)
 
+    def register_app(self, app_id):
+        self._write('A' + app_id)
+
 
 class LifecycleLogger(LifecycleObserver):
     """Log lifecycle messages in a simple but structured format,
@@ -754,6 +773,9 @@ class LifecycleLogger(LifecycleObserver):
 
     def register_job(self, job_id):
         self._write(logging.INFO, "start job", "id={}".format(job_id))
+
+    def register_app(self, app_id):
+        self._write(logging.INFO, "start app", "id={}".format(app_id))
 
 
 class ServiceMethod(trt.HasTraits, LifecycleSubject):

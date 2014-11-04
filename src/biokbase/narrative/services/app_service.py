@@ -146,7 +146,24 @@ def _app_get_state(meth, app_spec_json, method_specs_json, param_values_json, ap
     
     njsClient = NJSMock(url = service.URLS.job_service, token = token)
     appState = njsClient.check_app_state(app_job_id)
-
+    appState['widget_outputs'] = {}
+    for stepSpec in appSpec['steps']:
+        stepId = stepSpec['step_id']
+        if not stepId in appSpec['step_outputs']:
+            continue
+        rpcOut = appSpec['step_outputs'][stepId]
+        methodId = stepSpec['method_id']
+        methodSpec = methIdToSpec[methodId]
+        methodOut = None
+        if 'kb_service_input_mapping' in methodSpec['behavior']:
+            input = {}
+            tempArgs = []
+            methodInputValues = extract_param_values(paramValues, stepId)
+            prepare_generic_method_input(token, workspace, methodSpec, methodInputValues, input, tempArgs);
+            methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
+        else:
+            methodOut = rpcOut
+        appState['widget_outputs'][stepId] = methodOut
     return json.dumps(appState)
 
 

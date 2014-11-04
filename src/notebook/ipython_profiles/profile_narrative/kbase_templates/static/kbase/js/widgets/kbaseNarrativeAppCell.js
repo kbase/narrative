@@ -27,6 +27,8 @@
         defaultInputWidget: 'kbaseNarrativeMethodInput',
         defaultOutputWidget: 'kbaseDefaultNarrativeOutput',
 
+        appSpec: null,
+        methodSpecs: null,
         inputSteps: null,
         inputStepLookup: null,
         
@@ -62,6 +64,7 @@
                       .append($('<div>Loading App...</div>'));
 
             this.fetchMethodInfo();
+            
             return this;
         },
 
@@ -76,6 +79,7 @@
             }
             this.methClient.get_method_spec({'ids' : methodIds},
                 $.proxy(function(specs) {
+                    this.methodSpecs = specs;
                     this.render(specs);
                 }, this),
                 $.proxy(function(error) {
@@ -121,6 +125,15 @@
             this.$elem.empty().append($errorPanel);
         },
 
+        /* temp hack to deal with current state of NJS */
+        getSpecAndParameterInfo: function() {
+            return {
+                appSpec : this.appSpec,
+                methodSpecs : this.methodSpecs,
+                parameterValues: this.getAllParameterValues()
+            };
+        },
+        
         /**
          * Renders this cell and its contained input widget.
          */
@@ -216,6 +229,7 @@
             //this.updateStepStatus("step_2","status");
             //this.setStepOutput("step_2",{data:{id:"IntegratedModel",ws:"wstester1:home"}});
             //this.setRunningStep("step_2");
+            
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom

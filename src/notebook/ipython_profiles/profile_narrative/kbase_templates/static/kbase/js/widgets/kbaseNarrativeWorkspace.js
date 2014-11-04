@@ -1288,7 +1288,7 @@
                         }
                         else {
                             // look for @@S, @@P, @@D, @@G, @@J, @@E, or @@A
-                            var matches = line.match(/^@@([SPDGEJ])(.*)/);
+                            var matches = line.match(/^@@([ADEGJSP])(.*)/);
                             if (matches) { // if we got one
                                 switch(matches[1]) {
                                     case 'S': // Start running
@@ -1383,7 +1383,7 @@
             var cellId = 'unknown';
 
             if (txt)
-                cellId = $('<div>').append(txt).find('.panel').attr('id');
+                cellId = $('<div>').append(txt).find('div[id^=kb-cell-]').attr('id');
 
             var jobInfo = {
                 id : jobId,

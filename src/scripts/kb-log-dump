@@ -123,35 +123,36 @@ class DB(object):
         self._sq.commit()
         self._sq.close()
 
-def aggregate(db, table, groups, agg=0, out=sys.stdout, fmt='csv'):
-    """Aggregate
+    def aggregate(self, groups, agg=0, out=sys.stdout, fmt='csv'):
+        """Aggregate
 
-    :param db: Sqlite3 database
-    :param table: Name of table in db
-    :param groups: List of grouping columns
-    :param agg: Index of aggregation function in AGG_FUNC
-    :param out: Output stream
-    :param fmt: Name of output format
-    :return:
-    """
-    group_expr = ','.join(groups)
-    if agg == 0: # sum
-        sql_agg = "SUM(dur)"
-        agg_name = "total_sec"
-    elif agg == 1: # count
-        sql_agg = "COUNT(*)"
-        agg_name = "count"
-    stmt = 'SELECT {g},{a} FROM {t} GROUP BY {g}'.format(
-        a=sql_agg, t=table, g=group_expr)
-    _log.debug('query="{}"'.format(stmt))
-    rows = db.query(stmt)
-    if fmt == 'csv':
-        writer = csv.writer(out)
-        writer.writerow(list(groups) + [agg_name])
-        for row in rows:
-            writer.writerow(row)
-    else:
-        raise ValueError("bad output format for aggregate(): {}".format(fmt))
+        :param db: Sqlite3 database
+        :param table: Name of table in db
+        :param groups: List of grouping columns
+        :param agg: Index of aggregation function in AGG_FUNC
+        :param out: Output stream
+        :param fmt: Name of output format
+        :return:
+        """
+        db, table = self._sq, self._table
+        group_expr = ','.join(groups)
+        if agg == 0: # sum
+            sql_agg = "SUM(dur)"
+            agg_name = "total_sec"
+        elif agg == 1: # count
+            sql_agg = "COUNT(*)"
+            agg_name = "count"
+        stmt = 'SELECT {g},{a} FROM {t} GROUP BY {g}'.format(
+            a=sql_agg, t=table, g=group_expr)
+        _log.debug('query="{}"'.format(stmt))
+        rows = db.query(stmt)
+        if fmt == 'csv':
+            writer = csv.writer(out)
+            writer.writerow(list(groups) + [agg_name])
+            for row in rows:
+                writer.writerow(row)
+        else:
+            raise ValueError("bad output format for aggregate(): {}".format(fmt))
 
 def main(args):
     # verbosity
@@ -190,7 +191,7 @@ def main(args):
     else:
         # If 'groups' are given, perform an aggregation
         if len(args.groups) > 0:
-            aggregate(sq, args.sq_table, args.groups, agg=args.agg)
+            sq.aggregate(args.groups, agg=args.agg)
         sq.close()
     return 0
 

@@ -3,6 +3,7 @@
 Dump log info from MongoDB
 """
 import argparse
+import csv
 import logging
 import os
 import sqlite3
@@ -49,7 +50,11 @@ class DB(object):
     DUPLICATES_MAX = 10
 
     def __init__(self, fname, table_name):
-        self._table = table_name
+        # sync this with 'fields' in main()
+        self._columns = ['date', 'ts', 'event', 'narr', 'user', 'name',
+                         'dur', 'session_id']
+        self._table = table_name    
+        self._is_mem = fname == ':memory:'
         try:
             sq = sqlite3.connect(fname)
         except sqlite3.OperationalError:
@@ -59,14 +64,14 @@ class DB(object):
         self._insert_stmt = 'INSERT INTO {table_name} ({columns}) ' \
                             'VALUES ({{values}})'.format(
             table_name=self._table, columns=','.join(self._columns))
-        self._duplicates, self._disable_insert = 0, False
+        self._rkeys, self._duplicates, self._disable_insert = set(), 0, False
 
     def _create_table_stmt(self):
-        # TODO: Add event column for function vs. open
         stmt = "CREATE TABLE IF NOT EXISTS {table_name} ({columns})"
-        # sync this with 'fields' in main()
-        self._columns = ['date', 'ts', 'narr', 'user', 'name', 'dur', 'session_id']
-        constraints = ['CONSTRAINT c1 UNIQUE (ts, session_id)']
+        if self._is_mem:
+            constraints = []
+        else:
+            constraints = ['CONSTRAINT c1 UNIQUE (ts, session_id)']
         return stmt.format(table_name=self._table,
                            columns=','.join(self._columns + constraints))
 
@@ -75,6 +80,11 @@ class DB(object):
         """
         if self._disable_insert:
             return
+        if self._is_mem:
+            key = '#'.join([rec['ts'], rec['session_id']])
+            if key in self._rkeys:
+                self._add_duplicate()
+            self._rkeys.add(key)
         cursor = self._sq.cursor()
         values = [rec[c] for c in self._columns]
         ivalues = []
@@ -84,19 +94,25 @@ class DB(object):
             else:
                 ivalues.append('"' + v + '"')
         stmt = self._insert_stmt.format(values=','.join(ivalues))
-        #print("ADD: {}".format(stmt))
+        # add record
         try:
             cursor.execute(stmt)
-        except sqlite3.IntegrityError as err:
-            _log.warn("Duplicate record=({}) msg='{}'".format(
-                ','.join(ivalues), err))
-            self._duplicates += 1
-            if self._duplicates > self.DUPLICATES_MAX:
-                _log.error("Duplicate record limit ({:d}) reached."
-                           " All further inserts will be ignored."
-                           .format(self.DUPLICATES_MAX))
-                self._disable_insert = True
+        except sqlite3.IntegrityError:
+            self._add_duplicate()
         cursor.close()
+
+    def _add_duplicate(self):
+        self._duplicates += 1
+        if self._duplicates > self.DUPLICATES_MAX:
+            _log.error("Duplicate record limit ({:d}) reached."
+                       " All further inserts will be ignored."
+                       .format(self.DUPLICATES_MAX))
+            self._disable_insert = True
+
+    def query(self, q):
+        cursor = self._sq.cursor()
+        result = cursor.execute(q)
+        return result
 
     def close(self):
         self._sq.commit()
@@ -112,19 +128,38 @@ def main(args):
     fields = ('event', 'created', 'narr', 'user', 'name', 'dur', 'session_id')
     recs, first = c.find(spec=spec, fields=fields), True
     for rec in recs:
-        # TODO: Also handle narrative 'open' events
-        if rec['event'] != 'func.end':
+        e = rec['event']
+        if e not in ('open', 'func.end'):
             continue
         first = False
         ts = rec['created']
         localdate = time.strftime('%Y-%m-%d', time.localtime(ts))
         rec.update({'date': localdate, 'ts': '{:f}'.format(ts)})
+        if e == 'open':
+            rec.update({'dur': 0., 'event': 'O'})
+        else:
+            rec['event'] = 'F'
         sq.add(rec)
     if first:
         print("No records found")
     else:
+        if len(args.groups) > 0:
+            group_expr = ','.join(args.groups)
+            stmt = 'SELECT {g},SUM(dur) FROM {t} GROUP BY {g}'.format(
+                t=args.sq_table, g=group_expr)
+            print(stmt)
+            rows = sq.query(stmt)
+            writer = csv.writer(sys.stdout)
+            writer.writerow(list(args.groups) + ['total_sec'])
+            for row in rows:
+                writer.writerow(row)
         sq.close()
     return 0
+
+# argument types
+
+def csv_list(s):
+    return s.split(',')
 
 def date_range(s):
     """Parse a string with a date range and return a tuple of
@@ -144,9 +179,13 @@ def date_range(s):
         result.append(epoch_sec)
     return tuple(result)
 
+# main
+
 def parse_args():
     conf = os.environ.get("KBASE_PROXY_CONFIG", "narrative-log-proxy.conf")
     p = argparse.ArgumentParser(description=__doc__.strip())
+    p.add_argument("-g", "--group", dest='groups', type=csv_list, default=[],
+                   help='Group by these comma-separated fields')
     p.add_argument("-c", "--conf", dest='conf', default=conf,
                    help="Configuration file (default=%(default)s)")
     p.add_argument("-d", "--dates", dest='daterange', type=date_range,

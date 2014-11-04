@@ -94,7 +94,6 @@
                             "</tr>";
             
             */
-            
         },
         
         
@@ -165,14 +164,15 @@
                     }
                     
                     // refresh the input options
-                    if(this.isUsingSelect2) {
-                        this.$elem.find("#"+this.spec.id).trigger("change");
+                    if(self.isUsingSelect2) {
+                        self.$elem.find("#"+this.spec.id).trigger("change");
                     }
                 },
                 this
             )]);
         },
 
+        
         /* private method */
         setupSelect2: function ($input) {
             var self = this;
@@ -182,17 +182,20 @@
                 
                 query: function (query) {
                     var data = {results:[]};
-                
+                    
+                    // temporary hack until refresh is called from above.
+                    self.refresh();
+                    
                     // populate the names from our valid data object list
                     if (self.validDataObjectList) {
                         for(var i=0; i<self.validDataObjectList.length; i++){
                             var d = self.validDataObjectList[i];
                             if (query.term.trim()!=="") {
                                 if(self.select2Matcher(query.term,d.name)) {
-                                    data.results.push({id:d.name, text:d.name});
+                                    data.results.push({id:d.name, text:d.name, info:d.info});
                                 }
                             } else {
-                                data.results.push({id:d.name, text:d.name});
+                                data.results.push({id:d.name, text:d.name, info:d.info});
                             }
                         }
                     }
@@ -209,7 +212,20 @@
                     }
                     
                     query.callback(data);
+                },
+                
+                formatResult: function(object, container, query) {
+                    var display = "<b>"+object.text+"</b>";
+                    if (object.info) {
+                        // we can add additional info here in the dropdown ...
+                        display = display + " (v" + object.info[4]+")<br>&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]);
+                        
+                    }
+                    return display;
                 }
+                
+                
+                
             });
         },
         /* private method */
@@ -296,6 +312,41 @@
             return value;
         },
         
+        
+        
+        // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
+        getTimeStampStr: function (objInfoTimeStamp) {
+            var date = new Date(objInfoTimeStamp);
+            var seconds = Math.floor((new Date() - date) / 1000);
+            var interval = Math.floor(seconds / 31536000);
+            
+            if (interval > 1) {
+                return self.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+            }
+            interval = Math.floor(seconds / 2592000);
+            if (interval > 1) {
+                if (interval<4) {
+                    return interval + " months";
+                } else {
+                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                }
+            }
+            interval = Math.floor(seconds / 86400);
+            if (interval > 1) {
+                return interval + " days ago";
+            }
+            interval = Math.floor(seconds / 3600);
+            if (interval > 1) {
+                return interval + " hours ago";
+            }
+            interval = Math.floor(seconds / 60);
+            if (interval > 1) {
+                return interval + " minutes ago";
+            }
+            return Math.floor(seconds) + " seconds ago";
+        },
+        
+        monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"]
         
     });
 

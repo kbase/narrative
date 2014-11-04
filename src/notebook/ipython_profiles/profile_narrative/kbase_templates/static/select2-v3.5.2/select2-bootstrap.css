@@ -420,6 +420,11 @@
  *
  * @see http://getbootstrap.com/components/#alerts-default
  */
+
+/* added to make dropdown a bit larger */
+.select2-results {
+  max-height:400px;  
+}
 .select2-results .select2-no-results,
 .select2-results .select2-searching,
 .select2-results .select2-selection-limit {

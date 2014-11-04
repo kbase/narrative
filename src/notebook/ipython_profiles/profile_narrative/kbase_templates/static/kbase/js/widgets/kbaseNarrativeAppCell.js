@@ -374,7 +374,6 @@
          */
         refresh: function() {
             if (this.inputSteps) {
-                //alert('app refreshing, in kbaseNarrativeAppCell');
                 for(var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].widget.refresh();
                 }

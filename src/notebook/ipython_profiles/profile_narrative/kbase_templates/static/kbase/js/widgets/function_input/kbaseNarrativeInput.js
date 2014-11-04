@@ -102,6 +102,14 @@
              *  
              */
             return [ ];
+        },
+        
+        
+        lockInputs: function() {
+            
+        },
+        unlockInputs: function() {
+            
         }
         
     });

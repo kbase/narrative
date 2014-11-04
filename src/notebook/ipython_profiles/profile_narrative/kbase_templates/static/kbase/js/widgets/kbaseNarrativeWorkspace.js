@@ -500,6 +500,9 @@
                             $(cell.element).find("div[id^=kb-cell-]").kbaseNarrativeCell('refresh');
                         }
                     }
+                    else if (this.isAppCell(cell)) {
+                        $(cell.element).find("div[id^=kb-cell-]").kbaseNarrativeAppCell('refresh');
+                    }
                 }
             }
         },
@@ -1284,20 +1287,20 @@
                             offs += 1; // blank line, move offset
                         }
                         else {
-                            // look for @@S, @@P, @@D, @@G, @@J, or @@E
+                            // look for @@S, @@P, @@D, @@G, @@J, @@E, or @@A
                             var matches = line.match(/^@@([SPDGEJ])(.*)/);
                             if (matches) { // if we got one
                                 switch(matches[1]) {
-                                    case 'S':
+                                    case 'S': // Start running
                                         // if we're starting, init the progress bar.
                                         break;
 
-                                    case 'D':
+                                    case 'D': // Done running
                                         // were done, so hide the progress bar (wait like a second or two?)
                                         self.resetProgress(cell);
                                         break;
 
-                                    case 'P':
+                                    case 'P': // Progress step
                                         var progressInfo = matches[2].split(',');
                                         if (progressInfo.length == 3) {
                                             self.showCellProgress(cell, progressInfo[0], progressInfo[1], progressInfo[2]);
@@ -1309,21 +1312,27 @@
                                             done = true;
                                         break;
 
-                                    case 'E':
+                                    case 'E': // Error while running
                                         var errorJson = matches[2];
                                         errorJson = errorJson.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\$/g, "&#36;");
                                         self.createErrorCell(cell, errorJson);
                                         break;
 
-                                    case 'G':
+                                    case 'G': // debuG message
                                         var debug = matches[2];
                                         self.dbg("[KERNEL] " + debug);
                                         break;
 
-                                    case 'J':
+                                    case 'J': // Job id register
                                         var jobId = matches[2];
                                         self.dbg("[JOB ID] " + jobId);
                                         self.registerJobId(jobId, cell);
+                                        break;
+
+                                    case 'A': // App id register
+                                        var appId = matches[2];
+                                        self.dbg("[APP ID] " + appId);
+                                        self.registerJobId(appId, cell);
                                         break;
 
                                     default:
@@ -1376,13 +1385,16 @@
             if (txt)
                 cellId = $('<div>').append(txt).find('.panel').attr('id');
 
-            var narJobInfo = {
+            var jobInfo = {
                 id : jobId,
                 source : cellId,
                 target : '',
             };
 
-            this.trigger('registerJob.Narrative', narJobInfo);
+            if (this.isAppCell(sourceCell))
+                this.trigger('registerApp.Narrative', jobInfo);
+            else
+                this.trigger('registerMethod.Narrative', jobInfo);
         },
 
         /**

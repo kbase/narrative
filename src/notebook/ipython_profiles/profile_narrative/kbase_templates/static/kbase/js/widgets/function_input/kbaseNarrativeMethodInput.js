@@ -17,7 +17,6 @@
 
             this.render();
             this.refresh();
-            console.log(this.getState());
             return this;
         },
 
@@ -269,6 +268,24 @@
             }
             return values;
         },
+        
+        
+        lockInputs: function() {
+            if (this.parameters) {
+                for(var i=0; i<this.parameters.length; i++) {
+                    this.parameters[i].widget.lockInputs();
+                }
+            }
+        },
+        unlockInputs: function() {
+            if (this.parameters) {
+                for(var i=0; i<this.parameters.length; i++) {
+                    this.parameters[i].widget.unlockInputs();
+                }
+            }
+        },
+        
+        
         
         /**
          * allows an app or other higher-level function to attach a listener on a a parameter

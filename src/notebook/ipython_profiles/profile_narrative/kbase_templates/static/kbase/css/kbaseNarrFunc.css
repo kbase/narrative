@@ -237,7 +237,7 @@
 .kb-cell-run h2 {
     font-family: 'Roboto';
     font-size: 11pt;
-    line-height: 15px;
+    line-height: 150%;
     color: #666666;
     margin: 3px;
     opacity: inherit;
@@ -467,9 +467,11 @@
     opacity: inherit;
     display: inline;
 }
+.kb-app-step-container {
+    margin-top: 6px;
+}
 
 .kb-app-func-panel {
-    margin-top: 6px;
 }
 
 .kb-app-panel-description {
@@ -479,3 +481,29 @@
     color: #2E618D;
     margin: 3px;
 }
+
+
+.kb-app-step-running {
+    border: 3px solid #d14836;
+    border-radius: 5px;
+    z-index: auto;
+    animation: pulse 1s ease infinite;
+    -webkit-animation: pulse 1s ease infinite;
+    /*opacity: 0.7;*/
+}
+
+@-webkit-keyframes pulse {
+  0% { opacity: 1.0; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1.0; }
+}
+
+@keyframes pulse {
+  0% { opacity: 1.0; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1.0; }
+}
+
+
+
+

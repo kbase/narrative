@@ -18,6 +18,11 @@
         // $mainPanel:null,
         // spec:null,
         
+        isUsingSelect2: false,
+        enabled: true,
+        isOutputName: false,
+        validDataObjectList: null,
+        //listLimit:20, // limit the number of dropdown items, not used...
         
         render: function() {
             var self = this;
@@ -36,28 +41,46 @@
             if (!allow_multiple) {
                 // just one field, phew, this one should be easy    
                 var d = spec.default_values;
+                var placeholder = spec.placeholder;
+                if (!placeholder) { placeholder=' '; }
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] + "'" : "";
                 var form_id = spec.id;
+                var $input=$('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
+                        ' value="'+defaultValue+'" type="text" style="width:100%"/>').addClass("form-control");
                 
-                var input='<input class="form-control" style="width: 100%" id="' + spec.id + '" placeholder="' + defaultValue + '"' +
-                        ' value="" type="text"></input>';
+                if(spec.text_options) {
+                    if (spec.text_options.valid_ws_types) {
+                        if (spec.text_options.valid_ws_types.length>0) {
+                            this.isUsingSelect2 = true;
+                            $input =$('<input id="' + form_id + '" type="text" style="width:100%" />');
+                            this.validDataObjectList = [{name:"genome2"},{name:"genome3"},{name:"genome4"},{name:"model1"},{name:"model2"}];
+                            if (spec.text_options.is_output_name) {
+                                this.isOutputName = true;
+                            }
+                        }
+                    }
+                }
                 
                 var $row = $('<div>').addClass("row kb-method-parameter-row")
                                 .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
-                
                 $row.append($('<div>').addClass("col-md-2").addClass("kb-method-parameter-name")
                                 .append(spec.ui_name));
-                
                 $row.append($('<div>').addClass("col-md-4").addClass("kb-method-parameter-input")
-                                .append(input));
-                
+                                .append($input));
                 $row.append($('<div>').addClass("col-md-6").addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint));
                 
                 self.$mainPanel.append($row);
                 
+                /* for some reason, we need to actually have the input added to the main panel before this will work */
+                if (this.isUsingSelect2) {
+                    this.setupSelect2($input, placeholder);
+                }
+                
+                
             } else {
                 // need to handle multiple fields- do something better!
+                self.$mainPanel.append("<div>multiple input fields not yet supported</div>");
             }
             
             
@@ -74,106 +97,143 @@
                             "</tr>";
             
             */
-            
         },
         
         
         refresh: function() {
-            //var method = this.options.method;
-            //var params = method.parameters;
-            //var lookupTypes = [];
-            //var tempObj = {};
-            //for (var i=0; i<params.length; i++) {
-            //    var p = params[i];
-            //    if (p.text_options.valid_ws_types.length > 0) {
-            //        if (!tempObj.hasOwnProperty(p.text_options.valid_ws_types[0])) {
-            //            lookupTypes.push(p.text_options.valid_ws_types[0]);
-            //            tempObj[p.text_options.valid_ws_types[0]] = 1;
-            //        } 
-            //    }
-            //}
-            //
-            //this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
-            //    function(objects) {
-            //        // we know from each parameter what each input type is.
-            //        // we also know how many of each type there is.
-            //        // so, iterate over all parameters and fulfill cases as below.
-            //
-            //        for (var i=0; i<params.length; i++) {
-            //            var p = params[i];
-            //
-            //            // we're refreshing, not rendering, so assume that there's an
-            //            // input with name = pid present.
-            //            var $input = $($(this.$elem).find("[name=" + p.id + "]"));
-            //            var objList = [];
-            //
-            //            /*
-            //             * New sorting - by date, then alphabetically within dates.
-            //             */
-            //            var types = p.text_options.valid_ws_types;
-            //            for (var j=0; j<types.length; j++) {
-            //                if (objects[types[j]] && objects[types[j]].length > 0) {
-            //                    objList = objList.concat(objects[types[j]]);
-            //                }
-            //            }
-            //            objList.sort(function(a, b) {
-            //                if (a[3] > b[3]) return -1;
-            //                if (a[3] < b[3]) return 1;
-            //                if (a[1] < b[1]) return -1;
-            //                if (a[1] > b[1]) return 1;
-            //                return 0;
-            //            });
-            //
-            //            /* down to cases:
-            //             * 1. (simple) objList is empty, $input doesn't have a list attribute.
-            //             * -- don't do anything.
-            //             * 2. objList is empty, $input has a list attribute.
-            //             * -- no more data exists, so remove that list attribute and the associated datalist element
-            //             * 3. objList is not empty, $input doesn't have a list attribute.
-            //             * -- data exists, new datalist needs to be added and linked.
-            //             * 4. objList is not empty, $input has a list attribute.
-            //             * -- datalist needs to be cleared and updated.
-            //             */
-            //
-            //            // case 1 - no data, input is unchanged
-            //
-            //            // case 2 - no data, need to clear input
-            //            var datalistID = $input.attr('list');
-            //            if (objList.length == 0 && datalistID) {
-            //                $(this.$elem.find("#" + datalistID)).remove();
-            //                $input.removeAttr('list');
-            //                $input.val("");
-            //            }
-            //
-            //            // case 3 - data, need new datalist
-            //            // case 4 - data, need to update existing datalist
-            //            else if (objList.length > 0) {
-            //                var $datalist;
-            //                if (!datalistID) {
-            //                    datalistID = this.genUUID();
-            //                    $input.attr('list', datalistID);
-            //                    $datalist = $('<datalist>')
-            //                                .attr('id', datalistID);
-            //                    $input.after($datalist);
-            //                }
-            //                else {
-            //                    $datalist = $(this.$elem.find("#" + datalistID));
-            //                }
-            //                $datalist.empty();
-            //                for (var j=0; j<objList.length; j++) {
-            //                    $datalist.append($('<option>')
-            //                                     .attr('value', objList[j][1])
-            //                                     .append(objList[j][1]));
-            //                }
-            //            }
-            //        }
-            //    },
-            //    this
-            //)]);
+            var self = this;
+            
+            var needToMakeCall = false;
+            var lookupTypes = [];
+            var foundTypes = {};
+            
+            // could also check if we are using select2... that for now is only used for ws types
+            if(self.spec.text_options) {
+                if (self.spec.text_options.valid_ws_types) {
+                    if(self.spec.text_options.valid_ws_types.length>0) {
+                        var types = self.spec.text_options.valid_ws_types;
+                        for(var i=0; i<types.length; i++) {
+                            if (!foundTypes.hasOwnProperty(types[i])) {
+                                lookupTypes.push(types[i]);
+                                foundTypes[types[i]] = 1;
+                                needToMakeCall = true;
+                            }
+                        }
+                    }
+                }
+            }
+            if (!needToMakeCall) { return; }
+            
+            // update the validDataObjectList 
+            this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
+                function(objects) {
+                    // we know from each parameter what each input type is.
+                    // we also know how many of each type there is.
+                    // so, iterate over all parameters and fulfill cases as below.
+                    // extract the object infos
+                    var allObjInfo = [];
+                    for (var typeName in objects) {
+                        if (objects.hasOwnProperty(typeName)) {
+                            for(var i=0; i<objects[typeName].length; i++) {
+                                allObjInfo.push(objects[typeName][i]);
+                            }
+                        }
+                    }
+                    // sort them by date, then by name
+                    allObjInfo.sort(function(a, b) {
+                            if (a[3] > b[3]) return -1; // sort by date
+                            if (a[3] < b[3]) return 1;  // sort by date
+                            if (a[1] < b[1]) return -1; // sort by name
+                            if (a[1] > b[1]) return 1;  // sort by name
+                            return 0;
+                        });
+                    /* object info
+                    0: id
+                    1: name
+                    2: type
+                    3: timestamp
+                    4: version
+                    5: owner
+                    6: ws id
+                    7: ws name
+                    8: checksum
+                    9: size
+                    10: metadata*/
+                    
+                    // populate the valid data object list
+                    self.validDataObjectList = [];
+                    for(var i=0; i<allObjInfo.length; i++) {
+                        self.validDataObjectList.push({name:allObjInfo[i][1], info:allObjInfo[i]});
+                    }
+                    
+                    // refresh the input options
+                    if(self.isUsingSelect2) {
+                        self.$elem.find("#"+this.spec.id).trigger("change");
+                    }
+                },
+                this
+            )]);
         },
 
-        /*  NEW METHODS TO HANDLE NEW APP BEHAVIOR AND METHOD/APP SPECS */
         
+        /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
+        setupSelect2: function ($input, placeholder, defaultValue) {
+            var self = this;
+            $input.select2({
+                matcher: self.select2Matcher,
+                formatNoMatches: "No matching data found.",
+                placeholder:placeholder,
+                allowClear: true,
+                query: function (query) {
+                    var data = {results:[]};
+                    
+                    // populate the names from our valid data object list
+                    if (self.validDataObjectList) {
+                        for(var i=0; i<self.validDataObjectList.length; i++){
+                            var d = self.validDataObjectList[i];
+                            if (query.term.trim()!=="") {
+                                if(self.select2Matcher(query.term,d.name)) {
+                                    data.results.push({id:d.name, text:d.name, info:d.info});
+                                }
+                            } else {
+                                data.results.push({id:d.name, text:d.name, info:d.info});
+                            }
+                        }
+                    }
+                    
+                    //always allow the name they give if there was no match...
+                    if (data.results.length===0) {
+                        if (query.term.trim()!=="") {
+                            if(this.isOutputName) {
+                                data.results.push({id:query.term, text:query.term});
+                            } else {
+                                data.results.push({id:query.term, text:query.term+" (not found)"});
+                            }
+                        }
+                    }
+                    
+                    query.callback(data);
+                },
+                
+                formatResult: function(object, container, query) {
+                    var display = "<b>"+object.text+"</b>";
+                    if (object.info) {
+                        // we can add additional info here in the dropdown ...
+                        display = display + " (v" + object.info[4]+")<br>&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]);
+                        
+                    }
+                    return display;
+                }
+            });
+            
+            if (defaultValue) {
+                $input.select2("data",{id:defaultValue, text:defaultValue});
+            }
+        },
+        /* private method */
+        select2Matcher: function(term,text) {
+            return text.toUpperCase().indexOf(term.toUpperCase())>=0;
+        },
         
         /*
          * This is called when this method is run to allow you to check if the parameters
@@ -192,10 +252,13 @@
          */
         disableParameterEditing: function() {
             // disable the input
-            this.$elem.find("#"+this.spec.id).prop('disabled','true');
+            this.enabled = false;
+            if(this.isUsingSelect2) {
+                this.$elem.find("#"+this.spec.id).select2('disable',true);
+            } else {
+                this.$elem.find("#"+this.spec.id).prop('disabled',true);
+            }
             // stylize the row div
-            // todo ...
-            
         },
         
         /*
@@ -203,13 +266,42 @@
          */
         enableParameterEditing: function() {
             // enable the input
-            this.$elem.find("#"+this.spec.id).prop('disabled','false');
-            // remove disabled styles from the row div
-            // todo ...
+            this.enabled = true;
+            if(this.isUsingSelect2) {
+                this.$elem.find("#"+this.spec.id).select2('enable',true);
+            } else {
+                this.$elem.find("#"+this.spec.id).prop('disabled', false);
+            }
         },
         
+        
+        lockInputs: function() {
+            if (this.enabled) {
+                if(this.isUsingSelect2) {
+                    this.$elem.find("#"+this.spec.id).select2('disable',true);
+                } else {
+                    this.$elem.find("#"+this.spec.id).prop('disabled',true);
+                }
+            }
+        },
+        unlockInputs: function() {
+            if (this.enabled) {
+                if(this.isUsingSelect2) {
+                    this.$elem.find("#"+this.spec.id).select2('enable',true);
+                } else {
+                    this.$elem.find("#"+this.spec.id).prop('disabled', false);
+                }
+            }
+        },
+        
+        
+        
         addInputListener: function(onChangeFunc) {
-            this.$elem.find("#"+this.spec.id).on("input",onChangeFunc);
+            if(this.isUsingSelect2) {
+                this.$elem.find("#"+this.spec.id).on("change",onChangeFunc);
+            } else {
+                this.$elem.find("#"+this.spec.id).on("input",onChangeFunc);
+            }
         },
         
         /*
@@ -220,14 +312,18 @@
             
             // todo: handle case where this is a multiple, we need to check if value array matches number of elements,
             // and if not we must do something special   ...
-            
-            this.$elem.find("#"+this.spec.id).val(value);
-            
-            //.each(function(key, field) {
-		//if (field.value.trim() !== "") {
-		//    state['readParams'].push(field.value);
-		//}
-            //});
+            if(this.isUsingSelect2) {
+                if (this.enabled) {
+                    this.$elem.find("#"+this.spec.id).select2("data",{id:value, text:value});
+                } else {
+                    this.$elem.find("#"+this.spec.id).select2('disable',false);
+                    this.$elem.find("#"+this.spec.id).select2("data",{id:value, text:value});
+                    this.$elem.find("#"+this.spec.id).select2('disable',true);
+                    
+                }
+            } else {
+                this.$elem.find("#"+this.spec.id).val(value);
+            }
         },
         
         /*
@@ -240,6 +336,44 @@
             return value;
         },
         
+        
+        
+        
+        
+        
+        // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
+        getTimeStampStr: function (objInfoTimeStamp) {
+            var date = new Date(objInfoTimeStamp);
+            var seconds = Math.floor((new Date() - date) / 1000);
+            var interval = Math.floor(seconds / 31536000);
+            
+            if (interval > 1) {
+                return self.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+            }
+            interval = Math.floor(seconds / 2592000);
+            if (interval > 1) {
+                if (interval<4) {
+                    return interval + " months";
+                } else {
+                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                }
+            }
+            interval = Math.floor(seconds / 86400);
+            if (interval > 1) {
+                return interval + " days ago";
+            }
+            interval = Math.floor(seconds / 3600);
+            if (interval > 1) {
+                return interval + " hours ago";
+            }
+            interval = Math.floor(seconds / 60);
+            if (interval > 1) {
+                return interval + " minutes ago";
+            }
+            return Math.floor(seconds) + " seconds ago";
+        },
+        
+        monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"]
         
     });
 

@@ -10,13 +10,22 @@
             autopopulate: true,
             title: 'Jobs',
         },
+        // these are the elements that contain running apps and methods
+        $appsList: null,
+        $methodsList: null,
 
         init: function(options) {
             this._super(options);
 
-            $(document).on('registerJob.Narrative', $.proxy(
+            $(document).on('registerMethod.Narrative', $.proxy(
                 function(e, jobInfo) {
-                    this.registerJob(jobInfo);
+                    this.registerJob(jobInfo, false);
+                }, this)
+            );
+
+            $(document).on('registerApp.Narrative', $.proxy(
+                function(e, jobInfo) {
+                    this.registerJob(jobInfo, true);
                 }, this)
             );
 
@@ -57,9 +66,17 @@
                                       .append($('<span>')
                                               .addClass('glyphicon glyphicon-refresh')));
 
+            this.$methodsList = $('<div>');
+            this.$appsList = $('<div>');
+
+            this.$jobsAccordion = $('<div>');
             // Make a function panel for everything to sit inside.
             this.$jobsPanel = $('<div>')
-                              .addClass('kb-function-body');
+                              .addClass('kb-function-body')
+                              .append(this.$jobsAccordion);
+            
+            this.$jobsAccordion.kbaseAccordion({'elements' : [{ 'title' : 'Apps', 'body' : this.$appsList },
+                                                              { 'title' : 'Methods', 'body' : this.$methodsList }]});
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -120,13 +137,18 @@
             this.$jobsPanel.show();
         },
 
-        registerJob: function(jobInfo) {
+        registerJob: function(jobInfo, isApp) {
+            // Check to make sure the Narrative has been instantiated to begin with
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || !IPython.notebook.metadata)
                 return;
             if (!IPython.notebook.metadata.job_ids)
-                IPython.notebook.metadata.job_ids = [];
+                IPython.notebook.metadata.job_ids = {
+                    'methods' : [],
+                    'apps' : []
+                };
 
-            IPython.notebook.metadata.job_ids.push(jobInfo);
+            var type = isApp ? 'apps' : 'methods';
+            IPython.notebook.metadata.job_ids[type].push(jobInfo);
             this.refresh();
         },
 
@@ -151,14 +173,14 @@
 
             // Get a unique list of jobs
             // XXX - this'll change to method vs. app jobs, soonish.
-            var narrJobs = IPython.notebook.metadata.job_ids;
+            var jobs = IPython.notebook.metadata.job_ids;
             var uniqueJobs = {};
             var jobList = [];
-            for (var i=0; i<narrJobs.length; i++) {
-                if (uniqueJobs.hasOwnProperty(narrJobs[i].id))
+            for (var i=0; i<jobs.methods.length; i++) {
+                if (uniqueJobs.hasOwnProperty(jobs.methods[i].id))
                     continue;
-                uniqueJobs[narrJobs[i].id] = narrJobs[i];
-                jobList.push("'" + narrJobs[i].id + "'");
+                uniqueJobs[jobs.methods[i].id] = jobs.methods[i];
+                jobList.push("'" + jobs.methods[i].id + "'");
             }
 
             if (jobList.length === 0) {
@@ -223,14 +245,14 @@
                 this.showMessage('No running jobs!');
                 return;
             }
-            var $jobTable = $('<div class="kb-jobs-items">');
+            var $methodsTable = $('<div class="kb-jobs-items">');
             for (var i=0; i<jobs.length; i++) {
-                $jobTable.append(this.renderJob(jobs[i]));
+                $methodsTable.append(this.renderMethod(jobs[i]));
             }
-            this.$jobsPanel.empty().append($jobTable);
+            this.$methodsList.empty().append($methodsTable);
         },
 
-        renderJob: function(job) {
+        renderMethod: function(job) {
             var $row = $('<div class="kb-jobs-item">');
             if (!job || job.length < 12) {
                 return $row;

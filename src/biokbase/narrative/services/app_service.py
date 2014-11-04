@@ -52,16 +52,19 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     appSpec = json.loads(app_spec_json)
     paramValues = json.loads(param_values_json)
 
-    methIdToSpec = load_method_specs(appSpec)
+    methIdToSpec = json.loads(method_specs_json.replace('\n', '\\n'))  #load_method_specs(appSpec)
+    
+    #raise ValueError("========\nExternal=" + method_specs_json + "\n=======================\nInternal=" + json.dumps(methIdToSpec))
     
     steps = []
     app = { 'steps' : steps }
     for stepSpec in appSpec['steps']:
+        stepId = stepSpec['step_id']
         methodId = stepSpec['method_id']
         methodSpec = methIdToSpec[methodId]
         behavior = methodSpec['behavior']
-        methodInputValues = extract_param_values(paramValues, appSpec, methodSpec)
-        step = { 'step_id' : stepSpec['step_id'] }
+        methodInputValues = extract_param_values(paramValues, stepId)
+        step = { 'step_id' : stepId }
         if 'kb_service_input_mapping' in methodSpec['behavior']:
             tempInput = {}
             rpcArgs = []
@@ -92,7 +95,7 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
                 step['is_long_running'] = 1
                 if rpcJobIdField is not None:
                     step['job_id_output_field'] = rpcJobIdField                                   
-        else:
+        elif 'python_class' in behavior:
             step['type'] = 'python'
             step['input_values'] = methodInputValues
             step['python'] = {'python_class' : behavior['python_class'], 'method_name' : behavior['python_function']}
@@ -100,6 +103,10 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
                 jobIdField = methodSpec['job_id_output_field']
                 step['is_long_running'] = 1
                 step['job_id_output_field'] = jobIdField
+        elif 'kb_service_output_mapping' in behavior:
+            continue  # We don't put these steps in app sending to NJS. We will process them later in _app_get_state
+        else:
+            raise ValueError("Unsupported behavior type for [" + methodId + "]: " + json.dumps(behavior))
         steps.append(step)
     
     njsClient = NJSMock(url = service.URLS.job_service, token = token)
@@ -111,38 +118,77 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
 
     return json.dumps({ 'job_id' : job_id, 'app' : app})
 
-def extract_param_values(paramValues, appSpec, methodSpec):
-    parameters = methodSpec['parameters']
-    ret = []
-    for param in parameters:
-        value = ""
-        if 'text_options' in param and 'valid_ws_types' in param['text_options']:
-            types = param['text_options']['valid_ws_types']
-            if len(types) == 1:
-                type = types[0]
-                if type == 'KBaseGenomes.ContigSet':
-                    value = "contigset.1"
-                elif type == 'KBaseGenomes.Genome':
-                    value = "genome.1"
-                elif type == 'KBaseFBA.FBAModel':
-                    value = "model.1"
-                elif type == 'GenomeComparison.ProteomeComparison':
-                    value = "protcmp.1"
-                elif type == 'KBaseTrees.Tree':
-                    value = "tree.1"
-                elif type == 'KBaseTrees.MSA':
-                    value = "msa.1"
-                elif type == 'KBaseSearch.GenomeSet':
-                    value = 'genomeset.1'
-                elif type == 'KBaseGenomes.Pangenome':
-                    value = 'pangenome.1'
-                elif type == 'KBaseBiochem.Media':
-                    value = 'media.1'
-                elif type == 'KBaseFBA.FBA':
-                    value = 'fba.1'
-                elif type == 'KBaseFBA.Gapfilling':
-                    value = 'gapfilling.1'
-        ret.append(value)
+
+@method(name="app_get_state")
+def _app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id):
+    """Prepare app state returned by NJS
+
+    :param app_spec_json: The App Spec
+    :type app_spec_json: kbtypes.Unicode
+    :ui_name app_spec_json: The App Spec
+    :param method_specs_json: The Method Specs
+    :type method_specs_json: kbtypes.Unicode
+    :ui_name method_specs_json: The Method Specs
+    :param param_values_json: Param values
+    :type param_values_json: kbtypes.Unicode
+    :ui_name param_values_json: Param values
+    :param app_job_id: The App Job ID
+    :type app_job_id: kbtypes.Unicode
+    :ui_name app_job_id: The App Job ID
+    :rtype: kbtypes.Unicode
+    :return: running job info
+    """
+    token, workspace = meth.token, meth.workspace_id
+    
+    appSpec = json.loads(app_spec_json)
+    paramValues = json.loads(param_values_json)
+    methIdToSpec = json.loads(method_specs_json)
+    
+    njsClient = NJSMock(url = service.URLS.job_service, token = token)
+    appState = njsClient.check_app_state(app_job_id)
+
+    return json.dumps(appState)
+
+
+def extract_param_values(paramValues, stepId):
+    ret = None
+    for paramVal in paramValues:
+        if paramVal['stepId'] == stepId:
+            ret = []
+            for keyVal in paramVal['values']:
+                ret.append(keyVal['value'])
+    if ret is None:
+        raise ValueError("Step [" + stepId + "] wasn't found in input values: " + json.dumps(paramValues))
+    #parameters = methodSpec['parameters']
+    #for param in parameters:
+    #    value = ""
+    #    if 'text_options' in param and 'valid_ws_types' in param['text_options']:
+    #        types = param['text_options']['valid_ws_types']
+    #        if len(types) == 1:
+    #            type = types[0]
+    #            if type == 'KBaseGenomes.ContigSet':
+    #                value = "contigset.1"
+    #            elif type == 'KBaseGenomes.Genome':
+    #                value = "genome.1"
+    #            elif type == 'KBaseFBA.FBAModel':
+    #                value = "model.1"
+    #            elif type == 'GenomeComparison.ProteomeComparison':
+    #                value = "protcmp.1"
+    #            elif type == 'KBaseTrees.Tree':
+    #                value = "tree.1"
+    #            elif type == 'KBaseTrees.MSA':
+    #                value = "msa.1"
+    #            elif type == 'KBaseSearch.GenomeSet':
+    #                value = 'genomeset.1'
+    #            elif type == 'KBaseGenomes.Pangenome':
+    #                value = 'pangenome.1'
+    #            elif type == 'KBaseBiochem.Media':
+    #                value = 'media.1'
+    #            elif type == 'KBaseFBA.FBA':
+    #                value = 'fba.1'
+    #            elif type == 'KBaseFBA.Gapfilling':
+    #                value = 'gapfilling.1'
+    #    ret.append(value)
     return ret
 
 def load_method_specs(appSpec):

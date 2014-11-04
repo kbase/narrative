@@ -501,7 +501,7 @@
                         }
                     }
                     else if (this.isAppCell(cell)) {
-                        $(cell.element).find("div[id^kb-cell-]").kbaseNarrativeAppCell('refresh');
+                        $(cell.element).find("div[id^=kb-cell-]").kbaseNarrativeAppCell('refresh');
                     }
                 }
             }

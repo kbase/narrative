@@ -445,6 +445,7 @@
          *
          *
          *  THIS IS NOT SAFE BECAUSE THERE ARE HARD CODED KEYS THAT ARE CHECKED!!!! -mike
+         *  It should be more safe now - **all** strings should have their quotes escaped before JSONifying them.
          *
          * @post This does not modify the input object.
          * @return {string} JSON string
@@ -455,10 +456,11 @@
                         .replace(/"/g, "&quot;");
             };
             return JSON.stringify(method, function(key, value) {
+                return (typeof(value) === 'string') ? esc(value) : value;
                 // this seems not safe, since we can have many keys in the spec that are not these... -mike
-                return (typeof(value) == "string" &&
-                        (key == "description" || key == "title" || key=="header" || key=="tooltip" || key=="name" || key=="subtitle")) ?
-                    esc(value) : value;
+                // return (typeof(value) == "string" &&
+                //         (key == "description" || key == "title" || key=="header" || key=="tooltip" || key=="name" || key=="subtitle")) ?
+                //     esc(value) : value;
             });
         },
 

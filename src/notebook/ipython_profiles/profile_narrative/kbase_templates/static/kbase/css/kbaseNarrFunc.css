@@ -493,15 +493,15 @@
 }
 
 @-webkit-keyframes pulse {
-  0% { border: 3px solid #d14836; opacity: 1.0; }
-  50% { border: 3px solid #FF9886; opacity: 1.0; }
-  100% { border: 3px solid #d14836; opacity: 1.0; }
+  0% { opacity: 1.0; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1.0; }
 }
 
 @keyframes pulse {
-  0% { border: 3px solid #d14836; opacity: 1.0; }
-  50% { border: 3px solid #FF9886; opacity: 1.0; }
-  100% { border: 3px solid #d14836; opacity: 1.0; }
+  0% { opacity: 1.0; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1.0; }
 }
 
 

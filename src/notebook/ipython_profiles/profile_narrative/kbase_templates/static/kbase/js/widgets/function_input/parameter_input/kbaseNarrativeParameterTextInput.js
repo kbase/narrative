@@ -183,9 +183,6 @@
                 query: function (query) {
                     var data = {results:[]};
                     
-                    // temporary hack until refresh is called from above.
-                    self.refresh();
-                    
                     // populate the names from our valid data object list
                     if (self.validDataObjectList) {
                         for(var i=0; i<self.validDataObjectList.length; i++){

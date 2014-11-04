@@ -30,6 +30,9 @@
         inputSteps: null,
         inputStepLookup: null,
         
+        $runButton: null,
+        $stopButton: null,
+        
         
         /**
          * @private
@@ -125,19 +128,14 @@
             this.methodSpecs = {};
 
             var self = this;
-            var $runButton = $('<button>')
+            this.$runButton = $('<button>')
                               .attr('type', 'button')
                               .attr('value', 'Run')
                               .addClass('btn btn-success btn-sm')
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
-                                      // debug ...
-                                      var v = self.getAllParameterValues();
-                                      console.log("All Values:");
-                                      console.log(v);
-                                      
-                                      // end debug ...
+                                      self.startAppRun();
                                       event.preventDefault();
                                       this.trigger('runApp.Narrative', { 
                                           cell: IPython.notebook.get_selected_cell(),
@@ -147,6 +145,18 @@
                                       });
                                   }, this)
                               );
+            this.$stopButton = $('<button>')
+                              .attr('type', 'button')
+                              .attr('value', 'Stop')
+                              .addClass('btn btn-warning btn-sm')
+                              .append('Stop')
+                              .click(
+                                  $.proxy(function(event) {
+                                      self.stopAppRun();
+                                  }, this)
+                              )
+                              .hide();
+                            
 
             var $appInfo = this.appSpec.info.name;
             this.$methodPanel = $('<div>')
@@ -163,7 +173,8 @@
 
             var $buttons = $('<div>')
                            .addClass('buttons pull-right')
-                           .append($runButton);
+                           .append(this.$runButton)
+                           .append(this.$stopButton);
 
             
             console.log(this.appSpec);
@@ -201,7 +212,6 @@
             
             // finally, we refresh so that our drop down or other boxes can be populated
             this.refresh();
-            
             
             //this.updateStepStatus("step_2","status");
             //this.setStepOutput("step_2",{data:{id:"IntegratedModel",ws:"wstester1:home"}});
@@ -310,6 +320,34 @@
             }
             return;
         },
+        
+        
+        /* locks inputs and updates display properties to reflect the running state */
+        startAppRun: function() {
+            var self = this;
+            self.$runButton.hide();
+            self.$stopButton.show();
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    this.inputSteps[i].widget.lockInputs();
+                }
+            }
+        },
+        
+        /* unlocks inputs and updates display properties to reflect the not running state */
+        stopAppRun: function() {
+            var self = this;
+            self.$stopButton.hide();
+            self.$runButton.show();
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    this.inputSteps[i].widget.unlockInputs();
+                }
+            }
+        },
+        
+        
+        
         
         
         

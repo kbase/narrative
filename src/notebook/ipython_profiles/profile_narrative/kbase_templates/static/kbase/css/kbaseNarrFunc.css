@@ -237,7 +237,7 @@
 .kb-cell-run h2 {
     font-family: 'Roboto';
     font-size: 11pt;
-    line-height: 15px;
+    line-height: 150%;
     color: #666666;
     margin: 3px;
     opacity: inherit;

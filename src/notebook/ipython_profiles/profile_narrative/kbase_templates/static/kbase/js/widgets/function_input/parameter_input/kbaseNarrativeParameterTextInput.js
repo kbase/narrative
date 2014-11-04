@@ -41,10 +41,12 @@
             if (!allow_multiple) {
                 // just one field, phew, this one should be easy    
                 var d = spec.default_values;
+                var placeholder = spec.placeholder;
+                if (!placeholder) { placeholder=' '; }
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] + "'" : "";
                 var form_id = spec.id;
-                var $input=$('<input id="' + form_id + '" placeholder="' + defaultValue + '"' +
-                        ' value="" type="text" style="width:100%"/>').addClass("form-control");
+                var $input=$('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
+                        ' value="'+defaultValue+'" type="text" style="width:100%"/>').addClass("form-control");
                 
                 if(spec.text_options) {
                     if (spec.text_options.valid_ws_types) {
@@ -72,12 +74,13 @@
                 
                 /* for some reason, we need to actually have the input added to the main panel before this will work */
                 if (this.isUsingSelect2) {
-                    this.setupSelect2($input);
+                    this.setupSelect2($input, placeholder);
                 }
                 
                 
             } else {
                 // need to handle multiple fields- do something better!
+                self.$mainPanel.append("<div>multiple input fields not yet supported</div>");
             }
             
             
@@ -173,13 +176,14 @@
         },
 
         
-        /* private method */
-        setupSelect2: function ($input) {
+        /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
+        setupSelect2: function ($input, placeholder, defaultValue) {
             var self = this;
             $input.select2({
                 matcher: self.select2Matcher,
                 formatNoMatches: "No matching data found.",
-                
+                placeholder:placeholder,
+                allowClear: true,
                 query: function (query) {
                     var data = {results:[]};
                     
@@ -220,10 +224,11 @@
                     }
                     return display;
                 }
-                
-                
-                
             });
+            
+            if (defaultValue) {
+                $input.select2("data",{id:defaultValue, text:defaultValue});
+            }
         },
         /* private method */
         select2Matcher: function(term,text) {
@@ -247,7 +252,7 @@
          */
         disableParameterEditing: function() {
             // disable the input
-            this.enabled = true;
+            this.enabled = false;
             if(this.isUsingSelect2) {
                 this.$elem.find("#"+this.spec.id).select2('disable',true);
             } else {
@@ -261,13 +266,35 @@
          */
         enableParameterEditing: function() {
             // enable the input
-            this.enabled = false;
+            this.enabled = true;
             if(this.isUsingSelect2) {
-                this.$elem.find("#"+this.spec.id).select2('disable',false);
+                this.$elem.find("#"+this.spec.id).select2('enable',true);
             } else {
                 this.$elem.find("#"+this.spec.id).prop('disabled', false);
             }
         },
+        
+        
+        lockInputs: function() {
+            if (this.enabled) {
+                if(this.isUsingSelect2) {
+                    this.$elem.find("#"+this.spec.id).select2('disable',true);
+                } else {
+                    this.$elem.find("#"+this.spec.id).prop('disabled',true);
+                }
+            }
+        },
+        unlockInputs: function() {
+            if (this.enabled) {
+                if(this.isUsingSelect2) {
+                    this.$elem.find("#"+this.spec.id).select2('enable',true);
+                } else {
+                    this.$elem.find("#"+this.spec.id).prop('disabled', false);
+                }
+            }
+        },
+        
+        
         
         addInputListener: function(onChangeFunc) {
             if(this.isUsingSelect2) {
@@ -308,6 +335,9 @@
             var value = this.$elem.find("#"+this.spec.id).val();
             return value;
         },
+        
+        
+        
         
         
         

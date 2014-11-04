@@ -500,6 +500,9 @@
                             $(cell.element).find("div[id^=kb-cell-]").kbaseNarrativeCell('refresh');
                         }
                     }
+                    else if (this.isAppCell(cell)) {
+                        $(cell.element).find("div[id^kb-cell-]").kbaseNarrativeAppCell('refresh');
+                    }
                 }
             }
         },

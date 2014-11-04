@@ -10,6 +10,9 @@
             autopopulate: true,
             title: 'Jobs',
         },
+        // these are the elements that contain running apps and methods
+        $appsList: null,
+        $methodsList: null,
 
         init: function(options) {
             this._super(options);
@@ -57,9 +60,17 @@
                                       .append($('<span>')
                                               .addClass('glyphicon glyphicon-refresh')));
 
+            this.$methodsList = $('<div>');
+            this.$appsList = $('<div>');
+
+            this.$jobsAccordion = $('<div>');
             // Make a function panel for everything to sit inside.
             this.$jobsPanel = $('<div>')
-                              .addClass('kb-function-body');
+                              .addClass('kb-function-body')
+                              .append(this.$jobsAccordion);
+            
+            this.$jobsAccordion.kbaseAccordion({'elements' : [{ 'title' : 'Apps', 'body' : this.$appsList },
+                                                              { 'title' : 'Methods', 'body' : this.$methodsList }]});
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -227,7 +238,8 @@
             for (var i=0; i<jobs.length; i++) {
                 $jobTable.append(this.renderJob(jobs[i]));
             }
-            this.$jobsPanel.empty().append($jobTable);
+            this.$methodsList.empty().append($jobTable);
+//            this.$jobsPanel.empty().append($jobTable);
         },
 
         renderJob: function(job) {

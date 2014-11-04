@@ -203,7 +203,9 @@
             this.refresh();
             
             
+            //this.updateStepStatus("step_2","status");
             //this.setStepOutput("step_2",{data:{id:"IntegratedModel",ws:"wstester1:home"}});
+            //this.setRunningStep("step_2");
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom
@@ -396,7 +398,12 @@
         updateStepStatus: function(stepId, status) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
-                    this.inputStepLookup[stepId].$statusPanel.html(status);
+                    this.inputStepLookup[stepId].$statusPanel.empty();
+                    var $statusCell = $("<div>").addClass("kb-cell-output").css({"padding-top":"5px"}).append(
+                                            $('<div>').addClass("panel panel-default")
+                                                .append($('<div>').addClass("panel-body").html(status))
+                                            );
+                    this.inputStepLookup[stepId].$statusPanel.append($statusCell);
                 }
             }
         },
@@ -405,8 +412,27 @@
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
                     this.inputStepLookup[stepId].$outputPanel.empty();
+                    
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
-                    this.inputStepLookup[stepId].$outputPanel[widgetName](output);
+                    var $outputWidget = $('<div>'); var widget;
+                    if (widgetName !== "kbaseDefaultNarrativeOutput")
+                        widget = $outputWidget[widgetName](output);
+                    else
+                        widget = $outputWidget[widgetName]({data:output});
+                    
+        
+                    var header = '<span class="kb-out-desc">Output</span><span class="pull-right kb-func-timestamp">' + 
+                                    this.readableTimestamp(new Date().getTime()) +
+                                    '</span>';
+        
+                    var $outputCell = $("<div>").addClass("kb-cell-output").css({"padding-top":"5px","padding-bottom":"5px"}).append(
+                                            $('<div>').addClass("panel panel-default")
+                                                .append($('<div>').addClass("panel-heading").append(header))
+                                                .append($('<div>').addClass("panel-body").append($outputWidget))
+                                            );
+        
+                    this.inputStepLookup[stepId].$outputPanel.append($outputCell);
+                    
                     // todo: save outputwidget in list so that state can be saved
                 }
             }
@@ -439,9 +465,32 @@
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
+        },
+        
+         /**
+         * Converts a timestamp to a simple string.
+         * Do this American style - HH:MM:SS MM/DD/YYYY
+         *
+         * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
+         * @return {string} a human readable timestamp
+         */
+        readableTimestamp: function(timestamp) {
+            var format = function(x) {
+                if (x < 10)
+                    x = '0' + x;
+                return x;
+            };
+
+            var d = new Date(timestamp);
+            var hours = format(d.getHours());
+            var minutes = format(d.getMinutes());
+            var seconds = format(d.getSeconds());
+            var month = d.getMonth()+1;
+            var day = format(d.getDate());
+            var year = d.getFullYear();
+
+            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }
-
-
     });
 
 })( jQuery );

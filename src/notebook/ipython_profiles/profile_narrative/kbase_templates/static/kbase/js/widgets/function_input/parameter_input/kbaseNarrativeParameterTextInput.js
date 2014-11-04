@@ -18,10 +18,12 @@
         // $mainPanel:null,
         // spec:null,
         
+        isUsingSelect2: false,
+        enabled: true,
         
         render: function() {
             var self = this;
-            //console.log(this.spec);
+            console.log(this.spec);
             var spec = self.spec;
             
             // check if we need to allow multiple values
@@ -38,9 +40,18 @@
                 var d = spec.default_values;
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] + "'" : "";
                 var form_id = spec.id;
+                defaultValue = "v";
+                var $input=$('<input id="' + form_id + '" placeholder="' + defaultValue + '"' +
+                        ' value="" type="text" style="width:100%"/>').addClass("form-control");
                 
-                var input='<input class="form-control" style="width: 100%" id="' + spec.id + '" placeholder="' + defaultValue + '"' +
-                        ' value="" type="text"></input>';
+                if(spec.text_options) {
+                    if (spec.text_options.valid_ws_types) {
+                        if (spec.text_options.valid_ws_types.length>0) {
+                            this.isUsingSelect2 = true;
+                            $input =$('<input id="' + form_id + '" type="text" style="width:100%" />');
+                        }
+                    }
+                }
                 
                 var $row = $('<div>').addClass("row kb-method-parameter-row")
                                 .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
@@ -49,12 +60,25 @@
                                 .append(spec.ui_name));
                 
                 $row.append($('<div>').addClass("col-md-4").addClass("kb-method-parameter-input")
-                                .append(input));
+                                .append($input));
                 
                 $row.append($('<div>').addClass("col-md-6").addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint));
                 
                 self.$mainPanel.append($row);
+                if (this.isUsingSelect2) {
+                     self.$mainPanel.find("#"+form_id).select2({
+                        query: function (query) {
+                            var data = {results:[]};
+                            
+                            //always allow the name they give...
+                            data.results.push({id:query.term, text:query.term});
+                            
+                            query.callback(data);
+                        }
+                    });
+                }
+                
                 
             } else {
                 // need to handle multiple fields- do something better!
@@ -192,10 +216,13 @@
          */
         disableParameterEditing: function() {
             // disable the input
-            this.$elem.find("#"+this.spec.id).prop('disabled','true');
+            this.enabled = true;
+            if(this.isUsingSelect2) {
+                this.$elem.find("#"+this.spec.id).select2('disable',true);
+            } else {
+                this.$elem.find("#"+this.spec.id).prop('disabled',true);
+            }
             // stylize the row div
-            // todo ...
-            
         },
         
         /*
@@ -203,13 +230,20 @@
          */
         enableParameterEditing: function() {
             // enable the input
-            this.$elem.find("#"+this.spec.id).prop('disabled','false');
-            // remove disabled styles from the row div
-            // todo ...
+            this.enabled = false;
+            if(this.isUsingSelect2) {
+                this.$elem.find("#"+this.spec.id).select2('disable',false);
+            } else {
+                this.$elem.find("#"+this.spec.id).prop('disabled', false);
+            }
         },
         
         addInputListener: function(onChangeFunc) {
-            this.$elem.find("#"+this.spec.id).on("input",onChangeFunc);
+            if(this.isUsingSelect2) {
+                this.$elem.find("#"+this.spec.id).on("change",onChangeFunc);
+            } else {
+                this.$elem.find("#"+this.spec.id).on("input",onChangeFunc);
+            }
         },
         
         /*
@@ -220,8 +254,18 @@
             
             // todo: handle case where this is a multiple, we need to check if value array matches number of elements,
             // and if not we must do something special   ...
-            
-            this.$elem.find("#"+this.spec.id).val(value);
+            if(this.isUsingSelect2) {
+                if (this.enabled) {
+                    this.$elem.find("#"+this.spec.id).select2("data",{id:value, text:value});
+                } else {
+                    this.$elem.find("#"+this.spec.id).select2('disable',false);
+                    this.$elem.find("#"+this.spec.id).select2("data",{id:value, text:value});
+                    this.$elem.find("#"+this.spec.id).select2('disable',true);
+                    
+                }
+            } else {
+                this.$elem.find("#"+this.spec.id).val(value);
+            }
             
             //.each(function(key, field) {
 		//if (field.value.trim() !== "") {

@@ -376,7 +376,7 @@
             if (this.inputSteps) {
                 //alert('app refreshing, in kbaseNarrativeAppCell');
                 for(var i=0; i<this.inputSteps.length; i++) {
-                    inputSteps[i].widget.refresh();
+                    this.inputSteps[i].widget.refresh();
                 }
             }
         },

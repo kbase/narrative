@@ -40,7 +40,6 @@
                 var d = spec.default_values;
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] + "'" : "";
                 var form_id = spec.id;
-                defaultValue = "v";
                 var $input=$('<input id="' + form_id + '" placeholder="' + defaultValue + '"' +
                         ' value="" type="text" style="width:100%"/>').addClass("form-control");
                 

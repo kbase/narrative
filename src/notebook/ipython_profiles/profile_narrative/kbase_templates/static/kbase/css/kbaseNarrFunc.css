@@ -467,9 +467,11 @@
     opacity: inherit;
     display: inline;
 }
+.kb-app-step-container {
+    margin-top: 6px;
+}
 
 .kb-app-func-panel {
-    margin-top: 6px;
 }
 
 .kb-app-panel-description {
@@ -479,3 +481,29 @@
     color: #2E618D;
     margin: 3px;
 }
+
+
+.kb-app-step-running {
+    border: 3px solid #d14836;
+    border-radius: 5px;
+    z-index: auto;
+    animation: pulse 1s ease infinite;
+    -webkit-animation: pulse 1s ease infinite;
+    /*opacity: 0.7;*/
+}
+
+@-webkit-keyframes pulse {
+  0% { border: 3px solid #d14836; opacity: 1.0; }
+  50% { border: 3px solid #FF9886; opacity: 1.0; }
+  100% { border: 3px solid #d14836; opacity: 1.0; }
+}
+
+@keyframes pulse {
+  0% { border: 3px solid #d14836; opacity: 1.0; }
+  50% { border: 3px solid #FF9886; opacity: 1.0; }
+  100% { border: 3px solid #d14836; opacity: 1.0; }
+}
+
+
+
+

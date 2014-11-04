@@ -25,6 +25,7 @@
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
+        defaultOutputWidget: 'kbaseDefaultNarrativeOutput',
 
         inputSteps: null,
         inputStepLookup: null,
@@ -200,6 +201,9 @@
             
             // finally, we refresh so that our drop down or other boxes can be populated
             this.refresh();
+            
+            
+            //this.setStepOutput("step_2",{data:{id:"IntegratedModel",ws:"wstester1:home"}});
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom
@@ -207,9 +211,13 @@
         // stepHeading - something to show in front of the method title, e.g. Step 1, Step 2 ...
         renderStepDiv: function (stepId, stepSpec, stepHeading) {
             
-            var $stepPanel = $("<div>");
-            var $inputWidgetDiv = $("<div>");
+            var $stepPanel = $("<div>").addClass('kb-app-step-container');
             
+            var $statusPanel = $('<div>');
+            var $outputPanel = $('<div>');
+            
+            
+            var $inputWidgetDiv = $("<div>");
             var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
             var buttonLabel = 'step details';
             var methodDesc = stepSpec.info.subtitle;
@@ -245,41 +253,46 @@
                                      .append($inputWidgetDiv))
 
             $stepPanel.append($cellPanel);
+            $stepPanel.append($statusPanel);
+            $stepPanel.append($outputPanel);
 
             var inputWidgetName = stepSpec.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null') {
                 inputWidgetName = this.defaultInputWidget;
             }
+            var outputWidgetName = stepSpec.widgets.output;
+            //if (!outputWidgetName || outputWidgetName === 'null') {
+                outputWidgetName = this.defaultOutputWidget;
+            //}
 
             // todo, update input widget so that we don't have to stringify
             var inputWidget = $inputWidgetDiv[inputWidgetName]({ method: JSON.stringify(stepSpec) });
-            this.inputSteps.push({id:stepId ,methodId: stepSpec.info.id, widget:inputWidget, $div:$inputWidgetDiv});
-            this.inputStepLookup[stepId] = inputWidget;
+            var inputStepData = {id:stepId ,methodId: stepSpec.info.id, widget:inputWidget, $stepContainer:$stepPanel, $statusPanel:$statusPanel, $outputPanel:$outputPanel, outputWidgetName:outputWidgetName }
+            this.inputSteps.push(inputStepData);
+            this.inputStepLookup[stepId] = inputStepData;
             return $stepPanel;
         },
         
         linkStepsTogether: function() {
             var self = this;
             if(this.appSpec && this.inputSteps) {
-                console.log("linking");
-                console.log(this.appSpec);
                 var steps = this.appSpec.steps;
                 for(var s=0; s<steps.length; s++) {
                     var input_mapping = steps[s].input_mapping;
                     for(var m=0; m<input_mapping.length; m++) {
                         if (input_mapping[m].is_from_input) { // should be 1 for true, 0 for false
                             // first disable the input box
-                            this.inputStepLookup[steps[s].step_id].disableParameterEditing(input_mapping[m].to);
+                            this.inputStepLookup[steps[s].step_id].widget.disableParameterEditing(input_mapping[m].to);
                             // connect the values
                             if(this.inputStepLookup[input_mapping[m].step_source]) {
-                                var step_target = this.inputStepLookup[steps[s].step_id];
-                                var step_source = this.inputStepLookup[input_mapping[m].step_source];
+                                var step_target = this.inputStepLookup[steps[s].step_id].widget;
+                                var step_source = this.inputStepLookup[input_mapping[m].step_source].widget;
                                 var from = input_mapping[m].from;
                                 var to = input_mapping[m].to;
                                 // set the value to the original value
                                 step_target.setParameterValue(to, step_source.getParameterValue(from));
                                 // make sure the value changes every time the source input changes
-                                this.inputStepLookup[input_mapping[m].step_source].addInputListener(
+                                step_source.addInputListener(
                                     from,
                                     function() {
                                         step_target.setParameterValue(to, step_source.getParameterValue(from));
@@ -295,9 +308,6 @@
             }
             return;
         },
-        
-        
-        
         
         
         
@@ -369,6 +379,50 @@
             return;
         },
 
+        
+        
+        /** methods for setting the app state based on the job status **/
+        setRunningStep: function(stepId) {
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    this.inputSteps[i].$stepContainer.removeClass("kb-app-step-running");
+                    if (this.inputSteps[i].id === stepId) {
+                        this.inputSteps[i].$stepContainer.addClass("kb-app-step-running");
+                    }
+                }
+            }
+        },
+        
+        updateStepStatus: function(stepId, status) {
+            if (this.inputStepLookup) {
+                if(this.inputStepLookup[stepId]) {
+                    this.inputStepLookup[stepId].$statusPanel.html(status);
+                }
+            }
+        },
+        
+        setStepOutput: function(stepId, output) {
+            if (this.inputStepLookup) {
+                if(this.inputStepLookup[stepId]) {
+                    this.inputStepLookup[stepId].$outputPanel.empty();
+                    var widgetName = this.inputStepLookup[stepId].outputWidgetName;
+                    this.inputStepLookup[stepId].$outputPanel[widgetName](output);
+                    // todo: save outputwidget in list so that state can be saved
+                }
+            }
+        },
+        
+        setStepError: function(stepId, error) {
+            if (this.inputStepLookup) {
+                if(this.inputStepLookup[stepId]) {
+                    this.inputStepLookup[stepId].$outputPanel.html(error);
+                    // todo: actually render with the error widget
+                }
+            }
+        },
+        
+        /** end methods for setting the app state based on the job status **/
+        
         /**
          * Refreshes the input widget according to its own method.
          */

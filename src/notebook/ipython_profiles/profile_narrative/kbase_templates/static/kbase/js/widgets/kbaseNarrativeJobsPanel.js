@@ -10,6 +10,7 @@
             autopopulate: true,
             title: 'Jobs',
         },
+
         init: function(options) {
             this._super(options);
 
@@ -142,7 +143,7 @@
             // If we don't have any job ids, or it's length is zero, just show a 
             // message and return.
             if (!IPython.notebook.metadata.job_ids || IPython.notebook.metadata.job_ids.length === 0) {
-                this.showMessage('No running jobs!');
+                this.populateJobsPanel();
                 return;
             }
 

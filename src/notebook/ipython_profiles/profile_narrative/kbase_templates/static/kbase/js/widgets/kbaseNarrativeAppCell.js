@@ -286,9 +286,9 @@
                 inputWidgetName = this.defaultInputWidget;
             }
             var outputWidgetName = stepSpec.widgets.output;
-            //if (!outputWidgetName || outputWidgetName === 'null') {
+            if (!outputWidgetName || outputWidgetName === 'null') {
                 outputWidgetName = this.defaultOutputWidget;
-            //}
+            }
 
             // todo, update input widget so that we don't have to stringify
             var inputWidget = $inputWidgetDiv[inputWidgetName]({ method: JSON.stringify(stepSpec) });

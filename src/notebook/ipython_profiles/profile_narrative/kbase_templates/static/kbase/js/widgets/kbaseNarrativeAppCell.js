@@ -193,9 +193,10 @@
                                         .addClass('kb-app-panel-description')
                                         .append(this.appSpec.info.subtitle);
             
+            var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, "")
             var $appHeaderDiv = $("<div>")
                                         .addClass('kb-app-panel-header')
-                                        .append(this.appSpec.info.header);
+                                        .append(headerCleaned);
             
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')

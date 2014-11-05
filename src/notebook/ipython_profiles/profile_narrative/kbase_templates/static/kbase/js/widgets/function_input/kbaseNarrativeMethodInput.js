@@ -26,6 +26,8 @@
         // maps parameter id to widget for fast lookup of widget
         parameterIdLookup : {},
         
+        $advancedOptionsDiv : null,
+        
         /**
          * Builds the input div for a function cell, based on the given method object.
          * @param {Object} method - the method being constructed around.
@@ -34,12 +36,13 @@
          */
         render: function() {
             // figure out all types from the method
+            var self = this;
             var method = this.options.method;
             var params = method.parameters;
 
             var $inputParameterContainer = $('<div>');
             var $optionsDiv = $('<div>');
-            var $advancedOptionsDiv = $('<div>')
+            this.$advancedOptionsDiv = $('<div>')
             
             this.parameters = [];
             this.parameterIdLookup = {};
@@ -67,7 +70,7 @@
                     }
                 }
                 if (isAdvanced) {
-                    $advancedOptionsDiv.append($stepDiv);
+                    this.$advancedOptionsDiv.append($stepDiv);
                     hasAdvancedOption = true;
                 } else {
                     $optionsDiv.append($stepDiv);
@@ -77,10 +80,11 @@
             
             var $advancedOptionsControllerRow = $("<div>").addClass("row").css({"margin":"5px"});
             if (hasAdvancedOption) {
-                $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12")
-                                                     .append("<center><b><i>advanced options</i></b></center>"));
+                $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12 kb-method-advanced-options-controller")
+                                                     .append("<center><b><i>show/hide advanced options</i></b></center>"))
+                                                     .on('click',function() {self.$advancedOptionsDiv.toggle();} );
                 $inputParameterContainer.append($advancedOptionsControllerRow);
-                $inputParameterContainer.append($advancedOptionsDiv);
+                $inputParameterContainer.append(this.$advancedOptionsDiv.hide());
             } else {
                 $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12")
                                                      .append("<center><b><i>no advanced options</i></b></center>"));
@@ -269,7 +273,8 @@
             return values;
         },
         
-        
+        /** lock/unlock inputs allows temporary lock and unlock of the inputs only if they are enabled
+        this means that unlocking will not enable the input if it was previously disabled by the disableInputEditing method. **/
         lockInputs: function() {
             if (this.parameters) {
                 for(var i=0; i<this.parameters.length; i++) {

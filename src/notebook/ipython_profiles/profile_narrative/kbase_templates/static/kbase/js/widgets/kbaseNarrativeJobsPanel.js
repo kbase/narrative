@@ -328,8 +328,8 @@
             if (!appJob || !appInfo)
                 return $app;
 
-            $app.append($('<div class="kb-jobs-title">').append(appJob.app_job_id).append(this.makeAppDetailButton(appJob, appInfo)));
-            $app.append($('<div class="kb-jobs-descr">').append(appInfo.info.appSpec.info.name));
+            $app.append($('<div class="kb-jobs-title">').append(appInfo.info.appSpec.info.name).append(this.makeAppDetailButton(appJob, appInfo)));
+            $app.append($('<div class="kb-jobs-descr">').append(appJob.app_job_id));
 
             var $itemTable = $('<table class="kb-jobs-info-table">');
             var $statusRow = $('<tr>').append($('<th>').append('Status:'));

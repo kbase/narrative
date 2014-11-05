@@ -201,7 +201,7 @@
                                 "'" + this.safeJSONStringify(info.methodSpecs) + "', " + 
                                 "'" + this.safeJSONStringify(info.parameterValues) + "']");
 
-                uniqueJobs[app.id] = app;
+                uniqueJobs[app.id] = {'app' : app, 'info' : info};
             }
 
             if (jobs.apps.length === 0 && jobs.methods.length === 0) {
@@ -216,7 +216,7 @@
 
             var callbacks = {
                 'output' : $.proxy(function(msgType, content) { 
-                    this.parseKernelResponse(msgType, content); 
+                    this.parseKernelResponse(msgType, content, uniqueJobs); 
                 }, this),
                 'execute_reply' : $.proxy(function(content) { 
                     this.handleCallback('execute_reply', content); 
@@ -245,7 +245,7 @@
             });
         },
 
-        parseKernelResponse: function(msgType, content) {
+        parseKernelResponse: function(msgType, content, jobRef) {
             // if it's not a datastream, display some kind of error, and return.
             if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the job list.');
@@ -254,7 +254,7 @@
             var buffer = content.data;
             if (buffer.length > 0) {
                 var jobInfo = JSON.parse(buffer);
-                this.populateJobsPanel(jobInfo);
+                this.populateJobsPanel(jobInfo, jobRef);
             }
             this.$loadingPanel.hide();
             this.$jobsPanel.show();
@@ -265,42 +265,97 @@
                 this.showError(content);
             }
             else {
-                console.debug('kbaseJobManagerPanel.' + call);
-                console.debug(content);
+                // commented out for now
+                // console.debug('kbaseJobManagerPanel.' + call);
+                // console.debug(content);
             }
         },
 
-        populateJobsPanel: function(jobs) {
+        populateJobsPanel: function(jobs, jobInfo) {
             if (!jobs || jobs.length === 0) {
                 this.showMessage('No running jobs!');
                 return;
             }
+            console.log('populate jobs panel');
+
             // do methods.
             var $methodsTable = $('<div class="kb-jobs-items">');
             for (var i=0; i<jobs.methods.length; i++) {
-                $methodsTable.append(this.renderMethod(jobs.methods[i]));
+                $methodsTable.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
             }
             this.$methodsList.empty().append($methodsTable);
 
             // do apps.
             var $appsTable = $('<div class="kb-jobs-items">');
             for (var i=0; i<jobs.apps.length; i++) {
-                $appsTable.append(this.renderApp(jobs.apps[i]));
+                var app = jobs.apps[i];
+                var appInfo = jobInfo[jobs.apps[i].app_job_id];
+                $appsTable.append(this.renderApp(app, appInfo));
+                this.updateAppCell(app, appInfo);
             }
             this.$appsList.empty().append($appsTable);
 
         },
 
-        renderApp: function(appJob) {
-            return $('<div>' + appJob.app_job_id + '</div>');
+        updateAppCell: function(app, appInfo) {
+            var source = appInfo.app.source;
+            if (!source)
+                return; // don't do anything if we can't find the cell. it might have been deleted.
+
+            var $appCell = $('#' + source);
+            if (app.running_step_id) {
+                $appCell.kbaseNarrativeAppCell('setRunningStep', app.running_step_id);
+            }
+            if (Object.keys(app.widget_outputs).length > 0) {
+                for (var key in Object.keys(app.widget_outputs)) {
+                    $appCell.kbaseNarrativeAppCell('setStepOutput', key, app.widget_outputs[key]);
+                }
+            }
         },
 
-        renderMethod: function(job) {
+        renderApp: function(appJob, appInfo) {
+            var getStepSpec = function(id, appSpec) {
+                for (var i=0; i<appSpec.steps.length; i++) {
+                    if (id === appSpec.steps[i].step_id)
+                        return appSpec.steps[i];
+                }
+                return null;
+            };
+
+            var $app = $('<div>')
+                       .addClass('kb-jobs-item');
+            if (!appJob || !appInfo)
+                return $app;
+
+            $app.append($('<div class="kb-jobs-title">').append(appJob.app_job_id).append(this.makeAppDetailButton(appJob, appInfo)));
+            $app.append($('<div class="kb-jobs-descr">').append(appInfo.info.appSpec.info.name));
+
+            var $itemTable = $('<table class="kb-jobs-info-table">');
+            var $statusRow = $('<tr>').append($('<th>').append('Status:'));
+
+            var status = 'Not Running';
+            var task = null;
+            var stepId = appJob.running_step_id;
+            if (stepId) {
+                var stepSpec = getStepSpec(stepId, appInfo.info.appSpec);
+                status = 'Running';
+                task = appInfo.info.methodSpecs[stepSpec.method_id].info.name;
+            }
+            $statusRow.append($('<td>').append(status));
+            $itemTable.append($statusRow);
+            if (task !== null) {
+                $itemTable.append($('<tr><th>Task:</th><td>' + task + '</td></tr>'));
+            }
+            $app.append($itemTable);
+            return $app;
+        },
+
+        renderMethod: function(job, jobInfo) {
             var $row = $('<div class="kb-jobs-item">');
             if (!job || job.length < 12) {
                 return $row;
             }
-            $row.append($('<div class="kb-jobs-title">').append(job[1]).append(this.makeJobDetailButton(job)));
+            $row.append($('<div class="kb-jobs-title">').append(job[1]).append(this.makeJobDetailButton(job, jobInfo)));
             $row.append($('<div class="kb-jobs-descr">').append(job[12]));
 
             var $itemTable = $('<table class="kb-jobs-info-table">');
@@ -319,7 +374,17 @@
             return $row;
         },
 
-        makeJobDetailButton: function(job) {
+        makeAppDetailButton: function(app, appInfo) {
+            return $('<span>')
+                   .addClass('glyphicon glyphicon-info-sign kb-function-help')
+                   .click(function(e) {
+                       console.log(app);
+                       console.log(appInfo);
+
+                   });
+        },
+
+        makeJobDetailButton: function(job, jobInfo) {
             var showDetailModal = function(job, sourceId) {
                 var $modalBody = $('<div>');
                 var buttonList = [
@@ -359,13 +424,7 @@
                 $modalBody.kbaseJobWatcher({ jobInfo : job });
             };
 
-            var sourceId = "";
-            // fuck, looping through for now.
-            var jobs = IPython.notebook.metadata.job_ids;
-            for (var i=0; i<jobs.length; i++) {
-                if (jobs[i].id === job[0])
-                    sourceId = jobs[i].source;
-            }
+            var sourceId = jobInfo.source ? jobInfo.source : "";
 
             var $btn = $('<span>')
                        .addClass('glyphicon glyphicon-info-sign kb-function-help')

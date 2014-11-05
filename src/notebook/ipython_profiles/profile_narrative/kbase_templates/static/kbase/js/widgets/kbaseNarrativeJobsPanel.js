@@ -175,24 +175,51 @@
             // XXX - this'll change to method vs. app jobs, soonish.
             var jobs = IPython.notebook.metadata.job_ids;
             var uniqueJobs = {};
-            var jobList = [];
+
+            // set up methods
+            var methJobList = [];
             for (var i=0; i<jobs.methods.length; i++) {
                 if (uniqueJobs.hasOwnProperty(jobs.methods[i].id))
                     continue;
                 uniqueJobs[jobs.methods[i].id] = jobs.methods[i];
-                jobList.push("'" + jobs.methods[i].id + "'");
+                methJobList.push("'" + jobs.methods[i].id + "'");
             }
 
-            if (jobList.length === 0) {
+            // set up apps
+            var appJobList = [];
+            for (var i=0; i<jobs.apps.length; i++) {
+                var app = jobs.apps[i];
+                if (uniqueJobs.hasOwnProperty(app.id))
+                    continue;
+                if (!app.source || app.source.length === 0)
+                    continue;
+
+                // from the source, we need to get its containing app cell object.
+                var info = $('#' + app.source).kbaseNarrativeAppCell('getSpecAndParameterInfo');
+                appJobList.push("['" + app.id + "', " +
+                                "'" + this.safeJSONStringify(info.appSpec) + "', " +
+                                "'" + this.safeJSONStringify(info.methodSpecs) + "', " + 
+                                "'" + this.safeJSONStringify(info.parameterValues) + "']");
+
+                uniqueJobs[app.id] = app;
+            }
+
+            if (jobs.apps.length === 0 && jobs.methods.length === 0) {
                 // no jobs! skip the kernel noise and cut to the rendering!
                 this.populateJobsPanel();
                 return;
             }
 
             // Command to load and fetch all functions from the kernel
+            // var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
+            //                       'j = KBjobManager()\n' +
+            //                       'print j.poll_jobs(jobs=[' + methJobList + '], as_json=True)\n';
+
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
-                                  'j = KBjobManager()\n' +
-                                  'print j.poll_jobs([' + jobList + '], as_json=True)\n';
+                                  'job_manager = KBjobManager()\n' +
+                                  'print job_manager.poll_jobs(meth_jobs=[' + methJobList + '], app_jobs=[' + appJobList + '], as_json=True)\n';
+
+            console.log(pollJobsCommand);
 
             var callbacks = {
                 'output' : $.proxy(function(msgType, content) { 
@@ -214,6 +241,17 @@
 
             var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: false});
         },
+
+        safeJSONStringify: function(method) {
+            var esc = function(s) { 
+                return s.replace(/'/g, "&apos;")
+                        .replace(/"/g, "&quot;");
+            };
+            return JSON.stringify(method, function(key, value) {
+                return (typeof(value) === 'string') ? esc(value) : value;
+            });
+        },
+
 
         parseKernelResponse: function(msgType, content) {
             // if it's not a datastream, display some kind of error, and return.

@@ -78,17 +78,17 @@ class KBjobManager():
 
         return ujs_proxy.get_job_info(job_id)
 
-    def poll_jobs(self, job_ids, as_json=False):
+    def poll_jobs(self, meth_jobs, app_jobs, as_json=False):
         """
         Polls a list of job ids on behalf of the narrativejoblistener
         account and returns the results
         """
-        info_list = list()
+        meth_state_list = list()
         ujs_proxy = self.__proxy_client()
 
-        for job_id in job_ids:
+        for job_id in meth_jobs:
             try:
-                info_list.append(self.poll_job(job_id, ujs_proxy))
+                meth_state_list.append(self.poll_job(job_id, ujs_proxy))
             except Exception:
                 raise
                 # info_list.append([job_id, 
@@ -105,6 +105,13 @@ class KBjobManager():
                 #                   0,
                 #                   u'error',
                 #                   None])
+
+        # app_state_list = list()
+        # for app_info in app_jobs:
+        #     try:
+        #         app_state_list.append(self.get_app_state(app_info[1], app_info[2], app_info[3], app_info[0]))
+        #     except Exception:
+        #         raise
 
         if as_json:
             import json

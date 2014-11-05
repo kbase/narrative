@@ -446,6 +446,18 @@
    text-align:left;
 }
 
+.kb-method-advanced-options-controller {
+   cursor:pointer;
+   font-family: 'Roboto';
+   font-weight: bold;
+   font-size: 12pt;
+   line-height: 15px;
+   color: #0088cc;
+}
+.kb-method-advanced-options-controller:hover {
+    color: #2a6496;
+}
+
 
 /** App styling */
 

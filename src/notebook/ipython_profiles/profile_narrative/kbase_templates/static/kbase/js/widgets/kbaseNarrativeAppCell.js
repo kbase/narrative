@@ -189,8 +189,6 @@
                            .append(this.$runButton)
                            .append(this.$stopButton);
 
-            
-            console.log(this.appSpec);
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
                                         .append(this.appSpec.info.subtitle);

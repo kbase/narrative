@@ -26,7 +26,7 @@
         
         render: function() {
             var self = this;
-            //console.log(this.spec);
+            console.log(this.spec);
             var spec = self.spec;
             
             // check if we need to allow multiple values
@@ -41,19 +41,25 @@
             if (!allow_multiple) {
                 // just one field, phew, this one should be easy    
                 var d = spec.default_values;
-                var placeholder = spec.placeholder;
-                if (!placeholder) { placeholder=' '; }
-                var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] + "'" : "";
+                var placeholder = '';
+                if(spec.text_options) {
+                    if(spec.text_options.placeholder) {
+                        placeholder = spec.text_options.placeholder;
+                        placeholder = placeholder.replace(/(\r\n|\n|\r)/gm,"");
+                    }
+                }
+                
+                var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
                 var form_id = spec.id;
-                var $input=$('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
+                var $input= $('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
                         ' value="'+defaultValue+'" type="text" style="width:100%"/>').addClass("form-control");
                 
                 if(spec.text_options) {
                     if (spec.text_options.valid_ws_types) {
                         if (spec.text_options.valid_ws_types.length>0) {
-                            this.isUsingSelect2 = true;
+                            self.isUsingSelect2 = true;
                             $input =$('<input id="' + form_id + '" type="text" style="width:100%" />');
-                            this.validDataObjectList = [{name:"genome2"},{name:"genome3"},{name:"genome4"},{name:"model1"},{name:"model2"}];
+                            this.validDataObjectList = [];
                             if (spec.text_options.is_output_name) {
                                 this.isOutputName = true;
                             }
@@ -74,6 +80,9 @@
                 
                 /* for some reason, we need to actually have the input added to the main panel before this will work */
                 if (this.isUsingSelect2) {
+                    if (placeholder === '') {
+                        placeholder = ' '; // this allows us to cancel selections in select2
+                    }
                     this.setupSelect2($input, placeholder);
                 }
                 
@@ -179,9 +188,13 @@
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder, defaultValue) {
             var self = this;
+            var noMatchesFoundStr = "No matching data found.";
+            if (self.isOutputName) {
+                noMatchesFoundStr = "Enter a name for the output data object.";
+            }
             $input.select2({
                 matcher: self.select2Matcher,
-                formatNoMatches: "No matching data found.",
+                formatNoMatches: noMatchesFoundStr,
                 placeholder:placeholder,
                 allowClear: true,
                 query: function (query) {
@@ -204,7 +217,7 @@
                     //always allow the name they give if there was no match...
                     if (data.results.length===0) {
                         if (query.term.trim()!=="") {
-                            if(this.isOutputName) {
+                            if(self.isOutputName) {
                                 data.results.push({id:query.term, text:query.term});
                             } else {
                                 data.results.push({id:query.term, text:query.term+" (not found)"});

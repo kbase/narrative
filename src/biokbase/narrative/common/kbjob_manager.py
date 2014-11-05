@@ -112,8 +112,10 @@ class KBjobManager():
             info_list = json.dumps(info_list)
         return info_list
 
-    def app_get_state(workspace, app_spec_json, method_specs_json, param_values_json, app_job_id):
+    def get_app_state(self, app_spec_json, method_specs_json, param_values_json, app_job_id):
         """
         Prepare app state returned by NJS (use map {step_id -> widget_data} stored in widget_outputs field of resulting app state).
         """
+        token = os.environ['KB_AUTH_TOKEN']
+        workspace = os.environ['KB_WORKSPACE_ID']
         return _app_get_state(workspace, token, URLS, app_spec_json, method_specs_json, param_values_json, app_job_id)

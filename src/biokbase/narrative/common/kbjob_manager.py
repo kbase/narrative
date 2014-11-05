@@ -118,4 +118,4 @@ class KBjobManager():
         """
         token = os.environ['KB_AUTH_TOKEN']
         workspace = os.environ['KB_WORKSPACE_ID']
-        return _app_get_state(workspace, token, URLS, app_spec_json, method_specs_json, param_values_json, app_job_id)
+        return _app_get_state(workspace, token, URLS, self, app_spec_json, method_specs_json, param_values_json, app_job_id)

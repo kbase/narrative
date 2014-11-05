@@ -16,8 +16,8 @@ import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import *
 from biokbase.narrative_method_store.client import NarrativeMethodStore
 from biokbase.njs_mock.Client import NJSMock
-from biokbase.narrative.services.generic_service_calls import prepare_generic_method_input
-from biokbase.narrative.services.generic_service_calls import prepare_generic_method_output
+from biokbase.narrative.common.generic_service_calls import prepare_generic_method_input
+from biokbase.narrative.common.generic_service_calls import prepare_generic_method_output
 
 ## Globals
 
@@ -117,39 +117,6 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     meth.register_app(job_id)
 
     return json.dumps({ 'job_id' : job_id, 'app' : app})
-
-
-def _app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id):
-    token, workspace = meth.token, meth.workspace_id
-    
-    appSpec = json.loads(app_spec_json)
-    paramValues = json.loads(param_values_json)
-    methIdToSpec = json.loads(method_specs_json)
-    
-    njsClient = NJSMock(url = service.URLS.job_service, token = token)
-    appState = njsClient.check_app_state(app_job_id)
-    appState['widget_outputs'] = {}
-    for stepId in appState['step_job_ids']:
-        stepJobId = appState['step_job_ids'][stepId]
-        meth.register_job(stepJobId)
-    for stepSpec in appSpec['steps']:
-        stepId = stepSpec['step_id']
-        if not stepId in appState['step_outputs']:
-            continue
-        rpcOut = appState['step_outputs'][stepId]
-        methodId = stepSpec['method_id']
-        methodSpec = methIdToSpec[methodId]
-        methodOut = None
-        if 'kb_service_input_mapping' in methodSpec['behavior']:
-            input = {}
-            tempArgs = []
-            methodInputValues = extract_param_values(paramValues, stepId)
-            prepare_generic_method_input(token, workspace, methodSpec, methodInputValues, input, tempArgs);
-            methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
-        else:
-            methodOut = rpcOut
-        appState['widget_outputs'][stepId] = methodOut
-    return json.dumps(appState)
 
 
 def extract_param_values(paramValues, stepId):

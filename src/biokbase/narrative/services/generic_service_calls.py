@@ -41,6 +41,8 @@ from IPython.core.application import Application
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import *
+from biokbase.narrative.common.generic_service_calls import prepare_generic_method_input
+from biokbase.narrative.common.generic_service_calls import prepare_generic_method_output
 
 ## Globals
 
@@ -92,112 +94,6 @@ def _method_call(meth, method_spec_json, param_values_json):
 
 # Finalize (registers service)
 finalize_service()
-
-def prepare_generic_method_input(token, workspace, methodSpec, paramValues, input, rpcArgs):
-    narrSysProps = {'workspace': workspace, 'token': token}
-    parameters = methodSpec['parameters']
-    inputMapping = methodSpec['behavior']['kb_service_input_mapping']
-    
-    for paramPos in range(0, len(parameters)):
-        param = parameters[paramPos]
-        paramId = param['id']
-        paramValue = paramValues[paramPos]
-        input[paramId] = paramValue
-    
-    for mapping in inputMapping:
-        paramValue = None
-        paramId = None
-        if 'input_parameter' in mapping:
-            paramId = mapping['input_parameter']
-            paramValue = input[paramId]
-        elif 'narrative_system_variable' in mapping:
-            sysProp = mapping['narrative_system_variable']
-            paramValue = narrSysProps[sysProp]
-        if 'constant_value' in mapping and not_defined(paramValue):
-            paramValue = mapping['constant_value']
-        if 'generated_value' in mapping and not_defined(paramValue):
-            paramValue = generate_value(mapping['generated_value'])
-            if paramId is not None:
-                input[paramId] = paramValue
-        if paramValue is None:
-            raise ValueError("Value is not defined in input mapping: " + mapping)
-        build_args(paramValue, mapping, workspace, rpcArgs)
-
-def prepare_generic_method_output(token, workspace, methodSpec, input, output):
-    narrSysProps = {'workspace': workspace, 'token': token}
-    outArgs = []
-    outputMapping = methodSpec['behavior']['kb_service_output_mapping']
-    for mapping in outputMapping:
-        paramValue = None
-        if 'input_parameter' in mapping:
-            paramId = mapping['input_parameter']
-            paramValue = input[paramId]
-        elif 'constant_value' in mapping:
-            paramValue = mapping['constant_value']
-        elif 'narrative_system_variable' in mapping:
-            sysProp = mapping['narrative_system_variable']
-            paramValue = narrSysProps[sysProp]
-        elif 'service_method_output_path' in mapping:
-            paramValue = output
-        if paramValue is None:
-            raise ValueError("Value is not defined in input mapping: " + mapping)
-        build_args(paramValue, mapping, workspace, outArgs)
-    return outArgs[0]
-
-def not_defined(paramValue):
-    return paramValue is None or len(str(paramValue).strip()) == 0
-
-def generate_value(generProps):
-    symbols = 8
-    if 'symbols' in generProps:
-        symbols = int(generProps['symbols'])
-    ret = ''.join([chr(random.randrange(0, 26) + ord('A')) for _ in xrange(symbols)])
-    if 'prefix' in generProps:
-        ret = str(generProps['prefix']) + ret;
-    if 'suffix' in generProps:
-        ret = ret + str(generProps['suffix']);
-    return ret
-
-def get_sub_path(object, path, pos):
-    if pos >= len(path):
-        return object
-    if isinstance(object, list):
-        listPos = int(path[pos])
-        return get_sub_path(object[listPos], path, pos + 1)
-    return get_sub_path(object[path[pos]], path, pos + 1)
-
-def build_args(paramValue, paramMapping, workspace, args):
-    targetPos = 0
-    targetProp = None
-    targetTrans = "none"
-    if 'target_argument_position' in paramMapping and paramMapping['target_argument_position'] is not None:
-        targetPos = int(paramMapping['target_argument_position'])
-    if 'target_property' in paramMapping and paramMapping['target_property'] is not None:
-        targetProp = paramMapping['target_property']
-    if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
-        targetTrans = paramMapping['target_type_transform']
-    paramValue = transform_value(paramValue, workspace, targetTrans)
-    while len(args) <= targetPos:
-        args.append({})
-    if targetProp is None:
-        args[targetPos] = paramValue
-    else:
-        item = args[targetPos]
-        item[targetProp] = paramValue
-
-def transform_value(paramValue, workspace, targetTrans):
-    if targetTrans == "ref":
-        return workspace + '/' + paramValue
-    if targetTrans == "int":
-        if paramValue is None or len(str(paramValue).strip()) == 0:
-            return None
-        return int(paramValue) 
-    if targetTrans.startswith("list<") and targetTrans.endswith(">"):
-        innerTrans = targetTrans[5:-1]
-        return [transform_value(paramValue, workspace, innerTrans)]
-    if targetTrans == "none":
-        return paramValue
-    raise ValueError("Transformation type is not supported: " + targetTrans)
 
 def _get_token(user_id, password,
                auth_svc='https://nexus.api.globusonline.org/goauth/token?' +

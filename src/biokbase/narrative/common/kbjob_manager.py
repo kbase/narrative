@@ -18,7 +18,7 @@ from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.narrativejobproxy.client import NarrativeJobProxy
 from biokbase.narrative.common.url_config import URLS
 import biokbase.auth
-from biokbase.narrative.services.app_service import _app_get_state
+# from biokbase.narrative.services.app_service import _app_get_state
 
 class KBjobManager():
 
@@ -107,21 +107,22 @@ class KBjobManager():
                 #                   u'error',
                 #                   None])
 
-        # app_state_list = list()
+        app_state_list = list()
         # for app_info in app_jobs:
         #     try:
         #         app_state_list.append(self.get_app_state(app_info[1], app_info[2], app_info[3], app_info[0]))
         #     except Exception:
         #         raise
 
+        jobs_info = {'methods' : meth_state_list, 'apps' : app_state_list}
+
         if as_json:
             import json
-            info_list = json.dumps(info_list)
-        return info_list
+            jobs_info = json.dumps(jobs_info)
+        return jobs_info
 
-    @method(name="app_get_state")
-    def app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id):
-        """
-        Prepare app state returned by NJS (use map {step_id -> widget_data} stored in widget_outputs field of resulting app state).
-        """
-        return _app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id)
+    # def app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id):
+    #     """
+    #     Prepare app state returned by NJS (use map {step_id -> widget_data} stored in widget_outputs field of resulting app state).
+    #     """
+    #     return _app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id)

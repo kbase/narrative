@@ -23,6 +23,7 @@
         isOutputName: false,
         validDataObjectList: null,
         //listLimit:20, // limit the number of dropdown items, not used...
+        rowDivs: null,
         
         render: function() {
             var self = this;
@@ -37,7 +38,7 @@
                 }
             }
             
-            
+            self.rowDivs = [];
             if (!allow_multiple) {
                 // just one field, phew, this one should be easy    
                 var d = spec.default_values;
@@ -52,7 +53,8 @@
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
                 var form_id = spec.id;
                 var $input= $('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
-                        ' value="'+defaultValue+'" type="text" style="width:100%"/>').addClass("form-control");
+                        ' value="'+defaultValue+'" type="text" style="width:100%"/>').addClass("form-control")
+                        .on("input",function() { self.isValid() });
                 
                 if(spec.text_options) {
                     if (spec.text_options.valid_ws_types) {
@@ -76,7 +78,14 @@
                 $row.append($('<div>').addClass("col-md-6").addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint));
                 
+                var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg");
+                var $errorRow = $('<div>').addClass('row')
+                                    .append($('<div>').addClass("col-md-2"))
+                                    .append($errorPanel.addClass("col-md-4"));
+                
                 self.$mainPanel.append($row);
+                self.$mainPanel.append($errorRow);
+                self.rowDivs.push({$row:$row, $error:$errorPanel});
                 
                 /* for some reason, we need to actually have the input added to the main panel before this will work */
                 if (this.isUsingSelect2) {
@@ -256,7 +265,43 @@
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function() {
-           return { isValid: true, errormssgs: [] }; 
+            var self = this;
+            var p= self.getParameterValue();
+            var errorDetected = false;
+            if(value instanceof Array) {
+                // todo: handle this case when there are multiple fields
+            } else {
+                if (p==="bad") {
+                    if (self.rowDivs[0]) {
+                        self.rowDivs[0].$row.addClass("kb-method-parameter-row-error");
+                        self.rowDivs[0].$error.show();
+                        self.rowDivs[0].$error.html("The input 'bad' is bad, enter something different.");
+                        errorDetected = true;
+                    }
+                }
+                if(self.spec.text_options) {
+                    if (self.spec.text_options.validate_as) {
+                        var fieldtype = self.spec.text_options.validate_as;
+                        // int | float | nonnumeric | nospaces | none
+                        if ("int" === fieldtype.toLowerCase()) {
+                            //code
+                        } else if ("float" === fieldtype.toLowerCase()) {
+                            //code
+                        } else if ("nonnumeric" === fieldtype.toLowerCase()) {
+                            //code
+                        }
+                    }
+                }
+                
+                if (!errorDetected) {
+                    if (self.rowDivs[0]) {
+                        self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
+                        self.rowDivs[0].$error.hide();
+                    }
+                }
+            }
+            //return { isValid: !errorDetected, errormssgs:[]};
+            return { isValid: true, errormssgs: [] }; 
         },
         
         /*

@@ -438,6 +438,14 @@
 .kb-method-parameter-row-error {
    background: #FFD7D6;
 }
+.kb-method-parameter-error-mssg {
+   padding:5px;
+   text-align:center;
+   font-family: 'OxygenBold', sans-serif;
+   font-weight: bold;
+   font-size: 10pt;
+   color:#FF5E59;
+}
 
 
 /* not sure how to get text in these divs to valign middle... */

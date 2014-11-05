@@ -86,7 +86,7 @@
                 $inputParameterContainer.append($advancedOptionsControllerRow);
                 $inputParameterContainer.append(this.$advancedOptionsDiv.hide());
             } else {
-                $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12")
+                $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12 kb-method-advanced-options-controller-inactive")
                                                      .append("<center><b><i>no advanced options</i></b></center>"));
                 $inputParameterContainer.append($advancedOptionsControllerRow);
             }

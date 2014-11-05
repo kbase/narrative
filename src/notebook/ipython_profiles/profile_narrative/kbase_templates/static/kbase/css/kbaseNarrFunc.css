@@ -428,15 +428,23 @@
 .kb-method-parameter-row {
    margin:2px;
    padding:5px;
+   border-radius:5px;
 }
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 .kb-method-parameter-row-hover {
    background:#eee;
 }
+
+.kb-method-parameter-row-error {
+   background: #FFD7D6;
+}
+
+
 /* not sure how to get text in these divs to valign middle... */
 .kb-method-parameter-name {
    font-family: 'OxygenBold', sans-serif;
    font-weight: bold;
+   color:#333;
    text-align:right;
 }
 .kb-method-parameter-input {
@@ -446,6 +454,14 @@
    text-align:left;
 }
 
+
+.kb-method-advanced-options-controller-inactive {
+   font-family: 'Roboto';
+   font-weight: bold;
+   font-size: 12pt;
+   line-height: 15px;
+   color: #777;
+}
 .kb-method-advanced-options-controller {
    cursor:pointer;
    font-family: 'Roboto';

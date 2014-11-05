@@ -108,11 +108,11 @@ class KBjobManager():
                 #                   None])
 
         app_state_list = list()
-        # for app_info in app_jobs:
-        #     try:
-        #         app_state_list.append(self.get_app_state(app_info[1], app_info[2], app_info[3], app_info[0]))
-        #     except Exception:
-        #         raise
+        for app_info in app_jobs:
+            try:
+                app_state_list.append(self.get_app_state(app_info[1], app_info[2], app_info[3], app_info[0]))
+            except Exception:
+                raise
 
         jobs_info = {'methods' : meth_state_list, 'apps' : app_state_list}
 

@@ -210,16 +210,9 @@
                 return;
             }
 
-            // Command to load and fetch all functions from the kernel
-            // var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
-            //                       'j = KBjobManager()\n' +
-            //                       'print j.poll_jobs(jobs=[' + methJobList + '], as_json=True)\n';
-
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
                                   'print job_manager.poll_jobs(meth_jobs=[' + methJobList + '], app_jobs=[' + appJobList + '], as_json=True)\n';
-
-            console.log(pollJobsCommand);
 
             var callbacks = {
                 'output' : $.proxy(function(msgType, content) { 
@@ -252,7 +245,6 @@
             });
         },
 
-
         parseKernelResponse: function(msgType, content) {
             // if it's not a datastream, display some kind of error, and return.
             if (msgType != 'stream') {
@@ -261,8 +253,9 @@
             }
             var buffer = content.data;
             if (buffer.length > 0) {
-                var jobList = JSON.parse(buffer);
-                this.populateJobsPanel(jobList);
+                var jobInfo = JSON.parse(buffer);
+                console.log(jobInfo);
+                this.populateJobsPanel(jobInfo);
             }
             this.$loadingPanel.hide();
             this.$jobsPanel.show();
@@ -283,11 +276,15 @@
                 this.showMessage('No running jobs!');
                 return;
             }
+            // do methods.
             var $methodsTable = $('<div class="kb-jobs-items">');
-            for (var i=0; i<jobs.length; i++) {
-                $methodsTable.append(this.renderMethod(jobs[i]));
+            for (var i=0; i<jobs.methods.length; i++) {
+                $methodsTable.append(this.renderMethod(jobs.methods[i]));
             }
             this.$methodsList.empty().append($methodsTable);
+
+            // do apps.
+
         },
 
         renderMethod: function(job) {

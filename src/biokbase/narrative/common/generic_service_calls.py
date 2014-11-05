@@ -122,7 +122,7 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
         else:
             methodOut = rpcOut
         appState['widget_outputs'][stepId] = methodOut
-    return json.dumps(appState)
+    return appState
 
 def extract_param_values(paramValues, stepId):
     ret = None

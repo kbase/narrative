@@ -307,8 +307,9 @@
                 $appCell.kbaseNarrativeAppCell('setRunningStep', app.running_step_id);
             }
             if (Object.keys(app.widget_outputs).length > 0) {
-                for (var key in Object.keys(app.widget_outputs)) {
-                    $appCell.kbaseNarrativeAppCell('setStepOutput', key, app.widget_outputs[key]);
+                for (var key in app.widget_outputs) {
+                    if (app.widget_outputs.hasOwnProperty(key))
+                        $appCell.kbaseNarrativeAppCell('setStepOutput', key, app.widget_outputs[key]);
                 }
             }
         },

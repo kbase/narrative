@@ -119,25 +119,7 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     return json.dumps({ 'job_id' : job_id, 'app' : app})
 
 
-@method(name="app_get_state")
 def _app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id):
-    """Prepare app state returned by NJS
-
-    :param app_spec_json: The App Spec
-    :type app_spec_json: kbtypes.Unicode
-    :ui_name app_spec_json: The App Spec
-    :param method_specs_json: The Method Specs
-    :type method_specs_json: kbtypes.Unicode
-    :ui_name method_specs_json: The Method Specs
-    :param param_values_json: Param values
-    :type param_values_json: kbtypes.Unicode
-    :ui_name param_values_json: Param values
-    :param app_job_id: The App Job ID
-    :type app_job_id: kbtypes.Unicode
-    :ui_name app_job_id: The App Job ID
-    :rtype: kbtypes.Unicode
-    :return: running job info
-    """
     token, workspace = meth.token, meth.workspace_id
     
     appSpec = json.loads(app_spec_json)
@@ -147,11 +129,14 @@ def _app_get_state(meth, app_spec_json, method_specs_json, param_values_json, ap
     njsClient = NJSMock(url = service.URLS.job_service, token = token)
     appState = njsClient.check_app_state(app_job_id)
     appState['widget_outputs'] = {}
+    for stepId in appState['step_job_ids']:
+        stepJobId = appState['step_job_ids'][stepId]
+        meth.register_job(stepJobId)
     for stepSpec in appSpec['steps']:
         stepId = stepSpec['step_id']
-        if not stepId in appSpec['step_outputs']:
+        if not stepId in appState['step_outputs']:
             continue
-        rpcOut = appSpec['step_outputs'][stepId]
+        rpcOut = appState['step_outputs'][stepId]
         methodId = stepSpec['method_id']
         methodSpec = methIdToSpec[methodId]
         methodOut = None
@@ -176,36 +161,6 @@ def extract_param_values(paramValues, stepId):
                 ret.append(keyVal['value'])
     if ret is None:
         raise ValueError("Step [" + stepId + "] wasn't found in input values: " + json.dumps(paramValues))
-    #parameters = methodSpec['parameters']
-    #for param in parameters:
-    #    value = ""
-    #    if 'text_options' in param and 'valid_ws_types' in param['text_options']:
-    #        types = param['text_options']['valid_ws_types']
-    #        if len(types) == 1:
-    #            type = types[0]
-    #            if type == 'KBaseGenomes.ContigSet':
-    #                value = "contigset.1"
-    #            elif type == 'KBaseGenomes.Genome':
-    #                value = "genome.1"
-    #            elif type == 'KBaseFBA.FBAModel':
-    #                value = "model.1"
-    #            elif type == 'GenomeComparison.ProteomeComparison':
-    #                value = "protcmp.1"
-    #            elif type == 'KBaseTrees.Tree':
-    #                value = "tree.1"
-    #            elif type == 'KBaseTrees.MSA':
-    #                value = "msa.1"
-    #            elif type == 'KBaseSearch.GenomeSet':
-    #                value = 'genomeset.1'
-    #            elif type == 'KBaseGenomes.Pangenome':
-    #                value = 'pangenome.1'
-    #            elif type == 'KBaseBiochem.Media':
-    #                value = 'media.1'
-    #            elif type == 'KBaseFBA.FBA':
-    #                value = 'fba.1'
-    #            elif type == 'KBaseFBA.Gapfilling':
-    #                value = 'gapfilling.1'
-    #    ret.append(value)
     return ret
 
 def load_method_specs(appSpec):

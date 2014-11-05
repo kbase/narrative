@@ -38,6 +38,7 @@ import sys
 # Third-party
 import IPython.utils.traitlets as trt
 from IPython.core.application import Application
+from biokbase.njs_mock.Client import NJSMock
 
 ## Globals
 
@@ -92,7 +93,7 @@ def prepare_generic_method_output(token, workspace, methodSpec, input, output):
         build_args(paramValue, mapping, workspace, outArgs)
     return outArgs[0]
 
-def _app_get_state(workspace, token, URLS, app_spec_json, method_specs_json, param_values_json, app_job_id):
+def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_specs_json, param_values_json, app_job_id):
     
     appSpec = json.loads(app_spec_json)
     paramValues = json.loads(param_values_json)
@@ -103,7 +104,7 @@ def _app_get_state(workspace, token, URLS, app_spec_json, method_specs_json, par
     appState['widget_outputs'] = {}
     for stepId in appState['step_job_ids']:
         stepJobId = appState['step_job_ids'][stepId]
-        meth.register_job(stepJobId)
+        job_manager.register_job(stepJobId)
     for stepSpec in appSpec['steps']:
         stepId = stepSpec['step_id']
         if not stepId in appState['step_outputs']:
@@ -122,6 +123,17 @@ def _app_get_state(workspace, token, URLS, app_spec_json, method_specs_json, par
             methodOut = rpcOut
         appState['widget_outputs'][stepId] = methodOut
     return json.dumps(appState)
+
+def extract_param_values(paramValues, stepId):
+    ret = None
+    for paramVal in paramValues:
+        if paramVal['stepId'] == stepId:
+            ret = []
+            for keyVal in paramVal['values']:
+                ret.append(keyVal['value'])
+    if ret is None:
+        raise ValueError("Step [" + stepId + "] wasn't found in input values: " + json.dumps(paramValues))
+    return ret
 
 def not_defined(paramValue):
     return paramValue is None or len(str(paramValue).strip()) == 0

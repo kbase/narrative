@@ -119,25 +119,7 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     return json.dumps({ 'job_id' : job_id, 'app' : app})
 
 
-@method(name="app_get_state")
 def _app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id):
-    """Prepare app state returned by NJS (use map {step_id -> widget_data} stored in widget_outputs field of resulting app state).
-
-    :param app_spec_json: The App Spec
-    :type app_spec_json: kbtypes.Unicode
-    :ui_name app_spec_json: The App Spec
-    :param method_specs_json: The Method Specs
-    :type method_specs_json: kbtypes.Unicode
-    :ui_name method_specs_json: The Method Specs
-    :param param_values_json: Param values
-    :type param_values_json: kbtypes.Unicode
-    :ui_name param_values_json: Param values
-    :param app_job_id: The App Job ID
-    :type app_job_id: kbtypes.Unicode
-    :ui_name app_job_id: The App Job ID
-    :rtype: kbtypes.Unicode
-    :return: running job info
-    """
     token, workspace = meth.token, meth.workspace_id
     
     appSpec = json.loads(app_spec_json)

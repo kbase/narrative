@@ -97,7 +97,8 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
     
     appSpec = json.loads(app_spec_json)
     paramValues = json.loads(param_values_json)
-    methIdToSpec = json.loads(method_specs_json)
+    methIdToSpec = json.loads(method_specs_json.replace('\n', '\\n'))  #load_method_specs(appSpec)
+#    methIdToSpec = json.loads(method_specs_json)
     
     njsClient = NJSMock(url = URLS.job_service, token = token)
     appState = njsClient.check_app_state(app_job_id)

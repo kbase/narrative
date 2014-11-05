@@ -254,7 +254,6 @@
             var buffer = content.data;
             if (buffer.length > 0) {
                 var jobInfo = JSON.parse(buffer);
-                console.log(jobInfo);
                 this.populateJobsPanel(jobInfo);
             }
             this.$loadingPanel.hide();
@@ -284,7 +283,16 @@
             this.$methodsList.empty().append($methodsTable);
 
             // do apps.
+            var $appsTable = $('<div class="kb-jobs-items">');
+            for (var i=0; i<jobs.apps.length; i++) {
+                $appsTable.append(this.renderApp(jobs.apps[i]));
+            }
+            this.$appsList.empty().append($appsTable);
 
+        },
+
+        renderApp: function(appJob) {
+            return $('<div>' + appJob.app_job_id + '</div>');
         },
 
         renderMethod: function(job) {

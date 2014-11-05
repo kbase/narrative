@@ -18,7 +18,7 @@ from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.narrativejobproxy.client import NarrativeJobProxy
 from biokbase.narrative.common.url_config import URLS
 import biokbase.auth
-# from biokbase.narrative.services.app_service import _app_get_state
+from biokbase.narrative.common.generic_service_calls import _app_get_state
 
 class KBjobManager():
 
@@ -121,8 +121,8 @@ class KBjobManager():
             jobs_info = json.dumps(jobs_info)
         return jobs_info
 
-    # def app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id):
-    #     """
-    #     Prepare app state returned by NJS (use map {step_id -> widget_data} stored in widget_outputs field of resulting app state).
-    #     """
-    #     return _app_get_state(meth, app_spec_json, method_specs_json, param_values_json, app_job_id)
+    def app_get_state(workspace, app_spec_json, method_specs_json, param_values_json, app_job_id):
+        """
+        Prepare app state returned by NJS (use map {step_id -> widget_data} stored in widget_outputs field of resulting app state).
+        """
+        return _app_get_state(workspace, token, URLS, app_spec_json, method_specs_json, param_values_json, app_job_id)

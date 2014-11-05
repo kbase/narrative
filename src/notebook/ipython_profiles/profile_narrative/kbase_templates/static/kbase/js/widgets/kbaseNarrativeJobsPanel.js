@@ -14,6 +14,9 @@
         $appsList: null,
         $methodsList: null,
 
+        refreshTimer: null,
+        refreshInterval: 5000,
+
         init: function(options) {
             this._super(options);
 
@@ -146,6 +149,10 @@
                     'methods' : [],
                     'apps' : []
                 };
+            if (!IPython.notebook.metadata.job_ids['methods'])
+                IPython.notebook.metadata.job_ids['methods'] = [];
+            if (!IPython.notebook.metadata.job_ids['apps'])
+                IPython.notebook.metadata.job_ids['apps'] = [];
 
             var type = isApp ? 'apps' : 'methods';
             IPython.notebook.metadata.job_ids[type].push(jobInfo);
@@ -156,6 +163,15 @@
          * @method
          */
         refresh: function() {
+            // if there's no timer, set one up.
+            // if (this.refreshTimer === null) {
+            //     this.refreshTimer = setInterval(
+            //         $.proxy(function() { this.refresh(); }, this),
+            //         this.refreshInterval
+            //     );
+            // }
+
+
             // If none of the base IPython stuff shows up, then it's not inited yet.
             // Just return silently.
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || 

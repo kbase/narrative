@@ -54,6 +54,6 @@ narrative.init = function() {
         });
 
         // still needs to wait ~500ms for some godawful reason.
-       setTimeout( function() { $jobsWidget.refresh(); }, 500);
+        setTimeout( function() { $jobsWidget.refresh(); }, 500);
     });
 };

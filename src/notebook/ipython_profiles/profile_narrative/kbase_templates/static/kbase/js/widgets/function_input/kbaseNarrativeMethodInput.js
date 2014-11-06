@@ -81,13 +81,21 @@
             var $advancedOptionsControllerRow = $("<div>").addClass("row").css({"margin":"5px"});
             if (hasAdvancedOption) {
                 $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12 kb-method-advanced-options-controller")
-                                                     .append("<center><b><i>show/hide advanced options</i></b></center>"))
-                                                     .on('click',function() {self.$advancedOptionsDiv.toggle();} );
+                                                     .append("show advanced options"))
+                                                     .on('click',function() {
+                                                        if (self.$advancedOptionsDiv.is(":visible")) {
+                                                            self.$advancedOptionsDiv.hide();
+                                                            $(this).find(".kb-method-advanced-options-controller").html("show advanced options");
+                                                        } else {
+                                                            self.$advancedOptionsDiv.show();
+                                                            $(this).find(".kb-method-advanced-options-controller").html("hide advanced options");
+                                                        }
+                                                     } );
                 $inputParameterContainer.append($advancedOptionsControllerRow);
                 $inputParameterContainer.append(this.$advancedOptionsDiv.hide());
             } else {
                 $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12 kb-method-advanced-options-controller-inactive")
-                                                     .append("<center><b><i>no advanced options</i></b></center>"));
+                                                     .append("no advanced options"));
                 $inputParameterContainer.append($advancedOptionsControllerRow);
             }
             

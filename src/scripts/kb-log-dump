@@ -31,7 +31,7 @@ class MongoConnectError(Exception):
 def connect_mongo(conf):
     try:
         info = yaml.load(open(conf))
-        for key in 'db_host', 'db_port', 'db', 'user', 'password':
+        for key in 'db_host', 'db_port', 'db':
             if not key in info:
                 raise MongoConnectError(
                     "Configuration file is missing value for '{}'".format(key))
@@ -45,10 +45,13 @@ def connect_mongo(conf):
     except pymongo.errors.PyMongoError as err:
         raise MongoConnectError("Cannot connect to MongoDB '{}' at {}:{}".format(
             info["db"], info["db_host"], info["db_port"]))
-    if not db.authenticate(info["user"], info["password"]):
-        raise MongoConnectError("Could not authenticate to MongoDB '{}' at {}:{}".format(
-            info["db"], info["db_host"], info["db_port"]))
+    if 'user' in info:
+        if not db.authenticate(info["user"], info["password"]):
+            raise MongoConnectError("Could not authenticate to MongoDB '{}' at {}:{}".format(
+                info["db"], info["db_host"], info["db_port"]))
     c = db[info["collection"]]
+    _log.info("connect.end db={d} collection={c} user={u}".format(c=c.name,
+              d=c.database.name, u=info.get('user', '<anonymous>')))
     return c
 
 class DB(object):
@@ -82,10 +85,11 @@ class DB(object):
     def add(self, rec):
         """Add record to sqlite3 db.
         """
+        #print("ADD REC={}".format(rec))
         if self._disable_insert:
             return
         if self._is_mem:
-            key = '#'.join([rec['ts'], rec['session_id']])
+            key = '#'.join([rec['ts'], rec['user'], rec['narr']])
             if key in self._rkeys:
                 self._add_duplicate()
             self._rkeys.add(key)

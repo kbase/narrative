@@ -113,6 +113,9 @@
                 self.$mainPanel.append("<div>multiple input fields not yet supported</div>");
             }
             
+            // setup the feedback icons
+            self.isValid();
+            
             
             /*var input_default = (p.default_values[0] !== "" && p.default_values[0] !== undefined) ?
                                     " placeholder='" + p.default_values[0] + "'" : "";
@@ -281,7 +284,7 @@
             
             var p= self.getParameterValue();
             var errorDetected = false;
-            if(value instanceof Array) {
+            if(p instanceof Array) {
                 // todo: handle this case when there are multiple fields
             } else {
                 // if it is a required field and not empty, keep the required icon around but we have an error

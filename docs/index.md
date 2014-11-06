@@ -2,23 +2,17 @@
 
 * [Introduction][]
 * [Deployment][]
-* [Docker notes][]
 * [Logging][]
 * [Source][]
 
 # Introduction
 [Contents][]
-{{intro.md}}
+{{developer.md}}
 
 # Deployment
 [Contents][]
-
 {{deployment.md}}
 
-
-# Docker notes
-[Contents][]
-{{docker.md}}
 
 # Logging
 [Contents][]

@@ -1,5 +1,7 @@
 
-## Deploying the Narrative on a fresh developer’s server instance with Docker provisioning
+## Deploying with Docker
+
+This document schedules how to deploy the Narrative on a fresh developer’s server instance with Docker provisioning
 
 Last updated: Dan Gunter <dkgunter@lbl.gov> 7/18/2014
 

@@ -1,4 +1,22 @@
-# The narrative logging proxy
+## Narrative logging
+
+The narrative instances perform their logging through a 2-step process, where the data passes from the Docker container out to a "log proxy" on the host, and then from there to other sinks (currently MongoDB).
+
+    +----------------------+
+    |Narrative UI in Docker|
+    +----------------------+
+           |        
+           | logging
+           v        
+    +----------------------+
+    |  Log proxy on host      |
+    +----------------------+
+           |        
+           | logging
+           v        
+    +----------------------+
+    |    MongoDB, etc.     |
+    +----------------------+
 
 The narrative logging proxy was created to deal with security and networking issues for the Docker containers used for the KBase Narrative IPython Notebook backend (which is a mouthful, but basically is a web server that provides a bi-directional pipe to a Python interpreter). We want to log data to a remote location, like a MongoDB or Splunk server, from within the Docker container. However, within the Docker container we don't want to store the credentials needed to access the database. In addition, we don't want the management overhead and hassle of making socket connections to the Internet from within each Docker container.
 
@@ -6,15 +24,14 @@ So, what the logging proxy really does is run a simple server that listens on a 
 
 The rest of this README describes the configuration and various tasks with the proxy.
 
-## Code
+### Code
 
 The code for the narrative logging proxy is in the biokbase.narrative.common package:
 
 * log_proxy.py - Implement the proxy
 * kblogging.py - This is the client library for the narratives to do their logging
-* _
 
-## Configuration
+### Configuration
 
 For the most part, the logging proxy is configured from a single YAML file.
 
@@ -38,7 +55,7 @@ In addition, some environment variables have special meaning:
 * KBASE_DEBUG=1 - Turn on a high level
 * KBASE_PROXY_CONFIG=/etc/kbase/narrative-log-proxy.conf - Config file location, for clients
 
-## Update, test, or restart the proxy
+### Update, test, or restart the proxy
 
 * Get to narrative-dev
 

@@ -203,7 +203,7 @@ class KBaseWSNotebookManager(NotebookManager):
             nb.metadata.description = ''
             nb.metadata.name = new_name
             nb.metadata.data_dependencies = []
-            nb.metadata.job_ids = []
+            nb.metadata.job_ids = { 'methods' : [], 'apps' : [] }
             nb.metadata.format = self.node_format
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
@@ -399,7 +399,7 @@ class KBaseWSNotebookManager(NotebookManager):
             if not hasattr(nb.metadata, 'data_dependencies'):
                 nb.metadata.data_dependencies = list()
             if not hasattr(nb.metadata, 'job_ids'):
-                nb.metadata.job_ids = list()
+                nb.metadata.job_ids = { 'methods' : [], 'apps' : [] }
             nb.metadata.format = self.node_format
 
         except Exception as e:

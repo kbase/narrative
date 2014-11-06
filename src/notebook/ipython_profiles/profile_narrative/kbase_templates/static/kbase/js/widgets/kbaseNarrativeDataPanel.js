@@ -1,6 +1,9 @@
 /**
  * Widget to display a table of data objects from a kbase workspace.
  *
+ * TODO: Re-enable "readonly" mode by following instructions in isReadonlyWorkspace()
+ *       (dan g. 10/30/2014)
+ *
  * Options:
  *    wsId - the name of the workspace to show in this widget
  *    loadingImage - an image to show in the middle of the widget while loading data
@@ -26,6 +29,7 @@
         $errorMessage: null,
         $loading: null,
         isLoggedIn: false,
+        narrWs: null, /* see setNarrWS */
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
@@ -47,6 +51,7 @@
 
         init: function(options) {
             this._super(options);
+
             if (this.options.wsId)
                 this.wsId = options.wsId;
 
@@ -178,6 +183,47 @@
 
         setWorkspace: function(wsId) {
             this.wsId = wsId;
+            this.refresh();
+        },
+
+        /**
+         * Set the narrative workspace (parent) into the data widget
+         * so it can call back to it about information discovered
+         * from the workspace, e.g. permissions to objects in the
+         * narrative for read-only mode.
+         *
+         * @param obj kbaseNarrativeWorkspace instance
+         */
+        setNarrWs: function(obj) {
+            this.narrWs = obj;
+        },
+
+        /**
+         * Test if this narrative is in a workspace that this user is not
+         * able to modify.
+         *
+         * XXX: 
+         * XXX: DISABLED! To re-enable see TODO: comment below
+         * XXX:
+         */
+        isReadonlyWorkspace: function (ws_client, ws_name, callback) {
+            var workspace_id = {workspace: ws_name};
+            ws_client.get_workspace_info(workspace_id,
+                // success callback
+                $.proxy(function(info) {
+                    var ro = false;
+                    // TODO: re-enable by uncommenting the next 3 lines
+                    // var perms = info[5];
+                    // console.debug("workspace perms = ",perms);
+                    // ro = (perms != 'a' && perms != 'w');
+                    console.info("WS(" + ws_name + ") read-only: " + ro);
+                    callback(ro);
+                }, this),
+                // error callback
+                $.proxy(function(obj) {
+                    console.debug("isReadonlyWorkspace: error!", obj);
+                    callback(false);
+                }, this));
         },
 
         /**
@@ -445,12 +491,33 @@
          * @public
          */
         refresh: function() {
+            console.debug("kbWS.refresh.start");
+            if (this.wsClient && this.wsId) {
+                console.debug("kbWS.refresh.test-for-readonly");
+                this.isReadonlyWorkspace(this.wsClient, this.wsId, 
+                    $.proxy(function(ro) {
+                        if (ro) {
+                            // hide in readonly mode
+                            this.deactivateDataPanel();
+                            // tell parent to hide as well
+                            this.narrWs.activateReadonlyMode();
+                        }
+                        else {
+                            this.narrWs.activateReadwriteMode();
+                        }
+                        $('#main-container').show();
+                        // now show connections-- once it works!
+                        // this.narrWs.show_connections();
+                    }, this));
+            }
+
             if (!this.wsClient) {
                 this.showLoadingMessage("Unable to load workspace data!<br>No user credentials found!");
+                console.debug("kbWS.refresh.end msg=no-client");
                 return;
             }
             else if (!this.wsId) {
-                return; // silent for testing.
+                console.debug("kbWS.refresh.end msg=no-wsId");
             }
 
             this.showLoadingMessage("Loading workspace data...");
@@ -461,10 +528,9 @@
 
         refreshWorkspaceTab: function() {
             // Fetch data from the current workspace.
-            this.wsClient.list_objects( 
-                {
+            this.wsClient.list_objects({
                     workspaces : [this.wsId],
-                }, 
+                },
                 $.proxy(function(list) {
                     // first, go through the list and pull out Narrative objects.
                     // otherwise it's a little recursive. Including a Narrative within its narrative 
@@ -846,6 +912,19 @@
         showDataPanel: function() {
             this.$loadingPanel.hide();
             this.$errorPanel.hide();
+            this.$dataPanel.show();
+        },
+
+        /**
+         * Shows data panel, but does not allow clicks on it.
+         *
+         * @param error
+         */
+        deactivateDataPanel: function() {
+            this.$loadingPanel.find('#message').empty();
+            this.$loadingPanel.hide();
+            this.$errorPanel.hide();
+            //this.$dataPanel.find('a').off();
             this.$dataPanel.show();
         },
 

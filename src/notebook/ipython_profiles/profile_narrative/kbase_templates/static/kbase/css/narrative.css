@@ -841,3 +841,8 @@ border-left: 1px solid #f2f2f2;
     overflow-x : scroll;
     overflow-y: scroll;
 }
+/* For connecting lines */
+.kb-line {
+    background-color: lightgrey;
+    position: absolute;
+}

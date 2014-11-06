@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+"""
+Load a log file into the database
+"""
+__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
+__date__ = '10/24/14'
+
+# System
+import argparse
+import json
+import logging
+import os
+import sys
+import time
+# Third-party
+import pymongo
+# App
+from biokbase.narrative.common import log_proxy
+
+_log = logging.getLogger("kb-load-logs")
+_ = logging.StreamHandler()
+_.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s: %(message)s"))
+_log.addHandler(_)
+
+def parse_args():
+    program_name = os.path.basename(sys.argv[0])
+    parser = argparse.ArgumentParser(
+        description="Load KBase narrative application logging into "
+                    "a MongoDB collection")
+    parser.add_argument('infiles', type=str, nargs='*',
+                        help="Input log files (default=standard input)")
+    parser.add_argument("-f", "--config", dest="conf", metavar="FILE",
+                        type=argparse.FileType('r'), required=True,
+                        help="DB config file, in JSON format.")
+    parser.add_argument("-v", "--verbose", dest="vb", action="count",
+                        default=0, help="Increase verbosity")
+    args = parser.parse_args()
+
+    level = (logging.DEBUG, logging.INFO, logging.WARN)[max(0, 2 - args.vb)]
+    _log.setLevel(level)
+
+    return args
+
+def main(args):
+    # parse config
+    try:
+        d = json.load(args.conf)
+    except Exception as err:
+        _log.error("Error parsing JSON in '{}': {}".format(args.conf.name, err))
+        return 1
+    try:
+        host, port, db, coll = (d['host'], d.get('port', 27017),
+                                d['database'], d['collection'])
+        if 'user' in d:
+            user, passwd = d['user'], d['password']
+        else:
+            user, passwd = None, None
+    except KeyError as err:
+        _log.error("Missing key in '{}': {}".format(args.conf.name, err))
+        return 2
+
+    # connect to mongodb
+    desc = "{}:{}/{}".format(host, port, db)
+    _log.info("Connecting to MongoDB '{}'".format(desc))
+    conn = pymongo.MongoClient(host, port)
+    db = conn[db]
+    if user is not None:
+        if not db.authenticate(user, passwd):
+            _log.error("Could not authenticate as '{}' to '{}'"
+                       .format(user, desc))
+            return 3
+    mc = db[coll]
+
+    # load files
+    files = ['-'] if not args.infiles else args.infiles
+    n = 0
+    for f in files:
+        if f == '-':
+            f = sys.stdin
+        else:
+            f = open(f, 'rb')
+        _log.info("Process file '{}'".format(f.name))
+        for line in f:
+            # this is based on the format in kblogging.MetaFormatter
+            fields = line.split(' ', 4)
+            if len(fields) != 5:
+                rec = {'message': line.strip()}
+            else:
+                ts = fields[1] + ' ' + fields[2]
+                sec = time.strptime(ts[:ts.rfind(',')], "%Y-%m-%d %H:%M:%S")
+                sec = time.mktime(sec)
+                ms = int(ts[ts.rfind(',') + 1:]) / 1000.0
+                rec = {'levelname': fields[0],
+                       'created': sec + ms,
+                       'name': fields[3],
+                       'message': fields[4]}
+            kbrec = log_proxy.KBaseLogRecord(rec)
+            mc.insert(kbrec.record)
+            n += 1
+
+    _log.info("Loaded {:d} records".format(n))
+
+if __name__ == '__main__':
+    sys.exit(main(parse_args()))

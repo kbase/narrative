@@ -452,15 +452,23 @@
 .kb-method-parameter-name {
    font-family: 'OxygenBold', sans-serif;
    font-weight: bold;
-   color:#333;
+   color:#777;
    text-align:right;
+   vertical-align:middle;
 }
 .kb-method-parameter-input {
    vertical-align:middle;
    white-space: nowrap;
 }
+.kb-method-parameter-input input {
+   font-weight: bold;
+}
+.kb-parameter-data-selection {
+   font-weight: bold;
+}
+
 .kb-method-parameter-hint {
-   color: #777;
+   color: #444;
    text-align:left;
 }
 

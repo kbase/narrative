@@ -28,7 +28,7 @@
         
         render: function() {
             var self = this;
-            console.log(this.spec);
+            //console.log(this.spec);
             var spec = self.spec;
             
             // check if we need to allow multiple values
@@ -80,20 +80,26 @@
                     $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
                 }
                 
+                // set the widths of the columns
+                var nameColClass  = "col-md-2";
+                var inputColClass = "col-md-5";
+                var hintColClass  = "col-md-5";
+                
                 var $row = $('<div>').addClass("row kb-method-parameter-row")
                                 .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
-                $row.append($('<div>').addClass("col-md-2").addClass("kb-method-parameter-name")
-                                .append(spec.ui_name));
-                $row.append($('<div>').addClass("col-md-4").addClass("kb-method-parameter-input")
+                var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
+                                    .append(spec.ui_name);
+                var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
                                 .append($('<div>').css({"width":"100%","display":"inline-block"}).append($input))
-                                .append($('<div>').css({"display":"inline-block"}).append($feedbackTip)));
-                $row.append($('<div>').addClass("col-md-6").addClass("kb-method-parameter-hint")
-                                .append(spec.short_hint));
+                                .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
+                var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
+                                .append(spec.short_hint);
+                $row.append($nameCol).append($inputCol).append($hintCol);
                 
                 var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
                 var $errorRow = $('<div>').addClass('row')
-                                    .append($('<div>').addClass("col-md-2"))
-                                    .append($errorPanel.addClass("col-md-4"));
+                                    .append($('<div>').addClass(nameColClass))
+                                    .append($errorPanel.addClass(inputColClass));
                 
                 self.$mainPanel.append($row);
                 self.$mainPanel.append($errorRow);
@@ -251,7 +257,10 @@
                     
                     query.callback(data);
                 },
-                
+                formatSelection: function(object, container) {
+                    var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
+                    return display;
+                },
                 formatResult: function(object, container, query) {
                     var display = "<b>"+object.text+"</b>";
                     if (object.info) {

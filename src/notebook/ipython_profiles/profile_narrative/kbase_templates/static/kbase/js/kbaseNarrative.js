@@ -57,8 +57,8 @@ narrative.init = function() {
                 loadingImage: "/static/kbase/images/ajax-loader.gif",
                 ws_id: IPython.notebook.metadata.ws_name
             });
-            dataWidget.setNarrWs(narr_ws); //as a callback
-            dataWidget.setWorkspace(ws_name);
+            $dataWidget.setNarrWs(narr_ws); //as a callback
+            $dataWidget.setWorkspace(ws_name);
         }
         else {
             /* ??? */

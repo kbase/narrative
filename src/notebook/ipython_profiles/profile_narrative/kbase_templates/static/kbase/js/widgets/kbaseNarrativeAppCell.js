@@ -35,6 +35,7 @@
         $runButton: null,
         $stopButton: null,
         
+        state: null,
         
         /**
          * @private
@@ -63,6 +64,17 @@
             this.$elem.append($('<img src="' + this.options.loadingImage + '">'))
                       .append($('<div>Loading App...</div>'));
 
+            // initialize the state
+            this.state = {
+                    runningState: {
+                        appRunState: "input", // could be 'input' || 'running' || something else?
+                        runningStep: null
+                    },
+                    step: { }
+                };
+                      
+                      
+                      
             this.fetchMethodInfo();
             
             return this;
@@ -249,10 +261,6 @@
             var $methodInfo = $('<div>')
                               .addClass('kb-func-desc')
                               .append('<h1><b>' + stepHeading +'</b>'+ stepSpec.info.name + '</h1>')
-                              //.append($('<span>')
-                              //        .addClass('pull-right kb-func-timestamp')
-                              //        .attr('id', 'last-run'))
-                              //        .append("some time")
                               .append($('<button>')
                                       .addClass('btn btn-default btn-xs')
                                       .attr('type', 'button')
@@ -295,6 +303,9 @@
             var inputStepData = {id:stepId ,methodId: stepSpec.info.id, widget:inputWidget, $stepContainer:$stepPanel, $statusPanel:$statusPanel, $outputPanel:$outputPanel, outputWidgetName:outputWidgetName }
             this.inputSteps.push(inputStepData);
             this.inputStepLookup[stepId] = inputStepData;
+            
+            this.state.step[stepId] = { };
+            
             return $stepPanel;
         },
         
@@ -345,6 +356,7 @@
                     this.inputSteps[i].widget.lockInputs();
                 }
             }
+            this.state.runningState.appRunState = "running";
         },
         
         /* unlocks inputs and updates display properties to reflect the not running state */
@@ -357,10 +369,8 @@
                     this.inputSteps[i].widget.unlockInputs();
                 }
             }
+            this.state.runningState.appRunState = "input";
         },
-        
-        
-        
         
         
         
@@ -402,14 +412,18 @@
          * @public
          */
         getState: function() {
-            var state = {};
+            // get the state of each step and return (all other properties of this.state should be set elsewhere)
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
                     var id = this.inputSteps[i].id;
-                    state[id] = this.inputSteps[i].widget.getState();
+                    this.state.step[id].inputState = this.inputSteps[i].widget.getState();
+                    // if there is an output widget, then we need to set its state too
+                    if(this.inputSteps[i].outputWidget) {
+                        this.state.step[id].outputState.widgetState = this.inputSteps[i].outputWidget.getState;
+                    }
                 }
             }
-            return state;
+            return this.state;
         },
 
         /**
@@ -421,11 +435,34 @@
             if (!state) {
                 return;
             }
-            if (this.inputSteps) {
+            
+            // set the step states
+            if (this.inputSteps && state.step) {
                 for(var i=0; i<this.inputSteps.length; i++) {
                     var id = this.inputSteps[i].id;
-                    if (state.hasOwnProperty(id)) {
-                        this.inputSteps[i].widget.loadState(state[id]);
+                    if (state.step.hasOwnProperty(id)) {
+                        // set the input states
+                        if (state.step[id].inputState) {
+                            this.inputSteps[i].widget.loadState(state.step[id].inputState);
+                        }
+                        // set the output states
+                        if (state.step[id].outputState) {
+                            if (state.step[id].outputState.output) {
+                                this.setStepOutput(id,state.step[id].outputState.output, state.step[id].outputState.widgetState);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // if we were in the running state before, set the values
+            if (state.runningState) {
+                if (state.runningState.runningStep) {
+                    this.setRunningStep(runningStep);
+                }
+                if (state.runningState.appRunState) {
+                    if (state.runningState.appRunState === "running") {
+                        this.startAppRun();
                     }
                 }
             }
@@ -441,6 +478,7 @@
                     this.inputSteps[i].$stepContainer.removeClass("kb-app-step-running");
                     if (this.inputSteps[i].id === stepId) {
                         this.inputSteps[i].$stepContainer.addClass("kb-app-step-running");
+                        this.state.runningState.runningStep = stepId;
                     }
                 }
             }
@@ -459,10 +497,17 @@
             }
         },
         
-        setStepOutput: function(stepId, output) {
+        /* optional state parameter, if null then no state is set on the widget */
+        setStepOutput: function(stepId, output, state) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
+                    if (this.inputStepLookup[stepId].outputWidget) {
+                        //output is already set and cannot change, so we do not rerender
+                        return;
+                    }
+                    // clear the output panel, and assume we are no longer running this step
                     this.inputStepLookup[stepId].$outputPanel.empty();
+                    this.inputStepLookup[stepId].$stepContainer.removeClass("kb-app-step-running");
                     
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
                     var $outputWidget = $('<div>'); var widget;
@@ -470,8 +515,10 @@
                         widget = $outputWidget[widgetName](output);
                     else
                         widget = $outputWidget[widgetName]({data:output});
+                    if (state) {
+                        widget.loadState(state);
+                    }
                     
-        
                     var header = '<span class="kb-out-desc">Output</span><span class="pull-right kb-func-timestamp">' + 
                                     this.readableTimestamp(new Date().getTime()) +
                                     '</span>';
@@ -484,7 +531,10 @@
         
                     this.inputStepLookup[stepId].$outputPanel.append($outputCell);
                     
-                    // todo: save outputwidget in list so that state can be saved
+                    this.inputStepLookup[stepId].outputWidget = widget;
+                    this.state.step[stepId].outputState = {
+                        output: output
+                    };
                 }
             }
         },

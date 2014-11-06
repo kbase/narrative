@@ -426,7 +426,7 @@
 /** new method parameter styling **/
 
 .kb-method-parameter-row {
-   margin:2px;
+   margin:0px;
    padding:5px;
    border-radius:5px;
 }
@@ -455,6 +455,7 @@
    color:#777;
    text-align:right;
    vertical-align:middle;
+   margin-top:3px;
 }
 .kb-method-parameter-input {
    vertical-align:middle;
@@ -470,6 +471,7 @@
 .kb-method-parameter-hint {
    color: #444;
    text-align:left;
+   margin-top:3px;
 }
 
 .kb-method-parameter-required-glyph {
@@ -483,19 +485,21 @@
 
 
 .kb-method-advanced-options-controller-inactive {
-   font-family: 'Roboto';
    font-weight: bold;
-   font-size: 12pt;
+   font-style: italic;
+   font-size: 11pt;
    line-height: 15px;
    color: #777;
+   text-align: center;
 }
 .kb-method-advanced-options-controller {
    cursor:pointer;
-   font-family: 'Roboto';
    font-weight: bold;
-   font-size: 12pt;
+   font-style: italic;
+   font-size: 11pt;
    line-height: 15px;
    color: #0088cc;
+   text-align: center;
 }
 .kb-method-advanced-options-controller:hover {
     color: #2a6496;

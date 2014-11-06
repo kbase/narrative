@@ -119,8 +119,6 @@
                 self.$mainPanel.append("<div>multiple input fields not yet supported</div>");
             }
             
-            // setup the feedback icons
-            self.isValid();
             
             
             /*var input_default = (p.default_values[0] !== "" && p.default_values[0] !== undefined) ?
@@ -293,35 +291,59 @@
             
             var p= self.getParameterValue();
             var errorDetected = false;
+            var errorMessages = [];
             if(p instanceof Array) {
                 // todo: handle this case when there are multiple fields
             } else {
+                p = p.trim();
                 // if it is a required field and not empty, keep the required icon around but we have an error
-                if (p.trim()==='' && self.required) {
+                if (p==='' && self.required) {
                     self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
                     self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
                     self.rowDivs[0].$feedback.show();
+                    self.rowDivs[0].$error.hide();
                     errorDetected = true;
-                }
-                if (p==="bad") {
-                    if (self.rowDivs[0]) {
-                        self.rowDivs[0].$row.addClass("kb-method-parameter-row-error");
-                        self.rowDivs[0].$error.html("The input 'bad' is bad, enter something different.");
-                        self.rowDivs[0].$error.show();
-                        self.rowDivs[0].$feedback.removeClass();
-                        errorDetected = true;
-                    }
-                }
-                if(self.spec.text_options) {
-                    if (self.spec.text_options.validate_as) {
-                        var fieldtype = self.spec.text_options.validate_as;
-                        // int | float | nonnumeric | nospaces | none
-                        if ("int" === fieldtype.toLowerCase()) {
-                                //code
-                        } else if ("float" === fieldtype.toLowerCase()) {
-                                //code
-                        } else if ("nonnumeric" === fieldtype.toLowerCase()) {
-                                //code
+                    errorMessages.push("required field "+self.spec.ui_name+" missing.");
+                } else {
+                    if(self.spec.text_options) {
+                        if (self.spec.text_options.validate_as) {
+                            var fieldtype = self.spec.text_options.validate_as;
+                            // int | float | nonnumeric | nospaces | none
+                            if ("int" === fieldtype.toLowerCase()) {
+                                var n = ~~Number(p);
+                                if(String(n) !== p) {
+                                    self.rowDivs[0].$row.addClass("kb-method-parameter-row-error");
+                                    self.rowDivs[0].$error.html("value must be an integer");
+                                    self.rowDivs[0].$error.show();
+                                    self.rowDivs[0].$feedback.removeClass();
+                                    errorDetected = true;
+                                    errorMessages.push("value must be an integer in field "+self.spec.ui_name);
+                                }
+                            } else if ("float" === fieldtype.toLowerCase()) {
+                                if(isNaN(p)) {
+                                    self.rowDivs[0].$row.addClass("kb-method-parameter-row-error");
+                                    self.rowDivs[0].$error.html("value must be numeric");
+                                    self.rowDivs[0].$error.show();
+                                    self.rowDivs[0].$feedback.removeClass();
+                                    errorDetected = true;
+                                    errorMessages.push("value must be a number in field "+self.spec.ui_name);
+                                }
+                            }
+                        }
+                        
+                        if (self.validDataObjectList) {
+                            if(self.validDataObjectList.length>0) {
+                                if (/\s/.test(p)) {
+                                    if (self.rowDivs[0]) {
+                                        self.rowDivs[0].$row.addClass("kb-method-parameter-row-error");
+                                        self.rowDivs[0].$error.html("spaces are not allowed in data object names");
+                                        self.rowDivs[0].$error.show();
+                                        self.rowDivs[0].$feedback.removeClass();
+                                    }
+                                    errorDetected = true;
+                                    errorMessages.push("spaces are not allowed in data object names, in field "+self.spec.ui_name);
+                                }
+                            }
                         }
                     }
                 }
@@ -332,20 +354,19 @@
                         self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
                         self.rowDivs[0].$error.hide();
                         self.rowDivs[0].$feedback.removeClass();
-                        if (p.trim()!=='') {
+                        if (p!=='') {
                             self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
                         }
                     }
                 } else {
-                    if (p.trim()==='' && self.required) {
+                    if (p==='' && self.required) {
                         //code
                     } else {
                         self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left');
                     }
                 }
             }
-            //return { isValid: !errorDetected, errormssgs:[]};
-            return { isValid: true, errormssgs: [] }; 
+            return { isValid: !errorDetected, errormssgs:errorMessages};
         },
         
         /*
@@ -430,7 +451,6 @@
                     this.$elem.find("#"+this.spec.id).select2('disable',false);
                     this.$elem.find("#"+this.spec.id).select2("data",{id:value, text:value});
                     this.$elem.find("#"+this.spec.id).select2('disable',true);
-                    
                 }
             } else {
                 this.$elem.find("#"+this.spec.id).val(value);

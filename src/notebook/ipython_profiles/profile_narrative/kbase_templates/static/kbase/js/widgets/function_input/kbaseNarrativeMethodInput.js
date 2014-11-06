@@ -49,7 +49,7 @@
             var hasAdvancedOption = false;
             for (var i=0; i<params.length; i++) {
                 var paramSpec = params[i];
-                var $stepDiv = $('<div>');
+                var $stepDiv = $('<div>').css({"margin-top":"5px"})
                 
                 // check what kind of parameter here.
                 if (paramSpec.field_type === "text") {

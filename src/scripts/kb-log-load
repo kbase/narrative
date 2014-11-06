@@ -121,7 +121,7 @@ def generate(mc, num):
         t += random.random() * 5.0
         dur = random.random()
         # choose method or narrative open
-        if func_i >=0 and random > 0.1:
+        if func_i >=0 and random.random() > 0.1:
             name = m_pre + '.' + m
             e = funcs[func_i]
             # move to next stage in method, pick new method if at end
@@ -130,6 +130,7 @@ def generate(mc, num):
                 m = random.choice(methods)
                 func_i = 0
         else:
+            t += 3600 + random.random() * 3600
             e = 'open'
             name = m_pre
             func_i = 0 # reset to first func

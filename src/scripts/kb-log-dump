@@ -138,7 +138,6 @@ class DB(object):
         :param fmt: Name of output format
         :return:
         """
-        db, table = self._sq, self._table
         group_expr = ','.join(groups)
         if agg == 0: # sum
             sql_agg = "SUM(dur)"
@@ -147,9 +146,12 @@ class DB(object):
             sql_agg = "COUNT(*)"
             agg_name = "count"
         stmt = 'SELECT {g},{a} FROM {t} GROUP BY {g}'.format(
-            a=sql_agg, t=table, g=group_expr)
+            a=sql_agg, t=self._table, g=group_expr)
         _log.debug('query="{}"'.format(stmt))
-        rows = db.query(stmt)
+        try:
+            rows = self.query(stmt)
+        except sqlite3.OperationalError as err:
+            raise ValueError("bad query: {}".format(err))
         if fmt == 'csv':
             writer = csv.writer(out)
             writer.writerow(list(groups) + [agg_name])
@@ -195,7 +197,11 @@ def main(args):
     else:
         # If 'groups' are given, perform an aggregation
         if len(args.groups) > 0:
-            sq.aggregate(args.groups, agg=args.agg)
+            try:
+                sq.aggregate(args.groups, agg=args.agg)
+            except ValueError as err:
+                _log.error("aggregation_error={}".format(err))
+                return -1
         sq.close()
     return 0
 

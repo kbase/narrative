@@ -21,6 +21,7 @@
         isUsingSelect2: false,
         enabled: true,
         isOutputName: false,
+        required: true,
         validDataObjectList: null,
         //listLimit:20, // limit the number of dropdown items, not used...
         rowDivs: null,
@@ -43,10 +44,14 @@
                 // just one field, phew, this one should be easy    
                 var d = spec.default_values;
                 var placeholder = '';
+                self.required= true;
                 if(spec.text_options) {
                     if(spec.text_options.placeholder) {
                         placeholder = spec.text_options.placeholder;
                         placeholder = placeholder.replace(/(\r\n|\n|\r)/gm,"");
+                    }
+                    if (spec.optional) {
+                        self.required=false;
                     }
                 }
                 
@@ -60,7 +65,8 @@
                     if (spec.text_options.valid_ws_types) {
                         if (spec.text_options.valid_ws_types.length>0) {
                             self.isUsingSelect2 = true;
-                            $input =$('<input id="' + form_id + '" type="text" style="width:100%" />');
+                            $input =$('<input id="' + form_id + '" type="text" style="width:100%" />')
+                                .on("change",function() { self.isValid() });
                             this.validDataObjectList = [];
                             if (spec.text_options.is_output_name) {
                                 this.isOutputName = true;
@@ -69,23 +75,29 @@
                     }
                 }
                 
+                var $feedbackTip = $("<span>").removeClass();
+                if (self.required) {
+                    $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
+                }
+                
                 var $row = $('<div>').addClass("row kb-method-parameter-row")
                                 .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
                 $row.append($('<div>').addClass("col-md-2").addClass("kb-method-parameter-name")
                                 .append(spec.ui_name));
                 $row.append($('<div>').addClass("col-md-4").addClass("kb-method-parameter-input")
-                                .append($input));
+                                .append($('<div>').css({"width":"100%","display":"inline-block"}).append($input))
+                                .append($('<div>').css({"display":"inline-block"}).append($feedbackTip)));
                 $row.append($('<div>').addClass("col-md-6").addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint));
                 
-                var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg");
+                var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
                 var $errorRow = $('<div>').addClass('row')
                                     .append($('<div>').addClass("col-md-2"))
                                     .append($errorPanel.addClass("col-md-4"));
                 
                 self.$mainPanel.append($row);
                 self.$mainPanel.append($errorRow);
-                self.rowDivs.push({$row:$row, $error:$errorPanel});
+                self.rowDivs.push({$row:$row, $error:$errorPanel, $feedback:$feedbackTip});
                 
                 /* for some reason, we need to actually have the input added to the main panel before this will work */
                 if (this.isUsingSelect2) {
@@ -266,16 +278,25 @@
          */
         isValid: function() {
             var self = this;
+            
             var p= self.getParameterValue();
             var errorDetected = false;
             if(value instanceof Array) {
                 // todo: handle this case when there are multiple fields
             } else {
+                // if it is a required field and not empty, keep the required icon around but we have an error
+                if (p.trim()==='' && self.required) {
+                    self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
+                    self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
+                    self.rowDivs[0].$feedback.show();
+                    errorDetected = true;
+                }
                 if (p==="bad") {
                     if (self.rowDivs[0]) {
                         self.rowDivs[0].$row.addClass("kb-method-parameter-row-error");
-                        self.rowDivs[0].$error.show();
                         self.rowDivs[0].$error.html("The input 'bad' is bad, enter something different.");
+                        self.rowDivs[0].$error.show();
+                        self.rowDivs[0].$feedback.removeClass();
                         errorDetected = true;
                     }
                 }
@@ -284,19 +305,30 @@
                         var fieldtype = self.spec.text_options.validate_as;
                         // int | float | nonnumeric | nospaces | none
                         if ("int" === fieldtype.toLowerCase()) {
-                            //code
+                                //code
                         } else if ("float" === fieldtype.toLowerCase()) {
-                            //code
+                                //code
                         } else if ("nonnumeric" === fieldtype.toLowerCase()) {
-                            //code
+                                //code
                         }
                     }
                 }
                 
-                if (!errorDetected) {
+                // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
+                if (!errorDetected || !self.enabled) {
                     if (self.rowDivs[0]) {
                         self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
                         self.rowDivs[0].$error.hide();
+                        self.rowDivs[0].$feedback.removeClass();
+                        if (p.trim()!=='') {
+                            self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
+                        }
+                    }
+                } else {
+                    if (p.trim()==='' && self.required) {
+                        //code
+                    } else {
+                        self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left');
                     }
                 }
             }
@@ -317,6 +349,9 @@
                 this.$elem.find("#"+this.spec.id).prop('disabled',true);
             }
             // stylize the row div
+            if (this.rowDivs) {
+                this.rowDivs[0].$feedback.removeClass();
+            }
         },
         
         /*
@@ -330,6 +365,7 @@
             } else {
                 this.$elem.find("#"+this.spec.id).prop('disabled', false);
             }
+            this.isValid();
         },
         
         
@@ -341,6 +377,10 @@
                     this.$elem.find("#"+this.spec.id).prop('disabled',true);
                 }
             }
+            // stylize the row div
+            if (this.rowDivs) {
+                this.rowDivs[0].$feedback.removeClass();
+            }
         },
         unlockInputs: function() {
             if (this.enabled) {
@@ -350,6 +390,7 @@
                     this.$elem.find("#"+this.spec.id).prop('disabled', false);
                 }
             }
+            this.isValid();
         },
         
         

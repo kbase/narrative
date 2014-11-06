@@ -436,7 +436,7 @@
 }
 
 .kb-method-parameter-row-error {
-   background: #FFD7D6;
+   background: #f2dede;
 }
 .kb-method-parameter-error-mssg {
    padding:5px;
@@ -444,7 +444,7 @@
    font-family: 'OxygenBold', sans-serif;
    font-weight: bold;
    font-size: 10pt;
-   color:#FF5E59;
+   color:#d44950;
 }
 
 
@@ -456,10 +456,21 @@
    text-align:right;
 }
 .kb-method-parameter-input {
+   vertical-align:middle;
+   white-space: nowrap;
 }
 .kb-method-parameter-hint {
    color: #777;
    text-align:left;
+}
+
+.kb-method-parameter-required-glyph {
+   color: #d44950;
+   margin-left:7px;
+}
+.kb-method-parameter-accepted-glyph {
+   color: #5cb85c;
+   margin-left:7px;
 }
 
 

@@ -47,9 +47,10 @@
             this.parameters = [];
             this.parameterIdLookup = {};
             var hasAdvancedOption = false;
+            var firstParam = true;
             for (var i=0; i<params.length; i++) {
                 var paramSpec = params[i];
-                var $stepDiv = $('<div>').css({"margin-top":"5px"})
+                var $stepDiv = $('<div>');
                 
                 // check what kind of parameter here.
                 if (paramSpec.field_type === "text") {
@@ -81,6 +82,10 @@
                     this.$advancedOptionsDiv.append($stepDiv);
                     hasAdvancedOption = true;
                 } else {
+                    if (firstParam) {
+                        $stepDiv.css({"margin-top":"5px"});
+                        firstParam = false;
+                    }
                     $optionsDiv.append($stepDiv);
                 }
             }

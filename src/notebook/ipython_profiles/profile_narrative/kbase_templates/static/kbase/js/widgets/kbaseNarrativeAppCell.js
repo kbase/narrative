@@ -35,6 +35,10 @@
         $runButton: null,
         $stopButton: null,
         
+        $errorModal: null,
+        $errorModalContent:null,
+        
+        
         state: null,
         
         /**
@@ -72,9 +76,8 @@
                     },
                     step: { }
                 };
-                      
-                      
-                      
+            this.initErrorModal();
+
             this.fetchMethodInfo();
             
             return this;
@@ -161,8 +164,10 @@
                               .click(
                                   $.proxy(function(event) {
                                       self.$submitted.html("submitted on "+this.readableTimestamp(new Date().getTime()));
-                                      self.startAppRun();
                                       
+                                      var isGood = self.startAppRun();
+                                      if (!isGood) { return; }
+                                    
                                       event.preventDefault();
                                       this.trigger('runApp.Narrative', { 
                                           cell: IPython.notebook.get_selected_cell(),
@@ -352,9 +357,46 @@
         },
         
         
-        /* locks inputs and updates display properties to reflect the running state */
+        isValid : function() {
+            var isValidRet = {isValid:true, stepErrors:[]}
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    var v = this.inputSteps[i].widget.isValid();
+                    if (!v.isValid) {
+                        isValidRet.isValid = false;
+                        isValidRet.stepErrors.push({
+                            stepId:this.inputSteps[i].step_id,
+                            stepNum:(i+1),
+                            errormssgs:v.errormssgs});
+                    }
+                }
+            }
+            return isValidRet;
+        },
+        
+        /* locks inputs and updates display properties to reflect the running state
+            returns true if everything is valid and we can start, false if there were errors
+        */
         startAppRun: function() {
             var self = this;
+            var v = self.isValid();
+            if (!v.isValid) {
+                var errorCount = 1;
+                self.$errorModalContent.empty();
+                for(var k=0; k<v.stepErrors.length; k++) {
+                    var $errorStep = $('<div>');
+                    $errorStep.append($('<div>').addClass("kb-app-step-error-heading").append('Errors in Step '+v.stepErrors[k].stepNum+':'));
+                    for (var e=0; e<v.stepErrors[k].errormssgs.length; e++) {
+                        $errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.stepErrors[k].errormssgs[e]));
+                        errorCount = errorCount+1;
+                    }
+                    self.$errorModalContent.append($errorStep);
+                }
+                self.$errorModal.modal('show');
+                return false;
+            }
+            
+            self.$submitted.show();
             self.$runButton.hide();
             self.$stopButton.show();
             if (this.inputSteps) {
@@ -362,8 +404,8 @@
                     this.inputSteps[i].widget.lockInputs();
                 }
             }
-            this.$submitted.show();
             this.state.runningState.appRunState = "running";
+            return true;
         },
         
         /* unlocks inputs and updates display properties to reflect the not running state */
@@ -561,6 +603,26 @@
         },
         
         /** end methods for setting the app state based on the job status **/
+        
+        initErrorModal: function() {
+            var self=this;
+            var errorModalId = "app-error-modal-"+ self.genUUID();
+            var modalLabel = "app-error-modal-lablel-"+ self.genUUID();
+            self.$errorModalContent = $('<div>');
+            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true">').addClass("modal fade");
+            self.$errorModal.append(
+                $('<div>').addClass('modal-dialog').append(
+                    $('<div>').addClass('modal-content').append(
+                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" id="'+modalLabel+'">Problems exist in your parameter settings.</h4>')
+                    ).append(
+                       $('<div>').addClass('modal-body').append(self.$errorModalContent)
+                    ).append(
+                        $('<div>').addClass('modal-footer').append(
+                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
+                    )
+                ));
+            self.$elem.append(self.$errorModal);
+        },
         
         /**
          * Refreshes the input widget according to its own method.

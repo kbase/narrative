@@ -89,6 +89,9 @@
                 self.$mainPanel.append($row);
                 self.$mainPanel.append($errorRow);
                 self.rowDivs.push({$row:$row, $error:$errorPanel, $feedback:$feedbackTip});
+                if (defaultValue) {
+                    self.setParameterValue(defaultValue);
+                }
                 
             } else {
                 // need to handle multiple fields- do something better!

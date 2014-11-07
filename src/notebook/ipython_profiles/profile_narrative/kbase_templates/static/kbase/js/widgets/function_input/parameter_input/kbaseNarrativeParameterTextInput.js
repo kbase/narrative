@@ -112,7 +112,10 @@
                     }
                     this.setupSelect2($input, placeholder);
                 }
-                
+                // if a default value is set, validate it.
+                if (defaultValue) {
+                    this.isValid();
+                }
                 
             } else {
                 // need to handle multiple fields- do something better!

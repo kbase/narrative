@@ -160,7 +160,9 @@
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
+                                      self.$submitted.html("submitted on "+this.readableTimestamp(new Date().getTime()));
                                       self.startAppRun();
+                                      
                                       event.preventDefault();
                                       this.trigger('runApp.Narrative', { 
                                           cell: IPython.notebook.get_selected_cell(),
@@ -170,8 +172,10 @@
                                       });
                                   }, this)
                               );
-            this.$stopButton = $('<button>')
-                              .attr('type', 'button')
+            
+            //We cannot stop a method from running, so this button for now is gone.
+            this.$stopButton = $('<button>');
+            /*                  .attr('type', 'button')
                               .attr('value', 'Stop')
                               .addClass('btn btn-warning btn-sm')
                               .append('Stop')
@@ -181,7 +185,8 @@
                                   }, this)
                               )
                               .hide();
-                            
+            */
+            this.$submitted = $('<span>').addClass("pull-right kb-func-timestamp").hide();
 
             var $appInfo = this.appSpec.info.name;
             this.$methodPanel = $('<div>')
@@ -199,7 +204,8 @@
             var $buttons = $('<div>')
                            .addClass('buttons pull-right')
                            .append(this.$runButton)
-                           .append(this.$stopButton);
+                           //.append(this.$stopButton)
+                           .append(this.$submitted);
 
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
@@ -356,6 +362,7 @@
                     this.inputSteps[i].widget.lockInputs();
                 }
             }
+            this.$submitted.show();
             this.state.runningState.appRunState = "running";
         },
         
@@ -369,6 +376,7 @@
                     this.inputSteps[i].widget.unlockInputs();
                 }
             }
+            this.$submitted.hide();
             this.state.runningState.appRunState = "input";
         },
         
@@ -423,6 +431,7 @@
                     }
                 }
             }
+            this.state.runningState.submittedText = this.$submitted.html();
             return this.state;
         },
 
@@ -461,6 +470,9 @@
                     this.setRunningStep(runningStep);
                 }
                 if (state.runningState.appRunState) {
+                    if (state.runningState.submittedText) {
+                        this.$submitted.html(state.runningState.submittedText);
+                    }
                     if (state.runningState.appRunState === "running") {
                         this.startAppRun();
                     }

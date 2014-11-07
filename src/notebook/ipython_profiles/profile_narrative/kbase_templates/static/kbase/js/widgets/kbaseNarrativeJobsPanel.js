@@ -141,14 +141,18 @@
         },
 
         registerJob: function(jobInfo, isApp) {
-            // Check to make sure the Narrative has been instantiated to begin with
+            // Check to make sure the Narrative has been instantiated to begin with.
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || !IPython.notebook.metadata)
                 return;
-            if (!IPython.notebook.metadata.job_ids)
+            // If the job ids hasn't been inited yet, or it was done in the old way (as an array) then do it.
+            if (!IPython.notebook.metadata.job_ids || 
+                Object.prototype.toString.call(IPython.notebook.metadata.job_ids) === '[object Array]') {
                 IPython.notebook.metadata.job_ids = {
                     'methods' : [],
                     'apps' : []
                 };
+            }
+            // Double-check that it has the right properties
             if (!IPython.notebook.metadata.job_ids['methods'])
                 IPython.notebook.metadata.job_ids['methods'] = [];
             if (!IPython.notebook.metadata.job_ids['apps'])

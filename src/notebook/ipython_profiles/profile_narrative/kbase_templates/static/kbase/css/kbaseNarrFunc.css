@@ -218,7 +218,7 @@
 }
 .kb-cell-run h1 {
     font-family: 'Roboto';
-    font-weight: bold;
+    font-weight: normal;
     font-size: 12pt;
     line-height: 15px;
     color: #2E618D;
@@ -236,6 +236,7 @@
 
 .kb-cell-run h2 {
     font-family: 'Roboto';
+    font-weight: normal;
     font-size: 11pt;
     line-height: 150%;
     color: #666666;
@@ -303,7 +304,7 @@
 
 .kb-out-desc {
     font-family: 'Roboto';
-    font-weight: bold;
+    font-weight: normal;
     font-size: 12pt;
     line-height: 15px;
     color: #2E618D;
@@ -314,7 +315,7 @@
 
 .kb-err-desc {
     font-family: 'Roboto';
-    font-weight: bold;
+    font-weight: normal;
     font-size: 12pt;
     line-height: 15px;
     color: #A94442;
@@ -520,7 +521,7 @@
 
 .app-panel-heading h1 {
     font-family: 'Roboto';
-    font-weight: bold;
+    font-weight: normal;
     font-size: 16pt;
     line-height: 15px;
     color: #2E618D;
@@ -537,6 +538,7 @@
 
 .kb-app-panel-description {
     font-family: 'Roboto';
+    font-weight: normal;
     font-size: 12pt;
     line-height: 15px;
     color: #2E618D;

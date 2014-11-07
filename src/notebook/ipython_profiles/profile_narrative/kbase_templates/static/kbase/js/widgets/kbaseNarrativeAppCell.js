@@ -377,23 +377,27 @@
         /* locks inputs and updates display properties to reflect the running state
             returns true if everything is valid and we can start, false if there were errors
         */
-        startAppRun: function() {
+        startAppRun: function(ignoreValidCheck) {
             var self = this;
-            var v = self.isValid();
-            if (!v.isValid) {
-                var errorCount = 1;
-                self.$errorModalContent.empty();
-                for(var k=0; k<v.stepErrors.length; k++) {
-                    var $errorStep = $('<div>');
-                    $errorStep.append($('<div>').addClass("kb-app-step-error-heading").append('Errors in Step '+v.stepErrors[k].stepNum+':'));
-                    for (var e=0; e<v.stepErrors[k].errormssgs.length; e++) {
-                        $errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.stepErrors[k].errormssgs[e]));
-                        errorCount = errorCount+1;
+            if (ignoreValidCheck) {
+                //code
+            } else {
+                var v = self.isValid();
+                if (!v.isValid) {
+                    var errorCount = 1;
+                    self.$errorModalContent.empty();
+                    for(var k=0; k<v.stepErrors.length; k++) {
+                        var $errorStep = $('<div>');
+                        $errorStep.append($('<div>').addClass("kb-app-step-error-heading").append('Errors in Step '+v.stepErrors[k].stepNum+':'));
+                        for (var e=0; e<v.stepErrors[k].errormssgs.length; e++) {
+                            $errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.stepErrors[k].errormssgs[e]));
+                            errorCount = errorCount+1;
+                        }
+                        self.$errorModalContent.append($errorStep);
                     }
-                    self.$errorModalContent.append($errorStep);
+                    self.$errorModal.modal('show');
+                    return false;
                 }
-                self.$errorModal.modal('show');
-                return false;
             }
             
             self.$submitted.show();
@@ -486,7 +490,8 @@
             if (!state) {
                 return;
             }
-            
+            console.log("setting app state:");
+            console.log(state);
             // set the step states
             if (this.inputSteps && state.step) {
                 for(var i=0; i<this.inputSteps.length; i++) {
@@ -495,12 +500,6 @@
                         // set the input states
                         if (state.step[id].inputState) {
                             this.inputSteps[i].widget.loadState(state.step[id].inputState);
-                        }
-                        // set the output states
-                        if (state.step[id].outputState) {
-                            if (state.step[id].outputState.output) {
-                                this.setStepOutput(id,state.step[id].outputState.output, state.step[id].outputState.widgetState);
-                            }
                         }
                     }
                 }
@@ -517,6 +516,21 @@
                     }
                     if (state.runningState.appRunState === "running") {
                         this.startAppRun();
+                    }
+                }
+            }
+            
+            // set the output state (we do this last so that in case we run into an error, we still show that we are running)
+            if (this.inputSteps && state.step) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    var id = this.inputSteps[i].id;
+                    if (state.step.hasOwnProperty(id)) {
+                        // set the output states
+                        if (state.step[id].outputState) {
+                            if (state.step[id].outputState.output) {
+                                this.setStepOutput(id,state.step[id].outputState.output, state.step[id].outputState.widgetState);
+                            }
+                        }
                     }
                 }
             }

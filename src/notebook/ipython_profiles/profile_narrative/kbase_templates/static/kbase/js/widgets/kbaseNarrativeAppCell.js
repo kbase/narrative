@@ -262,11 +262,11 @@
             
             var $inputWidgetDiv = $("<div>");
             var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
-            var buttonLabel = 'step details';
+            var buttonLabel = 'details';
             var methodDesc = stepSpec.info.subtitle;
             var $methodInfo = $('<div>')
                               .addClass('kb-func-desc')
-                              .append('<h1>' + stepHeading +'&nbsp&nbsp-&nbsp '+ stepSpec.info.name + '</h1>')
+                              .append('<h1><b>' + stepHeading +'&nbsp&nbsp-&nbsp '+ stepSpec.info.name + '</b></h1>')
                               .append($('<button>')
                                       .addClass('btn btn-default btn-xs')
                                       .attr('type', 'button')

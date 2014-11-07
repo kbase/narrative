@@ -56,6 +56,10 @@
                     var textInputWidget = $stepDiv["kbaseNarrativeParameterTextInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
                     this.parameters.push({id:paramSpec.id, widget:textInputWidget});
                     this.parameterIdLookup[paramSpec.id] = textInputWidget;
+                } else if (paramSpec.field_type === "dropdown") {
+                    var dropdownInputWidget = $stepDiv["kbaseNarrativeParameterDropdownInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                    this.parameters.push({id:paramSpec.id, widget:dropdownInputWidget});
+                    this.parameterIdLookup[paramSpec.id] = dropdownInputWidget;
                 } else {
                     // this is what we should do:  this.getErrorDiv()
                     $stepDiv.append('<span class="label label-danger">Parameter '+paramSpec.id+

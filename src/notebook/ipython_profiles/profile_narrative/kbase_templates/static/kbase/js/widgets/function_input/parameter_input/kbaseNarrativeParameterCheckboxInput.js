@@ -5,7 +5,7 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "kbaseNarrativeParameterDropdownInput",
+        name: "kbaseNarrativeParameterCheckboxInput",
         parent: "kbaseNarrativeParameterInput",
         version: "1.0.0",
         options: {
@@ -22,11 +22,14 @@
         required: true,
         rowDivs: null,
         
+        checkedValue: 1,
+        uncheckedValue: 0,
+        
         render: function() {
             var self = this;
             //console.log(this.spec);
             var spec = self.spec;
-            
+            console.log(spec);
             // check if we need to allow multiple values
             var allow_multiple = false;
             if (spec.allow_multiple) {
@@ -39,44 +42,23 @@
             if (!allow_multiple) {
                 // just one field, phew, this one should be easy    
                 var d = spec.default_values;
-                self.required= true;
+                self.required= false;
                 
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
                 var form_id = spec.id;
-                var $dropdown= $('<select id="'+form_id+'">').css({width:"100%"})
+                var $checkboxContainer = $('<div>').addClass('checkbox').css({width:"100%"});
+                var $checkbox= $('<input id="'+form_id+'" type="checkbox">')
                                 .on("change",function() { self.isValid() });
-                
+                    $checkboxContainer.append($('<label>').addClass('kb-method-parameter-name').append($checkbox).append(spec.ui_name));
                 var foundOptions = false;
-                /* HOW IT SHOULD BE!!! */
-                  if(spec.dropdown_options) {
-                    if (spec.dropdown_options.options) {
-                        for (var k=0; k<spec.dropdown_options.options.length; k++) {
-                            var opt = spec.dropdown_options.options[k];
-                            if (opt.id && opt.ui_name) {
-                                $dropdown.append($('<option value="'+opt.id+'">').append(opt.ui_name));
-                                foundOptions = true;
-                            } else if (opt.value && opt.ui_name) {  // id was misnamed, should have been value
-                                $dropdown.append($('<option value="'+opt.value+'">').append(opt.ui_name));
-                                foundOptions = true;
-                            }
-                        }
-                    }
-                }
-                if(spec.dropdown_options) {
-                    if (spec.dropdown_options.ids_to_options) {
-                        $dropdown.empty();
-                        for (var optId in spec.dropdown_options.ids_to_options) {
-                            if(spec.dropdown_options.ids_to_options.hasOwnProperty(optId)){
-                                var opt = spec.dropdown_options.ids_to_options[optId];
-                                $dropdown.append($('<option value="'+optId+'">').append(opt));
-                                foundOptions = true;
-                            }
-                        }
-                    }
-                }
                 
-                if (!foundOptions) {
-                    $dropdown.append($('<option value="">').append("no options found in method spec"));
+                if(spec.checkbox_options) {
+                    if (spec.checkbox_options.checked_value) {
+                        self.checkedValue = spec.checkbox_options.checked_value;
+                    }
+                    if (spec.checkbox_options.unchecked_value) {
+                        self.uncheckedValue = spec.checkbox_options.unchecked_value;
+                    }
                 }
                 
                 var $feedbackTip = $("<span>").removeClass();
@@ -91,10 +73,9 @@
                 
                 var $row = $('<div>').addClass("row kb-method-parameter-row")
                                 .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
-                var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
-                                    .append(spec.ui_name);
+                var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name");
                 var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
-                                .append($('<div>').css({"width":"100%","display":"inline-block"}).append($dropdown))
+                                .append($('<div>').css({"width":"100%","display":"inline-block"}).append($checkboxContainer))
                                 .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
                 var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint);
@@ -109,12 +90,6 @@
                 self.$mainPanel.append($errorRow);
                 self.rowDivs.push({$row:$row, $error:$errorPanel, $feedback:$feedbackTip});
                 
-                /* for some reason, we need to actually have the input added to the main panel before this will work */
-                this.setupSelect2($dropdown,"",defaultValue);
-                
-                // for dropdowns, we always validate (because it adds the green check feedback)
-                this.isValid();
-                
             } else {
                 // need to handle multiple fields- do something better!
                 self.$mainPanel.append("<div>multiple dropdown fields not yet supported</div>");
@@ -123,36 +98,9 @@
         
         
         refresh: function() {
-            // we don't allow types to be displayed, so we don't have to refresh
+            // checkboxes don't need to refresh
         },
 
-        
-        /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
-        setupSelect2: function ($input, placeholder, defaultValue) {
-            var self = this;
-            var noMatchesFoundStr = "No matching data found.";
-            if (self.isOutputName) {
-                noMatchesFoundStr = "Enter a name for the output data object.";
-            }
-            $input.select2({
-                minimumResultsForSearch: -1,
-                //placeholder:placeholder,
-                //allowClear: true,
-                formatSelection: function(object, container) {
-                    var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
-                    return display;
-                },
-                //formatResult: function(object, container, query) {
-                //    var display = "<b>"+object.text+"</b>";
-                //    return display;
-                //}
-            });
-            
-            if (defaultValue) {
-                $input.select2("val",defaultValue);
-            }
-        },
-        
         /*
          * This is called when this method is run to allow you to check if the parameters
          * that the user has entered is correct.  You need to return an object that indicates
@@ -166,35 +114,19 @@
                 return { isValid: true, errormssgs:[]}; // do not validate if disabled
             }
             var p= self.getParameterValue();
-            var errorDetected = false;
-            var errorMessages = [];
             if(p instanceof Array) {
                 // todo: handle this case when there are multiple fields
             } else {
-                p = p.trim();
-                // if it is a required selection and is empty, keep the required icon around but we have an error
-                if (p==='' && self.required) {
-                    self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-                    self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
-                    self.rowDivs[0].$feedback.show();
-                    self.rowDivs[0].$error.hide();
-                    errorDetected = true;
-                    errorMessages.push("required field "+self.spec.ui_name+" missing.");
-                }
-                
-                // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
-                if (!errorDetected) {
+                // but we should still provide the feedback indicate
+                if (self.enabled) {
                     if (self.rowDivs[0]) {
-                        self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-                        self.rowDivs[0].$error.hide();
                         self.rowDivs[0].$feedback.removeClass();
-                        if (p!=='') {
-                            self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
-                        }
+                        self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
                     }
                 }
             }
-            return { isValid: !errorDetected, errormssgs:errorMessages};
+            // checkboxes are always valid!
+            return { isValid: true, errormssgs:[]};
         },
         
         /*
@@ -204,7 +136,7 @@
         disableParameterEditing: function() {
             // disable the input
             this.enabled = false;
-            this.$elem.find("#"+this.spec.id).select2('disable',true);
+            this.$elem.find("#"+this.spec.id).prop('disabled',true);
             // stylize the row div
             if (this.rowDivs) {
                 this.rowDivs[0].$feedback.removeClass();
@@ -217,14 +149,14 @@
         enableParameterEditing: function() {
             // enable the input
             this.enabled = true;
-            this.$elem.find("#"+this.spec.id).select2('enable',true);
+            this.$elem.find("#"+this.spec.id).prop('disabled',false);
             this.isValid();
         },
         
         
         lockInputs: function() {
             if (this.enabled) {
-                this.$elem.find("#"+this.spec.id).select2('disable',true);
+                this.$elem.find("#"+this.spec.id).prop('disabled',true);
             }
             // stylize the row div
             if (this.rowDivs) {
@@ -233,7 +165,7 @@
         },
         unlockInputs: function() {
             if (this.enabled) {
-                this.$elem.find("#"+this.spec.id).select2('enable',true);
+            this.$elem.find("#"+this.spec.id).prop('disabled',false);
             }
             this.isValid();
         },
@@ -251,13 +183,20 @@
         setParameterValue: function(value) {
             // todo: handle case where this is a multiple, we need to check if value array matches number of elements,
             // and if not we must do something special   ...
-            if (this.enabled) {
-                this.$elem.find("#"+this.spec.id).select2("val",value);
-            } else {
-                this.$elem.find("#"+this.spec.id).select2('disable',false);
-                this.$elem.find("#"+this.spec.id).select2("val",value);
-                this.$elem.find("#"+this.spec.id).select2('disable',true);
+            if(value === this.checkedValue) {
+                this.$elem.find("#"+this.spec.id).prop('checked', true);
+            } else if (value === this.uncheckedValue) {
+                this.$elem.find("#"+this.spec.id).prop('checked', false);
+            } else if(value === true) {
+                this.$elem.find("#"+this.spec.id).prop('checked', true);
+            } else if(value === false) {
+                this.$elem.find("#"+this.spec.id).prop('checked', false);
+            } else if(value === "checked") {
+                this.$elem.find("#"+this.spec.id).prop('checked', true);
+            } else if(value === "unchecked") {
+                this.$elem.find("#"+this.spec.id).prop('checked', false);
             }
+            
             this.isValid();
         },
         
@@ -267,8 +206,13 @@
          * in the method spec.
          */
         getParameterValue: function() {
-            var value = this.$elem.find("#"+this.spec.id).val();
-            return value;
+            // handle case with multiple fields
+            if(this.$elem.find("#"+this.spec.id).prop('checked')) {
+                return this.checkedValue;
+            } else {
+                return this.uncheckedValue;
+            }
+            return "";
         }
         
     });

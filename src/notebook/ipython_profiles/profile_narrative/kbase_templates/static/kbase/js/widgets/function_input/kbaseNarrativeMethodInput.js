@@ -60,7 +60,11 @@
                     var dropdownInputWidget = $stepDiv["kbaseNarrativeParameterDropdownInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
                     this.parameters.push({id:paramSpec.id, widget:dropdownInputWidget});
                     this.parameterIdLookup[paramSpec.id] = dropdownInputWidget;
-                } else {
+                } else if (paramSpec.field_type === "checkbox") {
+                    var checkboxInputWidget = $stepDiv["kbaseNarrativeParameterCheckboxInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                    this.parameters.push({id:paramSpec.id, widget:checkboxInputWidget});
+                    this.parameterIdLookup[paramSpec.id] = checkboxInputWidget;
+                }else {
                     // this is what we should do:  this.getErrorDiv()
                     $stepDiv.append('<span class="label label-danger">Parameter '+paramSpec.id+
                                     ' not displaying properly, invalid parameter type: "'+paramSpec.field_type+'"</span>');

@@ -443,23 +443,25 @@
    text-align:center;
    font-family: 'OxygenBold', sans-serif;
    font-weight: bold;
-   font-size: 10pt;
+   font-size: 9pt;
    color:#d44950;
 }
 
 
 /* not sure how to get text in these divs to valign middle... */
 .kb-method-parameter-name {
-   font-family: 'OxygenBold', sans-serif;
-   font-weight: bold;
+   font-family: 'OxygenBold', sans-serif; 
    color:#777;
    text-align:right;
    vertical-align:middle;
    margin-top:3px;
+   padding-right:0px;
+   padding-left:0px;
 }
 .kb-method-parameter-input {
    vertical-align:middle;
    white-space: nowrap;
+   padding-left:10px;
 }
 .kb-method-parameter-input input {
    font-weight: bold;
@@ -469,7 +471,7 @@
 }
 
 .kb-method-parameter-hint {
-   color: #444;
+   color: #777;
    text-align:left;
    margin-top:3px;
 }
@@ -485,19 +487,19 @@
 
 
 .kb-method-advanced-options-controller-inactive {
-   font-weight: bold;
+   font-family: 'OxygenBold', sans-serif; 
    font-style: italic;
-   font-size: 11pt;
-   line-height: 15px;
+   font-size: 10pt;
+   line-height: 14px;
    color: #777;
    text-align: center;
 }
 .kb-method-advanced-options-controller {
+   font-family: 'OxygenBold', sans-serif; 
    cursor:pointer;
-   font-weight: bold;
    font-style: italic;
-   font-size: 11pt;
-   line-height: 15px;
+   font-size: 10pt;
+   line-height: 14px;
    color: #0088cc;
    text-align: center;
 }

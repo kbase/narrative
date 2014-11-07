@@ -196,7 +196,7 @@
             this.inputStepLookup = {};
             var inputStep = {};
             for (var i=0; i<stepSpecs.length; i++) {
-                var $stepPanel = this.renderStepDiv(this.appSpec.steps[i].step_id, stepSpecs[i], stepHeaderText + (i+1)+": ");
+                var $stepPanel = this.renderStepDiv(this.appSpec.steps[i].step_id, stepSpecs[i], stepHeaderText + (i+1));
                 this.$methodPanel.append($stepPanel);
                 this.methodSpecs[stepSpecs[i].info.id] = stepSpecs[i];
             }
@@ -266,7 +266,7 @@
             var methodDesc = stepSpec.info.subtitle;
             var $methodInfo = $('<div>')
                               .addClass('kb-func-desc')
-                              .append('<h1><b>' + stepHeading +'</b>'+ stepSpec.info.name + '</h1>')
+                              .append('<h1>' + stepHeading +'&nbsp&nbsp-&nbsp '+ stepSpec.info.name + '</h1>')
                               .append($('<button>')
                                       .addClass('btn btn-default btn-xs')
                                       .attr('type', 'button')
@@ -278,8 +278,8 @@
                                       .addClass('collapse')
                                       .append($('<h2>')
                                          .append(methodDesc +
-                                                 ' <a href="'+ this.options.methodHelpLink + stepSpec.info.id +
-                                                        '" target="_blank">More documentation...</a>')));
+                                                 ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + stepSpec.info.id +
+                                                        '" target="_blank">more...</a>')));
 
             var $cellPanel = $('<div>')
                              .addClass('panel kb-func-panel kb-app-func-panel kb-cell-run')
@@ -467,7 +467,7 @@
             // if we were in the running state before, set the values
             if (state.runningState) {
                 if (state.runningState.runningStep) {
-                    this.setRunningStep(runningStep);
+                    this.setRunningStep(state.runningState.runningStep);
                 }
                 if (state.runningState.appRunState) {
                     if (state.runningState.submittedText) {

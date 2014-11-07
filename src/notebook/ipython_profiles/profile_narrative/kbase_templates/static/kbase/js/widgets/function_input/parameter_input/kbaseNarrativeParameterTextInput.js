@@ -121,22 +121,6 @@
                 // need to handle multiple fields- do something better!
                 self.$mainPanel.append("<div>multiple input fields not yet supported</div>");
             }
-            
-            
-            
-            /*var input_default = (p.default_values[0] !== "" && p.default_values[0] !== undefined) ?
-                                    " placeholder='" + p.default_values[0] + "'" : "";
-                input = "<input class='form-control' style='width: 95%' name='" + p.id + "'" + input_default +
-                        " value='' type='text'></input>";
-
-                var cellStyle = "border:none; vertical-align:middle;";
-                inputDiv += "<tr style='" + cellStyle + "'>" + 
-                                "<th style='" + cellStyle + " font-family: 'OxygenBold', sans-serif; font-weight: bold;>" + p.ui_name + "</th>" +
-                                "<td style='" + cellStyle + " width: 40%;'>" + input + "</td>" +
-                                "<td style='" + cellStyle + " color: #777;'>" + p.short_hint + "</td>" +
-                            "</tr>";
-            
-            */
         },
         
         
@@ -291,7 +275,9 @@
          */
         isValid: function() {
             var self = this;
-            
+            if (!self.enabled) {
+                return { isValid: true, errormssgs:[]}; // do not validate if disabled
+            }
             var p= self.getParameterValue();
             var errorDetected = false;
             var errorMessages = [];
@@ -458,6 +444,7 @@
             } else {
                 this.$elem.find("#"+this.spec.id).val(value);
             }
+            this.isValid();
         },
         
         /*

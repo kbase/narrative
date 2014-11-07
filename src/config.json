@@ -24,7 +24,7 @@
         "trees" : "http://140.221.67.152:7047",
         "awe" : "http://140.221.67.185:7080",
         "narrative_method_store" : "http://dev19.berkeley.kbase.us/narrative_method_store/rpc",
-        "job_service" : "http://140.221.67.204:8200/"
+        "job_service" : "http://dev06.berkeley.kbase.us:8283/"
     },
 
     "prod": {
@@ -47,7 +47,7 @@
         "narrative_job_proxy" : "http://140.221.67.225:8088",
         "awe" : "http://140.221.67.185:7080",
         "narrative_method_store" : "https://kbase.us/services/narrative_method_store/rpc",
-        "job_service" : "http://140.221.67.204:8200/"
+        "job_service" : "http://dev06.berkeley.kbase.us:8283/"
     },
 
     "name" : "KBase Narrative",

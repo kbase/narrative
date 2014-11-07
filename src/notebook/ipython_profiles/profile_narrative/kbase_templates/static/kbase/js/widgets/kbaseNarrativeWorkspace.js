@@ -880,14 +880,19 @@
                 var p = params[i];
 
                 /* fields: default, description, type, ui_name */
-                var type = p.text_options.valid_ws_types[0];
-                if (type && !this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
-                    cellDeps.push([type, paramValues[i]]);
-                    if (!typesHash[type]) {
-                        typesHash[type] = 1;
-                        types.push(type);
+                if (p.text_options) {
+                    if (p.text_options.valid_ws_types) {
+                        var type = p.text_options.valid_ws_types[0];
+                        if (type && !this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
+                            cellDeps.push([type, paramValues[i]]);
+                            if (!typesHash[type]) {
+                                typesHash[type] = 1;
+                                types.push(type);
+                            }
+                        }
                     }
                 }
+                
             }
 
             // look up the deps in the data panel.

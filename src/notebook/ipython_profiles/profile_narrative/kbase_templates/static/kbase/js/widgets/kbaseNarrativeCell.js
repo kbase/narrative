@@ -99,8 +99,8 @@
                                .append($('<p>')
                                        .addClass('text-success'));
 
-            var methodId = this.options.cellId + '-method-details';
-            var buttonLabel = '...';
+            var methodId = this.options.cellId + '-method-details-'+this.genUUID();
+            var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
             var $methodInfo = $('<div>')
                               .addClass('kb-func-desc')
@@ -177,6 +177,12 @@
             this.$inputWidget.refresh();
         },
 
+        genUUID: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);
+            });
+        },
 
     });
 

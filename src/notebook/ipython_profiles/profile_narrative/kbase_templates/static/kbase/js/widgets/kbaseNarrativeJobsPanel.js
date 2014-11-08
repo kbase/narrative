@@ -306,27 +306,39 @@
                 return;
             }
 
+            var storedIds = IPython.notebook.metadata.job_ids;
+
             // do methods.
             var $methodsTable = $('<div class="kb-jobs-items">');
-            for (var i=0; i<jobs.methods.length; i++) {
-                $methodsTable.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
+            if (jobs.methods.length === 0 && storedIds.methods.length === 0) {
+                $methodsTable.append($('<div class="kb-data-loading">').append('No running methods!'));
+            }
+            else {
+                for (var i=0; i<jobs.methods.length; i++) {
+                    $methodsTable.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
+                }                
             }
             this.$methodsList.empty().append($methodsTable);
 
             // do apps.
             var $appsTable = $('<div class="kb-jobs-items">');
-            var renderedApps = {};
-            for (var i=0; i<jobs.apps.length; i++) {
-                var app = jobs.apps[i];
-                var appInfo = jobInfo[app.app_job_id];
-                $appsTable.append(this.renderApp(app, appInfo));
-                this.updateAppCell(app, appInfo);
-                renderedApps[app.app_job_id] = true;
+            if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
+                $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));
             }
-            for (var i=0; i<IPython.notebook.metadata.job_ids.apps.length; i++) {
-                var appTest = IPython.notebook.metadata.job_ids.apps[i];
-                if (!renderedApps[appTest.id]) {
-                    $appsTable.append(this.renderAppError(appTest));
+            else {
+                var renderedApps = {};
+                for (var i=0; i<jobs.apps.length; i++) {
+                    var app = jobs.apps[i];
+                    var appInfo = jobInfo[app.app_job_id];
+                    $appsTable.append(this.renderApp(app, appInfo));
+                    this.updateAppCell(app, appInfo);
+                    renderedApps[app.app_job_id] = true;
+                }
+                for (var i=0; i<storedIds.apps.length; i++) {
+                    var appTest = storedIds.apps[i];
+                    if (!renderedApps[appTest.id]) {
+                        $appsTable.append(this.renderAppError(appTest));
+                    }
                 }
             }
             this.$appsList.empty().append($appsTable);
@@ -435,11 +447,12 @@
         makeAppClearButton: function(app) {
             return $('<span>')
                    .addClass('glyphicon glyphicon-remove kb-function-help kb-function-error')
-                   .click(function() {
+                   .click($.proxy(function() {
                        var appIds = IPython.notebook.metadata.job_ids.apps;
                        appIds = appIds.filter(function(val) { return val.id !== app.id });
                        IPython.notebook.metadata.job_ids.apps = appIds;
-                   });
+                       this.refresh(false);
+                   }, this));
         },
 
         makeAppDetailButton: function(app, appInfo) {

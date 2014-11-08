@@ -252,6 +252,7 @@
                 }, this),
             };
 
+            // console.debug('JOBS PANEL: refresh');
             var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: false});
         },
 
@@ -267,6 +268,7 @@
 
         parseKernelResponse: function(msgType, content, jobRef) {
             // if it's not a datastream, display some kind of error, and return.
+            // console.debug('JOBS PANEL: parseKernelResponse');
             if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the job list.');
                 return;

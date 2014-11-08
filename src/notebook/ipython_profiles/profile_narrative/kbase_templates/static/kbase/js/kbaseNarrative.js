@@ -59,7 +59,7 @@ narrative.init = function() {
             });
             $dataWidget.setNarrWs(narr_ws); //as a callback
             $dataWidget.setWorkspace(ws_name);
-            setTimeout(function() { $jobsWidget.refresh(); }, 500);
+            setTimeout(function() { $jobsWidget.refresh(); }, 750);
         }
         else {
             /* ??? */

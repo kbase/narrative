@@ -418,6 +418,10 @@
     padding-bottom: 3px;
 }
 
+.kb-jobs-error {
+    background-color: #f2dede;
+}
+
 .kb-jobs-item:last-child {
     border-bottom: none;
 }

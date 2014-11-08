@@ -472,8 +472,11 @@
                     var id = this.inputSteps[i].id;
                     this.state.step[id].inputState = this.inputSteps[i].widget.getState();
                     // if there is an output widget, then we need to set its state too
-                    if(this.inputSteps[i].outputWidget) {
-                        this.state.step[id].outputState.widgetState = this.inputSteps[i].outputWidget.getState;
+                    if(this.inputSteps[i].outputWidget && this.inputSteps[i].outputWidget.getState) {
+                        console.debug("GET STATE");
+                        this.inputSteps[i].outputWidget.getState;
+                        this.inputSteps[i].outputWidget.getState();
+                        this.state.step[id].outputState.widgetState = this.inputSteps[i].outputWidget.getState();
                     }
                 }
             }
@@ -578,7 +581,8 @@
                     this.inputStepLookup[stepId].$stepContainer.removeClass("kb-app-step-running");
                     
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
-                    var $outputWidget = $('<div>'); var widget;
+                    var $outputWidget = $('<div>'); 
+                    var widget;
                     if (widgetName !== "kbaseDefaultNarrativeOutput")
                         widget = $outputWidget[widgetName](output);
                     else

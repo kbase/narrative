@@ -166,14 +166,14 @@
         /**
          * @method
          */
-        refresh: function() {
+        refresh: function(hideLoadingMessage) {
             // if there's no timer, set one up.
-            // if (this.refreshTimer === null) {
-            //     this.refreshTimer = setInterval(
-            //         $.proxy(function() { this.refresh(); }, this),
-            //         this.refreshInterval
-            //     );
-            // }
+            if (this.refreshTimer === null) {
+                this.refreshTimer = setInterval(
+                    $.proxy(function() { this.refresh(true); }, this),
+                    this.refreshInterval
+                );
+            }
 
 
             // If none of the base IPython stuff shows up, then it's not inited yet.
@@ -189,7 +189,8 @@
                 return;
             }
 
-            this.showLoadingMessage('Loading running jobs...');
+            if (!hideLoadingMessage)
+                this.showLoadingMessage('Loading running jobs...');
 
             // Get a unique list of jobs
             // XXX - this'll change to method vs. app jobs, soonish.
@@ -214,12 +215,18 @@
                 if (!app.source || app.source.length === 0)
                     continue;
 
-                // from the source, we need to get its containing app cell object.
-                var info = $('#' + app.source).kbaseNarrativeAppCell('getSpecAndParameterInfo');
-                appJobList.push("['" + app.id + "', " +
-                                "'" + this.safeJSONStringify(info.appSpec) + "', " +
-                                "'" + this.safeJSONStringify(info.methodSpecs) + "', " + 
-                                "'" + this.safeJSONStringify(info.parameterValues) + "']");
+                var info = null; //{ appSpec : {}, methodSpecs: {}, parameterValues: {} };
+                var $appCell = $('#' + app.source);
+                if ($appCell.length > 0)
+                    info = $appCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
+
+                if (info) {
+                    // from the source, we need to get its containing app cell object.
+                    appJobList.push("['" + app.id + "', " +
+                                    "'" + this.safeJSONStringify(info.appSpec) + "', " +
+                                    "'" + this.safeJSONStringify(info.methodSpecs) + "', " + 
+                                    "'" + this.safeJSONStringify(info.parameterValues) + "']");                    
+                }
 
                 uniqueJobs[app.id] = {'app' : app, 'info' : info};
             }
@@ -298,7 +305,6 @@
                 this.showMessage('No running jobs!');
                 return;
             }
-            console.log('populate jobs panel');
 
             // do methods.
             var $methodsTable = $('<div class="kb-jobs-items">');
@@ -309,22 +315,37 @@
 
             // do apps.
             var $appsTable = $('<div class="kb-jobs-items">');
+            var renderedApps = {};
             for (var i=0; i<jobs.apps.length; i++) {
                 var app = jobs.apps[i];
-                var appInfo = jobInfo[jobs.apps[i].app_job_id];
+                var appInfo = jobInfo[app.app_job_id];
                 $appsTable.append(this.renderApp(app, appInfo));
                 this.updateAppCell(app, appInfo);
+                renderedApps[app.app_job_id] = true;
+            }
+            for (var i=0; i<IPython.notebook.metadata.job_ids.apps.length; i++) {
+                var appTest = IPython.notebook.metadata.job_ids.apps[i];
+                if (!renderedApps[appTest.id]) {
+                    $appsTable.append(this.renderAppError(appTest));
+                }
             }
             this.$appsList.empty().append($appsTable);
 
         },
 
+        /**
+         * TODO: add logic to signal to the user that an app has been deleted, and to ask them if they want to
+         * clear the job as well.
+         */
         updateAppCell: function(app, appInfo) {
             var source = appInfo.app.source;
             if (!source)
                 return; // don't do anything if we can't find the cell. it might have been deleted.
 
             var $appCell = $('#' + source);
+            if (!$appCell)
+                return; // don't do anything if we can't find the app cell, either.
+
             if (app.running_step_id) {
                 $appCell.kbaseNarrativeAppCell('setRunningStep', app.running_step_id);
             }
@@ -334,6 +355,20 @@
                         $appCell.kbaseNarrativeAppCell('setStepOutput', key, app.widget_outputs[key]);
                 }
             }
+        },
+
+        renderAppError: function(app) {
+            var $appErr = $('<div>')
+                          .addClass('kb-jobs-item kb-jobs-error')
+                          .append($('<div>')
+                                  .addClass('kb-jobs-title')
+                                  .append('Error')
+                                  .append(this.makeAppClearButton(app)))
+                          .append($('<div>')
+                                  .addClass('kb-jobs-descr')
+                                  .append('Unable to find job info. The associated app may have been removed. Click the X to delete this job'));
+
+            return $appErr;
         },
 
         renderApp: function(appJob, appInfo) {
@@ -395,6 +430,16 @@
             
             $row.append($itemTable);
             return $row;
+        },
+
+        makeAppClearButton: function(app) {
+            return $('<span>')
+                   .addClass('glyphicon glyphicon-remove kb-function-help kb-function-error')
+                   .click(function() {
+                       var appIds = IPython.notebook.metadata.job_ids.apps;
+                       appIds = appIds.filter(function(val) { return val.id !== app.id });
+                       IPython.notebook.metadata.job_ids.apps = appIds;
+                   });
         },
 
         makeAppDetailButton: function(app, appInfo) {

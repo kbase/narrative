@@ -17,16 +17,20 @@
          */
         var setEnvironment = function () {
 
+            console.debug('SET ENVIRONMENT: START');
+
             // Inline function that does a kernel call and sets callbacks for each event.
             var doKernelCall = function(cmd) {
+
+                console.debug('SET ENVIRONMENT - doKernelCall: START');
 
                 // Very simple callback function that dumps its message to console.
                 // This only gets run at page-reload, and is good for checking errors.
                 var kernelCallback = function(type, content, etc) {
-                    // console.log('KERNEL CALLBACK : "' + type + '"');
-                    // console.log(content);
-                    // if (etc)
-                    //     console.log(etc);
+                    console.debug('KERNEL CALLBACK : "' + type + '"');
+                    console.debug(content);
+                    if (etc)
+                        console.debug(etc);
                 };
 
                 var callbacks = {
@@ -47,6 +51,7 @@
              * user token, and workspace name in the environment.
              */
             var initKernelEnvCommand = function(token) {
+                console.debug('SET ENVIRONMENT - initKernelEnvCommand: START');
                 var cmd = "import os";
 
                 if (IPython.notebook.metadata && IPython.notebook.metadata.name) {
@@ -60,6 +65,7 @@
                 cmd += "\nos.environ['KB_WORKSPACE_ID'] = '" + escapeParamString(wsName) + "'" +
                        "\nos.environ['KB_AUTH_TOKEN'] = '" + token + "'";
 
+                console.debug('SET ENVIRONMENT - initKernelEnvCommand - cmd = ' + cmd);
                 return cmd;
             }
 

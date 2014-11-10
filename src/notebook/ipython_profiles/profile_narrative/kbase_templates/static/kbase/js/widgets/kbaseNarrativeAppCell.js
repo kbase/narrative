@@ -177,6 +177,20 @@
                                       });
                                   }, this)
                               );
+
+
+            /* A little debug button for fetching the app's state. */
+            this.$stateDebugBtn = $('<button>')
+                                  .attr('type', 'button')
+                                  .attr('value', 'Get State')
+                                  .addClass('btn btn-danger btn-sm')
+                                  .append('Get State')
+                                  .click(
+                                      function(event) {
+                                          console.log(self.getState());
+                                      }
+                                  );
+
             
             //We cannot stop a method from running, so this button for now is gone.
             this.$stopButton = $('<button>');
@@ -210,6 +224,7 @@
                            .addClass('buttons pull-right')
                            .append(this.$runButton)
                            //.append(this.$stopButton)
+                           //.append(this.$stateDebugBtn)
                            .append(this.$submitted);
 
             var $appSubtitleDiv = $("<div>")
@@ -473,9 +488,6 @@
                     this.state.step[id].inputState = this.inputSteps[i].widget.getState();
                     // if there is an output widget, then we need to set its state too
                     if(this.inputSteps[i].outputWidget && this.inputSteps[i].outputWidget.getState) {
-                        console.debug("GET STATE");
-                        this.inputSteps[i].outputWidget.getState;
-                        this.inputSteps[i].outputWidget.getState();
                         this.state.step[id].outputState.widgetState = this.inputSteps[i].outputWidget.getState();
                     }
                 }
@@ -604,8 +616,9 @@
                     this.inputStepLookup[stepId].$outputPanel.append($outputCell);
                     
                     this.inputStepLookup[stepId].outputWidget = widget;
+                    var objCopy = $.extend(true, {}, output);
                     this.state.step[stepId].outputState = {
-                        output: output
+                        output: objCopy
                     };
                 }
             }

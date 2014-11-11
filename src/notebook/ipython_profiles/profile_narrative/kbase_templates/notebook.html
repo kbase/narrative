@@ -2,13 +2,25 @@
 
 {% block stylesheet %}
 
-    <script type="text/javascript" src="{{ static_url("components/mathjax/mathjax.js") }}" charset="utf-8"></script>
+<!--    <script type="text/javascript" src="{{ static_url("components/mathjax/mathjax.js") }}" charset="utf-8"></script> -->
 
-    <script type="text/javascript">
+{% if mathjax_url %}
+<script type="text/javascript" src="{{mathjax_url}}&delayStartupUntil=configured" charset="utf-8"></script>
+{% endif %}
+<script type="text/javascript">
+// MathJax disabled, set as null to distingish from *missing* MathJax,
+// where it will be undefined, and should prompt a dialog later.
+window.mathjax_url = "{{mathjax_url}}";
+</script>
+
+
+<!--    <script type="text/javascript">
         // MathJax disabled, set as null to distingish from *missing* MathJax,
         // where it will be undefined, and should prompt a dialog later.
-        window.mathjax_url = "mathjax.js"; //{{ static_url("components/mathjax/mathjax.js") }}"; //"{{mathjax_url}}";
+//        window.mathjax_url = "mathjax.js"; //{{ static_url("components/mathjax/mathjax.js") }}"; //"{{mathjax_url}}";
+        window.mathjax_url = "{{mathjax_url}}";
     </script>
+-->
 
     <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
 
@@ -27,8 +39,6 @@
     <link rel="stylesheet" href="{{ static_url("select2-v3.5.2/select2-bootstrap.css") }}" type="text/css" />
 
     <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
-    
-
 {% endblock %}
 
 {% block params %}

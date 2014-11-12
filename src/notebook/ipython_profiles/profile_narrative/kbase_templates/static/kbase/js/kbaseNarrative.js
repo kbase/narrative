@@ -13,12 +13,80 @@ narrative.init = function() {
     var narr_ws = null;
     var readonly = false; /* whether whole narrative is read-only */
 
-    var versionStr = 'KBase Narrative<br>Alpha version';
+            // self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true">').addClass("modal fade");
+            // self.$errorModal.append(
+            //     $('<div>').addClass('modal-dialog').append(
+            //         $('<div>').addClass('modal-content').append(
+            //             $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" id="'+modalLabel+'">Problems exist in your parameter settings.</h4>')
+            //         ).append(
+            //            $('<div>').addClass('modal-body').append(self.$errorModalContent)
+            //         ).append(
+            //             $('<div>').addClass('modal-footer').append(
+            //                 $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
+            //         )
+            //     ));
+
+    var versionHtml = 'KBase Narrative<br>Alpha version';
     if (window.kbconfig && 
         window.kbconfig.name && 
-        window.kbconfig.version)
-        versionStr = window.kbconfig.name + '<br>' + window.kbconfig.version;
-    $('.version-stamp').empty().html(versionStr);
+        window.kbconfig.version) {
+//        versionText = window.kbconfig.name + '<br>' + window.kbconfig.version;
+        var $versionDiv = $('<div>')
+                          .append('Version: ' + window.kbconfig.version);
+        // not used, but left in as legacy if we go back to it.
+        // $versionInfo = window.kbconfig.name + '<br>' + window.kbconfig.version;
+        if (window.kbconfig.urls) {
+            var urlList = Object.keys(window.kbconfig.urls).sort();
+            var $versionTable = $('<table>')
+                                .addClass('table table-striped table-bordered');
+            $.each(urlList, 
+                function(idx, val) {
+                    $versionTable.append($('<tr>')
+                                         .append($('<td>').append(val))
+                                         .append($('<td>').append(window.kbconfig.urls[val])));
+                }
+            );
+            $versionDiv.append($versionTable);
+        }
+    }
+
+    var $versionModal = $('<div tabindex=-1 role="dialog" aria-labelledby="kb-version-label" aria-hidden="true">')
+                        .addClass('modal fade')
+                        .append($('<div>')
+                                .addClass('modal-dialog')
+                                .append($('<div>')
+                                    .addClass('modal-content')
+                                    .append($('<div>')
+                                            .addClass('modal-header')
+                                            .append($('<h4>')
+                                                    .addClass('modal-title')
+                                                    .attr('id', 'kb-version-label')
+                                                    .append('KBase Narrative Properties')))
+                                    .append($('<div>')
+                                            .addClass('modal-body')
+                                            .append($versionDiv))
+                                    .append($('<div>')
+                                            .addClass('modal-footer')
+                                            .append(
+                                                $('<button type="button" data-dismiss="modal">')
+                                                .addClass('btn btn-default')
+                                                .append('Okay')))));
+
+    var $versionBtn = $('<a href="#">About</a>')
+                      .click(function(event) {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          $versionModal.modal('show');
+                      });
+    // var $versionBtn = $('<button>')
+    //                   .addClass('btn btn-default btn-sm')
+    //                   .append('About')
+    //                   .click(function(event) { 
+    //                       $versionModal.modal('show');
+    //                   });
+
+    $('#kb-version-stamp').empty().append($versionBtn);
+    $('#notebook').append($versionModal);
 
     /*
      * Before we get everything loading, just grey out the whole %^! page
